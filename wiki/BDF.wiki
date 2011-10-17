@@ -1,0 +1,65 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+This section discusses the BDF class and how to use it.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
+
+= Usage = 
+mesh = BDF() # instantiates the class with the default set of cards
+
+mesh.setCardsToInclude(['GRID','CQUAD4','PSHELL','MAT1','CORD2C'])
+
+mesh.read(bdfFileIn)   # reads the bdf
+
+mesh.write(bdfFileOut) # writes the bdf
+
+c1 = mesh.Coord(1) # gets coordinate system 1
+
+print n1.type # CORD2C
+
+print c1 # prints the card in small field format version (8-character width)
+
+n1 = mesh.Node(1) # gets element 1
+
+print n1.type
+
+print n1.Position() # gets the position of the node in the global coordinate system (COORD2R.id=0)
+
+print n1.Position(1) # gets the position of the node in the coordinate system 1
+
+e1 = mesh.Element(1) # gets element 1
+
+print e1.type # CQUAD4
+
+print e1.nodes # [1,2,3,4]
+
+print e1.zOffset # 0.2
+
+p1 = mesh.Property(1) # gets property 1
+
+print p1.type # PSHELL
+
+print p1.t  # thickness (per the nastran QRG)
+
+m1 = mesh.Material(1) # gets material 1
+
+print m1.type # MAT1
+
+print m.E     # predefined on card
+
+print m.nu    # predefined on card
+
+print m.G     # calculated based on E, nu
+
+= Cards Supported =
+  * [Cards_Version_0.1]
+  * [Cards_Version_0.2]
+  * [Cards_Future]
