@@ -1,0 +1,173 @@
+In order for a card to be supported, it must read AND write ALL fields.  Important calculated parameters are nice, but not required.
+
+Cards Supported (version 0.1)
+
+Nodes:
+GRID (done)
+
+Elements:
+CONM2
+CEALS1
+CELAS2
+
+CROD   (done)
+CONROD (done)
+CTUBE  (done)
+CBEAM
+CBAR
+
+CTRIA3 (done)
+CTRIA6 (done)
+
+CQUAD4 (done)
+CQUAD8 (done)
+
+CPENTA (needs code integration)
+CHEXA (needs code integration)
+CTETRA (needs code integration)
+
+Constraints:
+RBE1
+RBE2
+RBE3
+
+SPC
+SPC1
+SPCSET
+SPCADD
+
+MPC
+MPCSET
+MPCADD
+
+
+Materials:
+MAT1 (done)
+MAT2
+MAT3
+MAT4
+MAT5
+MAT8 (close)
+MAT9
+MAT10
+
+Properties:
+PELAS
+PROD
+PBEAM
+PCOMP  (done)
+PSHELL (done)
+PSOLID (done)
+
+Coordinates:
+CORD2R
+CORD2C
+CORD2S
+
+
+-----------------------------------------------
+Future (Planned):
+
+Elements:
+CTRIAX  (ready for testing)
+CTRIAR  (ready for testing)
+CTRIAX6  (ready for testing)
+
+CQUADR  (ready for testing)
+CQUADX  (ready for testing)
+CQUAD  (ready for testing)
+
+Properties:
+PCOMPG
+PTUBE (ready for testing)
+PLSOLID
+
+Coordinates:
+CORD1R
+CORD1C
+CORD1S
+
+Optimization:
+DCONSTR  (ready for testing)
+DESVAR  (ready for testing)
+DDVAL  (ready for testing)
+DEQATN
+DRESP1
+DRESP2
+DRESP3
+DVPREL1
+
+Loads:
+PLOAD
+PLOAD1
+PLOAD2
+PLOAD3
+PLOAD4
+FORCE
+FORCE1
+FORCE2
+LOAD
+MOMENT
+MOMENT1
+
+Methods:
+EIGR
+EIGRL
+
+Constraint Cards:
+RBAR
+RBAR1
+
+Thermal:
+QBDY1
+QBDY2
+QBDY3
+QHBDY
+RADBC
+RADM
+
+Modal Cards:
+FREQ
+FREQ1
+FREQ2
+FREQ3
+FREQ4
+FREQ5
+
+Aero Cards:
+GUST
+
+Other:
+DAREA
+DLINK
+DMIG
+DTABLE
+GRAV
+INCLUDE
+MATT4
+MONPNT1
+MONPNT2
+MONPNT3
+NLPARM
+NSM
+PARAM
+RINGAX
+CCONEAX
+SESET
+SET1
+SET2
+SET3
+SPOINT
+SUPORT
+SUPORT1
+GENEL
+RROD
+RSPLINE
+RTRPLT
+PSHEAR
+
+-------------------------------------------
+
+Op2
+
+http://www.ferespost.be/HTML_MANUAL/III_1_Nastran_Preferences.html
