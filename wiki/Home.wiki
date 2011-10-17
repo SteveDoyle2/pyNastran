@@ -1,17 +1,14 @@
-#summary One-sentence summary of this page.
+#summary Introduction to the PyNastran Project.
 
 = Introduction =
+This project is an "attempt" at an open-source Python-C++ implementation of the Nastran-style format.  By using an open-source approach, users will be able to add new cards that they desire, with convenient and robust functions to enable that.  
 
-Add your content here.
+The software's primary goals are to enable the user to:
+ * read, write, edit a BDF without losing precision
+ * read an F06
+ * read an OP2
 
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
-
+Eventually, as the software matures, the plan is to also support the calculation of mass and stiffness matrix for the various elements.  With this capability, the user will be able to perform a finite element analysis of their model without using any expensive tokens.
 
 = See =
   * [BDF]
