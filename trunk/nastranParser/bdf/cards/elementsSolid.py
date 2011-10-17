@@ -1,0 +1,51 @@
+from elements import Element
+
+class CPENTA6(Element):
+    """
+    EID PID G1 G2 G3 G4 G5 G6
+    """
+    type = 'CPENTA'
+    def __init__(self,card):
+        Element.__init__(self,card)
+
+        nids = card.fields(3,9)
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==6
+
+class CPENTA15(Element):
+    """
+    CPENTA EID PID G1 G2 G3 G4 G5 G6
+    G7 G8 G9 G10 G11 G12 G13 G14
+    G15
+    """
+    type = 'CPENTA'
+    def __init__(self,card):
+        Element.__init__(self,card)
+
+        nids = card.fields(3,17)
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==15
+
+class CTETRA4(Element):
+    """
+    CTETRA EID PID G1 G2 G3 G4 G5 G6
+    G7 G8 G9 G10
+    """
+    type = 'CTETRA'
+    def __init__(self,card):
+        Element.__init__(self,card)
+        nids = card.fields(3,7)
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==4
+
+class CTETRA10(Element):
+    """
+    CTETRA   1       1       239     229     516     99      335     103
+             265     334     101     102
+    """
+    type = 'CTETRA'
+    def __init__(self,card):
+        Element.__init__(self,card)
+        nids = card.fields(3,13)
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==10
