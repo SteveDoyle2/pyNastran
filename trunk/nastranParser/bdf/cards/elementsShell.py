@@ -4,6 +4,7 @@ class CTRIA3(Element):
     type = 'CTRIA3'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,6)
         self.prepareNodeIDs(nids)
@@ -62,6 +63,7 @@ class CTRIA6(CTRIA3):
     type = 'CTRIA6'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids)
@@ -91,6 +93,7 @@ class CTRIAR(CTRIA3):
     type = 'CTRIAR'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,6)
         self.prepareNodeIDs(nids)
@@ -144,6 +147,8 @@ class CQUAD4(Element):
     type = 'CQUAD4'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
+
         nids = card.fields(3,7)
         self.prepareNodeIDs(nids)
 
@@ -310,6 +315,7 @@ class CQUAD(CQUAD4):
     type = 'CQUAD'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,12)
         self.prepareNodeIDs(nids)
@@ -334,6 +340,7 @@ class CQUAD8(CQUAD4):
     type = 'CQUAD8'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,11)
         self.prepareNodeIDs(nids)
@@ -358,6 +365,7 @@ class CQUADX(CQUAD4):
     type = 'CQUADX'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,12)
         self.prepareNodeIDs(nids)

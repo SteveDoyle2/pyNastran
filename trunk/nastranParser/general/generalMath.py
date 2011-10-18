@@ -1,9 +1,21 @@
 import numpy
-from numpy import zeros
+from numpy import zeros,sum,matrix
 from scipy.linalg import solve_banded
 
 from numpy import array,cross,allclose
 from numpy.linalg import norm, solve
+
+def reduceMatrix(matA,nids):
+    """
+    takes a list of ids and removes those rows and cols
+    """
+    nRows = len(nids)
+    matB = matrix(zeros((nRows,nRows),'d') )
+
+    for i,irow in enumerate(nids):
+        for j,jcol in enumerate(nids):  
+            matB[i,j] = matA[irow,jcol]
+    return matB
 
 def isListRanged(a,List,b):
     """

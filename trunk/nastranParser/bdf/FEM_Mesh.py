@@ -22,13 +22,19 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
         pass
 
     def __init__(self,infilename,log=None):
+        if log is None:
+            from nastranParser.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            log = loggerObj.startLog('debug') # or info
+
+        self.debug = False
         self.log = log
         self.infilename = infilename
         self.isOpened=False
         #self.n = 0
         #self.nCards = 0
         self.doneReading = False
-
+        self.foundEndData = False
         self.constraints = {}
         self.params = {}
         self.nodes = {}
@@ -259,153 +265,9 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
                 #print "----------------------------"
                 #if special:
                 #    print "iCard = ",iCard
-                if self.debug:
-                    print "*oldCardObj = \n",oldCardObj
-                cardObj = BDF_Card(card,oldCardObj=None)
-                #cardObj.applyOldFields(iCard)
-                if self.debug:
-                    print "*cardObj = \n",cardObj
-
-                try:
-                    if card==[] or cardName=='':
-                        pass
-                    elif cardName=='PARAM':
-                        param = PARAM(cardObj)
-                        self.addParam(param)
-                    elif cardName=='GRID':
-                        node = GRID(cardObj)
-                        #print "node.nid = ",node.nid
-                        self.addNode(node)
-
-                    elif cardName=='CQUAD4':
-                        elem = CQUAD4(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CQUAD8':
-                        elem = CQUAD8(cardObj)
-                        self.addElement(elem)
-
-                    elif cardName=='CTRIA3':
-                        elem = CTRIA3(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CTRIA6':
-                        elem = CTRIA6(cardObj)
-                        self.addElement(elem)
-
-                    elif cardName=='CTETRA':
-                        elem = CTETRA(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CHEXA':
-                        elem = CHEXA(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CPENTA':
-                        elem = CPENTA(cardObj)
-                        self.addElement(elem)
-
-                    elif cardName=='CBAR':
-                        elem = CBAR(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CBEAM':
-                        elem = CBEAM(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CROD':
-                        elem = CROD(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CTUBE':
-                        elem = CBAR(cardObj)
-                        self.addElement(elem)
-
-                    elif cardName=='CELAS1':
-                        elem = CELAS1(cardObj)
-                        self.addElement(elem)
-                    elif cardName=='CELAS2':
-                        (elem,prop) = CELAS2(cardObj)
-                        self.addElement(elem)
-                        self.addProperty(prop)
-                    elif cardName=='CONM2':
-                        elem = CONM2(cardObj)
-                        self.addElement(elem)
-
-                    elif cardName=='PELAS':
-                        prop = PELAS(cardObj)
-                        if cardObj.field(5):
-                            prop = PELAS(cardObj,1) # makes 2nd PELAS card
-                        self.addProperty(prop)
-                    elif cardName=='PBEAM':
-                        prop = PBEAM(cardObj)
-                        self.addProperty(prop)
-                    elif cardName=='PTUBE':
-                        prop = PTUBE(cardObj)
-                        self.addProperty(prop)
-                    elif cardName=='PSHELL':
-                        prop = PSHELL(cardObj)
-                        self.addProperty(prop)
-                    elif cardName=='PCOMP':
-                        prop = PCOMP(cardObj)
-                        self.addProperty(prop)
-                    #elif cardName=='PCOMPG':
-                    #    prop = PCOMPG(cardObj)
-                    #    self.addProperty(prop)
-                    elif cardName=='PSOLID':
-                        prop = PSOLID(cardObj)
-                        self.addProperty(prop)
-                    elif cardName=='PLSOLID':
-                        prop = PLSOLID(cardObj)
-                        self.addProperty(prop)
-
-                    elif cardName=='MAT1':
-                        material = MAT1(cardObj)
-                        self.addMaterial(material)
-                    #elif cardName=='MAT2':
-                    #    material = MAT2(cardObj)
-                    #    self.addMaterial(material)
-                    #elif cardName=='MAT3':
-                    #    material = MAT3(cardObj)
-                    #    self.addMaterial(material)
-                    #elif cardName=='MAT4':
-                    #    material = MAT4(cardObj)
-                    #    self.addMaterial(material)
-                    #elif cardName=='MAT5':
-                    #    material = MAT5(cardObj)
-                    #    self.addMaterial(material)
-                    elif cardName=='MAT8':
-                        material = MAT8(cardObj)
-                        self.addMaterial(material)
-                    #elif cardName=='MAT9':
-                    #    material = MAT9(cardObj)
-                    #    self.addMaterial(material)
-                    #elif cardName=='MAT10':
-                    #    material = MAT9(cardObj)
-                    #    self.addMaterial(material)
-
-                    elif cardName=='FORCE':
-                        #print "fcard = ",card 
-                        force = FORCE(cardObj)
-                        self.addLoad(force)
-
-                    elif cardName=='SPCADD':
-                        constraint = SPCADD(cardObj)
-                        self.addConstraint(constraint)
-                    elif cardName=='SPC1':
-                        #print "card = ",card
-                        constraint = SPC1(cardObj)
-                        self.addConstraint(constraint)
-
-                    elif cardName=='CORD2R':
-                        coord = CORD2R(cardObj)
-                        self.addCoord(coord)
-                        #print "done with ",card
-                    elif 'CORD' in cardName:
-                        raise Exception('unhandled coordinate system...cardName=%s' %(cardName))
-                    elif 'ENDDATA' in cardName:
-                        break
-                    else:
-                        print 'rejecting processed %s' %(card)
-                        self.rejectCards.append(card)
-                    ###
-                except:
-                    print card
-                    raise
-                ### try-except block
+                self.addCard(card,cardName,iCard=0,oldCardObj=None)
+                if self.foundEndData:
+                    break
             ### iCard
             if self.doneReading or len(self.lines)==0:
                 break
@@ -426,6 +288,163 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
                 #print ''.join(reject)
             self.log().debug("***readBulkDataDeck")
     
+    def addCard(self,card,cardName,iCard=0,oldCardObj=None):
+        #print card
+        if self.debug:
+            print "*oldCardObj = \n",oldCardObj
+            print "*cardObj = \n",cardObj
+        cardObj = BDF_Card(card,oldCardObj=None)
+        #cardObj.applyOldFields(iCard)
+        try:
+            if card==[] or cardName=='':
+                pass
+            elif cardName=='PARAM':
+                param = PARAM(cardObj)
+                self.addParam(param)
+            elif cardName=='GRID':
+                node = GRID(cardObj)
+                #print "node.nid = ",node.nid
+                self.addNode(node)
+
+            elif cardName=='CQUAD4':
+                elem = CQUAD4(cardObj)
+                self.addElement(elem)
+            elif cardName=='CQUAD8':
+                elem = CQUAD8(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='CTRIA3':
+                elem = CTRIA3(cardObj)
+                self.addElement(elem)
+            elif cardName=='CTRIA6':
+                elem = CTRIA6(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='CTETRA':
+                elem = CTETRA(cardObj)
+                self.addElement(elem)
+            elif cardName=='CHEXA':
+                elem = CHEXA(cardObj)
+                self.addElement(elem)
+            elif cardName=='CPENTA':
+                elem = CPENTA(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='CBAR':
+                elem = CBAR(cardObj)
+                self.addElement(elem)
+            elif cardName=='CBEAM':
+                elem = CBEAM(cardObj)
+                self.addElement(elem)
+            elif cardName=='CROD':
+                elem = CROD(cardObj)
+                self.addElement(elem)
+            elif cardName=='CONROD':
+                elem = CONROD(cardObj)
+                self.addElement(elem)
+                #print str(elem).strip()
+            elif cardName=='CTUBE':
+                elem = CBAR(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='CELAS1':
+                elem = CELAS1(cardObj)
+                self.addElement(elem)
+            elif cardName=='CELAS2':
+                (elem,prop) = CELAS2(cardObj)
+                self.addElement(elem)
+                self.addProperty(prop)
+            elif cardName=='CONM2':
+                elem = CONM2(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='PELAS':
+                prop = PELAS(cardObj)
+                if cardObj.field(5):
+                    prop = PELAS(cardObj,1) # makes 2nd PELAS card
+                self.addProperty(prop)
+            elif cardName=='PBEAM':
+                prop = PBEAM(cardObj)
+                self.addProperty(prop)
+            elif cardName=='PTUBE':
+                prop = PTUBE(cardObj)
+                self.addProperty(prop)
+            elif cardName=='PSHELL':
+                prop = PSHELL(cardObj)
+                self.addProperty(prop)
+            elif cardName=='PCOMP':
+                prop = PCOMP(cardObj)
+                self.addProperty(prop)
+            #elif cardName=='PCOMPG':
+            #    prop = PCOMPG(cardObj)
+            #    self.addProperty(prop)
+            elif cardName=='PSOLID':
+                prop = PSOLID(cardObj)
+                self.addProperty(prop)
+            elif cardName=='PLSOLID':
+                prop = PLSOLID(cardObj)
+                self.addProperty(prop)
+
+            elif cardName=='MAT1':
+                material = MAT1(cardObj)
+                self.addMaterial(material)
+            #elif cardName=='MAT2':
+            #    material = MAT2(cardObj)
+            #    self.addMaterial(material)
+            #elif cardName=='MAT3':
+            #    material = MAT3(cardObj)
+            #    self.addMaterial(material)
+            #elif cardName=='MAT4':
+            #    material = MAT4(cardObj)
+            #    self.addMaterial(material)
+            #elif cardName=='MAT5':
+            #    material = MAT5(cardObj)
+            #    self.addMaterial(material)
+            elif cardName=='MAT8':
+                material = MAT8(cardObj)
+                self.addMaterial(material)
+            #elif cardName=='MAT9':
+            #    material = MAT9(cardObj)
+            #    self.addMaterial(material)
+            #elif cardName=='MAT10':
+            #    material = MAT9(cardObj)
+            #    self.addMaterial(material)
+
+            elif cardName=='FORCE':
+                #print "fcard = ",card 
+                force = FORCE(cardObj)
+                self.addLoad(force)
+            elif cardName=='LOAD':
+                #print "fcard = ",card 
+                load = LOAD(cardObj)
+                self.addLoad(load)
+
+            elif cardName=='SPCADD':
+                constraint = SPCADD(cardObj)
+                self.addConstraint(constraint)
+            elif cardName=='SPC1':
+                #print "card = ",card
+                constraint = SPC1(cardObj)
+                self.addConstraint(constraint)
+
+            elif cardName=='CORD2R':
+                coord = CORD2R(cardObj)
+                self.addCoord(coord)
+                #print "done with ",card
+            elif 'CORD' in cardName:
+                raise Exception('unhandled coordinate system...cardName=%s' %(cardName))
+            elif 'ENDDATA' in cardName:
+                self.foundEndData = True
+                #break
+            else:
+                print 'rejecting processed %s' %(card)
+                self.rejectCards.append(card)
+            ###
+        except:
+            print card
+            raise
+        ### try-except block
+
     def sumForces(self):
         for key,loadCase in self.loads.items():
             F = array([0.,0.,0.])
@@ -465,10 +484,6 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
 
 if __name__=='__main__':
     import sys
-    from AirQuick.general.logger import dummyLogger
-    loggerObj = dummyLogger()
-    log = loggerObj.startLog('debug') # or info
-
     #basepath = os.getcwd()
     #configpath = os.path.join(basepath,'inputs')
     #workpath   = os.path.join(basepath,'outputs')
@@ -484,7 +499,7 @@ if __name__=='__main__':
     #bdfModel   = os.path.join(configpath,'test_mesh.bdf')
     #bdfModel   = os.path.join(configpath,'test_tet10.bdf')
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
-    fem = FEM_Mesh(bdfModel,log)
+    fem = FEM_Mesh(bdfModel,log=None)
     fem.read()
     #fem.sumForces()
     #fem.sumMoments()
