@@ -61,24 +61,25 @@ class MAT1(Material):
 
 
     def set_E_G_nu(self,card):
-        self.E  = card.field(2)
-        self.G  = card.field(3)
-        self.nu = card.field(4)
+        #self.E  = card.field(2)
+        #self.G  = card.field(3)
+        #self.nu = card.field(4)
         #return
 
         E  = card.field(2)
         G  = card.field(3)
         nu = card.field(4)
 
-        assert G is not None and E is not None,'G=%s E=%s cannot both be None' %(G,E)
+        if G is None and E is None:
+            raise RuntimeError('G=%s E=%s cannot both be None' %(G,E))
         if E and nu:
-            print "G1 = ",G
+            #print "G1 = ",G
             G = E/2./(1+nu)
-            print "G2 = ",G
+            #print "G2 = ",G
         elif G and nu:
-            print "E1 = ",E
+            #print "E1 = ",E
             E = 2*(1+nu)*G
-            print "E2 = ",E
+            #print "E2 = ",E
         elif G is None and nu is None:
             G  = 0.0
             nu = 0.0
@@ -88,6 +89,9 @@ class MAT1(Material):
         self.E = E
         self.G = G
         self.nu = nu
+        #print "E  = ",E
+        #print "G  = ",G
+        #print "nu = ",nu
 
     def __repr__(self):
         TRef = self.setBlankIfDefault(self.TRef,0.0)

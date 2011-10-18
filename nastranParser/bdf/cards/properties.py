@@ -23,8 +23,8 @@ class PBARL(Property): # not done
         return self.printCard(fields)
 
 class PBEAM(Property): # not done, cleanup
-    def __init__(self,card):
     type = 'PBEAM'
+    def __init__(self,card):
         Property.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
@@ -91,8 +91,8 @@ class PBEAM(Property): # not done, cleanup
 #class PBEAML(Property): #not done
 
 class PBEAM3(Property): # not done, cleanup
-    def __init__(self,card):
     type = 'PBEAM3'
+    def __init__(self,card):
         Property.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
@@ -270,6 +270,6 @@ class PTUBE(Property):
     
     def massMatrix():
         """@todo not done"""
-        m = zeros(6,6))
+        m = zeros(6,6)
         m[0,0] = 1.
         return m

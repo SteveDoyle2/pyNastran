@@ -1,3 +1,6 @@
+from numpy import matrix,zeros
+from numpy.linalg import norm
+
 class CardInstantiationError(RuntimeError):
     pass
 
@@ -18,12 +21,63 @@ class CROD(Element):
         fields = [self.type,self.eid,self.pid]+self.nodes
         return self.printCard(fields)
 
+
 class CTUBE(CROD):
     type = 'CTUBE'
     def __init__(self,card):
         CROD.__init__(self,card)
     ###
 ###
+
+
+class CONROD(CROD):
+    type = 'CONROD'
+    def __init__(self,card):
+        Element.__init__(self,card)
+        self.id  = card.field(1)
+
+        nids = card.fields(2,4)
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==2
+        print self.nodes
+        
+        self.mid = card.field(4)
+        self.A   = card.field(5)
+        self.J   = card.field(6)
+        self.c   = card.field(7,0.0)
+        self.nsm = card.field(8,0.0)
+
+    def Stiffness(self,bdf): # ,bdf,L,A,E
+        #L = norm(r)
+        (n1,n2) = self.getNodeIDs()
+        node1 = bdf.Node(n1)
+        node2 = bdf.Node(n2)
+
+        p1 = bdf.Node(n1).xyz
+        p2 = bdf.Node(n2).xyz
+        #print "node1 = ",node1
+        #print "node2 = ",node2
+        L = norm(p1-p2)
+        
+        if L==0.0:
+            msg = 'invalid CROD length=0.0\n%s' %(self.__repr__())
+            raise RuntimeError(msg)
+        
+        A = self.A
+        mat = bdf.Material(self.mid)
+        E = mat.E
+        #print "L = ",L
+        K = A*E/L*matrix([[1.,-1.],[-1.,1.]]) # rod
+        
+        #print "K = \n",K
+        return K
+
+    def __repr__(self):
+        c   = self.setBlankIfDefault(self.c,  0.0)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
+        #print "nodes",self.nodes
+        fields = [self.type,self.eid]+self.nodes+[self.mid,self.A,self.J,self.c,self.nsm]
+        return self.printCard(fields)
 
 
 class CBAR(Element):
@@ -43,12 +97,13 @@ class CBAR(Element):
         self.pid = card.field(2)
         self.ga = card.field(3)
         self.gb = card.field(4)
-        self.initX_G0()
+        self.initX_G0(card)
 
         self.offt = card.field(8,'GGG')
-        assert self.offt[0] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
-        assert self.offt[1] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
-        assert self.offt[2] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
+        #print 'self.offt = |%s|' %(self.offt)
+        assert self.offt[0] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
+        assert self.offt[1] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
+        assert self.offt[2] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
 
         self.pa = card.field(9)
         self.pb = card.field(10)
@@ -160,11 +215,12 @@ class CBEAM(CBAR):
         elif isinstance(field8,str):
             self.offt = field8
             self.bit = None
+            #print "self.offt = ",self.offt
             assert self.offt[0] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
             assert self.offt[1] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
             assert self.offt[2] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
         else:
-            msg = 'field8 on CBEAM card is not a string(offt) or bit (float)...field8=%s\n' %(field8)
+            msg = 'field8 on %s card is not a string(offt) or bit (float)...field8=%s\n' %(self.type,field8)
             raise CardInstantiationError(msg)
         ###
 
@@ -174,6 +230,67 @@ class CBEAM(CBAR):
         else:
             field8 = self.setBlankIfDefault(self.bit,0.0)
         return field8
+
+    def Stiffness(self,bdf,r,A,E,I):
+        Ke = matrix( zeros((6,6),'d'))
+        L = r
+        AE = A*E
+        EI = E*I
+
+        if 1:
+            Ke[0,0] =  AE/L
+            Ke[3,0] = -AE/L
+            Ke[0,3] = -AE/L
+            Ke[3,3] =  AE/L
+
+            Ke[1,1] = 12*EI/L**3
+            Ke[1,2] =  6*EI/L**2
+            Ke[2,1] = Ke[1,2]  # 6*EI/L**2
+            Ke[2,2] =  4*EI/L
+
+            Ke[1,4] = -Ke[1,1] # -12*EI/L**3
+            Ke[1,5] =  Ke[1,2] #  6*EI/L**2
+            Ke[2,4] = -Ke[1,2] # -6*EI/L**2
+            Ke[2,5] = 2*EI/L
+
+            Ke[4,1] = -Ke[1,4] # -12*EI/L**3
+            Ke[4,2] =  Ke[2,4] #  -6*EI/L**2
+            Ke[5,1] =  Ke[1,2] #   6*EI/L**2
+            Ke[5,2] =  Ke[2,5] #   2*EI/L
+
+            Ke[4,4] = Ke[1,1] #  12*EI/L**3
+            Ke[4,5] = Ke[2,4] #  -6*EI/L**2
+            Ke[5,4] = Ke[2,4] #  -6*EI/L**2
+            Ke[5,5] = Ke[2,2] #   4*EI/L
+        else:
+            Ke[0,0] =  AE
+            Ke[3,0] = -AE
+            Ke[0,3] = -AE
+            Ke[3,3] =  AE
+
+            Ke[1,1] = 12*EI/L**2
+            Ke[1,2] =  6*EI/L
+            Ke[2,1] = Ke[1,2]  # 6*EI/L**2
+            Ke[2,2] =  4*EI
+
+            Ke[1,4] = -Ke[1,1] # -12*EI/L**3
+            Ke[1,5] =  Ke[1,2] #  6*EI/L**2
+            Ke[2,4] = -Ke[1,2] # -6*EI/L**2
+            Ke[2,5] = 2*EI
+
+            Ke[4,1] = -Ke[1,4] # -12*EI/L**3
+            Ke[4,2] =  Ke[2,4] #  -6*EI/L**2
+            Ke[5,1] =  Ke[1,2] #   6*EI/L**2
+            Ke[5,2] =  Ke[2,5] #   2*EI/L
+
+            Ke[4,4] = Ke[1,1] #  12*EI/L**3
+            Ke[4,5] = Ke[2,4] #  -6*EI/L**2
+            Ke[5,4] = Ke[2,4] #  -6*EI/L**2
+            Ke[5,5] = Ke[2,2] #   4*EI/L
+
+            Ke = Ke/L
+        ###
+        return Ke
 
     def __repr__(self):
         w1a = self.setBlankIfDefault(self.w1a,0.0)

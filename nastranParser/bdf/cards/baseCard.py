@@ -1,6 +1,6 @@
 import sys
 
-from fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank
+from nastranParser.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank
 
 class BaseCard(object):
 
@@ -153,6 +153,7 @@ class BaseCard(object):
 class Property(BaseCard):
     def __init__(self,card):
         #self.type = card[0]
+        pass
         
     def __repr__(self):
         fields = [self.type,self.pid]

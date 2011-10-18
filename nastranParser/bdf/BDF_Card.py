@@ -58,7 +58,7 @@ class BDF_Card(object):
         for n in range(i,j):
             if debug:
                 print "  default = ",defaults[d]
-            value = self.field(n) or defaults[d]
+            value = self.field(n,defaults[d])
             if debug:
                 print "  n = ",n
                 print "  self.field(n) = ",self.field(n)
@@ -68,7 +68,7 @@ class BDF_Card(object):
         return out
 
     def field(self,i,default=None):
-        if i<self.nfields:
+        if i<self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
         else:
             return default
