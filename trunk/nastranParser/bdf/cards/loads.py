@@ -36,7 +36,7 @@ class LOAD(Load):
     def __repr__(self):
         fields = ['LOAD',self.id,self.s]+self.loads
         return self.printCard(fields)
-        
+
 
 class FORCE(Load):
     def __init__(self,card):
@@ -72,3 +72,58 @@ class FORCE(Load):
         #print printCard(fields)
         return self.printCard(fields)
 
+class PLOAD(Load):
+    def __init__(self,card):
+        self.lid = card.field(1)
+        self.p   = card.field(2)
+        self.nodes = card.fields(3,8)
+        assert len(self.nodes)==4
+    
+    def __repr__(self):
+        fields = ['PLOAD',self.lid,self.p]+self.nodes
+        return self.printCard(fields)
+
+class PLOAD1(Load):
+    validTypes = ['FX','FY','FZ','FXE','FYE','FZE',
+                  'MX','MY','MZ','MXE','MYE','MZE']
+    validScales = ['LE','FR','LEPR','FRPR']
+    def __init__(self,card):
+        self.lid   = card.field(1)
+        self.eid   = card.field(2)
+        self.type  = card.field(3)
+        self.scale = card.field(4)
+        assert self.type in validTypes,  '%s is an invalid type on the PLOAD1 card' %(self.type)
+        assert self.scale in validScales,'%s is an invalid scale on the PLOAD1 card' %(self.scale)
+        self.x1 = card.field(5)
+        self.p1 = card.field(6)
+        self.x2 = card.field(7)
+        self.p2 = card.field(8)
+    
+    def __repr__(self):
+        fields = ['PLOAD1',self.lid,self.eid,self.type,self.scale,self.x1,self.p1,self.x2,self.p2]
+        return self.printCard(fields)
+
+class PLOAD2(Load):  # todo:  support THRU
+    def __init__(self,card):
+        self.lid = card.field(1)
+        self.p   = card.field(2)
+        self.nodes = card.fields(3,9)
+        assert len(self.nodes)==6
+    
+    def __repr__(self):
+        fields = ['PLOAD2',self.lid,self.p]+self.nodes
+        return self.printCard(fields)
+
+class PLOAD4(Load):  # todo:  support THRU, not done...
+    def __init__(self,card):
+        self.lid = card.field(1)
+        self.eid = card.field(2)
+        p1 = card.field(3)
+        p  = card.fields(4,7,[p1,p1,p1])
+        p = [p1]+p
+        self.nodes = card.fields(3,9)
+        assert len(self.nodes)==6
+    
+    def __repr__(self):
+        fields = ['PLOAD4',self.lid,self.p]+self.nodes
+        return self.printCard(fields)
