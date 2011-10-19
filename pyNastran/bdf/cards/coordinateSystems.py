@@ -3,7 +3,8 @@ from numpy import array,cross,dot
 from numpy.linalg import norm
 
 # my code
-from nastranParser.bdf.bdf_helper import BDF_Card
+#from pyNastran.bdf.bdf_helper import BDF_Card
+from BDF_Card import BDF_Card
 from baseCard import BaseCard
 
 class Coord(BaseCard):
