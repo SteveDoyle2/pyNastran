@@ -20,7 +20,8 @@ class CaseControlDeck(object):
             paramType = None
 
             if 'SUBCASE' in line:
-                (subcase,iSubcase) = line.split(' ')
+                (key,iSubcase) = line.split(' ')
+                #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
                 self.iSubcase = int(iSubcase)
                 paramType = 'SUBCASE-type'
             elif '=' in line: # TITLE, STRESS
@@ -77,6 +78,16 @@ class CaseControlDeck(object):
         
         #print str(self)
         #sys.exit('stopping...')
+        self.finishSubcases()
+    ###
+
+    def finishSubcases(self):
+        """
+        removes any unwanted data in the subcase
+        """
+        for (iSubcase,subcase) in sorted(self.subcases.items()):
+            subcase.finishSubcase()
+        ###
     ###
 
     def addParameterToSubcase(self,key,value,options,paramType):
@@ -93,6 +104,7 @@ class CaseControlDeck(object):
         for (iSubcase,subcase) in sorted(self.subcases.items()):
             msg += str(subcase)
             #print "\n"
+            #break
         return msg
     ###
 ###
