@@ -12,7 +12,8 @@ from fieldWriter import printCard
 from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
 #from mathFunctions import *
 
-from bdf_helper import getMethods,addMethods,writeMesh,cardMethods,BDF_Card
+from BDF_Card import BDF_Card
+from bdf_helper import getMethods,addMethods,writeMesh,cardMethods
 from caseControlDeck import CaseControlDeck
 
 class BDF(getMethods,addMethods,writeMesh,cardMethods):
@@ -24,7 +25,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
 
     def __init__(self,infilename,log=None):
         if log is None:
-            from nastranParser.general.logger import dummyLogger
+            from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
             log = loggerObj.startLog('debug') # or info
 

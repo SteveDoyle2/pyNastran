@@ -1,7 +1,7 @@
 import sys
 import copy
-from nastranParser.bdf.fieldWriter import printCard
-from BDF_Card import BDF_Card
+from pyNastran.bdf.fieldWriter import printCard
+#from BDF_Card import BDF_Card
 from bdf_writeMesh import writeMesh
 from bdf_cardMethods import cardMethods
 

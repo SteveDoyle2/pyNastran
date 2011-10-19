@@ -1,6 +1,10 @@
 import sys
 
-from nastranParser.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank
+import pyNastran
+import pyNastran.bdf
+
+from pyNastran.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank
+from pyNastran.bdf.BDF_Card import BDF_Card
 
 class BaseCard(object):
 
