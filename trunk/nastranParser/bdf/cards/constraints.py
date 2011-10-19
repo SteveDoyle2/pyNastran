@@ -3,8 +3,8 @@ from baseCard import BaseCard
 
 class Constraint(BaseCard):
     def __init__(self,card):
-        #self.type = card[0]
-        self.lid  = card[1]
+        #self.type = card.field(0)
+        self.id  = card.field(1)
 
     def cleanNodes(self,nodes):
         """
@@ -28,7 +28,35 @@ class Constraint(BaseCard):
         #return nodes2
 
     def __repr__(self):
-        fields = [self.type,self.cid]
+        fields = [self.type,self.id]
+        return self.printCard(fields)
+
+class SUPORT1(Constraint):
+    """
+    #SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    """
+    type = 'SUPORT1'
+    def __init__(self,card):
+        Constraint.__init__(self,card)
+        self.sid = card.field(1)
+        fields   = card.fields(2)
+        
+        self.IDs = []
+        self.Cs  = []
+        #print "fields = ",fields
+        for i in range(0,len(fields),2):
+            #print "i = ",i
+            self.IDs.append(fields[i  ])
+            self.Cs.append( fields[i+1])
+            if fields[i+1]==None:
+                break
+            ###
+        ###
+
+    def __repr__(self):
+        fields = [self.type,self.sid]
+        for ID,c in zip(self.IDs,self.Cs):
+            fields += [ID,c]
         return self.printCard(fields)
 
 class SPC1(Constraint):
@@ -36,8 +64,8 @@ class SPC1(Constraint):
     type = 'SPC1'
     def __init__(self,card):
         Constraint.__init__(self,card)
-        self.constrained = card[2]  # 246 = y; dx, dz dir
-        nodes = card[3:]
+        self.constrained = card.field(2)  # 246 = y; dx, dz dir
+        nodes = card.fields(3)
         self.cleanNodes(nodes)
         #print "nodes = ",nodes
 
@@ -49,7 +77,7 @@ class SPC1(Constraint):
         #    nodes = [self.nodes[0],'THRU',self.nodes[-1]]
         #else:
         nodes = [int(i) for i in self.nodes]
-        fields = [self.type,self.lid,self.constrained]+nodes
+        fields = [self.type,self.id,self.constrained]+nodes
         return self.printCard(fields)
 
 class SPCADD(Constraint):
@@ -57,10 +85,10 @@ class SPCADD(Constraint):
     type = 'SPCADD'
     def __init__(self,card):
         Constraint.__init__(self,card)
-        nodes = card[2:]
+        nodes = card.fields(2)
         self.cleanNodes(nodes)
         #print "self.nodes = ",self.nodes
 
     def __repr__(self):
-        fields = [self.type,self.lid]+self.nodes
+        fields = [self.type,self.id]+self.nodes
         return self.printCard(fields)

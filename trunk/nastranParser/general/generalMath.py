@@ -1,8 +1,8 @@
 import numpy
-from numpy import zeros,sum,matrix
+from numpy import array,cross,allclose,zeros,matrix
 from scipy.linalg import solve_banded
 
-from numpy import array,cross,allclose
+from numpy import 
 from numpy.linalg import norm, solve
 
 def reduceMatrix(matA,nids):

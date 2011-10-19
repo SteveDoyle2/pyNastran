@@ -103,7 +103,7 @@ class addMethods(object):
             self.loads[key] = [load]
 
     def addConstraint(self,constraint):
-        key = constraint.lid
+        key = constraint.id
         #print "type(self.constraints) = ",type(self.constraints)
         if self.constraints.has_key(key):
             self.constraints[key].append(constraint)
@@ -117,8 +117,9 @@ class writeMesh(object):
             msg += line
 
         msg += '$CASE CONTROL DECK\n'
-        for line in self.caseControlLines:
-            msg += line
+        msg += str(self.caseControlDeck)
+        #for line in self.caseControlLines:
+        #    msg += line
         return msg
 
     def writeParams(self):
