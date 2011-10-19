@@ -3,17 +3,17 @@ import sys, os
 
 version = '0.1'
 
-setup(name='nastranParser',
+setup(name='pyNastran',
       version=version,
       description="General Purpose nastran file reader/writer",
       long_description="""\
 """,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
-      author='sdoyle9',
+      author='mesheb82',
       author_email='',
       url='',
-      license='GPL',
+      license='GPL V3',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
