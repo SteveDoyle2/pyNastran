@@ -19,6 +19,9 @@ Cards are "supported" when they can be read (with the defaults automatically set
  * CTRIA3
  * CELAS1
  * CELAS2
+ * RBE1
+ * RBE2
+ * RBE3
 
 == Materials ==
  * MAT1
@@ -29,7 +32,6 @@ Cards are "supported" when they can be read (with the defaults automatically set
  * PCOMP
  * PSHELL
  * PSOLID
- * PLSOLID
  * PROD
  * PTUBE
  * PELAS
@@ -39,6 +41,8 @@ Cards are "supported" when they can be read (with the defaults automatically set
 
 == Loads ==
  * FORCE
+ * PLOAD
+ * PLOAD1
 
 == Constraints ==
  * SPC1
@@ -65,6 +69,7 @@ Cards are "supported" when they can be read (with the defaults automatically set
  * PBAR
  * PBARL
  * PBEAM3
+ * PLSOLID
 
 == Constraints ==
  * SPC
@@ -74,15 +79,10 @@ Cards are "supported" when they can be read (with the defaults automatically set
  * MPC
  * MPCADD
  * MPCSET
- * RBE1
- * RBE2
- * RBE3
  * RBAR
  * RBAR1
 
 == Loads ==
- * PLOAD
- * PLOAD1
  * PLOAD2
  * PLOAD3
  * PLOAD4
