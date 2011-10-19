@@ -15,7 +15,7 @@ from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, et
 from bdf_helper import getMethods,addMethods,writeMesh,cardMethods,BDF_Card
 from caseControlDeck import CaseControlDeck
 
-class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
+class BDF(getMethods,addMethods,writeMesh,cardMethods):
     modelType = 'nastran'
     isStructured = False
     
@@ -517,7 +517,7 @@ if __name__=='__main__':
     #bdfModel   = os.path.join(configpath,'test_mesh.bdf')
     #bdfModel   = os.path.join(configpath,'test_tet10.bdf')
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
-    fem = FEM_Mesh(bdfModel,log=None)
+    fem = BDF(bdfModel,log=None)
     fem.read()
     #fem.sumForces()
     #fem.sumMoments()
