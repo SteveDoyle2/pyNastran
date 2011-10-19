@@ -4,12 +4,13 @@
 #from numpy.linalg import norm
 
 # my code
-#from bdf import printCard,setBlankIfDefault,setDefaultIfBlank
 from AirQuick.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
 from baseCard import Element
 
-from elementsShell import *
 from elementsBars  import *
+from elementsRigid import *
+from elementsShell import *
+from elementsSolid import *
         
 class CSHEAR(Element):
     type = 'CSHEAR'

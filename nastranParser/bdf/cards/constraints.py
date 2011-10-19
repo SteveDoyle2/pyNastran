@@ -7,6 +7,9 @@ class Constraint(BaseCard):
         self.lid  = card[1]
 
     def cleanNodes(self,nodes):
+        """
+        why do the nodes need to be cleaned?
+        """
         nodes2 = []
         for node in nodes:
             if node=="":
