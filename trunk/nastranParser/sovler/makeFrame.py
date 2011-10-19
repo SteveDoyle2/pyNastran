@@ -1,6 +1,6 @@
 from numpy import array,zeros,matrix
 
-from nastranParser.bdf.FEM_Mesh import FEM_Mesh
+from nastranParser.bdf.bdf import BDF
 from nastranParser.general.general import ListPrint
 from nastranParser.general.generalMath import reduceMatrix
 
@@ -16,7 +16,7 @@ def makeTruss():
     p7 = array([10.,10.,10.]) *12.
     p8 = array([ 0.,10.,10.]) *12.
     
-    mesh = FEM_Mesh('')
+    mesh = BDF('')
     nodes = [p1,p2,p3,p4,p5,p6,p7,p8]
     for i,node in enumerate(nodes):
         spc = None
