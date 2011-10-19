@@ -183,6 +183,5 @@ class MAT8(Material):
         fields = [self.type,self.mid,self.E11,self.E22,self.nu12,self.G12,G1z,G2z,self.rho,
                   a1,a2,Tref,self.Xt,Xc,self.Yt,Yc,self.S,
                   self.ge,F12,self.strn]
-        #print "hi...\n"
         #print fields
         return self.printCard(fields)

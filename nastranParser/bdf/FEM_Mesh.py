@@ -14,6 +14,172 @@ from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, et
 
 from bdf_helper import getMethods,addMethods,writeMesh,cardMethods,BDF_Card
 
+class Subcase(object):
+    def __init__(self,id=0,params={}):
+        self.id = id
+        self.params = params
+        self.sol = None
+        #print "\n***adding subcase %s***" %(self.id)
+
+    def addData(self,key,value,options,paramType):
+        self.params[key] = [value,options,paramType]
+
+    def printParam(self,key,param,printBeginBulk=True):
+        """
+        Prints a single entry of the a subcase from the global or local
+        subcase list.
+        @todo SET-type is not supported yet...
+        """
+        msg = ''
+        (value,options,paramType) = param
+        
+        spaces = '    '*self.id
+        if paramType=='SUBCASE-type':
+            if self.id>0:
+                msg += 'SUBCASE %s\n' %(self.id)
+            ###
+            #else:  global subcase ID=0 and is not printed
+            #    pass
+        elif paramType=='PARAM-type':
+            msg += spaces+'%s,%s,%s\n' %(key,value,options)
+        elif paramType=='STRESS-type':
+            sOptions = ','.join(options)
+            #print "sOptions = |%s|" %(sOptions)
+            if len(sOptions)>0:
+                msg += '%s(%s) = %s\n' %(key,sOptions,value)
+            else:
+                msg += '%s = %s\n' %(key,value)
+            msg = spaces + msg
+
+        elif paramType=='BEGIN_BULK-type':
+            msg += '%s %s\n' %(key,value)
+            if 'BEGIN BULK' not in msg:
+                msg = spaces + msg
+            elif printBeginBulk:
+                pass
+            else:
+                msg = ''
+            ###
+        else:
+            raise Exception((key,param))  # SET-type is not supported yet...
+        ###
+        #print "msg = |%r|" %(msg)
+        return msg
+
+    def __repr__(self):
+        #print "-------SUBCASE %s-------" %(self.id)
+        msg = ''
+        for (key,param) in sorted(self.params.items()):
+            if 'key'=='BEGIN':
+                continue
+            else:
+                #print "key=%s param=%s" %(key,param)
+                (value,options,paramType) = param
+                #print "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
+                msg += self.printParam(key,param,printBeginBulk=False)
+                #print ""
+            ###
+        ###
+        if self.id>0 and 'BEGIN' in self.params:
+            msg += self.printParam('BEGIN',self.params['BEGIN'])
+        return msg
+
+class CaseControlDeck(object):
+    def __init__(self,lines,log=None):
+        self.log = log
+        self.lines = lines
+        self.subcases = {0:Subcase(id=0)}
+        self.iSubcase = 0
+        self.read()
+
+    def read(self):
+        i = 0
+        lines = self.lines
+        while i < len(lines):
+            line = lines[i].strip()
+            #print "rawLine = |%s|" %(line)
+            options = []
+            value = None
+            key = None
+            paramType = None
+
+            if 'SUBCASE' in line:
+                (subcase,iSubcase) = line.split(' ')
+                self.iSubcase = int(iSubcase)
+                paramType = 'SUBCASE-type'
+            elif '=' in line: # TITLE, STRESS
+                (key,value) = line.strip().split('=')
+                key   = key.strip()
+                value = value.strip()
+                #print "key=|%s| value=|%s|" %(key,value)
+                paramType = 'STRESS-type'
+
+                if '(' in key:  # comma may be in line - STRESS
+                    sline = key.strip(')').split('(')
+                    key = sline[0]
+                    options = sline[1].split(',')
+                    #print "key=|%s| options=%s" %(key,options)
+                    paramType = 'STRESS-type'
+                elif ' ' in key and ',' in value: # set
+                    (key,ID) = key.split()
+                    fivalues = value.split(',') # float/int values
+                    
+                    # read more lines....
+                    if line[-1]==',':
+                        i+=1
+                        while lines[i]==',':
+                            fivalues += lines.split(',')
+                            i+=1
+                        ###
+                    ###
+                    value = fivalues
+                    paramType = 'SET-type'
+                elif ',' in value: # special TITLE = stuffA,stuffB
+                    print 'A ??? line = ',line
+                    raise Exception(line)
+                else:  # TITLE = stuff
+                    #print 'B ??? line = ',line
+                    pass
+                ###
+            ### = in line
+            elif ',' in line: # param
+                (key,value,options) = line.strip().split(',')
+                paramType = 'PARAM-type'
+            elif ' ' in line: # begin bulk
+                (key,value) = line.strip().split(' ')
+                paramType = 'BEGIN_BULK-type'
+            else:
+                print 'C ??? line = ',line
+                raise Exception(line)
+            ###
+            i+=1
+            #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
+            self.addParameterToSubcase(key,value,options,paramType)
+            #print "--------------"
+        ###
+        print "done with while loop...\n"
+        
+        #print str(self)
+        #sys.exit('stopping...')
+    ###
+
+    def addParameterToSubcase(self,key,value,options,paramType):
+        #print "adding key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
+        if self.iSubcase not in self.subcases: # initialize new subcase
+            #self.iSubcase += 1
+            self.subcases[self.iSubcase] = Subcase(id=self.iSubcase)
+
+        subcase = self.subcases[self.iSubcase]
+        subcase.addData(key,value,options,paramType)
+
+    def __repr__(self):
+        msg = ''
+        for (iSubcase,subcase) in sorted(self.subcases.items()):
+            msg += str(subcase)
+            #print "\n"
+        return msg
+###
+
 class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
     modelType = 'nastran'
     isStructured = False
@@ -51,12 +217,18 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
         self.cardsToRead = set([
         'PARAM','=',
         'GRID',
+        
         'CTRIA3','CQUAD4','CELAS1','CELAS2','CHEXA','CPENTA','CTETRA','CBAR',
-        'PELAS','PSHELL','PSOLID','PCOMP','PCOMPG',
+        'RBE1','RBE2','RBE3',
+        
+        'PELAS','PSHELL','PSOLID','PCOMP','PROD', # 'PCOMPG',
         'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9',
-        'SPC','SPC1','SPCADD',
+
+        'SPC','SPC1','SPCADD','SUPORT1',
         'MPC','MPCADD',
+
         'FORCE','PLOAD',
+
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
         'ENDDATA',
@@ -168,11 +340,13 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
         #self.caseControlControlLines = []
         while 'BEGIN BULK' not in line:
             lineIn = self.infile.readline()
-            line = lineIn.strip()
+            line = lineIn.strip().split('$')[0].strip()
             #print "*line = |%s|" %(line)
             self.caseControlLines.append(lineIn)
         self.log().info("finished with Case Control Deck..")
         #print "self.caseControlLines = ",self.caseControlLines
+        
+        self.caseControlDeck = CaseControlDeck(self.caseControlLines)
         return self.caseControlLines
 
     def Is(self,card,cardCheck):
@@ -203,10 +377,12 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
         #cardName = self.getCardName(card)
         if cardName.startswith('='):
             return False
-        if cardName in self.cardsToRead:
+        elif cardName in self.cardsToRead:
             #print "*card = ",card
             #print "RcardName = |%s|" %(cardName)
             return False
+        if cardName.strip():
+            print "RcardName = |%s|" %(cardName)
         return True
 
     def readBulkDataDeck(self):
@@ -260,7 +436,8 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
                     #special = True
                 #print "nCards = ",nCards
                 cardName = oldCardObj.field(0)
-            
+            ###
+
             for iCard in range(nCards):
                 #print "----------------------------"
                 #if special:
@@ -289,7 +466,8 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
             self.log().debug("***readBulkDataDeck")
     
     def addCard(self,card,cardName,iCard=0,oldCardObj=None):
-        #print card
+        #if cardName != 'CQUAD4':
+        #    print cardName
         if self.debug:
             print "*oldCardObj = \n",oldCardObj
             print "*cardObj = \n",cardObj
@@ -363,9 +541,9 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
                 if cardObj.field(5):
                     prop = PELAS(cardObj,1) # makes 2nd PELAS card
                 self.addProperty(prop)
-            elif cardName=='PBEAM':
-                prop = PBEAM(cardObj)
-                self.addProperty(prop)
+            #elif cardName=='PBEAM':
+            #    prop = PBEAM(cardObj)
+            #    self.addProperty(prop)
             elif cardName=='PTUBE':
                 prop = PTUBE(cardObj)
                 self.addProperty(prop)
@@ -426,6 +604,11 @@ class FEM_Mesh(getMethods,addMethods,writeMesh,cardMethods):
                 #print "card = ",card
                 constraint = SPC1(cardObj)
                 self.addConstraint(constraint)
+            elif cardName=='SUPORT1':
+                #print "card = ",card
+                constraint = SUPORT1(cardObj)
+                self.addConstraint(constraint)
+                #print "constraint = ",constraint
 
             elif cardName=='CORD2R':
                 coord = CORD2R(cardObj)

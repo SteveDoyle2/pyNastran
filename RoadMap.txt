@@ -2,19 +2,19 @@ In order for a card to be supported, it must read AND write ALL fields.  Importa
 
 Cards Supported (version 0.1)
 
-Nodes:
+----Nodes----:
 GRID (done)
 
-Elements:
+----Elements----:
 CONM2
-CEALS1
-CELAS2
+CEALS1 (done)
+CELAS2 (done)
 
 CROD   (done)
 CONROD (done)
 CTUBE  (done)
 CBEAM
-CBAR
+CBAR   (done)
 
 CTRIA3 (done)
 CTRIA6 (done)
@@ -22,72 +22,79 @@ CTRIA6 (done)
 CQUAD4 (done)
 CQUAD8 (done)
 
-CPENTA (needs code integration)
-CHEXA (needs code integration)
-CTETRA (needs code integration)
+CTETRA (needs code integration  - how is TET4 done vs TET10 vs TET9 ???)
+CPENTA (needs code integration) - same
+CHEXA  (needs code integration) - same
 
-Constraints:
-RBE1
-RBE2
-RBE3
+RBE1 (testing)
+RBE2 (testing)
+RBE3 (testing)
+
+
+----Constraints----:
+SUPORT1 (done)
 
 SPC
-SPC1
+SPC1   (done???)
 SPCSET
-SPCADD
+SPCADD (done???)
 
 MPC
 MPCSET
 MPCADD
 
 
-Materials:
+----Materials----:
 MAT1 (done)
-MAT2
+MAT2 (done)
 MAT3
 MAT4
 MAT5
-MAT8 (close)
+MAT8 (done)
 MAT9
 MAT10
 
-Properties:
-PELAS
-PROD
+----Properties----:
+PELAS  (done)
+PROD   (done)
 PBEAM
 PCOMP  (done)
 PSHELL (done)
 PSOLID (done)
+PTUBE  (done)
 
-Coordinates:
-CORD2R
+----Coordinates----:
+CORD2R (done???)
 CORD2C
 CORD2S
 
+----Other----:
+INCLUDE
 
 -----------------------------------------------
 Future (Planned):
 
-Elements:
+----Elements----:
 CTRIAX  (ready for testing)
 CTRIAR  (ready for testing)
-CTRIAX6  (ready for testing)
+CTRIAX6 (ready for testing)
 
 CQUADR  (ready for testing)
 CQUADX  (ready for testing)
-CQUAD  (ready for testing)
+CQUAD   (ready for testing)
 
-Properties:
+----Properties----:
 PCOMPG
-PTUBE (ready for testing)
 PLSOLID
+PCONEAX
+PBEAM3
 
-Coordinates:
+----Coordinates----:
 CORD1R
 CORD1C
 CORD1S
 
-Optimization:
+----Optimization----:
 DCONSTR  (ready for testing)
 DESVAR  (ready for testing)
 DDVAL  (ready for testing)
@@ -97,28 +104,31 @@ DRESP2
 DRESP3
 DVPREL1
 
-Loads:
-PLOAD
-PLOAD1
+----Loads----:
+PLOAD  (done)
+PLOAD1 (done)
 PLOAD2
 PLOAD3
 PLOAD4
-FORCE
+FORCE  (done???)
 FORCE1
 FORCE2
 LOAD
 MOMENT
 MOMENT1
 
-Methods:
+----Methods----:
 EIGR
 EIGRL
+EIGB
+EIGC
+EIGP
 
-Constraint Cards:
+----Constraint Cards----:
 RBAR
 RBAR1
 
-Thermal:
+----Thermal----:
 QBDY1
 QBDY2
 QBDY3
@@ -126,7 +136,7 @@ QHBDY
 RADBC
 RADM
 
-Modal Cards:
+----Modal Cards----:
 FREQ
 FREQ1
 FREQ2
@@ -134,16 +144,20 @@ FREQ3
 FREQ4
 FREQ5
 
-Aero Cards:
+----Aero Cards----:
 GUST
+CAERO1
+CAERO2
+CAERO3
+CAERO4
+CAERO5
 
-Other:
+----Other----:
 DAREA
 DLINK
 DMIG
 DTABLE
 GRAV
-INCLUDE
 MATT4
 MONPNT1
 MONPNT2
@@ -159,7 +173,6 @@ SET2
 SET3
 SPOINT
 SUPORT
-SUPORT1
 GENEL
 RROD
 RSPLINE

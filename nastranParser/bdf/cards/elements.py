@@ -11,7 +11,52 @@ from elementsBars  import *
 from elementsRigid import *
 from elementsShell import *
 from elementsSolid import *
+
+class CELAS1(Element):
+    type = 'CELAS1'
+    def __init__(self,card):
+        Element.__init__(self,card)
+        self.id  = card.field(1)
+        nids = [card.field(3),card.field(5)]
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==2
+
+        ## property ID
+        self.pid = card.field(2,self.id)
+
+        ## component number
+        self.c1 = card.field(4)
+        self.c2 = card.field(5)
+
+    def __repr__(self):
+        fields = [self.type,self.eid,self.pid,self.nodes[0],self.c1,self.nodes[1],self.c2]
+        return self.printCard(fields)
+
+class CELAS2(Element):
+    type = 'CELAS2'
+    def __init__(self,card):
+        self.id  = card.field(1)
+        nids = [card.field(3),card.field(5)]
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==2
+
+        ## stiffness of the scalar spring
+        self.k   = card.field(2)
+
+        ## component number
+        self.c1 = card.field(4)
+        self.c2 = card.field(5)
         
+        ## damping coefficient
+        self.ge = card.field(6)
+        
+        ## stress coefficient
+        self.s  = card.field(7)
+
+    def __repr__(self):
+        fields = [self.type,self.eid,self.pid,self.nodes[0],self.c1,self.nodes[1],self.c2,self.ge,self.s]
+        return self.printCard(fields)
+
 class CSHEAR(Element):
     type = 'CSHEAR'
     def __init__(self,card):
@@ -49,7 +94,6 @@ class CRAC3D(Element):
     def __repr__(self):
         fields = [self.type,self.eid,self.pid]+self.nodes
         return printCard(fields)
-
         
 class CVISC(CROD):
     type = 'CVISC'
@@ -58,7 +102,7 @@ class CVISC(CROD):
     ###
 ###
 
-class CONM2(Element): # not done
+class CONM2(Element): # v0.1 not done
     type = 'CONM2'
     # 'CONM2    501274  11064          132.274'
     def __init__(self,card):
