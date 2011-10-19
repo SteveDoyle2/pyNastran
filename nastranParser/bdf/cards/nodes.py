@@ -21,6 +21,10 @@ class GRID(BaseCard):
         self.ps = card.field(7,0)
         self.seid = card.field(8,0)
 
+        #print "xyz = ",self.xyz
+        #print "cd = ",self.cd
+        #print "ps = ",self.ps
+
     def Position(self):
         return self.xyzGlobal
 

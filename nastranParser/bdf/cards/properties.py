@@ -7,6 +7,20 @@ from numpy import zeros
 # my code
 from baseCard import Property
 
+class PCONEAX(Property): #not done
+    type = 'PCONEAX'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        self.pid = card.field(1)
+        self.mid = card.field(2)
+        self.group = card.field(3,'MSCBMLO')
+        self.type = card.field(4)
+        self.dim = [] # confusing entry...
+
+    def __repr__(self):
+        fields = [self.type,self.pid,self.mid]
+        return self.printCard(fields)
+    
 class PBARL(Property): # not done
     type = 'PBARL'
     def __init__(self,card):
