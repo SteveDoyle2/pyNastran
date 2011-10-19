@@ -1,11 +1,12 @@
 class Subcase(object):
-    def __init__(self,id=0,params={}):
+    def __init__(self,id=0):
         self.id = id
-        self.params = params
+        self.params = {}
         self.sol = None
         #print "\n***adding subcase %s***" %(self.id)
 
     def addData(self,key,value,options,paramType):
+        #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
         self.params[key] = [value,options,paramType]
 
     def printParam(self,key,param,printBeginBulk=True):
@@ -50,9 +51,18 @@ class Subcase(object):
         #print "msg = |%r|" %(msg)
         return msg
 
+    def finishSubcase(self):
+        if 'SUBCASE' in self.params:
+            del self.params['SUBCASE']
+        #print "self.params %s = %s" %(self.id,self.params)
+
     def __repr__(self):
-        #print "-------SUBCASE %s-------" %(self.id)
+        #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
+        if self.id>0:
+            msg += 'SUBCASE %s\n' %(self.id)
+        ###
+
         for (key,param) in sorted(self.params.items()):
             if 'key'=='BEGIN':
                 continue
