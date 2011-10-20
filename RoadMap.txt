@@ -6,7 +6,7 @@ Cards Supported (version 0.1)
 GRID (done)
 
 ----Elements----:
-CONM2
+CONM2  (cid=0)
 CEALS1 (done)
 CELAS2 (done)
 
@@ -45,14 +45,14 @@ MPCADD
 
 
 ----Materials----:
-MAT1 (done)
-MAT2 (done)
+MAT1  (done)
+MAT2  (done)
 MAT3
 MAT4
 MAT5
-MAT8 (done)
-MAT9
-MAT10
+MAT8  (done)
+MAT9  (done)
+MAT10 (done)
 
 ----Properties----:
 PELAS  (done)
@@ -62,6 +62,10 @@ PCOMP  (done)
 PSHELL (done)
 PSOLID (done)
 PTUBE  (done)
+
+----Loads----:
+PLOAD  (done)
+PLOAD1 (done)
 
 ----Coordinates----:
 CORD2R (done???)
@@ -106,8 +110,6 @@ DRESP3
 DVPREL1
 
 ----Loads----:
-PLOAD  (done)
-PLOAD1 (done)
 PLOAD2
 PLOAD3
 PLOAD4
@@ -152,6 +154,7 @@ CAERO2
 CAERO3
 CAERO4
 CAERO5
+FLFACT (in progress)
 
 ----Other----:
 DAREA

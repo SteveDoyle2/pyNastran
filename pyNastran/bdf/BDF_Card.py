@@ -38,6 +38,11 @@ class BDF_Card(object):
             self.nfields = None
         ###
 
+    def Is(self,cardName):
+        if card.field(0)==cardName.upper():
+            return True
+        return False
+
     def wipeEmptyFields(self,card):
         #print "cardA = ",card
         cardB = []
@@ -60,54 +65,6 @@ class BDF_Card(object):
         #print "cardC = ",cardB[:iMax+1],'\n'
         
         return cardB[:iMax+1]
-        
-        
-    def wipeEmptyFields3(self,card):
-        print "cardA = ",card
-        reversedCard = card[::-1]
-        print "cardB = ",reversedCard
-        #print ""
-        iFound = None
-        newReversedCard = []
-        for i,field in enumerate(reversedCard):
-            if isinstance(field,str) and field.strip()=='':
-                field = None
-
-            if iFound is None and field is not None:
-                iFound = copy.deepcopy(i)
-                newReversedCard.append(field)
-            else:
-                newReversedCard.append(field)
-            ###
-            
-        ###
-        print "cardC = ",newReversedCard
-        cardD = newReversedCard[::-1]
-        print "cardD = ",cardD
-        print "outEE = ",cardD[:iFound-1],'\n'
-        return cardD[iFound:]
-        
-    def wipeEmptyFields2(self,card):
-        iFound = None
-        found = False
-        print "cardA = ",card
-        for i in reversed(range(len(card)-1)):
-            field = card[i]
-            #print "i=%s field=%s" %(i,field)
-            
-            if isinstance(field,str) and field.strip()=='':
-                card[i] = None
-                field = None
-            if found==False and field is not None:
-                print "field[%s]=%s" %(i,field)
-                found = True
-                iFound = i
-            ###
-        ###
-        print "iFound = ",iFound
-        card = card[:iFound]
-        print "cardB = ",card,'\n'
-        return card
 
     def __repr__(self):
         return str(self.card)

@@ -1,6 +1,8 @@
+#from BDF_Card import collapse
+
 class cardMethods(object):
 
-    def getCard(self,debug=False):
+    def getCard(self,debug=True):
         """gets a single unparsed card"""
         #debug = False
         
@@ -60,7 +62,7 @@ class cardMethods(object):
             self.log().debug("-------\n")
         return (upperCard,cardName)
     
-    def getMultiLineCard(self,i,tempcard,isCSV=False,debug=False):
+    def getMultiLineCard(self,i,tempcard,isCSV=False,debug=True):
         if debug:
             print "tempcard1 = ",tempcard
         iline = self.lines[i].rstrip()
@@ -73,10 +75,12 @@ class cardMethods(object):
             self.log().debug("  iline = |%s|" %(iline))
             self.log().debug("  sCardName = |%s|" %(sCardName))
             self.log().debug("  len(iline) = |%s|" %(len(iline)))
-            #print "  iline[0] = ",iline[0]
-            #print ""
+            print "  iline[0] = |%s|" %(iline[0])
+            print ""
 
-        isNotDone = len(iline)>0 and ((iline[0]=='*') or (iline[0]=='+') or (iline[0]==',') or sCardName=='')
+        isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
+        print "isNotDone A = %s" %(isNotDone)
+        
         while(isNotDone):
             tempcard.append(iline)
             i+=1
@@ -98,8 +102,8 @@ class cardMethods(object):
             if debug:
                 print "sCardName = ",sCardName
                 print "len(iline) = ",len(iline)
-            isNotDone = len(iline)>0 and ((iline[0]=='*') or (iline[0]=='+') or sCardName=='')
-            #print "isNotDone = ",isNotDone
+            isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
+            print "isNotDone B = ",isNotDone
         ###
         if debug:
             self.log().debug("tempcard2 = |%s|" %(tempcard))
@@ -124,6 +128,8 @@ class cardMethods(object):
         return fields
     
     def nastranSplit2(self,line,isLargeField,debug=False):
+        if debug:
+            print "isLargeField = %s" %(isLargeField)
         if isLargeField:
             #print "large"
             #print "line = |%s|" %(line)
@@ -134,14 +140,16 @@ class cardMethods(object):
             #          line[40:48],line[48:56],line[56:64],line[64:72],line[72:80]]
             fields = [line[0 :8 ],line[8 :16],line[16:24],line[24:32],line[32:40],
                       line[40:48],line[48:56],line[56:64],line[64:72],line[72:80]]
-        if debug:
-            print "  fields = ",collapse(fields)
+        #if debug:
+        #    print "  fields = ",collapse(fields)
         
         fields2 = []
-        for field in fields:
+        for i,field in enumerate(fields):
             field = field.strip()
-            if '*'==field:
+            print "i=%s field=|%s|" %(i,field)
+            if '*'==field or '+'==field:
                 pass
+                print "skipping * or +"
             else:
                 fields2.append(field)
         return fields2
@@ -166,10 +174,11 @@ class cardMethods(object):
         #print "*** isLargeField = ",isLargeField
 
         #print "tempcard = ",tempcard
-        for line in tempcard:
+        for i,line in enumerate(tempcard):
+            #print "i = ",i
             if debug:
                 self.log().debug("  line = %s" %(line))
-            sline = line.strip('\r\n')
+            sline = line.strip('\r\n')[0:80]
             if not(sline):
                 break
             if debug:
@@ -177,7 +186,6 @@ class cardMethods(object):
             if ',' in sline:
                 sline = sline.split(',')
             else:
-                
                 sline = self.nastranSplit2(sline,isLargeField,debug=debug)
             #name = sline[0]
             #nFields = len(sline)
@@ -185,26 +193,33 @@ class cardMethods(object):
             
             cardName = sline[0].strip(' *')
             card.append(cardName)
-            for valueIn in sline[1:]:
+            for (fieldCounter,valueIn) in enumerate(sline[1:]):
+                #print "fieldCounter=%s" %(fieldCounter)
                 value = self.getValue(valueIn,debug=debug)
+                #if fieldCounter==8:
+                #    print "**type(value) = ",type(value)
+                #    break
+                    #sys.exit(12131)
                 if debug:
+                    print "type(value) = ",type(value)
                     print ""
                 card.append(value)
             ###
         ###
         if debug:
             self.log().debug("  sline2 = %s" %(card))
-            self.log().debug("  sline2 = %s" %(collapse(card)))
+            #self.log().debug("  sline2 = %s" %(collapse(card)))
         return self.makeSingleStreamedCard(card)
         
-    def makeSingleStreamedCard(self,card):
+    def makeSingleStreamedCard(self,card,debug=False):
         """
         takes a card that has been split b/c it's a multiline card
         and gets rid of the required blanks in it.
         """
         cardOut = []
         n=0
-        #print "card = ",card
+        if debug:
+            self.log().debug("card = %s" %(card))
         for i,field in enumerate(card):
             if n-9==0:
                 pass
@@ -216,7 +231,7 @@ class cardMethods(object):
         ###
         #print "cardOut = ",cardOut
         return cardOut
-        return collapse(cardOut)
+        #return collapse(cardOut)
         
     def getValue(self,valueRaw,debug=False):
         """converts a value from nastran format into python format."""
@@ -230,7 +245,7 @@ class cardMethods(object):
         if len(valueIn)==0:
             if debug:
                 print "BLANK!"
-            return ''
+            return None
 
         if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
             if debug:

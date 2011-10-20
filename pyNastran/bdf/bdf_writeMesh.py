@@ -61,6 +61,16 @@ class writeMesh(object):
                 msg += str(load)
         return msg
 
+    def writeAero(self):
+        #print "output aero cards..."
+        msg = '$AERO\n'
+        flfactKeys = self.flfacts.keys()
+        self.log().info("flfactKeys = %s" %(flfactKeys))
+        for ID,flfact in sorted(self.flfacts.items()):
+            #if ID!=0:
+            msg += str(flfact)
+        return msg
+
     def writeCoords(self):
         #print "output coords..."
         msg = '$COORDS\n'
