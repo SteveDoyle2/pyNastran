@@ -6,7 +6,7 @@ import pyNastran.bdf
 from pyNastran.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank
 from pyNastran.bdf.BDF_Card import BDF_Card
 
-class BaseCard(object):
+class BaseCard(BDF_Card):
 
     def Is(self,typeCheck):
         if self.type==typeCheck:
@@ -172,10 +172,16 @@ class Element(BaseCard):
         #self.nids = []
         pass
 
-    def prepareNodeIDs(self,nids):
+    def prepareNodeIDs(self,nids,allowEmptyNodes=False):
         self.nodes = []
         for nid in nids:
-            self.nodes.append(int(nid))
+            if isinstance(nid,int):
+                self.nodes.append(int(nid))
+            elif nid==None and allowEmptyNodes:
+                self.nodes.append(nid)
+            else:
+                raise Exception('this element may not have missing nodes...allowEmptyNodes=False')
+            ###
 
     def Centroid(self,nodes,debug=False):
         return None

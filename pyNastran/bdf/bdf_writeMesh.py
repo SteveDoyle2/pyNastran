@@ -1,3 +1,5 @@
+from pyNastran.bdf.fieldWriter import printCard
+
 class writeMesh(object):
     def writeHeader(self):
         msg = '$EXECUTIVE CONTROL DECK\n'

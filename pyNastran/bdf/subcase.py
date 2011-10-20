@@ -1,3 +1,4 @@
+import sys
 class Subcase(object):
     def __init__(self,id=0):
         self.id = id
@@ -7,7 +8,48 @@ class Subcase(object):
 
     def addData(self,key,value,options,paramType):
         #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+        if isinstance(value,str) and value.isdigit():
+            value = int(value)
+
+        (key,value,options) = self._simplifyData(key,value,options,paramType)
         self.params[key] = [value,options,paramType]
+
+    def _simplifyData(self,key,value,options,paramType):
+        if paramType=='SET-type':
+            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            values2 =[]
+            for i,ivalue in enumerate(value):
+                ivalue = ivalue.strip()
+                if ivalue.isdigit():
+                    values2.append(int(ivalue))
+                else:
+                    if value is 'EXCLUDE':
+                        raise RuntimeError('EXCLUDE is not supported on CaseControlDeck SET card\n')
+                    values2.append(ivalue)
+                ###
+            ###
+            
+            ## @todo expand values with THRU and EXCLUDE
+            ## @todo sort values
+            ## @todo collapse values when printing
+            
+            #print "values2 = ",values2
+            options = int(options)
+            return (key,values2,options)
+
+        elif paramType=='PARAM-type':
+            print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            if value.isdigit():  # PARAM,DBFIXED,-1
+                value = value
+            ###
+        else:
+            print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            if isinstance(value,int):
+                pass
+            elif value.isdigit():  # STRESS = ALL
+                value = value
+            #else: pass
+        return (key,value,options)
 
     def printParam(self,key,param,printBeginBulk=True):
         """
@@ -45,6 +87,25 @@ class Subcase(object):
             else:
                 msg = ''
             ###
+        elif paramType=='SET-type':
+            ## @todo collapse data...not written yet
+            msg2 = 'SET %s = ' %(options)
+            nChars = len(msg2)
+            
+            i = 0
+            while i<len(value):
+                #print "type(value[i]) = ",type(value[i])
+                newString = '%s, ' %(value[i])
+                #print "newString[%i] = |%s|" %(i,newString)
+                if len(msg2+newString)>70:
+                    msg += msg2+'\n'
+                    msg2 = '        '+newString
+                else:
+                    msg2 += newString
+                ###
+                i+=1
+            ###
+            msg += msg2.rstrip(' \n,')+'\n'
         else:
             raise Exception((key,param))  # SET-type is not supported yet...
         ###

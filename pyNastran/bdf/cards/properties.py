@@ -191,13 +191,13 @@ class PELAS(Property):
     type = 'PELAS'
     def __init__(self,card,nPELAS=0):
         Property.__init__(self,card)
-        self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS (not supported in this program)
-        self.k   = card.field(2+5*nPELAS)
+        self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
+        self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
         self.ge  = card.field(3+5*nPELAS)
         self.s   = card.field(4+5*nPELAS)
 
     def __repr__(self):
-        fields = [self.type,self.pid,self.mid,self.k,self.ge,self.s]
+        fields = [self.type,self.pid,self.k,self.ge,self.s]
         return self.printCard(fields)
 
 class PROD(Property):

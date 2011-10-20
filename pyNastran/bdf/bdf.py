@@ -182,13 +182,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         self.log().info("finished with Case Control Deck..")
         #print "self.caseControlLines = ",self.caseControlLines
         
-        self.caseControlDeck = CaseControlDeck(self.caseControlLines)
+        self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
         return self.caseControlLines
 
     def Is(self,card,cardCheck):
         #print "card=%s" %(card)
         #return cardCheck in card[0][0:8]
-        return any([cardCheck in field[0:8] for field in card])
+        return any([cardCheck in field[0:8].lstrip().rstrip(' *') for field in card])
 
     def isPrintable(self,cardName):
         """can the card be printed"""
@@ -335,13 +335,22 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.addElement(elem)
 
             elif cardName=='CTETRA':
-                elem = CTETRA(cardObj)
+                nFields = cardObj.nFields()
+                if   nFields==7:    elem = CTETRA4(cardObj) # 4+3
+                elif nFields==13:   elem = CTETRA10(cardObj)# 10+3
+                else: raise Exception('invalid number of CTETRA nodes=%s card=%s' %(nFields-3,str(cardObj)))
                 self.addElement(elem)
             elif cardName=='CHEXA':
-                elem = CHEXA(cardObj)
+                nFields = cardObj.nFields()
+                if   nFields==11: elem = CHEXA8(cardObj)  # 8+3
+                elif nFields==23: elem = CHEXA20(cardObj) # 20+3
+                else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
                 self.addElement(elem)
-            elif cardName=='CPENTA':
-                elem = CPENTA(cardObj)
+            elif cardName=='CPENTA': # 6/15
+                nFields = cardObj.nFields()
+                if   nFields==9:  elem = CPENTA6(cardObj)  # 6+3
+                elif nFields==18: elem = CPENTA15(cardObj) # 15+3
+                else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
                 self.addElement(elem)
 
             elif cardName=='CBAR':
@@ -365,11 +374,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 elem = CELAS1(cardObj)
                 self.addElement(elem)
             elif cardName=='CELAS2':
-                (elem,prop) = CELAS2(cardObj)
+                (elem) = CELAS2(cardObj)  # removed prop from outputs...
                 self.addElement(elem)
-                self.addProperty(prop)
-            elif cardName=='CONM2':
-                elem = CONM2(cardObj)
+                #self.addProperty(prop)
+            #elif cardName=='CONM2': # not done...
+            #    elem = CONM2(cardObj)
+            #    self.addElement(elem)
+
+            elif cardName=='RBE1':
+                (elem) = RBE1(cardObj)
+                self.addElement(elem)
+            elif cardName=='RBE2':
+                (elem) = RBE2(cardObj)
+                self.addElement(elem)
+            elif cardName=='RBE3':
+                (elem) = RBE3(cardObj)
                 self.addElement(elem)
 
             elif cardName=='PELAS':
@@ -450,8 +469,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 coord = CORD2R(cardObj)
                 self.addCoord(coord)
                 #print "done with ",card
-            elif 'CORD' in cardName:
-                raise Exception('unhandled coordinate system...cardName=%s' %(cardName))
+            #elif 'CORD' in cardName:
+            #    raise Exception('unhandled coordinate system...cardName=%s' %(cardName))
             elif 'ENDDATA' in cardName:
                 self.foundEndData = True
                 #break
@@ -460,7 +479,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.rejectCards.append(card)
             ###
         except:
-            print card
+            print "failed! Unreduced Card=%s" %(card)
             raise
         ### try-except block
 

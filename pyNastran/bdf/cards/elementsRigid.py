@@ -77,47 +77,58 @@ class RBE3(Element):  # not done, needs testing badly
         #iUM = fields.index('UM')
         
         fields = card.fields(5)
-        iAlpha = fields.index('ALPHA')
-        iUm    = fields.index('UM')
+        try:
+            iAlpha = fields.index('ALPHA')
+        except ValueError:
+            iAlpha = None
+
+        try:
+            iUm = fields.index('UM')
+        except ValueError:
+            iUm = None
         print "iAlpha=%s iUm=%s" %(iUm,iAlpha)
 
         #print "iUM = ",iUM
         self.WtCG_groups = []
-        for i in range(5,card.nFields()):
-            Gij = []
+        if iUm:
+            for i in range(5,card.nFields()):
+                Gij = []
 
-            wt = card.field(i)
-            ci = card.field(i+1)
-            i+=2
-            g = 0
-            while isinstance(gij,int):  # does this get extra fields???
-                gij = card.field(i+1)
-                Gij.append(gij)
-                i+=1
-            print "gij_stop? = ",gij
-            if gij=='UM':
-                print "breaking A..."
-                break
+                wt = card.field(i)
+                ci = card.field(i+1)
+                i+=2
+                g = 0
+                while isinstance(gij,int):  # does this get extra fields???
+                    gij = card.field(i+1)
+                    Gij.append(gij)
+                    i+=1
+                print "gij_stop? = ",gij
+                if gij=='UM':
+                    print "breaking A..."
+                    break
+                ###
+                self.WtCG_groups.append(wt,ci,Gij)
             ###
-            self.WtCG_groups.append(wt,ci,Gij)
-        ###
         
         self.Gmi = []
         self.Cmi = []
-        for j in range(i,card.nFields()):  # does this get extra fields???
-            gmi = card.field(j)
-            cmi = card.field(j+1)
-            nextEntry = card.field(j+2)
-            self.Gmi.append(gmi)
-            self.Cmi.append(cmi)
-            j+=2
+        ## thermal expansion coefficient
+        self.alpha = 0.0
+        if iAlpha:
+            for j in range(i,card.nFields()):  # does this get extra fields???
+                gmi = card.field(j)
+                cmi = card.field(j+1)
+                nextEntry = card.field(j+2)
+                self.Gmi.append(gmi)
+                self.Cmi.append(cmi)
+                j+=2
 
-            print "next_stop? = ",nextEntry
-            if nextEntry=='ALPHA':
-                break
+                print "next_stop? = ",nextEntry
+                if nextEntry=='ALPHA':
+                    break
+                ###
             ###
-        ###
-        self.alpha = card.field(j)
+            self.alpha = card.field(j)
 
     def __repr__(self):
         fields = [self.type,self.eid,None,self.refc]

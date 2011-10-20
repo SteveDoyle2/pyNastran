@@ -12,11 +12,27 @@ from elementsRigid import *
 from elementsShell import *
 from elementsSolid import *
 
-class CELAS1(Element):
-    type = 'CELAS1'
+
+class SpringElement(Element):
     def __init__(self,card):
         Element.__init__(self,card)
-        self.id  = card.field(1)
+        self.eid = card.field(1)
+
+    def volume(self):
+        raise Exception('not implemented in the %s class' %(self.type))
+    def stiffnessMatrix(self):
+        raise Exception('not implemented in the %s class' %(self.type))
+    def massMatrix(self):
+        raise Exception('not implemented in the %s class' %(self.type))
+    def mass(self):
+        raise Exception('not implemented in the %s class' %(self.type))
+
+class CELAS1(SpringElement):
+    type = 'CELAS1'
+    def __init__(self,card):
+        SpringElement.__init__(self,card)
+        self.pid = card.field(2)
+
         nids = [card.field(3),card.field(5)]
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
@@ -32,17 +48,17 @@ class CELAS1(Element):
         fields = [self.type,self.eid,self.pid,self.nodes[0],self.c1,self.nodes[1],self.c2]
         return self.printCard(fields)
 
-class CELAS2(Element):
+class CELAS2(SpringElement):
     type = 'CELAS2'
     def __init__(self,card):
-        self.id  = card.field(1)
+        SpringElement.__init__(self,card)
         nids = [card.field(3),card.field(5)]
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
 
         ## stiffness of the scalar spring
         self.k   = card.field(2)
-
+        
         ## component number
         self.c1 = card.field(4)
         self.c2 = card.field(5)
@@ -54,7 +70,7 @@ class CELAS2(Element):
         self.s  = card.field(7)
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid,self.nodes[0],self.c1,self.nodes[1],self.c2,self.ge,self.s]
+        fields = [self.type,self.eid,self.k,self.nodes[0],self.c1,self.nodes[1],self.c2,self.ge,self.s]
         return self.printCard(fields)
 
 class CSHEAR(Element):
@@ -109,7 +125,8 @@ class CONM2(Element): # v0.1 not done
         Element.__init__(self,card)
         #self.nids  = [ card[1] ]
         #del self.nids
-        self.pid = None
+        #self.pid = None
+        self.eid = card.field(1)
         self.dunno = card.field(2)
         self.blank = card.field(3)
         self.mass  = card.field(4)
