@@ -76,12 +76,20 @@ class getMethods(object):
     def Coord(self,cid):
         return self.coords[cid]
 
+    def FLFACT(self,fid):
+        self.flfacts[param.key] = flfact
+
 class addMethods(object):
+    def addFLFACT(self,flfact):
+        self.flfacts[flfact.sid] = flfact # set id...
+        asdf
+        print "added flfact...flflact = ",flfact
+
     def addParam(self,param):
         self.params[param.key] = param
 
     def addNode(self,node):
-        self.nodes[node.id] = node
+        self.nodes[node.nid] = node
 
     def addElement(self,elem):
         self.elements[elem.eid] = elem
@@ -110,5 +118,4 @@ class addMethods(object):
             self.constraints[key].append(constraint)
         else:
             self.constraints[key] = [constraint]
-
 

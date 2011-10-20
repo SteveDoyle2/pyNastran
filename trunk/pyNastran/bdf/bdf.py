@@ -45,6 +45,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         self.materials = {}
         self.coords = {0: CORD2R() }
         self.loads = {}
+        self.flfacts = {}  # can this be removed ???
         self.rejects = []
         self.rejectCards = []
         self.executiveControlLines = []
@@ -54,16 +55,25 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         'PARAM','=',
         'GRID',
         
-        'CTRIA3','CQUAD4','CELAS1','CELAS2','CHEXA','CPENTA','CTETRA','CBAR',
+        'CONM2',
+        'CELAS1','CELAS2',
+        'CBAR','CROD',
+        'CTRIA3','CQUAD4',
+        'CHEXA','CPENTA','CTETRA',
         'RBE1','RBE2','RBE3',
         
-        'PELAS','PSHELL','PSOLID','PCOMP','PROD', # 'PCOMPG',
-        'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9',
+        'PELAS',
+        'PROD',#'PBEAM',
+        'PSHELL','PCOMP', # 'PCOMPG',
+        'PSOLID',
+        'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9','MAT10',
 
         'SPC','SPC1','SPCADD','SUPORT1',
         'MPC','MPCADD',
 
         'FORCE','PLOAD',
+
+        'FLFACT',
 
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
@@ -120,6 +130,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         msg += self.writeProperties()
         msg += self.writeMaterials()
         msg += self.writeLoads()
+        msg += self.writeAero()
         msg += self.writeConstraints()
         msg += self.writeRejects()
         msg += self.writeCoords()
@@ -205,6 +216,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         cardName = card[0][0:8].strip()
         if ',' in cardName:
             cardName = cardName.split(',')[0].strip()
+
+        cardName = cardName.lstrip().rstrip(' *')
         #self.log().debug("getCardName cardName=|%s|" %(cardName))
         return cardName
     
@@ -231,7 +244,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         
         #oldCardObj = BDF_Card()
         while 1: # keep going until finished
-            (card,cardName) = self.getCard(debug=False) # gets the cardLines
+            (card,cardName) = self.getCard(debug=True) # gets the cardLines
             #print "outcard = ",card
             #if cardName=='CQUAD4':
             #    print "card = ",card
@@ -377,9 +390,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 (elem) = CELAS2(cardObj)  # removed prop from outputs...
                 self.addElement(elem)
                 #self.addProperty(prop)
-            #elif cardName=='CONM2': # not done...
-            #    elem = CONM2(cardObj)
-            #    self.addElement(elem)
+            elif cardName=='CONM2': # not done...
+                elem = CONM2(cardObj)
+                self.addElement(elem)
 
             elif cardName=='RBE1':
                 (elem) = RBE1(cardObj)
@@ -396,9 +409,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 if cardObj.field(5):
                     prop = PELAS(cardObj,1) # makes 2nd PELAS card
                 self.addProperty(prop)
-            #elif cardName=='PBEAM':
-            #    prop = PBEAM(cardObj)
-            #    self.addProperty(prop)
+            elif cardName=='PBEAM':
+                prop = PBEAM(cardObj)
+                self.addProperty(prop)
+            elif cardName=='PROD':
+                prop = PROD(cardObj)
+                self.addProperty(prop)
             elif cardName=='PTUBE':
                 prop = PTUBE(cardObj)
                 self.addProperty(prop)
@@ -421,9 +437,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='MAT1':
                 material = MAT1(cardObj)
                 self.addMaterial(material)
-            #elif cardName=='MAT2':
-            #    material = MAT2(cardObj)
-            #    self.addMaterial(material)
+            elif cardName=='MAT2':
+                material = MAT2(cardObj)
+                self.addMaterial(material)
             #elif cardName=='MAT3':
             #    material = MAT3(cardObj)
             #    self.addMaterial(material)
@@ -436,12 +452,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='MAT8':
                 material = MAT8(cardObj)
                 self.addMaterial(material)
-            #elif cardName=='MAT9':
-            #    material = MAT9(cardObj)
-            #    self.addMaterial(material)
-            #elif cardName=='MAT10':
-            #    material = MAT9(cardObj)
-            #    self.addMaterial(material)
+            elif cardName=='MAT9':
+                material = MAT9(cardObj)
+                self.addMaterial(material)
+            elif cardName=='MAT10':
+                material = MAT9(cardObj)
+                self.addMaterial(material)
 
             elif cardName=='FORCE':
                 #print "fcard = ",card 
@@ -464,6 +480,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 constraint = SUPORT1(cardObj)
                 self.addConstraint(constraint)
                 #print "constraint = ",constraint
+
+            elif cardName=='FLFACT':
+                #print "card = ",card
+                flfact = FLFACT(cardObj)
+                self.addFLFACT(flfact)
+                #sys.exit('stopping')
 
             elif cardName=='CORD2R':
                 coord = CORD2R(cardObj)

@@ -185,3 +185,98 @@ class MAT8(Material):
                   self.ge,F12,self.strn]
         #print fields
         return self.printCard(fields)
+
+class MAT9(Material):
+    """
+    MAT9 MID G11 G12 G13 G14 G15 G16 G22
+    G23 G24 G25 G26 G33 G34 G35 G36
+    G44 G45 G46 G55 G56 G66 RHO A1
+    A2 A3 A4 A5 A6 TREF GE
+    """
+    type = 'MAT9'
+    def __init__(self,card):
+        Material.__init__(self,card)
+        self.mid = card.field(1)
+        self.G11  = card.field(2)
+        self.G12 = card.field(3)
+
+        self.G13  = card.field(4,0.0)
+        self.G14  = card.field(5,0.0)
+        self.G15  = card.field(6,0.0)
+        self.G16  = card.field(7,0.0)
+        self.G22  = card.field(8,0.0)
+        self.G23  = card.field(9,0.0)
+        self.G24  = card.field(10,0.0)
+        self.G25  = card.field(11,0.0)
+        self.G26  = card.field(12,0.0)
+        self.G33  = card.field(13,0.0)
+        self.G34  = card.field(14,0.0)
+        self.G35  = card.field(15,0.0)
+        self.G36  = card.field(16,0.0)
+        self.G44  = card.field(17,0.0)
+        self.G45 = card.field(18,0.0)
+        self.G46 = card.field(19,0.0)
+        self.G55 = card.field(20,0.0)
+        self.G56 = card.field(21,0.0)
+        self.G66 = card.field(22,0.0)
+        self.rho = card.field(23,0.0)
+        self.A = card.fields(24,30,[0.]*6)
+        assert len(self.A)==6
+        self.TRef = card.field(30,0.0)
+        self.ge   = card.field(31)
+
+    def __repr__(self):
+        A = []
+        for a in self.A:
+            a = self.setBlankIfDefault(a, 0.0)
+            A.append(a)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
+        
+        fields = [self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
+                  self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
+                  self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+self.A+[
+                                                                         TRef,self.ge]
+        return self.printCard(fields)
+
+class MAT10(Material):
+    """MAT10 MID BULK RHO C GE"""
+    type = 'MAT10'
+    def __init__(self,card):
+        Material.__init__(self,card)
+        self.mid  = card.field(1)
+        (self.bulk,self.rho.self.c) = self.getBulkRhoC(card)    
+        self.ge = card.field(5)
+
+    def getBulkRhoC(self,card):
+        """
+        #bulk = c^2*rho
+        #c^2  = bulk/rho
+        #rho  = bulk/c^2
+        """
+        bulk = card.field(2)
+        rho  = card.field(3)
+        c    = card.field(4)
+
+        if c is not None:    
+            if rho is not None:
+                bulk = c**2.*rho
+            elif bulk is not None:
+                rho = bulk/c**2.
+            else:
+                raise RuntimeError('c is the only card defined on tbe MAT10')
+        elif bulk is not None:
+            if rho is not None:
+                c = (bulk/rho)**0.5
+            else:
+                raise RuntimeError('c, bulk, and rho are all undefined on tbe MAT10')
+            ###
+        else:
+            raise RuntimeError('c, bulk, and rho are all undefined on tbe MAT10')
+        ###
+        return(bulk,rho,c)
+            
+    def __repr__(self):
+        fields = [self.type,self.mid,self.bulk,self.rho,self.c,self.ge]
+        #print fields
+        return self.printCard(fields)
+

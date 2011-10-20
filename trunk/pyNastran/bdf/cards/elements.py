@@ -1,6 +1,6 @@
 #import sys
-#from numpy import array,cross,dot
-#from numpy import array
+from numpy import array
+#from numpy import cross,dot
 #from numpy.linalg import norm
 
 # my code
@@ -109,7 +109,7 @@ class CRAC3D(Element):
 
     def __repr__(self):
         fields = [self.type,self.eid,self.pid]+self.nodes
-        return printCard(fields)
+        return self.printCard(fields)
         
 class CVISC(CROD):
     type = 'CVISC'
@@ -126,22 +126,24 @@ class CONM2(Element): # v0.1 not done
         #self.nids  = [ card[1] ]
         #del self.nids
         #self.pid = None
-        self.eid = card.field(1)
-        self.dunno = card.field(2)
-        self.blank = card.field(3)
-        self.mass  = card.field(4)
-        
-        #print "nids       = ",self.nids
-        #print 'self.dunno = ',self.dunno
-        #print 'self.blank = ',self.blank
-        #print "mass       = ",self.mass
-        #print "card       = ",card
-        #print str(self)
-        #sys.exit()
-    
+        self.eid  = card.field(1)
+        self.gid  = card.field(2)
+        self.cid  = card.field(3,0)
+        self.mass = card.field(4)
+        self.X    = array(card.fields(5,8,[0.,0.,0.]))
+        self.I    = card.fields(9,15,[0.]*6)
+
+    def crossReference(self,mesh):
+        if self.cid==0:
+            pass
+        else:
+            raise Exception('not coded...')
+        ###
     def __repr__(self):
-        fields = [self.type,self.eid,self.dunno,self.blank,self.mass]
-        #fields = [self.type,self.eid,self.blank,self.mass]
-        return printCard(fields)
+        #I = []
+        #for i in self.I:
+        #    if i==0.:
+        fields = [self.type,self.eid,self.gid,self.cid,self.mass]+list(self.X)+self.I
+        return self.printCard(fields)
 
    
