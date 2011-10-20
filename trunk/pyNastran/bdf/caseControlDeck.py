@@ -14,13 +14,18 @@ class CaseControlDeck(object):
         while i < len(lines):
             line = lines[i].strip()
             #print "rawLine = |%s|" %(line)
+            self.log().debug("rawLine = |%r|" %(line))
+            line = line.split('$')[0].strip()
             options = []
             value = None
             key = None
             paramType = None
-
-            if 'SUBCASE' in line:
-                (key,iSubcase) = line.split(' ')
+            if line=='':
+                i+=1
+                continue
+            elif line.startswith('SUBCASE'):
+                print "line = |%r|" %(line)
+                (key,iSubcase) = line.split()
                 #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
                 self.iSubcase = int(iSubcase)
                 paramType = 'SUBCASE-type'
@@ -39,21 +44,31 @@ class CaseControlDeck(object):
                     paramType = 'STRESS-type'
                 elif ' ' in key and ',' in value: # set
                     (key,ID) = key.split()
-                    fivalues = value.split(',') # float/int values
+                    fivalues = value.rstrip(' ,').split(',') # float/int values
                     
+                    ## @todo should be more efficient multiline reader...
                     # read more lines....
-                    if line[-1]==',':
+                    if line[-1].strip()==',':
                         i+=1
-                        while lines[i]==',':
-                            fivalues += lines.split(',')
+                        print "rawSETLine = |%r|" %(lines[i])
+                        while 1:
+                            if ','== lines[i].strip()[-1]:
+                                fivalues += lines[i].strip()[:-1].split(',')
+                            else: # last case
+                                fivalues += lines[i].strip().split(',')
+                                i+=1
+                                break
                             i+=1
                         ###
                     ###
+                    print "len(fivalues) = ",len(fivalues)
                     value = fivalues
+
+                    options = ID # needed a place to put it...
                     paramType = 'SET-type'
                 elif ',' in value: # special TITLE = stuffA,stuffB
                     print 'A ??? line = ',line
-                    raise Exception(line)
+                    #raise Exception(line)
                 else:  # TITLE = stuff
                     #print 'B ??? line = ',line
                     pass
@@ -70,7 +85,7 @@ class CaseControlDeck(object):
                 raise Exception(line)
             ###
             i+=1
-            #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
+            print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
             self.addParameterToSubcase(key,value,options,paramType)
             #print "--------------"
         ###

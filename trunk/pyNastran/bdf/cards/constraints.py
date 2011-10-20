@@ -8,7 +8,7 @@ class Constraint(BaseCard):
 
     def cleanNodes(self,nodes):
         """
-        why do the nodes need to be cleaned?
+        nodes are cleaned to get rid of blank fields...which shouldnt be there...
         """
         nodes2 = []
         for node in nodes:
@@ -69,19 +69,20 @@ class SPC1(Constraint):
         self.cleanNodes(nodes)
         #print "nodes = ",nodes
 
-    def __repr__(self):
+    def __repr__(self): # SPC1
         #test = [i for i in range(self.nodes[0],self.nodes[-1]+1)]
         #print "self.nodes = ",self.nodes
         #print "test       = ",test
         #if self.nodes==test:
         #    nodes = [self.nodes[0],'THRU',self.nodes[-1]]
         #else:
-        nodes = [int(i) for i in self.nodes]
+        print "SPC1 self.nodes = ",self.nodes
+        nodes = [int(i) for i in self.nodes] # SPC1
         fields = [self.type,self.id,self.constrained]+nodes
         return self.printCard(fields)
 
 class SPCADD(Constraint):
-#SPCADD   2       1       3
+    #SPCADD   2       1       3
     type = 'SPCADD'
     def __init__(self,card):
         Constraint.__init__(self,card)

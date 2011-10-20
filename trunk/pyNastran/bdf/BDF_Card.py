@@ -1,3 +1,5 @@
+import copy #???
+
 def collapse(card):
     """doesnt work for fields==0"""
     raise Exception('broken')
@@ -21,21 +23,91 @@ def collapse(card):
     #print "cardEnd = ",card2
     return card2
 
-        
-
 class BDF_Card(object):
     def __init__(self,card=None,oldCardObj=None,debug=False):
         self.debug = debug
         if card:
-            self.card = card
+            self.card = self.wipeEmptyFields(card)
+            #self.card = card
             #print card
             #self.oldCard = oldCardObj
-            self.nfields = len(card)
+            self.nfields = len(self.card)
         else:
             self.oldCard = None
             self.card = None
             self.nfields = None
         ###
+
+    def wipeEmptyFields(self,card):
+        #print "cardA = ",card
+        cardB = []
+        for field in card:
+            if isinstance(field,str) and field.strip()=='':
+                field = None
+            ###
+            cardB.append(field)
+        ###
+        #print "cardB = ",cardB
+        i = 0
+        iMax = 0
+        while i<len(card):
+            if cardB[i] is not None:
+                iMax = i
+            ###
+            i+=1
+        ###
+        #print "i=%s iMax=%s"%(i,iMax)
+        #print "cardC = ",cardB[:iMax+1],'\n'
+        
+        return cardB[:iMax+1]
+        
+        
+    def wipeEmptyFields3(self,card):
+        print "cardA = ",card
+        reversedCard = card[::-1]
+        print "cardB = ",reversedCard
+        #print ""
+        iFound = None
+        newReversedCard = []
+        for i,field in enumerate(reversedCard):
+            if isinstance(field,str) and field.strip()=='':
+                field = None
+
+            if iFound is None and field is not None:
+                iFound = copy.deepcopy(i)
+                newReversedCard.append(field)
+            else:
+                newReversedCard.append(field)
+            ###
+            
+        ###
+        print "cardC = ",newReversedCard
+        cardD = newReversedCard[::-1]
+        print "cardD = ",cardD
+        print "outEE = ",cardD[:iFound-1],'\n'
+        return cardD[iFound:]
+        
+    def wipeEmptyFields2(self,card):
+        iFound = None
+        found = False
+        print "cardA = ",card
+        for i in reversed(range(len(card)-1)):
+            field = card[i]
+            #print "i=%s field=%s" %(i,field)
+            
+            if isinstance(field,str) and field.strip()=='':
+                card[i] = None
+                field = None
+            if found==False and field is not None:
+                print "field[%s]=%s" %(i,field)
+                found = True
+                iFound = i
+            ###
+        ###
+        print "iFound = ",iFound
+        card = card[:iFound]
+        print "cardB = ",card,'\n'
+        return card
 
     def __repr__(self):
         return str(self.card)
@@ -65,10 +137,12 @@ class BDF_Card(object):
             out.append(value)
             d+=1
         ###
+        #print "card.fields out = %s" %(out)
         return out
 
     def field(self,i,default=None):
         if i<self.nfields and self.card[i] is not None and self.card[i] is not '':
+            #print "self.card[%s] = %s"%(i,str(self.card[i]))
             return self.card[i]
         else:
             return default

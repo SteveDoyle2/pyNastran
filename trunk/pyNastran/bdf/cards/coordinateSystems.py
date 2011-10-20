@@ -4,7 +4,7 @@ from numpy.linalg import norm
 
 # my code
 #from pyNastran.bdf.bdf_helper import BDF_Card
-from BDF_Card import BDF_Card
+from pyNastran.bdf.BDF_Card import BDF_Card
 from baseCard import BaseCard
 
 class Coord(BaseCard):
@@ -39,9 +39,9 @@ class CORD2R(Coord):  # working...
         assert len(self.eo)==3,self.ez
         assert len(self.eo)==3,self.ex
         
-        print "eo = ",self.eo
-        print "ez = ",self.ez
-        print "ex = ",self.ex
+        #print "eo = ",self.eo
+        #print "ez = ",self.ez
+        #print "ex = ",self.ex
 
         self.ez0 = self.normalize(self.ez-self.eo)
         self.ex0 = self.normalize(self.ex-self.eo)
