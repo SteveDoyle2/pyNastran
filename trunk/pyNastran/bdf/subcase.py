@@ -6,7 +6,28 @@ class Subcase(object):
         self.sol = None
         #print "\n***adding subcase %s***" %(self.id)
 
-    def addData(self,key,value,options,paramType):
+    def hasParameter(self,paramName):
+        if paramName in self.params:
+            return True
+        return False
+
+    def getParameter(self,paramName):
+        return self.params[paramName][0:2]
+
+    def updateParamName(self,paramName):
+        """
+        takes an abbreviated name and expands it so the user can type DISP or 
+        DISPLACEMNT and get the same answer
+        @todo not a complete list
+        @warning not implemented yet...
+        """
+        if   paramName.startswith('SUPO'):  paramName = 'SUPORT1'
+        elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
+        elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'
+        elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
+        return  paramName
+
+    def _addData(self,key,value,options,paramType):
         #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
         if isinstance(value,str) and value.isdigit():
             value = int(value)
@@ -37,7 +58,7 @@ class Subcase(object):
             options = int(options)
             return (key,values2,options)
 
-        elif paramType=='PARAM-type':
+        elif paramType=='CSV-type':
             print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
@@ -55,7 +76,6 @@ class Subcase(object):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
-        @todo SET-type is not supported yet...
         """
         msg = ''
         (value,options,paramType) = param
@@ -67,7 +87,7 @@ class Subcase(object):
             ###
             #else:  global subcase ID=0 and is not printed
             #    pass
-        elif paramType=='PARAM-type':
+        elif paramType=='CSV-type':
             msg += spaces+'%s,%s,%s\n' %(key,value,options)
         elif paramType=='STRESS-type':
             sOptions = ','.join(options)
@@ -113,11 +133,17 @@ class Subcase(object):
         return msg
 
     def finishSubcase(self):
+        """
+        removes the subcase parameter from the subcase to avoid printing it in a funny spot
+        """
         if 'SUBCASE' in self.params:
             del self.params['SUBCASE']
         #print "self.params %s = %s" %(self.id,self.params)
 
     def __repr__(self):
+        """
+        prints out every entry in the subcase
+        """
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id>0:
