@@ -1,9 +1,54 @@
 from baseCard import Element
 
-class RBE1(Element):  # maybe not done, needs testing
+class RigidElement(Element):
+     def __repr__(self):
+        fields = ['RBAR',self.eid]
+        return self.printCard(fields)
+
+class RBAR(RigidElement):
+    type = 'RBAR'
+    def __init__(self,card):
+        """
+        RBAR EID GA GB CNA    CNB CMA CMB ALPHA
+        RBAR 5   1   2 123456             6.5-6
+        """
+        RigidElement.__init__(self,card)
+        self.eid   = card.field(1)
+        self.ga    = card.field(2)
+        self.gb    = card.field(3)
+        self.cna   = card.field(4)
+        slef.cnb   = card.field(5)
+        self.cma   = card.field(6)
+        self.cmb   = card.field(7)
+        self.alpha = card.field(8)
+
+    def __repr__(self):
+        alpha = self.setDefaultIfBlank(self.alpha,0.0)
+        fields = ['RBAR',self.eid,self.ga,self.gb,self.cna,self.cnb,self.cma,self.cmb,alpha]
+        return self.printCard(fields)
+
+class RBAR1(RigidElement):
+    type = 'RBAR1'
+    def __init__(self,card):
+        """
+        RBAR1 EID GA GB CB  ALPHA
+        RBAR1 5    1  2 123 6.5-6
+        """
+        RigidElement.__init__(self,card)
+        self.eid   = card.field(1)
+        self.ga    = card.field(2)
+        self.gb    = card.field(3)
+        self.alpha = card.field(4)
+
+    def __repr__(self):
+        alpha = self.setDefaultIfBlank(self.alpha,0.0)
+        fields = ['RBAR1',self.eid,self.ga,self.gb,alpha]
+        return self.printCard(fields)
+
+class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
     def __init__(self,card):
-        Element.__init__(self,card)
+        RigidElement.__init__(self,card)
         self.eid = card.field(1)
         self.Gni = []
         self.Cni = []
@@ -48,14 +93,14 @@ class RBE1(Element):  # maybe not done, needs testing
         fields += [self.alpha]
         return self.printCard(fields)
 
-class RBE2(Element):
+class RBE2(RigidElement):
     type = 'RBE2'
     def __init__(self,card):
         """
         RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
         GM6 GM7 GM8 -etc.- ALPHA
         """
-        Element.__init__(self,card)
+        RigidElement.__init__(self,card)
         self.eid = card.field(1)
         self.gn  = card.field(2)
         self.cm  = card.field(3)
@@ -66,10 +111,10 @@ class RBE2(Element):
         fields = [self.type,self.eid,self.gn,self.cm]+self.Gmi+[self.alpha]
         return self.printCard(fields)
 
-class RBE3(Element):  # not done, needs testing badly
+class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
     def __init__(self,card):
-        Element.__init__(self,card)
+        RigidElement.__init__(self,card)
         self.eid     = card.field(1)
         self.refgrid = card.field(3)
         self.refc    = card.field(4)

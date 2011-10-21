@@ -30,17 +30,19 @@ class LOAD(Load):
         nLoads  = nFields/2
         print "nFields = ",nFields
         print "nLoads  = ",nLoads
-        self.loads = fields[3:] # alternating of scale factor & load set ID #
+        self.loads = fields[3:] # alternating of scale factor & load set ID
         assert len(self.loads)%2==0
     
     def __repr__(self):
-        fields = ['LOAD',self.id,self.s]+self.loads
+        fields = ['LOAD',self.lid,self.s]+self.loads
         return self.printCard(fields)
 
 
 class FORCE(Load):
     def __init__(self,card):
-#FORCE          3       1            100.      0.      0.      1.
+        """
+        FORCE          3       1            100.      0.      0.      1.
+        """
         Load.__init__(self,card)
         self.node = card.field(2)
         self.cid  = card.field(3,0)

@@ -1,6 +1,10 @@
 from pyNastran.bdf.fieldWriter import printCard
 
 class writeMesh(object):
+    def echoBDF(self,infileName):
+        self.cardsToRead = set([])
+        return self.read(infileName)
+
     def writeHeader(self):
         msg = '$EXECUTIVE CONTROL DECK\n'
         for line in self.executiveControlLines:
@@ -63,7 +67,8 @@ class writeMesh(object):
 
     def writeAero(self):
         #print "output aero cards..."
-        msg = '$AERO\n'
+        msg = ''
+        if self.flfacts:  msg = '$AERO\n'
         flfactKeys = self.flfacts.keys()
         self.log().info("flfactKeys = %s" %(flfactKeys))
         for ID,flfact in sorted(self.flfacts.items()):

@@ -179,8 +179,9 @@ class Element(BaseCard):
                 self.nodes.append(int(nid))
             elif nid==None and allowEmptyNodes:
                 self.nodes.append(nid)
-            else:
-                raise Exception('this element may not have missing nodes...allowEmptyNodes=False')
+            else: # string???
+                self.nodes.append(int(nid))
+                #raise Exception('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
             ###
 
     def Centroid(self,nodes,debug=False):

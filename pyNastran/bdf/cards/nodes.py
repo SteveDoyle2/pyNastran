@@ -6,11 +6,49 @@ from numpy import array
 # my code
 from baseCard import BaseCard
 
-class GRID(BaseCard):
+class Node(BaseCard): # base class
     def __init__(self,card):
-        self.nid = int(card.field(1))
-        self.id  = self.nid
+        pass
+    def crossReference(self,mesh):
+        raise Exception('%s hasnt implemented a crossReference method' %(self.type))
+    def __repr__(self):
+        raise Exception('%s hasnt implemented a __repr__ method' %(self.type))
 
+class SPOINT(Node):
+    """
+    SPOINT ID1 ID2 ID3 ID4 ID5 ID6 ID7 ID8
+    or
+    SPOINT ID1 THRU ID2
+    SPOINT 5   THRU 649
+    """
+    type = 'SPOINT'
+    def __init__(self,card):
+        Node.__init__(self,card)
+        fields  = card.fields(1)
+        nFields = card.nFields()
+        
+        self.spoints = []
+        i = 0
+        while i<nFields: # =1 ???
+            if fields[i]=='THRU':
+                self.spoints += [fields[i-1],fields[i]+1]
+                i+=1
+            else:
+                self.spoints.append(fields[i])
+            i+=1
+        ###
+        
+    def __repr__(self):
+        ## @todo support THRU in output
+        fields = ['SPOINT']+self.spoints
+        return self.printCard(fields)
+        
+
+class GRID(Node):
+    type = 'GRID'
+    def __init__(self,card):
+        Node.__init__(self,card)
+        self.nid = int(card.field(1))
         self.cid = card.field(2,0)
         xyz = card.fields(3,6,[0.,0.,0.])  # TODO:  is standard nastran???
         #displayCard(card)
@@ -42,5 +80,4 @@ class GRID(BaseCard):
         #print "fields = ",fields
         return self.printCard(fields)
 
-#class SPOINT
 #class RINGAX

@@ -112,7 +112,7 @@ class addMethods(object):
             self.loads[key] = [load]
 
     def addConstraint(self,constraint):
-        key = constraint.id
+        key = constraint.cid
         #print "type(self.constraints) = ",type(self.constraints)
         if self.constraints.has_key(key):
             self.constraints[key].append(constraint)

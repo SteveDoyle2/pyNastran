@@ -18,7 +18,7 @@ class PCONEAX(Property): #not done
         self.dim = [] # confusing entry...
 
     def __repr__(self):
-        fields = [self.type,self.pid,self.mid]
+        fields = ['PCONEAX',self.pid,self.mid]
         return self.printCard(fields)
     
 class PBARL(Property): # not done
@@ -32,7 +32,7 @@ class PBARL(Property): # not done
         self.dim = [] # confusing entry...
 
     def __repr__(self):
-        fields = [self.type,self.pid,self.mid,group,type,None,None,None,None,
+        fields = ['PBARL',self.pid,self.mid,group,type,None,None,None,None,
         ]+self.dim
         return self.printCard(fields)
 
@@ -99,7 +99,7 @@ class PBEAM(Property): # not done, cleanup
 
     def __repr__(self):
         raise Exception('not done...')
-        fields = [self.type,self.pid,self.mid,] # other
+        fields = ['PBEAM',self.pid,self.mid,] # other
         return self.printCard(fields)
         
 #class PBEAML(Property): #not done
@@ -130,7 +130,7 @@ class PBEAM3(Property): # not done, cleanup
 
     def __repr__(self):
         raise Exception('not done...')
-        fields = [self.type,self.pid,self.mid,] # other
+        fields = ['PBEAM3',self.pid,self.mid,] # other
         return self.printCard(fields)
 
 #class PCOMPG(Property): # not done...
@@ -178,7 +178,7 @@ class PCOMP(Property):
         #print str(self)
 
     def __repr__(self):
-        fields = [self.type,self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
+        fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
         #print "plies = ",self.plies
         for ply in self.plies:
             (mid,t,theta,sout) = ply
@@ -197,7 +197,29 @@ class PELAS(Property):
         self.s   = card.field(4+5*nPELAS)
 
     def __repr__(self):
-        fields = [self.type,self.pid,self.k,self.ge,self.s]
+        fields = ['PELAS',self.pid,self.k,self.ge,self.s]
+        return self.printCard(fields)
+
+class PLSOLID(Property):
+    """
+    Defines a fully nonlinear (i.e., large strain and large rotation) hyperelastic solid
+    element.
+    PLSOLID PID MID STR
+    PLSOLID 20 21
+    """
+    type = 'PLSOLID'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        self.pid = card.field(1)
+        self.mid = card.field(2)
+        self.ge  = card.field(3)
+        self.str = card.field(4,'GRID')
+        assert self.str in ['GRID','GAUS'],'card=%s doesnt have a valid stress/strain output value set\n'
+        
+
+    def __repr__(self):
+        stressStrain = self.setDefaultIfNone(self.str,'GRID')
+        fields = ['PLSOLID',self.pid,self.mid,stressStrain]
         return self.printCard(fields)
 
 class PROD(Property):
@@ -213,7 +235,7 @@ class PROD(Property):
 
     def __repr__(self):
         c  = self.setBlankIfDefault(self.c,0.0)
-        fields = [self.type,self.pid,self.mid,self.A,self.J,c,self.nsm]
+        fields = ['PROD',self.pid,self.mid,self.A,self.J,c,self.nsm]
         return self.printCard(fields)
 
 class PSHELL(Property):
@@ -237,7 +259,7 @@ class PSHELL(Property):
         self.mid4  = card.field(11)
 
     def __repr__(self):
-        fields = [self.type,self.pid,self.mid,self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
+        fields = ['PSHELL',self.pid,self.mid,self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
                   self.z1,self.z2,self.mid4]
         return self.printCard(fields)
 
@@ -261,7 +283,7 @@ class PSOLID(Property):
     def __repr__(self):
         cordm = self.setBlankIfDefault(self.cordm,0)
         fctn  = self.setBlankIfDefault(self.fctn,'SMECH')
-        fields = [self.type,self.pid,self.mid,cordm,self.integ,self.stress,self.isop,fctn]
+        fields = ['PSOLID',self.pid,self.mid,cordm,self.integ,self.stress,self.isop,fctn]
         return self.printCard(fields)
 
 class PTUBE(Property):
@@ -279,7 +301,7 @@ class PTUBE(Property):
         t   = self.setBlankIfDefault(self.t,self.outerDiameter/2.)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
         outerDiameter2 = self.setBlankIfDefault(self.outerDiameter2,self.outerDiameter)
-        fields = [self.type,self.pid,self.mid,self.outerDiameter,t,nsm,outerDiameter2]
+        fields = ['PTUBE',self.pid,self.mid,self.outerDiameter,t,nsm,outerDiameter2]
         return self.printCard(fields)
     
     def massMatrix():

@@ -188,7 +188,7 @@ def printField(value):
         field = "        "
     else:
         field = "%8s" %(value)
-    assert len(field)==8,'|%s| is not 8 characters long' %(value)
+    assert len(field)==8,'field=|%s| is not 8 characters long...rawValue=|%s|' %(field,value)
     return field
 
 def printCard(fields):

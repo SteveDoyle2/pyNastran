@@ -39,7 +39,7 @@ class CREEP(Material):
         thresh = self.setBlankIfDefault(self.thresh,1e-5)
         exp    = self.setBlankIfDefault(self.G1z,4.1e-9)
         T0     = self.setBlankIfDefault(self.T0,0.0)
-        fields = [self.type,self.id,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
+        fields = ['CREEP',self.id,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
         self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
         return self.printCard(fields)
 
@@ -99,7 +99,7 @@ class MAT1(Material):
         G_default = self.E/2./(1+self.nu)
         G    = self.setBlankIfDefault(self.G,G_default)
         #G = self.G
-        fields = [self.type,self.mid,self.E,G,self.nu,self.rho,self.a,TRef,self.ge,
+        fields = ['MAT1',self.mid,self.E,G,self.nu,self.rho,self.a,TRef,self.ge,
                   self.St,self.Sc,self.Ss,self.Mcsid]        
         return self.printCard(fields)
 
@@ -139,7 +139,7 @@ class MAT2(Material):
         G23 = self.setBlankIfDefault(self.G23,0.0)
         G33 = self.setBlankIfDefault(self.G33,0.0)
         Tref = self.setBlankIfDefault(self.TRef,0.0)
-        fields = [self.type,self.mid,G11,G12,G13,G22,G23,G33,self.rho,
+        fields = ['MAT2',self.mid,G11,G12,G13,G22,G23,G33,self.rho,
                   self.a1,self.a2,self.a3,Tref,self.ge,self.st,self.sc,self.ss,
                   self.Mcsid]
         return self.printCard(fields)
@@ -180,7 +180,7 @@ class MAT8(Material):
         Yc   = self.setBlankIfDefault(self.Yc, self.Yt)
         F12  = self.setBlankIfDefault(self.F12,0.0)
         
-        fields = [self.type,self.mid,self.E11,self.E22,self.nu12,self.G12,G1z,G2z,self.rho,
+        fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,self.G12,G1z,G2z,self.rho,
                   a1,a2,Tref,self.Xt,Xc,self.Yt,Yc,self.S,
                   self.ge,F12,self.strn]
         #print fields
@@ -197,23 +197,22 @@ class MAT9(Material):
     def __init__(self,card):
         Material.__init__(self,card)
         self.mid = card.field(1)
-        self.G11  = card.field(2)
-        self.G12 = card.field(3)
-
-        self.G13  = card.field(4,0.0)
-        self.G14  = card.field(5,0.0)
-        self.G15  = card.field(6,0.0)
-        self.G16  = card.field(7,0.0)
-        self.G22  = card.field(8,0.0)
-        self.G23  = card.field(9,0.0)
-        self.G24  = card.field(10,0.0)
-        self.G25  = card.field(11,0.0)
-        self.G26  = card.field(12,0.0)
-        self.G33  = card.field(13,0.0)
-        self.G34  = card.field(14,0.0)
-        self.G35  = card.field(15,0.0)
-        self.G36  = card.field(16,0.0)
-        self.G44  = card.field(17,0.0)
+        self.G11 = card.field(2, 0.0)
+        self.G12 = card.field(3, 0.0)
+        self.G13 = card.field(4, 0.0)
+        self.G14 = card.field(5, 0.0)
+        self.G15 = card.field(6, 0.0)
+        self.G16 = card.field(7, 0.0)
+        self.G22 = card.field(8, 0.0)
+        self.G23 = card.field(9, 0.0)
+        self.G24 = card.field(10,0.0)
+        self.G25 = card.field(11,0.0)
+        self.G26 = card.field(12,0.0)
+        self.G33 = card.field(13,0.0)
+        self.G34 = card.field(14,0.0)
+        self.G35 = card.field(15,0.0)
+        self.G36 = card.field(16,0.0)
+        self.G44 = card.field(17,0.0)
         self.G45 = card.field(18,0.0)
         self.G46 = card.field(19,0.0)
         self.G55 = card.field(20,0.0)
@@ -232,10 +231,10 @@ class MAT9(Material):
             A.append(a)
         TRef = self.setBlankIfDefault(self.TRef,0.0)
         
-        fields = [self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                  self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                  self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+self.A+[
-                                                                         TRef,self.ge]
+        fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
+                         self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
+                         self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+A+[
+                                                                                 TRef,self.ge]
         return self.printCard(fields)
 
 class MAT10(Material):
@@ -276,7 +275,6 @@ class MAT10(Material):
         return(bulk,rho,c)
             
     def __repr__(self):
-        fields = [self.type,self.mid,self.bulk,self.rho,self.c,self.ge]
-        #print fields
+        fields = ['MAT10',self.mid,self.bulk,self.rho,self.c,self.ge]
         return self.printCard(fields)
 

@@ -60,20 +60,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         'CBAR','CROD',
         'CTRIA3','CQUAD4',
         'CHEXA','CPENTA','CTETRA',
-        'RBE1','RBE2','RBE3',
+        'RBAR','RBAR1','RBE1','RBE2','RBE3',
         
         'PELAS',
-        'PROD',#'PBEAM',
+        'PROD',#'PBEAM','PBEAM3','PBEAML'
         'PSHELL','PCOMP', # 'PCOMPG',
-        'PSOLID',
-        'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9','MAT10',
+        'PSOLID','PLSOLID',
+        'MAT1','MAT2','MAT8','MAT9','MAT10',  # 'MAT3','MAT4','MAT5',
 
-        'SPC','SPC1','SPCADD','SUPORT1',
+        'SPC','SPC1','SPCD','SPCADD','SUPORT1',
         'MPC','MPCADD',
 
-        'FORCE','PLOAD',
+        'LOAD','FORCE','PLOAD','PLOAD2','PLOAD4'
 
-        'FLFACT',
+        'FLFACT','AERO','AEROS','GUST',
 
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
@@ -244,7 +244,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         
         #oldCardObj = BDF_Card()
         while 1: # keep going until finished
-            (card,cardName) = self.getCard(debug=True) # gets the cardLines
+            (card,cardName) = self.getCard(debug=False) # gets the cardLines
             #print "outcard = ",card
             #if cardName=='CQUAD4':
             #    print "card = ",card
@@ -330,8 +330,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.addParam(param)
             elif cardName=='GRID':
                 node = GRID(cardObj)
-                #print "node.nid = ",node.nid
                 self.addNode(node)
+            #elif cardName=='SPOINT':
+            #    node = SPOINT(cardObj)
+            #    self.addNode(node)
 
             elif cardName=='CQUAD4':
                 elem = CQUAD4(cardObj)
@@ -394,6 +396,14 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 elem = CONM2(cardObj)
                 self.addElement(elem)
 
+
+            elif cardName=='RBAR':
+                (elem) = RBAR(cardObj)
+                self.addElement(elem)
+            elif cardName=='RBAR1':
+                (elem) = RBAR1(cardObj)
+                self.addElement(elem)
+
             elif cardName=='RBE1':
                 (elem) = RBE1(cardObj)
                 self.addElement(elem)
@@ -412,6 +422,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='PBEAM':
                 prop = PBEAM(cardObj)
                 self.addProperty(prop)
+            #elif cardName=='PBEAM3':
+            #    prop = PBEAM3(cardObj)
+            #    self.addProperty(prop)
+            #elif cardName=='PBEAML':
+            #    prop = PBEAML(cardObj)
+            #    self.addProperty(prop)
             elif cardName=='PROD':
                 prop = PROD(cardObj)
                 self.addProperty(prop)
@@ -449,7 +465,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             #elif cardName=='MAT5':
             #    material = MAT5(cardObj)
             #    self.addMaterial(material)
-            elif cardName=='MAT8':
+            elif cardName=='MAT8':  # note there is no MAT6 or MAT7
                 material = MAT8(cardObj)
                 self.addMaterial(material)
             elif cardName=='MAT9':
@@ -468,12 +484,17 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 load = LOAD(cardObj)
                 self.addLoad(load)
 
-            elif cardName=='SPCADD':
-                constraint = SPCADD(cardObj)
+            elif cardName=='SPC':
+                constraint = SPC(cardObj)
                 self.addConstraint(constraint)
             elif cardName=='SPC1':
-                #print "card = ",card
                 constraint = SPC1(cardObj)
+                self.addConstraint(constraint)
+            elif cardName=='SPCD':
+                constraint = SPC1(cardObj)
+                self.addConstraint(constraint)
+            elif cardName=='SPCADD':
+                constraint = SPCADD(cardObj)
                 self.addConstraint(constraint)
             elif cardName=='SUPORT1':
                 #print "card = ",card
@@ -481,6 +502,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.addConstraint(constraint)
                 #print "constraint = ",constraint
 
+            #elif cardName=='GUST':
+            #    #print "card = ",card
+            #    gust = GUST(cardObj)
+            #    self.addGust(gust)
             elif cardName=='FLFACT':
                 #print "card = ",card
                 flfact = FLFACT(cardObj)

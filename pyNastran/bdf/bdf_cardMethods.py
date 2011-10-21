@@ -2,7 +2,7 @@
 
 class cardMethods(object):
 
-    def getCard(self,debug=True):
+    def getCard(self,debug=False):
         """gets a single unparsed card"""
         #debug = False
         
@@ -71,15 +71,14 @@ class cardMethods(object):
         #    iline = self.lines[i].rstrip()
 
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
+        isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
         if debug:
             self.log().debug("  iline = |%s|" %(iline))
             self.log().debug("  sCardName = |%s|" %(sCardName))
             self.log().debug("  len(iline) = |%s|" %(len(iline)))
             print "  iline[0] = |%s|" %(iline[0])
             print ""
-
-        isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
-        print "isNotDone A = %s" %(isNotDone)
+            print "isNotDone A = %s" %(isNotDone)
         
         while(isNotDone):
             tempcard.append(iline)
@@ -102,8 +101,8 @@ class cardMethods(object):
             if debug:
                 print "sCardName = ",sCardName
                 print "len(iline) = ",len(iline)
+                print "isNotDone B = ",isNotDone
             isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
-            print "isNotDone B = ",isNotDone
         ###
         if debug:
             self.log().debug("tempcard2 = |%s|" %(tempcard))
@@ -146,7 +145,8 @@ class cardMethods(object):
         fields2 = []
         for i,field in enumerate(fields):
             field = field.strip()
-            print "i=%s field=|%s|" %(i,field)
+            if debug:
+                print "i=%s field=|%s|" %(i,field)
             if '*'==field or '+'==field:
                 pass
                 print "skipping * or +"
