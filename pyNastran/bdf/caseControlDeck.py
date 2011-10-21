@@ -1,92 +1,144 @@
+import copy
 from subcase import Subcase
 
 class CaseControlDeck(object):
     def __init__(self,lines,log=None):
+        """
+        @param self  the object pointer
+        @param lines list of lines that represent the case control deck ending with BEGIN BULK
+        @param log   a logger object
+        """
+        if log is None:
+            from pyNastran.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            log = loggerObj.startLog('debug') # or info
+
         self.log = log
         self.lines = lines
         self.subcases = {0:Subcase(id=0)}
         self.iSubcase = 0
-        self.read()
+        self._read(self.lines)
 
-    def read(self):
-        i = 0
-        lines = self.lines
-        while i < len(lines):
-            line = lines[i].strip()
-            #print "rawLine = |%s|" %(line)
-            self.log().debug("rawLine = |%r|" %(line))
-            line = line.split('$')[0].strip()
-            options = []
-            value = None
-            key = None
-            paramType = None
-            if line=='':
-                i+=1
-                continue
-            elif line.startswith('SUBCASE'):
-                print "line = |%r|" %(line)
-                (key,iSubcase) = line.split()
-                #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
-                self.iSubcase = int(iSubcase)
-                paramType = 'SUBCASE-type'
-            elif '=' in line: # TITLE, STRESS
-                (key,value) = line.strip().split('=')
-                key   = key.strip()
-                value = value.strip()
-                #print "key=|%s| value=|%s|" %(key,value)
-                paramType = 'STRESS-type'
+    def hasParameter(self,iSubcase,paramName):
+        if self.hasSubcase(iSubcase):
+            return self.subcases[iSubcase].hasParameter(paramName.upper())
 
-                if '(' in key:  # comma may be in line - STRESS
-                    sline = key.strip(')').split('(')
-                    key = sline[0]
-                    options = sline[1].split(',')
-                    #print "key=|%s| options=%s" %(key,options)
-                    paramType = 'STRESS-type'
-                elif ' ' in key and ',' in value: # set
-                    (key,ID) = key.split()
-                    fivalues = value.rstrip(' ,').split(',') # float/int values
-                    
-                    ## @todo should be more efficient multiline reader...
-                    # read more lines....
-                    if line[-1].strip()==',':
-                        i+=1
-                        print "rawSETLine = |%r|" %(lines[i])
-                        while 1:
-                            if ','== lines[i].strip()[-1]:
-                                fivalues += lines[i].strip()[:-1].split(',')
-                            else: # last case
-                                fivalues += lines[i].strip().split(',')
-                                i+=1
-                                break
-                            i+=1
-                        ###
-                    ###
-                    print "len(fivalues) = ",len(fivalues)
-                    value = fivalues
+    def getSubcaseParameter(self,iSubcase,paramName):
+        #print "iSubcase = ",iSubcase,'\n'
+        if self.hasSubcase(iSubcase):
+            print str(self.subcases[iSubcase])
+            return self.subcases[iSubcase].getParameter(paramName.upper())
+        ###
+        raise RuntimeError('iSubcase=%s does not exist...' %(iSubcase))
 
-                    options = ID # needed a place to put it...
-                    paramType = 'SET-type'
-                elif ',' in value: # special TITLE = stuffA,stuffB
-                    print 'A ??? line = ',line
-                    #raise Exception(line)
-                else:  # TITLE = stuff
-                    #print 'B ??? line = ',line
-                    pass
-                ###
-            ### = in line
-            elif ',' in line: # param
-                (key,value,options) = line.strip().split(',')
-                paramType = 'PARAM-type'
-            elif ' ' in line: # begin bulk
-                (key,value) = line.strip().split(' ')
-                paramType = 'BEGIN_BULK-type'
-            else:
-                print 'C ??? line = ',line
-                raise Exception(line)
+    def hasSubcase(self,iSubcase):
+        if iSubcase in self.subcases:
+            return True
+        return False
+
+    def createNewSubcase(self,iSubcase):
+        """
+        @warning be careful you dont add data to the global subcase after running this...is this True???
+        """
+        if not hasSubcase(iSubcase):
+            sys.stderr.write('subcase=%s already exists...skipping')
+        self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
+        #self.subcases[iSubcase] = Subcase(id=iSubcase)
+
+    def deleteSubcase(self,iSubcase):
+        if not hasSubcase(iSubcase):
+            sys.stderr.write('subcase doesnt exist...skipping')
+        del self.subcases[iSubcase]
+    
+    def copySubcase(self,iFromSubcase,iToSubcase,overwriteSubcase=True):
+        """
+        overwrites the parameters from one subcase to another
+        @param self             the object pointer
+        @param iFromSubcase     the subcase to pull the data from
+        @param iToSubcase       the subcase to map the data to
+        @param overwriteSubcase NULLs iToSubcase before copying iFromSubcase
+        """
+        if not self.hasSubcase(iFromSubcase):
+            raise RuntimeError('iFromSubcase=|%s| does not exist' %(iFromSubcase))
+        subcaseFrom = self.subcases[iFromSubcase]
+        if overwriteSubcase:
+            print "inside overwrite..."
+            self.subcases[iToSubcase] = copy.deepcopy(self.subcases[iFromSubcase])
+        else:
+            if not hasSubcase(iToSubcase):
+                raise RuntimeError('iToSubcase=|%s| does not exist' %(iToSubcase))
+            for key,param in subcaseFrom.items():
+                subcaseTo[key] = copy.deepcopy(param)
             ###
-            i+=1
-            print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
-            self.addParameterToSubcase(key,value,options,paramType)
+        ###
+            
+
+    def getSubcaseList(self):
+        return sorted(self.subcases.keys())
+
+    def getLocalSubcaseList(self):
+        keyList = [key for key in self.subcases if key != 0] # dont get the global
+        return sorted(keyList)
+
+    def addParameterToGlobalSubcase(self,param):
+        """
+        takes in a single-lined string
+        @note
+            dont worry about overbounding the line
+        """
+        (j,key,value,options,paramType) = self._parseDataFromUser(param)
+        subcaseList = self.getSubcaseList()
+        for iSubcase in subcaseList:
+            self._addParameterToSubcase(key,value,options,paramType,iSubcase)
+
+    def addParameterToLocalSubcase(self,iSubcase,param):
+        (j,key,value,options,paramType) = self._parseDataFromUser(param)
+        self._addParameterToSubcase(key,value,options,paramType,iSubcase)
+
+    def _parseDataFromUser(self,param):
+        if '\n' in param or 'r' in param or '\t' in param:
+            msg = 'doesnt support embedded endline/tab characters\n'
+            msg += '  param = |%r|' %(param)
+            raise SyntaxError(msg)
+        #self.read([param])
+        lines = self.cleanLines([param])
+        (j,key,value,options,paramType) = self._parseEntry(lines)
+        return (j,key,value,options,paramType)
+
+    def cleanLines(self,lines):
+        """removes comment characters $"""
+        lines2 = []
+        for line in lines:
+            line = line.strip(' \n\r').split('$')[0].rstrip()
+            if line:
+                lines2.append(line)
+            ###
+        ###
+        return lines2
+
+    def _read(self,lines):
+        """
+        reads the case control deck
+        @note supports comment lines
+        @warning
+            doesnt check for 72 character width lines, but will follow that
+            when it's written out
+        """
+        lines = self.cleanLines(lines)
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            #print "rawLine = |%s|" %(line)
+            #self.log().debug("rawLine = |%r|" %(line))
+
+            lines2 = [line]
+            while ',' in line[-1]:
+                lines2.append(line)
+                i+=1
+            (j,key,value,options,paramType) = self._parseEntry(lines2)
+            i+=j
+            #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
+            self._addParameterToSubcase(key,value,options,paramType,self.iSubcase)
             #print "--------------"
         ###
         print "done with while loop...\n"
@@ -96,26 +148,144 @@ class CaseControlDeck(object):
         self.finishSubcases()
     ###
 
+    def _parseEntry(self,lines):
+        """
+        @brief
+            internal method for parsing a card of the case control deck
+
+            parses a single case control deck card into 4 sections
+            1.  paramName - obvious
+            2.  Value     - still kind of obvious
+            3.  options   - rarely used data
+            4.  paramType - STRESS-type, SUBCASE-type, PARAM-type, SET-type, BEGIN_BULK-type
+
+            It's easier with examples:
+
+            paramType = SUBCASE-type
+              SUBCASE 1              ->   paramName=SUBCASE  value=1            options=[] 
+            paramType = STRESS-type
+              STRESS       = ALL     ->   paramName=STRESS    value=ALL         options=[]
+              STRAIN(PLOT) = 5       ->   paramName=STRAIN    value=5           options=[PLOT]
+              TITLE        = stuff   ->   paramName=TITLE     value=stuff       options=[]
+            paramType = SET-type
+              SET 1 = 10,20,30       ->   paramName=SET       value=[10,20,30]  options = 1
+            paramType = BEGIN_BULK-type
+              BEGIN BULK             ->   paramName=BEGIN     value=BULK        options = []
+            paramType = CSV-type
+              PARAM,FIXEDB,-1        ->   paramName=PARAM     value=FIXEDB      options = [-1]
+
+            The paramType is the "macro" form of the data (similar to integer, float, string).
+            The value is generally whats on the RHS of the equals sign (assuming it's there).
+            Options are modifiers on the data.  Form things like the PARAM card or the SET card
+            they arent as clear, but the paramType lets the program know how to format it
+            when writing it out.
+
+        @param self  the object pointer
+        @param lines list of lines
+        @retval paramName see below...
+        @retval value     see below...
+        @retval options   see below...
+        @retval paramType see below...
+        """
+        i = 0
+        options   = []
+        value     = None
+        key       = None
+        paramType = None
+
+        line = lines[i]
+        if line.startswith('SUBCASE'):
+            print "line = |%r|" %(line)
+            (key,iSubcase) = line.split()
+            #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
+            self.iSubcase = int(iSubcase)
+            paramType = 'SUBCASE-type'
+        elif '=' in line: # TITLE, STRESS
+            (key,value) = line.strip().split('=')
+            key   = key.strip()
+            value = value.strip()
+            #print "key=|%s| value=|%s|" %(key,value)
+            paramType = 'STRESS-type'
+
+            if '(' in key:  # comma may be in line - STRESS-type
+                sline = key.strip(')').split('(')
+                key = sline[0]
+                options = sline[1].split(',')
+                #print "key=|%s| options=%s" %(key,options)
+                paramType = 'STRESS-type'
+            elif ' ' in key and ',' in value: # SET-type
+                (key,ID) = key.split()
+                fivalues = value.rstrip(' ,').split(',') # float/int values
+
+                ## @todo should be more efficient multiline reader...
+                # read more lines....
+                if line[-1].strip()==',':
+                    i+=1
+                    print "rawSETLine = |%r|" %(lines[i])
+                    while 1:
+                        if ','== lines[i].strip()[-1]:
+                            fivalues += lines[i][:-1].split(',')
+                        else: # last case
+                            fivalues += lines[i].split(',')
+                            i+=1
+                            break
+                        i+=1
+                    ###
+                ###
+                print "len(fivalues) = ",len(fivalues)
+                value = fivalues
+
+                options = ID # needed a place to put it...
+                paramType = 'SET-type'
+            elif ',' in value: # STRESS-type; special TITLE = stuffA,stuffB
+                #print 'A ??? line = ',line
+                #raise Exception(line)
+                pass
+            else:  # STRESS-type; TITLE = stuff
+                #print 'B ??? line = ',line
+                pass
+            ###
+        ### = in line
+        elif ',' in line: # param
+            (key,value,options) = line.split(',')
+            paramType = 'CSV-type'
+        elif ' ' in line: # begin bulk
+            (key,value) = line.split(' ')
+            paramType = 'BEGIN_BULK-type'
+        else:
+            print 'C ??? line = ',line
+            raise Exception(line)
+        ###
+        i+=1
+        return (i,key,value,options,paramType)
+
     def finishSubcases(self):
         """
-        removes any unwanted data in the subcase
+        removes any unwanted data in the subcase...specifically the SUBCASE
+        data member.  Otherwise it will print out after a key like stress.
         """
         for (iSubcase,subcase) in sorted(self.subcases.items()):
             subcase.finishSubcase()
         ###
     ###
 
-    def addParameterToSubcase(self,key,value,options,paramType):
-        #print "adding key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
-        if self.iSubcase not in self.subcases: # initialize new subcase
-            #self.iSubcase += 1
-            self.subcases[self.iSubcase] = Subcase(id=self.iSubcase)
+    def _addParameterToSubcase(self,key,value,options,paramType,iSubcase):
+        """internal method"""
+        print "_adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(iSubcase,key,value,options,paramType)
 
-        subcase = self.subcases[self.iSubcase]
-        subcase.addData(key,value,options,paramType)
+        if iSubcase not in self.subcases: # initialize new subcase
+            #self.iSubcase += 1 # is handled in the read code
+            self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
+            print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)
+
+        subcase = self.subcases[iSubcase]
+        subcase._addData(key,value,options,paramType)
+        
+        print "\n%s\n" %(self.subcases[iSubcase])
 
     def __repr__(self):
         msg = ''
+        #subcase0 = self.subcases[0]
         for (iSubcase,subcase) in sorted(self.subcases.items()):
             msg += str(subcase)
             #print "\n"
@@ -123,3 +293,37 @@ class CaseControlDeck(object):
         return msg
     ###
 ###
+
+    def parseParam(self,param):
+        """
+        @warning doesnt support comment characters
+        """
+        param = param.substr('\n','').substr('\r','') # remove line endings
+        parse(param)
+        #param2 = [''.join(param)]
+        #print 'param2 = ',param2
+
+if __name__=='__main__':
+    lines = ['SPC=2',
+             'MPC =3',
+             'STRESS= ALL',
+             'DISPLACEMENT(PLOT,PUNCH) = 8',]
+    deck = CaseControlDeck(lines)
+    print "has SPC  True  = ",deck.hasParameter(0,'SPC')
+    print "has sPC  True  = ",deck.hasParameter(0,'sPC')
+    print "has junk False = ",deck.hasParameter(0,'JUNK')
+    
+    print "getSubcaseParameter(MPC) 3 = ",deck.getSubcaseParameter(0,'MPC')
+    deck.addParameterToGlobalSubcase('STRAIN = 7')
+    deck.addParameterToLocalSubcase(1,'STRAIN = 7')
+    print "-----added----"
+
+    out = deck.getSubcaseParameter(0,'STRAIN')
+    print "getSubcaseParameter(STRAIN) 7 = ",out
+
+    deck.addParameterToLocalSubcase(2,'SOL=200')
+    print "-----added2----"
+    out = deck.getSubcaseParameter(2,'SOL')
+    print "getSubcaseParameter(SOL) 200 = ",out
+    
+    
