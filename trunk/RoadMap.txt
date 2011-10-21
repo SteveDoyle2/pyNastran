@@ -1,9 +1,10 @@
 In order for a card to be supported, it must read AND write ALL fields.  Important calculated parameters are nice, but not required.
 
-Cards Supported (version 0.1)
+Cards Supported Reading/Writing (version 0.1)
 
 ----Nodes----:
-GRID (done)
+GRID   (done)
+SPOINT (done)
 
 ----Elements----:
 CONM2  (cid=0)
@@ -29,13 +30,15 @@ CHEXA  (same)
 RBE1 (testing)
 RBE2 (testing)
 RBE3 (testing)
-
+RBAR  (done)
+RBAR1 (done)
 
 ----Constraints----:
 SUPORT1 (done)
 
-SPC
-SPC1   (done???)
+SPC    (done)
+SPC1   (done)
+SPCD   (done)
 SPCSET
 SPCADD (done???)
 
@@ -62,19 +65,29 @@ PCOMP  (done)
 PSHELL (done)
 PSOLID (done)
 PTUBE  (done)
+PLSOLID (done)
 
 ----Loads----:
+LOAD   (done)
 PLOAD  (done)
 PLOAD1 (done)
+FORCE  (done)
 
 ----Coordinates----:
 CORD2R (done???)
 CORD2C
 CORD2S
 
+----Aero----:
+AERO  (needs integration)
+AEROS (needs integration)
+GUST  (needs integration)
+GRAV  (needs integration)
+
 ----Other----:
 INCLUDE
 PARAM (done)
+
 
 -----------------------------------------------
 Future (Planned):
@@ -90,7 +103,6 @@ CQUAD   (ready for testing)
 
 ----Properties----:
 PCOMPG
-PLSOLID
 PCONEAX
 PBEAM3
 
@@ -101,8 +113,8 @@ CORD1S
 
 ----Optimization----:
 DCONSTR  (ready for testing)
-DESVAR  (ready for testing)
-DDVAL  (ready for testing)
+DESVAR   (ready for testing)
+DDVAL    (ready for testing)
 DEQATN
 DRESP1
 DRESP2
@@ -113,7 +125,6 @@ DVPREL1
 PLOAD2
 PLOAD3
 PLOAD4
-FORCE  (done???)
 FORCE1
 FORCE2
 LOAD
@@ -128,8 +139,6 @@ EIGC
 EIGP
 
 ----Constraint Cards----:
-RBAR
-RBAR1
 
 ----Thermal----:
 QBDY1
@@ -148,7 +157,6 @@ FREQ4
 FREQ5
 
 ----Aero Cards----:
-GUST
 CAERO1
 CAERO2
 CAERO3
@@ -161,7 +169,6 @@ DAREA
 DLINK
 DMIG
 DTABLE
-GRAV
 MATT4
 MONPNT1
 MONPNT2
@@ -174,7 +181,6 @@ SESET
 SET1
 SET2
 SET3
-SPOINT
 SUPORT
 GENEL
 RROD

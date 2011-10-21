@@ -1,4 +1,5 @@
 import copy
+import sys
 from subcase import Subcase
 
 class CaseControlDeck(object):
@@ -132,16 +133,21 @@ class CaseControlDeck(object):
             #self.log().debug("rawLine = |%r|" %(line))
 
             lines2 = [line]
-            while ',' in line[-1]:
-                lines2.append(line)
+            while ',' in lines[i][-1]:
+                #print "lines[%s] = %s" %(i,lines[i])
                 i+=1
+                lines2.append(lines[i])
+                if i>100:
+                    sys.exit('huhh...')
             (j,key,value,options,paramType) = self._parseEntry(lines2)
             i+=j
             #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
             self._addParameterToSubcase(key,value,options,paramType,self.iSubcase)
             #print "--------------"
+            if i==100:
+                sys.exit('too many lines...')
         ###
-        print "done with while loop...\n"
+        #print "done with while loop...\n"
         
         #print str(self)
         #sys.exit('stopping...')
@@ -194,17 +200,19 @@ class CaseControlDeck(object):
         paramType = None
 
         line = lines[i]
+        #print "*****lines = ",lines
         if line.startswith('SUBCASE'):
-            print "line = |%r|" %(line)
+            #print "line = |%r|" %(line)
             (key,iSubcase) = line.split()
             #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
-            self.iSubcase = int(iSubcase)
+            value = int(iSubcase)
+            #self.iSubcase = int(iSubcase)
             paramType = 'SUBCASE-type'
         elif '=' in line: # TITLE, STRESS
             (key,value) = line.strip().split('=')
             key   = key.strip()
             value = value.strip()
-            #print "key=|%s| value=|%s|" %(key,value)
+            print "key=|%s| value=|%s|" %(key,value)
             paramType = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
@@ -221,7 +229,7 @@ class CaseControlDeck(object):
                 # read more lines....
                 if line[-1].strip()==',':
                     i+=1
-                    print "rawSETLine = |%r|" %(lines[i])
+                    #print "rawSETLine = |%r|" %(lines[i])
                     while 1:
                         if ','== lines[i].strip()[-1]:
                             fivalues += lines[i][:-1].split(',')
@@ -232,7 +240,7 @@ class CaseControlDeck(object):
                         i+=1
                     ###
                 ###
-                print "len(fivalues) = ",len(fivalues)
+                #print "len(fivalues) = ",len(fivalues)
                 value = fivalues
 
                 options = ID # needed a place to put it...
@@ -253,8 +261,8 @@ class CaseControlDeck(object):
             (key,value) = line.split(' ')
             paramType = 'BEGIN_BULK-type'
         else:
-            print 'C ??? line = ',line
-            raise Exception(line)
+            #print 'C ??? line = ',line
+            raise RunTimeError(line)
         ###
         i+=1
         return (i,key,value,options,paramType)
@@ -271,17 +279,18 @@ class CaseControlDeck(object):
 
     def _addParameterToSubcase(self,key,value,options,paramType,iSubcase):
         """internal method"""
-        print "_adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(iSubcase,key,value,options,paramType)
+        #print "_adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(iSubcase,key,value,options,paramType)
 
         if iSubcase not in self.subcases: # initialize new subcase
             #self.iSubcase += 1 # is handled in the read code
+            iSubcase = value
             self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
-            print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)
+            #print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)
 
         subcase = self.subcases[iSubcase]
         subcase._addData(key,value,options,paramType)
         
-        print "\n%s\n" %(self.subcases[iSubcase])
+        #print "\n%s\n" %(self.subcases[iSubcase])
 
     def __repr__(self):
         msg = ''
@@ -325,5 +334,4 @@ if __name__=='__main__':
     print "-----added2----"
     out = deck.getSubcaseParameter(2,'SOL')
     print "getSubcaseParameter(SOL) 200 = ",out
-    
     

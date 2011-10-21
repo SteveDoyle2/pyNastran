@@ -59,12 +59,12 @@ class Subcase(object):
             return (key,values2,options)
 
         elif paramType=='CSV-type':
-            print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
             ###
         else:
-            print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
             if isinstance(value,int):
                 pass
             elif value.isdigit():  # STRESS = ALL
