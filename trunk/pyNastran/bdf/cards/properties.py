@@ -50,43 +50,64 @@ class PBEAM(Property): # not done, cleanup
         self.J   = card.field(7)
         self.nsm = card.field(8)
 
-        fields = card.fields(9)
-        nFields = len(fields)
+        self.so  = []
+        self.xxb = []
+        self.a   = []
+        self.i1  = []
+        self.i2  = []
+        self.i12 = []
+        self.j   = []
+        self.nsm2 = []
+        self.c1 = []
+        self.c2 = []
+        self.d1 = []
+        self.d2 = []
+        self.e1 = []
+        self.e2 = []
+        self.f1 = []
+        self.f2 = []
+        
+        #fields = card.fields(9)
+        nFields = card.nFields()-9
         # counting continuation cards
         nMajor    = nFields/16
         nLeftover = nFields%16
         if nLeftover:
             nMajor+=1
-        
+
+        print "nMajor = ",nMajor
+
         for nRepeated in range(nMajor-1): # the -1 is for the last group of lines
-            nStart = nRepeated*16
-            so  = fields[nStart+10] # field 10 is the first possible so
-            xxb = fields[nStart+11]
-            a   = fields[nStart+12]
-            i1  = fields[nStart+13]
-            i2  = fields[nStart+14]
-            i12 = fields[nStart+15]
-            j   = fields[nStart+16]
-            nsm = fields[nStart+17]
-            c1 = fields[nStart+18]
-            c2 = fields[nStart+19]
-            d1 = fields[nStart+20]
-            d2 = fields[nStart+21]
-            e1 = fields[nStart+22]
-            e2 = fields[nStart+23]
-            f1 = fields[nStart+24]
-            f2 = fields[nStart+25]
+            nStart = nRepeated*16+10  # field 10 is the first possible so
+            propFields = card.fields(nStart,nStart+16)
+            print propFields
+            self.so.append( propFields[0])
+            self.xxb.append(propFields[1])
+            self.a.append(  propFields[2])
+            self.i1.append( propFields[3])
+            self.i2.append( propFields[4])
+            self.i12.append(propFields[5])
+            self.j.append(  propFields[6])
+            self.nsm2.append(propFields[7])
+            self.c1.append( propFields[8])
+            self.c2.append( propFields[9])
+            self.d1.append( propFields[10])
+            self.d2.append( propFields[11])
+            self.e1.append( propFields[12])
+            self.e2.append( propFields[13])
+            self.f1.append( propFields[14])
+            self.f2.append( propFields[15])
 
         # missing repeated lines
-        x = nStart+10+16
-        self.k1 = card.field(x)
-        self.k2 = card.field(x+1)
-        self.s1 = card.field(x+2)
-        self.s2 = card.field(x+3)
+        x = nRepeated*16+10
+        self.k1   = card.field(x)
+        self.k2   = card.field(x+1)
+        self.s1   = card.field(x+2)
+        self.s2   = card.field(x+3)
         self.nsia = card.field(x+4)
         self.nsib = card.field(x+5)
-        self.cwa = card.field(x+6)
-        self.cwb = card.field(x+7)
+        self.cwa  = card.field(x+6)
+        self.cwb  = card.field(x+7)
 
         self.m1a = card.field(x+8)
         self.m2a = card.field(x+9)
@@ -98,8 +119,18 @@ class PBEAM(Property): # not done, cleanup
         self.n2b = card.field(x+15)
 
     def __repr__(self):
-        raise Exception('not done...')
-        fields = ['PBEAM',self.pid,self.mid,] # other
+        fields = ['PBEAM',self.pid,self.mid,self.A,self.I1,self.I2,self.I12,self.J,self.nsm]
+        
+        print len(self.so)
+        for (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
+            self.so,self.xxb,self.a,self.i1,self.i2,self.i12,self.j,self.nsm2,
+            self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
+            fields += [so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
+            #print "asdf = ",asdf
+        # = [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
+        #           self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
+        print fields
+        #print "asdf = ",asdf
         return self.printCard(fields)
         
 #class PBEAML(Property): #not done

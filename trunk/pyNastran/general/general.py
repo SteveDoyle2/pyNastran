@@ -1,4 +1,5 @@
 from numpy import matrix
+from types import NoneType
 
 def ListPrint(listA):
     if len(listA)==0:
@@ -21,8 +22,11 @@ def ListPrint(listA):
 
     else:
         for a in listA:
+            #print "a = ",a,type(a)
             if isinstance(a,str):
                 msg += ' %s,' %(a)
+            elif isinstance(a,NoneType):
+                msg += ' None,'
             elif isinstance(a,float):
                 msg += ' %-4.2f,' %(a)
             elif isinstance(a,int):

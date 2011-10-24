@@ -216,7 +216,7 @@ class CaseControlDeck(object):
             (key,value) = line.strip().split('=')
             key   = key.strip()
             value = value.strip()
-            print "key=|%s| value=|%s|" %(key,value)
+            if self.debug:  print "key=|%s| value=|%s|" %(key,value)
             paramType = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
