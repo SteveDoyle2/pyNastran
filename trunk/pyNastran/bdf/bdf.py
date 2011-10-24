@@ -194,6 +194,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         #print "self.caseControlLines = ",self.caseControlLines
         
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
+        print "done w/ case control..."
         return self.caseControlLines
 
     def Is(self,card,cardCheck):
@@ -589,6 +590,10 @@ if __name__=='__main__':
     #fem.sumForces()
     #fem.sumMoments()
     
+    #print "----------"
+    #deck = fem.caseControlDeck #.subcases[1]
+    #print "deck = \n",deck
+    #print str()
     fem.write('fem.out.bdf')
     #fem.writeAsCTRIA3('fem.out.bdf')
 

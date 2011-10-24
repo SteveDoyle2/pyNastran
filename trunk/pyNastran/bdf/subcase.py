@@ -12,6 +12,7 @@ class Subcase(object):
         return False
 
     def getParameter(self,paramName):
+        paramName = self.updateParamName(paramName)
         return self.params[paramName][0:2]
 
     def updateParamName(self,paramName):
@@ -21,10 +22,13 @@ class Subcase(object):
         @todo not a complete list
         @warning not implemented yet...
         """
-        if   paramName.startswith('SUPO'):  paramName = 'SUPORT1'
+        if paramName.startswith('DESO'):    paramName = 'DESOBJ'
+        elif paramName.startswith('DESS'):  paramName = 'DESSUB'
         elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
-        elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'
+        elif paramName.startswith('EXPO'):  paramName = 'EXPORTLID'
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
+        elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
+        #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'
         return  paramName
 
     def _addData(self,key,value,options,paramType):
@@ -78,6 +82,7 @@ class Subcase(object):
         subcase list.
         """
         msg = ''
+        #msg += 'id=%s   ' %(self.id)
         (value,options,paramType) = param
         
         spaces = '    '*self.id
@@ -132,6 +137,16 @@ class Subcase(object):
         #print "msg = |%r|" %(msg)
         return msg
 
+    def crossReference(self,mesh):
+        if 'LOAD' in self.params:
+            pass
+        if 'SUPORT' in self.params:
+            pass
+        if 'MPC' in self.params:
+            pass
+        if 'SPC' in self.params:
+            pass
+
     def finishSubcase(self):
         """
         removes the subcase parameter from the subcase to avoid printing it in a funny spot
@@ -139,6 +154,9 @@ class Subcase(object):
         if 'SUBCASE' in self.params:
             del self.params['SUBCASE']
         #print "self.params %s = %s" %(self.id,self.params)
+
+    def writeSubcase(self):
+        pass
 
     def __repr__(self):
         """
