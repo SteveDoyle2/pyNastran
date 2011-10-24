@@ -13,18 +13,21 @@ class CaseControlDeck(object):
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
             log = loggerObj.startLog('debug') # or info
+        self.debug = False
 
         self.log = log
         self.lines = lines
         self.subcases = {0:Subcase(id=0)}
-        self.iSubcase = 0
+        #self.iSubcase = 0
         self._read(self.lines)
 
     def hasParameter(self,iSubcase,paramName):
+        #paramName = self.updateParamName(paramName)
         if self.hasSubcase(iSubcase):
             return self.subcases[iSubcase].hasParameter(paramName.upper())
 
     def getSubcaseParameter(self,iSubcase,paramName):
+        #paramName = self.updateParamName(paramName)
         #print "iSubcase = ",iSubcase,'\n'
         if self.hasSubcase(iSubcase):
             print str(self.subcases[iSubcase])
@@ -65,6 +68,7 @@ class CaseControlDeck(object):
         if overwriteSubcase:
             print "inside overwrite..."
             self.subcases[iToSubcase] = copy.deepcopy(self.subcases[iFromSubcase])
+            self.subcases[iToSubcase].id = iToSubcase
         else:
             if not hasSubcase(iToSubcase):
                 raise RuntimeError('iToSubcase=|%s| does not exist' %(iToSubcase))
@@ -72,7 +76,6 @@ class CaseControlDeck(object):
                 subcaseTo[key] = copy.deepcopy(param)
             ###
         ###
-            
 
     def getSubcaseList(self):
         return sorted(self.subcases.keys())
@@ -125,6 +128,7 @@ class CaseControlDeck(object):
             doesnt check for 72 character width lines, but will follow that
             when it's written out
         """
+        iSubcase = 0
         lines = self.cleanLines(lines)
         i = 0
         while i < len(lines):
@@ -142,7 +146,7 @@ class CaseControlDeck(object):
             (j,key,value,options,paramType) = self._parseEntry(lines2)
             i+=j
             #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
-            self._addParameterToSubcase(key,value,options,paramType,self.iSubcase)
+            iSubcase = self._addParameterToSubcase(key,value,options,paramType,iSubcase)
             #print "--------------"
             if i==100:
                 sys.exit('too many lines...')
@@ -216,11 +220,13 @@ class CaseControlDeck(object):
             paramType = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
+                #paramType = 'STRESS-type'
                 sline = key.strip(')').split('(')
-                key = sline[0]
-                options = sline[1].split(',')
+                if key=='TEMPERATURE' or key=='TEMP':
+                    pass
+                else:
+                    options = sline[1].split(',')
                 #print "key=|%s| options=%s" %(key,options)
-                paramType = 'STRESS-type'
             elif ' ' in key and ',' in value: # SET-type
                 (key,ID) = key.split()
                 fivalues = value.rstrip(' ,').split(',') # float/int values
@@ -279,38 +285,56 @@ class CaseControlDeck(object):
 
     def _addParameterToSubcase(self,key,value,options,paramType,iSubcase):
         """internal method"""
-        #print "_adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(iSubcase,key,value,options,paramType)
+        if self.debug:
+            print "_adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(iSubcase,key,value,options,paramType)
 
-        if iSubcase not in self.subcases: # initialize new subcase
-            #self.iSubcase += 1 # is handled in the read code
+        if key=='SUBCASE':
+            assert value not in self.subcases
+            assert isinstance(value,int)
             iSubcase = value
+            #print "value=",value
             self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
-            #print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)
+            if self.debug:
+                print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)    
+        elif iSubcase not in self.subcases: # initialize new subcase
+            #self.iSubcase += 1 # is handled in the read code
+            raise
 
         subcase = self.subcases[iSubcase]
         subcase._addData(key,value,options,paramType)
         
         #print "\n%s\n" %(self.subcases[iSubcase])
+        return iSubcase
+
+    #def __str__(self):
+    #    return self.__repr__()
+
+    def crossReference(self,mesh):
+        for (iSubcase,subcase) in sorted(self.subcases.items()):
+            subcase.crossReference(mesh)
 
     def __repr__(self):
         msg = ''
-        #subcase0 = self.subcases[0]
+        subcase0 = self.subcases[0]
         for (iSubcase,subcase) in sorted(self.subcases.items()):
+            #if iSubcase==0:
             msg += str(subcase)
+            #else:
+            #    msg += subcase.writeSubcase(subcase0)
             #print "\n"
             #break
         return msg
     ###
 ###
 
-    def parseParam(self,param):
-        """
-        @warning doesnt support comment characters
-        """
-        param = param.substr('\n','').substr('\r','') # remove line endings
-        parse(param)
-        #param2 = [''.join(param)]
-        #print 'param2 = ',param2
+    #def parseParam(self,param):
+    #    """
+    #    @warning doesnt support comment characters
+    #    """
+    #    param = param.substr('\n','').substr('\r','') # remove line endings
+    #    parse(param)
+    #    #param2 = [''.join(param)]
+    #    #print 'param2 = ',param2
 
 if __name__=='__main__':
     lines = ['SPC=2',
