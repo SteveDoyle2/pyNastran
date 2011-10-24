@@ -2,6 +2,7 @@ import os
 import sys
 import copy
 from math import ceil
+from pyNastran.general.general import ListPrint
 
 # 3rd party
 import numpy
@@ -63,7 +64,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         'RBAR','RBAR1','RBE1','RBE2','RBE3',
         
         'PELAS',
-        'PROD',#'PBEAM','PBEAM3','PBEAML'
+        'PROD','PBEAM',#'PBEAM3','PBEAML'
         'PSHELL','PCOMP', # 'PCOMPG',
         'PSOLID','PLSOLID',
         'MAT1','MAT2','MAT8','MAT9','MAT10',  # 'MAT3','MAT4','MAT5',
@@ -236,6 +237,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         return True
 
     def readBulkDataDeck(self):
+        debug = self.debug
         if self.debug:
             self.log().debug("*readBulkDataDeck")
         self.openFile()
@@ -245,7 +247,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         
         #oldCardObj = BDF_Card()
         while 1: # keep going until finished
-            (card,cardName) = self.getCard(debug=False) # gets the cardLines
+            (card,cardName) = self.getCard(debug=debug) # gets the cardLines
             #print "outcard = ",card
             #if cardName=='CQUAD4':
             #    print "card = ",card
@@ -254,7 +256,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 #print ""
                 #print "not a reject"
                 card = self.processCard(card) # parse the card into fields
-                #print "processedCard = ",card
+                print "processedCard = ",card
             elif card[0].strip()=='':
                 #print "funny strip thing..."
                 pass
@@ -270,6 +272,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             #print "card2 = ",ListPrint(card)
             #print "card = ",card
             cardName = self.getCardName(card)
+            
+            if 'ENDDATA' in cardName:
+                print cardName
+                break
             #self.log().debug('cardName = |%s|' %(cardName))
             
             #cardObj = BDF_Card(card,oldCardObj)
@@ -293,8 +299,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 #if special:
                 #    print "iCard = ",iCard
                 self.addCard(card,cardName,iCard=0,oldCardObj=None)
-                if self.foundEndData:
-                    break
+                #if self.foundEndData:
+                #    break
             ### iCard
             if self.doneReading or len(self.lines)==0:
                 break
@@ -527,7 +533,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.rejectCards.append(card)
             ###
         except:
-            print "failed! Unreduced Card=%s" %(card)
+            print "failed! Unreduced Card=%s" %(ListPrint(card))
             raise
         ### try-except block
 

@@ -1,3 +1,4 @@
+import sys
 #from BDF_Card import collapse
 
 class cardMethods(object):
@@ -26,7 +27,7 @@ class cardMethods(object):
         i=1
         #if emptyLines<50:
         try:
-            tempcard = self.getMultiLineCard(i,tempcard,debug=False)
+            (i,tempcard) = self.getMultiLineCard(i,tempcard,debug=debug)
         except IndexError:
             #try:
             #    tempcard = self.getMultiLineCard(i,tempcard,debug=True)
@@ -98,18 +99,23 @@ class cardMethods(object):
             #    iline = ''
 
             sCardName = iline[0:8].strip()  # trying to find if it's blank...
-            if debug:
-                print "sCardName = ",sCardName
-                print "len(iline) = ",len(iline)
-                print "isNotDone B = ",isNotDone
             isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
+            if debug:
+                print "CRITERIA"
+                print "iline       = |%r|" %(iline)
+                print "sCardName   = ",sCardName
+                print "len(iline)  = ",len(iline)
+                print "iline[0]    = ",iline[0]
+                print "isNotDone B = ",isNotDone
         ###
-        if debug:
-            self.log().debug("tempcard2 = |%s|" %(tempcard))
+        #if debug:
+        self.log().debug("tempcard2 = |%s|" %(tempcard))
             #print ""
-        return tempcard
+        #sys.exit('asdf')
+        return (i,tempcard)
 
     def nastranSplit(self,line,isLargeField):
+        raise
         fields = []
         nChars = len(line)
         iStart = 0
@@ -145,12 +151,12 @@ class cardMethods(object):
         fields2 = []
         for i,field in enumerate(fields):
             field = field.strip()
-            if debug:
-                print "i=%s field=|%s|" %(i,field)
-            if '*'==field or '+'==field:
+            #if debug:
+            if (i==9) and field=='' or field=='*' or field=='+':
+                #print "skipping * or + or empty field"
                 pass
-                print "skipping * or +"
             else:
+                print "i=%s field=|%s|" %(i,field)
                 fields2.append(field)
         return fields2
 
@@ -173,7 +179,7 @@ class cardMethods(object):
         isLargeField = self.isLargeField(tempcard)
         #print "*** isLargeField = ",isLargeField
 
-        #print "tempcard = ",tempcard
+        print "tempcard = ",tempcard
         for i,line in enumerate(tempcard):
             #print "i = ",i
             if debug:
@@ -183,33 +189,37 @@ class cardMethods(object):
                 break
             if debug:
                 self.log().debug("  sline = %s" %(sline))
-            if ',' in sline:
+            if ',' in sline:  #CSV
                 sline = sline.split(',')
-            else:
+            else: # standard
                 sline = self.nastranSplit2(sline,isLargeField,debug=debug)
             #name = sline[0]
             #nFields = len(sline)
-            #print "sline = ",sline
+            print "sline = ",sline
             
-            cardName = sline[0].strip(' *')
-            card.append(cardName)
-            for (fieldCounter,valueIn) in enumerate(sline[1:]):
-                #print "fieldCounter=%s" %(fieldCounter)
-                value = self.getValue(valueIn,debug=debug)
+            for (fieldCounter,valueIn) in enumerate(sline):
                 #if fieldCounter==8:
                 #    print "**type(value) = ",type(value)
                 #    break
                     #sys.exit(12131)
-                if debug:
-                    print "type(value) = ",type(value)
-                    print ""
-                card.append(value)
+                #if debug:
+                #    print "type(value) = ",type(value)
+                #    print ""
+                if i>0 and fieldCounter==0: # blank leading field
+                    pass
+                else:
+                    value = self.getValue(valueIn,debug=debug)
+                    card.append(value)
+                    print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
+                ###
             ###
         ###
+        print "cardOut&& = ",card
         if debug:
             self.log().debug("  sline2 = %s" %(card))
             #self.log().debug("  sline2 = %s" %(collapse(card)))
-        return self.makeSingleStreamedCard(card)
+        #return self.makeSingleStreamedCard(card)
+        return card
         
     def makeSingleStreamedCard(self,card,debug=False):
         """
