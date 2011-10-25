@@ -3,7 +3,7 @@ from types import NoneType
 def setBlankIfDefault(value,default):
     """used when setting the output data of a card to clear default values"""
     if value==default and type(value)==type(default):
-        return ''
+        return None
     return value
 
 def setDefaultIfBlank(value,default):

@@ -14,7 +14,7 @@ CELAS2 (done)
 CROD   (done)
 CONROD (done)
 CTUBE  (done)
-CBEAM
+CBEAM  (done)
 CBAR   (done)
 
 CTRIA3 (done)
@@ -80,10 +80,12 @@ CORD2C
 CORD2S
 
 ----Aero----:
-AERO  (done)
-AEROS (done)
-GUST  (done)
-GRAV  (done)
+AERO    (done)
+AEROS   (done)
+GUST    (done)
+GRAV    (done)
+FLUTTER (done)
+FLFACT  (done)
 
 ----Other----:
 INCLUDE
@@ -158,12 +160,23 @@ FREQ4
 FREQ5
 
 ----Aero Cards----:
+AEPARM
+AESTAT
+AESURFS
+
 CAERO1
 CAERO2
 CAERO3
 CAERO4
 CAERO5
-FLFACT (in progress)
+
+SPLINE1
+SPLINE2
+SPLINE3
+SPLINE4
+SPLINE5
+SPLINE6
+SPLINE7
 
 ----Other----:
 DAREA

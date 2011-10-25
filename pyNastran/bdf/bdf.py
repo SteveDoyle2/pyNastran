@@ -37,7 +37,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         #self.n = 0
         #self.nCards = 0
         self.doneReading = False
-        #self.foundEndData = False
+        self.foundEndData = False
 
         self.params = {}
         self.nodes = {}
@@ -45,15 +45,17 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         self.properties = {}
         self.materials = {}
         self.loads = {}
-        #self.log().debug("bdf.py - coords1")
         self.coords = {0: CORD2R() }
-        #self.log().debug("bdf.py - coords2")
-        self.constraints = {}
+
+        self.constraints = {} # suport1, anything else???
+        self.spcObject = constraintObject()
+        self.mpcObject = constraintObject()
 
         # aero cards
         self.aeros   = {}
         self.gusts   = {}  # can this be simplified ???
         self.flfacts = {}  # can this be simplified ???
+        self.flutters = {}
 
         self.rejects = []
         self.rejectCards = []
@@ -66,13 +68,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         
         'CONM2',
         'CELAS1','CELAS2',
-        'CBAR','CROD',
+        'CBAR','CROD','CTUBE','CBEAM',
         'CTRIA3','CQUAD4',
         'CHEXA','CPENTA','CTETRA',
         'RBAR','RBAR1','RBE1','RBE2','RBE3',
         
         'PELAS',
-        'PROD','PBEAM',#'PBEAM3','PBEAML'
+        'PROD','PBAR','PBEAM',#'PBEAM3','PBEAML'
         'PSHELL','PCOMP', # 'PCOMPG',
         'PSOLID','PLSOLID',
         'MAT1','MAT2','MAT8','MAT9','MAT10',  # 'MAT3','MAT4','MAT5',
@@ -80,9 +82,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         'SPC','SPC1','SPCD','SPCADD','SUPORT1',
         'MPC','MPCADD',
 
-        'LOAD','FORCE','PLOAD','PLOAD2','PLOAD4'
+        'LOAD','FORCE','PLOAD','PLOAD2','PLOAD4',
 
-        'FLFACT','AERO','AEROS','GUST',
+        'FLFACT','AERO','AEROS','GUST','FLUTTER',
 
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
@@ -116,69 +118,45 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         self.log().info('---finished FEM_Mesh.read of %s---' %(self.infilename))
         sys.stdout.flush()
 
-    def writeElementsAsCTRIA3(self):
-        eids = self.elementIDs()
-        #print "eids = ",eids
-        nextEID = max(eids)+1  # set the new ID
-        msg = '$ELEMENTS\n'
-        for key,element in sorted(self.elements.items()):
-            if element.Is('CQUAD4'):
-                msg += element.writeAsCTRIA3(nextEID)
-                nextEID+=1
-            else:
-                msg += str(element)
-            ###
-        ###
-        return msg
-
-    def write(self,outfilename='fem.out.bdf',debug=False):
-        msg  = self.writeHeader()
-        msg += self.writeParams()
-        msg += self.writeNodes()
-        msg += self.writeElements()
-        msg += self.writeProperties()
-        msg += self.writeMaterials()
-        msg += self.writeLoads()
-        msg += self.writeAero()
-        msg += self.writeConstraints()
-        msg += self.writeRejects()
-        msg += self.writeCoords()
-        msg += 'ENDDATA\n'
-
-        self.log().info("***writing %s" %(outfilename))
-        outfile = open(outfilename,'wb')
-        outfile.write(msg)
-        outfile.close
-
-    def writeAsCTRIA3(self,outfilename='fem.out.bdf',debug=False):
-        msg  = self.writeHeader()
-        msg += self.writeParams()
-        msg += self.writeNodes()
-        msg += self.writeElementsAsCTRIA3()
-        msg += self.writeProperties()
-        msg += self.writeMaterials()
-        msg += self.writeLoads()
-        msg += self.writeConstraints()
-        msg += self.writeRejects()
-        msg += self.writeCoords()
-        msg += 'ENDDATA\n'
-
-        self.log().info("***writing %s" %(outfilename))
-        outfile = open(outfilename,'wb')
-        outfile.write(msg)
-        outfile.close
+        isDone = self.foundEndData
+        return ('BulkDataDeck',isDone)
 
     def crossReference(self):
         #print "cross Reference is a temp function"
         #for key,e in self.elements.items():
         #    print(e)
-        for key,n in self.nodes.items():
+        
+        #self.spcObject.crossReference(self)
+        #self.caseControlDeck.crossReference(self)
+        self.crossReference_Nodes()
+        #self.crossReference_Elements()
+        #self.crossReference_Properties()
+
+    def crossReference_Nodes(self):
+        for nid,n in self.nodes.items():
             #print "n.cid = ",n.cid
             coord = self.Coord(n.cid)
             #print "*",str(coord)
             n.crossReference(coord)
-        pass
-        
+        ###
+
+    def crossReference_Elements(self):
+        for eid,e in self.elements.items():
+            #print "n.cid = ",n.cid
+            #coord = self.Coord(n.cid)
+            #print "*",str(coord)
+            e.crossReference(self)
+        ###
+
+    def crossReference_Properties(self):
+        for pid,p in self.properties.items():
+            #print "n.cid = ",n.cid
+            #coord = self.Coord(n.cid)
+            #print "*",str(coord)
+            p.crossReference(self)
+        ###
+
+
     def readExecutiveControlDeck(self):
         self.openFile()
         line = ''
@@ -246,6 +224,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
 
     def readBulkDataDeck(self):
         debug = self.debug
+        #debug = False
+        
         if self.debug:
             self.log().debug("*readBulkDataDeck")
         self.openFile()
@@ -437,6 +417,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 if cardObj.field(5):
                     prop = PELAS(cardObj,1) # makes 2nd PELAS card
                 self.addProperty(prop)
+
+            elif cardName=='PBAR':
+                prop = PBAR(cardObj)
+                self.addProperty(prop)
             elif cardName=='PBEAM':
                 prop = PBEAM(cardObj)
                 self.addProperty(prop)
@@ -452,6 +436,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='PTUBE':
                 prop = PTUBE(cardObj)
                 self.addProperty(prop)
+
             elif cardName=='PSHELL':
                 prop = PSHELL(cardObj)
                 self.addProperty(prop)
@@ -461,6 +446,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             #elif cardName=='PCOMPG':
             #    prop = PCOMPG(cardObj)
             #    self.addProperty(prop)
+
             elif cardName=='PSOLID':
                 prop = PSOLID(cardObj)
                 self.addProperty(prop)
@@ -504,16 +490,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
 
             elif cardName=='SPC':
                 constraint = SPC(cardObj)
-                self.addConstraint(constraint)
+                self.addConstraint_SPC(constraint)
             elif cardName=='SPC1':
                 constraint = SPC1(cardObj)
-                self.addConstraint(constraint)
+                self.addConstraint_SPC(constraint)
             elif cardName=='SPCD':
                 constraint = SPC1(cardObj)
-                self.addConstraint(constraint)
+                self.addConstraint_SPC(constraint)
             elif cardName=='SPCADD':
                 constraint = SPCADD(cardObj)
-                self.addConstraint(constraint)
+                self.addConstraint_SPC(constraint)
             elif cardName=='SUPORT1':
                 #print "card = ",card
                 constraint = SUPORT1(cardObj)
@@ -536,6 +522,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 #print "card = ",card
                 gust = GUST(cardObj)
                 self.addGust(gust)
+            elif cardName=='FLUTTER':
+                #print "card = ",card
+                flutter = FLUTTER(cardObj)
+                self.addFlutter(flutter)
 
             elif cardName=='CORD2R':
                 coord = CORD2R(cardObj)

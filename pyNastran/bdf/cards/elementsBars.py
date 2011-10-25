@@ -6,10 +6,14 @@ class CardInstantiationError(RuntimeError):
 
 from elements import Element
 
-class CROD(Element):
-    type = 'CROD'
+class LineElement(Element):
     def __init__(self,card):
         Element.__init__(self,card)
+
+class CROD(LineElement):
+    type = 'CROD'
+    def __init__(self,card):
+        LineElement.__init__(self,card)
         self.id  = card.field(1)
         self.pid = card.field(2,self.id)
 
@@ -33,7 +37,7 @@ class CTUBE(CROD):
 class CONROD(CROD):
     type = 'CONROD'
     def __init__(self,card):
-        Element.__init__(self,card)
+        LineElement.__init__(self,card)
         self.id  = card.field(1)
 
         nids = card.fields(2,4)
@@ -80,7 +84,7 @@ class CONROD(CROD):
         return self.printCard(fields)
 
 
-class CBAR(Element):
+class CBAR(LineElement):
     """
     CBAR EID PID GA GB X1 X2 X3 OFFT
     PA PB W1A W2A W3A W1B W2B W3B
@@ -93,7 +97,7 @@ class CBAR(Element):
     """
     type = 'CBAR'
     def __init__(self,card):
-        Element.__init__(self,card)
+        LineElement.__init__(self,card)
         self.pid = card.field(2)
         self.ga = card.field(3)
         self.gb = card.field(4)
@@ -183,7 +187,7 @@ class CBEAM(CBAR):
     """
     type = 'CBEAM'
     def __init__(self,card):
-        Element.__init__(self,card)
+        LineElement.__init__(self,card)
         self.pid = card.field(2,self.id)
         self.ga = card.field(3)
         self.gb = card.field(4)
@@ -207,14 +211,17 @@ class CBEAM(CBAR):
     def initOfftBit(self,card):
         field8 = card.field(8)
         if isinstance(field8,float):
-            self.bit = field8
+            self.isOfft = False
             self.offt = None
+            self.bit = field8
         elif field8 is None:
+            self.isOfft = True
             self.offt = 'GGG' # default
             self.bit = None
         elif isinstance(field8,str):
-            self.offt = field8
+            self.isOfft = True
             self.bit = None
+            self.offt = field8
             #print "self.offt = ",self.offt
             assert self.offt[0] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)
             assert self.offt[1] in ['G','B','O'],'invalid offt parameter of CBEAM...offt=%s' %(self.offt)

@@ -2,7 +2,7 @@ from baseCard import Element
 
 class RigidElement(Element):
      def __repr__(self):
-        fields = ['RBAR',self.eid]
+        fields = ['RIGID_EL',self.eid]
         return self.printCard(fields)
 
 class RBAR(RigidElement):

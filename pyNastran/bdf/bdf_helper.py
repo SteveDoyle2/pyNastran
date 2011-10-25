@@ -7,24 +7,31 @@ from bdf_cardMethods import cardMethods
 
 class getMethods(object):
     def getNodeIDs(self):
+        raise Exception('use self.nodeIDs()')
         return sorted(self.nodes.keys())
-
-    def propertyIDs(self):
-        return self.properties.keys()
 
     def nodeIDs(self):
         return self.nodes.keys()
         
-    def getElementIDs(self):
-        return sorted(self.elements.keys())
-
     def elementIDs(self):
         return self.elements.keys()
 
+    def propertyIDs(self):
+        return self.properties.keys()
+
+    def materialIDs(self):
+        return self.materials.keys()
+
+    def getElementIDs(self):
+        raise Exception('use self.elementIDs() and sort it...')
+        return sorted(self.elements.keys())
+
     def getPropertyIDs(self):
+        raise Exception('use self.propertyIDs() and sort it...')
         return sorted(self.properties.keys())
 
     def getMaterialIDs(self):
+        raise Exception('use self.materialIDs() and sort it...')
         return sorted(self.materials.keys())
 
     def getNodes(self):
@@ -32,6 +39,9 @@ class getMethods(object):
         for nid,node in sorted(self.nodes.items()):
             nodes.append(node)
         return nodes
+
+    def getNodeIDsWithElement(self,eid):
+        return self.getNodeIDsWithElements([eid])
 
     def getNodeIDsWithElements(self,eids):
         nids2 = set([])
@@ -43,8 +53,11 @@ class getMethods(object):
         ###
         return nids2
 
+    def getElementIDsWithPID(self,pid):
+        return self.getElementIDsWithPIDs([pid])
+
     def getElementIDsWithPIDs(self,pids):
-        self.log().info("pids = %s" %(pids))
+        #self.log().info("pids = %s" %(pids))
 
         eids = self.elementIDs()
         eids2 = []
@@ -64,14 +77,15 @@ class getMethods(object):
 
     def Element(self,eid):
         return self.elements[eid]
-    def Load(self,lid):
-        return self.loads[lid]
 
     def Property(self,pid):
         return self.properties[pid]
 
     def Material(self,mid):
         return self.materials[mid]
+
+    def Load(self,lid):
+        return self.loads[lid]
 
     def Coord(self,cid):
         return self.coords[cid]
@@ -80,19 +94,6 @@ class getMethods(object):
         self.flfacts[param.key] = flfact
 
 class addMethods(object):
-    def addAero(self,aero):
-        assert aero.acsid not in self.aeros
-        self.aeros[aero.acsid] = aero
-
-    def addGust(self,gust):
-        assert gust.sid not in self.gusts
-        self.gusts[gust.sid] = gust
-
-    def addFLFACT(self,flfact):
-        assert flfact.sid not in self.flfacts
-        self.flfacts[flfact.sid] = flfact # set id...
-        print "added flfact...flflact = ",flfact
-
     def addParam(self,param):
         assert param.key not in self.params
         self.params[param.key] = param
@@ -123,10 +124,39 @@ class addMethods(object):
         else:
             self.loads[key] = [load]
 
+    def addConstraint_SPCADD(self,constraint):
+        self.spcObject.add(constraint)
+
+    def addConstraint_SPC(self,constraint):
+        self.spcObject.append(constraint)
+        #key = constraint.cid
+        #if self.constraints.has_key(key):
+        #    self.constraints[key].append(constraint)
+        #else:
+        #    self.constraints[key] = [constraint]
+
     def addConstraint(self,constraint):
+        #self.spcObject.append(constraint)
         key = constraint.cid
         if self.constraints.has_key(key):
             self.constraints[key].append(constraint)
         else:
             self.constraints[key] = [constraint]
+
+    def addAero(self,aero):
+        assert aero.acsid not in self.aeros
+        self.aeros[aero.acsid] = aero
+
+    def addGust(self,gust):
+        assert gust.sid not in self.gusts
+        self.gusts[gust.sid] = gust
+
+    def addFlutter(self,flutter):
+        assert flutter.sid not in self.flutters
+        self.flutters[flutter.sid] = flutter
+
+    def addFLFACT(self,flfact):
+        assert flfact.sid not in self.flfacts
+        self.flfacts[flfact.sid] = flfact # set id...
+        #print "added flfact...flflact =\n"+flfact
 

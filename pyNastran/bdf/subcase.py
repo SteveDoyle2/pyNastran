@@ -18,15 +18,16 @@ class Subcase(object):
     def updateParamName(self,paramName):
         """
         takes an abbreviated name and expands it so the user can type DISP or 
-        DISPLACEMNT and get the same answer
+        DISPLACEMENT and get the same answer
         @todo not a complete list
-        @warning not implemented yet...
+        @warning not tested yet...
         """
-        if paramName.startswith('DESO'):    paramName = 'DESOBJ'
+        if   paramName.startswith('DESO'):  paramName = 'DESOBJ'
         elif paramName.startswith('DESS'):  paramName = 'DESSUB'
         elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
         elif paramName.startswith('EXPO'):  paramName = 'EXPORTLID'
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
+        elif paramName.startswith('PRESS'): paramName = 'PRESSURE'
         elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
         #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'
         return  paramName
@@ -138,15 +139,43 @@ class Subcase(object):
         return msg
 
     def crossReference(self,mesh):
+        print "keys = ",sorted(self.params.keys())
         if 'LOAD' in self.params:
-            pass
+            loadID = self.params['LOAD'][0]
+            loadObj = mesh.loads[loadID]
+            loadObj.crossReference(mesh)
         if 'SUPORT' in self.params:
             pass
         if 'MPC' in self.params:
+            #mpcID = self.params['MPC'][0]
+            #mpcObj = mesh.mpcs[mpcID]
+            #mpcObj.crossReference(mesh)
             pass
         if 'SPC' in self.params:
+            #spcID = self.params['SPC'][0]
+            #print "SPC ID = ",spcID
+            #spcObj = mesh.spcObject
+            #spcObj.crossReference(spcID,mesh)
             pass
-
+        if 'TSTEPNL' in self.params:
+            tstepnlID = self.params['TSTEPNL'][0]
+            tstepnlObj = mesh.tstepnl[tstepnlID]
+            tstepnlObj.crossReference(mesh)
+        if 'NLPARM' in self.params:
+            nlparmID = self.params['NLPARM'][0]
+            nlparmObj = mesh.nlparms[nlparmID]
+            nlparmObj.crossReference(mesh)
+        if 'TRIM' in self.params:
+            trimID = self.params['TRIM'][0]
+            trimObj = mesh.trims[trimID]
+            trimObj.crossReference(mesh)
+        if 'GUST' in self.params:
+            gustID = self.params['GUST'][0]
+            gustObj = mesh.gusts[gustID]
+            gustObj.crossReference(mesh)
+        if 'DLOAD' in self.params: # ???
+            pass
+    
     def finishSubcase(self):
         """
         removes the subcase parameter from the subcase to avoid printing it in a funny spot

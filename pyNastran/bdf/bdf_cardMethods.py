@@ -63,7 +63,7 @@ class cardMethods(object):
             self.log().debug("-------\n")
         return (upperCard,cardName)
     
-    def getMultiLineCard(self,i,tempcard,isCSV=False,debug=True):
+    def getMultiLineCard(self,i,tempcard,isCSV=False,debug=False):
         if debug:
             print "tempcard1 = ",tempcard
         iline = self.lines[i].rstrip()
@@ -74,10 +74,10 @@ class cardMethods(object):
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
         isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
         if debug:
-            self.log().debug("  iline = |%s|" %(iline))
-            self.log().debug("  sCardName = |%s|" %(sCardName))
             self.log().debug("  len(iline) = |%s|" %(len(iline)))
             print "  iline[0] = |%s|" %(iline[0])
+            self.log().debug("  sCardName = |%s|" %(sCardName))
+            self.log().debug("  iline = |%s|" %(iline))
             print ""
             print "isNotDone A = %s" %(isNotDone)
         
@@ -149,14 +149,15 @@ class cardMethods(object):
         #    print "  fields = ",collapse(fields)
         
         fields2 = []
-        for i,field in enumerate(fields):
-            field = field.strip()
+        for i,rawField in enumerate(fields):
+            field = rawField.strip()
             #if debug:
             #if (i==9) and field=='' or field=='*' or field=='+':
                 #print "skipping * or + or empty field"
             #    pass
             #else:
-                #print "i=%s field=|%s|" %(i,field)
+            if debug:
+                self.log().debug("i=%s rawField=|%s| field=|%s|" %(i,rawField,field))
             fields2.append(field)
         return fields2
 
@@ -176,19 +177,21 @@ class cardMethods(object):
         """
         #debug = True
         card = []
-        isLargeField = self.isLargeField(tempcard)
+        #isLargeField = self.isLargeField(tempcard)
         #print "*** isLargeField = ",isLargeField
 
         #print "tempcard = ",tempcard
         for i,line in enumerate(tempcard):
+            isLargeField = self.isLargeField(line)
             #print "i = ",i
             if debug:
-                self.log().debug("  line = %s" %(line))
-            sline = line.strip('\r\n')[0:80]
+                self.log().debug("  line  = |%r|" %(line))
+            sline = line.rstrip('\r\n')[0:73]
             if not(sline):
                 break
             if debug:
-                self.log().debug("  sline = %s" %(sline))
+                self.log().debug("  line2 = |%r|" %(sline))
+
             if ',' in sline:  #CSV
                 sline = sline.split(',')
             else: # standard
@@ -387,7 +390,8 @@ def stringParser(stringIn):
     else:
         #print "string = ",stringIn
         #print "typeCheck = ",typeCheck
-        return 'string'
+        #return 'string'
+        return stringIn
     
     print "typeCheck = |%s|" %(typeCheck)
     raise Exception('this should never happen...')
