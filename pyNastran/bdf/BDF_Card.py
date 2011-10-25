@@ -1,3 +1,4 @@
+import sys
 import copy #???
 
 def collapse(card):
@@ -37,6 +38,7 @@ class BDF_Card(object):
             self.card = None
             self.nfields = None
         ###
+        #print "made card"
 
     def Is(self,cardName):
         if card.field(0)==cardName.upper():

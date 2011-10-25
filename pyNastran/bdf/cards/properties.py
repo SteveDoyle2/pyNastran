@@ -7,6 +7,82 @@ from numpy import zeros
 # my code
 from baseCard import Property
 
+class LineProperty(Property):
+    type = 'LineProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
+
+class ShellProperty(Property):
+    type = 'ShellProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
+
+class SolidProperty(Property):
+    type = 'SolidProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
+
+class PBAR(LineProperty):
+    type = 'PBAR'
+    def __init__(self,card):
+        """
+        @todo
+            support solution 600 default
+            do a check for mid -> MAT1      for structural
+            do a check for mid -> MAT4/MAT5 for thermal
+        """
+        LineProperty.__init__(self,card)
+        self.pid = card.field(1)
+        self.mid = card.field(2)
+        self.A   = card.field(3,0.0)
+        self.I1  = card.field(4,0.0)
+        self.I2  = card.field(5,0.0)
+        self.J   = card.field(6,0.0) # default=1/2(I1+I2) for SOL=600, otherwise 0.0
+        self.nsm = card.field(7,0.0)
+
+        self.C1  = card.field(9, 0.0)
+        self.C2  = card.field(10,0.0)
+        self.D1  = card.field(11,0.0)
+        self.D2  = card.field(12,0.0)
+        self.E1  = card.field(13,0.0)
+        self.E2  = card.field(14,0.0)
+        self.F1  = card.field(15,0.0)
+        self.F2  = card.field(16,0.0)
+
+        self.K1  = card.field(17)
+        self.K2  = card.field(18)
+        self.I12 = card.field(19,0.0)
+        if self.A==0.0:
+            assert self.K1==None
+            assert self.K2==None
+
+    def __repr__(self):
+        I1  = self.setBlankIfDefault(self.I1,0.0)
+        I2  = self.setBlankIfDefault(self.I2,0.0)
+        I12 = self.setBlankIfDefault(self.I12,0.0)
+        J   = self.setBlankIfDefault(self.J,0.0)
+        A   = self.setBlankIfDefault(self.A,0.0)
+        
+        C1  = self.setBlankIfDefault(self.C1,0.0)
+        C2  = self.setBlankIfDefault(self.C2,0.0)
+
+        D1  = self.setBlankIfDefault(self.D1,0.0)
+        D2  = self.setBlankIfDefault(self.D2,0.0)
+
+        E1  = self.setBlankIfDefault(self.E1,0.0)
+        E2  = self.setBlankIfDefault(self.E2,0.0)
+
+        F1  = self.setBlankIfDefault(self.F1,0.0)
+        #F2  = self.setBlankIfDefault(self.F2,0.0) # must have 1 on line
+        
+        fields = ['PBAR',self.pid,self.mid,self.A,I1,I2,J,self.nsm,None,
+                         C1,C2,D1,D2,E1,E2,F1,self.F2,
+                         self.K1,self.K2,self.I12]
+        return self.printCard(fields)
+
 class PCONEAX(Property): #not done
     type = 'PCONEAX'
     def __init__(self,card):
@@ -21,25 +97,38 @@ class PCONEAX(Property): #not done
         fields = ['PCONEAX',self.pid,self.mid]
         return self.printCard(fields)
     
-class PBARL(Property): # not done
+class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
     type = 'PBARL'
+    validTypes = ["ROD", "TUBE", "I", "CHAN", "T", "BOX", "BAR", "CROSS", "H",
+    "T1", "I1", "CHAN1", "Z", "CHAN2", "T2", "BOX1", "HEXA", "HAT",
+    "HAT1", "DBOX"] # for GROUP="MSCBML0"
+
     def __init__(self,card):
-        Property.__init__(self,card)
+        LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.group = card.field(3,'MSCBMLO')
         self.type = card.field(4)
-        self.dim = [] # confusing entry...
+        assert type in self.validTypes
+
+        self.dim = fields(9) # confusing entry...
+        nDim = len(self.dim)-1
+        if nDim>0:
+            self.nsm = self.dim.pop()
+        else:
+            self.nsm = 0.0
+        ###
 
     def __repr__(self):
         fields = ['PBARL',self.pid,self.mid,group,type,None,None,None,None,
-        ]+self.dim
+        ]+self.dim+[self.nsm]
         return self.printCard(fields)
 
-class PBEAM(Property): # not done, cleanup
+class PBEAM(LineProperty):
     type = 'PBEAM'
     def __init__(self,card):
-        Property.__init__(self,card)
+        """@todo cleanup entries"""
+        LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
 
@@ -49,6 +138,14 @@ class PBEAM(Property): # not done, cleanup
         self.I12 = card.field(6)
         self.J   = card.field(7)
         self.nsm = card.field(8)
+        self.C1  = card.field(9)
+        self.C2  = card.field(10)
+        self.D1  = card.field(11)
+        self.D2  = card.field(12)
+        self.E1  = card.field(13)
+        self.E2  = card.field(14)
+        self.F1  = card.field(15)
+        self.F2  = card.field(16)
 
         self.so  = []
         self.xxb = []
@@ -67,20 +164,25 @@ class PBEAM(Property): # not done, cleanup
         self.f1 = []
         self.f2 = []
         
+        #fields = card.fields(0)
+        #print "fieldsPBEAM = ",fields
+        #fieldsMid = fields[16:]
+        #print "fieldsMid = ",fieldsMid
+
         #fields = card.fields(9)
-        nFields = card.nFields()-9
+        nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
         # counting continuation cards
         nMajor    = nFields/16
         nLeftover = nFields%16
-        if nLeftover:
-            nMajor+=1
+        #print "nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
+        if nLeftover==0:
+            nMajor-=1
 
-        print "nMajor = ",nMajor
-
-        for nRepeated in range(nMajor-1): # the -1 is for the last group of lines
-            nStart = nRepeated*16+10  # field 10 is the first possible so
+        #print "nMajor = ",nMajor
+        for nRepeated in range(1,nMajor+1):
+            nStart = nRepeated*16+1  # field 17 is the first possible so
             propFields = card.fields(nStart,nStart+16)
-            print propFields
+            #print "propFields = ",propFields
             self.so.append( propFields[0])
             self.xxb.append(propFields[1])
             self.a.append(  propFields[2])
@@ -97,9 +199,10 @@ class PBEAM(Property): # not done, cleanup
             self.e2.append( propFields[13])
             self.f1.append( propFields[14])
             self.f2.append( propFields[15])
+        #print "nRepeated = ",nRepeated
 
-        # missing repeated lines
-        x = nRepeated*16+10
+        # footer fields
+        x = (nMajor)*16+17
         self.k1   = card.field(x)
         self.k2   = card.field(x+1)
         self.s1   = card.field(x+2)
@@ -119,26 +222,28 @@ class PBEAM(Property): # not done, cleanup
         self.n2b = card.field(x+15)
 
     def __repr__(self):
-        fields = ['PBEAM',self.pid,self.mid,self.A,self.I1,self.I2,self.I12,self.J,self.nsm]
+        fields = ['PBEAM',self.pid,self.mid,self.A, self.I1,self.I2,self.I12,self.J, self.nsm,
+                          self.C1, self.C2, self.D1,self.D2,self.E1,self.E2, self.F1,self.F2]
+        #print "fieldsA = ",fields
         
-        print len(self.so)
+        #print len(self.so)
         for (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.a,self.i1,self.i2,self.i12,self.j,self.nsm2,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
             fields += [so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
             #print "asdf = ",asdf
-        # = [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
-        #           self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
-        print fields
+        fields += [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
+                   self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
+        #print fields
         #print "asdf = ",asdf
         return self.printCard(fields)
         
-#class PBEAML(Property): #not done
+#class PBEAML(LineProperty): #not done
 
-class PBEAM3(Property): # not done, cleanup
+class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'
     def __init__(self,card):
-        Property.__init__(self,card)
+        LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
 
@@ -164,9 +269,9 @@ class PBEAM3(Property): # not done, cleanup
         fields = ['PBEAM3',self.pid,self.mid,] # other
         return self.printCard(fields)
 
-#class PCOMPG(Property): # not done...
+#class PCOMPG(ShellProperty): # not done...
 #    pass
-class PCOMP(Property):
+class PCOMP(ShellProperty):
     """
     PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
               300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
@@ -175,7 +280,7 @@ class PCOMP(Property):
     """
     type = 'PCOMP'
     def __init__(self,card): # not done, cleanup
-        Property.__init__(self,card)
+        ShellProperty.__init__(self,card)
         
         #fields = card.fields(1)
 
@@ -218,10 +323,10 @@ class PCOMP(Property):
             fields += [mid,t,theta,sout]
         return self.printCard(fields)
 
-class PELAS(Property):
+class PELAS(LineProperty):
     type = 'PELAS'
     def __init__(self,card,nPELAS=0):
-        Property.__init__(self,card)
+        LineProperty.__init__(self,card)
         self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
         self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
         self.ge  = card.field(3+5*nPELAS)
@@ -231,7 +336,7 @@ class PELAS(Property):
         fields = ['PELAS',self.pid,self.k,self.ge,self.s]
         return self.printCard(fields)
 
-class PLSOLID(Property):
+class PLSOLID(SolidProperty):
     """
     Defines a fully nonlinear (i.e., large strain and large rotation) hyperelastic solid
     element.
@@ -240,7 +345,7 @@ class PLSOLID(Property):
     """
     type = 'PLSOLID'
     def __init__(self,card):
-        Property.__init__(self,card)
+        SolidProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.ge  = card.field(3)
@@ -253,12 +358,12 @@ class PLSOLID(Property):
         fields = ['PLSOLID',self.pid,self.mid,stressStrain]
         return self.printCard(fields)
 
-class PROD(Property):
+class PROD(LineProperty):
     type = 'PROD'
     def __init__(self,card):
-        Property.__init__(self,card)
-        self.pid    = card.field(1)
-        self.mid    = card.field(2)
+        LineProperty.__init__(self,card)
+        self.pid = card.field(1)
+        self.mid = card.field(2)
         self.A   = card.field(3)
         self.J   = card.field(4)
         self.c   = card.field(5,0.0)
@@ -269,14 +374,14 @@ class PROD(Property):
         fields = ['PROD',self.pid,self.mid,self.A,self.J,c,self.nsm]
         return self.printCard(fields)
 
-class PSHELL(Property):
+class PSHELL(ShellProperty):
     """
     PSHELL PID MID1 T MID2 12I/T**3 MID3 TS/T NSM
     Z1 Z2 MID4
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
     def __init__(self,card):
-        Property.__init__(self,card)
+        ShellProperty.__init__(self,card)
         self.pid  = card.field(1)
         self.mid  = card.field(2)
         self.t    = card.field(3)
@@ -294,7 +399,7 @@ class PSHELL(Property):
                   self.z1,self.z2,self.mid4]
         return self.printCard(fields)
 
-class PSOLID(Property):
+class PSOLID(SolidProperty):
     """
     PSOLID PID MID CORDM IN STRESS ISOP FCTN
     PSOLID   1       1       0
@@ -302,7 +407,7 @@ class PSOLID(Property):
     """
     type = 'PSOLID'
     def __init__(self,card):
-        Property.__init__(self,card)
+        SolidProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.cordm  = card.field(3,0)
@@ -317,10 +422,10 @@ class PSOLID(Property):
         fields = ['PSOLID',self.pid,self.mid,cordm,self.integ,self.stress,self.isop,fctn]
         return self.printCard(fields)
 
-class PTUBE(Property):
+class PTUBE(LineProperty):
     type = 'PTUBE'
     def __init__(self,card):
-        Property.__init__(self,card)
+        LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.outerDiameter = card.field(3)

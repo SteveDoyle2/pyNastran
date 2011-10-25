@@ -73,7 +73,7 @@ class Aero(BaseCard):
         return False
 
 
-class AERO(BaseCard):
+class AERO(Aero):
     """
     Gives basic aerodynamic parameters for unsteady aerodynamics.
     AERO ACSID VELOCITY REFC RHOREF SYMXZ SYMXY
@@ -96,7 +96,7 @@ class AERO(BaseCard):
         fields = ['AERO',self.acsid,self.velocity,self.cRef,self.rhoRef,symXZ,symXY]
         return self.printCard(fields)
 
-class AEROS(BaseCard):
+class AEROS(Aero):
     """
     Gives basic aerodynamic parameters for unsteady aerodynamics.
     AEROS ACSID RCSID REFC REFB REFS SYMXZ SYMXY

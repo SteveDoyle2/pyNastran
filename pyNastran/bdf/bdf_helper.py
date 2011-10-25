@@ -80,32 +80,44 @@ class getMethods(object):
         self.flfacts[param.key] = flfact
 
 class addMethods(object):
+    def addAero(self,aero):
+        assert aero.acsid not in self.aeros
+        self.aeros[aero.acsid] = aero
+
+    def addGust(self,gust):
+        assert gust.sid not in self.gusts
+        self.gusts[gust.sid] = gust
+
     def addFLFACT(self,flfact):
+        assert flfact.sid not in self.flfacts
         self.flfacts[flfact.sid] = flfact # set id...
-        asdf
         print "added flfact...flflact = ",flfact
 
     def addParam(self,param):
+        assert param.key not in self.params
         self.params[param.key] = param
 
     def addNode(self,node):
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
+        #assert elem.eid not in self.elements
         self.elements[elem.eid] = elem
 
     def addProperty(self,prop):
+        assert prop.pid not in self.properties
         self.properties[prop.pid] = prop
 
     def addMaterial(self,material):
+        assert material.mid not in self.materials
         self.materials[material.mid] = material
 
     def addCoord(self,coord):
+        assert coord.cid not in self.coords
         self.coords[coord.cid] = coord
 
     def addLoad(self,load):
         key = load.lid
-        #print "type(self.loads) = ",type(self.loads)
         if self.loads.has_key(key):
             self.loads[key].append(load)
         else:
@@ -113,7 +125,6 @@ class addMethods(object):
 
     def addConstraint(self,constraint):
         key = constraint.cid
-        #print "type(self.constraints) = ",type(self.constraints)
         if self.constraints.has_key(key):
             self.constraints[key].append(constraint)
         else:

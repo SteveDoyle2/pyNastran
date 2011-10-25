@@ -4,7 +4,7 @@ Cards Supported Reading/Writing (version 0.1)
 
 ----Nodes----:
 GRID   (done)
-SPOINT (done)
+SPOINT (needs integration)
 
 ----Elements----:
 CONM2  (cid=0)
@@ -23,24 +23,24 @@ CTRIA6 (done)
 CQUAD4 (done)
 CQUAD8 (done)
 
-CTETRA (done, TET9 issue)
-CPENTA (same) - same
-CHEXA  (same)
+CTETRA (done)
+CPENTA (done)
+CHEXA  (done)
 
-RBE1 (testing)
-RBE2 (testing)
-RBE3 (testing)
+RBE1  (testing)
+RBE2  (testing)
+RBE3  (testing)
 RBAR  (done)
 RBAR1 (done)
 
 ----Constraints----:
 SUPORT1 (done)
 
-SPC    (done)
-SPC1   (done)
-SPCD   (done)
+SPC     (done)
+SPC1    (done)
+SPCD    (done)
 SPCSET
-SPCADD (done???)
+SPCADD  (done???)
 
 MPC
 MPCSET
@@ -58,13 +58,14 @@ MAT9  (done)
 MAT10 (done)
 
 ----Properties----:
-PELAS  (done)
-PROD   (done)
-PBEAM
-PCOMP  (done)
-PSHELL (done)
-PSOLID (done)
-PTUBE  (done)
+PELAS   (done)
+PROD    (done)
+PBEAM   (done, cleanup)
+PBAR    (done)
+PCOMP   (done)
+PSHELL  (done)
+PSOLID  (done)
+PTUBE   (done)
 PLSOLID (done)
 
 ----Loads----:
@@ -79,10 +80,10 @@ CORD2C
 CORD2S
 
 ----Aero----:
-AERO  (needs integration)
-AEROS (needs integration)
-GUST  (needs integration)
-GRAV  (needs integration)
+AERO  (done)
+AEROS (done)
+GUST  (done)
+GRAV  (done)
 
 ----Other----:
 INCLUDE

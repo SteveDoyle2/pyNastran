@@ -37,16 +37,24 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         #self.n = 0
         #self.nCards = 0
         self.doneReading = False
-        self.foundEndData = False
-        self.constraints = {}
+        #self.foundEndData = False
+
         self.params = {}
         self.nodes = {}
         self.elements = {}
         self.properties = {}
         self.materials = {}
-        self.coords = {0: CORD2R() }
         self.loads = {}
-        self.flfacts = {}  # can this be removed ???
+        #self.log().debug("bdf.py - coords1")
+        self.coords = {0: CORD2R() }
+        #self.log().debug("bdf.py - coords2")
+        self.constraints = {}
+
+        # aero cards
+        self.aeros   = {}
+        self.gusts   = {}  # can this be simplified ???
+        self.flfacts = {}  # can this be simplified ???
+
         self.rejects = []
         self.rejectCards = []
         self.executiveControlLines = []
@@ -195,7 +203,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         #print "self.caseControlLines = ",self.caseControlLines
         
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
-        print "done w/ case control..."
+        #print "done w/ case control..."
         return self.caseControlLines
 
     def Is(self,card,cardCheck):
@@ -256,7 +264,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 #print ""
                 #print "not a reject"
                 card = self.processCard(card) # parse the card into fields
-                print "processedCard = ",card
+                #print "processedCard = ",card
             elif card[0].strip()=='':
                 #print "funny strip thing..."
                 pass
@@ -359,20 +367,23 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='CTETRA':
                 nFields = cardObj.nFields()
                 if   nFields==7:    elem = CTETRA4(cardObj) # 4+3
-                elif nFields==13:   elem = CTETRA10(cardObj)# 10+3
-                else: raise Exception('invalid number of CTETRA nodes=%s card=%s' %(nFields-3,str(cardObj)))
+                else:               elem = CTETRA10(cardObj)# 10+3
+                #elif nFields==13:   elem = CTETRA10(cardObj)# 10+3
+                #else: raise Exception('invalid number of CTETRA nodes=%s card=%s' %(nFields-3,str(cardObj)))
                 self.addElement(elem)
             elif cardName=='CHEXA':
                 nFields = cardObj.nFields()
                 if   nFields==11: elem = CHEXA8(cardObj)  # 8+3
-                elif nFields==23: elem = CHEXA20(cardObj) # 20+3
-                else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
+                else:             elem = CHEXA20(cardObj) # 20+3
+                #elif nFields==23: elem = CHEXA20(cardObj) # 20+3
+                #else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
                 self.addElement(elem)
             elif cardName=='CPENTA': # 6/15
                 nFields = cardObj.nFields()
                 if   nFields==9:  elem = CPENTA6(cardObj)  # 6+3
-                elif nFields==18: elem = CPENTA15(cardObj) # 15+3
-                else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
+                else:             elem = CPENTA15(cardObj) # 15+3
+                #elif nFields==18: elem = CPENTA15(cardObj) # 15+3
+                #else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
                 self.addElement(elem)
 
             elif cardName=='CBAR':
@@ -509,20 +520,32 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.addConstraint(constraint)
                 #print "constraint = ",constraint
 
-            #elif cardName=='GUST':
-            #    #print "card = ",card
-            #    gust = GUST(cardObj)
-            #    self.addGust(gust)
+            elif cardName=='AERO':
+                #print "card = ",card
+                aero = AERO(cardObj)
+                self.addAero(aero)
+            elif cardName=='AEROS':
+                #print "card = ",card
+                aeros = AEROS(cardObj)
+                self.addAero(aeros)
             elif cardName=='FLFACT':
                 #print "card = ",card
                 flfact = FLFACT(cardObj)
                 self.addFLFACT(flfact)
-                #sys.exit('stopping')
+            elif cardName=='GUST':
+                #print "card = ",card
+                gust = GUST(cardObj)
+                self.addGust(gust)
 
             elif cardName=='CORD2R':
                 coord = CORD2R(cardObj)
                 self.addCoord(coord)
-                #print "done with ",card
+            #elif cardName=='CORD2C':
+            #    coord = CORD2C(cardObj)
+            #    self.addCoord(coord)
+            #elif cardName=='CORD2S':
+            #    coord = CORD2S(cardObj)
+            #    self.addCoord(coord)
             #elif 'CORD' in cardName:
             #    raise Exception('unhandled coordinate system...cardName=%s' %(cardName))
             elif 'ENDDATA' in cardName:

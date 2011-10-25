@@ -38,17 +38,33 @@ class LOAD(Load):
         return self.printCard(fields)
 
 
-class FORCE(Load):
+class OneDeeLoad(Load): # FORCE/MOMENT
+    def __init__(self,card):
+        Load.__init__(self,card)
+
+    def normalize(self):
+        """
+        adjust the vector to a unit length
+        scale up the magnitude of the vector
+        """
+        if self.mag != 0.0:  # enforced displacement
+            normXYZ = norm(self.xyz)
+            mag = self.mag*normXYZ
+            self.mag *= normXYZ
+            self.xyz = self.xyz/normXYZ
+
+class FORCE(OneDeeLoad):
     def __init__(self,card):
         """
         FORCE          3       1            100.      0.      0.      1.
         """
-        Load.__init__(self,card)
+        OneDeeLoad.__init__(self,card)
         self.node = card.field(2)
         self.cid  = card.field(3,0)
         self.mag  = card.field(4)
         xyz = card.fields(5,8,[0.,0.,0.])
         assert len(xyz)==3,'xyz=%s' %(xyz)
+
         self.xyz = array(xyz)
         
         #print "node = ",self.node
@@ -62,12 +78,6 @@ class FORCE(Load):
         #print "self..."
         #print self
         #sys.exit()
-
-    def normalize(self):
-        normXYZ = norm(self.xyz)
-        mag = self.mag*normXYZ
-        self.mag *= normXYZ
-        self.xyz = self.xyz/normXYZ
 
     def __repr__(self):
         fields = ['FORCE',self.lid,self.node,self.cid,self.mag] + list(self.xyz)
@@ -111,6 +121,9 @@ class PLOAD2(Load):  # todo:  support THRU
         self.p   = card.field(2)
         self.nodes = card.fields(3,9)
         assert len(self.nodes)==6
+        
+        if card.field(4)=='THRU':
+            print "found a THRU on PLOAD2"
     
     def __repr__(self):
         fields = ['PLOAD2',self.lid,self.p]+self.nodes
@@ -125,6 +138,9 @@ class PLOAD4(Load):  # todo:  support THRU, not done...
         p = [p1]+p
         self.nodes = card.fields(3,9)
         assert len(self.nodes)==6
+
+        if card.field(7)=='THRU':
+            print "found a THRU on PLOAD4"
     
     def __repr__(self):
         fields = ['PLOAD4',self.lid,self.p]+self.nodes

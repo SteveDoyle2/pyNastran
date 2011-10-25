@@ -109,7 +109,7 @@ class cardMethods(object):
                 print "isNotDone B = ",isNotDone
         ###
         #if debug:
-        self.log().debug("tempcard2 = |%s|" %(tempcard))
+        #self.log().debug("tempcard2 = |%s|" %(tempcard))
             #print ""
         #sys.exit('asdf')
         return (i,tempcard)
@@ -144,7 +144,7 @@ class cardMethods(object):
             #fields = [line[0 :8 ],line[8 :16],line[16:24],line[24:32],line[32:40],
             #          line[40:48],line[48:56],line[56:64],line[64:72],line[72:80]]
             fields = [line[0 :8 ],line[8 :16],line[16:24],line[24:32],line[32:40],
-                      line[40:48],line[48:56],line[56:64],line[64:72],line[72:80]]
+                      line[40:48],line[48:56],line[56:64],line[64:72]]
         #if debug:
         #    print "  fields = ",collapse(fields)
         
@@ -152,12 +152,12 @@ class cardMethods(object):
         for i,field in enumerate(fields):
             field = field.strip()
             #if debug:
-            if (i==9) and field=='' or field=='*' or field=='+':
+            #if (i==9) and field=='' or field=='*' or field=='+':
                 #print "skipping * or + or empty field"
-                pass
-            else:
-                print "i=%s field=|%s|" %(i,field)
-                fields2.append(field)
+            #    pass
+            #else:
+                #print "i=%s field=|%s|" %(i,field)
+            fields2.append(field)
         return fields2
 
     def isLargeField(self,card):
@@ -179,7 +179,7 @@ class cardMethods(object):
         isLargeField = self.isLargeField(tempcard)
         #print "*** isLargeField = ",isLargeField
 
-        print "tempcard = ",tempcard
+        #print "tempcard = ",tempcard
         for i,line in enumerate(tempcard):
             #print "i = ",i
             if debug:
@@ -195,7 +195,7 @@ class cardMethods(object):
                 sline = self.nastranSplit2(sline,isLargeField,debug=debug)
             #name = sline[0]
             #nFields = len(sline)
-            print "sline = ",sline
+            #print "sline = ",sline
             
             for (fieldCounter,valueIn) in enumerate(sline):
                 #if fieldCounter==8:
@@ -210,11 +210,12 @@ class cardMethods(object):
                 else:
                     value = self.getValue(valueIn,debug=debug)
                     card.append(value)
-                    print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
+                    #print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
                 ###
             ###
+            #print "cardEnd temp = ",card
         ###
-        print "cardOut&& = ",card
+        #print "cardOut&& = ",card
         if debug:
             self.log().debug("  sline2 = %s" %(card))
             #self.log().debug("  sline2 = %s" %(collapse(card)))
@@ -282,7 +283,7 @@ class cardMethods(object):
         #    print "=()!"
         #    return valueIn
 
-        noED = list(set(valueIn)-set('ED 1234567890+-'))
+        noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
         word = ''.join(noED)
         #print "word=|%s|" %word
         if word.isalpha():
@@ -291,14 +292,10 @@ class cardMethods(object):
             return valueIn
 
         v0 = valueIn[0]
-        vm = valueIn.find('-',1)
-        vp = valueIn.find('+',1)
-        #print "valueIn = ",valueIn
         if '-'==v0 or '+'==v0:
-            valueLeft = valueIn[1:]
+            valueLeft = valueIn[1:] # truncate the sign for now
         else:
             valueLeft = valueIn
-
 
         #print "valueIn = |%s|" %(valueIn)
         #print "v0 = |%s|" %v0
@@ -307,8 +304,11 @@ class cardMethods(object):
         elif v0=='+' or v0.isdigit():
             vFactor=1.
         else:
-            raise Exception('huh?_1')
-        
+            msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s|' %(valueRaw,v0)
+            raise Exception(msg)
+
+        vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
+        vp = valueIn.find('+',1)
         if vm>0:
             sline = valueLeft.split('-')
             expFactor = -1.
@@ -316,11 +316,13 @@ class cardMethods(object):
             sline = valueLeft.split('+')
             expFactor = 1.
         else:
-            self.log().info("*valueIn = %s" %(valueIn))
-            raise Exception('huh?_2')
+            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s|' %(valueRaw,valueLeft)
+            raise Exception(msg)
 
         s0 = vFactor*float(sline[0])
         s1 = expFactor*int(sline[1])
+        #except:
+        #    print "vm=%s vp=%s valueRaw=|%s| sline=|%s|" %(vm,vp,valueRaw,sline)
 
         value = s0*10**(s1)
         #print "valueOut = |%s|" %value

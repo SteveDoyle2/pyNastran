@@ -66,7 +66,7 @@ class CaseControlDeck(object):
             raise RuntimeError('iFromSubcase=|%s| does not exist' %(iFromSubcase))
         subcaseFrom = self.subcases[iFromSubcase]
         if overwriteSubcase:
-            print "inside overwrite..."
+            #print "inside overwrite..."
             self.subcases[iToSubcase] = copy.deepcopy(self.subcases[iFromSubcase])
             self.subcases[iToSubcase].id = iToSubcase
         else:
