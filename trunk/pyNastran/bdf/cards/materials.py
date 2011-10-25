@@ -15,6 +15,11 @@ class Material(BaseCard):
         fields = [self.type,self.mid]
         return self.printCard(fields)
 
+class ThermalMaterial(Material):
+    def __init__(self,card):
+        Material.__init__(self,card) 
+
+
 class CREEP(Material):
     type = 'CREEP'
     def __init__(self,card):
@@ -44,7 +49,10 @@ class CREEP(Material):
         return self.printCard(fields)
 
 class MAT1(Material):
-    """MAT1     1      1.03+7  3.9615+6.3      .098"""
+    """
+    Defines the material properties for linear isotropic materials.
+    MAT1     1      1.03+7  3.9615+6.3      .098
+    """
     type = 'MAT1'
     def __init__(self,card):
         Material.__init__(self,card) #mid
@@ -105,6 +113,9 @@ class MAT1(Material):
 
 class MAT2(Material):
     """
+    Defines the material properties for linear anisotropic materials for two-dimensional
+    elements.
+
     MAT2 MID G11 G12 G13 G22 G23 G33 RHO
     A1 A2 A3 TREF GE ST SC SS
     MCSID
@@ -144,8 +155,103 @@ class MAT2(Material):
                   self.Mcsid]
         return self.printCard(fields)
 
+class MAT3(Material):
+    """
+    Defines the material properties for linear orthotropic materials used by the CTRIAX6 element entry.
+    MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
+    -    -   GZX AX  ATH AZ TREF GE
+    """
+    type = 'MAT3'
+    def __init__(self,card):
+        Material.__init__(self,card) # mid
+        
+        self.ex    = card.field(2)
+        self.eth   = card.field(3)
+        self.ez    = card.field(4)
+        self.nuxth = card.field(5)
+        self.nuthz = card.field(6)
+        self.nuzx  = card.field(7)
+
+        self.rho  = card.field(8)
+        self.gzx  = card.field(9)
+        self.ax   = card.field(10)
+        self.ath  = card.field(11)
+        self.az   = card.field(12)
+        self.TRef = card.field(13,0.0)
+        self.ge   = card.field(14)
+
+    def __repr__(self):
+        Tref = self.setBlankIfDefault(self.TRef,0.0)
+        fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
+                         None,None,self.gzx,self.ax,self.ath,self.az,Tref,self.ge]
+        return self.printCard(fields)
+
+class MAT4(ThermalMaterial):
+    """
+    Defines the constant or temperature-dependent thermal material properties for
+    conductivity, heat capacity, density, dynamic viscosity, heat generation, reference
+    enthalpy, and latent heat associated with a single-phase change.
+
+    MAT4 MID K CP H HGEN REFENTH
+    TCH TDELTA QLAT
+    """
+    type = 'MAT4'
+    def __init__(self,card):
+        ThermalMaterial.__init__(self,card) # mid
+        
+        self.k    = card.field(2)
+        self.cp   = card.field(3,0.0)
+        self.rho  = card.field(4,1.0)
+        self.H    = card.field(5)
+        self.mu   = card.field(6)
+        self.hgen = card.field(7,1.0)
+        self.refEnthalpy = card.field(8)
+        self.tch    = card.field(9)
+        self.tdelta = card.field(10)
+        self.qlat   = card.field(11)
+
+    def __repr__(self):
+        rho  = self.setBlankIfDefault(self.rho,1.0)
+        hgen = self.setBlankIfDefault(self.hgen,1.0)
+        cp   = self.setBlankIfDefault(self.cp,0.0)
+        fields = ['MAT4',self.mid,self.k,cp,rho,self.H,self.mu,hgen,self.refEnthalpy,
+                         self.tch,self.tdelta,self.qlat]
+        return self.printCard(fields)
+
+class MAT5(ThermalMaterial):
+    """
+    Defines the thermal material properties for anisotropic materials.
+
+    MAT5 MID KXX KXY KXZ KYY KYZ KZZ CP
+    RHO HGEN
+    """
+    type = 'MAT5'
+    def __init__(self,card):
+        ThermalMaterial.__init__(self,card) # mid
+
+        self.kxx  = card.field(2)
+        self.kxy  = card.field(3)
+        self.kxz  = card.field(4)
+        self.kyy  = card.field(5)
+        self.kyz  = card.field(6)
+        self.kzz  = card.field(7)
+        self.cp   = card.field(3,0.0)
+        self.rho  = card.field(4,1.0)
+        self.hgen = card.field(7,1.0)
+
+    def __repr__(self):
+        rho  = self.setBlankIfDefault(self.rho, 1.0)
+        hgen = self.setBlankIfDefault(self.hgen,1.0)
+        cp   = self.setBlankIfDefault(self.cp,  0.0)
+        fields = ['MAT5',self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,cp,
+                         rho,hgen]
+        return self.printCard(fields)
+
 class MAT8(Material):
-    """MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2"""
+    """
+    Defines the material property for an orthotropic material for isoparametric shell
+    elements.
+    MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2"""
     type = 'MAT8'
     def __init__(self,card):
         Material.__init__(self,card)
@@ -188,6 +294,9 @@ class MAT8(Material):
 
 class MAT9(Material):
     """
+    Defines the material properties for linear, temperature-independent, anisotropic
+    materials for solid isoparametric elements (see PSOLID entry description).
+
     MAT9 MID G11 G12 G13 G14 G15 G16 G22
     G23 G24 G25 G26 G33 G34 G35 G36
     G44 G45 G46 G55 G56 G66 RHO A1
@@ -238,7 +347,10 @@ class MAT9(Material):
         return self.printCard(fields)
 
 class MAT10(Material):
-    """MAT10 MID BULK RHO C GE"""
+    """
+    Defines material properties for fluid elements in coupled fluid-structural analysis.
+    MAT10 MID BULK RHO C GE
+    """
     type = 'MAT10'
     def __init__(self,card):
         Material.__init__(self,card)

@@ -50,9 +50,9 @@ MPCADD
 ----Materials----:
 MAT1  (done)
 MAT2  (done)
-MAT3
-MAT4
-MAT5
+MAT3  (done)
+MAT4  (done)
+MAT5  (done)
 MAT8  (done)
 MAT9  (done)
 MAT10 (done)
@@ -150,6 +150,13 @@ QBDY3
 QHBDY
 RADBC
 RADM
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
 
 ----Modal Cards----:
 FREQ
@@ -201,6 +208,7 @@ RROD
 RSPLINE
 RTRPLT
 PSHEAR
+MATS1
 
 -------------------------------------------
 

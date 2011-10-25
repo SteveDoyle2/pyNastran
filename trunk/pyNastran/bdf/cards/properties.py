@@ -80,7 +80,7 @@ class PBAR(LineProperty):
         F2  = self.setBlankIfDefault(self.F2,0.0) # must have 1 on line, if line3 is not empty
         
         line3 = [self.K1,self.K2,I12]
-        print "line3 = ",line3
+        #print "line3 = ",line3
         
         line1 = ['PBAR',self.pid,self.mid,self.A,I1,I2,J,nsm,None]
 

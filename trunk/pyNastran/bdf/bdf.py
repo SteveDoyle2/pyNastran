@@ -40,7 +40,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         self.foundEndData = False
 
         self.params = {}
+
         self.nodes = {}
+        self.gridSet = None
+
         self.elements = {}
         self.properties = {}
         self.materials = {}
@@ -64,7 +67,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
 
         self.cardsToRead = set([
         'PARAM','=',
-        'GRID',
+        'GRID','GRDSET',
         
         'CONM2',
         'CELAS1','CELAS2',
@@ -77,14 +80,22 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         'PROD','PBAR','PBEAM',#'PBEAM3','PBEAML'
         'PSHELL','PCOMP', # 'PCOMPG',
         'PSOLID','PLSOLID',
-        'MAT1','MAT2','MAT8','MAT9','MAT10',  # 'MAT3','MAT4','MAT5',
+        'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9','MAT10',
+         #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
+         #'MATS1',
 
         'SPC','SPC1','SPCD','SPCADD','SUPORT1',
         'MPC','MPCADD',
 
-        'LOAD','FORCE','PLOAD','PLOAD2','PLOAD4',
+        'LOAD',
+        'FORCE',#'FORCE1','FORCE2',
+        'PLOAD','PLOAD2','PLOAD4',#'PLOAD1',
+        #'MOMENT','MOMENT1','MOMENT2',
 
         'FLFACT','AERO','AEROS','GUST','FLUTTER',
+        #'CAERO1','CAERO2','CAERO3','CAERO4','CAERO5',
+        #'SPLINE1','SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
+        #'NLPARM',
 
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
@@ -133,11 +144,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         #self.crossReference_Properties()
 
     def crossReference_Nodes(self):
+        gridSet = self.gridSet
         for nid,n in self.nodes.items():
             #print "n.cid = ",n.cid
-            coord = self.Coord(n.cid)
+            #coord = self.Coord(n.cid)
             #print "*",str(coord)
-            n.crossReference(coord)
+            n.crossReference(self,gridSet)
         ###
 
     def crossReference_Elements(self):
@@ -155,7 +167,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             #print "*",str(coord)
             p.crossReference(self)
         ###
-
 
     def readExecutiveControlDeck(self):
         self.openFile()
@@ -323,6 +334,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='PARAM':
                 param = PARAM(cardObj)
                 self.addParam(param)
+            elif cardName=='GRDSET':
+                self.gridSet = GRDSET(cardObj)
             elif cardName=='GRID':
                 node = GRID(cardObj)
                 self.addNode(node)
@@ -460,15 +473,15 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='MAT2':
                 material = MAT2(cardObj)
                 self.addMaterial(material)
-            #elif cardName=='MAT3':
-            #    material = MAT3(cardObj)
-            #    self.addMaterial(material)
-            #elif cardName=='MAT4':
-            #    material = MAT4(cardObj)
-            #    self.addMaterial(material)
-            #elif cardName=='MAT5':
-            #    material = MAT5(cardObj)
-            #    self.addMaterial(material)
+            elif cardName=='MAT3':
+                material = MAT3(cardObj)
+                self.addMaterial(material)
+            elif cardName=='MAT4':
+                material = MAT4(cardObj)
+                self.addMaterial(material) # maybe addThermalMaterial
+            elif cardName=='MAT5':
+                material = MAT5(cardObj)
+                self.addMaterial(material) # maybe addThermalMaterial
             elif cardName=='MAT8':  # note there is no MAT6 or MAT7
                 material = MAT8(cardObj)
                 self.addMaterial(material)
@@ -478,6 +491,31 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             elif cardName=='MAT10':
                 material = MAT9(cardObj)
                 self.addMaterial(material)
+
+            #elif cardName=='MATS1':
+            #    material = MATS1(cardObj)
+            #    self.addStressMaterial(material)
+            #elif cardName=='MATT1':
+            #    material = MATT1(cardObj)
+            #    self.addTempMaterial(material)
+            #elif cardName=='MATT2':
+            #    material = MATT2(cardObj)
+            #    self.addTempMaterial(material)
+            #elif cardName=='MATT3':
+            #    material = MATT3(cardObj)
+            #    self.addTempMaterial(material)
+            #elif cardName=='MATT4':
+            #    material = MATT4(cardObj)
+            #    self.addTempMaterial(material)
+            #elif cardName=='MATT5':
+            #    material = MATT5(cardObj)
+            #    self.addTempMaterial(material)
+            #elif cardName=='MATT8':
+            #    material = MATT8(cardObj)
+            #    self.addTempMaterial(material)
+            #elif cardName=='MATT9':
+            #    material = MATT9(cardObj)
+            #    self.addTempMaterial(material)
 
             elif cardName=='FORCE':
                 #print "fcard = ",card 
