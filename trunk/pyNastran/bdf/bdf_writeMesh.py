@@ -10,14 +10,17 @@ class writeMesh(object):
         for line in self.executiveControlLines:
             msg += line
 
-        msg += '$CASE CONTROL DECK\n'
-        msg += str(self.caseControlDeck)
+        if self.caseControlDeck:
+            msg += '$CASE CONTROL DECK\n'
+            msg += str(self.caseControlDeck)
         #for line in self.caseControlLines:
         #    msg += line
         return msg
 
     def writeParams(self):
-        msg = '$PARAMS\n'
+        msg = ''
+        if self.params:
+            msg += '$PARAMS\n'
         #print "self.nodes = ",self.nodes
         for key,param in sorted(self.params.items()):
             #print "param = ",param
@@ -25,41 +28,53 @@ class writeMesh(object):
         return msg
 
     def writeNodes(self):
-        msg = '$NODES\n'
+        msg = ''
+        if self.nodes:
+            msg += '$NODES\n'
+            #print "nNodes = ",len(self.nodes)
         #print "self.nodes = ",self.nodes
-        print "nNodes = ",len(self.nodes)
         for key,node in sorted(self.nodes.items()):
             #print "node = ",node
             msg += str(node)
         return msg
 
     def writeElements(self):
-        msg = '$ELEMENTS\n'
+        msg = ''
+        if self.elements:
+            msg += '$ELEMENTS\n'
         for key,element in sorted(self.elements.items()):
             msg += str(element)
         return msg
 
     def writeProperties(self):
-        msg = '$PROPERTIES\n'
+        msg = ''
+        if self.properties:
+            msg += '$PROPERTIES\n'
         for key,prop in sorted(self.properties.items()):
             msg += str(prop)
         return msg
 
     def writeMaterials(self):
-        msg = '$MATERIALS\n'
+        msg = ''
+        if self.materials:
+            msg += '$MATERIALS\n'
         for key,material in sorted(self.materials.items()):
             msg += str(material)
         return msg
 
     def writeConstraints(self):
-        msg = '$CONSTRAINTS\n'
+        msg = ''
+        if self.constraints:
+            msg += '$CONSTRAINTS\n'
         for key,loadcase in sorted(self.constraints.items()):
             for constraint in loadcase:
                 msg += str(constraint)
         return msg
 
     def writeLoads(self):
-        msg = '$LOADS\n'
+        msg = ''
+        if self.loads:
+            msg += '$LOADS\n'
         for key,loadcase in sorted(self.loads.items()):
             for load in loadcase:
                 msg += str(load)
@@ -70,15 +85,21 @@ class writeMesh(object):
         msg = ''
         if self.flfacts:  msg = '$AERO\n'
         flfactKeys = self.flfacts.keys()
-        self.log().info("flfactKeys = %s" %(flfactKeys))
+        #self.log().info("flfactKeys = %s" %(flfactKeys))
         for ID,flfact in sorted(self.flfacts.items()):
             #if ID!=0:
             msg += str(flfact)
+        for ID,aero in sorted(self.aeros.items()):
+            msg += str(aero)
+        for ID,gust in sorted(self.gusts.items()):
+            msg += str(gust)
         return msg
 
     def writeCoords(self):
         #print "output coords..."
-        msg = '$COORDS\n'
+        msg = ''
+        #if self.coords:
+        msg += '$COORDS\n'
         coordKeys = self.coords.keys()
         self.log().info("coordKeys = %s" %(coordKeys))
         for ID,coord in sorted(self.coords.items()):

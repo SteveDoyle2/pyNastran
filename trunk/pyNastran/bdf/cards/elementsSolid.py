@@ -40,9 +40,10 @@ class CHEXA20(SolidElement):
     def __init__(self,card):
         SolidElement.__init__(self,card)
 
-        nids = card.fields(3,24)
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==20
+        nids = card.fields(3,23)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        msg = 'len(nids)=%s nids=%s' %(len(nids),nids)
+        assert len(self.nodes)<=20,msg
 
 class CPENTA6(SolidElement):
     """
@@ -66,9 +67,9 @@ class CPENTA15(SolidElement):
     def __init__(self,card):
         SolidElement.__init__(self,card)
 
-        nids = card.fields(3,17)
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==15
+        nids = card.fields(3,18)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)<=15
 
 class CTETRA4(SolidElement):
     """
@@ -92,5 +93,5 @@ class CTETRA10(SolidElement):
     def __init__(self,card):
         SolidElement.__init__(self,card)
         nids = card.fields(3,13)
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==10
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)<=10
