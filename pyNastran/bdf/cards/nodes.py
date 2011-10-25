@@ -44,6 +44,20 @@ class SPOINT(Node):
         return self.printCard(fields)
         
 
+class GRDSET(Node):
+    type = 'GRDSET'
+    def __init__(self,card):
+        self.cid  = card.field(2,0)
+        self.ps   = card.field(7,0)
+        self.seid = card.field(8,0)
+
+    def __repr__(self):
+        cid  = self.setBlankIfDefault(self.cid, 0)
+        cd   = self.setBlankIfDefault(self.cd,  0)
+        ps   = self.setBlankIfDefault(self.ps,  0)
+        seid = self.setBlankIfDefault(self.seid,0)
+        fields = ['GRDSET',None,cid,None,None,None,cd,ps,seid]
+
 class GRID(Node):
     type = 'GRID'
     def __init__(self,card):
@@ -66,8 +80,15 @@ class GRID(Node):
     def Position(self):
         return self.xyzGlobal
 
-    def crossReference(self,coord):
+    def crossReference(self,mesh,grdset=None):
         #print str(self)
+        if grdset: # update using a gridset object
+            if not self.cid:  self.cid  = grdset.cid
+            if not self.cd:   self.cd   = grdset.cd
+            if not self.ps:   self.ps   = grdset.ps
+            if not self.seid: self.seid = grdset.seid
+        
+        coord = mesh.Coord(self.cid)
         self.xyzGlobal = coord.transformToGlobal(self.xyz)
         #return self.
 
