@@ -1,6 +1,48 @@
 # my code
 from baseCard import BaseCard
 
+
+class constraintObject(object):
+    def __init__(self):
+        self.constraints    = {} # SPC, SPC1, SPCD, etc...
+        self.addConstraints = {} # SPCADD
+        self.resolvedConstraints = []
+
+    def add(self,constraint):
+        self.addConstraints[key] = [constraint]
+
+    def append(self,constraint):
+        key = constraint.cid
+        if self.constraints.has_key(key):
+            self.constraints[key].append(constraint)
+        else:
+            self.constraints[key] = [constraint]
+
+    def crossReference(self,mesh):
+        for key,addConstraint in sorted(self.addConstraints):  # SPCADDs
+            nodes = addConstraint.nodes
+            for i,node in enumerate(nodes):
+                nodes[i] = self.constraints[node]
+
+        for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
+            for constraint in constraints:
+                #if constraint.type=='SPCADD'
+                #else:
+                (cid,nodeDOFs) = constraint.getNodeDOFs(mesh) # the constrained nodes
+                for nodeDOF in nodeDOFs:
+                    self.addConstraint(cid,nodeDOF)
+                ###
+            ###
+        ###
+    ###
+
+    def addConstraint(self,cid,nodeDOF):
+        (nid,dofs) = nodeDOF
+        for dof in dofs:
+            self.resolvedConstraints.append( (nid,dof) )
+        ###
+    ###
+
 class Constraint(BaseCard):
     def __init__(self,card):
         self.cid  = card.field(1)
@@ -68,15 +110,13 @@ class MPC(Constraint): # not done...
         for (gid,constraint,enforced) in zip(self.gids,self.constraints,self.enforced):
             fields += [gid,constriant,enforced]
         return self.printCard(fields)
-
     
 class SPC(Constraint):
     """
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis)
-    SPC SID G1 C1 D1 G2 C2 D2
-    
-    SPC 2 32 3 -2.6 5
+    SPC SID G1 C1 D1   G2 C2 D2
+    SPC 2   32 3  -2.6  5
     """
     type = 'SPC'
     def __init__(self,card):
@@ -93,6 +133,9 @@ class SPC(Constraint):
         self.constraints = self.constraints[0:nConstraints]
         self.enforced    = self.enforced[   0:nConstraints]
 
+    #def getNodeDOFs():
+    #    pass
+
     def crossReference(self,mesh):
         dofCount = 0
         for (i,constraint) in enumerate(self.constraints):
@@ -106,8 +149,8 @@ class SPC(Constraint):
             ###
         return dofCount
 
-    def __repr__(self): # SPCD
-        fields = ['SPCD',self.cid]
+    def __repr__(self): # SPC
+        fields = ['SPC',self.cid]
         for (gid,constraint,enforced) in zip(self.gids,self.constraints,self.enforced):
             fields += [gid,constraint,enforced]
         return self.printCard(fields)
@@ -170,6 +213,7 @@ class SPCADD(Constraint):
     def __init__(self,card):
         Constraint.__init__(self,card)
         nodes = card.fields(2)
+        
         self.cleanNodes(nodes)
         #print "self.nodes = ",self.nodes
 

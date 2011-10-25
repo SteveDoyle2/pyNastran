@@ -60,11 +60,12 @@ class PBAR(LineProperty):
             assert self.K2==None
 
     def __repr__(self):
+        A   = self.setBlankIfDefault(self.A,0.0)
         I1  = self.setBlankIfDefault(self.I1,0.0)
         I2  = self.setBlankIfDefault(self.I2,0.0)
         I12 = self.setBlankIfDefault(self.I12,0.0)
         J   = self.setBlankIfDefault(self.J,0.0)
-        A   = self.setBlankIfDefault(self.A,0.0)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
         
         C1  = self.setBlankIfDefault(self.C1,0.0)
         C2  = self.setBlankIfDefault(self.C2,0.0)
@@ -76,11 +77,19 @@ class PBAR(LineProperty):
         E2  = self.setBlankIfDefault(self.E2,0.0)
 
         F1  = self.setBlankIfDefault(self.F1,0.0)
-        #F2  = self.setBlankIfDefault(self.F2,0.0) # must have 1 on line
+        F2  = self.setBlankIfDefault(self.F2,0.0) # must have 1 on line, if line3 is not empty
         
-        fields = ['PBAR',self.pid,self.mid,self.A,I1,I2,J,self.nsm,None,
-                         C1,C2,D1,D2,E1,E2,F1,self.F2,
-                         self.K1,self.K2,self.I12]
+        line3 = [self.K1,self.K2,I12]
+        print "line3 = ",line3
+        
+        line1 = ['PBAR',self.pid,self.mid,self.A,I1,I2,J,nsm,None]
+
+        if line3==[None,None,None]:
+            line2 = [C1,C2,D1,D2,E1,E2,F1,F2]
+        else:
+            line2 = [C1,C2,D1,D2,E1,E2,F1,self.F2]
+        fields = line1+line2+line3
+
         return self.printCard(fields)
 
 class PCONEAX(Property): #not done
@@ -137,7 +146,7 @@ class PBEAM(LineProperty):
         self.I2  = card.field(5)
         self.I12 = card.field(6)
         self.J   = card.field(7)
-        self.nsm = card.field(8)
+        self.NSM = card.field(8)
         self.C1  = card.field(9)
         self.C2  = card.field(10)
         self.D1  = card.field(11)
@@ -154,7 +163,7 @@ class PBEAM(LineProperty):
         self.i2  = []
         self.i12 = []
         self.j   = []
-        self.nsm2 = []
+        self.nsm = []
         self.c1 = []
         self.c2 = []
         self.d1 = []
@@ -190,7 +199,7 @@ class PBEAM(LineProperty):
             self.i2.append( propFields[4])
             self.i12.append(propFields[5])
             self.j.append(  propFields[6])
-            self.nsm2.append(propFields[7])
+            self.nsm.append(propFields[7])
             self.c1.append( propFields[8])
             self.c2.append( propFields[9])
             self.d1.append( propFields[10])
@@ -222,13 +231,13 @@ class PBEAM(LineProperty):
         self.n2b = card.field(x+15)
 
     def __repr__(self):
-        fields = ['PBEAM',self.pid,self.mid,self.A, self.I1,self.I2,self.I12,self.J, self.nsm,
+        fields = ['PBEAM',self.pid,self.mid,self.A, self.I1,self.I2,self.I12,self.J, self.NSM,
                           self.C1, self.C2, self.D1,self.D2,self.E1,self.E2, self.F1,self.F2]
         #print "fieldsA = ",fields
         
         #print len(self.so)
         for (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
-            self.so,self.xxb,self.a,self.i1,self.i2,self.i12,self.j,self.nsm2,
+            self.so,self.xxb,self.a,self.i1,self.i2,self.i12,self.j,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
             fields += [so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
             #print "asdf = ",asdf

@@ -7,6 +7,8 @@ from pyNastran.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBl
 from pyNastran.bdf.BDF_Card import BDF_Card
 
 class BaseCard(BDF_Card):
+    #def __init__(self,card):
+    #    pass
 
     def Is(self,typeCheck):
         if self.type==typeCheck:
@@ -22,6 +24,9 @@ class BaseCard(BDF_Card):
 
     def setBlankIfDefault(self,value,default):
         return setBlankIfDefault(value,default)
+
+    def crossReference(self,mesh):
+        raise Exception('%s needs to implement this method' %(self.type))
 
     def expandThru(self,fields):
         """
@@ -155,6 +160,7 @@ class BaseCard(BDF_Card):
 ###
 
 class Property(BaseCard):
+    mid = 0 # ???
     def __init__(self,card):
         #self.type = card[0]
         pass
@@ -164,6 +170,7 @@ class Property(BaseCard):
         return self.printCard(fields)
 
 class Element(BaseCard):
+    pid = 0 # CONM2, rigid
     def __init__(self,card):
         #displayCard(card)
         self.nodes = None

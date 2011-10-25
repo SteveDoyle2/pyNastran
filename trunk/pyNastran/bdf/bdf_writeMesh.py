@@ -5,6 +5,78 @@ class writeMesh(object):
         self.cardsToRead = set([])
         return self.read(infileName)
 
+    def writeElementsAsCTRIA3(self):
+        eids = self.elementIDs()
+        #print "eids = ",eids
+        nextEID = max(eids)+1  # set the new ID
+        msg = '$ELEMENTS\n'
+        for key,element in sorted(self.elements.items()):
+            if element.Is('CQUAD4'):
+                msg += element.writeAsCTRIA3(nextEID)
+                nextEID+=1
+            else:
+                msg += str(element)
+            ###
+        ###
+        return msg
+
+    def writeAsPatran(self,outfilename='fem.out.bdf',debug=False):
+        msg  = self.writeHeader()
+        msg += self.writeParams()
+        msg += self.writeNodes()
+        msg += self.writeElementsProperties()
+        msg += self.writeMaterials()
+        msg += self.writeLoads()
+        msg += self.writeAero()
+        msg += self.writeConstraints()
+        msg += self.writeRejects()
+        msg += self.writeCoords()
+        msg += 'ENDDATA\n'
+
+        self.log().info("***writing %s" %(outfilename))
+        outfile = open(outfilename,'wb')
+        outfile.write(msg)
+        outfile.close()
+
+    def write(self,outfilename='fem.out.bdf',debug=False):
+        msg  = self.writeHeader()
+        msg += self.writeParams()
+        msg += self.writeNodes()
+
+        msg += self.writeElements()
+        msg += self.writeProperties()
+
+        msg += self.writeMaterials()
+        msg += self.writeLoads()
+        msg += self.writeAero()
+        msg += self.writeConstraints()
+        msg += self.writeRejects()
+        msg += self.writeCoords()
+        msg += 'ENDDATA\n'
+
+        self.log().info("***writing %s" %(outfilename))
+        outfile = open(outfilename,'wb')
+        outfile.write(msg)
+        outfile.close()
+
+    def writeAsCTRIA3(self,outfilename='fem.out.bdf',debug=False):
+        msg  = self.writeHeader()
+        msg += self.writeParams()
+        msg += self.writeNodes()
+        msg += self.writeElementsAsCTRIA3()
+        msg += self.writeProperties()
+        msg += self.writeMaterials()
+        msg += self.writeLoads()
+        msg += self.writeConstraints()
+        msg += self.writeRejects()
+        msg += self.writeCoords()
+        msg += 'ENDDATA\n'
+
+        self.log().info("***writing %s" %(outfilename))
+        outfile = open(outfilename,'wb')
+        outfile.write(msg)
+        outfile.close()
+
     def writeHeader(self):
         msg = '$EXECUTIVE CONTROL DECK\n'
         for line in self.executiveControlLines:
@@ -42,7 +114,7 @@ class writeMesh(object):
         msg = ''
         if self.elements:
             msg += '$ELEMENTS\n'
-        for key,element in sorted(self.elements.items()):
+        for eid,element in sorted(self.elements.items()):
             msg += str(element)
         return msg
 
@@ -50,8 +122,29 @@ class writeMesh(object):
         msg = ''
         if self.properties:
             msg += '$PROPERTIES\n'
-        for key,prop in sorted(self.properties.items()):
+        for pid,prop in sorted(self.properties.items()):
             msg += str(prop)
+        return msg
+
+    def writeElementsProperties(self):
+        msg = ''
+        if self.properties:
+            msg += '$ELEMENTS_WITH_PROPERTIES\n'
+        for pid,prop in sorted(self.properties.items()):
+            msg += str(prop)
+            eids = self.getElementIDsWithPID(pid)
+
+            for eid in eids:
+                element = self.Element(eid)
+                msg += str(element)
+            ###
+        ###
+        msg += '$ELEMENTS_WITH_NO_PROPERTIES\n'
+        eids = self.getElementIDsWithPID(0)
+        for eid in eids:
+            element = self.Element(eid)
+            msg += str(element)
+        ###
         return msg
 
     def writeMaterials(self):
