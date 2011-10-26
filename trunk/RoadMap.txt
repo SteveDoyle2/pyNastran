@@ -4,6 +4,7 @@ Cards Supported Reading/Writing (version 0.1)
 
 ----Nodes----:
 GRID   (done)
+GRDSET (done)
 SPOINT (needs integration)
 
 ----Elements----:
@@ -19,7 +20,6 @@ CBAR   (done)
 
 CTRIA3 (done)
 CTRIA6 (done)
-
 CQUAD4 (done)
 CQUAD8 (done)
 
@@ -42,7 +42,7 @@ SPCD    (done)
 SPCSET
 SPCADD  (done???)
 
-MPC
+MPC     (done)
 MPCSET
 MPCADD
 
@@ -76,7 +76,7 @@ FORCE  (done)
 
 ----Coordinates----:
 CORD2R (done???)
-CORD2C
+CORD2C (partial???)
 CORD2S
 
 ----Aero----:
@@ -95,14 +95,21 @@ PARAM (done)
 -----------------------------------------------
 Future (Planned):
 
-----Elements----:
-CTRIAX  (ready for testing)
-CTRIAR  (ready for testing)
-CTRIAX6 (ready for testing)
+----Nodes----:
+RINGAX
 
-CQUADR  (ready for testing)
-CQUADX  (ready for testing)
-CQUAD   (ready for testing)
+----Elements----:
+CTRIAX  (needs integration)
+CTRIAR  (needs integration)
+CTRIAX6 (needs integration)
+
+CQUADR  (needs integration)
+CQUADX  (needs integration)
+CQUAD   (needs integration)
+CSHEAR  (needs integration)
+CRAC2D  (needs integration)
+CRAC3D  (needs integration)
+CVISC   (needs integration)
 
 ----Properties----:
 PCOMPG
@@ -113,11 +120,12 @@ PBEAM3
 CORD1R
 CORD1C
 CORD1S
+CORD3G
 
 ----Optimization----:
-DCONSTR  (ready for testing)
-DESVAR   (ready for testing)
-DDVAL    (ready for testing)
+DCONSTR  (needs integration)
+DESVAR   (needs integration)
+DDVAL    (needs integration)
 DEQATN
 DRESP1
 DRESP2
@@ -186,29 +194,28 @@ SPLINE6
 SPLINE7
 
 ----Other----:
+CCONEAX
 DAREA
 DLINK
 DMIG
 DTABLE
-MATT4
+GENEL
+MATS1
 MONPNT1
 MONPNT2
 MONPNT3
 NLPARM
 NSM
+PSHEAR
 RINGAX
-CCONEAX
+RROD
+RSPLINE
+RTRPLT
 SESET
 SET1
 SET2
 SET3
 SUPORT
-GENEL
-RROD
-RSPLINE
-RTRPLT
-PSHEAR
-MATS1
 
 -------------------------------------------
 

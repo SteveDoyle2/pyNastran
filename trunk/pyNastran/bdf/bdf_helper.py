@@ -90,8 +90,20 @@ class getMethods(object):
     def Coord(self,cid):
         return self.coords[cid]
 
-    def FLFACT(self,fid):
-        self.flfacts[param.key] = flfact
+    def Flfact(self,sid):
+        return self.flfacts[sid]
+
+    def Flutter(self,fid):
+        return self.flutters[fid]
+
+    def Gust(self,sid):
+        return self.gusts[sid]
+
+    def CAero(self,eid):
+        return self.caeros[eid]
+
+    def Aero(self,acsid):
+        return self.aeros[acsid]
 
 class addMethods(object):
     def addParam(self,param):
@@ -99,6 +111,8 @@ class addMethods(object):
         self.params[param.key] = param
 
     def addNode(self,node):
+        #print node
+        assert node.nid not in self.nodes
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
@@ -124,6 +138,12 @@ class addMethods(object):
         else:
             self.loads[key] = [load]
 
+    def addConstraint_MPCADD(self,constraint):
+        self.mpcObject.add(constraint)
+
+    def addConstraint_MPC(self,constraint):
+        self.mpcObject.append(constraint)
+
     def addConstraint_SPCADD(self,constraint):
         self.spcObject.add(constraint)
 
@@ -147,6 +167,10 @@ class addMethods(object):
         assert aero.acsid not in self.aeros
         self.aeros[aero.acsid] = aero
 
+    def addCAero(self,caero):
+        assert caero.eid not in self.caeros
+        self.caeros[caero.eid] = caero
+
     def addGust(self,gust):
         assert gust.sid not in self.gusts
         self.gusts[gust.sid] = gust
@@ -159,4 +183,3 @@ class addMethods(object):
         assert flfact.sid not in self.flfacts
         self.flfacts[flfact.sid] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact
-

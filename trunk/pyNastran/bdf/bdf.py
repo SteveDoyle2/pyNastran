@@ -30,6 +30,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             loggerObj = dummyLogger()
             log = loggerObj.startLog('debug') # or info
 
+
+        self.autoReject = False # automatically rejects every parsable card
         self.debug = False
         self.log = log
         self.infilename = infilename
@@ -328,8 +330,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             print "*cardObj = \n",cardObj
         cardObj = BDF_Card(card,oldCardObj=None)
         #cardObj.applyOldFields(iCard)
+
         try:
-            if card==[] or cardName=='':
+            if self.autoReject==True:
+                print 'rejecting processed %s' %(card)
+                self.rejectCards.append(card)
+            elif card==[] or cardName=='':
                 pass
             elif cardName=='PARAM':
                 param = PARAM(cardObj)
@@ -526,6 +532,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 load = LOAD(cardObj)
                 self.addLoad(load)
 
+            elif cardName=='MPC':
+                constraint = MPC(cardObj)
+                self.addConstraint_MPC(constraint)
+
             elif cardName=='SPC':
                 constraint = SPC(cardObj)
                 self.addConstraint_SPC(constraint)
@@ -584,7 +594,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 self.rejectCards.append(card)
             ###
         except:
-            print "failed! Unreduced Card=%s" %(ListPrint(card))
+            print "failed! Unreduced Card=%s\n" %(ListPrint(card))
+            print "filename = %s\n" %(self.infilename)
             raise
         ### try-except block
 

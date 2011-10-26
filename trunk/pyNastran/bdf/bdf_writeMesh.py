@@ -2,10 +2,28 @@ from pyNastran.bdf.fieldWriter import printCard
 
 class writeMesh(object):
     def echoBDF(self,infileName):
+        """
+        This method removes all comment lines from the bdf
+        A write method is stil required.
+        @todo maybe add the write method
+        """
         self.cardsToRead = set([])
         return self.read(infileName)
 
+    def autoRejectBDF(self,infileName):
+        """
+        This method parses supported cards, but does not group them into nodes,
+        elements, properties, etc.
+        @todo maybe add the write method
+        """
+        self.autoReject = True
+        return self.read(infileName)
+
     def writeElementsAsCTRIA3(self):
+        """
+        takes the cquad4 elements and splits them
+        @retval msg  string representation of the elements
+        """
         eids = self.elementIDs()
         #print "eids = ",eids
         nextEID = max(eids)+1  # set the new ID
@@ -21,6 +39,11 @@ class writeMesh(object):
         return msg
 
     def writeAsPatran(self,outfilename='fem.out.bdf',debug=False):
+        """
+        Writes a bdf with properties & elements interspersed like how
+        Patran writes the bdf.  This takes longer than the write method
+        but makes it easier to compare to a Patran-formatted bdf.
+        """
         msg  = self.writeHeader()
         msg += self.writeParams()
         msg += self.writeNodes()
@@ -39,6 +62,10 @@ class writeMesh(object):
         outfile.close()
 
     def write(self,outfilename='fem.out.bdf',debug=False):
+        """
+        Writes the bdf.  It groups the various sections together to make it
+        easy to find cards.
+        """
         msg  = self.writeHeader()
         msg += self.writeParams()
         msg += self.writeNodes()
@@ -60,6 +87,9 @@ class writeMesh(object):
         outfile.close()
 
     def writeAsCTRIA3(self,outfilename='fem.out.bdf',debug=False):
+        """
+        Writes a series of CQUAD4s as CTRIA3s.  All other cards are echoed.
+        """
         msg  = self.writeHeader()
         msg += self.writeParams()
         msg += self.writeNodes()
@@ -78,6 +108,9 @@ class writeMesh(object):
         outfile.close()
 
     def writeHeader(self):
+        """
+        Writes the executive and case control decks.
+        """
         msg = '$EXECUTIVE CONTROL DECK\n'
         for line in self.executiveControlLines:
             msg += line
@@ -90,6 +123,7 @@ class writeMesh(object):
         return msg
 
     def writeParams(self):
+        """writes the PARAM cards"""
         msg = ''
         if self.params:
             msg += '$PARAMS\n'
@@ -100,17 +134,21 @@ class writeMesh(object):
         return msg
 
     def writeNodes(self):
+        """writes the NODE-type cards"""
         msg = ''
         if self.nodes:
             msg += '$NODES\n'
             #print "nNodes = ",len(self.nodes)
         #print "self.nodes = ",self.nodes
+        if self.gridSet:
+            msg += str(self.gridSet)
         for key,node in sorted(self.nodes.items()):
             #print "node = ",node
             msg += str(node)
         return msg
 
     def writeElements(self):
+        """writes the elements in a sorted order"""
         msg = ''
         if self.elements:
             msg += '$ELEMENTS\n'
@@ -119,6 +157,7 @@ class writeMesh(object):
         return msg
 
     def writeProperties(self):
+        """writes the properties in a sorted order"""
         msg = ''
         if self.properties:
             msg += '$PROPERTIES\n'
@@ -127,6 +166,9 @@ class writeMesh(object):
         return msg
 
     def writeElementsProperties(self):
+        """
+        writes the elements and properties in and interspersed order
+        """
         msg = ''
         if self.properties:
             msg += '$ELEMENTS_WITH_PROPERTIES\n'
@@ -148,6 +190,7 @@ class writeMesh(object):
         return msg
 
     def writeMaterials(self):
+        """writes the materials in a sorted order"""
         msg = ''
         if self.materials:
             msg += '$MATERIALS\n'
@@ -189,6 +232,7 @@ class writeMesh(object):
         return msg
 
     def writeCoords(self):
+        """writes the coordinate cards in a sorted order"""
         #print "output coords..."
         msg = ''
         #if self.coords:
@@ -201,11 +245,16 @@ class writeMesh(object):
         return msg
 
     def writeRejects(self):
+        """
+        writes the rejected (processed) cards and the rejected unprocessed
+        cardLines
+        """
         msg = '$REJECTS\n'
         for rejectCard in self.rejectCards:
             #print "rejectCard = ",rejectCard
             #print ""
             msg += printCard(rejectCard)
+
         for rejectLines in self.rejects:
             if rejectLines[0][0]==' ':
                 continue
