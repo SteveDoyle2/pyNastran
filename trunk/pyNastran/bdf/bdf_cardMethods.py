@@ -5,25 +5,28 @@ class cardMethods(object):
     def __init__(self):
         pass
 
-    def getCard(self,debug=False):
-        """gets a single unparsed card"""
-        #debug = False
-        
+    def makeLinesPack(self,debug=False):
         emptyLines=0
-        while len(self.lines)<20:
-            line=self.infile.readline()
+        while len(self.linesPack[-1])<40:
+            line = self.infilesPack[-1].readline()
             line = line.split('$')[0]
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%s|" %(line)
-                self.lines.append(line)
+                self.linesPack[-1].append(line)
             else:
                 emptyLines += 1
             ###
             if emptyLines==50:
                 break
+        return self.linesPack[-1]
 
-        tempcard = [self.lines[0]]
+    def getCard(self,debug=False):
+        """gets a single unparsed card"""
+        #debug = False
+        
+        linesPack = self.makeLinesPack(debug=debug)
+        tempcard = [linesPack[0]]
         #if 'CQUAD4' in tempcard[0]:
         #    debug = True
         i=1
@@ -46,9 +49,8 @@ class cardMethods(object):
             #raise
         ###
         
-        
         #try:
-        self.lines = self.lines[i:]
+        linesPack[:] = linesPack[i:]
         #except IndexError:
         #    self.lines = []
         
@@ -68,7 +70,7 @@ class cardMethods(object):
     def getMultiLineCard(self,i,tempcard,isCSV=False,debug=False):
         if debug:
             print "tempcard1 = ",tempcard
-        iline = self.lines[i].rstrip()
+        iline = self.linesPack[-1][i].rstrip()
         #while iline=='':
         #    i+=1
         #    iline = self.lines[i].rstrip()
@@ -92,11 +94,11 @@ class cardMethods(object):
                 print "********"
                 self.doneReading=True
                 break
-            if i+1==len(self.lines):
+            if i+1==len(self.linesPack[-1]):
                 break
-            iline = self.lines[i]
+            iline = self.linesPack[-1][i]
             #try:
-            #    iline = self.lines[i]
+            #    iline = self.linesPack[-1][i]
             #except IndexError:
             #    iline = ''
 

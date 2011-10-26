@@ -24,7 +24,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     def setCardsToInclude():
         pass
 
-    def __init__(self,infilename,log=None):
+    def __init__(self,infilename,includeDir=None,log=None):
         ## allows the BDF variables to be scoped properly (i think...)
         getMethods.__init__(self)
         addMethods.__init__(self)
@@ -36,13 +36,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
             log = loggerObj.startLog('debug') # or info
-
+        if includeDir is None:
+            includeDir = os.path.dirname(infilename)
 
         self.autoReject = False # automatically rejects every parsable card
         self.debug = False
         self.log = log
+
         self.infilename = infilename
-        self.isOpened=False
+        self.includeDir = includeDir
+        self.infilesPack     = []
+        self.linesPack       = []
+        self.activeFileNames = []
+        self.isOpened = {self.infilename: False}
+
         #self.n = 0
         #self.nCards = 0
         self.doneReading = False
@@ -75,7 +82,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.caseControlLines = []
 
         self.cardsToRead = set([
-        'PARAM','=',
+        'PARAM','=','INCLUDE',
         'GRID','GRDSET',
         
         'CONM2',
@@ -112,15 +119,30 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ])
         self.cardsToWrite = self.cardsToRead
 
-    def openFile(self):
-        if self.isOpened==False:
-            self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(self.infilename,os.getcwd()))
-            self.infile = open(self.infilename,'r')
-            self.isOpened=True
-            self.lines = []
+    def openFile(self,infileName):
+        #print self.isOpened
+        if self.isOpened[infileName]==False:
+            self.activeFileNames.append(infileName)
+            self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
+            infile = open(infileName,'r')
+            self.infilesPack.append(infile)
+            self.isOpened[infileName]=True
+            self.linesPack.append([])
 
     def closeFile(self):
-        self.infile.close()
+        if len(self.infilesPack)==0:
+            return
+        print "*closing"
+        infile = self.infilesPack.pop()
+        infile.close()
+
+        activeFileName = self.activeFileNames.pop()
+        linesPack = self.linesPack.pop()
+        self.isOpened[activeFileName] = False
+        nlines = len(self.linesPack[-1])
+        self.doneReading = False
+        print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
+        #print "\n\n"
 
     def read(self,debug=False):
         self.log().info('---starting FEM_Mesh.read of %s---' %(self.infilename))
@@ -131,8 +153,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.readExecutiveControlDeck()
         self.readCaseControlDeck()
         self.readBulkDataDeck()
+        #self.closeFile()
         self.crossReference()
-        self.closeFile()
         if self.debug:
             self.log().debug("***FEM_Mesh.read")
         self.log().info('---finished FEM_Mesh.read of %s---' %(self.infilename))
@@ -142,22 +164,22 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         return ('BulkDataDeck',isDone)
 
     def readExecutiveControlDeck(self):
-        self.openFile()
+        self.openFile(self.infilename)
         line = ''
         #self.executiveControlLines = []
         while 'CEND' not in line:
-            lineIn = self.infile.readline()
+            lineIn = self.infilesPack[-1].readline()
             line = lineIn.strip()
             self.executiveControlLines.append(lineIn)
         return self.executiveControlLines
 
     def readCaseControlDeck(self):
-        self.openFile()
+        self.openFile(self.infilename)
         self.log().info("reading Case Control Deck...")
         line = ''
         #self.caseControlControlLines = []
         while 'BEGIN BULK' not in line:
-            lineIn = self.infile.readline()
+            lineIn = self.infilesPack[-1].readline()
             line = lineIn.strip().split('$')[0].strip()
             #print "*line = |%s|" %(line)
             self.caseControlLines.append(lineIn)
@@ -206,23 +228,49 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             print "RcardName = |%s|" %(cardName)
         return True
 
+    def getIncludeFileName(self,cardLines,cardName):
+        """parses an INCLUDE file split into multiple lines (as a list)"""
+        cardLines2 = []
+        for line in cardLines:
+            line = line.strip('\t\r\n ')
+            cardLines2.append(line)
+
+        #print "cardLinesRaw = ",cardLines2
+        cardLines2[0] = cardLines2[0][7:].strip() # truncate the cardname
+        filename = ''.join(cardLines2)
+        filename = filename.strip('"').strip("'")
+        #print 'filename = |%s|' %(filename)
+        filename = os.path.join(self.includeDir,filename)
+        return filename
+
+    def addIncludeFile(self,infileName):
+        self.isOpened[infileName] = False
+
     def readBulkDataDeck(self):
         debug = self.debug
         #debug = False
         
         if self.debug:
             self.log().debug("*readBulkDataDeck")
-        self.openFile()
+        self.openFile(self.infilename)
         #self.nodes = {}
         #self.elements = {}
         #self.rejects = []
         
         #oldCardObj = BDF_Card()
-        while 1: # keep going until finished
+        while len(self.activeFileNames)>0: # keep going until finished
             (card,cardName) = self.getCard(debug=debug) # gets the cardLines
             #print "outcard = ",card
             #if cardName=='CQUAD4':
             #    print "card = ",card
+            
+            if cardName=='INCLUDE':
+                filename = self.getIncludeFileName(card,cardName)
+                self.addIncludeFile(filename)
+                self.openFile(filename)
+                reject = '$ INCLUDE processed:  %s\n' %(filename)
+                self.rejects.append([reject])
+                continue
 
             if not self.isReject(cardName):
                 #print ""
@@ -247,7 +295,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             
             if 'ENDDATA' in cardName:
                 print cardName
-                break
+                break # exits while loop
             #self.log().debug('cardName = |%s|' %(cardName))
             
             #cardObj = BDF_Card(card,oldCardObj)
@@ -274,12 +322,17 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 #if self.foundEndData:
                 #    break
             ### iCard
-            if self.doneReading or len(self.lines)==0:
-                break
+            if self.doneReading or len(self.linesPack[-1])==0:
+                #print "doneReading=%s len(pack)=%s" %(self.doneReading,len(self.linesPack[-1]))
+                self.closeFile()
             ###
             #oldCardObj = copy.deepcopy(cardObj) # used for =(*1) stuff
             #print ""
-        
+            
+            #print "self.linesPack[-1] = ",len(self.linesPack[-1])
+            #print "self.activeFileNames = ",self.activeFileNames
+        ### end of while loop
+
         #self.debug = True
         if self.debug:
             #for nid,node in self.nodes.items():
@@ -292,7 +345,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 #print printCard(reject)
                 #print ''.join(reject)
             self.log().debug("***readBulkDataDeck")
-    
+        ###
+
     def addCard(self,card,cardName,iCard=0,oldCardObj=None):
         #if cardName != 'CQUAD4':
         #    print cardName
@@ -505,7 +559,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #    self.addLoad(force)
             elif cardName=='MOMENT':
                 moment = MOMENT(cardObj)
-                self.addLoad(force)
+                self.addLoad(moment)
             #elif cardName=='MOMENT1':
             #    moment = MOMENT1(cardObj)
             #    self.addLoad(force)

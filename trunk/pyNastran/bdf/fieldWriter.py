@@ -151,7 +151,7 @@ def printFloat(value,tol=1e-8):
             #    field = '-'+field[2:]
             elif value>-0.1:
                 #print "B"
-                field = "%8.7f" %(value)   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
+                field = "%8.6f" %(value)   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
                 field = '-'+field[2:]
             elif value>-1.:
                 #print "C"
@@ -228,16 +228,17 @@ if __name__=='__main__':
     #print printField(-10300000.0)
     #printField(-0.021004)
     
-    field = printField(-.723476);  assert '-.723476' == field,'|%s|' %(field)
-    field = printField(125000. );  assert ' 125000.' == field,'|%s|' %(field)
-    field = printField(12500000.); assert '  1.25+7' == field,'|%s|' %(field)
-    field = printField(47.77267);  assert '47.77267' == field,'|%s|' %(field)
-    field = printField(.001);      assert '    .001' == field,'|%s|' %(field)
+    field = printField(-.723476);   assert '-.723476' == field,'|%s|' %(field)
+    field = printField(125000. );   assert ' 125000.' == field,'|%s|' %(field)
+    field = printField(12500000.);  assert '  1.25+7' == field,'|%s|' %(field)
+    field = printField(47.77267);   assert '47.77267' == field,'|%s|' %(field)
+    field = printField(.001);       assert '    .001' == field,'|%s|' %(field)
     field = printField(.0000001);   assert '.0000001' == field,'|%s|' %(field)
-    field = printField(-5.007e-3);   assert '-5.007-3' == field,'|%s|' %(field)
+    field = printField(-5.007e-3);  assert '-5.007-3' == field,'|%s|' %(field)
+    field = printField(-0.0748662); assert '-.074866' == field,'|%s|' %(field)
     #print printField(12500000. )
     #print printField(47.77267)
     #print printField(.0000001)
-    print printField(-5.007e-3)
+    #print printField(-5.007e-3)
     
 
