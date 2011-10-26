@@ -1,6 +1,9 @@
 from pyNastran.bdf.fieldWriter import printCard
 
 class writeMesh(object):
+    def __init__(self):
+        pass
+
     def echoBDF(self,infileName):
         """
         This method removes all comment lines from the bdf

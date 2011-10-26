@@ -14,10 +14,10 @@ from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, et
 #from mathFunctions import *
 
 from BDF_Card import BDF_Card
-from bdf_helper import getMethods,addMethods,writeMesh,cardMethods
+from bdf_helper import getMethods,addMethods,writeMesh,cardMethods,XrefMesh
 from caseControlDeck import CaseControlDeck
 
-class BDF(getMethods,addMethods,writeMesh,cardMethods):
+class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     modelType = 'nastran'
     isStructured = False
     
@@ -25,6 +25,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         pass
 
     def __init__(self,infilename,log=None):
+        ## allows the BDF variables to be scoped properly (i think...)
+        getMethods.__init__(self)
+        addMethods.__init__(self)
+        writeMesh.__init__(self)
+        cardMethods.__init__(self)
+        XrefMesh.__init__(self)
+
         if log is None:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
@@ -92,7 +99,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
         'LOAD',
         'FORCE',#'FORCE1','FORCE2',
         'PLOAD','PLOAD2','PLOAD4',#'PLOAD1',
-        #'MOMENT','MOMENT1','MOMENT2',
+        'MOMENT',#'MOMENT1','MOMENT2',
 
         'FLFACT','AERO','AEROS','GUST','FLUTTER',
         #'CAERO1','CAERO2','CAERO3','CAERO4','CAERO5',
@@ -133,42 +140,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
 
         isDone = self.foundEndData
         return ('BulkDataDeck',isDone)
-
-    def crossReference(self):
-        #print "cross Reference is a temp function"
-        #for key,e in self.elements.items():
-        #    print(e)
-        
-        #self.spcObject.crossReference(self)
-        #self.caseControlDeck.crossReference(self)
-        self.crossReference_Nodes()
-        #self.crossReference_Elements()
-        #self.crossReference_Properties()
-
-    def crossReference_Nodes(self):
-        gridSet = self.gridSet
-        for nid,n in self.nodes.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
-            n.crossReference(self,gridSet)
-        ###
-
-    def crossReference_Elements(self):
-        for eid,e in self.elements.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
-            e.crossReference(self)
-        ###
-
-    def crossReference_Properties(self):
-        for pid,p in self.properties.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
-            p.crossReference(self)
-        ###
 
     def readExecutiveControlDeck(self):
         self.openFile()
@@ -524,17 +495,33 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             #    self.addTempMaterial(material)
 
             elif cardName=='FORCE':
-                #print "fcard = ",card 
                 force = FORCE(cardObj)
                 self.addLoad(force)
+            #elif cardName=='FORCE1':
+            #    force = FORCE1(cardObj)
+            #    self.addLoad(force)
+            #elif cardName=='FORCE':
+            #    force = FORCE1(cardObj)
+            #    self.addLoad(force)
+            elif cardName=='MOMENT':
+                moment = MOMENT(cardObj)
+                self.addLoad(force)
+            #elif cardName=='MOMENT1':
+            #    moment = MOMENT1(cardObj)
+            #    self.addLoad(force)
+            #elif cardName=='MOMENT2':
+            #    moment = MOMENT2(cardObj)
+            #    self.addLoad(force)
             elif cardName=='LOAD':
-                #print "fcard = ",card 
                 load = LOAD(cardObj)
                 self.addLoad(load)
 
             elif cardName=='MPC':
                 constraint = MPC(cardObj)
                 self.addConstraint_MPC(constraint)
+            #elif cardName=='MPCADD':
+            #    constraint = MPCADD(cardObj)
+            #    self.addConstraint_MPCADD(constraint)
 
             elif cardName=='SPC':
                 constraint = SPC(cardObj)
@@ -549,29 +536,23 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
                 constraint = SPCADD(cardObj)
                 self.addConstraint_SPC(constraint)
             elif cardName=='SUPORT1':
-                #print "card = ",card
                 constraint = SUPORT1(cardObj)
                 self.addConstraint(constraint)
                 #print "constraint = ",constraint
 
             elif cardName=='AERO':
-                #print "card = ",card
                 aero = AERO(cardObj)
                 self.addAero(aero)
             elif cardName=='AEROS':
-                #print "card = ",card
                 aeros = AEROS(cardObj)
                 self.addAero(aeros)
             elif cardName=='FLFACT':
-                #print "card = ",card
                 flfact = FLFACT(cardObj)
                 self.addFLFACT(flfact)
             elif cardName=='GUST':
-                #print "card = ",card
                 gust = GUST(cardObj)
                 self.addGust(gust)
             elif cardName=='FLUTTER':
-                #print "card = ",card
                 flutter = FLUTTER(cardObj)
                 self.addFlutter(flutter)
 
@@ -599,40 +580,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods):
             raise
         ### try-except block
 
-    def sumForces(self):
-        for key,loadCase in self.loads.items():
-            F = array([0.,0.,0.])
-            #print "loadCase = ",loadCase
-            for load in loadCase:
-                #print "load = ",load
-                if isinstance(load,FORCE):
-                    f = load.mag*load.xyz
-                    print "f = ",f
-                    F += f
-                ###
-            self.log().info("case=%s F=%s\n\n" %(key,F))
-        ###
-
-    def sumMoments(self):
-        p = array([0.,0.5,0.])
-        for key,loadCase in self.loads.items():
-            M = array([0.,0.,0.])
-            F = array([0.,0.,0.])
-            #print "loadCase = ",loadCase
-            for load in loadCase:
-                #print "load = ",load
-                if isinstance(load,FORCE):
-                    f = load.mag*load.xyz
-                    node = self.Node(load.node)
-                    #print "node = ",node
-                    r = node.Position() - p
-                    m = cross(r,f)
-                    #print "m    = ",m
-                    M += m
-                    F += f
-                ###
-            print "case=%s F=%s M=%s\n\n" %(key,F,M)
-        ###
 
 ### FEM_Mesh
 

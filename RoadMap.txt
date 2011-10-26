@@ -1,6 +1,6 @@
 In order for a card to be supported, it must read AND write ALL fields.  Important calculated parameters are nice, but not required.
 
-Cards Supported Reading/Writing (version 0.1)
+Cards Supported Reading/Writing (version 0.1 beta)
 
 ----Nodes----:
 GRID   (done)
@@ -46,7 +46,6 @@ MPC     (done)
 MPCSET
 MPCADD
 
-
 ----Materials----:
 MAT1  (done)
 MAT2  (done)
@@ -60,7 +59,7 @@ MAT10 (done)
 ----Properties----:
 PELAS   (done)
 PROD    (done)
-PBEAM   (done, cleanup)
+PBEAM   (done)
 PBAR    (done)
 PCOMP   (done)
 PSHELL  (done)
@@ -70,9 +69,19 @@ PLSOLID (done)
 
 ----Loads----:
 LOAD   (done)
+
+FORCE  (done)
+FORCE1
+FORCE2
+
 PLOAD  (done)
 PLOAD1 (done)
-FORCE  (done)
+PLOAD2
+PLOAD3
+PLOAD4
+
+MOMENT (done)
+MOMENT1
 
 ----Coordinates----:
 CORD2R (done???)
@@ -133,14 +142,6 @@ DRESP3
 DVPREL1
 
 ----Loads----:
-PLOAD2
-PLOAD3
-PLOAD4
-FORCE1
-FORCE2
-LOAD
-MOMENT
-MOMENT1
 
 ----Methods----:
 EIGR
