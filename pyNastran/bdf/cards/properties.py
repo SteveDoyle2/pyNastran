@@ -12,12 +12,157 @@ class LineProperty(Property):
     def __init__(self,card):
         Property.__init__(self,card)
         pass
-
+    def D_bending(self):
+        pass
+    def D_axial(self):
+        pass
+    def D_thermal(self):
+        pass
+    def D_shear(self):
+        pass
+        
 class ShellProperty(Property):
     type = 'ShellProperty'
     def __init__(self,card):
         Property.__init__(self,card)
         pass
+    
+
+    def S(self):
+        """"
+        Calculates the compliance matrix for a lamina
+        [Q] = [S]^-1
+        @todo finish...if necessary...
+        """
+        pass
+        #return Q.inv()
+
+    def ABDH(self):
+        """
+        [Nx] = [            ] [ e_xx0    ]
+        [Ny] = [  [A]   [B] ] [ e_yy0    ]
+        [Nz] = [            ] [ gamma_xy0]
+        [Mx] = [            ] [ k_xx0    ]
+        [My] = [  [B]   [D] ] [ k_yy0    ]
+        [Mz] = [            ] [ k_xy0    ]
+        
+        \f$[ A_{ij} = \Sigma_{k=1}^N (\over(Q_{ij}))_k (z_k  -z_{k-1}  ) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                     \f$]
+        \f$[ B_{ij} = \Sigma_{k=1}^N (\over(Q_{ij}))_k (z_k^2-z_{k-1}^2) = \Sigma_{k=1}^N (Q_{ij})_k (\over(z) t_k)                          \f$]
+        \f$[ D_{ij} = \Sigma_{k=1}^N (\over(Q_{ij}))_k (z_k^3-z_{k-1}^3) = \Sigma_{k=1}^N (Q_{ij})_k             (\over(z)^2 t_k + t_k^3/12) \f$]
+        \f$[ H_{ij} =                                                      \Sigma_{k=1}^N (Q_{ij})_k (t_k -4/t^2 (\over(z)^2 t_k + t_k^3/12) \f$]
+        
+        p. 138 of "Introduction to Composite Material Design"
+        """
+        A = zeros(9,'d')
+        B = copy.deepcopy(A)
+        D = copy.deepcopy(A)
+        H = copy.deepcopy(A)
+
+        for i,layer in enumerate(self.layers):
+            t = layer.t
+            z0 = layer.z
+            #z1 = z0+t
+            zbar = (2*z0+t)/2. # (z1+z0)/2. 
+            Qraw   = layer.Q() # needs E11, E22, G12, G13, nu12, nu21
+            qlayer = Qall(Qout,layer.thetad)
+            A += qlayer*t
+            B += qlayer*t*z
+            
+            Dfactor = t*zbar*zbar+t**3/12.
+            D += qlayer*Dfactor
+            H += qlayer*(t-4./t**2 * Dfactor)
+        B = 0.5*B
+        D = D/3.
+        H = H*5./4.
+            
+            
+    def Qall(self,thetad):
+        """
+        \f$[ [Q]all = [T]^-1 [Q] [R][T][R]^-1  \f$]
+        \f$[ [Q]all = [T]^-1 [Q] [T]^-T        \f$]
+        
+        p. 123 of "Introduction to Composite Material Design"
+        """
+        theta = radians(thetad)
+        ct  = cos(theta)
+        c2t = ct*ct
+        c3t = ct*c2t
+        c4t = c2t*c2t
+
+        st  = sin(theta)
+        s2t = st*st
+        s3t = st*s2t
+        s4t = s2t*s2t
+        
+        s2c2t = s2t*c2t
+        #s4tpc4t = s4t+c4t
+        
+        Q11a = Q11*c4t + 2*(Q12+2*Q66)*s2c2t + Q22*s4t
+        Q12a = (Q11+Q22-4*Q66)*s2c2t + Q12(s4t+c4t)
+        Q22a = Q11*s4t + 2*(Q12+2*Q66)*s2c2t+Q22*c4t
+        Q16a = (Q11-Q12-2*Q66)*st*c3t + (Q12-Q22+2*Q66)*s3t*ct
+        Q26a = (Q11-Q12-2*Q66)*s3t*ct + (Q12-Q22+2*Q66)*st*c3t
+        Q66a = (Q11+Q22-2*Q12-2*Q66)*s2c2t + Q66(s4t+c4t)
+        Q44a = Q44*c2t + Q55*s2t
+        Q55a = Q44*s2t + Q55*c2t
+        Q45a = (Q55-Q44)*st*ct
+        return array([Q11a,Q12a,Q22a,Q16a,Q26a,Q66a,Q44a,Q55a,Q45a])
+
+    def Q(self):
+        """"
+        Calculates the stiffness matrix for a lamina
+        @todo is this done?
+        p. 114 "Introduction to Composite Material Design"
+        """
+        delta = 1-nu12*nu21
+        Q11 = E1/delta
+        Q12 = nu12*E2/delta
+        Q22 = E2/delta
+        Q66 = G12
+        Q44 = G23
+        Q55 = G13
+        Qout = (Q11,Q22,Q12,Q44,Q55,Q66)
+        return Qout
+        
+    def T(self,theta):
+        """
+        the Transformation matrix \$ [T] \$
+        @param self the object pointer
+        #@param m              sin(\theta)
+        #@param n              cos(\theta)
+        @param theta          in radians...
+        @retval Tinv          the inverse transformation matrix
+        @retval TinvTranspose the transposed inverse transformation matrix
+        @todo document better
+
+                 [ m^2  n^2        2mn]
+        [T]    = [ n^2  m^2       -2mn]   # transformation matrix
+                 [ -mn   mn    m^2-n^2]
+
+                 [ m^2  n^2       -2mn]
+        [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
+                 [ mn   -mn    m^2-n^2]
+        
+        \f$[ {\sigma_{xx} \sigma_{yy} \sigma_{xy}} = [T]^-1 [Q] [R][T]{\epsilon_{xx} \epsilon_{yy} 0.5 \gamma_{xy} } \f$]
+        
+        p.119 "Introduction to Composite Material Design"
+        """
+        n = cos(theta)
+        m = sin(theta)
+        Tinv  = zeros((6,6),'d')
+        mm = m*m
+        nn = n*n
+        nm = n*m
+        Tinv[0][0] = Tinv[1][1] = mm
+        Tinv[1][0] = Tinv[0][1] = nn
+        Tinv[0][2] = -2*mn
+        Tinv[1][2] =  2*mn
+
+        Tinv[2][0] =  mn
+        Tinv[2][1] = -mn
+        Tinv[2][2] =  mm-nn
+        TinvT = numpy.transpose(Tinv)
+        return (Tinv,TinvT)
 
 class SolidProperty(Property):
     type = 'SolidProperty'
@@ -136,42 +281,29 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
 class PBEAM(LineProperty):
     type = 'PBEAM'
     def __init__(self,card):
-        """@todo cleanup entries"""
+        """
+        @todo fix 0th entry of self.so, self.xxb
+        """
         LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
 
-        self.A   = card.field(3)
-        self.I1  = card.field(4)
-        self.I2  = card.field(5)
-        self.I12 = card.field(6)
-        self.J   = card.field(7)
-        self.NSM = card.field(8)
-        self.C1  = card.field(9)
-        self.C2  = card.field(10)
-        self.D1  = card.field(11)
-        self.D2  = card.field(12)
-        self.E1  = card.field(13)
-        self.E2  = card.field(14)
-        self.F1  = card.field(15)
-        self.F2  = card.field(16)
-
-        self.so  = []
-        self.xxb = []
-        self.a   = []
-        self.i1  = []
-        self.i2  = []
-        self.i12 = []
-        self.j   = []
-        self.nsm = []
-        self.c1 = []
-        self.c2 = []
-        self.d1 = []
-        self.d2 = []
-        self.e1 = []
-        self.e2 = []
-        self.f1 = []
-        self.f2 = []
+        self.so  = [None] ## @todo what are these values???
+        self.xxb = [None]
+        self.a   = [card.field(3) ]
+        self.i1  = [card.field(4) ]
+        self.i2  = [card.field(5) ]
+        self.i12 = [card.field(6) ]
+        self.j   = [card.field(7) ]
+        self.nsm = [card.field(8) ]
+        self.c1  = [card.field(9) ]
+        self.c2  = [card.field(10)]
+        self.d1  = [card.field(11)]
+        self.d2  = [card.field(12)]
+        self.e1  = [card.field(13)]
+        self.e2  = [card.field(14)]
+        self.f1  = [card.field(15)]
+        self.f2  = [card.field(16)]
         
         #fields = card.fields(0)
         #print "fieldsPBEAM = ",fields
@@ -231,20 +363,22 @@ class PBEAM(LineProperty):
         self.n2b = card.field(x+15)
 
     def __repr__(self):
-        fields = ['PBEAM',self.pid,self.mid,self.A, self.I1,self.I2,self.I12,self.J, self.NSM,
-                          self.C1, self.C2, self.D1,self.D2,self.E1,self.E2, self.F1,self.F2]
+        fields = ['PBEAM',self.pid,self.mid]
         #print "fieldsA = ",fields
         
         #print len(self.so)
+        i = 0
         for (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.a,self.i1,self.i2,self.i12,self.j,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
-            fields += [so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
-            #print "asdf = ",asdf
+            if i==0:
+                fields +=        [a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
+            else:
+                fields += [so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
+            i+=1
         fields += [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
                    self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
         #print fields
-        #print "asdf = ",asdf
         return self.printCard(fields)
         
 #class PBEAML(LineProperty): #not done
@@ -300,7 +434,10 @@ class PCOMP(ShellProperty):
         self.ft   = card.field(5)
         self.TRef = card.field(6,0.0)
         self.ge   = card.field(7,0.0)
-        self.lam  = card.field(8)  # symmetric flag???
+        
+        ## symmetric flag - default = No Symmetry
+        self.lam  = card.field(8)
+        #print "lam = ",self.lam
         
         nPlyFields = card.nFields()-8 # -8 for the first 8 fields (1st line)
         #plyCards = card.fields(9)
@@ -310,18 +447,95 @@ class PCOMP(ShellProperty):
         nLeftover = nPlyFields%4
         if nLeftover:
             nMajor+=1
-        self.nplies = nMajor
+        nplies = nMajor
 
-        iPly = 0
-        self.plies = []
-        for i in range(9,self.nplies*4,4):
+        #iPly = 0
+        plies = []
+        for i in range(9,nplies*4,4):  # doesnt support single ply per line
             defaults = [None,None,0.0,'NO']
             (mid,t,theta,sout) = card.fields(i,i+4,defaults)
-            self.plies.append([mid,t,theta,sout])
-            iPly +=1
-        #print "nplies = ",self.nplies
-        #print str(self)
+            ply = [mid,t,theta,sout]
+            if ply!=defaults: # if there not all defaults...
+                plies.append(ply)
+            #iPly +=1
+        #print "nplies = ",nplies
+        
+        self.plies = plies
+        
+        #self.plies = []
+        #if self.lam=='SYM':
+        #    if nplies%2==1:  # 0th layer is the core layer
+        #        plies[0][1] = plies[0][1]/2. # cut the thickness in half to make the ply have an even number of plies, is there a better way???
+        #
+        #    pliesLower = plies.reverse()
+        #    self.plies = pliesLower+plies
+        #    #print str(self)
+        ###
+        #sys.exit()
 
+    def hasCoreLayer(self):
+        """is there a center layer (matters most for a symmetrical ply)"""
+        return self.nPlies%2==1 # True if has a core, False otherwise
+
+    def nPlies(self):
+        """
+        how many plies are there?
+        @note 
+            returns half the number of actual plies if the ply is symmetrical (not considering the core)
+        """
+        return len(self.plies)
+
+    def isSymmetrical(self):
+        """is the ply a symmetrical ply"""
+        if self.lam=='SYM':
+            return True
+        return False
+
+    def massPerArea(iPly='all'):
+        """
+        mass = rho*A*t
+        but area comes from the element
+        mass/A = rho*t for the various layers
+        the final mass calculation will be done later
+        """
+        if iLayer=='all': # get all layers
+            massPerArea = 0.
+            for (iPly,ply) in enumerate(self.plies):
+                massPerArea += self.massPerArea(iPly)
+            ###
+            if self.isSymmetrical():
+                if self.isCoreLayer():
+                    massPerArea -= self.massPerArea(0)/2.  # cut out the thickness of half the core layer
+                    
+                ###
+                return massPerArea*2.
+            ###
+            return massPerArea
+        ###
+        else:
+            rho = mid.rho()
+            t = plies[0][1]
+            return rho*t
+        ###
+
+    def thickness(iPly='all'):
+        if iLayer=='all': # get all layers
+            t = 0.
+            for (iPly,ply) in enumerate(self.plies):
+                t += self.thickness(iPly)
+            ###
+            if self.isSymmetrical():
+                if self.isCoreLayer():
+                    t -= self.thickness(0)/2.  # cut out the thickness of half the core layer
+                return t*2.
+            return t
+            ###
+        ###
+        else:
+            t = plies[0][1]
+            return t
+        ###
+        
     def __repr__(self):
         fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
         #print "plies = ",self.plies

@@ -45,10 +45,21 @@ class SPOINT(Node):
         
 
 class GRDSET(Node):
+    """
+    Defines default options for fields 3, 7, 8, and 9 of all GRID entries.
+    """
     type = 'GRDSET'
     def __init__(self,card):
+        ## Grid point coordinate system
         self.cid  = card.field(2,0)
+        
+        ## Analysis coordinate system
+        self.cd   = card.field(6,0)
+        
+        ## Default SPC constraint on undefined nodes
         self.ps   = card.field(7,0)
+        
+        ## Superelement ID
         self.seid = card.field(8,0)
 
     def __repr__(self):
@@ -58,19 +69,35 @@ class GRDSET(Node):
         seid = self.setBlankIfDefault(self.seid,0)
         fields = ['GRDSET',None,cid,None,None,None,cd,ps,seid]
 
+    def crossReference(self):
+        cid  = mesh.Coord(self.cid)
+        cd   = mesh.Coord(self.cd)
+        #seid = mesh.Super(self.seid)
+
 class GRID(Node):
     type = 'GRID'
     def __init__(self,card):
         Node.__init__(self,card)
+
+
+        ## Node ID
         self.nid = int(card.field(1))
+
+        ## Grid point coordinate system
         self.cid = card.field(2,0)
+
         xyz = card.fields(3,6,[0.,0.,0.])  # TODO:  is standard nastran???
         #displayCard(card)
         #print "xyz = ",xyz
-
         self.xyz = array(xyz)
+
+        ## Analysis coordinate system
         self.cd = card.field(6,0)
+
+        ## SPC constraint
         self.ps = card.field(7,0)
+
+        ## Superelement ID
         self.seid = card.field(8,0)
 
         #print "xyz = ",self.xyz
