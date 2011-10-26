@@ -1,11 +1,15 @@
 import sys
 import copy
 from pyNastran.bdf.fieldWriter import printCard
-#from BDF_Card import BDF_Card
+
 from bdf_writeMesh import writeMesh
 from bdf_cardMethods import cardMethods
+from crossReference import XrefMesh
 
 class getMethods(object):
+    def __init__(self):
+        pass
+
     def getNodeIDs(self):
         raise Exception('use self.nodeIDs()')
         return sorted(self.nodes.keys())
@@ -105,7 +109,48 @@ class getMethods(object):
     def Aero(self,acsid):
         return self.aeros[acsid]
 
+    def sumForces(self):
+        for key,loadCase in self.loads.items():
+            F = array([0.,0.,0.])
+            #print "loadCase = ",loadCase
+            for load in loadCase:
+                #print "load = ",load
+                if isinstance(load,FORCE):
+                    f = load.mag*load.xyz
+                    print "f = ",f
+                    F += f
+                ###
+            self.log().info("case=%s F=%s\n\n" %(key,F))
+        ###
+
+    def sumMoments(self):
+        p = array([0.,0.5,0.])
+        for key,loadCase in self.loads.items():
+            M = array([0.,0.,0.])
+            F = array([0.,0.,0.])
+            #print "loadCase = ",loadCase
+            for load in loadCase:
+                #print "load = ",load
+                if isinstance(load,FORCE):
+                    f = load.mag*load.xyz
+                    node = self.Node(load.node)
+                    #print "node = ",node
+                    r = node.Position() - p
+                    m = cross(r,f)
+                    #print "m    = ",m
+                    M += m
+                    F += f
+                #elif isinstance(load,MOMENT):
+                #    m = load.mag*load.xyz
+                #    M += m
+                ###
+            print "case=%s F=%s M=%s\n\n" %(key,F,M)
+        ###
+
 class addMethods(object):
+    def __init__(self):
+        pass
+
     def addParam(self,param):
         assert param.key not in self.params
         self.params[param.key] = param

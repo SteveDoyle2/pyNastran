@@ -131,7 +131,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
             iUm = fields.index('UM')
         except ValueError:
             iUm = None
-        print "iAlpha=%s iUm=%s" %(iUm,iAlpha)
+        #print "iAlpha=%s iUm=%s" %(iUm,iAlpha)
 
         #print "iUM = ",iUM
         self.WtCG_groups = []

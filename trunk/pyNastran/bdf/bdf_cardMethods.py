@@ -2,6 +2,8 @@ import sys
 #from BDF_Card import collapse
 
 class cardMethods(object):
+    def __init__(self):
+        pass
 
     def getCard(self,debug=False):
         """gets a single unparsed card"""
