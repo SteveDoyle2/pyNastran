@@ -1,4 +1,5 @@
 #summary Walk through of how to install the project
+#labels Featured,Phase-Deploy
 
 
 = Overview = 
