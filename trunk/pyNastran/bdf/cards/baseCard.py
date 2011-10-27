@@ -81,8 +81,8 @@ class BaseCard(BDF_Card):
         to be [1,5,7,9,13]
         """
         if len(fields)==1: return fields
-        print "expandThruBy"
-        print "fields = ",fields
+        #print "expandThruBy"
+        #print "fields = ",fields
         out = []
         nFields = len(fields)
         i=0
@@ -106,7 +106,7 @@ class BaseCard(BDF_Card):
                 i+=1
             ###
         ###
-        print "out = ",out,'\n'
+        #print "out = ",out,'\n'
         return list(set(out))
 
     def expandThruExclude(self,fields):
