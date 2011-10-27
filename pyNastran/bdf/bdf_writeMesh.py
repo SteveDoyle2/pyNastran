@@ -119,15 +119,26 @@ class writeMesh(object):
         """
         Writes the executive and case control decks.
         """
+        msg  = self.writeExecutiveControlDeck()
+        msg += self.writeCaseControlDeck()
+        return msg
+
+    def writeExecutiveControlDeck(self):
         msg = '$EXECUTIVE CONTROL DECK\n'
         for line in self.executiveControlLines:
             msg += line
+        return msg
 
+    def writeCaseControlDeck(self):
+        msg = ''
         if self.caseControlDeck:
             msg += '$CASE CONTROL DECK\n'
             msg += str(self.caseControlDeck)
         #for line in self.caseControlLines:
         #    msg += line
+
+        #if 'BEGIN BULK' not in msg:
+        #    msg += 'BEGIN BULK\n'
         return msg
 
     def writeParams(self):
@@ -228,7 +239,7 @@ class writeMesh(object):
     def writeAero(self):
         #print "output aero cards..."
         msg = ''
-        if self.flfacts:  msg = '$AERO\n'
+        if self.flfacts or self.aeros or self.gusts or self.flutters:  msg = '$AERO\n'
         flfactKeys = self.flfacts.keys()
         #self.log().info("flfactKeys = %s" %(flfactKeys))
         for ID,flfact in sorted(self.flfacts.items()):
@@ -238,12 +249,17 @@ class writeMesh(object):
             msg += str(aero)
         for ID,gust in sorted(self.gusts.items()):
             msg += str(gust)
+        for ID,flutter in sorted(self.flutters.items()):
+            msg += str(flutter)
+
         return msg
 
     def writeThermal(self):
         msg = ''
         # PHBDY
-        if self.bcs:  msg = '$THERMAL\n'
+        if self.phbdys or self.thermalProperties or self.convectionProperties or self.bcs:
+            msg = '$THERMAL\n'
+
         for key,phbdy in sorted(self.phbdys.items()):
             msg += str(phbdy)
 
@@ -264,10 +280,10 @@ class writeMesh(object):
         """writes the coordinate cards in a sorted order"""
         #print "output coords..."
         msg = ''
-        #if self.coords:
-        msg += '$COORDS\n'
+        if self.coords:
+            msg += '$COORDS\n'
         coordKeys = self.coords.keys()
-        self.log().info("coordKeys = %s" %(coordKeys))
+        #self.log().info("coordKeys = %s" %(coordKeys))
         for ID,coord in sorted(self.coords.items()):
             if ID!=0:
                 msg += str(coord)

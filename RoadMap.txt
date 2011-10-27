@@ -27,6 +27,7 @@ CTETRA (done)
 CPENTA (done)
 CHEXA  (done)
 
+----Rigid Elements----:
 RBE1  (testing)
 RBE2  (testing)
 RBE3  (testing)
@@ -97,10 +98,14 @@ CHBDYE (done)
 CHBDYG (done)
 CHBDYP (done)
 
-
 ----Thermal BCs----:
 RADBC  (done)
 CONV   (done)
+
+----Thermal Properties----:
+PCONV  (done)
+PCONVM (done)
+PHBDY  (done)
 
 ----Coordinates----:
 CORD2R (done???)
@@ -124,34 +129,75 @@ PARAM (done)
 
 
 -----------------------------------------------
-Future (Planned):
+Potential (v0.2) - these will be added in groupings...maybe (not necessarily in order):
+If you want a certain group...ask!
+**************
+RINGAX
+AXIC
+PCONEAX
+PCONEAX
+FORCEAX
+**************
+BAROR
+BEAMOR
+CBARAO
+PBEAM3
+**************
+CBEND
+PBEND
+**************
+PBCOMP
+PCOMPG
+**************
+CSHEAR
+PSHEAR
+**************
+CORD1R
+CORD1C
+CORD1S
+**************
 
 ----Nodes----:
 RINGAX
+MONPNT1
+MONPNT2
+MONPNT3
 
 ----Elements----:
-CTRIAX  (needs integration)
-CTRIAR  (needs integration)
-CTRIAX6 (needs integration)
-
-CQUADR  (needs integration)
-CQUADX  (needs integration)
-CQUAD   (needs integration)
-CSHEAR  (needs integration)
-CRAC2D  (needs integration)
-CRAC3D  (needs integration)
-CVISC   (needs integration)
+AXIC
+BAROR
+BEAMOR
+CBARAO
+CBEND
+CCONEAX
+CELAS3
+CELAS4
+CONM1
+CSHEAR
+CDAMP1
+CDAMP2
+CDAMP3
+CDAMP4
+CDAMP5
+NSM
+NSM1
 
 ----Properties----:
+PBEAM3
+PBCOMP
+PBEND
 PCOMPG
 PCONEAX
-PBEAM3
+PMASS
+PSHEAR
+
+----Loads----:
+FORCEAX
 
 ----Coordinates----:
 CORD1R
 CORD1C
 CORD1S
-CORD3G
 
 ----Optimization----:
 DCONSTR  (needs integration)
@@ -162,27 +208,11 @@ DRESP1
 DRESP2
 DRESP3
 DVPREL1
-
-----Loads----:
+DLINK
 
 ----Methods----:
 EIGR
 EIGRL
-EIGB
-EIGC
-EIGP
-
-----Constraint Cards----:
-
-----Thermal----:
-RADM
-MATT1
-MATT2
-MATT3
-MATT4
-MATT5
-MATT8
-MATT9
 
 ----Modal Cards----:
 FREQ
@@ -199,6 +229,12 @@ CAERO3
 CAERO4
 CAERO5
 
+PAERO1
+PAERO2
+PAERO3
+PAERO4
+PAERO5
+
 SPLINE1
 SPLINE2
 SPLINE3
@@ -207,29 +243,121 @@ SPLINE5
 SPLINE6
 SPLINE7
 
-----Other----:
-CCONEAX
-DAREA
-DLINK
-DMIG
-DTABLE
-GENEL
-MATS1
-MONPNT1
-MONPNT2
-MONPNT3
-NLPARM
-NSM
-PSHEAR
-RINGAX
+----Thermal Loads----:
+CONTRLT
+BDYOR
+
+-----------------------------------------------
+Card Groupings:
+
+----Nodes----:
+
+----Elements----:
+CTRIAX  (needs integration)
+CTRIAR  (needs integration)
+CTRIAX6 (needs integration)
+
+CQUADR  (needs integration)
+CQUADX  (needs integration)
+CQUAD   (needs integration)
+CSHEAR  (needs integration)
+CRAC2D  (needs integration)
+CRAC3D  (needs integration)
+CVISC   (needs integration)
+
+----Rigid Elements----:
+RBE2GS
+RBJOINT
+RBJSTIF
+RJOINT
 RROD
-RSPLINE
 RTRPLT
+RTRPLT1
+RSPLINE
+MATRIG
+
+----Properties----:
+
+----Coordinates----:
+CORD3G
+
+----Optimization----:
+
+----Loads----:
+
+----Methods----:
+EIGB
+EIGC
+EIGP
+
+----Constraint Cards----:
+SUPORT
+
+----Materials----:
+MATS1
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
+
+----Thermal----:
+RADBND
+RADCAV
+RADLST
+RADM
+RADMT
+RADMTX
+RADSET
+
+----Modal Cards----:
+
+----Aero Cards----:
+
+----Special----:
+DMIG
+GENEL
+DEQUATN
+
+----Dynamics/Nonlinear---:
+EPOINT
+DAREA
+DLOAD
+NLPARM
+RLOAD1
+RLOAD2
+
+----Tables----:
+DTABLE
+
+----Super Elements----:
+CSUPER
+CSUPEXT
+EXTRN
+SEELT
+SEEXCLD
+SELABEL
+SELOC
+SEMPLN
+SENQST
+SEQGP
+SEQSEP
+SEQSET
+SEQSET1
 SESET
+SESUP
+
+----Acoustic----:
+ACSRCE
+CHACAB
+CHACBR
+
+----Unsorted----:
 SET1
 SET2
 SET3
-SUPORT
 
 -------------------------------------------
 

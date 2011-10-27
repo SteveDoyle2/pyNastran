@@ -24,7 +24,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     #def setCardsToInclude():
     #    pass
 
-    def __init__(self,infilename,includeDir=None,log=None):
+    def __init__(self,infilename,includeDir=None,log=None,debug=True):
         ## allows the BDF variables to be scoped properly (i think...)
         getMethods.__init__(self)
         addMethods.__init__(self)
@@ -32,7 +32,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         cardMethods.__init__(self)
         XrefMesh.__init__(self)
 
-        self.debug = False
+        self.debug = debug
         self._setInfile(infilename,includeDir,log)
 
         #self.n = 0
@@ -165,6 +165,15 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             self.linesPack.append([])
         ###
 
+    def getNextLine(self):
+        return self.infilesPack[-1].readline()
+
+        infile = self.infilesPack[-1]
+        print "infile = |%s|" %(infile),type(infile)
+        line = infile.readline()
+        print "line = |%s|" %(line)
+        return line
+
     def closeFile(self):
         """
         Closes the active file object.
@@ -209,8 +218,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         line = ''
         #self.executiveControlLines = []
         while 'CEND' not in line:
-            lineIn = self.infilesPack[-1].readline()
+            lineIn = self.getNextLine()
             line = lineIn.strip()
+            if self.debug:
+                print "line = |%r|" %(line)
             self.executiveControlLines.append(lineIn)
         return self.executiveControlLines
 
@@ -220,7 +231,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         line = ''
         #self.caseControlControlLines = []
         while 'BEGIN BULK' not in line:
-            lineIn = self.infilesPack[-1].readline()
+            lineIn = self.getNextLine()
             line = lineIn.strip().split('$')[0].strip()
             #print "*line = |%s|" %(line)
             self.caseControlLines.append(lineIn)
