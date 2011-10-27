@@ -7,3 +7,4 @@ from loads import *
 from constraints import *
 from coordinateSystems import *
 from aero import *
+from thermal import *

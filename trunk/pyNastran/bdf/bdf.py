@@ -58,6 +58,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.params = {}
 
         self.nodes = {}
+        self.bcs   = {}  # e.g. RADBC
         self.gridSet = None
 
         self.elements = {}
@@ -116,10 +117,19 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
         'ENDDATA',
+        
+        'TEMP',#'TEMPD',
+        'QBDY1','QBDY2','QBDY3','QHBDY',
+        'RADBC',
+        'CHBDYE','CHBDYG','CHBDYP',
         ])
         self.cardsToWrite = self.cardsToRead
 
     def openFile(self,infileName):
+        """
+        Takes a filename and opens the file.  
+        This method is used in order to support INCLUDE files.
+        """
         #print self.isOpened
         if self.isOpened[infileName]==False:
             self.activeFileNames.append(infileName)
@@ -130,6 +140,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             self.linesPack.append([])
 
     def closeFile(self):
+        """
+        Closes the active file object.
+        If no files are open, the function is skipped.
+        This method is used in order to support INCLUDE files.
+        """
         if len(self.infilesPack)==0:
             return
         print "*closing"
@@ -205,9 +220,17 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             return False
         return True
 
-    def getCardName(self,card):
+    def getCardName(self,cardLines):
+        """
+        Given a list of card lines, determines the cardName.
+        @param self the object pointer
+        @retval cardName the name of the card
+        @note
+            Parses the first 8 characters of a card, splits bassed on a comma,
+            pulls off any spaces or asterisks and returns what is left.
+        """
         #self.log().debug("getting cardName...")
-        cardName = card[0][0:8].strip()
+        cardName = cardLines[0][0:8].strip()
         if ',' in cardName:
             cardName = cardName.split(',')[0].strip()
 
@@ -244,6 +267,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         return filename
 
     def addIncludeFile(self,infileName):
+        """
+        This method must be called before opening an INCLUDE file.
+        """
         self.isOpened[infileName] = False
 
     def readBulkDataDeck(self):
@@ -465,6 +491,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='PBAR':
                 prop = PBAR(cardObj)
                 self.addProperty(prop)
+            #elif cardName=='PBARL':
+            #    prop = PBARL(cardObj)
+            #    self.addProperty(prop)
             elif cardName=='PBEAM':
                 prop = PBEAM(cardObj)
                 self.addProperty(prop)
@@ -570,6 +599,44 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 load = LOAD(cardObj)
                 self.addLoad(load)
 
+            elif cardName=='TEMP':
+                load = TEMP(cardObj)
+                self.addThermalLoad(load)
+            #elif cardName=='TEMPD':
+            #    load = TEMPD(cardObj)
+            #    self.addThermalLoad(load)
+
+            elif cardName=='QBDY1':
+                load = QBDY1(cardObj)
+                self.addThermalLoad(load)
+            elif cardName=='QBDY2':
+                load = QBDY2(cardObj)
+                self.addThermalLoad(load)
+            elif cardName=='QBDY3':
+                load = QBDY3(cardObj)
+                self.addThermalLoad(load)
+            elif cardName=='QHBDY':
+                load = QHBDY(cardObj)
+                self.addThermalLoad(load)
+
+            elif cardName=='CHBDYE':
+                element = CHBDYE(cardObj)
+                self.addThermalElement(element)
+            elif cardName=='CHBDYG':
+                element = CHBDYG(cardObj)
+                self.addThermalElement(element)
+            elif cardName=='CHBDYP':
+                element = CHBDYP(cardObj)
+                self.addThermalElement(element)
+
+            elif cardName=='RADBC':
+                bc = RADBC(cardObj)
+                self.addThermalBC(bc,bc.nodamb)
+
+            #elif cardName=='TABLEH1':
+            #    load = TABLEH1(cardObj)
+            #    self.addTable(load)
+
             elif cardName=='MPC':
                 constraint = MPC(cardObj)
                 self.addConstraint_MPC(constraint)
@@ -594,6 +661,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addConstraint(constraint)
                 #print "constraint = ",constraint
 
+            #elif cardName=='CAERO1':
+            #    aero = CAERO1(cardObj)
+            #    self.addCAero(aero)
             elif cardName=='AERO':
                 aero = AERO(cardObj)
                 self.addAero(aero)

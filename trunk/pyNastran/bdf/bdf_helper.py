@@ -164,6 +164,10 @@ class addMethods(object):
         #assert elem.eid not in self.elements
         self.elements[elem.eid] = elem
 
+    def addThermalElement(self,elem):  # same function at the moment...
+        assert elem.eid not in self.elements
+        self.elements[elem.eid] = elem
+
     def addProperty(self,prop):
         assert prop.pid not in self.properties
         self.properties[prop.pid] = prop
@@ -178,7 +182,20 @@ class addMethods(object):
 
     def addLoad(self,load):
         key = load.lid
-        if self.loads.has_key(key):
+        if key in self.loads:
+            self.loads[key].append(load)
+        else:
+            self.loads[key] = [load]
+
+    def addThermalBC(self,bc,key):
+        if key in self.bcs:
+            self.bcs[key].append(bc)
+        else:
+            self.bcs[key] = [bc]
+
+    def addThermalLoad(self,load):  # same function at the moment...
+        key = load.sid
+        if key in self.loads:
             self.loads[key].append(load)
         else:
             self.loads[key] = [load]
