@@ -15,6 +15,9 @@ class BaseCard(BDF_Card):
             return True
         return False
 
+    def removeTrailingNones(self,fields):
+        self.wipeEmptyFields(fields)
+
     def printCard(self,fields):
         return printCard(fields)
 
@@ -28,11 +31,33 @@ class BaseCard(BDF_Card):
     def crossReference(self,mesh):
         raise Exception('%s needs to implement this method' %(self.type))
 
+   # def off_expandThru(self,fields):
+   #     """
+   #     not used...
+   #     expands a list of values of the form [1,5,THRU,10,13]
+   #     to be [1,5,6,7,8,9,10,13]
+   #     """
+   #     nFields = len(fields)
+   #     fieldsOut = []
+   #     for i in range(nFields):
+   #         if fields[i]=='THRU':
+   #             for j in range(fields[i-1],fields[i+1]):                    
+   #                 fieldsOut.append(fields[j])
+   #             ###
+   #         else:
+   #             fieldsOut.append(fields[i])
+   #         ###
+   #     ###
+   #     return fieldsOut
+
     def expandThru(self,fields):
         """
-        1,THRU,10
-        1,3,THRU,19,15
+        expands a list of values of the form [1,5,THRU,9,13]
+        to be [1,5,6,7,8,9,13]
         """
+        if len(fields)==1: return fields
+        print "expandThru"
+        print "fields = ",fields
         out = []
         nFields = len(fields)
         i=0
@@ -43,13 +68,72 @@ class BaseCard(BDF_Card):
                 ###
                 i+=2
             else:
-                out.append(i)
+                out.append(fields[i])
                 i+=1
             ###
-         ###
-         #return list(set(out))
+        ###
+        print "out = ",out,'\n'
+        return list(setA)
     
+    def expandThruBy(self,fields):
+        """
+        expands a list of values of the form [1,5,THRU,9,13]
+        to be [1,5,7,9,13]
+        """
+        if len(fields)==1: return fields
+        print "expandThruBy"
+        print "fields = ",fields
+        out = []
+        nFields = len(fields)
+        i=0
+        by = 1
+        while(i<nFields):
+            if fields[i]=='THRU':
+                by = 1
+                if i+2<nFields and fields[i+2]=='BY':
+                    by = fields[i+3]
+                    print "BY was found...untested..."
+                for j in range(fields[i-1],fields[i+1],by):
+                    out.append(j)
+                ###
+                if by>1:
+                    i+=3
+                else:
+                    i+=2
+                ###
+            else:
+                out.append(fields[i])
+                i+=1
+            ###
+        ###
+        print "out = ",out,'\n'
+        return list(set(out))
+
+    def expandThruExclude(self,fields):
+        """
+        EXCLUDE isnt supported
+        """
+        return self.expandThru(fields)
+        
+        nFields = len(fields)
+        for i in range(nFields):
+            if fields[i]=='THRU':
+                for j in range(fields[i-1],fields[i+1]):
+                    fieldsOut.append(fields[j])
+                ###
+            else:
+                fieldsOut.append(fields[i])
+            ###
+        ###
+
+
     def collapseThru(self,fields):
+        return fields
+
+    def collapseThruBy(self,fields):
+        return fields
+
+    def _collapseThru(self,fields):
         """
         1,THRU,10
         1,3,THRU,19,15

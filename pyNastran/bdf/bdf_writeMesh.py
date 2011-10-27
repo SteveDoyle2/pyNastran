@@ -50,10 +50,13 @@ class writeMesh(object):
         msg  = self.writeHeader()
         msg += self.writeParams()
         msg += self.writeNodes()
+
         msg += self.writeElementsProperties()
+
         msg += self.writeMaterials()
         msg += self.writeLoads()
         msg += self.writeAero()
+        msg += self.writeThermal()
         msg += self.writeConstraints()
         msg += self.writeRejects()
         msg += self.writeCoords()
@@ -79,6 +82,7 @@ class writeMesh(object):
         msg += self.writeMaterials()
         msg += self.writeLoads()
         msg += self.writeAero()
+        msg += self.writeThermal()
         msg += self.writeConstraints()
         msg += self.writeRejects()
         msg += self.writeCoords()
@@ -186,7 +190,7 @@ class writeMesh(object):
         ###
         msg += '$ELEMENTS_WITH_NO_PROPERTIES\n'
         eids = self.getElementIDsWithPID(0)
-        for eid in eids:
+        for eid in sorted(eids):
             element = self.Element(eid)
             msg += str(element)
         ###
@@ -232,6 +236,16 @@ class writeMesh(object):
             msg += str(aero)
         for ID,gust in sorted(self.gusts.items()):
             msg += str(gust)
+        return msg
+
+    def writeThermal(self):
+        msg = ''
+        if self.bcs:  msg = '$THERMAL\n'
+        for key,bcs in sorted(self.bcs.items()):
+            for bc in bcs: # list
+                msg += str(bc)
+            ###
+        ###
         return msg
 
     def writeCoords(self):
