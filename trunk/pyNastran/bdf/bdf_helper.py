@@ -187,6 +187,10 @@ class addMethods(object):
         else:
             self.loads[key] = [load]
 
+    def addThermalProperty(self,prop):
+        assert prop.pconid not in self.thermalProperties
+        self.thermalProperties[prop.pconid] = prop
+
     def addThermalBC(self,bc,key):
         if key in self.bcs:
             self.bcs[key].append(bc)

@@ -207,6 +207,7 @@ class writeMesh(object):
 
     def writeConstraints(self):
         msg = ''
+        msg += '$ where are my constraints...\n'
         if self.constraints:
             msg += '$CONSTRAINTS\n'
         for key,loadcase in sorted(self.constraints.items()):
