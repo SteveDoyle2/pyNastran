@@ -1,3 +1,4 @@
+import os
 from pyNastran.bdf.fieldWriter import printCard
 
 class writeMesh(object):
@@ -62,7 +63,7 @@ class writeMesh(object):
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
 
-        self.log().info("***writing %s" %(outfilename))
+        self.log().info("***writing %s" %(os.path.relpath(outfilename)))
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -241,7 +242,17 @@ class writeMesh(object):
 
     def writeThermal(self):
         msg = ''
+        # PHBDY
         if self.bcs:  msg = '$THERMAL\n'
+        for key,phbdy in sorted(self.phbdys.items()):
+            msg += str(phbdy)
+
+        for key,prop in sorted(self.thermalProperties.items()):
+            msg += str(prop)
+        for key,prop in sorted(self.convectionProperties.items()):
+            msg += str(prop)
+
+        # BCs
         for key,bcs in sorted(self.bcs.items()):
             for bc in bcs: # list
                 msg += str(bc)

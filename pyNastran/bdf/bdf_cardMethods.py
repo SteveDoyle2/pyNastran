@@ -65,8 +65,25 @@ class cardMethods(object):
             self.log().debug("upperCard = |%s|" %(upperCard))
             self.log().debug("tempcard  = |%s|" %(tempcard))
             self.log().debug("-------\n")
+        self._increaseCardCount(cardName)
         return (upperCard,cardName)
-    
+
+    def _increaseCardCount(self,cardName):
+        """
+        used for testing to check that the number of cards going in is the same as each time the model is read
+        verifies proper writing of cards
+        @warning
+            this wont guarantee proper reading of cards, but will help
+        """
+        if cardName=='': # stupid null case
+            return
+
+        if cardName in self.cardCount: # dict
+            self.cardCount[cardName] += 1
+        else:
+            self.cardCount[cardName]  = 1
+        ###
+
     def getMultiLineCard(self,i,tempcard,isCSV=False,debug=False):
         if debug:
             print "tempcard1 = ",tempcard

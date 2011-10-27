@@ -21,8 +21,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     modelType = 'nastran'
     isStructured = False
     
-    def setCardsToInclude():
-        pass
+    #def setCardsToInclude():
+    #    pass
 
     def __init__(self,infilename,includeDir=None,log=None):
         ## allows the BDF variables to be scoped properly (i think...)
@@ -32,52 +32,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         cardMethods.__init__(self)
         XrefMesh.__init__(self)
 
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog('debug') # or info
-        if includeDir is None:
-            includeDir = os.path.dirname(infilename)
-
-        self.autoReject = False # automatically rejects every parsable card
         self.debug = False
-        self.log = log
-
-        self.infilename = infilename
-        self.includeDir = includeDir
-        self.infilesPack     = []
-        self.linesPack       = []
-        self.activeFileNames = []
-        self.isOpened = {self.infilename: False}
+        self._setInfile(infilename,includeDir,log)
 
         #self.n = 0
         #self.nCards = 0
-        self.doneReading = False
-        self.foundEndData = False
-
-        # main structural block
-        self.params = {}
-        self.nodes = {}
-        self.gridSet = None
-        self.elements = {}
-        self.properties = {}
-        self.materials = {}
-        self.loads = {}
-        self.coords = {0: CORD2R() }
-
-        self.constraints = {} # suport1, anything else???
-        self.spcObject = constraintObject()
-        self.mpcObject = constraintObject()
-
-        # thermal
-        self.bcs   = {}  # e.g. RADBC
-        self.thermalProperties = {}
-
-        # aero cards
-        self.aeros    = {}
-        self.gusts    = {}  # can this be simplified ???
-        self.flfacts  = {}  # can this be simplified ???
-        self.flutters = {}
+        self._initStructuralDefaults()
+        self._initThermalDefaults()
 
         self.rejects = []
         self.rejectCards = []
@@ -125,11 +86,69 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         'CHBDYE','CHBDYG','CHBDYP',
 
-        'PCONV','PCONVM',
+        'PCONV','PCONVM','PHBDY',
 
         'RADBC','CONV',
         ])
         self.cardsToWrite = self.cardsToRead
+
+    def _initStructuralDefaults(self):
+        # main structural block
+        self.params = {}
+        self.nodes = {}
+        self.gridSet = None
+        self.elements = {}
+        self.properties = {}
+        self.materials = {}
+        self.loads = {}
+        self.coords = {0: CORD2R() }
+
+        # constraints
+        self.constraints = {} # suport1, anything else???
+        self.spcObject = constraintObject()
+        self.mpcObject = constraintObject()
+
+        # aero cards
+        self.aeros    = {}
+        self.gusts    = {}  # can this be simplified ???
+        self.flfacts  = {}  # can this be simplified ???
+        self.flutters = {}
+
+    def _initThermalDefaults(self):
+        # BCs
+        self.bcs   = {}  # e.g. RADBC
+        
+        # elements
+        # see self.elements
+
+        # properties
+        self.thermalProperties    = {}
+        self.phbdys               = {}
+        self.convectionProperties = {}
+
+    def _setInfile(self,infilename,includeDir=None,log=None):
+        """
+        sets up the basic file/lines/cardCounting operations
+        """
+        if log is None:
+            from pyNastran.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            log = loggerObj.startLog('debug') # or info
+        self.log = log
+
+        self.autoReject   = False # automatically rejects every parsable card
+        self.doneReading  = False
+        self.foundEndData = False
+
+        if includeDir is None:
+            includeDir = os.path.dirname(infilename)
+        self.infilename = infilename
+        self.includeDir = includeDir
+        self.infilesPack     = []
+        self.linesPack       = []
+        self.activeFileNames = []
+        self.isOpened = {self.infilename: False}
+        self.cardCount = {}
 
     def openFile(self,infileName):
         """
@@ -139,11 +158,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #print self.isOpened
         if self.isOpened[infileName]==False:
             self.activeFileNames.append(infileName)
-            self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
+            #self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
             infile = open(infileName,'r')
             self.infilesPack.append(infile)
             self.isOpened[infileName]=True
             self.linesPack.append([])
+        ###
 
     def closeFile(self):
         """
@@ -166,7 +186,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #print "\n\n"
 
     def read(self,debug=False):
-        self.log().info('---starting FEM_Mesh.read of %s---' %(self.infilename))
+        self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
         self.debug = debug
         if self.debug:
@@ -178,7 +198,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.crossReference()
         if self.debug:
             self.log().debug("***FEM_Mesh.read")
-        self.log().info('---finished FEM_Mesh.read of %s---' %(self.infilename))
+        self.log().info('---finished FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
 
         isDone = self.foundEndData
@@ -196,7 +216,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
     def readCaseControlDeck(self):
         self.openFile(self.infilename)
-        self.log().info("reading Case Control Deck...")
+        #self.log().info("reading Case Control Deck...")
         line = ''
         #self.caseControlControlLines = []
         while 'BEGIN BULK' not in line:
@@ -204,7 +224,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             line = lineIn.strip().split('$')[0].strip()
             #print "*line = |%s|" %(line)
             self.caseControlLines.append(lineIn)
-        self.log().info("finished with Case Control Deck..")
+        #self.log().info("finished with Case Control Deck..")
         #print "self.caseControlLines = ",self.caseControlLines
         
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
@@ -637,10 +657,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
             elif cardName=='PCONV':
                 prop = PCONV(cardObj)
-                self.addThermalProperty(prop)
+                self.addConvectionProperty(prop)
             elif cardName=='PCONVM':
                 prop = PCONVM(cardObj)
-                self.addThermalProperty(prop)
+                self.addConvectionProperty(prop)
+            elif cardName=='PHBDY':
+                prop = PHBDY(cardObj)
+                self.addPHBDY(prop)
 
             elif cardName=='CONV':
                 bc = CONV(cardObj)
