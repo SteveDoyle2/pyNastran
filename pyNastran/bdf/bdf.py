@@ -55,12 +55,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.doneReading = False
         self.foundEndData = False
 
+        # main structural block
         self.params = {}
-
         self.nodes = {}
-        self.bcs   = {}  # e.g. RADBC
         self.gridSet = None
-
         self.elements = {}
         self.properties = {}
         self.materials = {}
@@ -71,10 +69,14 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.spcObject = constraintObject()
         self.mpcObject = constraintObject()
 
+        # thermal
+        self.bcs   = {}  # e.g. RADBC
+        self.thermalProperties = {}
+
         # aero cards
-        self.aeros   = {}
-        self.gusts   = {}  # can this be simplified ???
-        self.flfacts = {}  # can this be simplified ???
+        self.aeros    = {}
+        self.gusts    = {}  # can this be simplified ???
+        self.flfacts  = {}  # can this be simplified ???
         self.flutters = {}
 
         self.rejects = []
@@ -120,8 +122,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         
         'TEMP',#'TEMPD',
         'QBDY1','QBDY2','QBDY3','QHBDY',
-        'RADBC',
+
         'CHBDYE','CHBDYG','CHBDYP',
+
+        'PCONV','PCONVM',
+
+        'RADBC','CONV',
         ])
         self.cardsToWrite = self.cardsToRead
 
@@ -629,6 +635,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 element = CHBDYP(cardObj)
                 self.addThermalElement(element)
 
+            elif cardName=='PCONV':
+                prop = PCONV(cardObj)
+                self.addThermalProperty(prop)
+            elif cardName=='PCONVM':
+                prop = PCONVM(cardObj)
+                self.addThermalProperty(prop)
+
+            elif cardName=='CONV':
+                bc = CONV(cardObj)
+                self.addThermalBC(bc,bc.eid)
             elif cardName=='RADBC':
                 bc = RADBC(cardObj)
                 self.addThermalBC(bc,bc.nodamb)

@@ -83,6 +83,25 @@ PLOAD4
 MOMENT (done)
 MOMENT1
 
+----Thermal Loads----:
+TEMP   (done)
+TEMPD  (needs integration)
+
+QHBDY  (done)
+QBDY1  (done)
+QBDY2  (done)
+QBDY3  (done)
+
+----Thermal Elements----:
+CHBDYE (done)
+CHBDYG (done)
+CHBDYP (done)
+
+
+----Thermal BCs----:
+RADBC  (done)
+CONV   (done)
+
 ----Coordinates----:
 CORD2R (done???)
 CORD2C (partial???)
@@ -95,6 +114,9 @@ GUST    (done)
 GRAV    (done)
 FLUTTER (done)
 FLFACT  (done)
+AEPARM  (needs integration)
+AESTAT  (needs integration)
+AESURFS (needs integration)
 
 ----Other----:
 INCLUDE
@@ -153,11 +175,6 @@ EIGP
 ----Constraint Cards----:
 
 ----Thermal----:
-QBDY1
-QBDY2
-QBDY3
-QHBDY
-RADBC
 RADM
 MATT1
 MATT2
@@ -176,10 +193,6 @@ FREQ4
 FREQ5
 
 ----Aero Cards----:
-AEPARM
-AESTAT
-AESURFS
-
 CAERO1
 CAERO2
 CAERO3
