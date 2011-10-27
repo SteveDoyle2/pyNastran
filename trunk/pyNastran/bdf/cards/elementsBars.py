@@ -133,8 +133,10 @@ class CBAR(LineElement):
             self.x2 = card.field(6,0.0)
             self.x3 = card.field(7,0.0)
         else:
-            msg = 'field5 on cbar is the wrong type...field5=%s' %(field5)
+            msg = 'field5 on %s is the wrong type...id=%s field5=%s' %(self.type,self.id,field5)
             raise RuntimeError(msg)
+        #if self.id==14100238:
+        #    print "g0=%s x1=%s x2=%s x3=%s" %(self.g0,self.x1,self.x2,self.x3)
 
     def crossReference(self,nodes):
         """
@@ -153,12 +155,12 @@ class CBAR(LineElement):
 
     def getX_G0_defaults(self):
         if self.g0:
-            x1 = self.setBlankIfDefault(self.x1,0.0)
-            x2 = self.setBlankIfDefault(self.x2,0.0)
-            x3 = self.setBlankIfDefault(self.x3,0.0)
-            return (x1,x2,x3)
-        else:
             return (self.g0,None,None)
+        else:
+            #x1 = self.setBlankIfDefault(self.x1,0.0)
+            #x2 = self.setBlankIfDefault(self.x2,0.0)
+            #x3 = self.setBlankIfDefault(self.x3,0.0)
+            return (self.x1,self.x2,self.x3)
         ###
 
     def __repr__(self):
