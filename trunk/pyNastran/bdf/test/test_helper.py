@@ -35,9 +35,9 @@ def runBDF(folder,bdfFilename,debug=False):
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
-        #traceback.print_exc(file=sys.stdout)
+        traceback.print_exc(file=sys.stdout)
         #print msg
-        #print "-"*80
+        print "-"*80
         raise
     ###
     print "-"*80
@@ -115,9 +115,33 @@ def compute(cards1,cards2):
         print msg
     ###
 
+from pyNastran.bdf.bdf import ShellElement, SolidElement,LineElement
+
+def getElementStats(fem1,fem2):
+    for key,e in sorted(fem1.elements.items()):
+        if isinstance(e,ShellElement):
+            a = e.area()
+            m = e.mass()
+        elif isinstance(e,SolidElement):
+            v = e.volume()
+            m = e.mass()
+        elif isinstance(e,LineElement):
+            L = e.length()
+            m = e.mass()
+        else:
+            print "e.type = ",e.type
+            #try:
+            #    print "e.type = ",e.type
+            #except:
+            #    print str(e)
+            ###
+        ###
+    ###
+
 def compare(fem1,fem2):
     compareCardCount(fem1,fem2)
-    compareParams(fem1,fem2)
+    getElementStats(fem1,fem2)
+    #compareParams(fem1,fem2)
     #printPoints(fem1,fem2)
 
 

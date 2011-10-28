@@ -29,6 +29,7 @@ class BaseCard(BDF_Card):
         return setBlankIfDefault(value,default)
 
     def crossReference(self,mesh):
+#        self.mid = mesh.Material(self.mid)
         raise Exception('%s needs to implement this method' %(self.type))
 
    # def off_expandThru(self,fields):
@@ -248,6 +249,17 @@ class Property(BaseCard):
     def __init__(self,card):
         #self.type = card[0]
         pass
+
+    def Mid(self):
+        #print str(self)
+        if isinstance(self.mid,int):
+            return self.mid
+        else:
+            return self.mid.mid
+        ###
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
         
     def __repr__(self):
         fields = [self.type,self.pid]
@@ -262,6 +274,13 @@ class Element(BaseCard):
         self.id  = self.eid
         #self.nids = []
         pass
+
+    def Pid(self):
+        if isinstance(self.pid,int):
+            return self.pid
+        else:
+            return self.pid.pid
+        ###
 
     def prepareNodeIDs(self,nids,allowEmptyNodes=False):
         self.nodes = []
@@ -313,8 +332,21 @@ class Element(BaseCard):
     #    return 0.5*numpy.linalg.norm(numpy.cross(a,b))
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()
         return self.printCard(fields)
+
+    def length(self):
+        raise Exception('length not implemented in the %s class' %(self.type))
+    def area(self):
+        raise Exception('area not implemented in the %s class' %(self.type))
+    def volume(self):
+        raise Exception('volume not implemented in the %s class' %(self.type))
+    def stiffnessMatrix(self):
+        raise Exception('stiffnessMatrix not implemented in the %s class' %(self.type))
+    def massMatrix(self):
+        raise Exception('massMatrix not implemented in the %s class' %(self.type))
+    def mass(self):
+        raise Exception('mass not implemented in the %s class' %(self.type))
 
 #dnMax = 2
 if __name__=='__main__':

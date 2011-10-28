@@ -1,3 +1,4 @@
+from numpy import dot, cross
 from elements import Element
 
 class SolidElement(Element):
@@ -6,15 +7,9 @@ class SolidElement(Element):
         self.eid = card.field(1)
         self.pid = card.field(2)
 
-    def volume(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-    def stiffnessMatrix(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-    def massMatrix(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-    def mass(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-
+    def crossReference(self,mesh):
+        self.nodes = mesh.Nodes(self.nodes)
+        self.pid   = mesh.Property(self.pid)
 
 class CHEXA8(SolidElement):
     """
@@ -30,7 +25,7 @@ class CHEXA8(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==8
 
-class CHEXA20(SolidElement):
+class CHEXA20(CHEXA8):
     """
     CHEXA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10 G11 G12 G13 G14
@@ -57,7 +52,7 @@ class CPENTA6(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==6
 
-class CPENTA15(SolidElement):
+class CPENTA15(CPENTA6):
     """
     CPENTA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10 G11 G12 G13 G14
@@ -82,7 +77,15 @@ class CTETRA4(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
 
-class CTETRA10(SolidElement):
+    def volume(self):
+        """
+        V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
+        """
+        (n1,n2,n3,n4) = self.nodePositions()
+        V = dot((n1-n4),cross(n2-n4,n3-n4))/6.
+        return V
+
+class CTETRA10(CTETRA4):
     """
     CTETRA EID PID G1 G2 G3 G4 G5 G6
     G7 G8 G9 G10

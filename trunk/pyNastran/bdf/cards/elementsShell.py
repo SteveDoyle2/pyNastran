@@ -1,5 +1,5 @@
 from baseCard import Element
-
+from pyNastran.general.generalMath import Area
 
 class ShellElement(Element):
     def __init__(self,card):
@@ -193,10 +193,10 @@ class CQUAD4(ShellElement):
         #print 'self.T1 = ',self.T1
         #sys.exit()
         #if self.id==20020:
-        #    print "thetaMcid = ",card.field(7)
-        #    print "actual = ",self.thetaMcid
-        #    print str(self)
-        #    sys.exit()
+            #print "thetaMcid = ",card.field(7)
+            #print "actual = ",self.thetaMcid
+            #print str(self)
+            #sys.exit()
         
     def getReprDefaults(self,debug=False):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
@@ -307,7 +307,7 @@ class CQUAD4(ShellElement):
         (area,centroid) = self.AreaCentroid(nodes,debug)
         return centroid
 
-    def Area(self):
+    def area(self):
         """
         Area = 1/2*|a cross b|
         where a and b are the quad's cross node point vectors

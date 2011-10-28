@@ -54,7 +54,7 @@ class CORD2R(Coord):  # working...needs more testing
         #print str(self)
 
         
-    def transformToGlobal(self,p):
+    def transformToGlobal(self,p,debug=False):
         if self.cid==0:
             return p
         

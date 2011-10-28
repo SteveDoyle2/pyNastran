@@ -10,8 +10,9 @@ class XrefMesh(object):
         #self.spcObject.crossReference(self)
         #self.caseControlDeck.crossReference(self)
         self.crossReference_Nodes()
-        #self.crossReference_Elements()
-        #self.crossReference_Properties()
+        self.crossReference_Elements()
+        self.crossReference_Properties()
+        self.crossReference_Materials()
 
     def crossReference_Nodes(self):
         gridSet = self.gridSet
@@ -35,5 +36,14 @@ class XrefMesh(object):
             #print "n.cid = ",n.cid
             #coord = self.Coord(n.cid)
             #print "*",str(coord)
+            #print p
             p.crossReference(self)
+        ###
+
+    def crossReference_Materials(self):
+        for mid,m in self.materials.items():
+            #print "n.cid = ",n.cid
+            #coord = self.Coord(n.cid)
+            #print "*",str(coord)
+            m.crossReference(self)
         ###
