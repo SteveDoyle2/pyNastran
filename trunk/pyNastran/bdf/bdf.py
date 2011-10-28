@@ -147,6 +147,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.infilesPack     = []
         self.linesPack       = []
         self.activeFileNames = []
+        self.lineNumbers     = []
         self.isOpened = {self.infilename: False}
         self.cardCount = {}
 
@@ -161,17 +162,30 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
             infile = open(infileName,'r')
             self.infilesPack.append(infile)
+            self.lineNumbers.append(0)
             self.isOpened[infileName]=True
             self.linesPack.append([])
         ###
+        else:
+            print "is already open...skipping"
+        ###
+
+    def getFileStats(self):
+        filename   = self.activeFileNames[-1]
+        return (filename,self.getLineNumber())
+
+    def getLineNumber(self):
+        lineNumber = self.lineNumbers[-1]
+        return lineNumber
 
     def getNextLine(self):
+        self.lineNumbers[-1]+=1
         return self.infilesPack[-1].readline()
 
         infile = self.infilesPack[-1]
-        print "infile = |%s|" %(infile),type(infile)
+        #print "infile = |%s|" %(infile),type(infile)
         line = infile.readline()
-        print "line = |%s|" %(line)
+        print "line = |%r|" %(line)
         return line
 
     def closeFile(self):
@@ -186,6 +200,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         infile = self.infilesPack.pop()
         infile.close()
 
+        lineNumbers = self.lineNumbers.pop()
         activeFileName = self.activeFileNames.pop()
         linesPack = self.linesPack.pop()
         self.isOpened[activeFileName] = False
@@ -213,6 +228,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         isDone = self.foundEndData
         return ('BulkDataDeck',isDone)
 
+    def isExecutiveControlDeck(self,line):
+        return True
+
     def readExecutiveControlDeck(self):
         self.openFile(self.infilename)
         line = ''
@@ -221,23 +239,34 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             lineIn = self.getNextLine()
             line = lineIn.strip()
             if self.debug:
-                print "line = |%r|" %(line)
+                (n) = self.getLineNumber()
+                print "line[%s]*= |%r|" %(n,line.upper())
             self.executiveControlLines.append(lineIn)
         return self.executiveControlLines
+    def isCaseControlDeck(self,line):
+            return True
 
     def readCaseControlDeck(self):
         self.openFile(self.infilename)
         #self.log().info("reading Case Control Deck...")
         line = ''
         #self.caseControlControlLines = []
+
+        i = 0
         while 'BEGIN BULK' not in line:
             lineIn = self.getNextLine()
             line = lineIn.strip().split('$')[0].strip()
             #print "*line = |%s|" %(line)
             self.caseControlLines.append(lineIn)
+            if i>200:
+                raise RuntimeError('there are too many lines in the Case Control Deck < 200')
+            i+=1
         #self.log().info("finished with Case Control Deck..")
         #print "self.caseControlLines = ",self.caseControlLines
         
+        #for line in self.caseControlLines:
+        #    print "** line=|%r|" %(line)
+
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
         #print "done w/ case control..."
         return self.caseControlLines
@@ -413,10 +442,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     def addCard(self,card,cardName,iCard=0,oldCardObj=None):
         #if cardName != 'CQUAD4':
         #    print cardName
+        cardObj = BDF_Card(card,oldCardObj=None)
         if self.debug:
             print "*oldCardObj = \n",oldCardObj
             print "*cardObj = \n",cardObj
-        cardObj = BDF_Card(card,oldCardObj=None)
         #cardObj.applyOldFields(iCard)
 
         try:
@@ -757,7 +786,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
 ### FEM_Mesh
 
-if __name__=='__main__':
+def runA():
     import sys
     #basepath = os.getcwd()
     #configpath = os.path.join(basepath,'inputs')
@@ -786,4 +815,7 @@ if __name__=='__main__':
     fem.write('fem.out.bdf')
     #fem.writeAsCTRIA3('fem.out.bdf')
 
+
+if __name__=='__main__':
+    runA()
 
