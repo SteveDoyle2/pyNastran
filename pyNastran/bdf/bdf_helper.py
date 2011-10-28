@@ -79,14 +79,40 @@ class getMethods(object):
     def Node(self,nid):
         return self.nodes[nid]
 
+    def Nodes(self,nids):
+        """
+        Returns a series of node objects given a list of node IDs
+        """
+        for nid in self.nids:
+            nodes.append(self.nodes[nid])
+        return nodes
+
     def Element(self,eid):
         return self.elements[eid]
+
+    def Elements(self,eids):
+        elements = []
+        for eid in self.eids:
+            elements.append(self.elements[eid])
+        return elements
 
     def Property(self,pid):
         return self.properties[pid]
 
+    def Properties(self,pids):
+        properties = []
+        for pid in pids:
+            properties.append(self.properties[pid])
+        return properties
+
     def Material(self,mid):
         return self.materials[mid]
+
+    def Materials(self,mids):
+        materials = []
+        for mid in mids:
+            materials.append(self.materials[mid])
+        return materials
 
     def Load(self,lid):
         return self.loads[lid]
@@ -254,6 +280,6 @@ class addMethods(object):
         self.flutters[flutter.sid] = flutter
 
     def addFLFACT(self,flfact):
-        assert flfact.sid not in self.flfacts
+        #assert flfact.sid not in self.flfacts
         self.flfacts[flfact.sid] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact

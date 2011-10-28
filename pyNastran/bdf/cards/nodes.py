@@ -28,6 +28,7 @@ class SPOINT(Node):
         nFields = card.nFields()
         
         self.spoints = []
+        self.dof = '23456'  # the constrained DOF
         i = 0
         while i<nFields: # =1 ???
             if fields[i]=='THRU':
@@ -37,7 +38,10 @@ class SPOINT(Node):
                 self.spoints.append(fields[i])
             i+=1
         ###
-        
+
+    def Position(self):
+        return array(0.,0.,0.)
+
     def __repr__(self):
         ## @todo support THRU in output
         fields = ['SPOINT']+self.spoints
@@ -84,9 +88,9 @@ class GRID(Node):
         self.nid = int(card.field(1))
 
         ## Grid point coordinate system
-        self.cid = card.field(2,0)
+        self.cp = card.field(2,0)
 
-        xyz = card.fields(3,6,[0.,0.,0.])  # TODO:  is standard nastran???
+        xyz = card.fields(3,6,[0.,0.,0.])  ## @todo is standard nastran to set <0,0,0>as the defaults???
         #displayCard(card)
         #print "xyz = ",xyz
         self.xyz = array(xyz)
@@ -104,27 +108,33 @@ class GRID(Node):
         #print "cd = ",self.cd
         #print "ps = ",self.ps
 
-    def Position(self):
-        return self.xyzGlobal
+    def Position(self,debug=False):
+        #print type(self.cp)
+        return self.cp.transformToGlobal(self.xyz,debug=debug)
+
+    def PositionWRT(self,mesh,cid,debug=False):
+        #print type(self.cp)
+        coord = mesh.Coord(cid)
+        return coord.transformToGlobal(self.xyz,debug=debug)
 
     def crossReference(self,mesh,grdset=None):
         #print str(self)
         if grdset: # update using a gridset object
-            if not self.cid:  self.cid  = grdset.cid
+            if not self.cp:   self.cp   = grdset.cp
             if not self.cd:   self.cd   = grdset.cd
             if not self.ps:   self.ps   = grdset.ps
             if not self.seid: self.seid = grdset.seid
-        
-        coord = mesh.Coord(self.cid)
-        self.xyzGlobal = coord.transformToGlobal(self.xyz)
+        self.cp = mesh.Coord(self.cp)
+        self.cd = mesh.Coord(self.cd)
+        #self.xyzGlobal = coord.transformToGlobal(self.xyz)
         #return self.
 
     def __repr__(self):
-        cid  = self.setBlankIfDefault(self.cid, 0)
-        cd   = self.setBlankIfDefault(self.cd,  0)
+        cp   = self.setBlankIfDefault(self.cp.cid, 0)
+        cd   = self.setBlankIfDefault(self.cd.cid, 0)
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.seid,0)
-        fields = ['GRID',self.nid,cid]+list(self.xyz)+[cd,ps,seid]
+        fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
         #print "fields = ",fields
         return self.printCard(fields)
 
