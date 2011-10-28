@@ -591,6 +591,24 @@ class PROD(LineProperty):
         self.J   = card.field(4)
         self.c   = card.field(5,0.0)
         self.nsm = card.field(6)
+    
+    def rho(self):
+        return self.mid.rho
+
+    def nsm(self):
+        return self.nsm
+
+    def E(self):
+        return self.mid.E
+
+    def G(self):
+        return self.mid.G
+
+    def nu(self):
+        return self.mid.nu
+
+    def crossReference(self,mesh):
+        self.mid = mesh.Material(self.mid)
 
     def __repr__(self):
         c  = self.setBlankIfDefault(self.c,0.0)
@@ -608,6 +626,8 @@ class PSHELL(ShellProperty):
         self.pid  = card.field(1)
         self.mid  = card.field(2)
         self.t    = card.field(3)
+        
+        ## Material identification number for bending
         self.mid2 = card.field(4)
         self.twelveIt3 = card.field(5,1.0)  # poor name
         self.mid3  = card.field(6)
@@ -616,6 +636,19 @@ class PSHELL(ShellProperty):
         self.z1    = card.field(9)
         self.z2    = card.field(10)
         self.mid4  = card.field(11)
+
+    def rho(self):
+        return self.mid.rho + self.t
+
+    def massPerArea(self):
+        mPerA = self.nsm + self.rho*self.t
+        return mPerA
+
+    def crossReference(self):
+        self.mid  = mesh.Material(self.mid)
+        #self.mid2 = mesh.Material(self.mid2)
+        #self.mid3 = mesh.Material(self.mid3)
+        #self.mid4 = mesh.Material(self.mid4)
 
     def __repr__(self):
         fields = ['PSHELL',self.pid,self.mid,self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
@@ -651,19 +684,63 @@ class PTUBE(LineProperty):
         LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
-        self.outerDiameter = card.field(3)
+        self.OD1 = card.field(3)
         self.t   = card.field(4,self.outerDiameter/2.)
         self.nsm = card.field(5,0.0)
-        self.outerDiameter2 = card.field(6,self.outerDiameter)
+        self.OD2 = card.field(6,self.outerDiameter)
 
     def __repr__(self):
-        t   = self.setBlankIfDefault(self.t,self.outerDiameter/2.)
+        t   = self.setBlankIfDefault(self.t,self.OD1/2.)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
-        outerDiameter2 = self.setBlankIfDefault(self.outerDiameter2,self.outerDiameter)
-        fields = ['PTUBE',self.pid,self.mid,self.outerDiameter,t,nsm,outerDiameter2]
+        OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
+        fields = ['PTUBE',self.pid,self.mid,self.OD1,t,nsm,OD2]
         return self.printCard(fields)
     
-    def massMatrix():
+    def area(self):
+        """
+        this shouldnt be so hard...
+        """
+        return (self.area1()+self.area2())/2.
+        factor = pi()
+        A = 1.
+        #Di = Do-2t
+        #Ri = Ro-t
+        #A/pi = Ro^2-Ri^2 = Ro^2-(Ro-t)^2 = Ro^2-(Ro-t)(Ro-t)
+        #A/pi = Ro^2-(Ro^2-2Ro*t + tt)
+        #A/pi = 2Ro*t-tt = t*(2Ro-t)
+        #R/2*(2R-R/2) = R/2*(3/2*R) = RR3/4
+        
+        #2A/pi = t*(2Ro1-t)+(2Ro2-t)*t = t*(2Ro1-2t+2Ro2)
+        #factor = pi/2
+        #A = pi*t*(Ro1+Ro2-t)
+        #A = pi*t*(Do-t)
+        
+        
+        #A/pi = DoDo/4 - (Do/2-t)*(Do/2-t)
+        #A/pi = DoDo/4 - (DoDo/4 -2*Do/2*t+tt)
+        #A/pi = DoDo/4 - (DoDo/4 -Do/t    +tt)
+        #A/pi = Do*t - tt
+        
+        #A/pi    = t*(Do-t)
+        #Aavg/pi = t*(Do1-t + Do2-t)/2.
+        #Aavg/pi = t*(Do1+Do2 - 2*t)/2.
+        factor = pi()/2.
+        #A = self.t*(self.OD1+self.OD2 - 2*self.t)
+        return A*factor
+
+    def area1(self):
+        Dout = self.OD
+        Din  = Dout-self.t
+        A = pi()/4.*(Dout*Dout-Din*Din)
+        return A1
+
+    def area2(self):
+        Dout = self.OD2
+        Din  = Dout-self.t
+        A = pi()/4.*(Dout*Dout-Din*Din)
+        return A2
+
+    def massMatrix(self):
         """@todo not done"""
         m = zeros(6,6)
         m[0,0] = 1.

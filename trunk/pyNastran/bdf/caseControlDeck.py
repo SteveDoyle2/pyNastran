@@ -268,7 +268,7 @@ class CaseControlDeck(object):
             paramType = 'BEGIN_BULK-type'
         else:
             #print 'C ??? line = ',line
-            raise RunTimeError(line)
+            raise RuntimeError(line)
         ###
         i+=1
         return (i,key,value,options,paramType)

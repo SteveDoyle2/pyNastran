@@ -1,4 +1,4 @@
-from numpy import matrix,zeros
+from numpy import matrix,zeros,ones
 from numpy.linalg import norm
 
 class CardInstantiationError(RuntimeError):
@@ -9,6 +9,52 @@ from elements import Element
 class LineElement(Element):
     def __init__(self,card):
         Element.__init__(self,card)
+
+    def length(self):
+        pass
+
+    def k_Axial(self):
+        L = self.length()
+        E = self.E()
+        A = self.Area()
+        kMag = A*E/(2*L)
+        M = Matrix(ones(1,1))
+        M[0,1] = M[1,0] = -1
+        return M
+
+    def k_Bending(self):
+        """
+        kFac = EI/L^3
+         k/kFac = 
+        
+         12   6L    -12   6L
+         6L   4L^2  -6L   2L^2
+        -12  -6L     12  -6L
+         6L   2L^2  -6L   4L^2
+        """
+        L = self.length()
+        E = self.E()
+        I = self.I()
+        kMag = E*I/LLL
+        LL  = L*L
+        LLL = L*LL
+        sL = 6*L
+        tLL = 2*LL
+        fLL = 4*LL
+        
+        M = Matrix(zeros(4,4))
+        matrix([[12.,  sL, -12,  sL],
+                [sL,  fLL, -sL, tLL],
+                [-12, -sL, 12., -sL],
+                [sL,  tLL, -sL, fLL]])
+        M[1,0] = sL
+        M[2,0] = -12.
+        M[3,0] = sL
+
+        M[2,4] =  -sL
+        M[1,1] = M[3,3] = fLL
+        
+        return M
 
 class CROD(LineElement):
     type = 'CROD'
@@ -21,6 +67,41 @@ class CROD(LineElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
 
+    def crossReference(self,mesh):
+        self.nodes = mesh.Nodes(self.nodes)
+        self.pid   = mesh.Property(self.pid)
+
+    def C(self):
+        """torsional constant"""
+        return self.pid.C()
+
+    def area(self):
+        return self.pid.mid.A
+    
+    def E(self):
+        return self.pid.mid.E
+     
+    def G(self):
+        return self.pid.mid.G
+
+    def nu(self):
+        return self.pid.mid.nu
+    
+    def rho(self):
+        return self.pid.mid.rho
+
+    def nsm(self):
+        return self.pid.nsm
+
+    def mass(self):
+        L = self.length()
+        mass = (self.rho()*self.area() + self.nsm())*L
+        return mass
+
+    def length(self):
+        L = self.nodes[1].Position()-self.nodes[0].Position()
+        return abs(L)
+
     def __repr__(self):
         fields = [self.type,self.eid,self.pid]+self.nodes
         return self.printCard(fields)
@@ -31,6 +112,8 @@ class CTUBE(CROD):
     def __init__(self,card):
         CROD.__init__(self,card)
     ###
+    def area():
+        return self.pid.area()
 ###
 
 

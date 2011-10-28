@@ -15,6 +15,15 @@ class Material(BaseCard):
         fields = [self.type,self.mid]
         return self.printCard(fields)
 
+class IsotropicMaterial(Material):
+    def __init__(self,card):
+        Material.__init__(self,card)
+
+
+class AnisotropicMaterial(Material):
+    def __init__(self,card):
+        Material.__init__(self,card)
+
 class ThermalMaterial(Material):
     def __init__(self,card):
         Material.__init__(self,card) 
@@ -67,6 +76,14 @@ class MAT1(Material):
         self.Ss = card.field(11)
         self.Mcsid = card.field(12)
 
+    #def G(self):
+    #    return self.G
+    
+    #def E(self):
+    #    return self.E
+    
+    #def nu(self):
+    #    return self.nu
 
     def set_E_G_nu(self,card):
         #self.E  = card.field(2)
@@ -108,10 +125,10 @@ class MAT1(Material):
         G    = self.setBlankIfDefault(self.G,G_default)
         #G = self.G
         fields = ['MAT1',self.mid,self.E,G,self.nu,self.rho,self.a,TRef,self.ge,
-                  self.St,self.Sc,self.Ss,self.Mcsid]        
+                  self.St,self.Sc,self.Ss,self.Mcsid]
         return self.printCard(fields)
 
-class MAT2(Material):
+class MAT2(AnisotropicMaterial):
     """
     Defines the material properties for linear anisotropic materials for two-dimensional
     elements.
@@ -122,7 +139,7 @@ class MAT2(Material):
     """
     type = 'MAT2'
     def __init__(self,card):
-        Material.__init__(self,card) # mid
+        AnisotropicMaterial.__init__(self,card) # mid
         
         self.G11  = card.field(2,0.0)
         self.G12  = card.field(3,0.0)
@@ -155,7 +172,7 @@ class MAT2(Material):
                   self.Mcsid]
         return self.printCard(fields)
 
-class MAT3(Material):
+class MAT3(AnisotropicMaterial):
     """
     Defines the material properties for linear orthotropic materials used by the CTRIAX6 element entry.
     MAT3 MID EX  ETH EZ  NUXTH NUTHZ NUZX RHO
@@ -163,7 +180,7 @@ class MAT3(Material):
     """
     type = 'MAT3'
     def __init__(self,card):
-        Material.__init__(self,card) # mid
+        AnisotropicMaterial.__init__(self,card) # mid
         
         self.ex    = card.field(2)
         self.eth   = card.field(3)
@@ -218,7 +235,7 @@ class MAT4(ThermalMaterial):
                          self.tch,self.tdelta,self.qlat]
         return self.printCard(fields)
 
-class MAT5(ThermalMaterial):
+class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
     Defines the thermal material properties for anisotropic materials.
 
@@ -247,14 +264,14 @@ class MAT5(ThermalMaterial):
                          rho,hgen]
         return self.printCard(fields)
 
-class MAT8(Material):
+class MAT8(AnisotropicMaterial):
     """
     Defines the material property for an orthotropic material for isoparametric shell
     elements.
     MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2"""
     type = 'MAT8'
     def __init__(self,card):
-        Material.__init__(self,card)
+        AnisotropicMaterial.__init__(self,card)
         self.E11  = card.field(2)
         self.E22  = card.field(3)
         self.nu12 = card.field(4)
@@ -292,7 +309,7 @@ class MAT8(Material):
         #print fields
         return self.printCard(fields)
 
-class MAT9(Material):
+class MAT9(AnisotropicMaterial):
     """
     Defines the material properties for linear, temperature-independent, anisotropic
     materials for solid isoparametric elements (see PSOLID entry description).
@@ -304,7 +321,7 @@ class MAT9(Material):
     """
     type = 'MAT9'
     def __init__(self,card):
-        Material.__init__(self,card)
+        AnisotropicMaterial.__init__(self,card)
         self.mid = card.field(1)
         self.G11 = card.field(2, 0.0)
         self.G12 = card.field(3, 0.0)

@@ -1,9 +1,34 @@
 from baseCard import Element
 
-class CTRIA3(Element):
-    type = 'CTRIA3'
+
+class ShellElement(Element):
     def __init__(self,card):
         Element.__init__(self,card)
+
+    def area(self):
+        raise Exception('undefined for %s' %(self.type))
+
+    def mass(self):
+        return self.area()*self.pid.massPerArea()
+
+    def nodePositions(self):
+        return [node.Position() for node in self.nodes]
+
+    def nodeIDs(self):
+        if isinstance(self.nodes[0],int):
+            return [node    for node in self.nodes]
+        else:
+            return [node.id for node in self.nodes]
+        ###
+
+    def crossReference(self,mesh):
+        self.nodes = mesh.Nodes(self.nodes)
+        self.pid   = mesh.Property(self.pid)
+
+class CTRIA3(ShellElement):
+    type = 'CTRIA3'
+    def __init__(self,card):
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,6)
@@ -34,35 +59,34 @@ class CTRIA3(Element):
         None,TFlag,T1,T2,T3]
         return self.printCard(fields)
 
-    def crossReference(self,nodes):
-        pass
-
-    def AreaCentroidNormal(self,nodes):
+    def AreaCentroidNormal(self):
+        (n0,n1,n2) = self.nodePositions()
         return Triangle_AreaCentroidNormal(nodes)
 
-    def Area(self,nodes):
-        #(n0,n1,n2) = self.getNodes(nodes)
-        (n0,n1,n2) = nodes
+    def Area(self):
+        (n0,n1,n2) = self.nodePositions()
         a = n0-n1
         b = n0-n2
         area = Area(a,b)
 
-    def Normal(self,nodes):
-        #(n0,n1,n2) = self.getNodes(nodes)
-        (n0,n1,n2) = nodes
+    def Normal(self):
+        (n0,n1,n2) = self.nodePositions()
         a = n0-n1
         b = n0-n2
         return Normal(a,b)
 
-    def Centroid(self,nodes,debug=False):
-        (n0,n1,n2) = self.getNodes(nodes)
+    def Centroid(self,debug=False):
+        (n0,n1,n2) = self.nodePositions()
         centroid = self.CentroidTriangle(n0,n1,n2,debug)
         return centroid
+    
+    def mass():
+        self.pid.massPerArea()*self.area()
 
 class CTRIA6(CTRIA3):
     type = 'CTRIA6'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,9)
@@ -92,7 +116,7 @@ class CTRIA6(CTRIA3):
 class CTRIAR(CTRIA3):
     type = 'CTRIAR'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,6)
@@ -109,27 +133,27 @@ class CTRIAR(CTRIA3):
 
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
-        fields = [self.type,self.eid,self.pid]+self.nodes+[thetaMcid,zOffset,None,
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()+[thetaMcid,zOffset,None,
                   None,TFlag,T1,T2,T3]
         return self.printCard(fields)
 
 class CTRIAX(CTRIA3):
     type = 'CTRIAX'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
 
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids)
         assert len(nids)==6,'error on CTRIAX'
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()
         return self.printCard(fields)
 
 class CTRIAX6(CTRIA3):
     type = 'CTRIAX6'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
 
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids)
@@ -139,14 +163,14 @@ class CTRIAX6(CTRIA3):
 
     def __repr__(self):
         th = self.th
-        fields = [self.type,self.eid,self.pid]+self.nodes+[
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()+[
                   th]
         return self.printCard(fields)
 
-class CQUAD4(Element):
+class CQUAD4(ShellElement):
     type = 'CQUAD4'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,7)
@@ -207,7 +231,7 @@ class CQUAD4(Element):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults(debug=debug)
 
 
-        fields = [self.type,self.eid,self.pid]+self.nodes+[thetaMcid,zOffset,
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()+[thetaMcid,zOffset,
                   None,TFlag,T1,T2,T3,T4]
 
         #if self.id==20020:
@@ -232,18 +256,18 @@ class CQUAD4(Element):
         return self.printCard(fields1)+printCard(fields2)
     
     def Normal(self,nodes):
-        (n1,n2,n3,n4) = nodes
-        #(n1,n2,n3,n4) = self.getNodes(nodes)
+        (n1,n2,n3,n4) = self.nodePositions()
         a = n1-n3
         b = n2-n4
         return Normal(a,b)
 
-    def AreaCentroidNormal(self,nodes):
+    def AreaCentroidNormal(self):
+        (n1,n2,n3,n4) = self.nodePositions()
         (area,centroid) = self.AreaCentroid(nodes)
         normal = self.Normal(nodes)
         return (area,centroid,normal)
 
-    def AreaCentroid(self,nodes,debug=False):
+    def AreaCentroid(self,debug=False):
         """
         1-----2
         |    /|
@@ -258,10 +282,9 @@ class CQUAD4(Element):
              c=centroid
              A=area
         """
-        if debug:
-            print "nodes = ",nodes
-        (n1,n2,n3,n4) = nodes
-        #(n1,n2,n3,n4) = self.getNodes(nodes)
+        #if debug:
+        #    print "nodes = ",self.nodes
+        (n1,n2,n3,n4) = self.nodePositions()
         a = n1-n2
         b = n2-n4
         area1 = Area(a,b)
@@ -284,12 +307,12 @@ class CQUAD4(Element):
         (area,centroid) = self.AreaCentroid(nodes,debug)
         return centroid
 
-    def Area(self,nodes):
+    def Area(self):
         """
         Area = 1/2*|a cross b|
         where a and b are the quad's cross node point vectors
         """
-        (n1,n2,n3,n4) = self.getNodes(nodes)
+        (n1,n2,n3,n4) = self.nodePositions()
         a = n1-n3
         b = n2-n4
         area = Area(a,b)
@@ -299,14 +322,14 @@ class CQUAD4(Element):
 class CQUADR(CQUAD4):
     type = 'CQUADR'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
 
         nids = card.fields(3,12)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes+[
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()+[
                   T1,T2,T3,T4,thetaMcid,zOffset,
                   TFlag]
         return self.printCard(fields)
@@ -314,7 +337,7 @@ class CQUADR(CQUAD4):
 class CQUAD(CQUAD4):
     type = 'CQUAD'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,12)
@@ -332,14 +355,14 @@ class CQUAD(CQUAD4):
 
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
-        fields = [self.type,self.eid,self.pid]+self.nodes+[thetaMcid,zOffset,
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()+[thetaMcid,zOffset,
                   None,TFlag,T1,T2,T3,T4]
         return self.printCard(fields)
 
 class CQUAD8(CQUAD4):
     type = 'CQUAD8'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,11)
@@ -356,7 +379,7 @@ class CQUAD8(CQUAD4):
 
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
-        fields = [self.type,self.eid,self.pid]+self.nodes+[
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()+[
                   T1,T2,T3,T4,thetaMcid,zOffset,
                   TFlag]
         return self.printCard(fields)
@@ -364,7 +387,7 @@ class CQUAD8(CQUAD4):
 class CQUADX(CQUAD4):
     type = 'CQUADX'
     def __init__(self,card):
-        Element.__init__(self,card)
+        ShellElement.__init__(self,card)
         self.pid = card.field(2)
 
         nids = card.fields(3,12)
@@ -372,5 +395,5 @@ class CQUADX(CQUAD4):
         assert len(self.nodes)==9
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes
+        fields = [self.type,self.eid,self.pid]+self.nodeIDs()
         return self.printCard(fields)
