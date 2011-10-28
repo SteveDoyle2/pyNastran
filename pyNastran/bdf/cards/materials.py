@@ -10,7 +10,10 @@ class Material(BaseCard):
     def __init__(self,card):
         #self.type = card[0]
         self.mid  = card.field(1)
-        
+
+    def crossReference(self,mesh):
+        pass
+
     def __repr__(self):
         fields = [self.type,self.mid]
         return self.printCard(fields)
@@ -33,7 +36,7 @@ class CREEP(Material):
     type = 'CREEP'
     def __init__(self,card):
         Material.__init__(self,card)
-        self.id   = card.field(2) # mid
+        self.mid  = card.field(2) # mid
         self.T0   = card.field(3,0.0)
         self.exp  = card.field(4,1e-9)
         self.form = card.field(5)
@@ -53,7 +56,7 @@ class CREEP(Material):
         thresh = self.setBlankIfDefault(self.thresh,1e-5)
         exp    = self.setBlankIfDefault(self.G1z,4.1e-9)
         T0     = self.setBlankIfDefault(self.T0,0.0)
-        fields = ['CREEP',self.id,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
+        fields = ['CREEP',self.mid,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
         self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
         return self.printCard(fields)
 

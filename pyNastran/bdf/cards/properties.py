@@ -227,7 +227,7 @@ class PBAR(LineProperty):
         line3 = [self.K1,self.K2,I12]
         #print "line3 = ",line3
         
-        line1 = ['PBAR',self.pid,self.mid,self.A,I1,I2,J,nsm,None]
+        line1 = ['PBAR',self.pid,self.Mid(),self.A,I1,I2,J,nsm,None]
 
         if line3==[None,None,None]:
             line2 = [C1,C2,D1,D2,E1,E2,F1,F2]
@@ -248,7 +248,7 @@ class PCONEAX(Property): #not done
         self.dim = [] # confusing entry...
 
     def __repr__(self):
-        fields = ['PCONEAX',self.pid,self.mid]
+        fields = ['PCONEAX',self.pid,self.Mid()]
         return self.printCard(fields)
     
 class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
@@ -274,7 +274,7 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
         ###
 
     def __repr__(self):
-        fields = ['PBARL',self.pid,self.mid,group,type,None,None,None,None,
+        fields = ['PBARL',self.pid,self.Mid(),group,type,None,None,None,None,
         ]+self.dim+[self.nsm]
         return self.printCard(fields)
 
@@ -295,7 +295,7 @@ class PBEAM(LineProperty):
         self.i2  = [card.field(5) ]
         self.i12 = [card.field(6) ]
         self.j   = [card.field(7) ]
-        self.nsm = [card.field(8) ]
+        self.nsm = [card.field(8,0.0) ]
         self.c1  = [card.field(9) ]
         self.c2  = [card.field(10)]
         self.d1  = [card.field(11)]
@@ -363,7 +363,7 @@ class PBEAM(LineProperty):
         self.n2b = card.field(x+15)
 
     def __repr__(self):
-        fields = ['PBEAM',self.pid,self.mid]
+        fields = ['PBEAM',self.pid,self.Mid()]
         #print "fieldsA = ",fields
         
         #print len(self.so)
@@ -409,7 +409,7 @@ class PBEAM3(LineProperty): # not done, cleanup
 
     def __repr__(self):
         raise Exception('not done...')
-        fields = ['PBEAM3',self.pid,self.mid,] # other
+        fields = ['PBEAM3',self.pid,self.Mid(),] # other
         return self.printCard(fields)
 
 #class PCOMPG(ShellProperty): # not done...
@@ -578,7 +578,7 @@ class PLSOLID(SolidProperty):
 
     def __repr__(self):
         stressStrain = self.setDefaultIfNone(self.str,'GRID')
-        fields = ['PLSOLID',self.pid,self.mid,stressStrain]
+        fields = ['PLSOLID',self.pid,self.Mid(),stressStrain]
         return self.printCard(fields)
 
 class PROD(LineProperty):
@@ -590,7 +590,7 @@ class PROD(LineProperty):
         self.A   = card.field(3)
         self.J   = card.field(4)
         self.c   = card.field(5,0.0)
-        self.nsm = card.field(6)
+        self.nsm = card.field(6,0.0)
     
     def rho(self):
         return self.mid.rho
@@ -611,8 +611,9 @@ class PROD(LineProperty):
         self.mid = mesh.Material(self.mid)
 
     def __repr__(self):
-        c  = self.setBlankIfDefault(self.c,0.0)
-        fields = ['PROD',self.pid,self.mid,self.A,self.J,c,self.nsm]
+        c   = self.setBlankIfDefault(self.c,0.0)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
+        fields = ['PROD',self.pid,self.Mid(),self.A,self.J,c,nsm]
         return self.printCard(fields)
 
 class PSHELL(ShellProperty):
@@ -641,17 +642,17 @@ class PSHELL(ShellProperty):
         return self.mid.rho + self.t
 
     def massPerArea(self):
-        mPerA = self.nsm + self.rho*self.t
+        mPerA = self.nsm + self.mid.rho*self.t
         return mPerA
 
-    def crossReference(self):
+    def crossReference(self,mesh):
         self.mid  = mesh.Material(self.mid)
         #self.mid2 = mesh.Material(self.mid2)
         #self.mid3 = mesh.Material(self.mid3)
         #self.mid4 = mesh.Material(self.mid4)
 
     def __repr__(self):
-        fields = ['PSHELL',self.pid,self.mid,self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
+        fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
                   self.z1,self.z2,self.mid4]
         return self.printCard(fields)
 
@@ -675,7 +676,7 @@ class PSOLID(SolidProperty):
     def __repr__(self):
         cordm = self.setBlankIfDefault(self.cordm,0)
         fctn  = self.setBlankIfDefault(self.fctn,'SMECH')
-        fields = ['PSOLID',self.pid,self.mid,cordm,self.integ,self.stress,self.isop,fctn]
+        fields = ['PSOLID',self.pid,self.Mid(),cordm,self.integ,self.stress,self.isop,fctn]
         return self.printCard(fields)
 
 class PTUBE(LineProperty):
@@ -693,7 +694,7 @@ class PTUBE(LineProperty):
         t   = self.setBlankIfDefault(self.t,self.OD1/2.)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
         OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
-        fields = ['PTUBE',self.pid,self.mid,self.OD1,t,nsm,OD2]
+        fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
         return self.printCard(fields)
     
     def area(self):

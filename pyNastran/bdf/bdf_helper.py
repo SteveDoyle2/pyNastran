@@ -83,7 +83,9 @@ class getMethods(object):
         """
         Returns a series of node objects given a list of node IDs
         """
-        for nid in self.nids:
+        #print "nids",nids
+        nodes = []
+        for nid in nids:
             nodes.append(self.nodes[nid])
         return nodes
 
@@ -92,7 +94,7 @@ class getMethods(object):
 
     def Elements(self,eids):
         elements = []
-        for eid in self.eids:
+        for eid in eids:
             elements.append(self.elements[eid])
         return elements
 
@@ -104,6 +106,9 @@ class getMethods(object):
         for pid in pids:
             properties.append(self.properties[pid])
         return properties
+
+    def Phbdy(self,pid):
+        return phbdys[pid]
 
     def Material(self,mid):
         return self.materials[mid]

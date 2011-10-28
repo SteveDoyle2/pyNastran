@@ -1,9 +1,11 @@
 from baseCard import Element
 
 class RigidElement(Element):
-     def __repr__(self):
+    def __repr__(self):
         fields = ['RIGID_EL',self.eid]
         return self.printCard(fields)
+    def crossReference(self,mesh):
+        pass
 
 class RBAR(RigidElement):
     type = 'RBAR'

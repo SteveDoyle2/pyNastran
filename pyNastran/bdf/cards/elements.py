@@ -18,15 +18,6 @@ class SpringElement(Element):
         Element.__init__(self,card)
         self.eid = card.field(1)
 
-    def volume(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-    def stiffnessMatrix(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-    def massMatrix(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-    def mass(self):
-        raise Exception('not implemented in the %s class' %(self.type))
-
 class CELAS1(SpringElement):
     type = 'CELAS1'
     def __init__(self,card):
@@ -45,7 +36,7 @@ class CELAS1(SpringElement):
         self.c2 = card.field(5)
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid,self.nodes[0],self.c1,self.nodes[1],self.c2]
+        fields = [self.type,self.eid,self.Pid(),self.nodes[0],self.c1,self.nodes[1],self.c2]
         return self.printCard(fields)
 
 class CELAS2(SpringElement):
@@ -82,7 +73,7 @@ class CSHEAR(Element):
         assert len(self.nodes)==4
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes
+        fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
 class CRAC2D(Element):
@@ -95,7 +86,7 @@ class CRAC2D(Element):
         assert len(self.nodes)==18
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes
+        fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
 class CRAC3D(Element):
@@ -108,7 +99,7 @@ class CRAC3D(Element):
         assert len(self.nodes)==64
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodes
+        fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
         
 class CVISC(CROD):

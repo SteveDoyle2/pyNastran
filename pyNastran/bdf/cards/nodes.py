@@ -11,6 +11,21 @@ class Node(BaseCard): # base class
         pass
     def crossReference(self,mesh):
         raise Exception('%s hasnt implemented a crossReference method' %(self.type))
+
+    def Cp(self):
+        if isinstance(self.cp,int):
+            return self.cp
+        else:
+            return self.cp.cid
+        ###
+
+    def Cd(self):
+        if isinstance(self.cd,int):
+            return self.cd
+        else:
+            return self.cd.cid
+        ###
+        
     def __repr__(self):
         raise Exception('%s hasnt implemented a __repr__ method' %(self.type))
 
@@ -130,8 +145,8 @@ class GRID(Node):
         #return self.
 
     def __repr__(self):
-        cp   = self.setBlankIfDefault(self.cp.cid, 0)
-        cd   = self.setBlankIfDefault(self.cd.cid, 0)
+        cp   = self.setBlankIfDefault(self.Cp(), 0)
+        cd   = self.setBlankIfDefault(self.Cd(), 0)
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.seid,0)
         fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
