@@ -53,7 +53,7 @@ class CaseControlDeck(object):
         if not hasSubcase(iSubcase):
             sys.stderr.write('subcase doesnt exist...skipping')
         del self.subcases[iSubcase]
-    
+
     def copySubcase(self,iFromSubcase,iToSubcase,overwriteSubcase=True):
         """
         overwrites the parameters from one subcase to another
@@ -225,7 +225,10 @@ class CaseControlDeck(object):
                 if key=='TEMPERATURE' or key=='TEMP':
                     pass
                 else:
+                    key = sline[0]
                     options = sline[1].split(',')
+                    
+                
                 #print "key=|%s| options=%s" %(key,options)
             elif ' ' in key and ',' in value: # SET-type
                 (key,ID) = key.split()

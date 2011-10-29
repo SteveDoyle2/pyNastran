@@ -189,23 +189,39 @@ class writeMesh(object):
         writes the elements and properties in and interspersed order
         """
         msg = ''
+        missingProperties = []
         if self.properties:
             msg += '$ELEMENTS_WITH_PROPERTIES\n'
         for pid,prop in sorted(self.properties.items()):
-            msg += str(prop)
+            #print "pid = ",pid
             eids = self.getElementIDsWithPID(pid)
+            #print "   eids = ",eids
+            if eids:
+                msg += str(prop)
+                for eid in eids:
+                    element = self.Element(eid)
+                    msg += str(element)
+                ###
+            else:
+                #print "*MISSING",prop
+                missingProperties.append(str(prop))
+            ###
+        ###
 
-            for eid in eids:
+        eids = self.getElementIDsWithPID(0)
+        if eids:
+            msg += '$ELEMENTS_WITH_NO_PROPERTIES (PID=0)\n'
+            for eid in sorted(eids):
                 element = self.Element(eid)
                 msg += str(element)
             ###
-        ###
-        msg += '$ELEMENTS_WITH_NO_PROPERTIES\n'
-        eids = self.getElementIDsWithPID(0)
-        for eid in sorted(eids):
-            element = self.Element(eid)
-            msg += str(element)
-        ###
+
+        if missingProperties:
+            msg += '$UNASSOCIATED_PROPERTIES\n'
+            for missingProperty in missingProperties:
+                #print 'missingProperty = ',missingProperty
+                #print missingProperty
+                msg += str(missingProperty)
         return msg
 
     def writeMaterials(self):
@@ -219,12 +235,20 @@ class writeMesh(object):
 
     def writeConstraints(self):
         msg = ''
-        msg += '$ where are my constraints...\n'
-        if self.constraints:
-            msg += '$CONSTRAINTS\n'
-        for key,loadcase in sorted(self.constraints.items()):
-            for constraint in loadcase:
-                msg += str(constraint)
+        #msg += '$ where are my constraints...\n'
+        #if self.constraints:
+        #    msg += '$CONSTRAINTS\n'
+        #for key,loadcase in sorted(self.constraints.items()):
+        #    for constraint in loadcase:
+        #        msg += str(constraint)
+
+        if self.spcObject:
+            msg += '$SPCs\n'
+            msg += str(self.spcObject)
+
+        if self.mpcObject:
+            msg += '$MPCs\n'
+            msg += str(self.mpcObject)
         return msg
 
     def writeLoads(self):
@@ -280,7 +304,7 @@ class writeMesh(object):
         """writes the coordinate cards in a sorted order"""
         #print "output coords..."
         msg = ''
-        if self.coords:
+        if len(self.coords)>1:
             msg += '$COORDS\n'
         coordKeys = self.coords.keys()
         #self.log().info("coordKeys = %s" %(coordKeys))
@@ -294,7 +318,9 @@ class writeMesh(object):
         writes the rejected (processed) cards and the rejected unprocessed
         cardLines
         """
-        msg = '$REJECTS\n'
+        msg = ''
+        if self.rejectCards:
+            msg += '$REJECTS\n'
         for rejectCard in self.rejectCards:
             #print "rejectCard = ",rejectCard
             #print ""
