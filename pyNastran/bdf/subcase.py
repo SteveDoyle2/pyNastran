@@ -98,6 +98,7 @@ class Subcase(object):
         elif paramType=='STRESS-type':
             sOptions = ','.join(options)
             #print "sOptions = |%s|" %(sOptions)
+            #print "STRESSTYPE key=%s value=%s options=%s" %(key,value,options)
             if len(sOptions)>0:
                 msg += '%s(%s) = %s\n' %(key,sOptions,value)
             else:

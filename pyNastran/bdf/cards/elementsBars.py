@@ -105,8 +105,8 @@ class CROD(LineElement):
     type = 'CROD'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.id  = card.field(1)
-        self.pid = card.field(2,self.id)
+        self.eid  = card.field(1)
+        self.pid = card.field(2,self.eid)
 
         nids = card.fields(3,5)
         self.prepareNodeIDs(nids)
@@ -136,7 +136,7 @@ class CONROD(CROD):
     type = 'CONROD'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.id  = card.field(1)
+        self.eid  = card.field(1)
 
         nids = card.fields(2,4)
         self.prepareNodeIDs(nids)
@@ -241,9 +241,9 @@ class CBAR(LineElement):
             self.x2 = card.field(6,0.0)
             self.x3 = card.field(7,0.0)
         else:
-            msg = 'field5 on %s is the wrong type...id=%s field5=%s' %(self.type,self.id,field5)
+            msg = 'field5 on %s is the wrong type...id=%s field5=%s' %(self.type,self.eid,field5)
             raise RuntimeError(msg)
-        #if self.id==14100238:
+        #if self.eid==14100238:
             #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0,self.x1,self.x2,self.x3)
 
     def crossReference(self,mesh):
@@ -315,7 +315,7 @@ class CBEAM(CBAR):
     type = 'CBEAM'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.pid = card.field(2,self.id)
+        self.pid = card.field(2,self.eid)
         self.ga = card.field(3)
         self.gb = card.field(4)
 

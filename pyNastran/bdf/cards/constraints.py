@@ -1,15 +1,21 @@
 # my code
+import sys
 from baseCard import BaseCard
 
 
 class constraintObject(object):
+    """
+    todo rename constraint id from cid b/c thats the coordinate system id
+    """
     def __init__(self):
         self.constraints    = {} # SPC, SPC1, SPCD, etc...
         self.addConstraints = {} # SPCADD
         self.resolvedConstraints = []
 
     def add(self,constraint):
-        self.addConstraints[key] = [constraint]
+        cid = constraint.cid
+        assert cid not in self.addConstraints
+        self.addConstraints[cid] = constraint
 
     def append(self,constraint):
         key = constraint.cid
@@ -19,11 +25,32 @@ class constraintObject(object):
             self.constraints[key] = [constraint]
 
     def crossReference(self,mesh):
-        for key,addConstraint in sorted(self.addConstraints):  # SPCADDs
-            nodes = addConstraint.nodes
-            for i,node in enumerate(nodes):
-                nodes[i] = self.constraints[node]
+        #print "xref spcadds..."
+        #print "spcadds = ",self.addConstraints
+        for (key,addConstraint) in sorted(self.addConstraints.items()):  # SPCADDs
+            #print "add key=%s" %(key)
+            #sets = type(addConstraint)
+            spcsets = addConstraint.sets
+            #sys.stdout.flush()
+            #print str(addConstraint.sets)
+            #sys.stdout.flush()
+            #sys.exit('xxx1---constraints.py')
+            #print "spcsets = ",spcsets
+            for i,cid in enumerate(spcsets):
+                #print "cid = ",cid
+                #cid = spcset.cid
+                #print "self.addConstraints[cid] = ",self.getConstraint(cid)
+                constraint = self.getConstraint(cid)
+                #print 'newSlot = ',self.addConstraints[key].gids[i]
+                self.addConstraints[key].crossReference(i,constraint)
+                #self.addConstraints[key].gids[i] = self.getConstraint(cid)
+                #print "spcadds* = ",self.addConstraints
+        #print "spcadds2 = ",self.addConstraints
 
+        return
+
+        # xrefs nodes...not done...
+        print "xref spc/spc1/spcd..."
         for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
             for constraint in constraints:
                 #if constraint.type=='SPCADD'
@@ -36,38 +63,40 @@ class constraintObject(object):
         ###
     ###
 
+    def getConstraint(self,cid):
+        if cid in self.addConstraints:
+            return self.addConstraints[cid]
+        elif cid in self.constraints:
+            return self.constraints[cid]
+        else:
+            return cid
+
     def addConstraint(self,cid,nodeDOF):
         (nid,dofs) = nodeDOF
         for dof in dofs:
             self.resolvedConstraints.append( (nid,dof) )
         ###
     ###
+    def __repr__(self):
+        msg = ''
+        #print "repr %s" %(self.addConstraints)
+        for addID,spcadd in sorted(self.addConstraints.items()):
+            msg += str(spcadd)  # deceptively this writes the SPC cards as well
+        
+        #print msg
+        #sys.exit('asd')
+        return msg
+        
+        # works for spc, spc1, spcd
+        #for key,constraintSets in sorted(self.constraints.items()):
+        #    for constraint in constraintSets:
+        #        msg += str(constraint)
+        return msg
 
 class Constraint(BaseCard):
     def __init__(self,card):
         self.cid  = card.field(1)
-
-    def cleanNodes(self,nodes):
-        """
-        nodes are cleaned to get rid of blank fields...which shouldnt be there...
-        """
-        nodes2 = []
-        for node in nodes:
-            if node=="":
-                pass
-            else:
-                nodes2.append(node)
-            ###
-        ###
-        #print "nodes2 = ",nodes2
-        nodes = nodes2
-        if len(nodes2)>1 and nodes2[1]=='THRU':
-            nodes = [int(i) for i in range(nodes2[0],nodes2[2]+1)]
-
-        self.nodes = nodes
-        #print "*nodes = ",nodes
-        #return nodes2
-
+    
     def __repr__(self):
         fields = [self.type,self.cid]
         return self.printCard(fields)
@@ -133,20 +162,22 @@ class SPC(Constraint):
         self.constraints = self.constraints[0:nConstraints]
         self.enforced    = self.enforced[   0:nConstraints]
 
-    #def getNodeDOFs():
-    #    pass
+    def getNodeDOFs(self,mesh):
+        pass
+        return cid,dofs
 
-    def crossReference(self,mesh):
+    def crossReference(self,i,node):
         dofCount = 0
-        for (i,constraint) in enumerate(self.constraints):
-            if self.constraint is None:
-                node = self.Node(self.gids[i])
-                if not node.Is('GRID'): # SPOINT, EPOINT, DPOINT
-                    dofCount+=1
-                else:
-                    dofCount+=6
-                ###
-            ###
+        self.gids[i] = node
+        #for (i,constraint) in enumerate(self.constraints):
+        #    if self.constraint is None:
+        #        node = self.Node(self.gids[i])
+        #        if not node.Is('GRID'): # SPOINT, EPOINT, DPOINT
+        #            dofCount+=1
+        #        else:
+        #            dofCount+=6
+        #        ###
+        #    ###
         return dofCount
 
     def __repr__(self): # SPC
@@ -184,8 +215,12 @@ class SPC1(Constraint):
         Constraint.__init__(self,card)
         self.constraints = card.field(2)  # 246 = y; dx, dz dir
         nodes = card.fields(3)
-        self.cleanNodes(nodes)
+        self.nodes = self.expandThru(nodes)
         #print "nodes = ",nodes
+
+    def crossReference(self,i,node):
+        dofCount = 0
+        self.nodes[i] = node
 
     def __repr__(self): # SPC1
         #test = [i for i in range(self.nodes[0],self.nodes[-1]+1)]
@@ -201,22 +236,44 @@ class SPC1(Constraint):
 
 class SPCADD(Constraint):
     """
-    Defines a single-point constraint set as a union of single-point constraint sets defined
-    on SPC or SPC1 entries.
-    
+    Defines a single-point constraint set as a union of single-point constraint
+    sets defined on SPC or SPC1 entries.
     SPCADD   2       1       3
-    
-    Defines a single-point constraint set as a union of single-point constraint sets defined
-    on SPC or SPC1 entries.
     """
     type = 'SPCADD'
     def __init__(self,card):
         Constraint.__init__(self,card)
-        nodes = card.fields(2)
+        sets = card.fields(2)
         
-        self.cleanNodes(nodes)
+        self.sets = self.expandThru(sets)
         #print "self.nodes = ",self.nodes
 
+    def crossReference(self,i,node):
+        dofCount = 0
+        self.sets[i] = node
+
     def __repr__(self):
-        fields = ['SPCADD',self.cid]+self.nodes
-        return self.printCard(fields)
+        outSPCs = ''
+        fields = ['SPCADD',self.cid] #+self.sets
+        fieldSets = []
+        #print "repr---spcadd"
+        #print self.sets
+        for spcsets in self.sets:
+            #print "*spcsets",spcsets
+            if isinstance(spcsets,int):  # spcset wasnt found
+                #print "int unfound...%s" %(spcsets)
+                #outSPCs += str(spcsets)
+                fields.append(spcsets)
+            elif isinstance(spcsets,list):
+                #print 'list'
+                for spcset in spcsets:
+                    fieldSets.append(spcset.cid)
+                    outSPCs += str(spcset)
+                
+            else:
+                #print 'dict'
+                #outSPCs += str(spcsets.cid)
+                for key,spcset in spcsets.items():
+                    fieldSets.append(spcsets.cid)
+
+        return self.printCard(fields+list(set(fieldSets)))+outSPCs  # SPCADD

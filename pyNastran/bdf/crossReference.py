@@ -6,13 +6,14 @@ class XrefMesh(object):
         #print "cross Reference is a temp function"
         #for key,e in self.elements.items():
         #    print(e)
-        
-        #self.spcObject.crossReference(self)
+
+        self.spcObject.crossReference(self)
         #self.caseControlDeck.crossReference(self)
         self.crossReference_Nodes()
         self.crossReference_Elements()
         self.crossReference_Properties()
         self.crossReference_Materials()
+        self.crossReference_Loads()
 
     def crossReference_Nodes(self):
         gridSet = self.gridSet
@@ -47,3 +48,12 @@ class XrefMesh(object):
             #print "*",str(coord)
             m.crossReference(self)
         ###
+
+    def crossReference_Loads(self):
+        for lid,sid in self.loads.items():
+        #    #print "n.cid = ",n.cid
+        #    #coord = self.Coord(n.cid)
+        #    #print "*",str(coord)
+            l.crossReference(self)
+        ###
+

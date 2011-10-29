@@ -65,11 +65,10 @@ class getMethods(object):
 
         eids = self.elementIDs()
         eids2 = []
+        #print "eids = ",eids
         for eid in eids:
             element = self.Element(eid)
-            #print "element = ",element
-            #print "element.pid = ",element.pid
-            if element.pid in pids:
+            if element.Pid() in pids:
                 eids2.append(eid)
             ###
             #print ""

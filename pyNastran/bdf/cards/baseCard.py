@@ -29,7 +29,7 @@ class BaseCard(BDF_Card):
         return setBlankIfDefault(value,default)
 
     def crossReference(self,mesh):
-#        self.mid = mesh.Material(self.mid)
+        #self.mid = mesh.Material(self.mid)
         raise Exception('%s needs to implement this method' %(self.type))
 
    # def off_expandThru(self,fields):
@@ -74,7 +74,7 @@ class BaseCard(BDF_Card):
             ###
         ###
         print "out = ",out,'\n'
-        return list(setA)
+        return list(set(out))
     
     def expandThruBy(self,fields):
         """
@@ -271,7 +271,6 @@ class Element(BaseCard):
         #displayCard(card)
         self.nodes = None
         self.eid = int(card.field(1))
-        self.id  = self.eid
         #self.nids = []
         pass
 
