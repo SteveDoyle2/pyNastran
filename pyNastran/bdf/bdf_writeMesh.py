@@ -200,6 +200,7 @@ class writeMesh(object):
                 msg += str(prop)
                 for eid in eids:
                     element = self.Element(eid)
+                    #print "e.type = ",element.type
                     msg += str(element)
                 ###
             else:
@@ -236,11 +237,11 @@ class writeMesh(object):
     def writeConstraints(self):
         msg = ''
         #msg += '$ where are my constraints...\n'
-        #if self.constraints:
-        #    msg += '$CONSTRAINTS\n'
-        #for key,loadcase in sorted(self.constraints.items()):
-        #    for constraint in loadcase:
-        #        msg += str(constraint)
+        if self.constraints:
+            msg += '$CONSTRAINTS\n'
+        for key,loadcase in sorted(self.constraints.items()):
+            for constraint in loadcase:
+                msg += str(constraint)
 
         if self.spcObject:
             msg += '$SPCs\n'

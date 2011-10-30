@@ -29,7 +29,7 @@ class CELAS1(SpringElement):
         assert len(self.nodes)==2
 
         ## property ID
-        self.pid = card.field(2,self.id)
+        self.pid = card.field(2,self.eid)
 
         ## component number
         self.c1 = card.field(4)
@@ -107,6 +107,8 @@ class CVISC(CROD):
     def __init__(self,card):
         CROD.__init__(self,card)
     ###
+    def __repr__(self):  # not done...
+        fields = ['CVISC',self.eid]
 ###
 
 class CONM2(Element): # v0.1 not done
@@ -125,10 +127,13 @@ class CONM2(Element): # v0.1 not done
         self.I    = card.fields(9,15,[0.]*6)
 
     def crossReference(self,mesh):
+        """
+        @warning only supports cid=0
+        """
         if self.cid==0:
             pass
-        else:
-            raise Exception('not coded...')
+        #else:
+        #    raise Exception('CONM2 cid !=0 is not coded...')
         ###
     def __repr__(self):
         #I = []

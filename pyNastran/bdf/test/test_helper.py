@@ -3,10 +3,12 @@ import sys
 import traceback
 
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement
+
 
 import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
-print "testPath = ",testPath
+#print "testPath = ",testPath
 
 def runBDF(folder,bdfFilename,debug=False):
     bdfModel = os.path.join(testPath,folder,bdfFilename)
@@ -29,15 +31,16 @@ def runBDF(folder,bdfFilename,debug=False):
         fem2.writeAsPatran(outModel2)
         #fem2.writeAsCTRIA3(outModel2)
         compare(fem1,fem2)
+        os.remove(outModel2)
 
     #except KeyboardInterrupt:
     #    sys.exit()
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
-        traceback.print_exc(file=sys.stdout)
+        #traceback.print_exc(file=sys.stdout)
         #print msg
-        print "-"*80
+        #print "-"*80
         raise
     ###
     print "-"*80
@@ -115,21 +118,22 @@ def compute(cards1,cards2):
         print msg
     ###
 
-from pyNastran.bdf.bdf import ShellElement, SolidElement,LineElement
-
 def getElementStats(fem1,fem2):
     for key,e in sorted(fem1.elements.items()):
         if isinstance(e,ShellElement):
             a = e.area()
             m = e.mass()
         elif isinstance(e,SolidElement):
-            v = e.volume()
-            m = e.mass()
+            #v = e.volume()
+            #m = e.mass()
+            pass
         elif isinstance(e,LineElement):
             L = e.length()
             m = e.mass()
+        elif isinstance(e,RigidElement):
+            pass
         else:
-            print "e.type = ",e.type
+            print "stats - e.type = ",e.type
             #try:
             #    print "e.type = ",e.type
             #except:

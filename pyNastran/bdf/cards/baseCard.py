@@ -57,8 +57,8 @@ class BaseCard(BDF_Card):
         to be [1,5,6,7,8,9,13]
         """
         if len(fields)==1: return fields
-        print "expandThru"
-        print "fields = ",fields
+        #print "expandThru"
+        #print "fields = ",fields
         out = []
         nFields = len(fields)
         i=0
@@ -73,7 +73,7 @@ class BaseCard(BDF_Card):
                 i+=1
             ###
         ###
-        print "out = ",out,'\n'
+        #print "out = ",out,'\n'
         return list(set(out))
     
     def expandThruBy(self,fields):
@@ -262,7 +262,7 @@ class Property(BaseCard):
         self.mid = model.Material(self.mid)
         
     def __repr__(self):
-        fields = [self.type,self.pid]
+        fields = [self.type,self.Pid()]
         return self.printCard(fields)
 
 class Element(BaseCard):
@@ -281,6 +281,18 @@ class Element(BaseCard):
             return self.pid.pid
         ###
 
+    def nodePositions(self):
+        return [node.Position() for node in self.nodes]
+
+    def nodeIDs(self):
+        if isinstance(self.nodes[0],int):
+            #print 'if'
+            return [node     for node in self.nodes]
+        else:
+            #print 'else'
+            return [node.nid for node in self.nodes]
+        ###
+
     def prepareNodeIDs(self,nids,allowEmptyNodes=False):
         self.nodes = []
         for nid in nids:
@@ -296,27 +308,6 @@ class Element(BaseCard):
     def Centroid(self,nodes,debug=False):
         return None
 
-    def getNodeIDs(self):
-        nids = self.nodes
-        #nids = []
-        #for node in nodes:
-        #    nids.append(node.nid)
-        #print "nids[%s] = %s" %(self.eid,nids)
-        return nids
-
-    def getNodes(self,nodes):
-        """
-        returns nodes...???
-        """
-        #print "self.type = ",self.type
-        nids = self.nodes
-        #print "nids = ",self.nodes
-        nNodes = len(self.nodes)
-        nodesList = []
-        for nid in range(nNodes):
-            nodesList.append(nodes[nid])
-        return nodesList
-
     #def Normal(self,a,b):
     #    """finds the unit normal vector of 2 vectors"""
     #    return Normal(a,b)
@@ -331,7 +322,7 @@ class Element(BaseCard):
     #    return 0.5*numpy.linalg.norm(numpy.cross(a,b))
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.pid]+self.nodeIDs()
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()
         return self.printCard(fields)
 
     def length(self):
@@ -340,12 +331,16 @@ class Element(BaseCard):
         raise Exception('area not implemented in the %s class' %(self.type))
     def volume(self):
         raise Exception('volume not implemented in the %s class' %(self.type))
+    def mass(self):
+        raise Exception('mass not implemented in the %s class' %(self.type))
+
+    def Jacobian(self):
+        raise Exception('Jacobian not implemented for %s' %(self.type))
     def stiffnessMatrix(self):
         raise Exception('stiffnessMatrix not implemented in the %s class' %(self.type))
     def massMatrix(self):
         raise Exception('massMatrix not implemented in the %s class' %(self.type))
-    def mass(self):
-        raise Exception('mass not implemented in the %s class' %(self.type))
+
 
 #dnMax = 2
 if __name__=='__main__':

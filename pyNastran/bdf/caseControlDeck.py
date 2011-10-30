@@ -222,14 +222,15 @@ class CaseControlDeck(object):
             if '(' in key:  # comma may be in line - STRESS-type
                 #paramType = 'STRESS-type'
                 sline = key.strip(')').split('(')
+                key = sline[0]
+                options = sline[1].split(',')
+
+                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
                 if key=='TEMPERATURE' or key=='TEMP':
-                    pass
-                else:
-                    key = sline[0]
-                    options = sline[1].split(',')
-                    
-                
+                    key = 'TEMPERATURE(%s)' %(options[0])
+                    options = []
                 #print "key=|%s| options=%s" %(key,options)
+
             elif ' ' in key and ',' in value: # SET-type
                 (key,ID) = key.split()
                 fivalues = value.rstrip(' ,').split(',') # float/int values

@@ -209,7 +209,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
         #print "\n\n"
 
-    def read(self,debug=False):
+    def read(self,debug=False,xref=True):
         self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
         self.debug = debug
@@ -219,7 +219,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.readCaseControlDeck()
         self.readBulkDataDeck()
         #self.closeFile()
-        self.crossReference()
+        self.crossReference(xref=xref)
         if self.debug:
             self.log().debug("***FEM_Mesh.read")
         self.log().info('---finished FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
@@ -351,7 +351,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         
         #oldCardObj = BDF_Card()
         while len(self.activeFileNames)>0: # keep going until finished
-            (card,cardName) = self.getCard(debug=debug) # gets the cardLines
+            (card,cardName) = self.getCard(debug=False) # gets the cardLines
             #print "outcard = ",card
             #if cardName=='CQUAD4':
             #    print "card = ",card
@@ -510,6 +510,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addElement(elem)
             elif cardName=='CROD':
                 elem = CROD(cardObj)
+                print "crod...."
                 self.addElement(elem)
             elif cardName=='CONROD':
                 elem = CONROD(cardObj)
@@ -719,9 +720,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='MPC':
                 constraint = MPC(cardObj)
                 self.addConstraint_MPC(constraint)
-            #elif cardName=='MPCADD':
-            #    constraint = MPCADD(cardObj)
-            #    self.addConstraint_MPCADD(constraint)
+            elif cardName=='MPCADD':
+                constraint = MPCADD(cardObj)
+                assert not isinstance(constraint,SPCADD)
+                self.addConstraint_MPCADD(constraint)
 
             elif cardName=='SPC':
                 constraint = SPC(cardObj)
@@ -734,7 +736,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addConstraint_SPC(constraint)
             elif cardName=='SPCADD':
                 constraint = SPCADD(cardObj)
-                self.addConstraint_SPC(constraint)
+                self.addConstraint_SPCADD(constraint)
             elif cardName=='SUPORT1':
                 constraint = SUPORT1(cardObj)
                 self.addConstraint(constraint)

@@ -211,7 +211,7 @@ class CHBDYP(ThermalElement):
         g0 = self.setBlankIfDefault(self.g0, 0)
         ce = self.setBlankIfDefault(self.ce, 0)
 
-        fields = ['CHBDYP',self.eid,self.pid,self.Type,iViewFront,iViewBack,self.g1,self.g2,g0,
+        fields = ['CHBDYP',self.eid,self.Pid(),self.Type,iViewFront,iViewBack,self.g1,self.g2,g0,
                   radMidFront,radMidBack,self.gmid,ce,self.e1,self.e2,self.e3]
         return self.printCard(fields)
 

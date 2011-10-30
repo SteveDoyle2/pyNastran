@@ -1,4 +1,4 @@
-from numpy import dot, cross
+from numpy import dot, cross,matrix
 from elements import Element
 
 class SolidElement(Element):
@@ -10,6 +10,12 @@ class SolidElement(Element):
     def crossReference(self,mesh):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid   = mesh.Property(self.pid)
+
+    def mass(self):
+        return self.Rho()*self.volume()
+    
+    def Rho(self):
+        return self.pid.rho
 
 class CHEXA8(SolidElement):
     """
@@ -84,6 +90,15 @@ class CTETRA4(SolidElement):
         (n1,n2,n3,n4) = self.nodePositions()
         V = dot((n1-n4),cross(n2-n4,n3-n4))/6.
         return V
+
+    def Jacobian(self):
+        m = matrix((6,6),'d')
+        m[0][0] = m[0][1] = m[0][2] = m[0][2] = 1.
+        m[1][0]=n1[0]; m[2][0]=n1[1]; m[3][0]=n1[2];
+        m[1][1]=n2[0]; m[2][1]=n2[1]; m[3][1]=n2[2];
+        m[1][2]=n3[0]; m[2][2]=n3[1]; m[3][2]=n3[2];
+        m[1][3]=n4[0]; m[2][3]=n4[1]; m[3][3]=n4[2];
+        return m
 
 class CTETRA10(CTETRA4):
     """
