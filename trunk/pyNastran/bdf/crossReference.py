@@ -2,18 +2,20 @@ class XrefMesh(object):
     def __init__(self):
         pass
 
-    def crossReference(self):
-        #print "cross Reference is a temp function"
-        #for key,e in self.elements.items():
-        #    print(e)
+    def crossReference(self,xref=True):
+        if xref:
+            #print "cross Reference is a temp function"
+            #for key,e in self.elements.items():
+            #    print(e)
 
-        self.spcObject.crossReference(self)
-        #self.caseControlDeck.crossReference(self)
-        self.crossReference_Nodes()
-        self.crossReference_Elements()
-        self.crossReference_Properties()
-        self.crossReference_Materials()
-        self.crossReference_Loads()
+            self.spcObject.crossReference(self)
+            #self.caseControlDeck.crossReference(self)
+            self.crossReference_Nodes()
+            self.crossReference_Elements()
+            self.crossReference_Properties()
+            self.crossReference_Materials()
+            #self.crossReference_Loads()
+        ###
 
     def crossReference_Nodes(self):
         gridSet = self.gridSet

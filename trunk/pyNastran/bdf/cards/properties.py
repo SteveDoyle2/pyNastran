@@ -20,7 +20,22 @@ class LineProperty(Property):
         pass
     def D_shear(self):
         pass
-        
+    
+    def rho(self):
+        return self.mid.rho
+
+    def nsm(self):
+        return self.nsm
+
+    def E(self):
+        return self.mid.E
+
+    def G(self):
+        return self.mid.G
+
+    def nu(self):
+        return self.mid.nu
+
 class ShellProperty(Property):
     type = 'ShellProperty'
     def __init__(self,card):
@@ -134,6 +149,14 @@ class ShellProperty(Property):
         @retval Tinv          the inverse transformation matrix
         @retval TinvTranspose the transposed inverse transformation matrix
         @todo document better
+
+        \f[  \left[ 
+          \begin{array}{ccc}
+              a & b & c \\
+              d & e & f \\
+              g & h & i 
+          \end{array} \right)
+        \f] 
 
                  [ m^2  n^2        2mn]
         [T]    = [ n^2  m^2       -2mn]   # transformation matrix
@@ -273,6 +296,9 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
             self.nsm = 0.0
         ###
 
+    def nsm():
+        return self.nsm
+
     def __repr__(self):
         fields = ['PBARL',self.pid,self.Mid(),group,type,None,None,None,None,
         ]+self.dim+[self.nsm]
@@ -362,6 +388,12 @@ class PBEAM(LineProperty):
         self.n1b = card.field(x+14)
         self.n2b = card.field(x+15)
 
+    def nsm():
+        """
+        @warning nsm field not supported fully on PBEAM card
+        """
+        return self.nsm[0]
+
     def __repr__(self):
         fields = ['PBEAM',self.pid,self.Mid()]
         #print "fieldsA = ",fields
@@ -382,7 +414,6 @@ class PBEAM(LineProperty):
         return self.printCard(fields)
         
 #class PBEAML(LineProperty): #not done
-
 class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'
     def __init__(self,card):
@@ -413,7 +444,6 @@ class PBEAM3(LineProperty): # not done, cleanup
         return self.printCard(fields)
 
 #class PCOMPG(ShellProperty): # not done...
-#    pass
 class PCOMP(ShellProperty):
     """
     PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
@@ -591,21 +621,6 @@ class PROD(LineProperty):
         self.J   = card.field(4)
         self.c   = card.field(5,0.0)
         self.nsm = card.field(6,0.0)
-    
-    def rho(self):
-        return self.mid.rho
-
-    def nsm(self):
-        return self.nsm
-
-    def E(self):
-        return self.mid.E
-
-    def G(self):
-        return self.mid.G
-
-    def nu(self):
-        return self.mid.nu
 
     def crossReference(self,mesh):
         self.mid = mesh.Material(self.mid)

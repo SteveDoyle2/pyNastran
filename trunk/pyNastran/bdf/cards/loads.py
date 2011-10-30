@@ -91,7 +91,8 @@ class FORCE(OneDeeLoad):
         self.xyz = array(xyz)
 
     def __repr__(self):
-        fields = ['FORCE',self.lid,self.node,self.cid,self.mag] + list(self.xyz)
+        cid = self.setBlankIfDefault(self.cid,0)
+        fields = ['FORCE',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
 
 class MOMENT(OneDeeLoad):  # can i copy the force init without making the MOMENT a FORCE ???
@@ -114,7 +115,8 @@ class MOMENT(OneDeeLoad):  # can i copy the force init without making the MOMENT
         self.xyz = array(xyz)
 
     def __repr__(self):
-        fields = ['MOMENT',self.lid,self.node,self.cid,self.mag] + list(self.xyz)
+        cid = self.setBlankIfDefault(self.cid,0)
+        fields = ['MOMENT',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
 
 class PLOAD(Load):
@@ -137,7 +139,7 @@ class PLOAD1(Load):
     def __init__(self,card):
         self.lid   = card.field(1)
         self.eid   = card.field(2)
-        self.type  = card.field(3)
+        self.Type  = card.field(3)
         self.scale = card.field(4)
         assert self.type in validTypes,  '%s is an invalid type on the PLOAD1 card' %(self.type)
         assert self.scale in validScales,'%s is an invalid scale on the PLOAD1 card' %(self.scale)
@@ -147,7 +149,7 @@ class PLOAD1(Load):
         self.p2 = card.field(8)
     
     def __repr__(self):
-        fields = ['PLOAD1',self.lid,self.eid,self.type,self.scale,self.x1,self.p1,self.x2,self.p2]
+        fields = ['PLOAD1',self.lid,self.eid,self.Type,self.scale,self.x1,self.p1,self.x2,self.p2]
         return self.printCard(fields)
 
 class PLOAD2(Load):  # todo:  support THRU
@@ -165,20 +167,41 @@ class PLOAD2(Load):  # todo:  support THRU
         fields = ['PLOAD2',self.lid,self.p]+self.nodes
         return self.printCard(fields)
 
-class PLOAD4(Load):  # todo:  support THRU, not done...
+class PLOAD4(Load):
     type = 'PLOAD4'
     def __init__(self,card):
         self.lid = card.field(1)
         self.eid = card.field(2)
         p1 = card.field(3)
         p  = card.fields(4,7,[p1,p1,p1])
-        p = [p1]+p
-        self.nodes = card.fields(3,9)
-        assert len(self.nodes)==6
-
+        self.p = [p1]+p
+        
         if card.field(7)=='THRU':
             print "found a THRU on PLOAD4"
+            eid2 = card.field(8)
+            self.eids= self.expandThru([self.eid,'THRU',eid2])
+            self.g3 = None
+            self.g4 = None
+        else:   # used for CPENTA, CHEXA
+            self.eids = None
+            self.g3 = card.field(7)
+            self.g4 = card.field(8)
+        ###
+        self.cid     = card.field(9,0)
+        self.NVector = card.fields(10,13,[0.,0.,0.])
+        self.sorl    = card.field(13,'SURF')
     
     def __repr__(self):
+        cid  = self.setBlankIfDefault(self.cid,0)
+        sorl = self.setBlankIfDefault(self.sorl,'SURF')
         fields = ['PLOAD4',self.lid,self.p]+self.nodes
+        if self.g3:
+            fields.append(self.g3)
+            fields.append(self.g4)
+        else:
+            fields.append('THRU')
+            fields.append(self.eids[-1])
+        fields.append(cid)
+        fields += NVector
+        fields.append(sorl)
         return self.printCard(fields)

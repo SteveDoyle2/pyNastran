@@ -18,22 +18,40 @@ class LineElement(Element):
         raise Exception('implement self.area() for %s' %(self.type))
     
     def E(self):
+        """returns the Young's Modulus  \f$ E \f$"""
         return self.pid.mid.E
      
     def G(self):
+        """returns the Shear Modulus   \f$ G \f$"""
         return self.pid.mid.G
 
+    def J(self):
+        """returns the Polar Moment of Inertia.   \f$ J \f$"""
+        return self.pid.mid.G
+
+    def Izz(self):
+        """returns the Moment of Inertia.   \f$ I \f$"""
+        return self.pid.mid.Izz
+
     def nu(self):
+        """returns Poisson's Ratio  \f$ \nu \f$"""
         return self.pid.mid.nu
     
     def rho(self):
+        """returns the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
         return self.pid.mid.rho
 
     def nsm(self):
+        """Placeholder method for the non-structural mass"""
         raise Exception('implement self.area() for %s' %(self.type))
 
     def mass(self):
+        """
+        returns the mass of a bar/beam/rod element
+        
+        \f[ \large  mass = \left( \rhoA + nsm \right) L  \f]
+        """
         L = self.length()
         #print "rho",self.rho()
         #print "area",self.area()
@@ -48,17 +66,35 @@ class LineElement(Element):
         self.nids = mesh.Nodes(self.nodes)
         self.pid  = mesh.Property(self.pid)
 
-    def length(self):
+    def length(self,n1=None,n2=None):
+        """
+        Returns the length of a bar/rod/beam element
+        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
+        @param n1,n2 a Node object (default=None)
+        @param self the object pointer
+        @note
+            if n1 AND n2 are both none (the default), then the model must
+            be cross-referenced already
+        """
         #print self.type
-        L = norm(self.nids[1].Position()-self.nids[0].Position())
-        return L
-
-    def length2(self,n1,n2):    # length refers to an alternate method
-        #print self.type
-        L = norm(n1.Position()-n2.Position())
+        if n1 and n2:
+            L = norm(n1.Position()-n2.Position())
+        else:
+            L = norm(self.nids[1].Position()-self.nids[0].Position())
         return L
 
     def k_Axial(self):
+        """
+        Returns the axial stiffness matrix.
+
+        \f[  k_{Axial} = \frac{AE}{2L} 
+          \left[
+          \begin{array}{cc}
+              1 & -1 \\
+             -1 &  1
+          \end{array} \right)
+        \f]
+        """
         L = self.length()
         E = self.E()
         A = self.Area()
@@ -67,15 +103,40 @@ class LineElement(Element):
         M[0,1] = M[1,0] = -1
         return M
 
+    def k_Torsion(self):  # not done
+        """
+        Returns the torsional stiffness matrix.
+
+        \f[  k_{Axial} = \frac{L}{GJ} 
+          \left[
+          \begin{array}{cc}
+              1 & -1 \\
+             -1 &  1
+          \end{array} \right)
+        \f]
+        @warning formula not verified
+        """
+        L = self.length()
+        G = self.G()
+        J = self.J()
+        kMag = A*E/(2*L)
+        M = Matrix(ones(1,1))
+        M[0,1] = M[1,0] = -1
+        return M
+
     def k_Bending(self):
         """
-        kFac = EI/L^3
-         k/kFac = 
-        
-         12   6L    -12   6L
-         6L   4L^2  -6L   2L^2
-        -12  -6L     12  -6L
-         6L   2L^2  -6L   4L^2
+        Returns the bending stiffness matrix.
+
+        \f[ k_{Bending} = \frac{EI}{L^3} 
+          \left[ 
+          \begin{array}{cccc}
+             12 &  6L   & -12 &  6L    \\
+             6L &  4L^2 & -6L &  2L^2  \\
+            -12 & -6L   &  12 & -6L    \\
+             6L &  2L^2 & -6L &  4L^2
+          \end{array} \right)
+        \f] 
         """
         L = self.length()
         E = self.E()
@@ -119,7 +180,7 @@ class CROD(LineElement):
         return self.pid.nsm
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.Pid()]+self.nodes
+        fields = ['CROD',self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
 
@@ -150,8 +211,11 @@ class CONROD(CROD):
         self.nsm = card.field(8,0.0)
 
     def Stiffness(self,bdf): # ,bdf,L,A,E
+        """
+        @todo remove this method after making sure it still works
+        """
         #L = norm(r)
-        (n1,n2) = self.getNodeIDs()
+        (n1,n2) = self.nodeIDs()
         node1 = bdf.Node(n1)
         node2 = bdf.Node(n2)
 
@@ -178,7 +242,7 @@ class CONROD(CROD):
         c   = self.setBlankIfDefault(self.c,  0.0)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
         #print "nodes",self.nids
-        fields = [self.type,self.eid]+self.nids+[self.mid,self.A,self.J,self.c,self.nsm]
+        fields = ['CONROD',self.eid]+self.nids+[self.mid,self.A,self.J,self.c,self.nsm]
         return self.printCard(fields)
 
 
@@ -222,7 +286,7 @@ class CBAR(LineElement):
         return self.pid.A
 
     def length(self):
-        L = self.length2(self.ga,self.gb)
+        L = self.length(self.ga,self.gb)
         return L
 
     def nsm(self):
@@ -297,7 +361,7 @@ class CBAR(LineElement):
         w3b = self.setBlankIfDefault(self.w3b,0.0)
         (x1,x2,x3) = self.getX_G0_defaults()
         offt = self.setBlankIfDefault(self.offt,'GGG')
-        fields = [self.type,self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
+        fields = ['CBAR',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
                   self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b]
 
         return self.printCard(fields)
@@ -371,6 +435,9 @@ class CBEAM(CBAR):
         self.pid  = mesh.Property(self.pid)
 
     def Stiffness(self,bdf,r,A,E,I):
+        """
+        from makeTruss???
+        """
         Ke = matrix( zeros((6,6),'d'))
         L = r
         AE = A*E
@@ -440,7 +507,7 @@ class CBEAM(CBAR):
         w3b = self.setBlankIfDefault(self.w3b,0.0)
         (x1,x2,x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        fields = [self.type,self.eid,self.Pid(),self.ga,self.gb,x1,x2,x3,offt,
+        fields = ['CBEAM',self.eid,self.Pid(),self.ga,self.gb,x1,x2,x3,offt,
                   self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b,
                   self.sa,self.sb]
         return self.printCard(fields)

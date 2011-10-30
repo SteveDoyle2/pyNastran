@@ -107,7 +107,7 @@ class getMethods(object):
         return properties
 
     def Phbdy(self,pid):
-        return phbdys[pid]
+        return self.phbdys[pid]
 
     def Material(self,mid):
         return self.materials[mid]

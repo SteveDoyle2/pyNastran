@@ -27,7 +27,34 @@ class constraintObject(object):
     def crossReference(self,mesh):
         #print "xref spcadds..."
         #print "spcadds = ",self.addConstraints
-        for (key,addConstraint) in sorted(self.addConstraints.items()):  # SPCADDs
+        if self.addConstraints:
+            for (key,addConstraint) in sorted(self.addConstraints.items()):  # SPCADDs
+                self.crossReferenceAddConstraint(key,addConstraint)
+            #print "spcadds2 = ",self.addConstraints
+        else:
+            pass  # not done, no spcsets
+        ###
+
+        # xrefs nodes...not done...
+        print "xref spc/spc1/spcd..."
+        for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
+            for constraint in constraints:
+                #constraint.crossR
+                pass
+                #if constraint.type=='SPCADD'
+                #else:
+                #(cid,nodeDOFs) = constraint.getNodeDOFs(mesh) # the constrained nodes
+                #for nodeDOF in nodeDOFs:
+                #    self.addConstraint(cid,nodeDOF)
+                ###
+            ###
+        ###
+    ###
+
+        def crossReferenceAddConstraint(self,key,addConstraint):
+            """
+            cross references MPCSETs and SPCSETs
+            """
             #print "add key=%s" %(key)
             #sets = type(addConstraint)
             spcsets = addConstraint.sets
@@ -45,23 +72,8 @@ class constraintObject(object):
                 self.addConstraints[key].crossReference(i,constraint)
                 #self.addConstraints[key].gids[i] = self.getConstraint(cid)
                 #print "spcadds* = ",self.addConstraints
-        #print "spcadds2 = ",self.addConstraints
-
-        return
-
-        # xrefs nodes...not done...
-        print "xref spc/spc1/spcd..."
-        for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
-            for constraint in constraints:
-                #if constraint.type=='SPCADD'
-                #else:
-                (cid,nodeDOFs) = constraint.getNodeDOFs(mesh) # the constrained nodes
-                for nodeDOF in nodeDOFs:
-                    self.addConstraint(cid,nodeDOF)
-                ###
             ###
         ###
-    ###
 
     def getConstraint(self,cid):
         if cid in self.addConstraints:
@@ -70,19 +82,26 @@ class constraintObject(object):
             return self.constraints[cid]
         else:
             return cid
-
+        ###
     def addConstraint(self,cid,nodeDOF):
         (nid,dofs) = nodeDOF
         for dof in dofs:
             self.resolvedConstraints.append( (nid,dof) )
         ###
-    ###
+
     def __repr__(self):
         msg = ''
         #print "repr %s" %(self.addConstraints)
-        for addID,spcadd in sorted(self.addConstraints.items()):
-            msg += str(spcadd)  # deceptively this writes the SPC cards as well
-        
+        if self.addConstraints:
+            for addID,spcadd in sorted(self.addConstraints.items()):
+                msg += str(spcadd)  # deceptively this writes the SPC cards as well
+        else:
+            for key,constraintSets in sorted(self.constraints.items()):
+                for constraint in constraintSets:
+                    msg += str(constraint)
+                ###
+            ###
+        ###
         #print msg
         #sys.exit('asd')
         return msg
@@ -129,7 +148,7 @@ class SUPORT1(Constraint):
             fields += [ID,c]
         return self.printCard(fields)
 
-class MPC(Constraint): # not done...
+class MPC(Constraint):
     type = 'MPC'
     def __init__(self,card):
         Constraint.__init__(self,card)    # defines self.cid
@@ -253,10 +272,14 @@ class SPCADD(Constraint):
         self.sets[i] = node
 
     def __repr__(self):
-        outSPCs = ''
         fields = ['SPCADD',self.cid] #+self.sets
+        return self._reprSpcMpcAdd(fields)
+
+    def _reprSpcMpcAdd(self,fields):
+        outSPCs = ''
         fieldSets = []
-        #print "repr---spcadd"
+
+        #print "repr---mpcadd"
         #print self.sets
         for spcsets in self.sets:
             #print "*spcsets",spcsets
@@ -277,3 +300,27 @@ class SPCADD(Constraint):
                     fieldSets.append(spcsets.cid)
 
         return self.printCard(fields+list(set(fieldSets)))+outSPCs  # SPCADD
+
+class MPCADD(SPCADD):
+    """
+    Defines a multipoint constraint equation of the form \f$ \Sigma_j A_j u_j =0 \f$
+    where \f$ u_j \f$ represents degree-of-freedom \f$ C_j \f$ at grid or scalar point \f$ G_j \f$.
+    mPCADD   2       1       3
+    """
+    type = 'MPCADD'
+    def __init__(self,card):
+        Constraint.__init__(self,card)
+        sets = card.fields(2)
+        
+        self.sets = self.expandThru(sets)
+        #print "self.nodes = ",self.nodes
+
+    def crossReference(self,i,node):
+        dofCount = 0
+        self.sets[i] = node
+
+    def __repr__(self):
+        outSPCs = ''
+        fields = ['MPCADD',self.cid] #+self.sets
+        return self._reprSpcMpcAdd(fields)
+
