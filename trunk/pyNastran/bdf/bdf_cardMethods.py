@@ -319,6 +319,7 @@ class cardMethods(object):
         if '-'==v0 or '+'==v0:
             valueLeft = valueIn[1:] # truncate the sign for now
         else:
+            v0 = '+' # inplied positive value
             valueLeft = valueIn
 
         #print "valueIn = |%s|" %(valueIn)

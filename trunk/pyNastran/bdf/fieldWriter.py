@@ -105,17 +105,13 @@ def printFloat(value,tol=1e-8):
             elif value<1000000.: field = "%8.1f" %(value)
             else: # big value
                 #print "big"
-                field = printScientific(value)
-                field2 = "%8.1f" %(value)
-                
-                if 'e' not in field:
-                    field1 = field.replace('+','e+')
-
-                if len(field2)==8 and float(field1)==float(field2):
-                    field = field2
-                    field = field.strip(' 0')
+                field = "%8.1f" %(value)
+                if field.index('.')<8:
+                    field = field[0:8]
+                    assert '.' != field[0],field
+                else:
+                    field = printScientific(value)
                 ###
-                #print "field = |%s|" %field
             ###
         ###
         else:
@@ -203,7 +199,11 @@ def printCard(fields):
     
     for i in range(1,len(fields)):
         field = fields[i]
-        out += printField(field) #+'  '
+        try:
+            out += printField(field) #+'  '
+        except AssertionError:
+            print "bad fields = ",fields
+            raise
         if i%8==0:
             out += '\n%8s' %('')
         ###

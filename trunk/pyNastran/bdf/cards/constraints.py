@@ -36,7 +36,7 @@ class constraintObject(object):
         ###
 
         # xrefs nodes...not done...
-        print "xref spc/spc1/spcd..."
+        #print "xref spc/spc1/spcd..."
         for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
             for constraint in constraints:
                 #constraint.crossR
@@ -250,6 +250,9 @@ class SPCAX(Constraint):
         ## Enforced displacement value
         self.d   = card.field(5)
 
+    def crossReference(self,i,node):
+        pass
+
     def __repr__(self): # SPCAX
         fields = ['SPCAX',self.cid,self.rid,self.hid,self.c,self.d]
         return self.printCard(fields)
@@ -276,7 +279,6 @@ class SPC1(Constraint):
         #print "nodes = ",nodes
 
     def crossReference(self,i,node):
-        dofCount = 0
         self.nodes[i] = node
 
     def __repr__(self): # SPC1

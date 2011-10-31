@@ -70,7 +70,7 @@ class MAT1(Material):
         Material.__init__(self,card) #mid
 
         self.set_E_G_nu(card)
-        self.rho  = card.field(5)
+        self.rho  = card.field(5,1e-8)
         self.a    = card.field(6)
         self.TRef = card.field(7,0.0)
         self.ge = card.field(8)

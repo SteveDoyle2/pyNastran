@@ -15,10 +15,48 @@ class DAREA(BaseCard): # not integrated
         self.p     = [card.field(2),card.field(5)]
         self.c     = [card.field(3),card.field(6)]
         self.a     = [card.field(4),card.field(7)]
-        self.units = card.fiedl(3)
+        self.units = card.field(3)
 
     def __repr__(self):
         fields = ['DAREA',self.sid,  self.p[0],self.c[0],self.a[0],  self.self.p[1],self.c[1],self.a[1]]
+        return self.printCard(fields)
+
+class SPLINE1(BaseCard): # not integrated
+    """
+    Defines a surface spline for interpolating motion and/or forces for aeroelastic
+    problems on aerodynamic geometries defined by regular arrays of aerodynamic
+    points
+    SPLINE1 EID CAERO BOX1 BOX2 SETG DZ METH USAGE
+    NELEM MELEM
+    
+    SPLINE1 3   111    115  122  14   0.
+    """
+    type = 'SPLINE1'
+    def __init__(self,card):
+        #Material.__init__(self,card)
+        self.eid    = card.field(1)
+        self.caero  = card.field(2)
+        self.box1   = card.field(3)
+        self.box2   = card.field(4)
+        self.setg   = card.field(5)
+        self.dz     = card.field(6,0.0)
+        self.method = card.field(7,'IPS')
+        self.usage  = card.field(8,'BOTH')
+        self.nelements = card.field(9,10)
+        self.melements = card.field(10,10)
+
+        assert self.box2>=self.box1
+        assert self.method in ['IPS','TPS','FPS']
+        assert self.usage  in ['FORCE','DISP','BOTH']
+
+    def __repr__(self):
+        method    = self.setBlankIfDefault(self.method,'IPS')
+        usage     = self.setBlankIfDefault(self.usage,'BOTH')
+        nelements = self.setBlankIfDefault(self.nelements,10)
+        melements = self.setBlankIfDefault(self.melements,10)
+        fields = ['SPLINE1',self.eid,self.caero,self.box1,self.box2,self.setg,self.dz,method,usage,
+                            nelements,melements]
+        fields = self.wipeEmptyFields(fields)
         return self.printCard(fields)
 
 class CAERO1(BaseCard): # add helper functions
@@ -67,7 +105,7 @@ class CAERO1(BaseCard): # add helper functions
     def __repr__(self):
         x12 = self.p2-self.p1
         x43 = self.p4-self.p3
-        fields = ['CAERO1',self.pid,self.cp,self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
+        fields = ['CAERO1',self.eid,self.pid,self.cp,self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
                          ]+list(self.p1)+[x12[0]]+list(self.p4)+[x43[0]]
         return self.printCard(fields)
 

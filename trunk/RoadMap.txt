@@ -12,11 +12,11 @@ CONM2  (cid=0)
 CEALS1 (done)
 CELAS2 (done)
 
-CROD   (done)
-CONROD (done)
-CTUBE  (done)
-CBEAM  (done)
 CBAR   (done)
+CBEAM  (done)
+CONROD (done)
+CROD   (done)
+CTUBE  (done)
 
 CTRIA3 (done)
 CTRIA6 (done)
@@ -40,12 +40,11 @@ SUPORT1 (done)
 SPC     (done)
 SPC1    (done)
 SPCD    (done)
-SPCSET
-SPCADD  (done???)
+SPCADD  (done)
+SPCAX   (done)
 
 MPC     (done)
-MPCSET
-MPCADD
+MPCADD  (done)
 
 ----Materials----:
 MAT1  (done)
@@ -78,11 +77,11 @@ FORCE2
 PLOAD  (done)
 PLOAD1 (done)
 PLOAD2
-PLOAD3
 PLOAD4
 
 MOMENT (done)
 MOMENT1
+MOMENT2
 
 ----Thermal Loads----:
 TEMP   (done)
@@ -123,8 +122,11 @@ AEPARM  (needs integration)
 AESTAT  (needs integration)
 AESURFS (needs integration)
 
+CAERO1 (done)
+SPLINE1 (done)
+
 ----Other----:
-INCLUDE
+INCLUDE (partial - bulk data deck only)
 PARAM (done)
 
 
@@ -143,19 +145,106 @@ BEAMOR
 CBARAO
 PBEAM3
 **************
-CBEND
-PBEND
-**************
-PBCOMP
 PCOMPG
-**************
-CSHEAR
-PSHEAR
 **************
 CORD1R
 CORD1C
 CORD1S
 **************
+
+----Patran Elements w/ Properties----:
+CBARAO
+PBARL
+PBEAML
+PBCOMP
+
+CBUSH
+PBUSH
+PBUSHT
+
+CDAMP1
+CDAMP2
+CDAMP3
+PDAMP
+
+CELAS3
+CELAS4
+
+CGAP
+PGAP
+
+----Patran Elements----:
+CMASS1
+CMASS2
+CMASS3
+CMASS4
+
+CGAP
+PGAP
+
+CONM1
+CONM2
+
+CDAMP1
+CDAMP2
+CDAMP3
+CDAMP4
+
+CQUADR  (needs integration)
+
+CSHEAR  (needs integration)
+PSHEAR
+
+CTRIAR  (needs integration)
+CTRIAX6 (needs integration)
+
+CVISC   (needs integration)
+PLOTEL
+MBOLTUS
+
+
+----Patran Rigid Elements----:
+RROD
+RSPLINE
+RTRPLT
+
+----Patran Materials----:
+CREEP
+
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
+
+----Patran Loads----:
+PLOADX1
+QVECT
+QVOL
+
+RADCAV
+RADM
+RADMT
+RFORCE
+
+SLOAD
+
+TEMPP1
+TEMPRB
+
+VIEW
+VIEW3D
+
+----Patran Tables----:
+TABLED1
+TABLED2
+TABLED3
+TABLEM1
+TABLEM2
+TABLEM3
+
 
 ----Nodes----:
 RINGAX
@@ -170,14 +259,6 @@ BEAMOR
 CBARAO
 CBEND
 CCONEAX
-CELAS3
-CELAS4
-CONM1
-CSHEAR
-CDAMP1
-CDAMP2
-CDAMP3
-CDAMP4
 CDAMP5
 NSM
 NSM1
@@ -189,7 +270,6 @@ PBEND
 PCOMPG
 PCONEAX
 PMASS
-PSHEAR
 
 ----Loads----:
 FORCEAX
@@ -223,7 +303,6 @@ FREQ4
 FREQ5
 
 ----Aero Cards----:
-CAERO1
 CAERO2
 CAERO3
 CAERO4
@@ -254,26 +333,17 @@ Card Groupings:
 
 ----Elements----:
 CTRIAX  (needs integration)
-CTRIAR  (needs integration)
-CTRIAX6 (needs integration)
-
-CQUADR  (needs integration)
 CQUADX  (needs integration)
 CQUAD   (needs integration)
-CSHEAR  (needs integration)
 CRAC2D  (needs integration)
 CRAC3D  (needs integration)
-CVISC   (needs integration)
 
 ----Rigid Elements----:
 RBE2GS
 RBJOINT
 RBJSTIF
 RJOINT
-RROD
-RTRPLT
 RTRPLT1
-RSPLINE
 MATRIG
 
 ----Properties----:
@@ -295,20 +365,10 @@ SUPORT
 
 ----Materials----:
 MATS1
-MATT1
-MATT2
-MATT3
-MATT4
-MATT5
-MATT8
-MATT9
 
 ----Thermal----:
 RADBND
-RADCAV
 RADLST
-RADM
-RADMT
 RADMTX
 RADSET
 
@@ -324,10 +384,10 @@ DEQUATN
 ----Dynamics/Nonlinear---:
 EPOINT
 DAREA
-DLOAD
+DLOAD  (needs integration)
 NLPARM
-RLOAD1
-RLOAD2
+RLOAD1 (needs integration)
+RLOAD2 (needs integration)
 
 ----Tables----:
 DTABLE
@@ -361,6 +421,9 @@ SET3
 
 -------------------------------------------
 
-Op2
+msc Patran card support
+http://www.mscsoftware.com/training_videos/patran/Reverb_help/index.html#page/MD%2520Nastran%2520Structural/nas_input_forms.06.3.html
 
+
+Op2
 http://www.ferespost.be/HTML_MANUAL/III_1_Nastran_Preferences.html

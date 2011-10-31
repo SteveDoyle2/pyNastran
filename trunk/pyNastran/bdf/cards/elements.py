@@ -18,11 +18,45 @@ class SpringElement(Element):
         Element.__init__(self,card)
         self.eid = card.field(1)
 
+    def length_noXref(self,n1=None,n2=None):
+        """
+        Returns the length of a bar/rod/beam element
+        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
+        @param n1,n2 a Node object (default=None)
+        @param self the object pointer
+        @note
+            if n1 AND n2 are both none (the default), then the model must
+            be cross-referenced already
+        """
+        #print self.type
+        L = norm(n1.Position()-n2.Position())
+        return L
+
+    def length(self):
+        """
+        Returns the length of a bar/rod/beam element
+        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
+        @param n1,n2 a Node object (default=None)
+        @param self the object pointer
+        @note
+            if n1 AND n2 are both none (the default), then the model must
+            be cross-referenced already
+        """
+        #print self.type
+        return self.length_noXref(self.nodes[1],self.nodes[0])
+
+    def mass(self):
+        return 0.0
+
+class PointElement(Element):
+    def __init__(self,card):
+        Element.__init__(self,card)
+
 class CELAS1(SpringElement):
     type = 'CELAS1'
     def __init__(self,card):
         SpringElement.__init__(self,card)
-        self.pid = card.field(2)
+        self.eid = card.field(2)
 
         nids = [card.field(3),card.field(5)]
         self.prepareNodeIDs(nids)
@@ -35,8 +69,13 @@ class CELAS1(SpringElement):
         self.c1 = card.field(4)
         self.c2 = card.field(5)
 
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
+        
     def __repr__(self):
-        fields = [self.type,self.eid,self.Pid(),self.nodes[0],self.c1,self.nodes[1],self.c2]
+        nodes = self.nodeIDs()
+        fields = [self.type,self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
         return self.printCard(fields)
 
 class CELAS2(SpringElement):
@@ -60,14 +99,19 @@ class CELAS2(SpringElement):
         ## stress coefficient
         self.s  = card.field(7)
 
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        
     def __repr__(self):
-        fields = [self.type,self.eid,self.k,self.nodes[0],self.c1,self.nodes[1],self.c2,self.ge,self.s]
+        nodes = self.nodeIDs()
+        fields = [self.type,self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]
         return self.printCard(fields)
 
-class CSHEAR(Element):
+class CSHEAR(Element): # not integrated
     type = 'CSHEAR'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
         nids = card.fields(3,7)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
@@ -76,10 +120,11 @@ class CSHEAR(Element):
         fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
-class CRAC2D(Element):
+class CRAC2D(Element): # not integrated
     type = 'CRAC2D'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,21) # caps at 18
         self.prepareNodeIDs(nids)
@@ -89,10 +134,11 @@ class CRAC2D(Element):
         fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
-class CRAC3D(Element):
+class CRAC3D(Element): # not integrated
     type = 'CRAC3D'
     def __init__(self,card):
         Element.__init__(self,card)
+        self.pid = card.field(2)
 
         nids = card.fields(3,67) # cap at +3 = 67
         self.prepareNodeIDs(nids)
@@ -102,7 +148,7 @@ class CRAC3D(Element):
         fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
         
-class CVISC(CROD):
+class CVISC(CROD): # not integrated
     type = 'CVISC'
     def __init__(self,card):
         CROD.__init__(self,card)
@@ -111,20 +157,23 @@ class CVISC(CROD):
         fields = ['CVISC',self.eid]
 ###
 
-class CONM2(Element): # v0.1 not done
+class CONM2(PointElement): # v0.1 not done
     type = 'CONM2'
     # 'CONM2    501274  11064          132.274'
     def __init__(self,card):
-        Element.__init__(self,card)
+        PointElement.__init__(self,card)
         #self.nids  = [ card[1] ]
         #del self.nids
         #self.pid = None
         self.eid  = card.field(1)
         self.gid  = card.field(2)
         self.cid  = card.field(3,0)
-        self.mass = card.field(4)
+        self.Mass = card.field(4,0.0)
         self.X    = array(card.fields(5,8,[0.,0.,0.]))
         self.I    = card.fields(9,15,[0.]*6)
+
+    def mass(self):
+        return self.mass
 
     def crossReference(self,mesh):
         """
@@ -139,7 +188,7 @@ class CONM2(Element): # v0.1 not done
         #I = []
         #for i in self.I:
         #    if i==0.:
-        fields = [self.type,self.eid,self.gid,self.cid,self.mass]+list(self.X)+self.I
+        fields = [self.type,self.eid,self.gid,self.cid,self.Mass]+list(self.X)+self.I
         return self.printCard(fields)
 
    

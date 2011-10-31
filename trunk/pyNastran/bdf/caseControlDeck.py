@@ -118,6 +118,8 @@ class CaseControlDeck(object):
                 lines2.append(line)
             ###
         ###
+        #for line in lines2:
+        #    print "L2 = ",line
         return lines2
 
     def _read(self,lines):
@@ -144,7 +146,9 @@ class CaseControlDeck(object):
                 if i>100:
                     sys.exit('huhh...')
             (j,key,value,options,paramType) = self._parseEntry(lines2)
-            i+=j
+            #print "i=%s j=%s" %(i,j)
+            i+=1
+            #print ""
             #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
             iSubcase = self._addParameterToSubcase(key,value,options,paramType,iSubcase)
             #print "--------------"
@@ -245,6 +249,7 @@ class CaseControlDeck(object):
                             fivalues += lines[i][:-1].split(',')
                         else: # last case
                             fivalues += lines[i].split(',')
+                            #print "fivalues last = i=%s |%r|" %(i,lines[i])
                             i+=1
                             break
                         i+=1
@@ -275,6 +280,7 @@ class CaseControlDeck(object):
             raise RuntimeError(line)
         ###
         i+=1
+        #print "done with ",key
         return (i,key,value,options,paramType)
 
     def finishSubcases(self):
@@ -327,6 +333,9 @@ class CaseControlDeck(object):
             #    msg += subcase.writeSubcase(subcase0)
             #print "\n"
             #break
+        if len(self.subcases)==1:
+            msg += 'BEGIN BULK\n'
+        #print msg
         return msg
     ###
 ###
