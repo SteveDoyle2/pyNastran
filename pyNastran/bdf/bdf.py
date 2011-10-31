@@ -73,7 +73,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'MOMENT',#'MOMENT1','MOMENT2',
 
         'FLFACT','AERO','AEROS','GUST','FLUTTER',
-        #'CAERO1','CAERO2','CAERO3','CAERO4','CAERO5',
+        'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         #'SPLINE1','SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
         #'NLPARM',
 
@@ -109,6 +109,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.mpcObject = constraintObject()
 
         # aero cards
+        self.caeros   = {}  # can this be combined with elements???
         self.aeros    = {}
         self.gusts    = {}  # can this be simplified ???
         self.flfacts  = {}  # can this be simplified ???
@@ -510,7 +511,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addElement(elem)
             elif cardName=='CROD':
                 elem = CROD(cardObj)
-                print "crod...."
                 self.addElement(elem)
             elif cardName=='CONROD':
                 elem = CONROD(cardObj)
@@ -650,8 +650,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #elif cardName=='FORCE1':
             #    force = FORCE1(cardObj)
             #    self.addLoad(force)
-            #elif cardName=='FORCE':
-            #    force = FORCE1(cardObj)
+            #elif cardName=='FORCE2':
+            #    force = FORCE2(cardObj)
             #    self.addLoad(force)
             elif cardName=='MOMENT':
                 moment = MOMENT(cardObj)
@@ -731,6 +731,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='SPC1':
                 constraint = SPC1(cardObj)
                 self.addConstraint_SPC(constraint)
+            #elif cardName=='SPCAX':
+            #    constraint = SPCAX(cardObj)
+            #    self.addConstraint_SPC(constraint)
             elif cardName=='SPCD':
                 constraint = SPC1(cardObj)
                 self.addConstraint_SPC(constraint)
@@ -742,8 +745,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addConstraint(constraint)
                 #print "constraint = ",constraint
 
-            #elif cardName=='CAERO1':
-            #    aero = CAERO1(cardObj)
+            elif cardName=='CAERO1':
+                aero = CAERO1(cardObj)
+                self.addCAero(aero)
+            #elif cardName=='CAERO2':
+            #    aero = CAERO2(cardObj)
             #    self.addCAero(aero)
             elif cardName=='AERO':
                 aero = AERO(cardObj)

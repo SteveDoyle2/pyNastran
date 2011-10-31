@@ -66,7 +66,7 @@ class LineElement(Element):
         self.nids = mesh.Nodes(self.nodes)
         self.pid  = mesh.Property(self.pid)
 
-    def length(self,n1=None,n2=None):
+    def length_noXref(self,n1=None,n2=None):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
@@ -77,11 +77,21 @@ class LineElement(Element):
             be cross-referenced already
         """
         #print self.type
-        if n1 and n2:
-            L = norm(n1.Position()-n2.Position())
-        else:
-            L = norm(self.nids[1].Position()-self.nids[0].Position())
+        L = norm(n1.Position()-n2.Position())
         return L
+
+    def length(self):
+        """
+        Returns the length of a bar/rod/beam element
+        \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
+        @param n1,n2 a Node object (default=None)
+        @param self the object pointer
+        @note
+            if n1 AND n2 are both none (the default), then the model must
+            be cross-referenced already
+        """
+        #print self.type
+        return self.length_noXref(self.nids[1],self.nids[0])
 
     def k_Axial(self):
         """
@@ -286,7 +296,7 @@ class CBAR(LineElement):
         return self.pid.A
 
     def length(self):
-        L = self.length(self.ga,self.gb)
+        L = self.length_noXref(self.ga,self.gb)
         return L
 
     def nsm(self):

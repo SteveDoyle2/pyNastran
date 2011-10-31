@@ -1,10 +1,82 @@
+from numpy import array
 from baseCard import BaseCard
+
+class DAREA(BaseCard): # not integrated
+    """
+    Defines scale (area) factors for static and dynamic loads. In dynamic analysis, DAREA
+    is used in conjunction with ACSRCE, RLOADi and TLOADi entries.
+    DAREA SID P1 C1 A1  P2 C2 A2
+    DAREA 3   6   2 8.2 15 1  10.1
+    """
+    type = 'DAERO1'
+    def __init__(self,card):
+        #Material.__init__(self,card)
+        self.si    =  card.field(1)
+        self.p     = [card.field(2),card.field(5)]
+        self.c     = [card.field(3),card.field(6)]
+        self.a     = [card.field(4),card.field(7)]
+        self.units = card.fiedl(3)
+
+    def __repr__(self):
+        fields = ['DAREA',self.sid,  self.p[0],self.c[0],self.a[0],  self.self.p[1],self.c[1],self.a[1]]
+        return self.printCard(fields)
+
+class CAERO1(BaseCard): # add helper functions
+    """
+    Defines an aerodynamic macro element (panel) in terms of two leading edge locations
+    and side chords. This is used for Doublet-Lattice theory for subsonic aerodynamics
+    and the ZONA51 theory for supersonic aerodynamics.
+    CAERO1 EID PID CP NSPAN NCHORD LSPAN LCHORD IGID
+    X1 Y1 Z1 X12 X4 Y4 Z4 X43
+    """
+    type = 'CAERO1'
+    def __init__(self,card):
+        """
+        1 \
+        |   \
+        |     \
+        |      3
+        |      |
+        |      |
+        2------4
+        """
+        #Material.__init__(self,card)
+        self.eid    =  card.field(1)
+        self.pid    =  card.field(2)
+        self.cp     =  card.field(3,0)
+        self.nspan  =  card.field(4,0)
+        self.nchord =  card.field(5,0)
+        
+        #if self.nspan==0:
+        self.lspan  =  card.field(6)
+
+        #if self.nchord==0:
+        self.lchord =  card.field(7)
+        
+        self.igid =  card.field(8)
+
+        self.p1   =  array([card.field(9, 0.0), card.field(10,0.0), card.field(11,0.0)])
+        self.p2   =  self.p1+[card.field(12,0.0), 0., 0.]
+
+        self.p4   =  array([card.field(13,0.0), card.field(14,0.0), card.field(15,0.0)])
+        self.p3   =  self.p4+[card.field(16,0.0), 0., 0.]
+
+    def points(self):
+        raise Exception('not implemented in CAERO1')
+
+    def __repr__(self):
+        x12 = self.p2-self.p1
+        x43 = self.p4-self.p3
+        fields = ['CAERO1',self.pid,self.cp,self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
+                         ]+list(self.p1)+[x12[0]]+list(self.p4)+[x43[0]]
+        return self.printCard(fields)
+
 
 class AEPARM(BaseCard): # not integrated
     """
-Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic extra
-point). The forces associated with this controller will be derived from AEDW,
-AEFORCE and AEPRESS input data.
+    Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic extra
+    point). The forces associated with this controller will be derived from AEDW,
+    AEFORCE and AEPRESS input data.
     AEPARM ID LABEL UNITS
     AEPARM 5 THRUST LBS
     """
