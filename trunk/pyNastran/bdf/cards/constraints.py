@@ -29,7 +29,7 @@ class constraintObject(object):
         #print "spcadds = ",self.addConstraints
         if self.addConstraints:
             for (key,addConstraint) in sorted(self.addConstraints.items()):  # SPCADDs
-                self.crossReferenceAddConstraint(key,addConstraint)
+                self.crossReference_AddConstraint(key,addConstraint)
             #print "spcadds2 = ",self.addConstraints
         else:
             pass  # not done, no spcsets
@@ -51,29 +51,29 @@ class constraintObject(object):
         ###
     ###
 
-        def crossReferenceAddConstraint(self,key,addConstraint):
-            """
-            cross references MPCSETs and SPCSETs
-            """
-            #print "add key=%s" %(key)
-            #sets = type(addConstraint)
-            spcsets = addConstraint.sets
-            #sys.stdout.flush()
-            #print str(addConstraint.sets)
-            #sys.stdout.flush()
-            #sys.exit('xxx1---constraints.py')
-            #print "spcsets = ",spcsets
-            for i,cid in enumerate(spcsets):
-                #print "cid = ",cid
-                #cid = spcset.cid
-                #print "self.addConstraints[cid] = ",self.getConstraint(cid)
-                constraint = self.getConstraint(cid)
-                #print 'newSlot = ',self.addConstraints[key].gids[i]
-                self.addConstraints[key].crossReference(i,constraint)
-                #self.addConstraints[key].gids[i] = self.getConstraint(cid)
-                #print "spcadds* = ",self.addConstraints
-            ###
+    def crossReference_AddConstraint(self,key,addConstraint):
+        """
+        cross references MPCSETs and SPCSETs
+        """
+        #print "add key=%s" %(key)
+        #sets = type(addConstraint)
+        spcsets = addConstraint.sets
+        #sys.stdout.flush()
+        #print str(addConstraint.sets)
+        #sys.stdout.flush()
+        #sys.exit('xxx1---constraints.py')
+        #print "spcsets = ",spcsets
+        for i,cid in enumerate(spcsets):
+            #print "cid = ",cid
+            #cid = spcset.cid
+            #print "self.addConstraints[cid] = ",self.getConstraint(cid)
+            constraint = self.getConstraint(cid)
+            #print 'newSlot = ',self.addConstraints[key].gids[i]
+            self.addConstraints[key].crossReference(i,constraint)
+            #self.addConstraints[key].gids[i] = self.getConstraint(cid)
+            #print "spcadds* = ",self.addConstraints
         ###
+    ###
 
     def getConstraint(self,cid):
         if cid in self.addConstraints:
@@ -152,11 +152,22 @@ class MPC(Constraint):
     type = 'MPC'
     def __init__(self,card):
         Constraint.__init__(self,card)    # defines self.cid
+        self.gids        = [card.field(2),card.field(5,None)]
+        self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
+        self.enforced    = [card.field(4),card.field(7,None)]
+
+        # reduce the size if there are duplicate Nones
+        nConstraints = max(len(self.gids       ),
+                           len(self.constraints),
+                           len(self.enforced   ))
+        self.gids        = self.gids[       0:nConstraints]
+        self.constraints = self.constraints[0:nConstraints]
+        self.enforced    = self.enforced[   0:nConstraints]
 
     def __repr__(self): # MPC
         fields = ['MPC',self.cid]
         for (gid,constraint,enforced) in zip(self.gids,self.constraints,self.enforced):
-            fields += [gid,constriant,enforced]
+            fields += [gid,constraint,enforced]
         return self.printCard(fields)
     
 class SPC(Constraint):
@@ -215,6 +226,33 @@ class SPCD(Constraint):
     type = 'SPCD'
     def __init__(self,card):
         SPC.__init__(self,card)  # defines everything :) at least until cross-referencing methods are implemented
+
+class SPCAX(Constraint):
+    """
+    Defines a set of single-point constraints or enforced displacements
+    for conical shell coordinates.
+    SPCAX SID RID HID C    D
+    SPCAX 2   3     4 13 6.0
+    """
+    type = 'SPCAX'
+    def __init__(self,card):
+        SPC.__init__(self,card)  # defines everything :) at least until cross-referencing methods are implemented
+
+        ## Identification number of a single-point constraint set.
+        self.cid = card.field(1)
+        ## Ring identification number. See RINGAX entry.
+        self.rid = card.field(2)
+        ## Harmonic identification number. (Integer >= 0)
+        self.hid = card.field(3)
+        ## Component identification number. (Any unique combination of the
+        ## Integers 1 through 6.)
+        self.c   = card.field(4)
+        ## Enforced displacement value
+        self.d   = card.field(5)
+
+    def __repr__(self): # SPCAX
+        fields = ['SPCAX',self.cid,self.rid,self.hid,self.c,self.d]
+        return self.printCard(fields)
 
 class SPC1(Constraint):
     """
