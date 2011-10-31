@@ -270,6 +270,8 @@ class writeMesh(object):
         for ID,flfact in sorted(self.flfacts.items()):
             #if ID!=0:
             msg += str(flfact)
+        for ID,spline in sorted(self.splines.items()):
+            msg += str(spline)
         for ID,caero in sorted(self.caeros.items()):
             msg += str(caero)
         for ID,aero in sorted(self.aeros.items()):

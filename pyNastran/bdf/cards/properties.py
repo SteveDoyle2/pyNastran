@@ -227,6 +227,9 @@ class PBAR(LineProperty):
             assert self.K1==None
             assert self.K2==None
 
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+
     def __repr__(self):
         A   = self.setBlankIfDefault(self.A,0.0)
         I1  = self.setBlankIfDefault(self.I1,0.0)
@@ -270,6 +273,9 @@ class PCONEAX(Property): #not done
         self.type = card.field(4)
         self.dim = [] # confusing entry...
 
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+
     def __repr__(self):
         fields = ['PCONEAX',self.pid,self.Mid()]
         return self.printCard(fields)
@@ -296,6 +302,9 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
             self.nsm = 0.0
         ###
 
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+
     def nsm():
         return self.nsm
 
@@ -316,12 +325,12 @@ class PBEAM(LineProperty):
 
         self.so  = [None] ## @todo what are these values???
         self.xxb = [None]
-        self.a   = [card.field(3) ]
+        self.A   = [card.field(3) ]
         self.i1  = [card.field(4) ]
         self.i2  = [card.field(5) ]
         self.i12 = [card.field(6) ]
-        self.j   = [card.field(7) ]
-        self.nsm = [card.field(8,0.0) ]
+        self.J   = [card.field(7) ]
+        self.NSM = [card.field(8,0.0) ]
         self.c1  = [card.field(9) ]
         self.c2  = [card.field(10)]
         self.d1  = [card.field(11)]
@@ -352,12 +361,12 @@ class PBEAM(LineProperty):
             #print "propFields = ",propFields
             self.so.append( propFields[0])
             self.xxb.append(propFields[1])
-            self.a.append(  propFields[2])
+            self.A.append(  propFields[2])
             self.i1.append( propFields[3])
             self.i2.append( propFields[4])
             self.i12.append(propFields[5])
-            self.j.append(  propFields[6])
-            self.nsm.append(propFields[7])
+            self.J.append(  propFields[6])
+            self.NSM.append(self.setDefaultIfBlank(propFields[7],0.0))
             self.c1.append( propFields[8])
             self.c2.append( propFields[9])
             self.d1.append( propFields[10])
@@ -388,11 +397,18 @@ class PBEAM(LineProperty):
         self.n1b = card.field(x+14)
         self.n2b = card.field(x+15)
 
-    def nsm():
-        """
-        @warning nsm field not supported fully on PBEAM card
-        """
-        return self.nsm[0]
+    def area(self):
+        """@warning area field not supported fully on PBEAM card"""
+        #raise Exception(self.A[0])
+        return self.A[0]
+
+    def nsm(self):
+        """@warning nsm field not supported fully on PBEAM card"""
+        #raise Exception(self.nsm[0])
+        return self.NSM[0]
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
 
     def __repr__(self):
         fields = ['PBEAM',self.pid,self.Mid()]
@@ -400,13 +416,14 @@ class PBEAM(LineProperty):
         
         #print len(self.so)
         i = 0
-        for (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
-            self.so,self.xxb,self.a,self.i1,self.i2,self.i12,self.j,self.nsm,
+        for (so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
+            self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.J,self.NSM,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
+            NSM = self.setBlankIfDefault(NSM,0.0)
             if i==0:
-                fields +=        [a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
+                fields +=        [A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
             else:
-                fields += [so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
+                fields += [so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2]
             i+=1
         fields += [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
                    self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
@@ -437,6 +454,14 @@ class PBEAM3(LineProperty): # not done, cleanup
         self.fy = card.field(15)
         self.fz = card.field(16)
         # more...
+
+    def nsm(self):
+        """@warning nsm field not supported fully on PBEAM3 card"""
+        #raise Exception(self.nsm[0])
+        return self.nsm
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
 
     def __repr__(self):
         raise Exception('not done...')
@@ -485,11 +510,11 @@ class PCOMP(ShellProperty):
             defaults = [None,None,0.0,'NO']
             (mid,t,theta,sout) = card.fields(i,i+4,defaults)
             ply = [mid,t,theta,sout]
-            if ply!=defaults: # if there not all defaults...
+            if ply!=defaults: # if they're not all defaults...
                 plies.append(ply)
             #iPly +=1
         #print "nplies = ",nplies
-        
+
         self.plies = plies
         
         #self.plies = []
@@ -521,17 +546,42 @@ class PCOMP(ShellProperty):
             return True
         return False
 
-    def massPerArea(iPly='all'):
+    def crossReference(self,model):
+        for iPly,ply in enumerate(self.plies):
+            mid = self.plies[iPly][0]
+            #print mid
+            self.plies[iPly][0] = model.Material(mid)  # mid
+        ###
+
+    def material(self,iPly):
+        Mid = self.plies[iPly][0]
+        return Mid
+
+    def mid(self,iPly):
+        Mid = self.plies[iPly][0]
+        if isinstance(Mid,int):
+            return Mid
+        return Mid.mid
+
+    def theta(self,iPly):
+        Theta = self.plies[iPly][2]
+        return Theta
+
+    def sout(self,iPly):
+        Sout = self.plies[iPly][3]
+        return Sout
+
+    def massPerArea(self,iPly='all'):
         """
         mass = rho*A*t
         but area comes from the element
         mass/A = rho*t for the various layers
         the final mass calculation will be done later
         """
-        if iLayer=='all': # get all layers
+        if iPly=='all': # get all layers
             massPerArea = 0.
-            for (iPly,ply) in enumerate(self.plies):
-                massPerArea += self.massPerArea(iPly)
+            for (iply,ply) in enumerate(self.plies):
+                massPerArea += self.massPerArea(iply)
             ###
             if self.isSymmetrical():
                 if self.isCoreLayer():
@@ -543,16 +593,20 @@ class PCOMP(ShellProperty):
             return massPerArea
         ###
         else:
-            rho = mid.rho()
-            t = plies[0][1]
+            rho = self.rho(iPly)
+            t = self.plies[iPly][1]
             return rho*t
         ###
 
-    def thickness(iPly='all'):
-        if iLayer=='all': # get all layers
+    def rho(self,iPly):
+        mid = self.material(iPly)
+        return mid.rho
+
+    def thickness(self,iPly='all'):
+        if iPly=='all': # get all layers
             t = 0.
-            for (iPly,ply) in enumerate(self.plies):
-                t += self.thickness(iPly)
+            for (iply,ply) in enumerate(self.plies):
+                t += self.thickness(iply)
             ###
             if self.isSymmetrical():
                 if self.isCoreLayer():
@@ -562,15 +616,16 @@ class PCOMP(ShellProperty):
             ###
         ###
         else:
-            t = plies[0][1]
+            t = self.plies[iPly][1]
             return t
         ###
-        
+
     def __repr__(self):
         fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
         #print "plies = ",self.plies
-        for ply in self.plies:
-            (mid,t,theta,sout) = ply
+        for (iPly,ply) in enumerate(self.plies):
+            (_mid,t,theta,sout) = ply
+            mid = self.mid(iPly)
             theta = self.setBlankIfDefault(theta,0.0)
             sout  = self.setBlankIfDefault(sout,'NO')
             fields += [mid,t,theta,sout]
@@ -604,7 +659,9 @@ class PLSOLID(SolidProperty):
         self.ge  = card.field(3)
         self.str = card.field(4,'GRID')
         assert self.str in ['GRID','GAUS'],'card=%s doesnt have a valid stress/strain output value set\n'
-        
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
 
     def __repr__(self):
         stressStrain = self.setDefaultIfNone(self.str,'GRID')

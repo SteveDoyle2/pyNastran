@@ -22,6 +22,7 @@ class Subcase(object):
         @todo not a complete list
         @warning not tested yet...
         """
+        #print 'paramName  = ',paramName
         if   paramName.startswith('DESO'):  paramName = 'DESOBJ'
         elif paramName.startswith('DESS'):  paramName = 'DESSUB'
         elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
@@ -29,10 +30,12 @@ class Subcase(object):
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
         elif paramName.startswith('PRESS'): paramName = 'PRESSURE'
         elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
-        #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'
+        #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
+        #print '*paramName = ',paramName
         return  paramName
 
     def _addData(self,key,value,options,paramType):
+        key = self.updateParamName(key)
         #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
         if isinstance(value,str) and value.isdigit():
             value = int(value)

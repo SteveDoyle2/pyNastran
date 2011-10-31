@@ -10,6 +10,8 @@ class BaseCard(BDF_Card):
     #def __init__(self,card):
     #    pass
 
+    #def wipeEmptyFields(self,card): # BaseCard
+
     def Is(self,typeCheck):
         if self.type==typeCheck:
             return True
@@ -22,7 +24,7 @@ class BaseCard(BDF_Card):
         return printCard(fields)
 
     def setDefaultIfBlank(self,value,default):
-        raise Exception('time to upgrade...')
+        #raise Exception('time to upgrade...')
         return setDefaultIfBlank(value,default)
 
     def setBlankIfDefault(self,value,default):
@@ -259,7 +261,9 @@ class Property(BaseCard):
         ###
 
     def crossReference(self,model):
-        self.mid = model.Material(self.mid)
+        if self.mid:
+            self.mid = model.Material(self.mid)
+        ###
         
     def __repr__(self):
         fields = [self.type,self.Pid()]
@@ -281,16 +285,20 @@ class Element(BaseCard):
             return self.pid.pid
         ###
 
-    def nodePositions(self):
-        return [node.Position() for node in self.nodes]
+    def nodePositions(self,nodes=None):
+        if not nodes:
+           nodes = self.nodes
+        return [node.Position() for node in nodes]
 
-    def nodeIDs(self):
-        if isinstance(self.nodes[0],int):
+    def nodeIDs(self,nodes=None):
+        if not nodes:
+           nodes = self.nodes
+        if isinstance(nodes[0],int):
             #print 'if'
-            return [node     for node in self.nodes]
+            return [node     for node in nodes]
         else:
             #print 'else'
-            return [node.nid for node in self.nodes]
+            return [node.nid for node in nodes]
         ###
 
     def prepareNodeIDs(self,nids,allowEmptyNodes=False):

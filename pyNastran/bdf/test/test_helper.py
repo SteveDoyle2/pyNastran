@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement
+from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement
 
 
 import pyNastran.bdf.test
@@ -132,6 +132,10 @@ def getElementStats(fem1,fem2):
             m = e.mass()
         elif isinstance(e,RigidElement):
             pass
+        elif isinstance(e,SpringElement):
+            L = e.length()
+        elif isinstance(e,PointElement):
+            m = e.mass()
         else:
             print "stats - e.type = ",e.type
             #try:

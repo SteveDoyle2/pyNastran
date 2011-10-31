@@ -139,6 +139,9 @@ class getMethods(object):
     def Aero(self,acsid):
         return self.aeros[acsid]
 
+    def Spline(self,eid):
+        return self.splines[eid]
+
     def sumForces(self):
         for key,loadCase in self.loads.items():
             F = array([0.,0.,0.])
@@ -272,8 +275,12 @@ class addMethods(object):
         self.aeros[aero.acsid] = aero
 
     def addCAero(self,caero):
-        assert caero.eid not in self.caeros
+        assert caero.eid not in self.caeros,'self.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
         self.caeros[caero.eid] = caero
+
+    def addSpline(self,spline):
+        assert spline.eid not in self.splines
+        self.splines[spline.eid] = spline
 
     def addGust(self,gust):
         assert gust.sid not in self.gusts

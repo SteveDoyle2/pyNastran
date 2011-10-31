@@ -27,7 +27,7 @@ class LineElement(Element):
 
     def J(self):
         """returns the Polar Moment of Inertia.   \f$ J \f$"""
-        return self.pid.mid.G
+        return self.pid.mid.J
 
     def Izz(self):
         """returns the Moment of Inertia.   \f$ I \f$"""
@@ -40,6 +40,7 @@ class LineElement(Element):
     def rho(self):
         """returns the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
+        #raise Exception('implement self.rho() for %s' %(self.type))
         return self.pid.mid.rho
 
     def nsm(self):
@@ -53,6 +54,12 @@ class LineElement(Element):
         \f[ \large  mass = \left( \rhoA + nsm \right) L  \f]
         """
         L = self.length()
+        #print "type = ",self.type
+        
+        #try:
+        #    print "mat  = ",self.mid.type
+        #except:
+        #    print "no material"
         #print "rho",self.rho()
         #print "area",self.area()
         #print "nsm",self.nsm()
@@ -302,6 +309,13 @@ class CBAR(LineElement):
     def nsm(self):
         return self.pid.nsm
 
+    #def rho(self):
+    #    """returns the material density  \f$ \rho \f$"""
+    #    #print str(self.pid),type(self.pid)
+    #    print str(self.pid.mid)
+    #    
+    #    #return .rho
+
     def initX_G0(self,card):
         field5 = card.field(5)
         if isinstance(field5,int):
@@ -432,6 +446,13 @@ class CBEAM(CBAR):
             raise CardInstantiationError(msg)
         ###
 
+    def area(self):
+        return self.pid.area()
+
+    def nsm(self):
+        #print "CBEAM pid = ",str(self.pid)
+        return self.pid.nsm()
+
     def getOfft_Bit_defaults(self):
         if self.isOfft:
             field8 = self.offt
@@ -440,9 +461,9 @@ class CBEAM(CBAR):
         return field8
 
     def crossReference(self,model):
-        self.ga = mesh.Node(self.ga)
-        self.gb = mesh.Node(self.gb)
-        self.pid  = mesh.Property(self.pid)
+        self.ga  = model.Node(self.ga)
+        self.gb  = model.Node(self.gb)
+        self.pid = model.Property(self.pid)
 
     def Stiffness(self,bdf,r,A,E,I):
         """
@@ -517,7 +538,8 @@ class CBEAM(CBAR):
         w3b = self.setBlankIfDefault(self.w3b,0.0)
         (x1,x2,x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        fields = ['CBEAM',self.eid,self.Pid(),self.ga,self.gb,x1,x2,x3,offt,
+        ga,gb = self.nodeIDs([self.ga,self.gb])
+        fields = ['CBEAM',self.eid,self.Pid(),ga,gb,x1,x2,x3,offt,
                   self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b,
                   self.sa,self.sb]
         return self.printCard(fields)
