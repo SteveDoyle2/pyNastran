@@ -1,0 +1,77 @@
+
+---v0.1 (working)---
+See "RoadMap.txt" for a list of the BDF cards that are supported.
+It's nice and long :)
+
+This document discusses the major features (and limitations) added in each
+version of the software.  See the HTML documentation for more information.
+
+If you like it/want to help leave some feedback on the
+Dicussion Page:  http://groups.google.com/group/pynastran-discuss?pli=1
+
+If you have a bug/want a new feature or card, leave some feedback on the
+Issues List:     http://code.google.com/p/pynastran/issues/list
+
+
+Overall
+   - an executive control deck, case control deck, and bulk data deck
+     are REQUIRED.
+   - A ENDDATA card is strongly recommened!
+   - Mass/Stiffness Matricies not supported except in a few, rare cases.
+   - superelements are NOT supported
+   - loads need some TLC in v0.2, but there is minor support for them
+   - see the HTML documenation for a list of object data and methods.
+     The Nastran QRG (Quick Reference Guide) is another good reference.
+   - This code was written entirely in Python and should install easily.
+
+Executive Control Deck
+   - Include files NOT supported
+   - Limited to LESS than 200 lines
+   - Extract soltion and method (if sol=600)
+   - Can update solution/method
+
+Case Control Deck
+   - Include files supported
+   - Limited to LESS than 200 lines
+   - In general, if a card is supported, EVERY field can be read,
+     accessed, and written.
+   - Most cards forms supported
+      1.  STRESS(PLOT,PUNCH) = ALL     #  name(options) = value  (STRESS-type)
+      2.  STRESS = ALL                 #  name = value           (STRESS-type)
+      3.  DISP(PLOT,PUNCH) = ALL       #  name(options) = value  (STRESS-type)
+      4.  PARAM,FIXEDB,-1              #  name, options, value   (PARAM-type)
+      5.  SET 1 = 1,2,3,4, etc.        #  name id = options      (SET-type)
+   - Methods to update global/local subcase values
+
+
+BDF Data Deck (no cross referencing required)
+   - include files supported
+   - 8/16 character fields, csv format for cards is supported.  DONT USE TABS!!!
+   - Cards are written in 8-character fields and make use of Nastran-scientific
+     notation to maximize precision.
+   - write and writeAsPatran methods to write the bdf file after modifying it.
+     The write method writes each 'section' (e.g. nodes/elements/properties)
+     as isolated sections.  writeAsPatran intersperses properties and elements.
+
+Bulk Data Deck Cross-Referencing
+   - Entire deck is read.  If a card isnt supported, it is rejected.  Unparsed
+     cards are clearly marked in the $REJECTS section.
+   - Duplicate node/element/property/etc. IDs are NOT allowed!
+   - Coordinate systems are a work in progress and difficult to test without
+     good test cases.  Feel free to add some.  Therefore, the global coordinate
+     system is safest.
+   - Cross-referencing is a feature that links data from one card to another.
+     An example is a CQUAD4 has four nodes.  When cross-referenced, the element
+     object's nodes become node objects.
+   - In order to determine element information that requires information from
+     other cards, cross-referencing is REQUIRED.  The read method has the
+     option to disable this.
+   - When using constraints, all constraints (SPC,SPC1,SPCD,MPC) must be
+     part of an SPCADD or MPCADD, unless there are no SPCADDs or MPCADDs.
+     In other words, DONT mix and match!
+   - Structural elements have a mass/area/length depending on type.
+   - Volume ONLY supported for TET4 and TET10
+   - Lots of methods for PCOMPs
+   - CBEAM elements do are not complete for their area/mass/etc calcuations.
+   - Moments of intertias of elements are not calculated.
+   

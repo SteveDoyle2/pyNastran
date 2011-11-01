@@ -158,6 +158,9 @@ class CVISC(CROD): # not integrated
 ###
 
 class CONM2(PointElement): # v0.1 not done
+    """
+    @todo support cid != 0
+    """
     type = 'CONM2'
     # 'CONM2    501274  11064          132.274'
     def __init__(self,card):
