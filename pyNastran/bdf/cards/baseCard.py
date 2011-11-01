@@ -13,21 +13,26 @@ class BaseCard(BDF_Card):
     #def wipeEmptyFields(self,card): # BaseCard
 
     def Is(self,typeCheck):
+        """retruns True if the card type is the same as the object"""
         if self.type==typeCheck:
             return True
         return False
 
     def removeTrailingNones(self,fields):
+        """removes blank fields at the end of a card object"""
         self.wipeEmptyFields(fields)
 
     def printCard(self,fields):
+        """prints a card object"""
         return printCard(fields)
 
     def setDefaultIfBlank(self,value,default):
+        """used to initialize default values"""
         #raise Exception('time to upgrade...')
         return setDefaultIfBlank(value,default)
 
     def setBlankIfDefault(self,value,default):
+        """used to set default values for object repr functions"""
         return setBlankIfDefault(value,default)
 
     def crossReference(self,mesh):
@@ -80,8 +85,9 @@ class BaseCard(BDF_Card):
     
     def expandThruBy(self,fields):
         """
-        expands a list of values of the form [1,5,THRU,9,13]
+        expands a list of values of the form [1,5,THRU,9,BY,2,13]
         to be [1,5,7,9,13]
+        @todo not tested
         """
         if len(fields)==1: return fields
         #print "expandThruBy"
@@ -114,17 +120,25 @@ class BaseCard(BDF_Card):
 
     def expandThruExclude(self,fields):
         """
-        EXCLUDE isnt supported
+        expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
+        to be [1,5,6,9,10,11,13]
+        @todo not tested
         """
-        return self.expandThru(fields)
-        
         nFields = len(fields)
         for i in range(nFields):
             if fields[i]=='THRU':
+                storedList = []
                 for j in range(fields[i-1],fields[i+1]):
-                    fieldsOut.append(fields[j])
+                    storedList.append(fields[j])
                 ###
+            elif field[i]=='EXCLUDE':
+                storedSet = set(storedList)
+                while fields[i]<max(storedList):
+                    storedSet.remove(field[i])
+                storedList = list(storedSet)
             else:
+                if storedList:
+                    fieldsOut += storedList
                 fieldsOut.append(fields[i])
             ###
         ###
@@ -140,6 +154,7 @@ class BaseCard(BDF_Card):
         """
         1,THRU,10
         1,3,THRU,19,15
+        @warning doesnt work
         """
         fields = list(set(fields))
         
@@ -272,13 +287,15 @@ class Property(BaseCard):
 class Element(BaseCard):
     pid = 0 # CONM2, rigid
     def __init__(self,card):
-        #displayCard(card)
+        ## the list of node IDs for an element (default=None)
         self.nodes = None
+        ## element ID number
         self.eid = int(card.field(1))
         #self.nids = []
         pass
 
     def Pid(self):
+        """returns the property ID of an element"""
         if isinstance(self.pid,int):
             return self.pid
         else:
@@ -286,11 +303,13 @@ class Element(BaseCard):
         ###
 
     def nodePositions(self,nodes=None):
+        """returns the positions of multiple node objects"""
         if not nodes:
            nodes = self.nodes
         return [node.Position() for node in nodes]
 
     def nodeIDs(self,nodes=None):
+        """returns nodeIDs for repr functions"""
         if not nodes:
            nodes = self.nodes
         if isinstance(nodes[0],int):
@@ -302,6 +321,7 @@ class Element(BaseCard):
         ###
 
     def prepareNodeIDs(self,nids,allowEmptyNodes=False):
+        """verifies all node IDs exist and that they're integers"""
         self.nodes = []
         for nid in nids:
             if isinstance(nid,int):

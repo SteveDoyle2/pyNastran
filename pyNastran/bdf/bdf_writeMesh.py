@@ -133,7 +133,7 @@ class writeMesh(object):
         self.executiveControlLines[self.iSolLine] = newSol
 
         for line in self.executiveControlLines:
-            msg += line
+            msg += line+'\n'
         return msg
 
     def writeCaseControlDeck(self):
