@@ -242,6 +242,7 @@ class writeMesh(object):
         return msg
 
     def writeConstraints(self):
+        """writes the constraint cards sorted by ID"""
         msg = ''
         #msg += '$ where are my constraints...\n'
         if self.constraints:
@@ -260,6 +261,7 @@ class writeMesh(object):
         return msg
 
     def writeLoads(self):
+        """writes the load cards sorted by ID"""
         msg = ''
         if self.loads:
             msg += '$LOADS\n'
@@ -269,6 +271,7 @@ class writeMesh(object):
         return msg
 
     def writeAero(self):
+        """writes the aero cards"""
         #print "output aero cards..."
         msg = ''
         if self.flfacts or self.aeros or self.gusts or self.flutters:  msg = '$AERO\n'
@@ -291,9 +294,10 @@ class writeMesh(object):
         return msg
 
     def writeThermal(self):
+        """writes the thermal cards"""
         msg = ''
         # PHBDY
-        if self.phbdys or self.thermalProperties or self.convectionProperties or self.bcs:
+        if self.phbdys or self.convectionProperties or self.bcs:  # self.thermalProperties or
             msg = '$THERMAL\n'
 
         for key,phbdy in sorted(self.phbdys.items()):

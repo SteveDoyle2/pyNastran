@@ -2,20 +2,20 @@ import os
 import sys
 import copy
 from math import ceil
-from pyNastran.general.general import ListPrint
 
 # 3rd party
 import numpy
 from numpy import any,cross
 
 # my code
-from fieldWriter import printCard
-from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
+from pyNastran.general.general import ListPrint
 #from mathFunctions import *
 
-from BDF_Card import BDF_Card
-from bdf_helper import getMethods,addMethods,writeMesh,cardMethods,XrefMesh
+from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
+from BDF_Card        import BDF_Card
+from bdf_helper      import getMethods,addMethods,writeMesh,cardMethods,XrefMesh
 from caseControlDeck import CaseControlDeck
+from fieldWriter     import printCard
 
 class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     modelType = 'nastran'
@@ -32,6 +32,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         cardMethods.__init__(self)
         XrefMesh.__init__(self)
 
+        ## useful in debugging errors in input
         self.debug = debug
         self._setInfile(infilename,includeDir,log)
 
@@ -40,13 +41,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self._initStructuralDefaults()
         self._initThermalDefaults()
 
+        ## lines that were rejected b/c they were for a card
+        ## that isnt supported
         self.rejects = []
+        ## cards that were created, but not processed
         self.rejectCards = []
+        ## list of execive control deck lines
         self.executiveControlLines = []
+        ## list of case control deck lines
         self.caseControlLines = []
+        ## the analysis type
         self.sol = None
+        ## used in solution 600
         self.solMethod = None
 
+        ## the list of possible cards that will be parsed
         self.cardsToRead = set([
         'PARAM','=','INCLUDE',
         'GRID','GRDSET',
@@ -93,42 +102,65 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         'RADBC','CONV',
         ])
+        ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
     def _initStructuralDefaults(self):
         # main structural block
+        ## store the PARAM cards
         self.params = {}
+        ## stores SPOINT, GRID cards
         self.nodes = {}
+        ## stores GRIDSET card
         self.gridSet = None
+        ## stores LOTS of elements
         self.elements = {}
+        ## stores LOTS of elements
         self.properties = {}
+        ## stores MAT1,MAT2,...,MAT10 materials
         self.materials = {}
+        ## stores LOAD,FORCE,MOMENT
         self.loads = {}
+        ## stores coordinate systems
         self.coords = {0: CORD2R() }
 
         # constraints
+        ## stores SUPORT1s
         self.constraints = {} # suport1, anything else???
+        ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject = constraintObject()
+        ## stores MPCADD,MPC
         self.mpcObject = constraintObject()
 
         # aero cards
+        ## stores CAERO1
         self.caeros   = {}  # can this be combined with self.elements???
+        ## stores AERO & AEROS
+        ## @warning possible bug
         self.aeros    = {}
+        ## stores GUST cards
         self.gusts    = {}  # can this be simplified ???
+        ## stores FLFACT
         self.flfacts  = {}  # can this be simplified ???
+        ## stores FLUTTER
         self.flutters = {}
+        ## store SPLINE1
         self.splines  = {} # maybe put into self.elements???
 
     def _initThermalDefaults(self):
         # BCs
+        ## stores thermal boundary conditions - CONV,RADBC
         self.bcs   = {}  # e.g. RADBC
         
         # elements
         # see self.elements
 
         # properties
-        self.thermalProperties    = {}
+        ## stores other thermal properties - unused ???
+        #self.thermalProperties    = {}
+        ## stores PHBDY
         self.phbdys               = {}
+        ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
     def _setInfile(self,infilename,includeDir=None,log=None):
@@ -141,19 +173,32 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             log = loggerObj.startLog('debug') # or info
         self.log = log
 
-        self.autoReject   = False # automatically rejects every parsable card
+        ## automatically rejects every parsable card (default=False)
+        self.autoReject   = False
+        ## is the active file done reading
         self.doneReading  = False
+        ## was an ENDDATA card found
         self.foundEndData = False
 
         if includeDir is None:
             includeDir = os.path.dirname(infilename)
+        ## the active filename (string)
         self.infilename = infilename
+        ## the directory of the 1st BDF (include BDFs are relative to this one)
         self.includeDir = includeDir
+        ## list of infile objects (needed for INCLUDE files)
         self.infilesPack     = []
+        ## list of lines from self.activeFilename that are stored
         self.linesPack       = []
+        ## list of all open filenames
         self.activeFileNames = []
+        ## stores the line number of self.activefilename that the parser is on
+        ## very helpful when debugging
         self.lineNumbers     = []
+        ## dictionary that says whether self.infilename is open/close (boolean0
         self.isOpened = {self.infilename: False}
+        ## list of all read in cards - useful in determining if
+        ## entire BDF was read & really useful in debugging
         self.cardCount = {}
 
     def openFile(self,infileName):
@@ -229,12 +274,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         linesPack = self.linesPack.pop()
         self.isOpened[activeFileName] = False
         nlines = len(self.linesPack[-1])
+        ## determines if self.activefilename should be closed at the next opportunity
         self.doneReading = False
         if debug:
             print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
         #print "\n\n"
 
     def read(self,debug=False,xref=True):
+        """
+        main read method for the bdf
+        """
         self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
         self.debug = debug
@@ -254,9 +303,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         return ('BulkDataDeck',isDone)
 
     def isExecutiveControlDeck(self,line):
+        """@todo code this..."""
         return True
 
     def readExecutiveControlDeck(self):
+        """
+        reads the executive control deck
+        """
         self.openFile(self.infilename)
         line = ''
         #self.executiveControlLines = []
@@ -277,6 +330,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.parseExecutiveControlDeck()
 
     def parseExecutiveControlDeck(self):
+        """
+        extracts the solution from the executive control deck
+        """
         for i,eline in enumerate(self.executiveControlLines):
             #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()
@@ -289,22 +345,41 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 assert self.sol==None,'cannot overwrite solution existing=|SOL %s| new =|%s|' %(self.sol,sline2)
                 self.iSolLine = i
 
+                try:
+                    self.updateSolution(sline2[1],sline)
+                except:
+                    
+                    msg = 'updateSolution failed...sline2=%s sline=%s' %(sline2,sline)
+                    raise RuntimeError(msg)
                 self.sol = int(sline2[1])
                 if self.sol==600:
                     self.solMethod = sline[1].strip()
-                else:  self.solMethod = None
                 print "sol=%s method=%s" %(self.sol,self.solMethod)
             ###
         ###
 
     def updateSolution(self,sol,method=None):
+        """
+        updates the overall solution type (e.g. 101,200,600)
+        @param self   the object pointer
+        @param sol    the solution type (101,103, etc)
+        @param method the solution method (only for SOL=600), default=None
+        """
+        if isinstance(method,list) and len(method)==2:
+            method = method[1]
+
+        ## the integer of the solution type (e.g. SOL 101)
         self.sol = int(sol)
         if self.sol==600:
-            self.method = method
+            ## solution 600 method modifier
+            self.solMethod = method.strip()
+        else: # very common
+            self.solMethod = None
         ###
 
     def isCaseControlDeck(self,line):
-            return True
+        """@todo not done..."""
+        return True
 
     def readCaseControlDeck(self,infilename):
         #print "opening |%s|" %(infilename)
@@ -365,6 +440,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         return self.caseControlLines
 
     def Is(self,card,cardCheck):
+        """
+        a method for determining the cardName
+        """
         #print "card=%s" %(card)
         #return cardCheck in card[0][0:8]
         return any([cardCheck in field[0:8].lstrip().rstrip(' *') for field in card])
@@ -411,7 +489,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         return True
 
     def getIncludeFileName(self,cardLines,cardName):
-        """parses an INCLUDE file split into multiple lines (as a list)"""
+        """parses an INCLUDE file split into multiple lines (as a list)
+        @param self the object poitner
+        @param cardLines the list of lines in the include card (all the lines!)
+        @param cardName
+            INCLUDE or include (needed to strip it off without converting the case
+        """
         cardLines2 = []
         for line in cardLines:
             line = line.strip('\t\r\n ')
@@ -428,10 +511,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     def addIncludeFile(self,infileName):
         """
         This method must be called before opening an INCLUDE file.
+        Identifies the new file as being opened.
         """
         self.isOpened[infileName] = False
 
     def readBulkDataDeck(self):
+        """parses the Bulk Data Deck"""
         debug = self.debug
         #debug = False
         
@@ -533,6 +618,18 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ###
 
     def addCard(self,card,cardName,iCard=0,oldCardObj=None):
+        """
+        adds a card object to the BDF object. 
+        @param self the object pointer
+        @param card the list of the card fields -> ['GRID',1,2,]
+        @param cardName the cardName -> 'GRID'
+        @param iCard used when reading Nastran Free-Format (disabled)
+        @param oldCardObject the last card object that was returned (default=None)
+        @retval cardObject the card object representation of card
+        @note
+            this is a very useful method for interfacing with the code
+        @warning cardObject is not returned
+        """
         #if cardName != 'CQUAD4':
         #    print cardName
         #print "card = ",card
@@ -608,7 +705,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='CONROD':
                 elem = CONROD(cardObj)
                 self.addElement(elem)
-                #print str(elem).strip()
             elif cardName=='CTUBE':
                 elem = CBAR(cardObj)
                 self.addElement(elem)
@@ -617,13 +713,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 elem = CELAS1(cardObj)
                 self.addElement(elem)
             elif cardName=='CELAS2':
-                (elem) = CELAS2(cardObj)  # removed prop from outputs...
+                (elem) = CELAS2(cardObj)
                 self.addElement(elem)
                 #self.addProperty(prop)
             elif cardName=='CONM2': # not done...
                 elem = CONM2(cardObj)
                 self.addElement(elem)
-
 
             elif cardName=='RBAR':
                 (elem) = RBAR(cardObj)
@@ -832,6 +927,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addConstraint_SPC(constraint)
             elif cardName=='SPCADD':
                 constraint = SPCADD(cardObj)
+                assert not isinstance(constraint,MPCADD)
                 self.addConstraint_SPCADD(constraint)
             elif cardName=='SUPORT1':
                 constraint = SUPORT1(cardObj)
@@ -885,40 +981,4 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             print "filename = %s\n" %(self.infilename)
             raise
         ### try-except block
-
-
-### FEM_Mesh
-
-def runA():
-    import sys
-    #basepath = os.getcwd()
-    #configpath = os.path.join(basepath,'inputs')
-    #workpath   = os.path.join(basepath,'outputs')
-    #os.chdir(workpath)
-    
-
-    #bdfModel   = os.path.join(configpath,'fem.bdf.txt')
-    #bdfModel   = os.path.join(configpath,'aeroModel.bdf')
-    #bdfModel   = os.path.join('aeroModel_mod.bdf')
-    bdfModel   = os.path.join('aeroModel_2.bdf')
-    #bdfModel   = os.path.join('hard.bdf')
-    #bdfModel   = os.path.join(configpath,'aeroModel_Loads.bdf')
-    #bdfModel   = os.path.join(configpath,'test_mesh.bdf')
-    #bdfModel   = os.path.join(configpath,'test_tet10.bdf')
-    assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
-    fem = BDF(bdfModel,log=None)
-    fem.read()
-    #fem.sumForces()
-    #fem.sumMoments()
-    
-    #print "----------"
-    #deck = fem.caseControlDeck #.subcases[1]
-    #print "deck = \n",deck
-    #print str()
-    fem.write('fem.out.bdf')
-    #fem.writeAsCTRIA3('fem.out.bdf')
-
-
-if __name__=='__main__':
-    runA()
 
