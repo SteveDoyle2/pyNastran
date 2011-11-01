@@ -530,13 +530,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         
         #oldCardObj = BDF_Card()
         while len(self.activeFileNames)>0: # keep going until finished
-            (card,cardName) = self.getCard(debug=False) # gets the cardLines
+            (rawCard,card,cardName) = self.getCard(debug=False) # gets the cardLines
             #print "outcard = ",card
             #if cardName=='CQUAD4':
             #    print "card = ",card
             
             if cardName=='INCLUDE':
-                filename = self.getIncludeFileName(card,cardName)
+                #print "rawCard = ",rawCard
+                #print "card    = ",card
+                filename = self.getIncludeFileName(rawCard,cardName)
+                #print 'filename = ',os.path.relpath(filename)
                 self.addIncludeFile(filename)
                 self.openFile(filename)
                 reject = '$ INCLUDE processed:  %s\n' %(filename)
