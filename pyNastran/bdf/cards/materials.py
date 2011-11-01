@@ -7,6 +7,7 @@
 from baseCard import BaseCard
 
 class Material(BaseCard):
+    """Base Material Class"""
     def __init__(self,card):
         #self.type = card[0]
         self.mid  = card.field(1)
@@ -19,15 +20,18 @@ class Material(BaseCard):
         return self.printCard(fields)
 
 class IsotropicMaterial(Material):
+    """Isotropic Material Class"""
     def __init__(self,card):
         Material.__init__(self,card)
 
 
 class AnisotropicMaterial(Material):
+    """Anisotropic Material Class"""
     def __init__(self,card):
         Material.__init__(self,card)
 
 class ThermalMaterial(Material):
+    """Thermal Material Class"""
     def __init__(self,card):
         Material.__init__(self,card) 
 
@@ -89,6 +93,9 @@ class MAT1(Material):
     #    return self.nu
 
     def set_E_G_nu(self,card):
+        """
+        \f[ \large G = \frac{E}{2 (1+\nu)} \f]
+        """
         #self.E  = card.field(2)
         #self.G  = card.field(3)
         #self.nu = card.field(4)
@@ -380,9 +387,7 @@ class MAT10(Material):
 
     def getBulkRhoC(self,card):
         """
-        #bulk = c^2*rho
-        #c^2  = bulk/rho
-        #rho  = bulk/c^2
+        \f[ \large bulk = c^2 \rho \f]
         """
         bulk = card.field(2)
         rho  = card.field(3)
