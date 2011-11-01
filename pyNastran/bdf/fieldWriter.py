@@ -69,26 +69,39 @@ def printFloat(value,tol=1e-8):
                 field = printScientific(value)
             elif value<0.0001:
                 #print "A"
-                #print value
-                field = printScientific(value)
-                field2 = "%8.7f" %(value) # small value
-                field2 = field2.strip('0 ')
+                if 1:
+                    #print value
+                    field = printScientific(value)
+                    field2 = "%8.7f" %(value) # small value
+                    field2 = field2.strip('0 ')
 
-                #if 'e' not in field:
-                field1 = field.replace('-','e-')
+                    #if 'e' not in field:
+                    field1 = field.replace('-','e-')
 
-                #print "value=%s field1=%s field2=%s" %(value,field1,field2)
-                #print "same - ",float(field1)==float(field2)
-                if len(field2)==8 and float(field1)==float(field2):
-                    field = field2
-                    #print "*field = ",field
-                    field = field.strip(' 0')
+                    #print "value=%s field1=%s field2=%s" %(value,field1,field2)
+                    #print "same - ",float(field1)==float(field2)
+                    if len(field2)<=8 and float(field1)==float(field2):
+                        field = field2
+                        #print "*field = ",field
+                        field = field.strip(' 0')
 
-                    #print "AA"
-                    #print "field  = ",field
-                    #print "field1 = ",field1
-                    #print "field2 = ",field2
-                    #print ""
+                        #print "AA"
+                        #print "field  = ",field
+                        #print "field1 = ",field1
+                        #print "field2 = ",field2
+                        #print ""
+                    ###
+                ###
+                if 0:
+                    field = "%8.7f" %(value)
+                    #print "field = ",field
+                    field = field.strip('0')
+                    if len(field)<8:
+                        assert '.' == field[0],field
+                    else:
+                        field = printScientific(value)
+                    ###
+                    print "field = ",field
                 ###
             elif value<0.1:
                 #print "B*"
@@ -130,7 +143,7 @@ def printFloat(value,tol=1e-8):
 
                 #print "value=%s field=%s field1=%s field2=%s" %(value,field[1:],field1,field2)
                 #print "same - ",float(field1)==float(field2)
-                if len(field2)==8 and float(field1)==float(field2):
+                if len(field2)<=8 and float(field1)==float(field2):
                     field = field2
                     #print "*field = ",field
                     field = field.strip(' 0')

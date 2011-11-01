@@ -44,6 +44,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.rejectCards = []
         self.executiveControlLines = []
         self.caseControlLines = []
+        self.sol = None
+        self.solMethod = None
 
         self.cardsToRead = set([
         'PARAM','=','INCLUDE',
@@ -170,7 +172,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             self.linesPack.append([])
         ###
         else:
-            print "is already open...skipping"
+            pass
+            #print "is already open...skipping"
         ###
 
     def getFileStats(self):
@@ -181,17 +184,32 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         lineNumber = self.lineNumbers[-1]
         return lineNumber
 
-    def getNextLine(self):
+    def getNextLine(self,debug=False):
         self.lineNumbers[-1]+=1
-        return self.infilesPack[-1].readline()
+        linesPack = self.makeLinesPack(debug=False)
+        #print "len(linesPack) = ",len(linesPack)
+        #for line in linesPack:
+        #    print "$  |%r|" %(line)
 
-        infile = self.infilesPack[-1]
-        #print "infile = |%s|" %(infile),type(infile)
-        line = infile.readline()
-        print "line = |%r|" %(line)
-        return line
+        if len(linesPack)==0:
+            self.closeFile()
+            return None
+            #linesPack = self.makeLinesPack(debug=debug)
+            #return lastLine
+        #print linesPack[0]
+        return linesPack.pop(0)
 
-    def closeFile(self):
+    #def getNextLine2(self):
+    #    self.lineNumbers[-1]+=1
+    #    return self.infilesPack[-1].readline()
+
+    #    infile = self.infilesPack[-1]
+    #    #print "infile = |%s|" %(infile),type(infile)
+    #    line = infile.readline()
+    #    print "line = |%r|" %(line)
+    #    return line
+
+    def closeFile(self,debug=False):
         """
         Closes the active file object.
         If no files are open, the function is skipped.
@@ -199,17 +217,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         if len(self.infilesPack)==0:
             return
-        print "*closing"
+        if debug:
+            print "*closing"
         infile = self.infilesPack.pop()
         infile.close()
 
+        if debug:
+            print [os.path.relpath(fname) for fname in self.activeFileNames]
         lineNumbers = self.lineNumbers.pop()
         activeFileName = self.activeFileNames.pop()
         linesPack = self.linesPack.pop()
         self.isOpened[activeFileName] = False
         nlines = len(self.linesPack[-1])
         self.doneReading = False
-        print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
+        if debug:
+            print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
         #print "\n\n"
 
     def read(self,debug=False,xref=True):
@@ -219,7 +241,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if self.debug:
             self.log().info("*FEM_Mesh.read")
         self.readExecutiveControlDeck()
-        self.readCaseControlDeck()
+        self.readCaseControlDeck(self.infilename)
         self.readBulkDataDeck()
         #self.closeFile()
         self.crossReference(xref=xref)
@@ -238,29 +260,96 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.openFile(self.infilename)
         line = ''
         #self.executiveControlLines = []
-        while 'CEND' not in line:
+        while len(self.activeFileNames)>0: # keep going until finished
             lineIn = self.getNextLine()
+            if lineIn==None: # file was closed and a 2nd readCaseControl was called
+                return
+
             line = lineIn.strip()
             if self.debug:
                 (n) = self.getLineNumber()
                 print "line[%s]*= |%r|" %(n,line.upper())
             self.executiveControlLines.append(lineIn)
-        return self.executiveControlLines
+            if 'CEND' in line:
+                break
+            ###
+        ###
+        self.parseExecutiveControlDeck()
+
+    def parseExecutiveControlDeck(self):
+        for i,eline in enumerate(self.executiveControlLines):
+            #print 'eLine = |%r|' %(eline)
+            uline = eline.strip().upper()
+            if 'SOL ' in uline:
+                sline = uline.split(',') # SOL 600,method
+                solValue = sline[0]
+
+                sline2 = solValue.split(' ')
+                #print sline2
+                assert self.sol==None,'cannot overwrite solution existing=|SOL %s| new =|%s|' %(self.sol,sline2)
+                self.iSolLine = i
+
+                self.sol = int(sline2[1])
+                if self.sol==600:
+                    self.solMethod = sline[1].strip()
+                else:  self.solMethod = None
+                print "sol=%s method=%s" %(self.sol,self.solMethod)
+            ###
+        ###
+
+    def updateSolution(self,sol,method=None):
+        self.sol = int(sol)
+        if self.sol==600:
+            self.method = method
+        ###
+
     def isCaseControlDeck(self,line):
             return True
 
-    def readCaseControlDeck(self):
-        self.openFile(self.infilename)
+    def readCaseControlDeck(self,infilename):
+        #print "opening |%s|" %(infilename)
+        self.openFile(infilename)
         #self.log().info("reading Case Control Deck...")
         line = ''
         #self.caseControlControlLines = []
 
         i = 0
-        while 'BEGIN BULK' not in line:
+        while len(self.activeFileNames)>0: # keep going until finished
+        #while 'BEGIN BULK' not in line:
             lineIn = self.getNextLine()
+            #print "lineIn = ",lineIn
+            if lineIn==None: # file was closed and a 2nd readCaseControl was called
+                return
             line = lineIn.strip().split('$')[0].strip()
+
+            if 'INCLUDE' in line.upper():
+                nextLine = self.getNextLine().strip().split('$')[0].strip()
+                includeLines = [line]
+                #print "^&*1",nextLine
+                while '\\' in nextLine or '/' in nextLine: # more includes
+                    includeLines.append(nextLine)
+                    nextLine = self.getNextLine().strip().split('$')[0].strip()
+                    #print "^&*2",nextLine
+
+                    
+                #print "include lines = |%s|" %(includeLines)
+                filename = self.getIncludeFileName(includeLines,'INCLUDE')
+
+                self.addIncludeFile(filename)
+                #self.openFile(filename)
+                self.readCaseControlDeck(filename)
+                line = nextLine
+                #print "appending |%r|" %(nextLine)
+                self.caseControlLines.append(nextLine)
+            else:
+                #print "appending |%r|" %(lineIn)
+                self.caseControlLines.append(lineIn)
+            ###
+
             #print "*line = |%s|" %(line)
-            self.caseControlLines.append(lineIn)
+            if 'BEGIN BULK' in line:
+                #print "breaking"
+                break
             if i>200:
                 raise RuntimeError('there are too many lines in the Case Control Deck < 200')
             i+=1
@@ -272,6 +361,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
         #print "done w/ case control..."
+        #print '***********************'
         return self.caseControlLines
 
     def Is(self,card,cardCheck):

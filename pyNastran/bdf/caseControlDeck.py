@@ -84,6 +84,10 @@ class CaseControlDeck(object):
         keyList = [key for key in self.subcases if key != 0] # dont get the global
         return sorted(keyList)
 
+    def updateSolution(self,iSubcase,sol):
+        """sol = STATICS, FLUTTER, MODAL, etc."""
+        self.addParameterToLocalSubcase(self,iSubcase,'ANALYSIS %s')
+
     def addParameterToGlobalSubcase(self,param):
         """
         takes in a single-lined string
@@ -208,6 +212,7 @@ class CaseControlDeck(object):
         paramType = None
 
         line = lines[i]
+        #print line
         #print "*****lines = ",lines
         if line.startswith('SUBCASE'):
             #print "line = |%r|" %(line)
@@ -270,7 +275,11 @@ class CaseControlDeck(object):
             ###
         ### = in line
         elif ',' in line: # param
-            (key,value,options) = line.split(',')
+            try:
+                (key,value,options) = line.split(',')
+            except ValueError:
+                print "trying to parse |%s| bug cant..." %(line)
+            ###
             paramType = 'CSV-type'
         elif ' ' in line: # begin bulk
             (key,value) = line.split(' ')

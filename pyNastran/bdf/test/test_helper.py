@@ -44,6 +44,7 @@ def runBDF(folder,bdfFilename,debug=False):
         raise
     ###
     print "-"*80
+    return (fem1,fem2)
 
 def divide(value1,value2):
     if value1==value2:  # good for 0/0

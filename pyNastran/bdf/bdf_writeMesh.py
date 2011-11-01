@@ -125,6 +125,13 @@ class writeMesh(object):
 
     def writeExecutiveControlDeck(self):
         msg = '$EXECUTIVE CONTROL DECK\n'
+        
+        if self.sol==600:
+            newSol = 'SOL 600,%s\n' %(self.solMethod)
+        else:
+            newSol = 'SOL %s\n' %(self.sol)
+        self.executiveControlLines[self.iSolLine] = newSol
+
         for line in self.executiveControlLines:
             msg += line
         return msg

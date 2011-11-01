@@ -7,12 +7,15 @@ class cardMethods(object):
 
     def makeLinesPack(self,debug=False):
         emptyLines=0
+        if not self.linesPack:
+            return ['']
+
         while len(self.linesPack[-1])<40:
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0]
             if('$' not in line and len(line)>0):
                 if debug:
-                    print "line = |%s|" %(line)
+                    print "line = |%r|" %(line)
                 self.linesPack[-1].append(line)
             else:
                 emptyLines += 1
