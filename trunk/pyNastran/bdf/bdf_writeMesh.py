@@ -303,8 +303,8 @@ class writeMesh(object):
         for key,phbdy in sorted(self.phbdys.items()):
             msg += str(phbdy)
 
-        for key,prop in sorted(self.thermalProperties.items()):
-            msg += str(prop)
+        #for key,prop in sorted(self.thermalProperties.items()):
+        #    msg += str(prop)
         for key,prop in sorted(self.convectionProperties.items()):
             msg += str(prop)
 

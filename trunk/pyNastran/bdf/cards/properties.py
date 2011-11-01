@@ -7,6 +7,12 @@ from numpy import zeros
 # my code
 from baseCard import Property
 
+class SpringProperty(Property):
+    type = 'SpringProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
+
 class LineProperty(Property):
     type = 'LineProperty'
     def __init__(self,card):
@@ -54,6 +60,29 @@ class ShellProperty(Property):
 
     def ABDH(self):
         """
+        tranforms load to strain/bending curvature taken at \f$ z=0 \f$
+        \f[ \large  [T] \left[ 
+          \begin{array}{c}
+              Nx  \\
+              Ny  \\
+              Nz  \\
+              Mx  \\
+              My  \\
+              Mz  \\
+          \end{array} \right] = 
+
+          [ABBD] \left[ 
+          \begin{array}{c}
+              \epsilon_{xx}  \\
+              \epsilon_{yy}  \\
+                \gamma_{xy}  \\
+                \kappa_{xx}  \\
+                \kappa_{yy}  \\
+                \kappa_{xy}  \\
+          \end{array} \right]
+        \f] 
+
+
         [Nx] = [            ] [ e_xx0    ]
         [Ny] = [  [A]   [B] ] [ e_yy0    ]
         [Nz] = [            ] [ gamma_xy0]
@@ -61,10 +90,10 @@ class ShellProperty(Property):
         [My] = [  [B]   [D] ] [ k_yy0    ]
         [Mz] = [            ] [ k_xy0    ]
         
-        \f$[ A_{ij} = \Sigma_{k=1}^N (\over(Q_{ij}))_k (z_k  -z_{k-1}  ) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                     \f$]
-        \f$[ B_{ij} = \Sigma_{k=1}^N (\over(Q_{ij}))_k (z_k^2-z_{k-1}^2) = \Sigma_{k=1}^N (Q_{ij})_k (\over(z) t_k)                          \f$]
-        \f$[ D_{ij} = \Sigma_{k=1}^N (\over(Q_{ij}))_k (z_k^3-z_{k-1}^3) = \Sigma_{k=1}^N (Q_{ij})_k             (\over(z)^2 t_k + t_k^3/12) \f$]
-        \f$[ H_{ij} =                                                      \Sigma_{k=1}^N (Q_{ij})_k (t_k -4/t^2 (\over(z)^2 t_k + t_k^3/12) \f$]
+        \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k  -z_{k-1}  ) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                     \f]
+        \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^2-z_{k-1}^2) = \Sigma_{k=1}^N (Q_{ij})_k (\overline{z} t_k)                      \f]
+        \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^3-z_{k-1}^3) = \Sigma_{k=1}^N (Q_{ij})_k         (\overline{z}^2 t_k + t_k^3/12) \f]
+        \f[ \large  H_{ij} =                                                      \Sigma_{k=1}^N (Q_{ij})_k (t_k -4/t^2 (\overline{z}^2 t_k + t_k^3/12) \f]
         
         p. 138 of "Introduction to Composite Material Design"
         """
@@ -93,8 +122,9 @@ class ShellProperty(Property):
             
     def Qall(self,thetad):
         """
-        \f$[ [Q]all = [T]^-1 [Q] [R][T][R]^-1  \f$]
-        \f$[ [Q]all = [T]^-1 [Q] [T]^-T        \f$]
+        Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
+        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
+        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
         
         p. 123 of "Introduction to Composite Material Design"
         """
@@ -125,7 +155,7 @@ class ShellProperty(Property):
 
     def Q(self):
         """"
-        Calculates the stiffness matrix for a lamina
+        Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
         @todo is this done?
         p. 114 "Introduction to Composite Material Design"
         """
@@ -141,32 +171,41 @@ class ShellProperty(Property):
         
     def T(self,theta):
         """
-        the Transformation matrix \$ [T] \$
-        @param self the object pointer
-        #@param m              sin(\theta)
-        #@param n              cos(\theta)
+        calculates the Transformation matricies \$ [T] \$ and  \f$ [T]^{-1} \f$
+        @param self           the object pointer
         @param theta          in radians...
         @retval Tinv          the inverse transformation matrix
         @retval TinvTranspose the transposed inverse transformation matrix
         @todo document better
 
-        \f[  \left[ 
+        tranformation matrix  \f$ [T] \f$
+        \f[ \large  [T] \left[ 
           \begin{array}{ccc}
-              a & b & c \\
-              d & e & f \\
-              g & h & i 
-          \end{array} \right)
+              m^2 & n^2 &  2mn    \\
+              n^2 & m^2 & -2mn    \\
+              -mn & mn  & m^2-n^2 
+          \end{array} \right]
         \f] 
 
                  [ m^2  n^2        2mn]
         [T]    = [ n^2  m^2       -2mn]   # transformation matrix
                  [ -mn   mn    m^2-n^2]
 
+
+        inverse transformation matrix \f$ [T]^{-1} \f$
+        \f[ \large  [T]^{-1} \left[ 
+          \begin{array}{ccc}
+              m^2 & n^2 & -2mn    \\
+              n^2 & m^2 &  2mn    \\
+              mn  & -mn & m^2-n^2 
+          \end{array} \right]
+        \f] 
+
                  [ m^2  n^2       -2mn]
         [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
                  [ mn   -mn    m^2-n^2]
         
-        \f$[ {\sigma_{xx} \sigma_{yy} \sigma_{xy}} = [T]^-1 [Q] [R][T]{\epsilon_{xx} \epsilon_{yy} 0.5 \gamma_{xy} } \f$]
+        \f[ \large  \left[ \sigma_{xx}, \sigma_{yy}, \sigma_{xy} \right]^T = [T]^{-1} [Q] [R][T] \left[ \epsilon_{xx}, \epsilon_{yy}, \frac{1}{2} \gamma_{xy} \right]^T \f]
         
         p.119 "Introduction to Composite Material Design"
         """
@@ -490,7 +529,7 @@ class PCOMP(ShellProperty):
         self.TRef = card.field(6,0.0)
         self.ge   = card.field(7,0.0)
         
-        ## symmetric flag - default = No Symmetry
+        ## symmetric flag - default = No Symmetry (NO)
         self.lam  = card.field(8)
         #print "lam = ",self.lam
         
@@ -514,7 +553,8 @@ class PCOMP(ShellProperty):
                 plies.append(ply)
             #iPly +=1
         #print "nplies = ",nplies
-
+        
+        ## list of plies
         self.plies = plies
         
         #self.plies = []
@@ -557,8 +597,15 @@ class PCOMP(ShellProperty):
         Mid = self.plies[iPly][0]
         return Mid
 
+    #def nsm(self,iPly):
+    #    material = self.material(iPly)
+    #    return material.nsm
+
+    def nsm(self):
+        return self.nsm
+
     def mid(self,iPly):
-        Mid = self.plies[iPly][0]
+        Mid = self.material(iPly)
         if isinstance(Mid,int):
             return Mid
         return Mid.mid
@@ -595,7 +642,7 @@ class PCOMP(ShellProperty):
         else:
             rho = self.rho(iPly)
             t = self.plies[iPly][1]
-            return rho*t
+            return rho*t+self.nsm
         ###
 
     def rho(self,iPly):
@@ -631,10 +678,10 @@ class PCOMP(ShellProperty):
             fields += [mid,t,theta,sout]
         return self.printCard(fields)
 
-class PELAS(LineProperty):
+class PELAS(SpringProperty):
     type = 'PELAS'
     def __init__(self,card,nPELAS=0):
-        LineProperty.__init__(self,card)
+        SpringProperty.__init__(self,card)
         self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
         self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
         self.ge  = card.field(3+5*nPELAS)
@@ -702,6 +749,7 @@ class PSHELL(ShellProperty):
         
         ## Material identification number for bending
         self.mid2 = card.field(4)
+        ## \f$ \frac{12I}{t^3} \f
         self.twelveIt3 = card.field(5,1.0)  # poor name
         self.mid3  = card.field(6)
         self.tst   = card.field(7,0.833333)
@@ -711,9 +759,13 @@ class PSHELL(ShellProperty):
         self.mid4  = card.field(11)
 
     def rho(self):
-        return self.mid.rho + self.t
+        return self.mid.rho
 
     def massPerArea(self):
+        """
+        calculates mass per area
+        \f[ \large  \frac{mass}{A} = nsm + \rho t \f]
+        """
         mPerA = self.nsm + self.mid.rho*self.t
         return mPerA
 

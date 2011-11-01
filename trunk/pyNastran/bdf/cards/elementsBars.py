@@ -77,8 +77,9 @@ class LineElement(Element):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param n1,n2 a Node object (default=None)
         @param self the object pointer
+        @param n1 a Node object (default=None)
+        @param n2 a Node object (default=None)
         @note
             if n1 AND n2 are both none (the default), then the model must
             be cross-referenced already
@@ -91,11 +92,7 @@ class LineElement(Element):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
-        @param n1,n2 a Node object (default=None)
         @param self the object pointer
-        @note
-            if n1 AND n2 are both none (the default), then the model must
-            be cross-referenced already
         """
         #print self.type
         return self.length_noXref(self.nids[1],self.nids[0])
@@ -104,7 +101,7 @@ class LineElement(Element):
         """
         Returns the axial stiffness matrix.
 
-        \f[  k_{Axial} = \frac{AE}{2L} 
+        \f[ \large   k_{Axial} = \frac{AE}{2L} 
           \left[
           \begin{array}{cc}
               1 & -1 \\
@@ -124,7 +121,7 @@ class LineElement(Element):
         """
         Returns the torsional stiffness matrix.
 
-        \f[  k_{Axial} = \frac{L}{GJ} 
+        \f[ \large   k_{Axial} = \frac{AE}{2L} 
           \left[
           \begin{array}{cc}
               1 & -1 \\
@@ -134,8 +131,10 @@ class LineElement(Element):
         @warning formula not verified
         """
         L = self.length()
-        G = self.G()
-        J = self.J()
+        #G = self.G()
+        #J = self.J()
+        #kmag = L/GJ ???
+        A = self.area()
         kMag = A*E/(2*L)
         M = Matrix(ones(1,1))
         M[0,1] = M[1,0] = -1
@@ -145,7 +144,7 @@ class LineElement(Element):
         """
         Returns the bending stiffness matrix.
 
-        \f[ k_{Bending} = \frac{EI}{L^3} 
+        \f[ \large  k_{Bending} = \frac{EI}{L^3} 
           \left[ 
           \begin{array}{cccc}
              12 &  6L   & -12 &  6L    \\
@@ -170,12 +169,12 @@ class LineElement(Element):
                 [sL,  fLL, -sL, tLL],
                 [-12, -sL, 12., -sL],
                 [sL,  tLL, -sL, fLL]])
-        M[1,0] = sL
-        M[2,0] = -12.
-        M[3,0] = sL
+        #M[1,0] = sL
+        #M[2,0] = -12.
+        #M[3,0] = sL
 
-        M[2,4] =  -sL
-        M[1,1] = M[3,3] = fLL
+        #M[2,4] =  -sL
+        #M[1,1] = M[3,3] = fLL
         
         return M
 
@@ -309,13 +308,6 @@ class CBAR(LineElement):
     def nsm(self):
         return self.pid.nsm
 
-    #def rho(self):
-    #    """returns the material density  \f$ \rho \f$"""
-    #    #print str(self.pid),type(self.pid)
-    #    print str(self.pid.mid)
-    #    
-    #    #return .rho
-
     def initX_G0(self,card):
         field5 = card.field(5)
         if isinstance(field5,int):
@@ -346,7 +338,7 @@ class CBAR(LineElement):
         ###
         self.ga = mesh.Node(self.ga)
         self.gb = mesh.Node(self.gb)
-        self.pid  = mesh.Property(self.pid)
+        self.pid = mesh.Property(self.pid)
 
     #def updateNodes(self,nodes):
     #    """@todo maybe improve"""

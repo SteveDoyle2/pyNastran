@@ -460,7 +460,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     def getCardName(self,cardLines):
         """
         Given a list of card lines, determines the cardName.
-        @param self the object pointer
+        @param self      the object pointer
+        @param cardLines the list of lines that define the card
         @retval cardName the name of the card
         @note
             Parses the first 8 characters of a card, splits bassed on a comma,
@@ -624,7 +625,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         @param card the list of the card fields -> ['GRID',1,2,]
         @param cardName the cardName -> 'GRID'
         @param iCard used when reading Nastran Free-Format (disabled)
-        @param oldCardObject the last card object that was returned (default=None)
+        @param oldCardObj the last card object that was returned (type=BDF_Card or None; default=None)
         @retval cardObject the card object representation of card
         @note
             this is a very useful method for interfacing with the code

@@ -11,6 +11,9 @@ class ShellElement(Element):
         raise Exception('area undefined for %s' %(self.type))
 
     def mass(self):
+        """
+        \f[ \large  mass = \frac{mass}{area} area  \f]
+        """
         return self.pid.massPerArea()*self.area()
 
     def crossReference(self,mesh):
@@ -53,10 +56,17 @@ class CTRIA3(ShellElement):
         return self.printCard(fields)
 
     def areaCentroidNormal(self):
+        """
+        returns area,centroid, normal as it's more efficient to do them together
+        """
         (n0,n1,n2) = self.nodePositions()
         return Triangle_AreaCentroidNormal(nodes)
 
     def area(self):
+        """
+        returns the normal vector
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        """
         (n0,n1,n2) = self.nodePositions()
         a = n0-n1
         b = n0-n2
@@ -64,12 +74,21 @@ class CTRIA3(ShellElement):
         return area
 
     def normal(self):
+        """
+        returns the normal vector
+        \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large n = \frac{n}{norm(N)}           \f]
+        """
         (n0,n1,n2) = self.nodePositions()
         a = n0-n1
         b = n0-n2
         return Normal(a,b)
 
     def centroid(self,debug=False):
+        """
+        returns the centroid
+        \f[ \large CG = \frac{1}{3} (n_0+n_1+n_2)  \f]
+        """
         (n0,n1,n2) = self.nodePositions()
         centroid = self.CentroidTriangle(n0,n1,n2,debug)
         return centroid
@@ -300,7 +319,7 @@ class CQUAD4(ShellElement):
 
     def area(self):
         """
-        Area = 1/2*|a cross b|
+        area = \frac{1}{2} \left| (n_1-n_3) \cross (n_2-n_4) \right|
         where a and b are the quad's cross node point vectors
         """
         (n1,n2,n3,n4) = self.nodePositions()
