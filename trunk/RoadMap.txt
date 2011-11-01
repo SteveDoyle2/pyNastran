@@ -126,7 +126,7 @@ CAERO1 (done)
 SPLINE1 (done)
 
 ----Other----:
-INCLUDE (partial - bulk data deck only)
+INCLUDE (partial - case control deck & bulk data deck ONLY)
 PARAM (done)
 
 

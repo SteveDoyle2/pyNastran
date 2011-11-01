@@ -75,14 +75,14 @@ class constraintObject(object):
         ###
     ###
 
-    def popConstraint(self,cid):  # need to not throw away constraints...
-        if cid in self.addConstraints:
-            return self.addConstraints[cid]
-        elif cid in self.constraints:
-            return self.constraints[cid]
-        else:
-            return cid
-        ###
+    #def popConstraint(self,cid):  # need to not throw away constraints...
+    #    if cid in self.addConstraints:
+    #        return self.addConstraints[cid]
+    #    elif cid in self.constraints:
+    #        return self.constraints[cid]
+    #    else:
+    #        return cid
+    #    ###
 
     def getConstraint(self,cid):
         if cid in self.addConstraints:
@@ -146,8 +146,8 @@ class SUPORT1(Constraint):
             #print "i = ",i
             self.IDs.append(fields[i  ])
             self.Cs.append( fields[i+1])
-            if fields[i+1]==None:
-                break
+            #if fields[i+1]==None:
+            #    break
             ###
         ###
 

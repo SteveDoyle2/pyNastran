@@ -12,7 +12,7 @@ class cardMethods(object):
 
         while len(self.linesPack[-1])<40:
             line = self.infilesPack[-1].readline()
-            line = line.split('$')[0]
+            line = line.split('$')[0].rstrip('\n\r\t ')
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)
@@ -137,26 +137,8 @@ class cardMethods(object):
             #print ""
         #sys.exit('asdf')
         return (i,tempcard)
-
-    def nastranSplit(self,line,isLargeField):
-        raise
-        fields = []
-        nChars = len(line)
-        iStart = 0
-        iEnd = 8
-        lenField = 8
-        nFields = int(ceil(len(line)/8.))
-        #print "nFields = ",nFields
-        for iField in range(nFields):
-            field = line[iStart:iEnd]
-            fields.append(field)
-            iStart += lenField
-            iEnd   += lenField
-        ###
-        #print "fields2 = ",fields
-        return fields
     
-    def nastranSplit2(self,line,isLargeField,debug=False):
+    def nastranSplit(self,line,isLargeField,debug=False):
         if debug:
             print "isLargeField = %s" %(isLargeField)
         if isLargeField:
@@ -210,7 +192,7 @@ class cardMethods(object):
             #print "i = ",i
             if debug:
                 self.log().debug("  line  = |%r|" %(line))
-            sline = line.rstrip('\r\n')[0:73]
+            sline = line[0:73]
             if not(sline):
                 break
             if debug:
@@ -219,7 +201,7 @@ class cardMethods(object):
             if ',' in sline:  #CSV
                 sline = sline.split(',')
             else: # standard
-                sline = self.nastranSplit2(sline,isLargeField,debug=debug)
+                sline = self.nastranSplit(sline,isLargeField,debug=debug)
             #name = sline[0]
             #nFields = len(sline)
             #print "sline = ",sline
@@ -275,7 +257,7 @@ class cardMethods(object):
         """converts a value from nastran format into python format."""
         if debug:
             print "v1 = |%s|" %(valueRaw)
-        valueIn = valueRaw.strip(' \n\r').rstrip('*').upper()
+        valueIn = valueRaw.lstrip().rstrip(' *').upper()
         
         if debug:
             pass
