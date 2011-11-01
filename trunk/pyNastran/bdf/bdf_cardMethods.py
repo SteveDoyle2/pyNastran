@@ -69,7 +69,7 @@ class cardMethods(object):
             self.log().debug("tempcard  = |%s|" %(tempcard))
             self.log().debug("-------\n")
         self._increaseCardCount(cardName)
-        return (upperCard,cardName)
+        return (tempcard,upperCard,cardName)
 
     def _increaseCardCount(self,cardName):
         """
