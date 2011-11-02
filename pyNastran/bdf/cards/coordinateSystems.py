@@ -63,7 +63,9 @@ class Cord2x(Coord):
         This should handle any number of coordinate systems or coordinate
         system types assuming there is no circular references.
         """
-        if self.isResolved or self.rid.isResolved:  # rid=0
+        #print str(self)
+        #pritn self.rid
+        if self.cid==0 or isinstance(self.rid,int) or self.rid.isResolved:  # rid=0
             return
         elif self.rid.isResolved==False: # rid
             assert self.rid.isCrossReferenced==False,'there is a circular reference between Coord %s and Coord %s' %(self.cid,self.Rid())
@@ -123,7 +125,7 @@ class CORD3G(Coord):
         self.methodES  = method[0]
         self.methodInt = int(method[1:])
         assert self.ESmethod in ['E','S']
-        assert 0 < self methodInt < 1000
+        assert 0 < self.methodInt < 1000
         
         self.form   = card.field(3,'EQN')
         self.theta1 = card.field(4)
@@ -174,7 +176,7 @@ class CORD3G(Coord):
         fields = ['CORD1R',self.g1,self.g2,self.g3]
         self.printCard(fields)
 
-class CORD1R(Coord):
+class CORD1R(Cord1x):
     type = 'CORD1R'
     """
     CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
@@ -240,12 +242,13 @@ class CORD1R(Coord):
     def resolveCid():
         self.setup()
 
-class CORD2R(Coord):  # working for simple cases...
+class CORD2R(Cord2x):  # working for simple cases...
     type = 'CORD2R'
     def __init__(self,card=['CORD2R',0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
         if isinstance(card,list):
             card = BDF_Card(card)
         Cord2x.__init__(self,card)
+        #self.isResolved = False
 
         ## reference coordinate system ID
         self.rid = card.field(2,0)
@@ -312,18 +315,25 @@ class CORD2R(Coord):  # working for simple cases...
         ex = self.ex0
         ey = self.ey0
         ez = self.ez0
-        gx = array([1.,0.,0.])
-        gy = array([0.,1.,0.])
-        gz = array([0.,0.,1.])
-        
+        if isinstance(self.rid,int):
+            gx = array([1.,0.,0.])
+            gy = array([0.,1.,0.])
+            gz = array([0.,0.,1.])
+        else:
+            gx = self.rid.ex0
+            gy = self.rid.ey0
+            gz = self.rid.ez0
+        ###
         matrix = array([[dot(gx,ex),dot(gx,ey),dot(gx,ez)],
                         [dot(gy,ex),dot(gy,ey),dot(gy,ez)],
                         [dot(gz,ex),dot(gz,ey),dot(gz,ez)]])
         print "p = ",p
-        print "matrix = ",matrix
+        print "matrix = \n",matrix
         p2 = dot(p,matrix)
         p3 = p2+self.eo
+        print "eo = ",self.eo
         print "p2 = ",p2
+        print '------------------------'
         print "p3 = ",p3
         
         #print str(self)

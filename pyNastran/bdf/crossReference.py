@@ -23,10 +23,10 @@ class XrefMesh(object):
 
     def crossReference_Coordinates(self):
         for cid,c in self.coords.items():
-            c.crossReference(self,model)
+            c.crossReference(self)
         ###
         for cid,c in self.coords.items():
-            c.resolveCidToGlobal(self)
+            c.resolveCid()
         ###
 
     def crossReference_Aero(self):
