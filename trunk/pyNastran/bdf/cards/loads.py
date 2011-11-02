@@ -5,6 +5,7 @@ from numpy.linalg import norm
 from baseCard import BaseCard
 
 class Load(BaseCard):
+    """defines the DefaultLoad class"""
     type = 'DefLoad'
     def __init__(self,card):
         #self.type = card[0]
@@ -13,6 +14,13 @@ class Load(BaseCard):
     #def normalize(self,v):
     #    #print "v = ",v
     #    return v/norm(v)
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        else:
+            return self.cid.cid
+        ###
 
     def __repr__(self):
         fields = [self.type,self.lid]
@@ -31,7 +39,7 @@ class LOAD(Load):
         self.lid = card.field(1)
         #self.id  = self.lid
 
-        # overall scale factor
+        ## overall scale factor
         self.s  = card.field(2)
         
         nFields = len(fields)-2
@@ -75,6 +83,8 @@ class OneDeeLoad(Load): # FORCE/MOMENT
             self.mag *= normXYZ
             self.xyz = self.xyz/normXYZ
 
+#class FORCE1(OneDeeLoad):
+#class FORCE2(OneDeeLoad):
 class FORCE(OneDeeLoad):
     type = 'FORCE'
     def __init__(self,card):
@@ -90,12 +100,18 @@ class FORCE(OneDeeLoad):
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
 
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        pass
+
     def __repr__(self):
         cid = self.setBlankIfDefault(self.cid,0)
         fields = ['FORCE',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
 
-class MOMENT(OneDeeLoad):  # can i copy the force init without making the MOMENT a FORCE ???
+#class MOMENT1(OneDeeLoad):
+#class MOMENT2(OneDeeLoad):
+class MOMENT(OneDeeLoad):    # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
     def __init__(self,card):
         """
@@ -114,6 +130,10 @@ class MOMENT(OneDeeLoad):  # can i copy the force init without making the MOMENT
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
 
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        pass
+
     def __repr__(self):
         cid = self.setBlankIfDefault(self.cid,0)
         fields = ['MOMENT',self.lid,self.node,cid,self.mag] + list(self.xyz)
@@ -127,8 +147,12 @@ class PLOAD(Load):
         self.nodes = card.fields(3,8)
         assert len(self.nodes)==4
     
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        pass
+
     def __repr__(self):
-        fields = ['PLOAD',self.lid,self.p]+self.nodes
+        fields = ['PLOAD',self.lid,self.p]+self.nodeIDs()
         return self.printCard(fields)
 
 class PLOAD1(Load):
@@ -148,6 +172,10 @@ class PLOAD1(Load):
         self.x2 = card.field(7)
         self.p2 = card.field(8)
     
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        pass
+
     def __repr__(self):
         fields = ['PLOAD1',self.lid,self.eid,self.Type,self.scale,self.x1,self.p1,self.x2,self.p2]
         return self.printCard(fields)
@@ -163,8 +191,12 @@ class PLOAD2(Load):  # todo:  support THRU
         if card.field(4)=='THRU':
             print "found a THRU on PLOAD2"
     
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        pass
+
     def __repr__(self):
-        fields = ['PLOAD2',self.lid,self.p]+self.nodes
+        fields = ['PLOAD2',self.lid,self.p]+self.nodeIDs()
         return self.printCard(fields)
 
 class PLOAD4(Load):
@@ -187,21 +219,38 @@ class PLOAD4(Load):
             self.g3 = card.field(7)
             self.g4 = card.field(8)
         ###
+        
+        ## Coordinate system identification number. See Remark 2. (Integer >= 0;Default=0)
         self.cid     = card.field(9,0)
         self.NVector = card.fields(10,13,[0.,0.,0.])
         self.sorl    = card.field(13,'SURF')
     
+    def crossReference(self,model):
+        self.cid = model.Coord(self.cid)
+        if self.g1: self.g1 = model.Node(self.g1)
+        if self.g3: self.g3 = model.Node(self.g3)
+        if self.g4: self.g4 = model.Node(self.g4)
+        if self.eids:
+            self.eids = model.Elements(self.eids)
+
     def __repr__(self):
         cid  = self.setBlankIfDefault(self.cid,0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
-        fields = ['PLOAD4',self.lid,self.p]+self.nodes
+        p2 = self.setBlankIfDefault(self.p[1],self.p[0])
+        p3 = self.setBlankIfDefault(self.p[2],self.p[0])
+        p4 = self.setBlankIfDefault(self.p[3],self.p[0])
+        fields = ['PLOAD4',self.lid,self.p[0],p2,p3,p4]
+
         if self.g3:
-            fields.append(self.g3)
-            fields.append(self.g4)
+            (g3,g4) = self.getNodeIDs([self.g3,self.g4])
+            fields.append(g3)
+            fields.append(g4)
         else:
             fields.append('THRU')
-            fields.append(self.eids[-1])
+            eid = self.eids[-1]
+            fields.append(self.getElementIDs([eid]) )
         fields.append(cid)
-        fields += NVector
+        fields += list(self.NVector)
         fields.append(sorl)
+        #print "fields = ",fields
         return self.printCard(fields)

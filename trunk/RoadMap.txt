@@ -3,6 +3,7 @@ In order for a card to be supported, it must read AND write ALL fields.  Importa
 Cards Supported Reading/Writing (version 0.1 beta)
 
 ----Nodes----:
+RINGAX (done)
 GRID   (done)
 GRDSET (done)
 SPOINT (needs integration)
@@ -76,8 +77,8 @@ FORCE2
 
 PLOAD  (done)
 PLOAD1 (done)
-PLOAD2
-PLOAD4
+PLOAD2 (done)
+PLOAD4 (done)
 
 MOMENT (done)
 MOMENT1
@@ -134,7 +135,6 @@ PARAM (done)
 Potential (v0.2) - these will be added in groupings...maybe (not necessarily in order):
 If you want a certain group...ask!
 **************
-RINGAX
 AXIC
 PCONEAX
 PCONEAX
@@ -247,7 +247,6 @@ TABLEM3
 
 
 ----Nodes----:
-RINGAX
 MONPNT1
 MONPNT2
 MONPNT3

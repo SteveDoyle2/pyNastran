@@ -8,14 +8,29 @@ class XrefMesh(object):
             #for key,e in self.elements.items():
             #    print(e)
 
-            self.spcObject.crossReference(self)
-            #self.caseControlDeck.crossReference(self)
             self.crossReference_Nodes()
+            self.crossReference_Coordinates()
+
             self.crossReference_Elements()
             self.crossReference_Properties()
             self.crossReference_Materials()
+
+            self.crossReference_Aero()
             #self.crossReference_Loads()
+            self.spcObject.crossReference(self)
+            #self.caseControlDeck.crossReference(self)
         ###
+
+    def crossReference_Coordinates(self):
+        for cid,c in self.coords.items():
+            c.crossReference(self,model)
+        ###
+        for cid,c in self.coords.items():
+            c.resolveCidToGlobal(self)
+        ###
+
+    def crossReference_Aero(self):
+        pass
 
     def crossReference_Nodes(self):
         gridSet = self.gridSet
