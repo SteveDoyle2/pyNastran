@@ -5,7 +5,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF
 
 class Tester(unittest.TestCase):
-    def atest_same(self):  # passes
+    def test_same(self):  # passes
         grids  = [
                      [0,  0.,  0.,  1.],
                      [0,  0.,  1.,  0.],
@@ -17,7 +17,7 @@ class Tester(unittest.TestCase):
         coords = []
         self.getNodes(grids,gridsExpected,coords)
 
-    def atest_shift(self):  # passes
+    def test_shift(self):  # passes
         grids  = [
                      [1,  0.,  0.,  1.],
                      [1,  0.,  1.,  0.],
@@ -39,7 +39,7 @@ class Tester(unittest.TestCase):
         self.getNodes(grids,gridsExpected,coords)
 
 
-    def Atest_rotate(self):  # passes
+    def test_rotate(self):  # passes
         grids  = [
                      [1,  0.,  0.,  1.],
                      [1,  0.,  1.,  0.],
@@ -62,7 +62,7 @@ class Tester(unittest.TestCase):
         self.getNodes(grids,gridsExpected,coords)
 
 
-    def Atest_rotate2(self):   # passes
+    def test_rotate2(self):   # passes
         grids  = [
                      [1,  0.,  0.,  1.],
                      [1,  0.,  1.,  0.],
@@ -107,25 +107,17 @@ class Tester(unittest.TestCase):
 
 
     def test_rid_1(self):
-        print 'test_rid_1'
+        print 'test_rid_2'
         grids  = [
-                     [1,  0.,  0.,  1.],
-                     [1,  0.,  1.,  0.],
-                     [1,  1.,  0.,  0.],
-                     [1,  1.,  1.,  1.],
-                     [1,  1.,  1.,  0.],
+                     [2,    10., 5.,  3.],
                  ]
         gridsExpected  = [
-                     [2,  1., -1., -2.],
-                     [2,  1., -2., -1.],
-                     [2,  2., -1., -1.],
-                     [2,  2., -2., -2.],
-                     [2,  2., -2., -1.],
+                     ['x',  11., 6.,  4.],
                  ]
 
         coords = [   #rid origin,     zaxis        xaxis
-                   [  0,  [1.,1.,1.], [1.,1.,2.],  [2.,1., 1.]   ],  # cid=2
-                   [  1,  [0.,0.,0.], [0.,0.,-1.], [1.,0.,0.]  ],  # cid=1
+                   [  0,  [0.,0.,0.], [0.,0.,-1.], [1.,0.,0.]  ],  # cid=1
+                   [  1,  [1.,1.,1.], [1.,1.,2.],  [2.,1., 1.]   ],  # cid=2
                  ]
         self.getNodes(grids,gridsExpected,coords)
 

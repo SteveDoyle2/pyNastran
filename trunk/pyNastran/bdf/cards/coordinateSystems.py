@@ -324,20 +324,28 @@ class CORD2R(Cord2x):  # working for simple cases...
             gy = self.rid.ey0
             gz = self.rid.ez0
         ###
+        
+        print "gx = ",gx
+        print "gy = ",gy
+        print "gz = ",gz
         matrix = array([[dot(gx,ex),dot(gx,ey),dot(gx,ez)],
                         [dot(gy,ex),dot(gy,ey),dot(gy,ez)],
                         [dot(gz,ex),dot(gz,ey),dot(gz,ez)]])
         print "p = ",p
         print "matrix = \n",matrix
-        p2 = dot(p,matrix)
-        p3 = p2+self.eo
+        p2 = dot(p+self.eo,matrix)
+        p3 = p2#+self.eo
         print "eo = ",self.eo
         print "p2 = ",p2
         print '------------------------'
         print "p3 = ",p3
         
         #print str(self)
-        return p3
+        if isinstance(self.rid,int):
+            return p2
+        else:
+            return self.rid.transformToGlobal(p3)
+        ###
 
     def __repr__(self):
         #eo = self.eo
