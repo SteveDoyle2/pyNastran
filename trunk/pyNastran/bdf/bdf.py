@@ -24,7 +24,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     #def setCardsToInclude():
     #    pass
 
-    def __init__(self,infilename,includeDir=None,log=None,debug=True):
+    def __init__(self,debug=True):
         ## allows the BDF variables to be scoped properly (i think...)
         getMethods.__init__(self)
         addMethods.__init__(self)
@@ -34,7 +34,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         ## useful in debugging errors in input
         self.debug = debug
-        self._setInfile(infilename,includeDir,log)
+        self.infilename = None
+        self.autoReject = False
 
         #self.n = 0
         #self.nCards = 0
@@ -280,10 +281,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
         #print "\n\n"
 
-    def read(self,debug=False,xref=True):
+    def read(self,infilename,includeDir=None,debug=False,xref=True,log=None):
         """
         main read method for the bdf
         """
+        
+        self._setInfile(infilename,includeDir,log)
+
         self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
         self.debug = debug
@@ -632,6 +636,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         @retval cardObject the card object representation of card
         @note
             this is a very useful method for interfacing with the code
+        @note
+            the cardObject is not a card-type object...so not a GRID card
+            or CQUAD4 object.  It's a BDF_Card Object.  However, you know the type (assuming a GRID),
+            so just call the mesh.Node(nid) to get the Node object that was just created.
         @warning cardObject is not returned
         """
         #if cardName != 'CQUAD4':
@@ -1026,3 +1034,5 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             raise
         ### try-except block
 
+        return cardObj
+    
