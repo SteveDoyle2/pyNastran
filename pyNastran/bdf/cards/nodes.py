@@ -6,6 +6,10 @@ from numpy import array
 # my code
 from baseCard import BaseCard
 
+class Ring(BaseCard): # base class
+    def __init__(self,card):
+        pass
+
 class Node(BaseCard): # base class
     def __init__(self,card):
         pass
@@ -29,6 +33,31 @@ class Node(BaseCard): # base class
     def __repr__(self):
         raise Exception('%s hasnt implemented a __repr__ method' %(self.type))
 
+class RINGAX(Ring):
+    """
+    Defines a ring for conical shell problems
+    RINGAX ID R    Z    PS
+    RINGAX 3  2.0 -10.0 162
+    """
+    type = 'RINGAX'
+    def __init__(self,card):
+        Node.__init__(self,card)
+        self.nid = card.field(1)
+        #2
+        self.R   = card.field(3)
+        self.z   = card.field(4)
+        #5
+        #6
+        self.ps  = card.field(7)
+
+    def Position(self):
+        return array(0.,0.,0.)
+
+    def __repr__(self):
+        fields = ['RINGAX',self.nid,None,self.R,self.z,None,None,self.ps]
+        return self.printCard(fields)
+        
+    
 class SPOINT(Node):
     """
     SPOINT ID1 ID2 ID3 ID4 ID5 ID6 ID7 ID8

@@ -58,7 +58,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
         'PARAM','=','INCLUDE',
-        'GRID','GRDSET',
+        'GRID','GRDSET','RINGAX',
         
         'CONM2',
         'CELAS1','CELAS2',
@@ -80,9 +80,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'SUPORT1',
 
         'LOAD',
-        'FORCE',#'FORCE1','FORCE2',
-        'PLOAD','PLOAD2','PLOAD4',#'PLOAD1',
-        'MOMENT',#'MOMENT1','MOMENT2',
+        'FORCE','FORCE1','FORCE2',
+        'PLOAD','PLOAD1','PLOAD2','PLOAD4',
+        'MOMENT','MOMENT1','MOMENT2',
 
         'FLFACT','AERO','AEROS','GUST','FLUTTER',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
@@ -657,7 +657,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='GRID':
                 node = GRID(cardObj)
                 self.addNode(node)
-            #elif cardName=='SPOINT':
+            elif cardName=='RINGAX':
+                node = RINGAX(cardObj)
+                self.addNode(node)
+            #elif cardName=='SPOINT':  # not done
             #    node = SPOINT(cardObj)
             #    self.addNode(node)
 
@@ -839,23 +842,35 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='FORCE':
                 force = FORCE(cardObj)
                 self.addLoad(force)
-            #elif cardName=='FORCE1':
-            #    force = FORCE1(cardObj)
-            #    self.addLoad(force)
-            #elif cardName=='FORCE2':
-            #    force = FORCE2(cardObj)
-            #    self.addLoad(force)
+            elif cardName=='FORCE1':  # not added
+                force = FORCE1(cardObj)
+                self.addLoad(force)
+            elif cardName=='FORCE2':  # not added
+                force = FORCE2(cardObj)
+                self.addLoad(force)
             elif cardName=='MOMENT':
                 moment = MOMENT(cardObj)
                 self.addLoad(moment)
-            #elif cardName=='MOMENT1':
-            #    moment = MOMENT1(cardObj)
-            #    self.addLoad(force)
-            #elif cardName=='MOMENT2':
-            #    moment = MOMENT2(cardObj)
-            #    self.addLoad(force)
+            elif cardName=='MOMENT1': # not added
+                moment = MOMENT1(cardObj)
+                self.addLoad(force)
+            elif cardName=='MOMENT2': # not added
+                moment = MOMENT2(cardObj)
+                self.addLoad(force)
             elif cardName=='LOAD':
                 load = LOAD(cardObj)
+                self.addLoad(load)
+            elif cardName=='PLOAD':
+                load = PLOAD(cardObj)
+                self.addLoad(load)
+            elif cardName=='PLOAD1':
+                load = PLOAD1(cardObj)
+                self.addLoad(load)
+            elif cardName=='PLOAD2':
+                load = PLOAD2(cardObj)
+                self.addLoad(load)
+            elif cardName=='PLOAD4':
+                load = PLOAD4(cardObj)
                 self.addLoad(load)
 
             elif cardName=='TEMP':
@@ -971,8 +986,33 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #elif cardName=='CORD2S':
             #    coord = CORD2S(cardObj)
             #    self.addCoord(coord)
-            #elif 'CORD' in cardName:
-            #    raise Exception('unhandled coordinate system...cardName=%s' %(cardName))
+
+            #elif cardName=='CORD1R':
+            #    coord = CORD1R(cardObj)
+            #    self.addCoord(coord)
+            #    if cardObj.field(5):
+            #        coord = CORD1R(cardObj,nCoord=1)
+            #        self.addCoord(coord)
+            #    ###
+            #elif cardName=='CORD1C':
+            #    coord = CORD1C(cardObj)
+            #    self.addCoord(coord)
+            #    if cardObj.field(5):
+            #        coord = CORD1C(cardObj,nCoord=1)
+            #        self.addCoord(coord)
+            #    ###
+            #elif cardName=='CORD1S':
+            #    coord = CORD1S(cardObj)
+            #    self.addCoord(coord)
+            #    if cardObj.field(5):
+            #        coord = CORD1S(cardObj,nCoord=1)
+            #        self.addCoord(coord)
+            #    ###
+            #elif cardName=='CORD3G':
+            #    coord = CORD3G(cardObj)
+            #    self.addCoord(coord)
+
+
             elif 'ENDDATA' in cardName:
                 self.foundEndData = True
                 #break

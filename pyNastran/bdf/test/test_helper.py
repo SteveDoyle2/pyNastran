@@ -10,13 +10,13 @@ import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
 #print "testPath = ",testPath
 
-def runBDF(folder,bdfFilename,debug=False):
+def runBDF(folder,bdfFilename,debug=False,xref=True):
     bdfModel = os.path.join(testPath,folder,bdfFilename)
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
     fem1 = BDF(bdfModel,log=None,debug=debug)
     try:
-        fem1.read()
+        fem1.read(debug=debug,xref=xref)
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
@@ -24,13 +24,13 @@ def runBDF(folder,bdfFilename,debug=False):
         #fem1.writeAsCTRIA3(outModel)
 
         fem2 = BDF(outModel,log=None,debug=debug)
-        fem2.read(debug=debug)
+        fem2.read(debug=debug,xref=xref)
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'
         fem2.writeAsPatran(outModel2)
         #fem2.writeAsCTRIA3(outModel2)
-        compare(fem1,fem2)
+        compare(fem1,fem2,xref=xref)
         os.remove(outModel2)
 
     #except KeyboardInterrupt:
@@ -147,9 +147,10 @@ def getElementStats(fem1,fem2):
         ###
     ###
 
-def compare(fem1,fem2):
+def compare(fem1,fem2,xref=True):
     compareCardCount(fem1,fem2)
-    getElementStats(fem1,fem2)
+    if xref:
+        getElementStats(fem1,fem2)
     #compareParams(fem1,fem2)
     #printPoints(fem1,fem2)
 
