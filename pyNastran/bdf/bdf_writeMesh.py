@@ -199,6 +199,8 @@ class writeMesh(object):
         missingProperties = []
         if self.properties:
             msg += '$ELEMENTS_WITH_PROPERTIES\n'
+
+        eidsWritten = []
         for pid,prop in sorted(self.properties.items()):
             #print "pid = ",pid
             eids = self.getElementIDsWithPID(pid)
@@ -210,16 +212,17 @@ class writeMesh(object):
                     #print "e.type = ",element.type
                     msg += str(element)
                 ###
+                eidsWritten+=eids
             else:
                 #print "*MISSING",prop
                 missingProperties.append(str(prop))
             ###
         ###
 
-        eids = self.getElementIDsWithPID(0)
-        if eids:
-            msg += '$ELEMENTS_WITH_NO_PROPERTIES (PID=0)\n'
-            for eid in sorted(eids):
+        eidsMissing = set(self.elements.keys()).difference(set(eidsWritten))
+        if eidsMissing:
+            msg += '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)\n'
+            for eid in sorted(eidsMissing):
                 element = self.Element(eid)
                 msg += str(element)
             ###

@@ -408,7 +408,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                     method = None
 
                 print "solValue = |%s|" %(solValue)
-                sol = solValue.split(' ')[1]
+                sol = solValue[3:].strip()
                     
                 assert self.sol==None,'cannot overwrite solution existing=|SOL %s| new =|%s|' %(self.sol,sline2)
                 self.iSolLine = i
@@ -657,7 +657,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                     nCards = 1
                     #special = True
                 #print "nCards = ",nCards
-                cardName = oldCardObj.field(0)
+                #cardName = oldCardObj.field(0)
             ###
 
             for iCard in range(nCards):

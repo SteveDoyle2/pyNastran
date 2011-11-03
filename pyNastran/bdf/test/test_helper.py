@@ -115,6 +115,7 @@ def computeInts(cards1,cards2):
             factorMsg = 'diff=%s factor1=%g factor2=%g' %(diff,factor1,factor2)
 
         msg += '  %skey=%-7s value1=%-4s value2=%-4s' %(star,key,value1,value2)+factorMsg #+'\n'
+        msg = msg.rstrip()
         print msg
     ###
 
@@ -136,7 +137,8 @@ def compute(cards1,cards2):
 
         if key in listKeys2: value2 = cards2[key]
         else:                value2 = 0
-        msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2) #+'\n'
+        msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
+        msg = msg.rstrip()
         print msg
     ###
 

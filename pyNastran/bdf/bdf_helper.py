@@ -195,14 +195,15 @@ class addMethods(object):
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
-        #assert elem.eid not in self.elements
+        assert elem.eid not in self.elements
         assert elem.eid>0
         self.elements[elem.eid] = elem
 
     def addThermalElement(self,elem):  # same function at the moment...
-        assert elem.eid not in self.elements
-        assert elem.eid>0
-        self.elements[elem.eid] = elem
+        self.addElement(elem)
+        #assert elem.eid not in self.elements
+        #assert elem.eid>0
+        #self.elements[elem.eid] = elem
 
     def addProperty(self,prop):
         assert prop.pid not in self.properties
