@@ -76,7 +76,7 @@ class Subcase(object):
             b = 'value=|%s|'     %(value)
             c = 'options=|%s|'   %(options)
             d = 'paramType=|%s|' %(paramType)
-            print "_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id,a,b,c,d)
+            #print "_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id,a,b,c,d)
             if isinstance(value,int) or value is None:
                 pass
             elif value.isdigit():  # STRESS = ALL

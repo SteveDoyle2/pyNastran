@@ -297,7 +297,7 @@ class CaseControlDeck(object):
                 msg = 'excepted "BEGIN BULK" found=|%r|' %(line)
                 raise RuntimeError(msg)
             paramType = 'BEGIN_BULK-type'
-        elif ',' in line: # param
+        elif 'PARAM' in line: # param
             try:
                 (key,value,options) = line.split(',')
             except ValueError:

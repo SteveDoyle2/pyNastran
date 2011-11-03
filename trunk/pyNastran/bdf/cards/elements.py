@@ -187,10 +187,23 @@ class CONM2(PointElement): # v0.1 not done
         #    raise Exception('CONM2 cid !=0 is not coded...')
         ###
     def __repr__(self):
-        #I = []
-        #for i in self.I:
-        #    if i==0.:
-        fields = [self.type,self.eid,self.gid,self.cid,self.Mass]+list(self.X)+self.I
+        I = []
+        for i in self.I:
+            if i==0.:
+                i = None
+            I.append(None)
+        ###
+        X = []
+        for x in self.X:
+            if x==0.:
+                x = None
+            X.append(None)
+        ###
+
+
+        cid  = self.setBlankIfDefault(self.cid,0)
+        Mass = self.setBlankIfDefault(self.Mass,0.0)
+        fields = [self.type,self.eid,self.gid,cid,Mass]+X+I
         return self.printCard(fields)
 
    
