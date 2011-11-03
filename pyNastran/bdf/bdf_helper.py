@@ -191,26 +191,32 @@ class addMethods(object):
     def addNode(self,node):
         #print node
         assert node.nid not in self.nodes
+        assert node.nid>0
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
         #assert elem.eid not in self.elements
+        assert elem.eid>0
         self.elements[elem.eid] = elem
 
     def addThermalElement(self,elem):  # same function at the moment...
         assert elem.eid not in self.elements
+        assert elem.eid>0
         self.elements[elem.eid] = elem
 
     def addProperty(self,prop):
         assert prop.pid not in self.properties
+        assert prop.pid>0
         self.properties[prop.pid] = prop
 
     def addMaterial(self,material):
         assert material.mid not in self.materials
+        assert material.mid>0
         self.materials[material.mid] = material
 
     def addCoord(self,coord):
         assert coord.cid not in self.coords
+        assert coord.cid>-1
         self.coords[coord.cid] = coord
 
     def addLoad(self,load):
@@ -221,10 +227,12 @@ class addMethods(object):
             self.loads[key] = [load]
 
     def addPHBDY(self,prop):
+        assert prop.pid>0
         assert prop.pid not in self.phbdys
         self.phbdys[prop.pid] = prop
 
     def addConvectionProperty(self,prop):
+        assert prop.pconid>0
         assert prop.pconid not in self.convectionProperties
         self.convectionProperties[prop.pconid] = prop
 
@@ -233,6 +241,7 @@ class addMethods(object):
     #    self.thermalProperties[prop.pconid] = prop
 
     def addThermalBC(self,bc,key):
+        assert key>0
         if key in self.bcs:
             self.bcs[key].append(bc)
         else:
@@ -240,6 +249,7 @@ class addMethods(object):
 
     def addThermalLoad(self,load):  # same function at the moment...
         key = load.sid
+        assert key>0
         if key in self.loads:
             self.loads[key].append(load)
         else:
@@ -265,6 +275,7 @@ class addMethods(object):
     def addConstraint(self,constraint):
         #self.spcObject.append(constraint)
         key = constraint.cid
+        assert key>0
         if self.constraints.has_key(key):
             self.constraints[key].append(constraint)
         else:
@@ -272,22 +283,27 @@ class addMethods(object):
 
     def addAero(self,aero):
         assert aero.acsid not in self.aeros
+        assert asero.acsid>0
         self.aeros[aero.acsid] = aero
 
     def addCAero(self,caero):
         assert caero.eid not in self.caeros,'self.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
+        assert caero.eid>0
         self.caeros[caero.eid] = caero
 
     def addSpline(self,spline):
         assert spline.eid not in self.splines
+        assert spline.eid>0
         self.splines[spline.eid] = spline
 
     def addGust(self,gust):
         assert gust.sid not in self.gusts
+        assert gust.sid>0
         self.gusts[gust.sid] = gust
 
     def addFlutter(self,flutter):
         assert flutter.sid not in self.flutters
+        assert flutter.sid>0
         self.flutters[flutter.sid] = flutter
 
     def addFLFACT(self,flfact):

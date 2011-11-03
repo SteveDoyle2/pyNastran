@@ -302,27 +302,13 @@ class SPC1(Constraint):
         fields = ['SPC1',self.cid,self.constraints]+nodes
         return self.printCard(fields)
 
-class SPCADD(Constraint):
-    """
-    Defines a single-point constraint set as a union of single-point constraint
-    sets defined on SPC or SPC1 entries.
-    SPCADD   2       1       3
-    """
-    type = 'SPCADD'
+class ConstraintADD(Constraint):
     def __init__(self,card):
         Constraint.__init__(self,card)
-        sets = card.fields(2)
-        
-        self.sets = self.expandThru(sets)
-        #print "self.nodes = ",self.nodes
 
     def crossReference(self,i,node):
         dofCount = 0
         self.sets[i] = node
-
-    def __repr__(self):
-        fields = ['SPCADD',self.cid] #+self.sets
-        return self._reprSpcMpcAdd(fields)
 
     def _reprSpcMpcAdd(self,fields):
         outSPCs = ''
@@ -350,15 +336,16 @@ class SPCADD(Constraint):
 
         return self.printCard(fields+list(set(fieldSets)))+outSPCs  # SPCADD
 
-class MPCADD(SPCADD):
+
+class SPCADD(ConstraintADD):
     """
-    Defines a multipoint constraint equation of the form \f$ \Sigma_j A_j u_j =0 \f$
-    where \f$ u_j \f$ represents degree-of-freedom \f$ C_j \f$ at grid or scalar point \f$ G_j \f$.
-    mPCADD   2       1       3
+    Defines a single-point constraint set as a union of single-point constraint
+    sets defined on SPC or SPC1 entries.
+    SPCADD   2       1       3
     """
-    type = 'MPCADD'
+    type = 'SPCADD'
     def __init__(self,card):
-        Constraint.__init__(self,card)
+        ConstraintADD.__init__(self,card)
         sets = card.fields(2)
         
         self.sets = self.expandThru(sets)
@@ -369,7 +356,25 @@ class MPCADD(SPCADD):
         self.sets[i] = node
 
     def __repr__(self):
-        outSPCs = ''
+        fields = ['SPCADD',self.cid] #+self.sets
+        return self._reprSpcMpcAdd(fields)
+
+class MPCADD(ConstraintADD):
+    """
+    Defines a multipoint constraint equation of the form \f$ \Sigma_j A_j u_j =0 \f$
+    where \f$ u_j \f$ represents degree-of-freedom \f$ C_j \f$ at grid or scalar point \f$ G_j \f$.
+    mPCADD   2       1       3
+    """
+    type = 'MPCADD'
+    def __init__(self,card):
+        ConstraintADD.__init__(self,card)
+        sets = card.fields(2)
+        
+        self.sets = self.expandThru(sets)
+        #print "self.nodes = ",self.nodes
+
+    def __repr__(self):
+        #outSPCs = ''
         fields = ['MPCADD',self.cid] #+self.sets
         return self._reprSpcMpcAdd(fields)
 

@@ -22,6 +22,18 @@ class Load(BaseCard):
             return self.cid.cid
         ###
 
+    def nodeIDs(self,nodes=None):
+        """returns nodeIDs for repr functions"""
+        if not nodes:
+           nodes = self.nodes
+        if isinstance(nodes[0],int):
+            #print 'if'
+            return [node     for node in nodes]
+        else:
+            #print 'else'
+            return [node.nid for node in nodes]
+        ###
+
     def __repr__(self):
         fields = [self.type,self.lid]
         return self.printCard(fields)
@@ -83,7 +95,6 @@ class OneDeeLoad(Load): # FORCE/MOMENT
             self.mag *= normXYZ
             self.xyz = self.xyz/normXYZ
 
-#class FORCE1(OneDeeLoad):
 #class FORCE2(OneDeeLoad):
 class FORCE(OneDeeLoad):
     type = 'FORCE'
@@ -108,6 +119,39 @@ class FORCE(OneDeeLoad):
         cid = self.setBlankIfDefault(self.cid,0)
         fields = ['FORCE',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
+
+class FORCE1(OneDeeLoad):
+    """
+    Defines a static concentrated force at a grid point by specification of a magnitude and
+    two grid points that determine the direction.
+    """
+    type = 'FORCE1'
+    def __init__(self,card):
+        """
+        FORCE          3       1            100.      0.      0.      1.
+        """
+        OneDeeLoad.__init__(self,card)
+        self.node = card.field(2)
+        self.mag  = card.field(3)
+        self.g1   = card.field(4)
+        self.g2   = card.field(5)
+
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        self.node = mdodel.Node(self.node)
+
+        self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
+        self.Normalize()
+
+    def Node(self):
+        if isinstance(self.node,int):
+            return self.node
+        return self.node.nid
+
+    def __repr__(self):
+        fields = ['FORCE1',self.g,self.Node(),self.F,self.g1,self.g2]
+        return self.printCard(fields)
+
 
 #class MOMENT1(OneDeeLoad):
 #class MOMENT2(OneDeeLoad):
@@ -165,8 +209,8 @@ class PLOAD1(Load):
         self.eid   = card.field(2)
         self.Type  = card.field(3)
         self.scale = card.field(4)
-        assert self.type in validTypes,  '%s is an invalid type on the PLOAD1 card' %(self.type)
-        assert self.scale in validScales,'%s is an invalid scale on the PLOAD1 card' %(self.scale)
+        assert self.Type  in self.validTypes, '%s is an invalid type on the PLOAD1 card' %(self.type)
+        assert self.scale in self.validScales,'%s is an invalid scale on the PLOAD1 card' %(self.scale)
         self.x1 = card.field(5)
         self.p1 = card.field(6)
         self.x2 = card.field(7)
@@ -242,7 +286,7 @@ class PLOAD4(Load):
         fields = ['PLOAD4',self.lid,self.p[0],p2,p3,p4]
 
         if self.g3:
-            (g3,g4) = self.getNodeIDs([self.g3,self.g4])
+            (g3,g4) = self.nodeIDs([self.g3,self.g4])
             fields.append(g3)
             fields.append(g4)
         else:

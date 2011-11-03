@@ -214,6 +214,12 @@ class CaseControlDeck(object):
         line = lines[i]
         #print line
         #print "*****lines = ",lines
+        
+        equalsCount = 0
+        for letter in line:
+            if letter=='=':
+                equalsCount +=1
+        
         if line.startswith('SUBCASE'):
             #print "line = |%r|" %(line)
             (key,iSubcase) = line.split()
@@ -221,8 +227,18 @@ class CaseControlDeck(object):
             value = int(iSubcase)
             #self.iSubcase = int(iSubcase)
             paramType = 'SUBCASE-type'
-        elif '=' in line: # TITLE, STRESS
-            (key,value) = line.strip().split('=')
+        elif line.startswith('LABEL') or line.startswith('SUBTITLE') or line.startswith('TITLE'):
+            eIndex = line.index('=')
+            key   = line[0:eIndex].strip()
+            value = line[eIndex+1:].strip()
+            options = []
+            paramType = 'STRING-type'
+        elif equalsCount==1: # STRESS
+            try:
+                (key,value) = line.strip().split('=')
+            except:
+                msg = 'expected item of form "name = value"   line=|%r|' %(line.strip())
+                raise RuntimeError(msg)
             key   = key.strip()
             value = value.strip()
             if self.debug:  print "key=|%s| value=|%s|" %(key,value)
@@ -274,19 +290,34 @@ class CaseControlDeck(object):
                 pass
             ###
         ### = in line
+        elif line.startswith('BEGIN'): # begin bulk
+            try:
+                (key,value) = line.split(' ')
+            except:
+                msg = 'excepted "BEGIN BULK" found=|%r|' %(line)
+                raise RuntimeError(msg)
+            paramType = 'BEGIN_BULK-type'
         elif ',' in line: # param
             try:
                 (key,value,options) = line.split(',')
             except ValueError:
                 print "trying to parse |%s| bug cant..." %(line)
+                raise
             ###
             paramType = 'CSV-type'
-        elif ' ' in line: # begin bulk
-            (key,value) = line.split(' ')
-            paramType = 'BEGIN_BULK-type'
+        elif ' ' not in line:
+            key = line
+            value = None
+            options = None
+            paramType = 'KEY-type'
         else:
+            msg = 'generic catch all...line=|%r|' %(line)
             #print 'C ??? line = ',line
-            raise RuntimeError(line)
+            #raise RuntimeError(msg)
+            key = ''
+            value = line
+            options = None
+            paramType = 'KEY-type'
         ###
         i+=1
         #print "done with ",key
@@ -305,7 +336,11 @@ class CaseControlDeck(object):
     def _addParameterToSubcase(self,key,value,options,paramType,iSubcase):
         """internal method"""
         if self.debug:
-            print "_adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(iSubcase,key,value,options,paramType)
+            a = 'key=|%s|'       %(key)
+            b = 'value=|%s|'     %(value)
+            c = 'options=|%s|'   %(options)
+            d = 'paramType=|%s|' %(paramType)
+            print "_adding iSubcase=%s %-12s %-12s %-12s %-12s" %(iSubcase,a,b,c,d)
 
         if key=='SUBCASE':
             assert value not in self.subcases
