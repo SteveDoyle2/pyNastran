@@ -10,21 +10,42 @@ import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
 #print "testPath = ",testPath
 
+def runAllFilesInFolder(folder,debug=False,xref=True):
+    print "folder = ",folder
+    filenames  = os.listdir(folder)
+    filenames2 = []
+    for filename in filenames:
+        if filename.endswith('.bdf') or filename.endswith('.dat'):
+            filenames2.append(filename)
+        ###
+    ###
+    for filename in filenames2:
+        print "filename = ",filename
+        try:
+            runBDF(folder,filename,debug=debug,xref=xref)
+        except:
+            traceback.print_exc(file=sys.stdout)
+        ###
+        print '-'*80
+    ###
+    print '*'*80
+###
+
 def runBDF(folder,bdfFilename,debug=False,xref=True):
     bdfModel = os.path.join(testPath,folder,bdfFilename)
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
-    fem1 = BDF(bdfModel,log=None,debug=debug)
+    fem1 = BDF(debug=debug)
     try:
-        fem1.read(debug=debug,xref=xref)
+        fem1.read(bdfModel,debug=debug,xref=xref,log=None)
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
         fem1.writeAsPatran(outModel)
         #fem1.writeAsCTRIA3(outModel)
 
-        fem2 = BDF(outModel,log=None,debug=debug)
-        fem2.read(debug=debug,xref=xref)
+        fem2 = BDF(debug=debug)
+        fem2.read(outModel,debug=debug,xref=xref,log=None)
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'
@@ -121,28 +142,34 @@ def compute(cards1,cards2):
 
 def getElementStats(fem1,fem2):
     for key,e in sorted(fem1.elements.items()):
-        if isinstance(e,ShellElement):
-            a = e.area()
-            m = e.mass()
-        elif isinstance(e,SolidElement):
-            #v = e.volume()
-            #m = e.mass()
-            pass
-        elif isinstance(e,LineElement):
-            L = e.length()
-            m = e.mass()
-        elif isinstance(e,RigidElement):
-            pass
-        elif isinstance(e,SpringElement):
-            L = e.length()
-        elif isinstance(e,PointElement):
-            m = e.mass()
-        else:
-            print "stats - e.type = ",e.type
-            #try:
-            #    print "e.type = ",e.type
-            #except:
-            #    print str(e)
+        try:
+            if isinstance(e,ShellElement):
+                a = e.area()
+                m = e.mass()
+            elif isinstance(e,SolidElement):
+                #v = e.volume()
+                #m = e.mass()
+                pass
+            elif isinstance(e,LineElement):
+                L = e.length()
+                m = e.mass()
+            elif isinstance(e,RigidElement):
+                pass
+            elif isinstance(e,SpringElement):
+                L = e.length()
+            elif isinstance(e,PointElement):
+                m = e.mass()
+            else:
+                print "stats - e.type = ",e.type
+                #try:
+                #    print "e.type = ",e.type
+                #except:
+                #    print str(e)
+                ###
+            ###
+        except:
+                print "*stats - e.type = ",e.type
+                raise
             ###
         ###
     ###

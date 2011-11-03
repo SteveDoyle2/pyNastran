@@ -34,13 +34,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         ## useful in debugging errors in input
         self.debug = debug
-        self.infilename = None
-        self.autoReject = False
 
-        #self.n = 0
-        #self.nCards = 0
-        self._initStructuralDefaults()
-        self._initThermalDefaults()
+        self._initSolution()
 
         ## lines that were rejected b/c they were for a card
         ## that isnt supported
@@ -52,18 +47,15 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## list of case control deck lines
         self.caseControlLines = []
         ## the analysis type
-        self.sol = None
-        ## used in solution 600
-        self.solMethod = None
 
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
-        'PARAM','=','INCLUDE',
+        'PARAM','INCLUDE',  # '='
         'GRID','GRDSET','RINGAX',
         
         'CONM2',
         'CELAS1','CELAS2',
-        'CBAR','CROD','CTUBE','CBEAM',
+        'CBAR','CROD','CTUBE','CBEAM','CONROD',
         'CTRIA3','CQUAD4',
         'CHEXA','CPENTA','CTETRA',
         'RBAR','RBAR1','RBE1','RBE2','RBE3',
@@ -106,7 +98,68 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
+    def _initSolution(self):
+        self.infilename = None
+        self.autoReject = False
+        self.solmap_toValue = {
+                        'SESTSTATIC': 101,
+                        'SEMODES'   : 103,
+                        'BUCKLING'  : 105,
+                        'SEBUCKL'   : 105,
+                        'NLSTATIC'  : 106,
+                        'SEDCEIG'   : 107,
+                        'SEDFREQ'   : 108,
+                        'SEDTRAN'   : 109,
+                        'SEMCEIG'   : 110,
+                        'SEMFREQ'   : 111,
+                        'SEMTRAN'   : 112,
+                        'CYCSTATX'  : 114,
+                        'CYCMODE'   : 115,
+                        'CYCBUCKL'  : 116,
+                        'CYCFREQ'   : 118,
+                        'NLTRAN'    : 129,
+                        'AESTAT'    : 144,
+                        'FLUTTR'    : 145,
+                        'SEAERO'    : 146,
+                        'NLSCSH'    : 153,
+                        'NLTCSH'    : 159,
+                        'DBTRANS'   : 190,
+                        'DESOPT'    : 200,
+                       }
+
+
+        self.rsolmap_toStr = {
+                         101 : 'SESTSTATIC',
+                         103 : 'SEMODES'   ,
+                         105 : 'BUCKLING'  ,  # SEBUCKL
+                         106 : 'NLSTATIC'  ,
+                         107 : 'SEDCEIG'   ,
+                         108 : 'SEDFREQ'   ,
+                         109 : 'SEDTRAN'   ,
+                         110 : 'SEMCEIG'   ,
+                         111 : 'SEMFREQ'   ,
+                         112 : 'SEMTRAN'   ,
+                         114 : 'CYCSTATX'  ,
+                         115 : 'CYCMODE'   ,
+                         116 : 'CYCBUCKL'  ,
+                         118 : 'CYCFREQ'   ,
+                         129 : 'NLTRAN'    ,
+                         144 : 'AESTAT'    ,
+                         145 : 'FLUTTR'    ,
+                         146 : 'SEAERO'    ,
+                         153 : 'NLSCSH'    ,
+                         159 : 'NLTCSH'    ,
+                         190 : 'DBTRANS'   ,
+                         200 : 'DESOPT'    ,
+                       }
+        self._initStructuralDefaults()
+        self._initThermalDefaults()
+
     def _initStructuralDefaults(self):
+        self.sol = None
+        ## used in solution 600
+        self.solMethod = None
+
         # main structural block
         ## store the PARAM cards
         self.params = {}
@@ -211,6 +264,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if self.isOpened[infileName]==False:
             self.activeFileNames.append(infileName)
             #self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
+            assert os.path.exists(infileName),"infileName=|%s| does not exist..." %(infileName)
             infile = open(infileName,'r')
             self.infilesPack.append(infile)
             self.lineNumbers.append(0)
@@ -341,24 +395,31 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()
             if 'SOL ' in uline:
-                sline = uline.split(',') # SOL 600,method
-                solValue = sline[0]
+                print "line = ",uline
+                if ',' in uline:
+                    sline = uline.split(',') # SOL 600,method
+                    solValue = sline[0]
+                    method = sline[1]
 
-                sline2 = solValue.split(' ')
-                #print sline2
+                    print "sline    = |%s|" %(sline)
+                    #print "sline2   = |%s|" %(sline2)
+                else:
+                    solValue = uline
+                    method = None
+
+                print "solValue = |%s|" %(solValue)
+                sol = solValue.split(' ')[1]
+                    
                 assert self.sol==None,'cannot overwrite solution existing=|SOL %s| new =|%s|' %(self.sol,sline2)
                 self.iSolLine = i
 
                 try:
-                    self.updateSolution(sline2[1],sline)
+                    self.updateSolution(sol,method)
                 except:
-                    
-                    msg = 'updateSolution failed...sline2=%s sline=%s' %(sline2,sline)
-                    raise RuntimeError(msg)
-                self.sol = int(sline2[1])
-                if self.sol==600:
-                    self.solMethod = sline[1].strip()
-                print "sol=%s method=%s" %(self.sol,self.solMethod)
+                    #msg = 'updateSolution failed...sline2=%s sline=%s' %(sline2,sline)
+                    #raise RuntimeError(msg)
+                    raise
+
             ###
         ###
 
@@ -369,17 +430,24 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         @param sol    the solution type (101,103, etc)
         @param method the solution method (only for SOL=600), default=None
         """
-        if isinstance(method,list) and len(method)==2:
-            method = method[1]
 
         ## the integer of the solution type (e.g. SOL 101)
-        self.sol = int(sol)
+        try:
+            print "sol = |%s|" %(sol)
+            self.sol = int(sol)
+        except:
+            print "sol = |%r|" %(sol)
+            self.sol = self.solmap_toValue[sol]
+            print "self.sol = ",self.sol
+
         if self.sol==600:
             ## solution 600 method modifier
             self.solMethod = method.strip()
         else: # very common
             self.solMethod = None
         ###
+        print "sol=%s method=%s" %(self.sol,self.solMethod)
+        
 
     def isCaseControlDeck(self,line):
         """@todo not done..."""

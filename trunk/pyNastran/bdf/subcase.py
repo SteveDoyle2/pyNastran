@@ -28,7 +28,7 @@ class Subcase(object):
         elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
         elif paramName.startswith('EXPO'):  paramName = 'EXPORTLID'
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
-        elif paramName.startswith('PRESS'): paramName = 'PRESSURE'
+        elif paramName.startswith('PRES'):  paramName = 'PRESSURE'
         elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
         #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
         #print '*paramName = ',paramName
@@ -72,8 +72,12 @@ class Subcase(object):
                 value = value
             ###
         else:
-            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
-            if isinstance(value,int):
+            a = 'key=|%s|'       %(key)
+            b = 'value=|%s|'     %(value)
+            c = 'options=|%s|'   %(options)
+            d = 'paramType=|%s|' %(paramType)
+            print "_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id,a,b,c,d)
+            if isinstance(value,int) or value is None:
                 pass
             elif value.isdigit():  # STRESS = ALL
                 value = value
@@ -96,6 +100,10 @@ class Subcase(object):
             ###
             #else:  global subcase ID=0 and is not printed
             #    pass
+        elif paramType=='KEY-type':
+            msg += '%s\n' %(value)
+        elif paramType=='STRING-type':
+            msg += spaces+'%s = %s\n' %(key,value)
         elif paramType=='CSV-type':
             msg += spaces+'%s,%s,%s\n' %(key,value,options)
         elif paramType=='STRESS-type':

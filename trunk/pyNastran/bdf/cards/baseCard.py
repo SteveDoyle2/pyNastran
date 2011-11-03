@@ -261,6 +261,14 @@ class BaseCard(BDF_Card):
     ###
 ###
 
+def Mid(self):
+    #print str(self)
+    if isinstance(self.mid,int):
+        return self.mid
+    else:
+        return self.mid.mid
+    ###
+
 class Property(BaseCard):
     mid = 0 # ???
     def __init__(self,card):
@@ -268,12 +276,7 @@ class Property(BaseCard):
         pass
 
     def Mid(self):
-        #print str(self)
-        if isinstance(self.mid,int):
-            return self.mid
-        else:
-            return self.mid.mid
-        ###
+        return Mid(self)
 
     def crossReference(self,model):
         if self.mid:

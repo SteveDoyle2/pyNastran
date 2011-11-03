@@ -1,3 +1,5 @@
+from baseCard import Mid
+
 from numpy import matrix,zeros,ones
 from numpy.linalg import norm
 
@@ -15,6 +17,7 @@ class LineElement(Element):
         return self.pid.C()
 
     def area(self):
+        """returns the area of the element face"""
         raise Exception('implement self.area() for %s' %(self.type))
     
     def E(self):
@@ -70,8 +73,8 @@ class LineElement(Element):
         return mass
 
     def crossReference(self,mesh):
-        self.nids = mesh.Nodes(self.nodes)
-        self.pid  = mesh.Property(self.pid)
+        self.nodes = mesh.Nodes(self.nodes)
+        self.pid   = mesh.Property(self.pid)
 
     def length_noXref(self,n1=None,n2=None):
         """
@@ -95,7 +98,7 @@ class LineElement(Element):
         @param self the object pointer
         """
         #print self.type
-        return self.length_noXref(self.nids[1],self.nids[0])
+        return self.length_noXref(self.nodes[1],self.nodes[0])
 
     def k_Axial(self):
         """
@@ -182,8 +185,8 @@ class CROD(LineElement):
     type = 'CROD'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.eid  = card.field(1)
-        self.pid = card.field(2,self.eid)
+        self.eid = int(card.field(1))
+        self.pid = int(card.field(2,self.eid))
 
         nids = card.fields(3,5)
         self.prepareNodeIDs(nids)
@@ -196,7 +199,7 @@ class CROD(LineElement):
         return self.pid.nsm
 
     def __repr__(self):
-        fields = ['CROD',self.eid,self.Pid()]+self.nodes
+        fields = ['CROD',self.eid,self.Pid()]+self.nodeIDs()
         return self.printCard(fields)
 
 
@@ -213,18 +216,57 @@ class CONROD(CROD):
     type = 'CONROD'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.eid  = card.field(1)
+        self.eid  = int(card.field(1))
 
         nids = card.fields(2,4)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
         #print self.nodes
         
-        self.mid = card.field(4)
-        self.A   = card.field(5)
-        self.J   = card.field(6)
-        self.c   = card.field(7,0.0)
-        self.nsm = card.field(8,0.0)
+        self.mid = int(card.field(4))
+        self.A   = float(card.field(5))
+        self.J   = float(card.field(6,0.0))
+        self.c   = float(card.field(7,0.0))
+        self.NSM = float(card.field(8,0.0))
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        self.mid   = model.Material(self.mid)
+
+    def C(self):
+        """torsional constant"""
+        return self.c
+
+    def area(self):
+        return self.A
+    
+    def E(self):
+        """returns the Young's Modulus  \f$ E \f$"""
+        return self.mid.E
+     
+    def G(self):
+        """returns the Shear Modulus   \f$ G \f$"""
+        return self.mid.G
+
+    def J(self):
+        """returns the Polar Moment of Inertia.   \f$ J \f$"""
+        return self.mid.J
+
+    def Izz(self):
+        """returns the Moment of Inertia.   \f$ I \f$"""
+        return self.mid.Izz
+
+    def nu(self):
+        """returns Poisson's Ratio  \f$ \nu \f$"""
+        return self.mid.nu
+    
+    def rho(self):
+        """returns the material density  \f$ \rho \f$"""
+        return self.mid.rho
+
+    def nsm(self):
+        """Placeholder method for the non-structural mass"""
+        return self.NSM
 
     def Stiffness(self,bdf): # ,bdf,L,A,E
         """
@@ -256,9 +298,13 @@ class CONROD(CROD):
 
     def __repr__(self):
         c   = self.setBlankIfDefault(self.c,  0.0)
-        nsm = self.setBlankIfDefault(self.nsm,0.0)
-        #print "nodes",self.nids
-        fields = ['CONROD',self.eid]+self.nids+[self.mid,self.A,self.J,self.c,self.nsm]
+        nsm = self.setBlankIfDefault(self.NSM,0.0)
+        #print "nodes = ",self.nodeIDs()
+        #print "mid   = ",Mid(self)
+        #print "eid   = ",self.eid
+        fields = ['CONROD',self.eid]+self.nodeIDs()+[Mid(self),self.A,self.J,self.c,nsm]
+        #print fields
+        #print "----------------------------"
         return self.printCard(fields)
 
 
@@ -276,9 +322,9 @@ class CBAR(LineElement):
     type = 'CBAR'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.pid = card.field(2)
-        self.ga = card.field(3)
-        self.gb = card.field(4)
+        self.pid = int(card.field(2,self.eid))
+        self.ga  = int(card.field(3))
+        self.gb  = int(card.field(4))
         self.initX_G0(card)
 
         self.offt = card.field(8,'GGG')
@@ -290,13 +336,13 @@ class CBAR(LineElement):
         self.pa = card.field(9)
         self.pb = card.field(10)
         
-        self.w1a = card.field(11,0.0)
-        self.w2a = card.field(12,0.0)
-        self.w3a = card.field(13,0.0)
+        self.w1a = float(card.field(11,0.0))
+        self.w2a = float(card.field(12,0.0))
+        self.w3a = float(card.field(13,0.0))
 
-        self.w1b = card.field(14,0.0)
-        self.w2b = card.field(15,0.0)
-        self.w3b = card.field(16,0.0)
+        self.w1b = float(card.field(14,0.0))
+        self.w2b = float(card.field(15,0.0))
+        self.w3b = float(card.field(16,0.0))
 
     def area(self):
         return self.pid.A
@@ -317,9 +363,9 @@ class CBAR(LineElement):
             self.x3 = None
         elif isinstance(field5,float):
             self.g0 = None
-            self.x1 = card.field(5,0.0)
-            self.x2 = card.field(6,0.0)
-            self.x3 = card.field(7,0.0)
+            self.x1 = float(card.field(5,0.0))
+            self.x2 = float(card.field(6,0.0))
+            self.x3 = float(card.field(7,0.0))
         else:
             msg = 'field5 on %s is the wrong type...id=%s field5=%s' %(self.type,self.eid,field5)
             raise RuntimeError(msg)
@@ -336,8 +382,8 @@ class CBAR(LineElement):
         #    self.x2 = v[1]
         #    self.x3 = v[2]
         ###
-        self.ga = mesh.Node(self.ga)
-        self.gb = mesh.Node(self.gb)
+        self.ga  = mesh.Node(self.ga)
+        self.gb  = mesh.Node(self.gb)
         self.pid = mesh.Property(self.pid)
 
     #def updateNodes(self,nodes):
@@ -395,22 +441,22 @@ class CBEAM(CBAR):
     type = 'CBEAM'
     def __init__(self,card):
         LineElement.__init__(self,card)
-        self.pid = card.field(2,self.eid)
-        self.ga = card.field(3)
-        self.gb = card.field(4)
+        self.pid = int(card.field(2,self.eid))
+        self.ga = int(card.field(3))
+        self.gb = int(card.field(4))
 
         self.initX_G0(card)
         self.initOfftBit(card)
         self.pa = card.field(9)
         self.pb = card.field(10)
         
-        self.w1a = card.field(11,0.0)
-        self.w2a = card.field(12,0.0)
-        self.w3a = card.field(13,0.0)
+        self.w1a = float(card.field(11,0.0))
+        self.w2a = float(card.field(12,0.0))
+        self.w3a = float(card.field(13,0.0))
 
-        self.w1b = card.field(14,0.0)
-        self.w2b = card.field(15,0.0)
-        self.w3b = card.field(16,0.0)
+        self.w1b = float(card.field(14,0.0))
+        self.w2b = float(card.field(15,0.0))
+        self.w3b = float(card.field(16,0.0))
 
         self.sa = card.field(17)
         self.sb = card.field(18)

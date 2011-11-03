@@ -1,3 +1,5 @@
+import sys
+
 class XrefMesh(object):
     def __init__(self):
         pass
@@ -38,7 +40,11 @@ class XrefMesh(object):
             #print "n.cid = ",n.cid
             #coord = self.Coord(n.cid)
             #print "*",str(coord)
-            n.crossReference(self,gridSet)
+            try:
+                n.crossReference(self,gridSet)
+            except:
+                sys.stderr.write('couldnt cross reference\n%s' %(str(n)))
+                raise
         ###
 
     def crossReference_Elements(self):
@@ -46,7 +52,11 @@ class XrefMesh(object):
             #print "n.cid = ",n.cid
             #coord = self.Coord(n.cid)
             #print "*",str(coord)
-            e.crossReference(self)
+            try:
+                e.crossReference(self)
+            except:
+                sys.stderr.write('couldnt cross reference\n%s' %(str(e)))
+                raise
         ###
 
     def crossReference_Properties(self):
@@ -55,7 +65,11 @@ class XrefMesh(object):
             #coord = self.Coord(n.cid)
             #print "*",str(coord)
             #print p
-            p.crossReference(self)
+            try:
+                p.crossReference(self)
+            except:
+                sys.stderr.write('couldnt cross reference\n%s' %(str(p)))
+                raise
         ###
 
     def crossReference_Materials(self):
@@ -63,7 +77,11 @@ class XrefMesh(object):
             #print "n.cid = ",n.cid
             #coord = self.Coord(n.cid)
             #print "*",str(coord)
-            m.crossReference(self)
+            try:
+                m.crossReference(self)
+            except:
+                sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
+                raise
         ###
 
     def crossReference_Loads(self):

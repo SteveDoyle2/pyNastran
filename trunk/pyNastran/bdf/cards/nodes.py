@@ -99,7 +99,7 @@ class GRDSET(Node):
     type = 'GRDSET'
     def __init__(self,card):
         ## Grid point coordinate system
-        self.cid  = card.field(2,0)
+        self.cp  = card.field(2,0)
         
         ## Analysis coordinate system
         self.cd   = card.field(6,0)
@@ -110,17 +110,18 @@ class GRDSET(Node):
         ## Superelement ID
         self.seid = card.field(8,0)
 
+    def crossReference(self):
+        cp = mesh.Coord(self.cp)
+        cd = mesh.Coord(self.cd)
+        #seid = mesh.Super(self.seid)
+
     def __repr__(self):
-        cid  = self.setBlankIfDefault(self.cid, 0)
+        cp   = self.setBlankIfDefault(self.cp,  0)
         cd   = self.setBlankIfDefault(self.cd,  0)
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.seid,0)
-        fields = ['GRDSET',None,cid,None,None,None,cd,ps,seid]
-
-    def crossReference(self):
-        cid  = mesh.Coord(self.cid)
-        cd   = mesh.Coord(self.cd)
-        #seid = mesh.Super(self.seid)
+        fields = ['GRDSET',None,cp,None,None,None,cd,ps,seid]
+        return self.printCard(fields)
 
 class GRID(Node):
     type = 'GRID'
