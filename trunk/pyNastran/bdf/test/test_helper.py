@@ -37,6 +37,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
 
     fem1 = BDF(debug=debug)
     try:
+        #print "xref = ",xref
         fem1.read(bdfModel,debug=debug,xref=xref,log=None)
         #fem1.sumForces()
         #fem1.sumMoments()
@@ -82,9 +83,9 @@ def divide(value1,value2):
 def compareCardCount(fem1,fem2):
     cards1 = fem1.cardCount
     cards2 = fem2.cardCount
-    computeInts(cards1,cards2)
+    computeInts(cards1,cards2,fem1)
 
-def computeInts(cards1,cards2):
+def computeInts(cards1,cards2,fem1):
     cardKeys1 = set(cards1.keys())
     cardKeys2 = set(cards2.keys())
     allKeys  = cardKeys1.union(cardKeys2)
@@ -107,6 +108,8 @@ def computeInts(cards1,cards2):
         star = ' '
         if diff:
             star = '*'
+        if key not in fem1.cardsToRead:
+            star = '-'
 
         factor1 = divide(value1,value2)
         factor2 = divide(value2,value1)

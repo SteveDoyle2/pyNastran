@@ -383,6 +383,29 @@ class CONV(ThermalBC):
         fields = ['CONV',self.eid,self.pconID,flmnd,cntrlnd]+self.ta
         return self.printCard(fields)
 
+class RADM(ThermalBC):
+    """
+    Defines the radiation properties of a boundary element for heat transfer analysis
+    """
+    type = 'RADM'
+    def __init__(self,card):
+        ThermalBC.__init__(self,card)
+        ## Material identification number
+        self.radmid = card.field(1)
+        self.absorb = card.field(2)
+        self.emissivity = card.fields(3)
+        assert self.radmid > 0
+        assert 0. <= self.absorb <= 1.0
+        for e in self.emissivity:
+            assert 0. <= e <= 1.0
+        
+    #def crossReference(self,model):
+    #    pass
+
+    def __repr__(self):
+        fields = ['RADM',self.radmid,self.absorb] + self.emissivity
+        return self.printCard(fields)
+
 class RADBC(ThermalBC):
     """
     Specifies an CHBDYi element face for application of radiation boundary conditions
@@ -510,7 +533,7 @@ class QHBDY(ThermalLoad):
         self.grids = card.fields(5)
 
         ## Grid point identification of connected grid points. (Integer > 0 or blank)
-        self.eids = self.expandThruBy(grids)
+        self.grids = self.expandThruBy(self.grids)
 
     #def crossReference(self,model):
     #    pass

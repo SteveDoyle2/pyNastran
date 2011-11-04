@@ -12,6 +12,8 @@ SPOINT (needs integration)
 CONM2  (cid=0)
 CEALS1 (done)
 CELAS2 (done)
+CELAS3 (done)
+CELAS4 (done)
 
 CBAR   (done)
 CBEAM  (done)
@@ -28,14 +30,20 @@ CTETRA (done)
 CPENTA (done)
 CHEXA  (done)
 
+CMASS1 (done)
+CMASS2 (done)
+CMASS3 (done)
+CMASS4 (done)
+
 ----Rigid Elements----:
-RBE1  (testing)
-RBE2  (testing)
-RBE3  (testing)
+RBE1  (done)
+RBE2  (done)
+RBE3  (done)
 RBAR  (done)
 RBAR1 (done)
 
 ----Constraints----:
+SUPORT  (done)
 SUPORT1 (done)
 
 SPC     (done)
@@ -61,28 +69,32 @@ MAT10 (done)
 PELAS   (done)
 PROD    (done)
 PBEAM   (done)
+PBEAML
 PBAR    (done)
+PBARL
 PCOMP   (done)
 PSHELL  (done)
 PSOLID  (done)
 PTUBE   (done)
 PLSOLID (done)
+PMASS   (done)
 
 ----Loads----:
-LOAD   (done)
+LSEQ
+LOAD    (done)
 
-FORCE  (done)
-FORCE1
+FORCE   (done)
+FORCE1  (done)
 FORCE2
 
-PLOAD  (done)
-PLOAD1 (done)
-PLOAD2 (done)
-PLOAD4 (done)
+PLOAD   (done)
+PLOAD1  (done)
+PLOAD2  (done)
+PLOAD4  (done)
 
-MOMENT (done)
+MOMENT  (done)
 MOMENT1
-MOMENT2
+MOMENT2 (done)
 
 ----Thermal Loads----:
 TEMP   (done)
@@ -99,6 +111,7 @@ CHBDYG (done)
 CHBDYP (done)
 
 ----Thermal BCs----:
+RADM   (needs integration)
 RADBC  (done)
 CONV   (done)
 
@@ -154,8 +167,6 @@ CORD1S
 
 ----Patran Elements w/ Properties----:
 CBARAO
-PBARL
-PBEAML
 PBCOMP
 
 CBUSH
@@ -167,23 +178,14 @@ CDAMP2
 CDAMP3
 PDAMP
 
-CELAS3
-CELAS4
-
 CGAP
 PGAP
 
 ----Patran Elements----:
-CMASS1
-CMASS2
-CMASS3
-CMASS4
-
 CGAP
 PGAP
 
 CONM1
-CONM2
 
 CDAMP1
 CDAMP2
@@ -225,7 +227,6 @@ QVECT
 QVOL
 
 RADCAV
-RADM
 RADMT
 RFORCE
 
@@ -268,7 +269,6 @@ PBCOMP
 PBEND
 PCOMPG
 PCONEAX
-PMASS
 
 ----Loads----:
 FORCEAX
@@ -277,6 +277,7 @@ FORCEAX
 CORD1R
 CORD1C
 CORD1S
+CORD3G
 
 ----Optimization----:
 DCONSTR  (needs integration)
@@ -348,7 +349,6 @@ MATRIG
 ----Properties----:
 
 ----Coordinates----:
-CORD3G
 
 ----Optimization----:
 
@@ -360,7 +360,6 @@ EIGC
 EIGP
 
 ----Constraint Cards----:
-SUPORT
 
 ----Materials----:
 MATS1

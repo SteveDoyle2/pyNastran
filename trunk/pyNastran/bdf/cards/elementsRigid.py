@@ -19,7 +19,7 @@ class RBAR(RigidElement):
         self.ga    = card.field(2)
         self.gb    = card.field(3)
         self.cna   = card.field(4)
-        slef.cnb   = card.field(5)
+        self.cnb   = card.field(5)
         self.cma   = card.field(6)
         self.cmb   = card.field(7)
         self.alpha = card.field(8)

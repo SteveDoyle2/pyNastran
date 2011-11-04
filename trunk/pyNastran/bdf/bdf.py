@@ -52,14 +52,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.cardsToRead = set([
         'PARAM','INCLUDE',  # '='
         'GRID','GRDSET','RINGAX',
-        
-        'CONM2',
-        'CELAS1','CELAS2',
+
+        'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
+        'CELAS1','CELAS2','CELAS3','CELAS4',
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
-        'CTRIA3','CQUAD4',
+        'CTRIA3','CTRIA6','CTRIAX6',
+        'CQUAD4','CQUAD8',
         'CHEXA','CPENTA','CTETRA',
         'RBAR','RBAR1','RBE1','RBE2','RBE3',
         
+        'PMASS',
         'PELAS',
         'PROD','PBAR','PBEAM',#'PBEAM3','PBEAML'
         'PSHELL','PCOMP', # 'PCOMPG',
@@ -70,17 +72,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         'SPC','SPC1','SPCD','SPCADD','SPCAX',
         'MPC','MPCADD',
-        'SUPORT1',
+        'SUPORT','SUPORT1',
 
         'LOAD',
         'FORCE','FORCE1','FORCE2',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
 
-        'FLFACT','AERO','AEROS','GUST','FLUTTER',
+        # dynamic
+        'DAREA',
+        #'NLPARM',
+
+        # aero
+        'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
-        #'NLPARM',
 
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
@@ -88,12 +94,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         
         'TEMP',#'TEMPD',
         'QBDY1','QBDY2','QBDY3','QHBDY',
-
         'CHBDYE','CHBDYG','CHBDYP',
-
         'PCONV','PCONVM','PHBDY',
-
-        'RADBC','CONV',
+        'RADM','RADBC','CONV',
+        
+        # optimization
+        #'DCONSTR','DESVAR','DDVAL',
         ])
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
@@ -181,10 +187,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         # constraints
         ## stores SUPORT1s
         self.constraints = {} # suport1, anything else???
+        self.suports = [] # suport
+
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject = constraintObject()
         ## stores MPCADD,MPC
         self.mpcObject = constraintObject()
+
+        # dynamic cards
+        ## stores DAREA
+        self.dareas   = {}
 
         # aero cards
         ## stores CAERO1
@@ -200,6 +212,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.flutters = {}
         ## store SPLINE1
         self.splines  = {} # maybe put into self.elements???
+        ## stores GRAV
+        self.gravs = {}
 
     def _initThermalDefaults(self):
         # BCs
@@ -753,6 +767,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='CTRIA6':
                 elem = CTRIA6(cardObj)
                 self.addElement(elem)
+            elif cardName=='CTRIAX6':
+                elem = CTRIAX6(cardObj)
+                self.addElement(elem)
 
             elif cardName=='CTETRA':
                 nFields = cardObj.nFields()
@@ -789,7 +806,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 elem = CONROD(cardObj)
                 self.addElement(elem)
             elif cardName=='CTUBE':
-                elem = CBAR(cardObj)
+                elem = CTUBE(cardObj)
                 self.addElement(elem)
 
             elif cardName=='CELAS1':
@@ -798,10 +815,29 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='CELAS2':
                 (elem) = CELAS2(cardObj)
                 self.addElement(elem)
-                #self.addProperty(prop)
+            elif cardName=='CELAS3':
+                (elem) = CELAS3(cardObj)
+                self.addElement(elem)
+            elif cardName=='CELAS4':
+                (elem) = CELAS4(cardObj)
+                self.addElement(elem)
             elif cardName=='CONM2': # not done...
                 elem = CONM2(cardObj)
                 self.addElement(elem)
+
+            elif cardName=='CMASS1':
+                elem = CMASS1(cardObj)
+                self.addElement(elem)
+            elif cardName=='CMASS2':
+                elem = CMASS2(cardObj)
+                self.addElement(elem)
+            elif cardName=='CMASS3':
+                elem = CMASS3(cardObj)
+                self.addElement(elem)
+            elif cardName=='CMASS4':
+                elem = CMASS4(cardObj)
+                self.addElement(elem)
+
 
             elif cardName=='RBAR':
                 (elem) = RBAR(cardObj)
@@ -847,7 +883,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='PTUBE':
                 prop = PTUBE(cardObj)
                 self.addProperty(prop)
+            elif cardName=='PMASS':
+                prop = PMASS(cardObj,nOffset=0)
+                self.addProperty(prop)
 
+                if card.field(3):
+                    prop = PMASS(cardObj,nOffset=1)
+                    self.addProperty(prop)
+                if card.field(5):
+                    prop = PMASS(cardObj,nOffset=2)
+                    self.addProperty(prop)
+                if card.field(7):
+                    prop = PMASS(cardObj,nOffset=3)
+                    self.addProperty(prop)
+                ###
             elif cardName=='PSHELL':
                 prop = PSHELL(cardObj)
                 self.addProperty(prop)
@@ -887,7 +936,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 material = MAT9(cardObj)
                 self.addMaterial(material)
             elif cardName=='MAT10':
-                material = MAT9(cardObj)
+                material = MAT10(cardObj)
                 self.addMaterial(material)
 
             #elif cardName=='MATS1':
@@ -918,10 +967,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='FORCE':
                 force = FORCE(cardObj)
                 self.addLoad(force)
-            elif cardName=='FORCE1':  # not added
+            elif cardName=='FORCE1': # not done
                 force = FORCE1(cardObj)
                 self.addLoad(force)
-            elif cardName=='FORCE2':  # not added
+            elif cardName=='FORCE2':
                 force = FORCE2(cardObj)
                 self.addLoad(force)
             elif cardName=='MOMENT':
@@ -929,10 +978,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addLoad(moment)
             elif cardName=='MOMENT1': # not added
                 moment = MOMENT1(cardObj)
-                self.addLoad(force)
-            elif cardName=='MOMENT2': # not added
+                self.addLoad(moment)
+            elif cardName=='MOMENT2':
                 moment = MOMENT2(cardObj)
-                self.addLoad(force)
+                self.addLoad(moment)
             elif cardName=='LOAD':
                 load = LOAD(cardObj)
                 self.addLoad(load)
@@ -949,13 +998,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 load = PLOAD4(cardObj)
                 self.addLoad(load)
 
+            # thermal loads
             elif cardName=='TEMP':
                 load = TEMP(cardObj)
                 self.addThermalLoad(load)
             #elif cardName=='TEMPD':
             #    load = TEMPD(cardObj)
             #    self.addThermalLoad(load)
-
             elif cardName=='QBDY1':
                 load = QBDY1(cardObj)
                 self.addThermalLoad(load)
@@ -969,6 +1018,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 load = QHBDY(cardObj)
                 self.addThermalLoad(load)
 
+            # thermal elements
             elif cardName=='CHBDYE':
                 element = CHBDYE(cardObj)
                 self.addThermalElement(element)
@@ -979,6 +1029,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 element = CHBDYP(cardObj)
                 self.addThermalElement(element)
 
+            # thermal properties
             elif cardName=='PCONV':
                 prop = PCONV(cardObj)
                 self.addConvectionProperty(prop)
@@ -989,9 +1040,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 prop = PHBDY(cardObj)
                 self.addPHBDY(prop)
 
+            # thermal BCs
             elif cardName=='CONV':
                 bc = CONV(cardObj)
                 self.addThermalBC(bc,bc.eid)
+            #elif cardName=='RADM':
+            #    bc = RADM(cardObj)
+            #    self.addThermalBC(bc,bc.nodamb)
             elif cardName=='RADBC':
                 bc = RADBC(cardObj)
                 self.addThermalBC(bc,bc.nodamb)
@@ -1000,6 +1055,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #    load = TABLEH1(cardObj)
             #    self.addTable(load)
 
+            # constraints
             elif cardName=='MPC':
                 constraint = MPC(cardObj)
                 self.addConstraint_MPC(constraint)
@@ -1008,6 +1064,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 assert not isinstance(constraint,SPCADD)
                 self.addConstraint_MPCADD(constraint)
 
+            # constraints
             elif cardName=='SPC':
                 constraint = SPC(cardObj)
                 self.addConstraint_SPC(constraint)
@@ -1018,16 +1075,25 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 constraint = SPCAX(cardObj)
                 self.addConstraint_SPC(constraint)
             elif cardName=='SPCD':
-                constraint = SPC1(cardObj)
+                constraint = SPCD(cardObj)
                 self.addConstraint_SPC(constraint)
             elif cardName=='SPCADD':
                 constraint = SPCADD(cardObj)
                 assert not isinstance(constraint,MPCADD)
                 self.addConstraint_SPCADD(constraint)
+            elif cardName=='SUPORT':
+                suport = SUPORT(cardObj)
+                self.addSUPORT(suport)
             elif cardName=='SUPORT1':
-                constraint = SUPORT1(cardObj)
-                self.addConstraint(constraint)
+                suport1 = SUPORT1(cardObj)
+                self.addConstraint(suport1)
 
+            # constraints
+            elif cardName=='DAREA':
+                darea = DAREA(cardObj)
+                self.addDArea(darea)
+
+            # aero
             elif cardName=='SPLINE1':
                 aero = SPLINE1(cardObj)
                 self.addSpline(aero)
@@ -1049,10 +1115,14 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='GUST':
                 gust = GUST(cardObj)
                 self.addGust(gust)
+            elif cardName=='GRAV':
+                grav = GRAV(cardObj)
+                self.addGrav(grav)
             elif cardName=='FLUTTER':
                 flutter = FLUTTER(cardObj)
                 self.addFlutter(flutter)
 
+            # coordinate systems
             elif cardName=='CORD2R':
                 coord = CORD2R(cardObj)
                 self.addCoord(coord)

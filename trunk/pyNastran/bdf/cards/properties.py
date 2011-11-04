@@ -7,6 +7,26 @@ from numpy import zeros
 # my code
 from baseCard import Property
 
+class PointProperty(Property):
+    type = 'PointProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
+
+class PMASS(PointProperty):
+    def __init__(self,card):
+        PointProperty.__init__(self,card,nOffset=0)
+        
+        nOffset *= 2
+        self.pid = card.field(1+nOffset)
+        self.Mass = card.field(2+nOffset,0.)
+
+    def mass(self):
+        return self.mass
+
+    def __repr__(self):
+        fields = ['PMASS',self.pid,self.Mass]
+
 class SpringProperty(Property):
     type = 'SpringProperty'
     def __init__(self,card):

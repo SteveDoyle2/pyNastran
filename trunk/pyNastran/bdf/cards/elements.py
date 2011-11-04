@@ -47,10 +47,6 @@ class SpringElement(Element):
     def mass(self):
         return 0.0
 
-class PointElement(Element):
-    def __init__(self,card):
-        Element.__init__(self,card)
-
 class CELAS1(SpringElement):
     type = 'CELAS1'
     def __init__(self,card):
@@ -58,7 +54,7 @@ class CELAS1(SpringElement):
         self.eid = card.field(2)
 
         nids = [card.field(3),card.field(5)]
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=False)
         assert len(self.nodes)==2
 
         ## property ID
@@ -74,7 +70,7 @@ class CELAS1(SpringElement):
         
     def __repr__(self):
         nodes = self.nodeIDs()
-        fields = [self.type,self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
+        fields = ['CELAS1',self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
         return self.printCard(fields)
 
 class CELAS2(SpringElement):
@@ -82,7 +78,7 @@ class CELAS2(SpringElement):
     def __init__(self,card):
         SpringElement.__init__(self,card)
         nids = [card.field(3),card.field(5)]
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=False)
         assert len(self.nodes)==2
 
         ## stiffness of the scalar spring
@@ -103,8 +99,58 @@ class CELAS2(SpringElement):
         
     def __repr__(self):
         nodes = self.nodeIDs()
-        fields = [self.type,self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]
+        fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]
         return self.printCard(fields)
+
+class CELAS3(SpringElement):
+    type = 'CELAS3'
+    def __init__(self,card):
+        SpringElement.__init__(self,card)
+        #nids = [card.field(3),card.field(5)]
+        #self.prepareNodeIDs(nids)
+        #assert len(self.nodes)==2
+
+        self.eid = card.field(1)
+        self.pid = card.field(2,self.edi)
+        
+        ## Scalar point identification numbers
+        self.s1 = card.field(4)
+        self.s2 = card.field(5)
+
+    def crossReference(self,model):
+        pass
+        #self.nodes = model.Nodes(self.nodes)
+        
+    def __repr__(self):
+        nodes = self.nodeIDs()
+        fields = ['CELAS3',self.eid,self.pid,self.s1,self.s2]
+        return self.printCard(fields)
+
+class CELAS4(SpringElement):
+    type = 'CELAS4'
+    def __init__(self,card):
+        SpringElement.__init__(self,card)
+        #nids = [card.field(3),card.field(5)]
+        #self.prepareNodeIDs(nids)
+        #assert len(self.nodes)==2
+
+        self.eid = card.field(1)
+
+        ## stiffness of the scalar spring
+        self.k   = card.field(2)
+        
+        ## Scalar point identification numbers
+        self.s1 = card.field(4)
+        self.s2 = card.field(5)
+
+    def crossReference(self,model):
+        pass
+        #self.nodes = model.Nodes(self.nodes)
+
+    def __repr__(self):
+        fields = ['CELAS4',self.eid,self.k,self.s1,self.s2]
+        return self.printCard(fields)
+
 
 class CSHEAR(Element): # not integrated
     type = 'CSHEAR'
@@ -156,6 +202,122 @@ class CVISC(CROD): # not integrated
         fields = ['CVISC',self.eid]
 ###
 
+
+class PointElement(Element):
+    def __init__(self,card):
+        Element.__init__(self,card)
+        
+    def mass(self):
+        return self.Mass
+
+
+
+class CMASS1(PointElement):
+    """
+    Defines a scalar mass element.
+    CMASS2 EID M   G1 C1 G2 C2
+    CMASS1 EID PID G1 C1 G2 C2
+    """
+    type = 'CMASS2'
+    def __init__(self,card):
+        PointElement.__init__(self,card)
+        self.eid = card.field(1)
+        self.pid = card.field(2,self.eid)
+        self.g1 = card.field(3)
+        self.c1 = card.field(4)
+        self.g2 = card.field(5)
+        self.c2 = card.field(6)
+
+    def mass(self):
+        return self.pid.Mass
+
+    def crossReference(self,mesh):
+        """
+        """
+        #self.g1 = mesh.Node(self.g1)
+        #self.g2 = mesh.Node(self.g2)
+        self.pid = mesh.Property(self.pid)
+
+    def __repr__(self):
+        fields = ['CMASS1',self.eid,self.pid,self.g1,self.c1,self.g2,self.c2]
+        return self.printCard(fields)
+
+class CMASS2(PointElement):
+    """
+    Defines a scalar mass element without reference to a property entry.
+    CMASS2 EID M G1 C1 G2 C2
+    """
+    type = 'CMASS2'
+    def __init__(self,card):
+        PointElement.__init__(self,card)
+        self.eid  = card.field(1)
+        self.Mass = card.field(2,0.)
+        self.g1 = card.field(3)
+        self.c1 = card.field(4)
+        self.g2 = card.field(5)
+        self.c2 = card.field(6)
+
+    def crossReference(self,mesh):
+        """
+        """
+        #self.g1 = mesh.Node(self.g1)
+        #self.g2 = mesh.Node(self.g2)
+        pass
+
+    def __repr__(self):
+        Mass = self.setBlankIfDefault(self.Mass,0.0)
+        fields = ['CMASS2',self.eid,self.Mass,self.g1,self.c1,self.g2,self.c2]
+        return self.printCard(fields)
+
+class CMASS3(PointElement):
+    """
+    Defines a scalar mass element that is connected only to scalar points.
+    CMASS3 EID PID S1 S2
+    """
+    type = 'CMASS3'
+    def __init__(self,card):
+        PointElement.__init__(self,card)
+        self.eid  = card.field(1)
+        self.pid  = card.field(2,self.eid)
+        self.s1 = card.field(3)
+        self.s2 = card.field(4)
+
+    def crossReference(self,mesh):
+        """
+        """
+        #self.s1 = mesh.Node(self.s1)
+        #self.s2 = mesh.Node(self.s2)
+        self.pid = mesh.Property(self.pid)
+
+    def __repr__(self):
+        fields = ['CMASS3',self.eid,self.pid,self.s1,self.s2]
+        return self.printCard(fields)
+
+class CMASS4(PointElement):
+    """
+    Defines a scalar mass element that is connected only to scalar points, without reference to a property entry
+    CMASS4 EID M S1 S2
+    """
+    type = 'CMASS4'
+    def __init__(self,card):
+        PointElement.__init__(self,card)
+        self.eid  = card.field(1)
+        self.Mass = card.field(2,0.)
+        self.s1 = card.field(3)
+        self.s2 = card.field(4)
+
+    def crossReference(self,mesh):
+        """
+        """
+        #self.s1 = mesh.Node(self.s1)
+        #self.s2 = mesh.Node(self.s2)
+        pass
+
+    def __repr__(self):
+        fields = ['CMASS4',self.eid,self.Mass,self.s1,self.s2]
+        return self.printCard(fields)
+
+   
 class CONM2(PointElement): # v0.1 not done
     """
     @todo support cid != 0
@@ -173,9 +335,6 @@ class CONM2(PointElement): # v0.1 not done
         self.Mass = card.field(4,0.0)
         self.X    = array(card.fields(5,8,[0.,0.,0.]))
         self.I    = card.fields(9,15,[0.]*6)
-
-    def mass(self):
-        return self.mass
 
     def crossReference(self,mesh):
         """
@@ -203,7 +362,7 @@ class CONM2(PointElement): # v0.1 not done
 
         cid  = self.setBlankIfDefault(self.cid,0)
         Mass = self.setBlankIfDefault(self.Mass,0.0)
-        fields = [self.type,self.eid,self.gid,cid,Mass]+X+I
+        fields = ['CONM2',self.eid,self.gid,cid,Mass]+X+I
         return self.printCard(fields)
 
    

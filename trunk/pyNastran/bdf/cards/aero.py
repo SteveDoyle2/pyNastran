@@ -1,7 +1,7 @@
 from numpy import array
 from baseCard import BaseCard
 
-class DAREA(BaseCard): # not integrated
+class DAREA(BaseCard):
     """
     Defines scale (area) factors for static and dynamic loads. In dynamic analysis, DAREA
     is used in conjunction with ACSRCE, RLOADi and TLOADi entries.
@@ -11,14 +11,14 @@ class DAREA(BaseCard): # not integrated
     type = 'DAERO1'
     def __init__(self,card):
         #Material.__init__(self,card)
-        self.si    =  card.field(1)
+        self.sid   =  card.field(1)
         self.p     = [card.field(2),card.field(5)]
         self.c     = [card.field(3),card.field(6)]
         self.a     = [card.field(4),card.field(7)]
         self.units = card.field(3)
 
     def __repr__(self):
-        fields = ['DAREA',self.sid,  self.p[0],self.c[0],self.a[0],  self.self.p[1],self.c[1],self.a[1]]
+        fields = ['DAREA',self.sid, self.p[0],self.c[0],self.a[0],  self.p[1],self.c[1],self.a[1] ]
         return self.printCard(fields)
 
 class SPLINE1(BaseCard): # not integrated
