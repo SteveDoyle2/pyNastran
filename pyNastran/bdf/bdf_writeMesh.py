@@ -56,6 +56,7 @@ class writeMesh(object):
 
         msg += self.writeMaterials()
         msg += self.writeLoads()
+        msg += self.writeDynamic()
         msg += self.writeAero()
         msg += self.writeThermal()
         msg += self.writeConstraints()
@@ -82,6 +83,7 @@ class writeMesh(object):
 
         msg += self.writeMaterials()
         msg += self.writeLoads()
+        msg += self.writeDynamic()
         msg += self.writeAero()
         msg += self.writeThermal()
         msg += self.writeConstraints()
@@ -253,6 +255,9 @@ class writeMesh(object):
         for key,loadcase in sorted(self.constraints.items()):
             for constraint in loadcase:
                 msg += str(constraint)
+        for suport in self.suports:
+            msg += str(suport)
+
 
         if self.spcObject:
             msg += '$SPCs\n'
@@ -273,6 +278,12 @@ class writeMesh(object):
                 msg += str(load)
         return msg
 
+    def writeDynamic(self):
+        msg = '$DYNAMIC\n'
+        for ID,darea in sorted(self.dareas.items()):
+            msg += str(darea)
+        return msg
+        
     def writeAero(self):
         """writes the aero cards"""
         #print "output aero cards..."
@@ -291,6 +302,8 @@ class writeMesh(object):
             msg += str(aero)
         for ID,gust in sorted(self.gusts.items()):
             msg += str(gust)
+        for ID,grav in sorted(self.gravs.items()):
+            msg += str(grav)
         for ID,flutter in sorted(self.flutters.items()):
             msg += str(flutter)
 

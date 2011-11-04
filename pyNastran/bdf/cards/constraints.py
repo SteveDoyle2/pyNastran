@@ -157,6 +157,34 @@ class SUPORT1(Constraint):
             fields += [ID,c]
         return self.printCard(fields)
 
+class SUPORT(Constraint):
+    """
+    SUPORT      ID1 C1 ID2 C2 ID3 C3 ID4 C4
+    SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    """
+    type = 'SUPORT'
+    def __init__(self,card):
+        Constraint.__init__(self,card)
+        fields   = card.fields(1)
+        
+        self.IDs = []
+        self.Cs  = []
+        #print "fields = ",fields
+        for i in range(0,len(fields),2):
+            #print "i = ",i
+            self.IDs.append(fields[i  ])
+            self.Cs.append( fields[i+1])
+            #if fields[i+1]==None:
+            #    break
+            ###
+        ###
+
+    def __repr__(self):
+        fields = ['SUPORT']
+        for ID,c in zip(self.IDs,self.Cs):
+            fields += [ID,c]
+        return self.printCard(fields)
+
 class MPC(Constraint):
     type = 'MPC'
     def __init__(self,card):
@@ -225,7 +253,7 @@ class SPC(Constraint):
             fields += [gid,constraint,enforced]
         return self.printCard(fields)
 
-class SPCD(Constraint):
+class SPCD(SPC):
     """
     Defines an enforced displacement value for static analysis and an enforced motion
     value (displacement, velocity or acceleration) in dynamic analysis.
@@ -235,6 +263,12 @@ class SPCD(Constraint):
     type = 'SPCD'
     def __init__(self,card):
         SPC.__init__(self,card)  # defines everything :) at least until cross-referencing methods are implemented
+
+    def __repr__(self): # SPC
+        fields = ['SPCD',self.cid]
+        for (gid,constraint,enforced) in zip(self.gids,self.constraints,self.enforced):
+            fields += [gid,constraint,enforced]
+        return self.printCard(fields)
 
 class SPCAX(Constraint):
     """

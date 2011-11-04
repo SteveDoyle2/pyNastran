@@ -1,5 +1,5 @@
 #import sys
-from numpy import array
+from numpy import array,cross
 from numpy.linalg import norm
 
 from baseCard import BaseCard
@@ -38,6 +38,34 @@ class Load(BaseCard):
         fields = [self.type,self.lid]
         return self.printCard(fields)
 
+
+class LSEQ(BaseCard):  # how does this work...
+    """
+    Defines a sequence of static load sets
+    """
+    type = 'LSEQ'
+    def __init__(self,card):
+        self.sid  = card.field(1)
+        self.exciteID = card.field(2)
+        self.lid = card.field(3)
+        self.tid = card.field(4)
+
+
+    def nodeIDs(self,nodes=None):
+        """returns nodeIDs for repr functions"""
+        if not nodes:
+           nodes = self.nodes
+        if isinstance(nodes[0],int):
+            #print 'if'
+            return [node     for node in nodes]
+        else:
+            #print 'else'
+            return [node.nid for node in nodes]
+        ###
+
+    def __repr__(self):
+        fields = ['LSEQ',self.lid]
+        return self.printCard(fields)
 
 class LOAD(Load):
     type = 'LOAD'
@@ -95,14 +123,32 @@ class OneDeeLoad(Load): # FORCE/MOMENT
             self.mag *= normXYZ
             self.xyz = self.xyz/normXYZ
 
-#class FORCE2(OneDeeLoad):
-class FORCE(OneDeeLoad):
+class Force(OneDeeLoad):
+    type = '1D_Load'
+    def __init__(self,card):
+        OneDeeLoad.__init__(self,card)
+
+    def F(self):
+        return self.xyz*self.mag
+
+class Moment(OneDeeLoad):
+    type = 'Moment'
+    def __init__(self,card):
+        OneDeeLoad.__init__(self,card)
+
+    def M(self):
+        return self.xyz*self.mag
+
+
+
+#class FORCE2(Force):
+class FORCE(Force):
     type = 'FORCE'
     def __init__(self,card):
         """
         FORCE          3       1            100.      0.      0.      1.
         """
-        OneDeeLoad.__init__(self,card)
+        Force.__init__(self,card)
         self.node = card.field(2)
         self.cid  = card.field(3,0)
         self.mag  = card.field(4)
@@ -120,7 +166,7 @@ class FORCE(OneDeeLoad):
         fields = ['FORCE',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
 
-class FORCE1(OneDeeLoad):
+class FORCE1(Force):
     """
     Defines a static concentrated force at a grid point by specification of a magnitude and
     two grid points that determine the direction.
@@ -130,7 +176,7 @@ class FORCE1(OneDeeLoad):
         """
         FORCE          3       1            100.      0.      0.      1.
         """
-        OneDeeLoad.__init__(self,card)
+        Force.__init__(self,card)
         self.node = card.field(2)
         self.mag  = card.field(3)
         self.g1   = card.field(4)
@@ -149,13 +195,12 @@ class FORCE1(OneDeeLoad):
         return self.node.nid
 
     def __repr__(self):
-        fields = ['FORCE1',self.g,self.Node(),self.F,self.g1,self.g2]
+        fields = ['FORCE1',self.lid,self.Node(),self.mag,self.g1,self.g2]
         return self.printCard(fields)
 
 
-#class MOMENT1(OneDeeLoad):
-#class MOMENT2(OneDeeLoad):
-class MOMENT(OneDeeLoad):    # can i copy the force init without making the MOMENT a FORCE ???
+#class MOMENT1(Moment):
+class MOMENT(Moment):    # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
     def __init__(self,card):
         """
@@ -165,7 +210,7 @@ class MOMENT(OneDeeLoad):    # can i copy the force init without making the MOME
         MOMENT SID G CID M    N1  N2  N3
         MOMENT 2   5   6 2.9 0.0 1.0 0.0
         """
-        OneDeeLoad.__init__(self,card)
+        Moment.__init__(self,card)
         self.node = card.field(2)
         self.cid  = card.field(3,0)
         self.mag  = card.field(4)
@@ -181,6 +226,41 @@ class MOMENT(OneDeeLoad):    # can i copy the force init without making the MOME
     def __repr__(self):
         cid = self.setBlankIfDefault(self.cid,0)
         fields = ['MOMENT',self.lid,self.node,cid,self.mag] + list(self.xyz)
+        return self.printCard(fields)
+
+class MOMENT2(Moment):
+    type = 'MOMENT2'
+    def __init__(self,card):
+        """
+        Defines a static concentrated moment at a grid point by specification of a magnitude
+        and four grid points that determine the direction.
+
+        MOMENT2 SID G M G1 G2 G3 G4
+        """
+        Moment.__init__(self,card)
+        self.node = card.field(2)
+        self.mag  = card.field(3)
+        self.g1   = card.field(4)
+        self.g2   = card.field(5)
+        self.g3   = card.field(6)
+        self.g4   = card.field(7)
+
+        xyz = card.fields(5,8,[0.,0.,0.])
+        assert len(xyz)==3,'xyz=%s' %(xyz)
+        self.xyz = array(xyz)
+
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        (self.g1,self.g2,self.g3,self.g4) = model.Nodes(self.g1,self.g2,self.g3,self.g4)
+        v12 = g2.Position()-g1.Position()
+        v34 = g4.Position()-g3.Position()
+        v12 = v12/norm(v12)
+        v12 = v34/norm(v34)
+        self.xyz = cross(v12,v34)
+
+    def __repr__(self):
+        (node,g1,g2,g3,g4) = self.nodeIDs([self.node,self.g1,self.g2,self.g3,self.g4])
+        fields = ['MOMENT2',self.lid,node,self.mag,g1,g2,g3,g4]
         return self.printCard(fields)
 
 class PLOAD(Load):
@@ -234,6 +314,7 @@ class PLOAD2(Load):  # todo:  support THRU
         
         if card.field(4)=='THRU':
             print "found a THRU on PLOAD2"
+            pass
     
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -253,7 +334,8 @@ class PLOAD4(Load):
         self.p = [p1]+p
         
         if card.field(7)=='THRU':
-            print "found a THRU on PLOAD4"
+            #print "found a THRU on PLOAD4"
+            pass
             eid2 = card.field(8)
             self.eids= self.expandThru([self.eid,'THRU',eid2])
             self.g3 = None

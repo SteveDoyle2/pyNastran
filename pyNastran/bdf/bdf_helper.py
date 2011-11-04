@@ -195,7 +195,7 @@ class addMethods(object):
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
-        assert elem.eid not in self.elements
+        assert elem.eid not in self.elements,'eid=%s oldElement=\n%s' %(elem.eid,self.elements[elem.eid])
         assert elem.eid>0
         self.elements[elem.eid] = elem
 
@@ -282,15 +282,29 @@ class addMethods(object):
         else:
             self.constraints[key] = [constraint]
 
+    def addSUPORT(self,suport):
+        self.suports.append(suport)
+
+
+    def addDArea(self,darea):
+        assert darea.sid not in self.dareas
+        assert darea.sid>0
+        self.dareas[darea.sid] = darea
+
     def addAero(self,aero):
         assert aero.acsid not in self.aeros
-        assert asero.acsid>0
+        assert aero.acsid>0
         self.aeros[aero.acsid] = aero
 
     def addCAero(self,caero):
         assert caero.eid not in self.caeros,'self.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
         assert caero.eid>0
         self.caeros[caero.eid] = caero
+
+    def addGrav(self,grav):
+        assert grav.sid not in self.gravs
+        assert grav.sid>0
+        self.gravs[grav.sid] = grav
 
     def addSpline(self,spline):
         assert spline.eid not in self.splines

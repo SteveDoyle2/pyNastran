@@ -107,20 +107,21 @@ class MAT1(Material):
 
         if G is None and E is None:
             raise RuntimeError('G=%s E=%s cannot both be None' %(G,E))
-        if E and nu:
-            #print "G1 = ",G
+        if E  is not None and nu is not None:
             G = E/2./(1+nu)
-            #print "G2 = ",G
-        elif G and nu:
-            #print "E1 = ",E
+        elif G is not None and nu is not None:
             E = 2*(1+nu)*G
-            #print "E2 = ",E
+        elif G is not None and E is not None:
+            nu = E/(2*G)-1.
         elif G is None and nu is None:
             G  = 0.0
             nu = 0.0
         elif E is None and nu is None:
             E  = 0.0
             nu = 0.0
+        else:
+            msg = 'G=%s E=%s nu=%s' %(G,E,nu)
+            raise RuntimeError(msg)
         self.E = E
         self.G = G
         self.nu = nu
@@ -131,6 +132,7 @@ class MAT1(Material):
     def __repr__(self):
         TRef = self.setBlankIfDefault(self.TRef,0.0)
         
+        #print "MAT1 - self.E=%s self.nu=%s" %(self.E,self.nu)
         G_default = self.E/2./(1+self.nu)
         G    = self.setBlankIfDefault(self.G,G_default)
         #G = self.G
@@ -178,7 +180,7 @@ class MAT2(AnisotropicMaterial):
         G33 = self.setBlankIfDefault(self.G33,0.0)
         Tref = self.setBlankIfDefault(self.TRef,0.0)
         fields = ['MAT2',self.mid,G11,G12,G13,G22,G23,G33,self.rho,
-                  self.a1,self.a2,self.a3,Tref,self.ge,self.st,self.sc,self.ss,
+                  self.a1,self.a2,self.a3,Tref,self.ge,self.St,self.Sc,self.Ss,
                   self.Mcsid]
         return self.printCard(fields)
 
