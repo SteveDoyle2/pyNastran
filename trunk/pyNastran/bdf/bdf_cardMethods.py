@@ -13,6 +13,8 @@ class cardMethods(object):
         while len(self.linesPack[-1])<40:
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0].rstrip('\n\r\t ')
+            if '\t' in line:
+                raise SyntaxError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)

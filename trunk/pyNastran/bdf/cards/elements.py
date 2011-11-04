@@ -54,7 +54,7 @@ class CELAS1(SpringElement):
         self.eid = card.field(2)
 
         nids = [card.field(3),card.field(5)]
-        self.prepareNodeIDs(nids,allowEmptyNodes=False)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
         ## property ID
@@ -78,7 +78,7 @@ class CELAS2(SpringElement):
     def __init__(self,card):
         SpringElement.__init__(self,card)
         nids = [card.field(3),card.field(5)]
-        self.prepareNodeIDs(nids,allowEmptyNodes=False)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
         ## stiffness of the scalar spring
@@ -151,8 +151,7 @@ class CELAS4(SpringElement):
         fields = ['CELAS4',self.eid,self.k,self.s1,self.s2]
         return self.printCard(fields)
 
-
-class CSHEAR(Element): # not integrated
+class CSHEAR(Element):
     type = 'CSHEAR'
     def __init__(self,card):
         Element.__init__(self,card)
@@ -165,7 +164,7 @@ class CSHEAR(Element): # not integrated
         fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
-class CRAC2D(Element): # not integrated
+class CRAC2D(Element):
     type = 'CRAC2D'
     def __init__(self,card):
         Element.__init__(self,card)
@@ -179,7 +178,7 @@ class CRAC2D(Element): # not integrated
         fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
-class CRAC3D(Element): # not integrated
+class CRAC3D(Element):
     type = 'CRAC3D'
     def __init__(self,card):
         Element.__init__(self,card)
@@ -193,7 +192,8 @@ class CRAC3D(Element): # not integrated
         fields = [self.type,self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
         
-class CVISC(CROD): # not integrated
+
+class CVISC(CROD):
     type = 'CVISC'
     def __init__(self,card):
         CROD.__init__(self,card)

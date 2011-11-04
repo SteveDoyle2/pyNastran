@@ -57,10 +57,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'CELAS1','CELAS2','CELAS3','CELAS4',
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
         'CTRIA3','CTRIA6','CTRIAX6',
-        'CQUAD4','CQUAD8',
+        'CQUAD4','CQUAD8','CQUADR','CQUADX',
         'CHEXA','CPENTA','CTETRA',
+        'CSHEAR','CVISC','CRAC2D','CRAC3D',
         'RBAR','RBAR1','RBE1','RBE2','RBE3',
-        
+
         'PMASS',
         'PELAS',
         'PROD','PBAR','PBEAM',#'PBEAM3','PBEAML'
@@ -80,8 +81,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'MOMENT','MOMENT1','MOMENT2',
 
         # dynamic
-        'DAREA',
-        #'NLPARM',
+        'DAREA','NLPARM',
 
         # aero
         'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
@@ -99,7 +99,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'RADM','RADBC','CONV',
         
         # optimization
-        #'DCONSTR','DESVAR','DDVAL',
+        'DCONSTR','DESVAR','DDVAL',
         ])
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
@@ -197,6 +197,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         # dynamic cards
         ## stores DAREA
         self.dareas   = {}
+        self.nlparms = {}
 
         # aero cards
         ## stores CAERO1
@@ -214,6 +215,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.splines  = {} # maybe put into self.elements???
         ## stores GRAV
         self.gravs = {}
+        
+        # optimization
+        self.dconstrs = {}
+        self.desvars  = {}
+        self.ddvals   = {}
 
     def _initThermalDefaults(self):
         # BCs
@@ -415,13 +421,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                     solValue = sline[0]
                     method = sline[1]
 
-                    print "sline    = |%s|" %(sline)
+                    #print "sline    = |%s|" %(sline)
                     #print "sline2   = |%s|" %(sline2)
                 else:
                     solValue = uline
                     method = None
 
-                print "solValue = |%s|" %(solValue)
+                #print "solValue = |%s|" %(solValue)
                 sol = solValue[3:].strip()
                     
                 assert self.sol==None,'cannot overwrite solution existing=|SOL %s| new =|%s|' %(self.sol,sline2)
@@ -452,15 +458,16 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         except:
             print "sol = |%r|" %(sol)
             self.sol = self.solmap_toValue[sol]
-            print "self.sol = ",self.sol
+            print "sol = ",self.sol
 
         if self.sol==600:
             ## solution 600 method modifier
             self.solMethod = method.strip()
+            print "sol=%s method=%s" %(self.sol,self.solMethod)
         else: # very common
             self.solMethod = None
         ###
-        print "sol=%s method=%s" %(self.sol,self.solMethod)
+        #print "sol=%s method=%s" %(self.sol,self.solMethod)
         
 
     def isCaseControlDeck(self,line):
@@ -767,9 +774,34 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='CTRIA6':
                 elem = CTRIA6(cardObj)
                 self.addElement(elem)
+
             elif cardName=='CTRIAX6':
                 elem = CTRIAX6(cardObj)
                 self.addElement(elem)
+            elif cardName=='CQUAD':
+                elem = CQUAD(cardObj)
+                self.addElement(elem)
+            elif cardName=='CQUADR':
+                elem = CQUADR(cardObj)
+                self.addElement(elem)
+            elif cardName=='CQUADX':
+                elem = CQUADX(cardObj)
+                self.addElement(elem)
+            elif cardName=='CVISC':
+                elem = CVISC(cardObj)
+                self.addElement(elem)
+            elif cardName=='CSHEAR':
+                elem = CSHEAR(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='CRAC2D':
+                elem = CRAC2D(cardObj)
+                self.addElement(elem)
+            elif cardName=='CRAC3D':
+                elem = CRAC3D(cardObj)
+                self.addElement(elem)
+
+
 
             elif cardName=='CTETRA':
                 nFields = cardObj.nFields()
@@ -1088,10 +1120,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 suport1 = SUPORT1(cardObj)
                 self.addConstraint(suport1)
 
-            # constraints
+            # dynamic
             elif cardName=='DAREA':
                 darea = DAREA(cardObj)
                 self.addDArea(darea)
+            elif cardName=='NLPARM':
+                nlparm = NLPARM(cardObj)
+                self.addNLParm(nlparm)
 
             # aero
             elif cardName=='SPLINE1':
@@ -1121,6 +1156,17 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='FLUTTER':
                 flutter = FLUTTER(cardObj)
                 self.addFlutter(flutter)
+
+            elif cardName=='DCONSTR':
+                flutter = DCONSTR(cardObj)
+                self.addDConstr(flutter)
+            elif cardName=='DESVAR':
+                desvar = DESVAR(cardObj)
+                self.addDesvar(desvar)
+            elif cardName=='DDVAL':
+                ddval = DDVAL(cardObj)
+                self.addDDVal(ddval)
+
 
             # coordinate systems
             elif cardName=='CORD2R':
@@ -1163,7 +1209,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.foundEndData = True
                 #break
             else:
-                print 'rejecting processed %s' %(card)
+                if '=' not in card[0]:  ## warning cards with = signs in them are not announced when they are rejected
+                    print 'rejecting processed %s' %(card)
                 self.rejectCards.append(card)
             ###
         except:
