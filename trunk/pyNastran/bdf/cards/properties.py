@@ -13,6 +13,19 @@ class SpringProperty(Property):
         Property.__init__(self,card)
         pass
 
+class PELAS(SpringProperty):
+    type = 'PELAS'
+    def __init__(self,card,nPELAS=0):
+        SpringProperty.__init__(self,card)
+        self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
+        self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
+        self.ge  = card.field(3+5*nPELAS)
+        self.s   = card.field(4+5*nPELAS)
+
+    def __repr__(self):
+        fields = ['PELAS',self.pid,self.k,self.ge,self.s]
+        return self.printCard(fields)
+
 class LineProperty(Property):
     type = 'LineProperty'
     def __init__(self,card):
@@ -42,195 +55,93 @@ class LineProperty(Property):
     def nu(self):
         return self.mid.nu
 
-class ShellProperty(Property):
-    type = 'ShellProperty'
+class PROD(LineProperty):
+    type = 'PROD'
     def __init__(self,card):
-        Property.__init__(self,card)
-        pass
+        LineProperty.__init__(self,card)
+        self.pid = card.field(1)
+        self.mid = card.field(2)
+        self.A   = card.field(3)
+        self.J   = card.field(4)
+        self.c   = card.field(5,0.0)
+        self.nsm = card.field(6,0.0)
+
+    def crossReference(self,mesh):
+        self.mid = mesh.Material(self.mid)
+
+    def __repr__(self):
+        c   = self.setBlankIfDefault(self.c,0.0)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
+        fields = ['PROD',self.pid,self.Mid(),self.A,self.J,c,nsm]
+        return self.printCard(fields)
+
+class PTUBE(LineProperty):
+    type = 'PTUBE'
+    def __init__(self,card):
+        LineProperty.__init__(self,card)
+        self.pid = card.field(1)
+        self.mid = card.field(2)
+        self.OD1 = card.field(3)
+        self.t   = card.field(4,self.outerDiameter/2.)
+        self.nsm = card.field(5,0.0)
+        self.OD2 = card.field(6,self.outerDiameter)
+
+    def __repr__(self):
+        t   = self.setBlankIfDefault(self.t,self.OD1/2.)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
+        OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
+        fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
+        return self.printCard(fields)
     
-
-    def S(self):
-        """"
-        Calculates the compliance matrix for a lamina
-        [Q] = [S]^-1
-        @todo finish...if necessary...
+    def area(self):
         """
-        pass
-        #return Q.inv()
-
-    def ABDH(self):
+        this shouldnt be so hard...
         """
-        tranforms load to strain/bending curvature taken at \f$ z=0 \f$
-        \f[ \large  [T] \left[ 
-          \begin{array}{c}
-              Nx  \\
-              Ny  \\
-              Nz  \\
-              Mx  \\
-              My  \\
-              Mz  \\
-          \end{array} \right] = 
-
-          [ABBD] \left[ 
-          \begin{array}{c}
-              \epsilon_{xx}  \\
-              \epsilon_{yy}  \\
-                \gamma_{xy}  \\
-                \kappa_{xx}  \\
-                \kappa_{yy}  \\
-                \kappa_{xy}  \\
-          \end{array} \right]
-        \f] 
-
-
-        [Nx] = [            ] [ e_xx0    ]
-        [Ny] = [  [A]   [B] ] [ e_yy0    ]
-        [Nz] = [            ] [ gamma_xy0]
-        [Mx] = [            ] [ k_xx0    ]
-        [My] = [  [B]   [D] ] [ k_yy0    ]
-        [Mz] = [            ] [ k_xy0    ]
+        return (self.area1()+self.area2())/2.
+        factor = pi()
+        A = 1.
+        #Di = Do-2t
+        #Ri = Ro-t
+        #A/pi = Ro^2-Ri^2 = Ro^2-(Ro-t)^2 = Ro^2-(Ro-t)(Ro-t)
+        #A/pi = Ro^2-(Ro^2-2Ro*t + tt)
+        #A/pi = 2Ro*t-tt = t*(2Ro-t)
+        #R/2*(2R-R/2) = R/2*(3/2*R) = RR3/4
         
-        \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k  -z_{k-1}  ) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                     \f]
-        \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^2-z_{k-1}^2) = \Sigma_{k=1}^N (Q_{ij})_k (\overline{z} t_k)                      \f]
-        \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^3-z_{k-1}^3) = \Sigma_{k=1}^N (Q_{ij})_k         (\overline{z}^2 t_k + t_k^3/12) \f]
-        \f[ \large  H_{ij} =                                                      \Sigma_{k=1}^N (Q_{ij})_k (t_k -4/t^2 (\overline{z}^2 t_k + t_k^3/12) \f]
+        #2A/pi = t*(2Ro1-t)+(2Ro2-t)*t = t*(2Ro1-2t+2Ro2)
+        #factor = pi/2
+        #A = pi*t*(Ro1+Ro2-t)
+        #A = pi*t*(Do-t)
         
-        p. 138 of "Introduction to Composite Material Design"
-        """
-        A = zeros(9,'d')
-        B = copy.deepcopy(A)
-        D = copy.deepcopy(A)
-        H = copy.deepcopy(A)
-
-        for i,layer in enumerate(self.layers):
-            t = layer.t
-            z0 = layer.z
-            #z1 = z0+t
-            zbar = (2*z0+t)/2. # (z1+z0)/2. 
-            Qraw   = layer.Q() # needs E11, E22, G12, G13, nu12, nu21
-            qlayer = Qall(Qout,layer.thetad)
-            A += qlayer*t
-            B += qlayer*t*z
-            
-            Dfactor = t*zbar*zbar+t**3/12.
-            D += qlayer*Dfactor
-            H += qlayer*(t-4./t**2 * Dfactor)
-        B = 0.5*B
-        D = D/3.
-        H = H*5./4.
-            
-            
-    def Qall(self,thetad):
-        """
-        Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
-        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
-        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
         
-        p. 123 of "Introduction to Composite Material Design"
-        """
-        theta = radians(thetad)
-        ct  = cos(theta)
-        c2t = ct*ct
-        c3t = ct*c2t
-        c4t = c2t*c2t
-
-        st  = sin(theta)
-        s2t = st*st
-        s3t = st*s2t
-        s4t = s2t*s2t
+        #A/pi = DoDo/4 - (Do/2-t)*(Do/2-t)
+        #A/pi = DoDo/4 - (DoDo/4 -2*Do/2*t+tt)
+        #A/pi = DoDo/4 - (DoDo/4 -Do/t    +tt)
+        #A/pi = Do*t - tt
         
-        s2c2t = s2t*c2t
-        #s4tpc4t = s4t+c4t
-        
-        Q11a = Q11*c4t + 2*(Q12+2*Q66)*s2c2t + Q22*s4t
-        Q12a = (Q11+Q22-4*Q66)*s2c2t + Q12(s4t+c4t)
-        Q22a = Q11*s4t + 2*(Q12+2*Q66)*s2c2t+Q22*c4t
-        Q16a = (Q11-Q12-2*Q66)*st*c3t + (Q12-Q22+2*Q66)*s3t*ct
-        Q26a = (Q11-Q12-2*Q66)*s3t*ct + (Q12-Q22+2*Q66)*st*c3t
-        Q66a = (Q11+Q22-2*Q12-2*Q66)*s2c2t + Q66(s4t+c4t)
-        Q44a = Q44*c2t + Q55*s2t
-        Q55a = Q44*s2t + Q55*c2t
-        Q45a = (Q55-Q44)*st*ct
-        return array([Q11a,Q12a,Q22a,Q16a,Q26a,Q66a,Q44a,Q55a,Q45a])
+        #A/pi    = t*(Do-t)
+        #Aavg/pi = t*(Do1-t + Do2-t)/2.
+        #Aavg/pi = t*(Do1+Do2 - 2*t)/2.
+        factor = pi()/2.
+        #A = self.t*(self.OD1+self.OD2 - 2*self.t)
+        return A*factor
 
-    def Q(self):
-        """"
-        Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
-        @todo is this done?
-        p. 114 "Introduction to Composite Material Design"
-        """
-        delta = 1-nu12*nu21
-        Q11 = E1/delta
-        Q12 = nu12*E2/delta
-        Q22 = E2/delta
-        Q66 = G12
-        Q44 = G23
-        Q55 = G13
-        Qout = (Q11,Q22,Q12,Q44,Q55,Q66)
-        return Qout
-        
-    def T(self,theta):
-        """
-        calculates the Transformation matricies \$ [T] \$ and  \f$ [T]^{-1} \f$
-        @param self           the object pointer
-        @param theta          in radians...
-        @retval Tinv          the inverse transformation matrix
-        @retval TinvTranspose the transposed inverse transformation matrix
-        @todo document better
+    def area1(self):
+        Dout = self.OD
+        Din  = Dout-self.t
+        A = pi()/4.*(Dout*Dout-Din*Din)
+        return A1
 
-        tranformation matrix  \f$ [T] \f$
-        \f[ \large  [T] \left[ 
-          \begin{array}{ccc}
-              m^2 & n^2 &  2mn    \\
-              n^2 & m^2 & -2mn    \\
-              -mn & mn  & m^2-n^2 
-          \end{array} \right]
-        \f] 
+    def area2(self):
+        Dout = self.OD2
+        Din  = Dout-self.t
+        A = pi()/4.*(Dout*Dout-Din*Din)
+        return A2
 
-                 [ m^2  n^2        2mn]
-        [T]    = [ n^2  m^2       -2mn]   # transformation matrix
-                 [ -mn   mn    m^2-n^2]
-
-
-        inverse transformation matrix \f$ [T]^{-1} \f$
-        \f[ \large  [T]^{-1} \left[ 
-          \begin{array}{ccc}
-              m^2 & n^2 & -2mn    \\
-              n^2 & m^2 &  2mn    \\
-              mn  & -mn & m^2-n^2 
-          \end{array} \right]
-        \f] 
-
-                 [ m^2  n^2       -2mn]
-        [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
-                 [ mn   -mn    m^2-n^2]
-        
-        \f[ \large  \left[ \sigma_{xx}, \sigma_{yy}, \sigma_{xy} \right]^T = [T]^{-1} [Q] [R][T] \left[ \epsilon_{xx}, \epsilon_{yy}, \frac{1}{2} \gamma_{xy} \right]^T \f]
-        
-        p.119 "Introduction to Composite Material Design"
-        """
-        n = cos(theta)
-        m = sin(theta)
-        Tinv  = zeros((6,6),'d')
-        mm = m*m
-        nn = n*n
-        nm = n*m
-        Tinv[0][0] = Tinv[1][1] = mm
-        Tinv[1][0] = Tinv[0][1] = nn
-        Tinv[0][2] = -2*mn
-        Tinv[1][2] =  2*mn
-
-        Tinv[2][0] =  mn
-        Tinv[2][1] = -mn
-        Tinv[2][2] =  mm-nn
-        TinvT = numpy.transpose(Tinv)
-        return (Tinv,TinvT)
-
-class SolidProperty(Property):
-    type = 'SolidProperty'
-    def __init__(self,card):
-        Property.__init__(self,card)
-        pass
+    def massMatrix(self):
+        """@todo not done"""
+        m = zeros(6,6)
+        m[0,0] = 1.
+        return m
 
 class PBAR(LineProperty):
     type = 'PBAR'
@@ -302,23 +213,6 @@ class PBAR(LineProperty):
 
         return self.printCard(fields)
 
-class PCONEAX(Property): #not done
-    type = 'PCONEAX'
-    def __init__(self,card):
-        Property.__init__(self,card)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.group = card.field(3,'MSCBMLO')
-        self.type = card.field(4)
-        self.dim = [] # confusing entry...
-
-    def crossReference(self,model):
-        self.mid = model.Material(self.mid)
-
-    def __repr__(self):
-        fields = ['PCONEAX',self.pid,self.Mid()]
-        return self.printCard(fields)
-    
 class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
     type = 'PBARL'
     validTypes = ["ROD", "TUBE", "I", "CHAN", "T", "BOX", "BAR", "CROSS", "H",
@@ -507,6 +401,190 @@ class PBEAM3(LineProperty): # not done, cleanup
         fields = ['PBEAM3',self.pid,self.Mid(),] # other
         return self.printCard(fields)
 
+class ShellProperty(Property):
+    type = 'ShellProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
+    
+
+    def S(self):
+        """"
+        Calculates the compliance matrix for a lamina
+        [Q] = [S]^-1
+        @todo finish...if necessary...
+        """
+        pass
+        #return Q.inv()
+
+    def ABDH(self):
+        """
+        tranforms load to strain/bending curvature taken at \f$ z=0 \f$
+        \f[ \large  [T] \left[ 
+          \begin{array}{c}
+              Nx  \\
+              Ny  \\
+              Nz  \\
+              Mx  \\
+              My  \\
+              Mz  \\
+          \end{array} \right] = 
+
+          [ABBD] \left[ 
+          \begin{array}{c}
+              \epsilon_{xx}  \\
+              \epsilon_{yy}  \\
+                \gamma_{xy}  \\
+                \kappa_{xx}  \\
+                \kappa_{yy}  \\
+                \kappa_{xy}  \\
+          \end{array} \right]
+        \f] 
+
+
+        [Nx] = [            ] [ e_xx0    ]
+        [Ny] = [  [A]   [B] ] [ e_yy0    ]
+        [Nz] = [            ] [ gamma_xy0]
+        [Mx] = [            ] [ k_xx0    ]
+        [My] = [  [B]   [D] ] [ k_yy0    ]
+        [Mz] = [            ] [ k_xy0    ]
+        
+        \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k  -z_{k-1}  ) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                     \f]
+        \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^2-z_{k-1}^2) = \Sigma_{k=1}^N (Q_{ij})_k (\overline{z} t_k)                      \f]
+        \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^3-z_{k-1}^3) = \Sigma_{k=1}^N (Q_{ij})_k         (\overline{z}^2 t_k + t_k^3/12) \f]
+        \f[ \large  H_{ij} =                                                      \Sigma_{k=1}^N (Q_{ij})_k (t_k -4/t^2 (\overline{z}^2 t_k + t_k^3/12) \f]
+        
+        p. 138 of "Introduction to Composite Material Design"
+        """
+        A = zeros(9,'d')
+        B = copy.deepcopy(A)
+        D = copy.deepcopy(A)
+        H = copy.deepcopy(A)
+
+        for i,layer in enumerate(self.layers):
+            t = layer.t
+            z0 = layer.z
+            #z1 = z0+t
+            zbar = (2*z0+t)/2. # (z1+z0)/2. 
+            Qraw   = layer.Q() # needs E11, E22, G12, G13, nu12, nu21
+            qlayer = Qall(Qout,layer.thetad)
+            A += qlayer*t
+            B += qlayer*t*z
+            
+            Dfactor = t*zbar*zbar+t**3/12.
+            D += qlayer*Dfactor
+            H += qlayer*(t-4./t**2 * Dfactor)
+        B = 0.5*B
+        D = D/3.
+        H = H*5./4.
+            
+            
+    def Qall(self,thetad):
+        """
+        Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
+        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
+        \f[ \large  [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
+        
+        p. 123 of "Introduction to Composite Material Design"
+        """
+        theta = radians(thetad)
+        ct  = cos(theta)
+        c2t = ct*ct
+        c3t = ct*c2t
+        c4t = c2t*c2t
+
+        st  = sin(theta)
+        s2t = st*st
+        s3t = st*s2t
+        s4t = s2t*s2t
+        
+        s2c2t = s2t*c2t
+        #s4tpc4t = s4t+c4t
+        
+        Q11a = Q11*c4t + 2*(Q12+2*Q66)*s2c2t + Q22*s4t
+        Q12a = (Q11+Q22-4*Q66)*s2c2t + Q12(s4t+c4t)
+        Q22a = Q11*s4t + 2*(Q12+2*Q66)*s2c2t+Q22*c4t
+        Q16a = (Q11-Q12-2*Q66)*st*c3t + (Q12-Q22+2*Q66)*s3t*ct
+        Q26a = (Q11-Q12-2*Q66)*s3t*ct + (Q12-Q22+2*Q66)*st*c3t
+        Q66a = (Q11+Q22-2*Q12-2*Q66)*s2c2t + Q66(s4t+c4t)
+        Q44a = Q44*c2t + Q55*s2t
+        Q55a = Q44*s2t + Q55*c2t
+        Q45a = (Q55-Q44)*st*ct
+        return array([Q11a,Q12a,Q22a,Q16a,Q26a,Q66a,Q44a,Q55a,Q45a])
+
+    def Q(self):
+        """"
+        Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
+        @todo is this done?
+        p. 114 "Introduction to Composite Material Design"
+        """
+        delta = 1-nu12*nu21
+        Q11 = E1/delta
+        Q12 = nu12*E2/delta
+        Q22 = E2/delta
+        Q66 = G12
+        Q44 = G23
+        Q55 = G13
+        Qout = (Q11,Q22,Q12,Q44,Q55,Q66)
+        return Qout
+        
+    def T(self,theta):
+        """
+        calculates the Transformation matricies \$ [T] \$ and  \f$ [T]^{-1} \f$
+        @param self           the object pointer
+        @param theta          in radians...
+        @retval Tinv          the inverse transformation matrix
+        @retval TinvTranspose the transposed inverse transformation matrix
+        @todo document better
+
+        tranformation matrix  \f$ [T] \f$
+        \f[ \large  [T] \left[ 
+          \begin{array}{ccc}
+              m^2 & n^2 &  2mn    \\
+              n^2 & m^2 & -2mn    \\
+              -mn & mn  & m^2-n^2 
+          \end{array} \right]
+        \f] 
+
+                 [ m^2  n^2        2mn]
+        [T]    = [ n^2  m^2       -2mn]   # transformation matrix
+                 [ -mn   mn    m^2-n^2]
+
+
+        inverse transformation matrix \f$ [T]^{-1} \f$
+        \f[ \large  [T]^{-1} \left[ 
+          \begin{array}{ccc}
+              m^2 & n^2 & -2mn    \\
+              n^2 & m^2 &  2mn    \\
+              mn  & -mn & m^2-n^2 
+          \end{array} \right]
+        \f] 
+
+                 [ m^2  n^2       -2mn]
+        [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
+                 [ mn   -mn    m^2-n^2]
+        
+        \f[ \large  \left[ \sigma_{xx}, \sigma_{yy}, \sigma_{xy} \right]^T = [T]^{-1} [Q] [R][T] \left[ \epsilon_{xx}, \epsilon_{yy}, \frac{1}{2} \gamma_{xy} \right]^T \f]
+        
+        p.119 "Introduction to Composite Material Design"
+        """
+        n = cos(theta)
+        m = sin(theta)
+        Tinv  = zeros((6,6),'d')
+        mm = m*m
+        nn = n*n
+        nm = n*m
+        Tinv[0][0] = Tinv[1][1] = mm
+        Tinv[1][0] = Tinv[0][1] = nn
+        Tinv[0][2] = -2*mn
+        Tinv[1][2] =  2*mn
+
+        Tinv[2][0] =  mn
+        Tinv[2][1] = -mn
+        Tinv[2][2] =  mm-nn
+        TinvT = numpy.transpose(Tinv)
+        return (Tinv,TinvT)
+
 #class PCOMPG(ShellProperty): # not done...
 class PCOMP(ShellProperty):
     """
@@ -678,18 +756,11 @@ class PCOMP(ShellProperty):
             fields += [mid,t,theta,sout]
         return self.printCard(fields)
 
-class PELAS(SpringProperty):
-    type = 'PELAS'
-    def __init__(self,card,nPELAS=0):
-        SpringProperty.__init__(self,card)
-        self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
-        self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
-        self.ge  = card.field(3+5*nPELAS)
-        self.s   = card.field(4+5*nPELAS)
-
-    def __repr__(self):
-        fields = ['PELAS',self.pid,self.k,self.ge,self.s]
-        return self.printCard(fields)
+class SolidProperty(Property):
+    type = 'SolidProperty'
+    def __init__(self,card):
+        Property.__init__(self,card)
+        pass
 
 class PLSOLID(SolidProperty):
     """
@@ -713,26 +784,6 @@ class PLSOLID(SolidProperty):
     def __repr__(self):
         stressStrain = self.setDefaultIfNone(self.str,'GRID')
         fields = ['PLSOLID',self.pid,self.Mid(),stressStrain]
-        return self.printCard(fields)
-
-class PROD(LineProperty):
-    type = 'PROD'
-    def __init__(self,card):
-        LineProperty.__init__(self,card)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.A   = card.field(3)
-        self.J   = card.field(4)
-        self.c   = card.field(5,0.0)
-        self.nsm = card.field(6,0.0)
-
-    def crossReference(self,mesh):
-        self.mid = mesh.Material(self.mid)
-
-    def __repr__(self):
-        c   = self.setBlankIfDefault(self.c,0.0)
-        nsm = self.setBlankIfDefault(self.nsm,0.0)
-        fields = ['PROD',self.pid,self.Mid(),self.A,self.J,c,nsm]
         return self.printCard(fields)
 
 class PSHELL(ShellProperty):
@@ -803,70 +854,20 @@ class PSOLID(SolidProperty):
         fields = ['PSOLID',self.pid,self.Mid(),cordm,self.integ,self.stress,self.isop,fctn]
         return self.printCard(fields)
 
-class PTUBE(LineProperty):
-    type = 'PTUBE'
+class PCONEAX(Property): #not done
+    type = 'PCONEAX'
     def __init__(self,card):
-        LineProperty.__init__(self,card)
+        Property.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
-        self.OD1 = card.field(3)
-        self.t   = card.field(4,self.outerDiameter/2.)
-        self.nsm = card.field(5,0.0)
-        self.OD2 = card.field(6,self.outerDiameter)
+        self.group = card.field(3,'MSCBMLO')
+        self.type = card.field(4)
+        self.dim = [] # confusing entry...
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
 
     def __repr__(self):
-        t   = self.setBlankIfDefault(self.t,self.OD1/2.)
-        nsm = self.setBlankIfDefault(self.nsm,0.0)
-        OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
-        fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
+        fields = ['PCONEAX',self.pid,self.Mid()]
         return self.printCard(fields)
     
-    def area(self):
-        """
-        this shouldnt be so hard...
-        """
-        return (self.area1()+self.area2())/2.
-        factor = pi()
-        A = 1.
-        #Di = Do-2t
-        #Ri = Ro-t
-        #A/pi = Ro^2-Ri^2 = Ro^2-(Ro-t)^2 = Ro^2-(Ro-t)(Ro-t)
-        #A/pi = Ro^2-(Ro^2-2Ro*t + tt)
-        #A/pi = 2Ro*t-tt = t*(2Ro-t)
-        #R/2*(2R-R/2) = R/2*(3/2*R) = RR3/4
-        
-        #2A/pi = t*(2Ro1-t)+(2Ro2-t)*t = t*(2Ro1-2t+2Ro2)
-        #factor = pi/2
-        #A = pi*t*(Ro1+Ro2-t)
-        #A = pi*t*(Do-t)
-        
-        
-        #A/pi = DoDo/4 - (Do/2-t)*(Do/2-t)
-        #A/pi = DoDo/4 - (DoDo/4 -2*Do/2*t+tt)
-        #A/pi = DoDo/4 - (DoDo/4 -Do/t    +tt)
-        #A/pi = Do*t - tt
-        
-        #A/pi    = t*(Do-t)
-        #Aavg/pi = t*(Do1-t + Do2-t)/2.
-        #Aavg/pi = t*(Do1+Do2 - 2*t)/2.
-        factor = pi()/2.
-        #A = self.t*(self.OD1+self.OD2 - 2*self.t)
-        return A*factor
-
-    def area1(self):
-        Dout = self.OD
-        Din  = Dout-self.t
-        A = pi()/4.*(Dout*Dout-Din*Din)
-        return A1
-
-    def area2(self):
-        Dout = self.OD2
-        Din  = Dout-self.t
-        A = pi()/4.*(Dout*Dout-Din*Din)
-        return A2
-
-    def massMatrix(self):
-        """@todo not done"""
-        m = zeros(6,6)
-        m[0,0] = 1.
-        return m
