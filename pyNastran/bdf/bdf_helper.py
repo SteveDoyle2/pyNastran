@@ -124,23 +124,32 @@ class getMethods(object):
     def Coord(self,cid):
         return self.coords[cid]
 
-    def Flfact(self,sid):
-        return self.flfacts[sid]
-
-    def Flutter(self,fid):
-        return self.flutters[fid]
-
-    def Gust(self,sid):
-        return self.gusts[sid]
-
-    def CAero(self,eid):
-        return self.caeros[eid]
 
     def Aero(self,acsid):
         return self.aeros[acsid]
-
+    def Flfact(self,sid):
+        return self.flfacts[sid]
+    def Flutter(self,fid):
+        return self.flutters[fid]
+    def Gust(self,sid):
+        return self.gusts[sid]
+    def CAero(self,eid):
+        return self.caeros[eid]
+    def Aero(self,acsid):
+        return self.aeros[acsid]
     def Spline(self,eid):
         return self.splines[eid]
+
+
+    def DConstr(self,oid):
+        return self.dconstrs[oid]
+    def Desvar(self,oid):
+        return self.desvars[oid]
+    def DDVal(self,oid):
+        return self.ddvals[oid]
+
+    def NLParml(self,nid):
+        return self.nlparms[nid]
 
     def sumForces(self):
         for key,loadCase in self.loads.items():
@@ -206,7 +215,7 @@ class addMethods(object):
         #self.elements[elem.eid] = elem
 
     def addProperty(self,prop):
-        assert prop.pid not in self.properties
+        assert prop.pid not in self.properties,'eid=%s oldElement=\n%s' %(prop.pid,self.properties[prop.pid])
         assert prop.pid>0
         self.properties[prop.pid] = prop
 
@@ -287,7 +296,7 @@ class addMethods(object):
 
 
     def addDArea(self,darea):
-        assert darea.sid not in self.dareas
+        assert darea.sid not in self.dareas,'eid=%s oldElement=\n%s' %(darea.sid,self.dareas[darea.sid])
         assert darea.sid>0
         self.dareas[darea.sid] = darea
 
@@ -325,3 +334,23 @@ class addMethods(object):
         #assert flfact.sid not in self.flfacts
         self.flfacts[flfact.sid] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact
+
+
+    def addDConstr(self,dconstr):
+        assert dconstr.oid not in self.dconstrs
+        assert dconstrs.oid>0
+        self.dconstrss[dconstrs.oid] = dconstrs
+    def addDesvar(self,desvar):
+        assert desvar.oid not in self.desvars
+        assert desvar.oid>0
+        self.desvars[desvar.oid] = desvar
+    def addDDVal(self,ddval):
+        assert ddval.oid not in self.ddvals
+        assert ddval.oid>0
+        self.ddvals[ddval.oid] = ddval
+
+
+    def addNLParm(self,nlparm):
+        assert nlparm.nid not in self.nlparms
+        assert nlparm.nid>0
+        self.nlparms[nlparm.nid] = nlparm

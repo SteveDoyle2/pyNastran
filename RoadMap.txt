@@ -10,21 +10,33 @@ SPOINT (needs integration)
 
 ----Elements----:
 CONM2  (cid=0)
+
 CEALS1 (done)
 CELAS2 (done)
 CELAS3 (done)
 CELAS4 (done)
 
+CBEND
 CBAR   (done)
 CBEAM  (done)
 CONROD (done)
 CROD   (done)
 CTUBE  (done)
 
-CTRIA3 (done)
-CTRIA6 (done)
+CTRIA3  (done)
+CTRIA6  (done)
+CTRIAR  (done)
+CTRIAX  (done)
+CTRIAX6 (done)
+
+CQUAD  (done)
 CQUAD4 (done)
 CQUAD8 (done)
+CQUADR (done)
+CQUADX (done)
+
+CSHEAR (done)
+CVISC  (done)
 
 CTETRA (done)
 CPENTA (done)
@@ -34,6 +46,9 @@ CMASS1 (done)
 CMASS2 (done)
 CMASS3 (done)
 CMASS4 (done)
+
+CRAC2D  (done)
+CRAC3D  (done)
 
 ----Rigid Elements----:
 RBE1  (done)
@@ -66,18 +81,23 @@ MAT9  (done)
 MAT10 (done)
 
 ----Properties----:
+PMASS   (done)
+
 PELAS   (done)
+
 PROD    (done)
 PBEAM   (done)
+PBEND
 PBEAML
-PBAR    (done)
 PBARL
+PBAR    (done)
+PTUBE   (done)
+
+PSHEAR
 PCOMP   (done)
 PSHELL  (done)
 PSOLID  (done)
-PTUBE   (done)
 PLSOLID (done)
-PMASS   (done)
 
 ----Loads----:
 LSEQ
@@ -125,6 +145,10 @@ CORD2R (done???)
 CORD2C (partial???)
 CORD2S
 
+----Dynamic----:
+DAREA   (done)
+NLPARM  (done)
+
 ----Aero----:
 AERO    (done)
 AEROS   (done)
@@ -136,8 +160,13 @@ AEPARM  (needs integration)
 AESTAT  (needs integration)
 AESURFS (needs integration)
 
-CAERO1 (done)
+CAERO1  (done)
 SPLINE1 (done)
+
+----Optimization----:
+DCONSTR  (done)
+DESVAR   (done)
+DDVAL    (done)
 
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)
@@ -182,9 +211,6 @@ CGAP
 PGAP
 
 ----Patran Elements----:
-CGAP
-PGAP
-
 CONM1
 
 CDAMP1
@@ -192,18 +218,8 @@ CDAMP2
 CDAMP3
 CDAMP4
 
-CQUADR  (needs integration)
-
-CSHEAR  (needs integration)
-PSHEAR
-
-CTRIAR  (needs integration)
-CTRIAX6 (needs integration)
-
-CVISC   (needs integration)
 PLOTEL
 MBOLTUS
-
 
 ----Patran Rigid Elements----:
 RROD
@@ -246,7 +262,6 @@ TABLEM1
 TABLEM2
 TABLEM3
 
-
 ----Nodes----:
 MONPNT1
 MONPNT2
@@ -257,7 +272,6 @@ AXIC
 BAROR
 BEAMOR
 CBARAO
-CBEND
 CCONEAX
 CDAMP5
 NSM
@@ -266,7 +280,6 @@ NSM1
 ----Properties----:
 PBEAM3
 PBCOMP
-PBEND
 PCOMPG
 PCONEAX
 
@@ -274,15 +287,12 @@ PCONEAX
 FORCEAX
 
 ----Coordinates----:
-CORD1R
+CORD1R (partial)
 CORD1C
 CORD1S
-CORD3G
+CORD3G (partial)
 
 ----Optimization----:
-DCONSTR  (needs integration)
-DESVAR   (needs integration)
-DDVAL    (needs integration)
 DEQATN
 DRESP1
 DRESP2
@@ -332,11 +342,6 @@ Card Groupings:
 ----Nodes----:
 
 ----Elements----:
-CTRIAX  (needs integration)
-CQUADX  (needs integration)
-CQUAD   (needs integration)
-CRAC2D  (needs integration)
-CRAC3D  (needs integration)
 
 ----Rigid Elements----:
 RBE2GS
@@ -381,9 +386,7 @@ DEQUATN
 
 ----Dynamics/Nonlinear---:
 EPOINT
-DAREA
 DLOAD  (needs integration)
-NLPARM
 RLOAD1 (needs integration)
 RLOAD2 (needs integration)
 

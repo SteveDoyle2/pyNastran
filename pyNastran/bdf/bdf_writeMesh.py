@@ -60,6 +60,7 @@ class writeMesh(object):
         msg += self.writeAero()
         msg += self.writeThermal()
         msg += self.writeConstraints()
+        msg += self.writeOptimization()
         msg += self.writeRejects()
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
@@ -72,7 +73,8 @@ class writeMesh(object):
     def write(self,outfilename='fem.out.bdf',debug=False):
         """
         Writes the bdf.  It groups the various sections together to make it
-        easy to find cards.
+        easy to find cards.  This method is slightly more stable than 
+        writeAsPatran due to the properties sometimes being a little funny.
         """
         msg  = self.writeHeader()
         msg += self.writeParams()
@@ -87,6 +89,7 @@ class writeMesh(object):
         msg += self.writeAero()
         msg += self.writeThermal()
         msg += self.writeConstraints()
+        msg += self.writeOptimization()
         msg += self.writeRejects()
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
@@ -278,10 +281,22 @@ class writeMesh(object):
                 msg += str(load)
         return msg
 
+    def writeOptimization(self):
+        msg = '$OPTIMIZATION\n'
+        for ID,dconstr in sorted(self.dconstrs.items()):
+            msg += str(dconstr)
+        for ID,desvar in sorted(self.desvars.items()):
+            msg += str(desvar)
+        for ID,ddval in sorted(self.ddvals.items()):
+            msg += str(ddval)
+        return msg
+
     def writeDynamic(self):
         msg = '$DYNAMIC\n'
         for ID,darea in sorted(self.dareas.items()):
             msg += str(darea)
+        for ID,nlparm in sorted(self.nlparms.items()):
+            msg += str(nlparm)
         return msg
         
     def writeAero(self):

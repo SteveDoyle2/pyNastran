@@ -384,7 +384,7 @@ class MAT10(Material):
     def __init__(self,card):
         Material.__init__(self,card)
         self.mid  = card.field(1)
-        (self.bulk,self.rho.self.c) = self.getBulkRhoC(card)    
+        (self.bulk,self.rho,self.c) = self.getBulkRhoC(card)
         self.ge = card.field(5)
 
     def getBulkRhoC(self,card):
