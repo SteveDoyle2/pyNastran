@@ -1,10 +1,11 @@
 from fortranFile import FortranFile
+from op2Codes import Op2Codes
 import os
 import sys
 import struct
 from struct import unpack
 
-class Op2(FortranFile):
+class Op2(FortranFile,Op2Codes):
     def __init__(self,infileName): 
         self.infilename = infileName
     
@@ -39,7 +40,13 @@ class Op2(FortranFile):
 
         self.readMarkers([-2,1,0,2])
         word = self.readStringBlock()
-        self.readMarkers([-3,1,0,35])
+
+        self.readMarkers([-3,1,0])
+        marker = self.getMarker() # 35,1571
+        print "marker = ",marker
+        self.printTableCode(marker)
+        #self.printSection(1200)
+        sys.exit('asdf')
         
         ## end geom1
         self.skip(4*69)
@@ -208,12 +215,9 @@ class Op2(FortranFile):
         self.readMarkers([-5,1,0,])
         self.readMarkers([0,0,])
 
-        
-        
-
 if __name__=='__main__':
-    op2 = Op2()
-    #op2.read('quad4.op2')
-    op2.read('tria3.op2')
+    op2 = Op2('quad4.op2')
+    #op2 = Op2('tria3.op2')
+    op2.read()
 
     print "done..."
