@@ -88,6 +88,10 @@ class FortranFile(object):
     def getTableCode(self):
         tableCode = self.readHeader()
         return tableCode
+
+    def getMarker(self):
+        tableCode = self.readHeader()
+        return tableCode
         
     def readMarkers(self,markers):
         for marker in markers:
