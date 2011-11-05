@@ -27,90 +27,8 @@ class Op2(FortranFile,Op2Codes):
         self.skip(4*4)
         self.readTable_Geom1()
         self.readTable_Geom2()
-
-        
-        #sys.exit('asdf2')
-        print "------------"
-
-        ## GEOM3
-        self.readMarkers([-5,1,0,0,2])
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-3,1,0,24])
-        self.skip(4*26)
-
-        self.readMarkers([-4,1,0,9])
-        self.skip(4*11)
-
-        self.readMarkers([-5,1,0,3])
-        self.skip(4*5)
-
-        print "------------"
-        # GEOM4
-        self.startTable([-6,1,0,0,2])
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-3,1,0,9])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-4,1,0,6])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-5,1,0,3])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-6,1,0,0,2])
-        print "------------"
-
-        # EPT
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
-        print "------------"
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-        self.readMarkers([-3,1,0,14])
-        self.skip(4*16)
-        self.readMarkers([-4,1,0,3])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        print "------------"
-        self.readMarkers([-5,1,0,0,2,])
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
-
-        print "------------"
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-        self.readMarkers([-3,1,0,15])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-4,1,0,3])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-5,1,0,0,2])
-        print "------------"
-
+        self.readTable_Geom3()
+        self.readTable_Geom4()
         self.readTable_OQG1()
         self.readTable_OES1X1()
         
@@ -170,6 +88,86 @@ class Op2(FortranFile,Op2Codes):
         self.readMarkers([-4,1,0,3])
         ints = self.readIntBlock()
         print "*ints = ",ints
+
+    def readTable_Geom3(self):
+        ## GEOM3
+        self.readMarkers([-5,1,0,0,2])
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-2,1,0,2])
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+
+        self.readMarkers([-3,1,0,24])
+        self.skip(4*26)
+
+        self.readMarkers([-4,1,0,9])
+        self.skip(4*11)
+
+        self.readMarkers([-5,1,0,3])
+        self.skip(4*5)
+
+    def readTable_Geom4(self):
+        # GEOM4
+        self.startTable([-6,1,0,0,2])
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-2,1,0,2])
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+
+        self.readMarkers([-3,1,0,9])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-4,1,0,6])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-5,1,0,3])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-6,1,0,0,2])
+        print "------------"
+
+        # EPT
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-2,1,0,2])
+        print "------------"
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+        self.readMarkers([-3,1,0,14])
+        self.skip(4*16)
+        self.readMarkers([-4,1,0,3])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+
+        print "------------"
+        self.readMarkers([-5,1,0,0,2,])
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-2,1,0,2])
+
+        print "------------"
+        word = self.readStringBlock()
+        print "word = |%r|" %(word)
+        self.readMarkers([-3,1,0,15])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-4,1,0,3])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+        self.readMarkers([-5,1,0,0,2])
+        print "------------"
 
     def readTable_OQG1(self):
         ## OQG1
@@ -236,7 +234,7 @@ class Op2(FortranFile,Op2Codes):
         print "****",self.op2.tell()
         assert self.op2.tell()==4880
         self.readMarkers([-2,1,0,7])
-        #self.printSection(100)
+        self.printSection(100)
         word = self.readStringBlock()  # OES1
         print "word = |%r|" %(word)
         self.readMarkers([-3,1,0,146])
