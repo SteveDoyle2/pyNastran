@@ -151,13 +151,29 @@ class getMethods(object):
     def NLParml(self,nid):
         return self.nlparms[nid]
 
+    def massProperties(self):
+                  Ixx Iyy Izz, Ixy, Ixz Iyz
+        I = array(0., 0., 0.,  0.,  0., 0.,)
+        for element in self.elements:
+            p = e.centroid()  # not really coded across the board
+            m = e.mass()
+            (x,y,z) = p
+            I[0] = m*x*x  # Ixx
+            I[1] = m*y*y  # Iyy
+            I[2] = m*z*z  # Izz
+            I[3] = m*x*y  # Ixy
+            I[4] = m*x*z  # Ixz
+            I[5] = m*y*z  # Iyz
+        ###
+        return I
+            
     def sumForces(self):
         for key,loadCase in self.loads.items():
             F = array([0.,0.,0.])
             #print "loadCase = ",loadCase
             for load in loadCase:
                 #print "load = ",load
-                if isinstance(load,FORCE):
+                if isinstance(load,Force):
                     f = load.mag*load.xyz
                     print "f = ",f
                     F += f
@@ -173,7 +189,7 @@ class getMethods(object):
             #print "loadCase = ",loadCase
             for load in loadCase:
                 #print "load = ",load
-                if isinstance(load,FORCE):
+                if isinstance(load,Force):
                     f = load.mag*load.xyz
                     node = self.Node(load.node)
                     #print "node = ",node
@@ -182,9 +198,9 @@ class getMethods(object):
                     #print "m    = ",m
                     M += m
                     F += f
-                #elif isinstance(load,MOMENT):
-                #    m = load.mag*load.xyz
-                #    M += m
+                elif isinstance(load,Moment):
+                    m = load.mag*load.xyz
+                    M += m
                 ###
             print "case=%s F=%s M=%s\n\n" %(key,F,M)
         ###
