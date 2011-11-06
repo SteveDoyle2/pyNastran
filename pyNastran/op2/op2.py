@@ -11,7 +11,7 @@ from geometryTables import GeometryTables
 class Op2(FortranFile,Op2Codes,GeometryTables):
     def __init__(self,infileName): 
         self.infilename = infileName
-        self.tablesToRead = ['OQG1','OUGV1','OES1X1']  # 'OUGV1',
+        self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1',
     
     def read(self):
         self.op2 = open(self.infilename,'rb')
@@ -27,15 +27,19 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         print "word = |%r|" %(word)
 
         self.readMarkers([2])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
 
-        self.skip(4*4)
         self.readMarkers([-1])
-        
+
+        #data = self.getData(60)
+        #self.printBlock(data)
+
         isAnotherTable = True
         while isAnotherTable:
             tableName = self.readTableName(rewind=True)
             print "tableName = |%r|" %(tableName)
-            
+ 
             if tableName in self.tablesToRead:
                 if tableName=='GEOM1':
                     self.readTable_Geom1()
@@ -45,6 +49,11 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
                     self.readTable_Geom3()
                 elif tableName=='GEOM4':
                     self.readTable_Geom3()
+
+                elif tableName=='EPT':
+                    self.readTable_EPT()
+                elif tableName=='MPTS':
+                    self.readTable_MPTS()
 
                 elif tableName=='OQG1':
                     self.readTable_OQG1()
@@ -161,7 +170,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         print str(dispObj)
 
         self.readMarkers([-5,1,0])
-        assert self.op2.tell()==4780,self.op2.tell()
+        #assert self.op2.tell()==4780,self.op2.tell()
         #sys.exit('end of displacements')
 
     def readScalars(self,deviceCode,data,scalarObject):
@@ -184,7 +193,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         data = self.readBlock()
         #self.printBlock(data)
         print "****",self.op2.tell()
-        assert self.op2.tell()==4880
+        #assert self.op2.tell()==4880
 
         self.readMarkers([-2,1,0,7])
         word = self.readStringBlock()  # OES1
@@ -234,21 +243,50 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         print "*elementType = ",elementType
         
         print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
-        assert self.op2.tell()==5656
+        #assert self.op2.tell()==5656
 
         data = self.getData(bufferWords*4)
         #self.printBlock(data)
         if elementType==144:
-            self.CQUAD4(data)  # 144
+            self.CQUAD4_144(data)  # 144
+        if elementType==74:
+            self.CTRIA3_74(data)  # 74
         else:
-            raise RuntimeError('elementType=%s is not supported' %(elmentType))
+            raise RuntimeError('elementType=%s = %s is not supported' %(elementType,'???'))
 
         self.readMarkers([-5,1,0,])
         #print "tell5 = ",self.op2.tell()
         self.readMarkers([0,0,])
         #print "end tell = ",self.op2.tell()
 
-    def CQUAD4(self,data):
+    def CTRIA3_74(self,data):
+        """
+        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
+        stress is extracted at the centroid
+        """
+        #self.printSection(20)
+        #term = data[0:4] CEN/
+        #data = data[4:]
+        print "*****"
+        while data:
+            eData = data[0:4*17]
+            data  = data[4*17: ]
+            print "len(data) = ",len(eData)
+            out = unpack('iffffffffffffffff',eData[0:68])
+
+            (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
+                 fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
+            eid = (eid - 1) / 10
+            print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            print "len(data) = ",len(data)
+            ###
+            #sys.exit('asdf')
+        self.skip(4)
+        ###
+
+
+    def CQUAD4_144(self,data):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """

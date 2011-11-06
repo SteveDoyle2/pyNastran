@@ -21,7 +21,7 @@ class displacementObject(scalarObject):
 
     def __repr__(self):
         msg = '---DISPLACEMENTS---\n'
-        msg += '%-8s %-8s %-8s %-8s %-8s %-8s %-8s\n' %('GRID','Dx','Dy','Dz','Rx','Ry','Rz')
+        msg += '%9s  %-9s %-9s %-9s %-9s %-9s %-9s\n' %('GRID','Dx','Dy','Dz','Rx','Ry','Rz')
         for nodeID,displacement in sorted(self.displacements.items()):
             rotation = self.rotations[nodeID]
             (dx,dy,dz) = displacement
@@ -33,7 +33,7 @@ class displacementObject(scalarObject):
             if abs(rx)<1e-5:  rx=0.
             if abs(ry)<1e-5:  ry=0.
             if abs(rz)<1e-5:  rz=0.
-            msg += '%-8g %-8g %-8g %-8g %-8g %-8g %-8g\n' %(nodeID,dx,dy,dz,rx,ry,rz)
+            msg += '%9i %9.2e %9.2e %9.2e %9.2e %9.2e %9.2e\n' %(nodeID,dx,dy,dz,rx,ry,rz)
         return msg
 
 class spcForcesObject(scalarObject):
