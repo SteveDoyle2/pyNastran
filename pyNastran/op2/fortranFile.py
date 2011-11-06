@@ -92,6 +92,10 @@ class FortranFile(object):
         print "doubles = ",doubles
         print "strings = |%r|" %(''.join(strings))
 
+    def getBlockIntEntry(self,data,n):
+        data2 = data[4*(n-1):4*(n-1)+4]
+        return struct.unpack('i',data2)[0]
+        
     def printSection(self,nBytes):
         """
         prints data, but doesnt move the cursor
