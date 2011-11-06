@@ -11,7 +11,7 @@ from geometryTables import GeometryTables
 class Op2(FortranFile,Op2Codes,GeometryTables):
     def __init__(self,infileName): 
         self.infilename = infileName
-        self.tablesToRead = ['OUG','OES1X1']  # 'OUGV1',
+        self.tablesToRead = ['OQG1','OUGV1','OES1X1']  # 'OUGV1',
     
     def read(self):
         self.op2 = open(self.infilename,'rb')
@@ -48,14 +48,18 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
 
                 elif tableName=='OQG1':
                     self.readTable_OQG1()
+                elif tableName=='OUGV1':
+                    self.readTable_OUGV1()
                 elif tableName=='OES1X1':
                     self.readTable_OES1X1()
                     #isAnotherTable = False
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
+                (isAnotherTable) = self.hasMoreTables()
             else:
                 (isAnotherTable) = self.skipNextTable()
                 continue
+            print "*** finished tableName = |%r|" %(tableName)
             ###
         ###
         #
@@ -112,10 +116,12 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         spcForcesObj = spcForcesObject(iSubcase)
         self.readScalars(deviceCode,data,spcForcesObj)
 
-        self.readMarkers([-5,1,0,0,2])
+        self.readMarkers([-5,1,0])
         print str(spcForcesObj)
 
-        word = self.readStringBlock()  # OUGV1
+    def readTable_OUGV1(self):
+        ## OUGV1
+        word = self.readTableName(rewind=False) # OUGV1
         print "word = |%r|" %(word)
 
         self.readMarkers([-1,7])
@@ -132,10 +138,15 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4,'\n'
 
-        data = self.getData(4*51)
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+        print "bufferSize = ",bufferSize
+        data = self.getData(4*50)
+        aCode = self.getBlockIntEntry(data,1)
+        print "aCode = ",aCode
+        (analysisCode,deviceCode,tableCode,three,subcase) = self.parseAnalysisCode(data)
         #self.printBlock(data)
 
-        #self.skip(4*51)
         word = self.readString(384)
         print "word = |%s|" %(word)
         self.readHollerith()

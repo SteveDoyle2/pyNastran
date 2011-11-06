@@ -17,7 +17,7 @@ class FortranFile(object):
     def readHeader(self):
         data = self.op2.read(12)
         ints = self.getInts(data)
-        #print "header ints = ",ints
+        print "header ints = ",ints
         self.n += 12
         return ints[1]
 
@@ -146,7 +146,7 @@ class FortranFile(object):
         nLetters = len(data)
         letters = unpack('s'*nLetters,data)
         word = ''.join(letters)
-        print "word = |%s|" %(word)
+        #print "word = |%s|" %(word)
         return word
 
     def readBlock(self):
@@ -201,8 +201,7 @@ class FortranFile(object):
         return word.strip()
 
     def skipNextTable(self,bufferSize=10000):
-        self.readMarkers([0,2])
-        word = self.readStringBlock()  # GEOM1
+        word = self.readTableName(rewind=False) # GEOM1
         print "skippingTable |%s|" %(word)
 
         self.readMarkers([-1,7])
@@ -238,3 +237,20 @@ class FortranFile(object):
         self.op2.seek(self.n)
         return isAnotherTable
 
+    def hasMoreTables(self):
+        try:
+            marker1 = self.getMarker()
+            marker2 = self.getMarker()
+            marker = [marker1,marker2]
+            if marker==[0,2]:
+                isAnotherTable = True
+            else:# marker=0
+                isAnotherTable = False
+            ###
+            #print "isAnotherTable = ",isAnotherTable
+            self.n -= 24  # subtract off the header [0,2] or [0,0]
+            self.op2.seek(self.n)
+        except IndexError:
+            isAnotherTable = False
+        return isAnotherTable
+    
