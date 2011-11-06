@@ -17,7 +17,7 @@ class FortranFile(object):
     def readHeader(self):
         data = self.op2.read(12)
         ints = self.getInts(data)
-        print "header ints = ",ints
+        #print "header ints = ",ints
         self.n += 12
         return ints[1]
 
