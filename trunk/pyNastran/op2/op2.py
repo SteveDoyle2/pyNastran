@@ -20,7 +20,9 @@ class GeometryTables(object):
         fields = self.readIntBlock()
         print "fields = ",fields
 
-        self.readMarkers([-2,1,0,2])
+        self.readMarkers([-2,1,0]) # 2
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         word = self.readStringBlock()
 
         self.readMarkers([-3,1,0])
@@ -36,7 +38,9 @@ class GeometryTables(object):
             ints = ints[6:]
             print "coord1 = ",coord1
 
-        self.readMarkers([-4,1,0,3])
+        self.readMarkers([-4,1,0])  #3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
 
@@ -48,11 +52,15 @@ class GeometryTables(object):
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
+        self.readMarkers([-2,1,0]) #2
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         word = self.readStringBlock()
         #print "word = |%r|" %(word)
 
-        self.readMarkers([-3,1,0,17])
+        self.readMarkers([-3,1,0]) # 17
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
 
         #marker = self.getMarker() # 17
         #print "marker = ",marker
@@ -60,28 +68,38 @@ class GeometryTables(object):
 
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-4,1,0,3])
+        self.readMarkers([-4,1,0]) # 3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
+        self.readMarkers([-5,1,0,0,2])
 
     def readTable_Geom3(self):
         ## GEOM3
-        self.readMarkers([-5,1,0,0,2])
         word = self.readStringBlock()
         print "word = |%r|" %(word)
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
+        self.readMarkers([-2,1,0])
+        bufferWords = self.getMarker() # 2
+        print "bufferWords = ",bufferWords,bufferWords*4
         word = self.readStringBlock()
         print "word = |%r|" %(word)
 
-        self.readMarkers([-3,1,0,24])
+        self.readMarkers([-3,1,0]) # 24
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         self.skip(4*26)
-        self.readMarkers([-4,1,0,9])
+        self.readMarkers([-4,1,0]) # 9
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         self.skip(4*11)
 
-        self.readMarkers([-5,1,0,3])
+        self.readMarkers([-5,1,0]) # 3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         self.skip(4*5)
 
     def readTable_Geom4(self):
@@ -90,17 +108,25 @@ class GeometryTables(object):
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
+        self.readMarkers([-2,1,0]) # 2
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         word = self.readStringBlock()
         print "word = |%r|" %(word)
 
-        self.readMarkers([-3,1,0,9])
+        self.readMarkers([-3,1,0]) # 9
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-4,1,0,6])
+        self.readMarkers([-4,1,0]) # 6
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-5,1,0,3])
+        self.readMarkers([-5,1,0]) # 3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
         self.readMarkers([-6,1,0,0,2])
@@ -112,32 +138,46 @@ class GeometryTables(object):
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
+        self.readMarkers([-2,1,0]) # 2
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         print "------------"
         word = self.readStringBlock()
         print "word = |%r|" %(word)
-        self.readMarkers([-3,1,0,14])
+        self.readMarkers([-3,1,0]) # 14
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         self.skip(4*16)
-        self.readMarkers([-4,1,0,3])
+        self.readMarkers([-4,1,0]) # 3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
 
         print "------------"
         self.readMarkers([-5,1,0,0,2,])
+
+
         word = self.readStringBlock()
         print "word = |%r|" %(word)
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,2])
+        self.readMarkers([-2,1,0]) # 2
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
 
         print "------------"
         word = self.readStringBlock()
         print "word = |%r|" %(word)
-        self.readMarkers([-3,1,0,15])
+        self.readMarkers([-3,1,0]) # 15
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-4,1,0,3])
+        self.readMarkers([-4,1,0]) # 3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
         self.readMarkers([-5,1,0,0,2])
@@ -182,14 +222,16 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,7])
+        self.readMarkers([-2,1,0]) # 7
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
         self.readMarkers([-3,1,0])
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4
 
-        
+
         #data = self.getData(4)
         #bufferSize, = unpack('i',data)
         #data = self.getData(4*51)
@@ -201,7 +243,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
         (analysisCode,deviceCode,tableCode,three,subcase) = self.parseAnalysisCode(data)
-        
+
 
         #self.skip(4*47)
         word = self.readString(384)
@@ -225,7 +267,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
-        self.readMarkers([-2,1,0,7])
+        self.readMarkers([-2,1,0]) # 7
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
         self.readMarkers([-3,1,0])
@@ -239,7 +283,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         word = self.readString(384)
         print "word = |%s|" %(word)
         self.readHollerith()
-        
+
 
         self.readMarkers([-4,1,0])
         bufferWords = self.getMarker()
