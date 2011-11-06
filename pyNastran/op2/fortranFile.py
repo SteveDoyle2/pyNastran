@@ -198,11 +198,12 @@ class FortranFile(object):
         #print "n      = ",n
         #print "self.n = ",self.n
         #print "op2.tell = ",self.op2.tell()
-        return word
+        return word.strip()
 
     def skipNextTable(self,bufferSize=10000):
         self.readMarkers([0,2])
         word = self.readStringBlock()  # GEOM1
+        print "skippingTable |%s|" %(word)
 
         self.readMarkers([-1,7])
         
@@ -232,7 +233,7 @@ class FortranFile(object):
         else:# marker=0
             isAnotherTable = False
         ###
-        print "isAnotherTable = ",isAnotherTable
+        #print "isAnotherTable = ",isAnotherTable
         self.n -= 24  # subtract off the header [0,2] or [0,0]
         self.op2.seek(self.n)
         return isAnotherTable
