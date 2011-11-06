@@ -17,8 +17,9 @@ class FortranFile(object):
     def readHeader(self):
         data = self.op2.read(12)
         ints = self.getInts(data)
-        print "header ints = ",ints
+        print "header ints = %s" %(repr(ints))
         self.n += 12
+        assert ints[0]==ints[2]==4,"header ints = (%s, %2s, %s)" %(ints)
         return ints[1]
 
     def readString(self,nData):
@@ -69,6 +70,17 @@ class FortranFile(object):
         ints = unpack(iFormat,data[:nInts*4])
         return ints
 
+    def getLongs(self,data):
+        n = len(data)
+        nLongs = n/4
+        #print "nLongs = ",nLongs
+        #a = pack('l',200)
+        #print "len(a) = ",len(a)
+        
+        LFormat = 'l'*nLongs
+        longs = unpack(LFormat,data[:nLongs*4])
+        return longs
+
     def getFloats(self,data):
         n = len(data)
         nFloats = n/4
@@ -85,10 +97,12 @@ class FortranFile(object):
     
     def printBlock(self,data):
         ints    = self.getInts(data)
+        #longs   = self.getLongs(data)
         floats  = self.getFloats(data)
         doubles = self.getDoubles(data)
         strings = self.getStrings(data)
         print "ints    = ",ints
+        #print "longs   = ",longs
         print "floats  = ",floats
         print "doubles = ",doubles
         print "strings = |%r|" %(''.join(strings))
