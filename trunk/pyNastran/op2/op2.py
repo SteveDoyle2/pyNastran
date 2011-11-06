@@ -9,7 +9,6 @@ from op2_Objects import *
 class GeometryTables(object):
 
     def readTable_Geom1(self):
-        self.readMarkers([-1])
         word = self.readTableName(rewind=False) # GEOM1
         #print "*word = |%r|" %(word)
 
@@ -226,7 +225,16 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         self.readMarkers([2])
 
         self.skip(4*4)
-        self.readTable_Geom1()
+        self.readMarkers([-1])
+
+        tableName = self.readTableName(rewind=True)
+        print "tableName = |%r|" %(tableName)
+        (isAnotherTable) = self.skipNextTable()
+
+        #self.readTable_Geom1()
+        assert self.op2.tell()==584,self.op2.tell()
+        tableName = self.readTableName(rewind=True)
+
         self.readTable_Geom2()
         self.readTable_Geom3()
         self.readTable_Geom4()

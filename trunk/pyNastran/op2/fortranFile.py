@@ -2,7 +2,7 @@
 #import sys
 
 import struct
-from struct import unpack
+from struct import unpack,pack
 
 class FortranFile(object):
     def __init__(self):
@@ -176,6 +176,11 @@ class FortranFile(object):
         doubles = unpack('d'*nDoubles,data)
         return doubles
 
+    def rewind(self,n):
+        """doesnt support a full rewind, only a partial"""
+        self.n -= n
+        self.op2.seek(self.n)
+
     def readTableName(self,rewind=True):
         n = self.n
         #print ""
@@ -194,4 +199,41 @@ class FortranFile(object):
         #print "self.n = ",self.n
         #print "op2.tell = ",self.op2.tell()
         return word
+
+    def skipNextTable(self,bufferSize=10000):
+        self.readMarkers([0,2])
+        word = self.readStringBlock()  # GEOM1
+
+        self.readMarkers([-1,7])
         
+        dataPack = (4,1,4,  4,0,4,  4,0,4)  # marks the end of the table
+        binaryData = pack('iiiiiiiii',*dataPack)
+        #[1,0,0] marks the end of the table
+        
+        i = 0
+        error = 50
+        n = self.n
+        endIndex = -1
+        data = "dummy"
+        while endIndex== -1 and len(data)>0:
+            data     = self.op2.read(bufferSize+error)
+            endIndex = data.find(binaryData)
+            self.op2.seek(n+i*bufferSize)
+            i+=1
+        
+        assert endIndex>0,'couldnt find the end of the table'
+        self.n = self.n+endIndex+36 # 36 so it gets to the end of the table markersNext=[0] or [2]
+        self.op2.seek(self.n)
+        "self.op2.tell() = ",self.op2.tell()
+
+        marker = self.getMarker()
+        if marker==2:
+            isAnotherTable = True
+        else:# marker=0
+            isAnotherTable = False
+        ###
+        print "isAnotherTable = ",isAnotherTable
+        self.n -= 24  # subtract off the header [0,2] or [0,0]
+        self.op2.seek(self.n)
+        return isAnotherTable
+
