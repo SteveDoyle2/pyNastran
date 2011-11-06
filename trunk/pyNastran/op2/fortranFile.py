@@ -64,6 +64,7 @@ class FortranFile(object):
     def getInts(self,data):
         n = len(data)
         nInts = n/4
+        #print "nInts = ",nInts
         iFormat = 'i'*nInts
         ints = unpack(iFormat,data[:nInts*4])
         return ints
@@ -91,6 +92,11 @@ class FortranFile(object):
         print "floats  = ",floats
         print "doubles = ",doubles
         print "strings = |%r|" %(''.join(strings))
+
+    def getData(self,n):
+        data = self.op2.read(n)
+        self.n+=n
+        return data
 
     def getBlockIntEntry(self,data,n):
         data2 = data[4*(n-1):4*(n-1)+4]

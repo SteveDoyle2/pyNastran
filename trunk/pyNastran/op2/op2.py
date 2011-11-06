@@ -235,12 +235,11 @@ class Op2(FortranFile,Op2Codes):
         print "tell3 = ",self.op2.tell()
         #self.skip(4*51)
         
-        data = self.op2.read(4)
-        self.n+=4
+        data = self.getData(4)
         bufferSize, = unpack('i',data)
 
-        data = self.op2.read(4*51)
-        self.n+=4*51
+
+        data = self.getData(4*51)
 
         self.printBlock(data)
         nWide = self.getBlockIntEntry(data,10)
@@ -248,8 +247,8 @@ class Op2(FortranFile,Op2Codes):
         thermal = self.getBlockIntEntry(data,21)
 
         #print "len(block) = ",len(data)  # 4
-        (aCode,tCode,elType,iSubcase) = unpack('iiii',data[:16])
-        print "aCode=%s tCode=%s elType=%s iSubcase=%s" %(aCode,tCode,elType,iSubcase)
+        (aCode,tCode,elementType,iSubcase) = unpack('iiii',data[:16])
+        print "aCode=%s tCode=%s elementType=%s iSubcase=%s" %(aCode,tCode,elementType,iSubcase)
         data = data[16:]
         
         (word5,word6,word7) = unpack('iii',data[:12]) # depends on aCode,tCode
@@ -261,10 +260,9 @@ class Op2(FortranFile,Op2Codes):
         print "thermal=%s" %(thermal)
         data = data[16:]
 
-        
-        
+       
         #sys.exit('oes')
-        word = self.readString(4*95)
+        word = self.readString(4*(63+32)) # subcase and label
         self.readHollerith()
         
         print "tell4 = ",self.op2.tell()
@@ -273,29 +271,56 @@ class Op2(FortranFile,Op2Codes):
 
         print "word* = |%s|" %(word)
         self.readMarkers([-4,1,0])
-        self.printSection(100)
-        data = self.op2.read(20)
-        bufferWord,  = unpack('i',data[4:8])
-        elementType, = unpack('i',data[16:20])
-        self.n += 52
-        #bufferWord = self.getMarker() # 87 - buffer
-        print "bufferWords = ",bufferWord,bufferWord*4
-        print "elementType = ",elementType
+        #self.printSection(100)
+
+        data = self.getData(16)
+        self.printBlock(data)
+        bufferWords,  = unpack('i',data[4:8])
+
+        print "*********************"
+        #bufferWords = self.getMarker() # 87 - buffer
+        print "bufferWords = ",bufferWords,bufferWords*4
+        print "*elementType = ",elementType
         
 
-
-        #self.skip(8)
-        #word = self.readString(4)
-        #print "word* = |%s|" %(word)
-        #self.printSection(16)
-        #self.skip(4)
-        
-        sys.exit('asdf')
-        floats = self.readFloats(4*85)
-        #print "*floats = ",floats,'\n'
+        print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
+        data = self.getData(bufferWords*4)
+        self.printBlock(data)
+        if elementType==144:
+            self.CQUAD4(data)  # 144
+        else:
+            raise RuntimeError('elementType=%s is not supported' %(elmentType))
 
         self.readMarkers([-5,1,0,])
         print "tell5 = ",self.op2.tell()
         self.readMarkers([0,0,])
         print "end tell = ",self.op2.tell()
 
+    def CQUAD4(self,data):
+        """
+        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
+        """
+        nNodes = 5 # centroid + 4 corner points
+        self.printSection(20)
+        #term = data[0:4] CEN/
+        #data = data[4:]
+        print "*****"
+        while data:
+            for nodeID in range(nNodes):   #nodes pts
+                if nodeID==0:
+                    (eid,_,_,_,_) = struct.unpack("issss",data[0:8])
+                    data = data[8:]
+                    eid = (eid - 1) / 10
+
+                eData = data[0:4*17]
+                data  = data[4*17: ]
+                out = unpack('iffffffffffffffff',eData[0:68])
+                (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
+                      fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
+                print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                print "len(data) = ",len(data)
+            ###
+            #sys.exit('asdf')
+        self.skip(4)
+        ###
