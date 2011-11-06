@@ -1,7 +1,6 @@
 
 class Op2Codes(object):
-    def elementType(self,eCode):
-        
+    def ElementType(self,eCode):
         elements = {
             0  : 'GRID',
             1  : 'ROD',
@@ -238,6 +237,7 @@ class Op2Codes(object):
             232 : 'QUADRLC',
             233 : 'TRIARLC',
         }
+        return elements[eCode]
 
     def printTableCode(self,tableCode):
         tableCodeContent = tableCode%1000

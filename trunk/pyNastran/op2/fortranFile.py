@@ -152,6 +152,29 @@ class FortranFile(object):
             assert marker==tableCode
         ###
 
+    def getNMarkers(self,nMarkers,rewind=False):
+        markers = []
+        for iMarker in range(nMarkers):
+            tableCode = self.readHeader()
+            markers.append(tableCode)
+        ###
+        if rewind:
+            self.n -= 12*nMarkers
+            self.op2.seek(self.n)
+            
+        return markers
+
+    def isTableDone(self,expectedMarkers):
+        markers = self.getNMarkers(len(expectedMarkers),rewind=True)
+        print "getMarkers = ",markers
+
+        if markers==[-1,7]:
+            return True
+        elif markers==expectedMarkers:
+            return False
+        else:
+            raise RuntimeError('this should never happen...invalid markers...expected=%s markers=%s' %(expectedMarkers,markers))
+
     def goto(self,n):
         self.op2.seek(n)
 
@@ -175,6 +198,7 @@ class FortranFile(object):
     def readIntBlock(self):
         data = self.readBlock()
         nInts = len(data)/4
+        print "**nInts = ",nInts
         ints = unpack('i'*nInts,data)
         return ints
 
@@ -252,10 +276,12 @@ class FortranFile(object):
         return isAnotherTable
 
     def hasMoreTables(self):
+        print self.printSection(120)
         try:
             marker1 = self.getMarker()
             marker2 = self.getMarker()
             marker = [marker1,marker2]
+            print "marker = ",marker
             if marker==[0,2]:
                 isAnotherTable = True
             else:# marker=0
