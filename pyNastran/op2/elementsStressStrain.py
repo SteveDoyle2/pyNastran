@@ -1,3 +1,6 @@
+import sys
+from struct import unpack
+
 class ElementsStressStrain(object):
     def CTRIA3_74(self,data):
         """
@@ -37,7 +40,7 @@ class ElementsStressStrain(object):
         while data:
             for nodeID in range(nNodes):   #nodes pts
                 if nodeID==0:
-                    (eid,_,_,_,_) = struct.unpack("issss",data[0:8])
+                    (eid,_,_,_,_) = unpack("issss",data[0:8])
                     data = data[8:]
                     eid = (eid - 1) / 10
 
@@ -76,7 +79,7 @@ class ElementsStressStrain(object):
         while data:
             for nodeID in range(nNodes):   #nodes pts
                 if nodeID==0:
-                    (eid,_,_,_,_) = struct.unpack("issss",data[0:8])
+                    (eid,_,_,_,_) = unpack("issss",data[0:8])
                     data = data[8:]
                     eid = (eid - 1) / 10
 
