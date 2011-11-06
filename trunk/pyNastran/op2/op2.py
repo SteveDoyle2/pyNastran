@@ -9,10 +9,10 @@ from op2_Objects import *
 from geometryTables import GeometryTables
 from elementsStressStrain import ElementsStressStrain
 
-class Op2(FortranFile,Op2Codes,GeometryTables):
+class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
     def __init__(self,infileName): 
         self.infilename = infileName
-        self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1',
+        self.tablesToRead = ['OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
     
     def readTapeCode(self):
