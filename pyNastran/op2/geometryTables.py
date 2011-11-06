@@ -35,6 +35,7 @@ class GeometryTables(object):
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
+        assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
         print "*ints = ",ints
 
         self.readMarkers([-5,1,0])
@@ -47,6 +48,7 @@ class GeometryTables(object):
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
         print "*ints = ",ints
+
         self.readMarkers([-2,1,0]) #2
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4
@@ -60,15 +62,45 @@ class GeometryTables(object):
         #marker = self.getMarker() # 17
         #print "marker = ",marker
         #self.printTableCode(marker)
+        #ints = self.readIntBlock()  ## @todo do i need this...
+        #print "*ints = ",ints
 
-        ints = self.readIntBlock()
-        print "*ints = ",ints
         self.readMarkers([-4,1,0]) # 3
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
+        #assert len(ints)==37
+
+        # these sections arent always in the op2...
+        if self.isTableDone([-5,1]):
+            print "couldnt find table 5 in GEOM2..."
+            return
+        print "tell = ",self.op2.tell(),self.n
         self.readMarkers([-5,1,0])
+        return
+        #assert self.op2.tell()==28568, "***tell = %s" %(self.op2.tell())
+        bufferWords = self.getMarker()  # 31
+        print "bufferWords = ",bufferWords,bufferWords*4
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+
+        ints = self.readIntBlock()  ## @todo  need this for large problems....
+        print "*ints = ",ints
+        self.printSection(200)
+        
+        if self.isTableDone([-6,1]):
+            print "couldnt find table 6 in GEOM2..."
+            return
+
+        self.readMarkers([-6,1,0])
+        bufferWords = self.getMarker()  # 31
+        print "bufferWords = ",bufferWords,bufferWords*4
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+
+        
+        #self.printSection(200)
         #assert self.op2.tell()==976,self.op2.tell()
 
     def readTable_Geom3(self):

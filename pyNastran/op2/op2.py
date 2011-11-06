@@ -7,33 +7,38 @@ from struct import unpack
 
 from op2_Objects import *
 from geometryTables import GeometryTables
+from elementsStressStrain import ElementsStressStrain
 
 class Op2(FortranFile,Op2Codes,GeometryTables):
     def __init__(self,infileName): 
         self.infilename = infileName
         self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1',
+        ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
     
-    def read(self):
-        self.op2 = open(self.infilename,'rb')
- 
-        self.n = self.op2.tell()
-        print "self.n = ",self.n
+    def readTapeCode(self):
         self.readMarkers([3])
         ints = self.readIntBlock()
-        print "*ints = ",ints
+        #print "*ints = ",ints
         self.readMarkers([7])
 
         word = self.readStringBlock() # Nastran Fort Tape ID Code - 
-        print "word = |%r|" %(word)
+        #print "word = |%r|" %(word)
 
         self.readMarkers([2])
         ints = self.readIntBlock()
-        print "*ints = ",ints
+        #print "*ints = ",ints
 
         self.readMarkers([-1])
 
         #data = self.getData(60)
         #self.printBlock(data)
+
+    def read(self):
+        self.op2 = open(self.infilename,'rb')
+        
+        self.n = self.op2.tell()
+        print "self.n = ",self.n
+        self.readTapeCode()
 
         isAnotherTable = True
         while isAnotherTable:
@@ -41,29 +46,29 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
             print "tableName = |%r|" %(tableName)
  
             if tableName in self.tablesToRead:
-                if tableName=='GEOM1':
+                if tableName=='GEOM1': # nodes,coords,etc.
                     self.readTable_Geom1()
-                elif tableName=='GEOM2':
+                elif tableName=='GEOM2': # elements
                     self.readTable_Geom2()
-                elif tableName=='GEOM3':
+                elif tableName=='GEOM3': # static/thermal loads
                     self.readTable_Geom3()
-                elif tableName=='GEOM4':
+                elif tableName=='GEOM4': # constraints
                     self.readTable_Geom3()
 
-                elif tableName=='EPT':
+                elif tableName=='EPT':   # element properties
                     self.readTable_EPT()
-                elif tableName=='MPTS':
+                elif tableName=='MPTS':  # material properties
                     self.readTable_MPTS()
 
-                elif tableName=='OQG1':
+                elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
-                elif tableName=='OUGV1':
+                elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUGV1()
-                elif tableName=='OES1X1':
+                elif tableName=='OES1X1': # stress
                     self.readTable_OES1X1()
-                    #isAnotherTable = False
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
+                print "---isAnotherTable---"
                 (isAnotherTable) = self.hasMoreTables()
             else:
                 (isAnotherTable) = self.skipNextTable()
@@ -79,7 +84,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         #self.readTable_Geom4()
         #self.readTable_OQG1()
         #self.readTable_OES1X1()
-        print "end of oes1x1"
+        print "---end of all tables---"
 
         #self.printSection(4*51+12)
         
@@ -126,7 +131,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         self.readScalars(deviceCode,data,spcForcesObj)
 
         self.readMarkers([-5,1,0])
-        print str(spcForcesObj)
+        #print str(spcForcesObj)
 
     def readTable_OUGV1(self):
         ## OUGV1
@@ -167,7 +172,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         iSubcase = 1 ## @todo temporary
         dispObj = displacementObject(iSubcase)
         self.readScalars(deviceCode,data,dispObj)
-        print str(dispObj)
+        #print str(dispObj)
 
         self.readMarkers([-5,1,0])
         #assert self.op2.tell()==4780,self.op2.tell()
@@ -179,7 +184,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
-            print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
+            #print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
             scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###
@@ -249,71 +254,17 @@ class Op2(FortranFile,Op2Codes,GeometryTables):
         #self.printBlock(data)
         if elementType==144:
             self.CQUAD4_144(data)  # 144
-        if elementType==74:
+        elif elementType==74:
             self.CTRIA3_74(data)  # 74
+        elif elementType==39:
+            self.CTETRA_39(data)  # 39
         else:
-            raise RuntimeError('elementType=%s = %s is not supported' %(elementType,'???'))
+            raise RuntimeError('elementType=%s -> %s is not supported' %(elementType,self.ElementType(elementType)))
 
         self.readMarkers([-5,1,0,])
         #print "tell5 = ",self.op2.tell()
         self.readMarkers([0,0,])
         #print "end tell = ",self.op2.tell()
-
-    def CTRIA3_74(self,data):
-        """
-        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
-        stress is extracted at the centroid
-        """
-        #self.printSection(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        print "*****"
-        while data:
-            eData = data[0:4*17]
-            data  = data[4*17: ]
-            print "len(data) = ",len(eData)
-            out = unpack('iffffffffffffffff',eData[0:68])
-
-            (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                 fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-            eid = (eid - 1) / 10
-            print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            print "len(data) = ",len(data)
-            ###
-            #sys.exit('asdf')
-        self.skip(4)
-        ###
-
-
-    def CQUAD4_144(self,data):
-        """
-        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
-        """
-        nNodes = 5 # centroid + 4 corner points
-        #self.printSection(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        print "*****"
-        while data:
-            for nodeID in range(nNodes):   #nodes pts
-                if nodeID==0:
-                    (eid,_,_,_,_) = struct.unpack("issss",data[0:8])
-                    data = data[8:]
-                    eid = (eid - 1) / 10
-
-                eData = data[0:4*17]
-                data  = data[4*17: ]
-                out = unpack('iffffffffffffffff',eData[0:68])
-                (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                      fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                #print "len(data) = ",len(data)
-            ###
-            #sys.exit('asdf')
-        self.skip(4)
-        ###
 
     def parseAnalysisCode(self,data):
         #self.printBlock(data)
