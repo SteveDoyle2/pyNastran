@@ -120,16 +120,9 @@ class FortranFile(object):
         #print "*tell = ",self.op2.tell()
         #print "\n"
 
-
-
     def scan(self,n):
         data = self.op2.read(n)
         self.n+=n
-
-    def startTable(self,markers):
-        self.readMarkers(markers)
-        word = self.readStringBlock()
-        return word
 
     def getTableCode(self):
         tableCode = self.readHeader()
@@ -182,3 +175,23 @@ class FortranFile(object):
         nDoubles = len(data)/8
         doubles = unpack('d'*nDoubles,data)
         return doubles
+
+    def readTableName(self,rewind=True):
+        n = self.n
+        #print ""
+        self.readMarkers([0,2])
+        word = self.readStringBlock()  # GEOM1
+        #print "*word = |%r|" %(word)
+
+        #print "n      = ",n
+        #print "self.n = ",self.n
+        #print "op2.tell = ",self.op2.tell()
+        #print "******"
+        if rewind:
+            self.n = n
+            self.op2.seek(n)
+        #print "n      = ",n
+        #print "self.n = ",self.n
+        #print "op2.tell = ",self.op2.tell()
+        return word
+        
