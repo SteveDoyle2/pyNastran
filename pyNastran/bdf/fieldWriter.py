@@ -218,6 +218,7 @@ def printCard(fields):
             print "bad fields = ",fields
             raise
         if i%8==0:
+            out = out.rstrip()
             out += '\n%8s' %('')
         ###
     ###
