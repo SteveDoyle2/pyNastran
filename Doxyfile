@@ -684,6 +684,8 @@ EXCLUDE                = old/ \
                          pyNastran/op2/test/ \
                          pyNastran/bdf/test/ \
                          pyNastran/f06/test/ \
+                         pyNastran/solver/test/ \
+                         pyNastran/general/test/ \
                          pyNastran/op4/
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
