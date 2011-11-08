@@ -499,16 +499,15 @@ class ShellProperty(Property):
     def S(self):
         """"
         Calculates the compliance matrix for a lamina
-        [Q] = [S]^-1
+        \f[ \large [Q] = [S]^{-1}  \f]
         @todo finish...if necessary...
         """
-        pass
-        #return Q.inv()
+        return Q.inv()
 
     def ABDH(self):
         """
         tranforms load to strain/bending curvature taken at \f$ z=0 \f$
-        \f[ \large  [T] \left[ 
+        \f[ \large  \left[ 
           \begin{array}{c}
               Nx  \\
               Ny  \\
@@ -518,7 +517,13 @@ class ShellProperty(Property):
               Mz  \\
           \end{array} \right] = 
 
-          [ABBD] \left[ 
+          \left[ 
+          \begin{array}{cc}
+              A & B  \\
+              B & D  \\
+          \end{array} \right]
+          
+          \left[ 
           \begin{array}{c}
               \epsilon_{xx}  \\
               \epsilon_{yy}  \\
@@ -537,10 +542,10 @@ class ShellProperty(Property):
         [My] = [  [B]   [D] ] [ k_yy0    ]
         [Mz] = [            ] [ k_xy0    ]
         
-        \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k  -z_{k-1}  ) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                     \f]
-        \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^2-z_{k-1}^2) = \Sigma_{k=1}^N (Q_{ij})_k (\overline{z} t_k)                      \f]
-        \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k (z_k^3-z_{k-1}^3) = \Sigma_{k=1}^N (Q_{ij})_k         (\overline{z}^2 t_k + t_k^3/12) \f]
-        \f[ \large  H_{ij} =                                                      \Sigma_{k=1}^N (Q_{ij})_k (t_k -4/t^2 (\overline{z}^2 t_k + t_k^3/12) \f]
+        \f[ \large  A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
+        \f[ \large  B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
+        \f[ \large  D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^3-z_{k-1}^3 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right)         \f]
+        \f[ \large  H_{ij} =                                                                       \Sigma_{k=1}^N (Q_{ij})_k \left( t_k -\frac{4}{t^2} \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right) \right) \f]
         
         p. 138 of "Introduction to Composite Material Design"
         """
@@ -626,7 +631,7 @@ class ShellProperty(Property):
         @todo document better
 
         tranformation matrix  \f$ [T] \f$
-        \f[ \large  [T] \left[ 
+        \f[ \large  [T] = \left[ 
           \begin{array}{ccc}
               m^2 & n^2 &  2mn    \\
               n^2 & m^2 & -2mn    \\
@@ -640,7 +645,7 @@ class ShellProperty(Property):
 
 
         inverse transformation matrix \f$ [T]^{-1} \f$
-        \f[ \large  [T]^{-1} \left[ 
+        \f[ \large  [T]^{-1} = \left[ 
           \begin{array}{ccc}
               m^2 & n^2 & -2mn    \\
               n^2 & m^2 &  2mn    \\
@@ -651,8 +656,22 @@ class ShellProperty(Property):
                  [ m^2  n^2       -2mn]
         [T]^-1 = [ n^2  m^2        2mn]   # inverse transform
                  [ mn   -mn    m^2-n^2]
-        
-        \f[ \large  \left[ \sigma_{xx}, \sigma_{yy}, \sigma_{xy} \right]^T = [T]^{-1} [Q] [R][T] \left[ \epsilon_{xx}, \epsilon_{yy}, \frac{1}{2} \gamma_{xy} \right]^T \f]
+
+        \f[ \large  \left[ 
+            \begin{array}{c}
+                 \sigma_{xx}   \\
+                 \sigma_{yy}   \\
+                 \sigma_{xy} 
+            \end{array} \right]
+
+             = [T]^{-1} [Q] [R][T]
+          
+            \left[ \begin{array}{c}
+                 \epsilon_{xx} \\
+                 \epsilon_{yy} \\
+                 \frac{1}{2} \gamma_{xy}
+            \end{array} \right]
+        \f] 
         
         p.119 "Introduction to Composite Material Design"
         """

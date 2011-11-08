@@ -319,7 +319,7 @@ class CQUAD4(ShellElement):
 
     def area(self):
         """
-        area = \frac{1}{2} \left| (n_1-n_3) \cross (n_2-n_4) \right|
+        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
         where a and b are the quad's cross node point vectors
         """
         (n1,n2,n3,n4) = self.nodePositions()

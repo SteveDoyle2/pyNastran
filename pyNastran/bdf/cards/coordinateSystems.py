@@ -404,8 +404,8 @@ class CORD2C(Coord):  # not done...
         *------------x
         @endcode
         
-        x = R \cos(\theta)
-        y = R \sin(\theta)
+        \f[ \large x = R \cos(\theta) \f]
+        \f[ \large y = R \sin(\theta) \f]
         """
         pass
 
