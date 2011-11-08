@@ -151,12 +151,12 @@ class getMethods(object):
     def NLParm(self,nid):
         return self.nlparms[nid]
 
-    def massProperties(self):
+    def MassProperties(self):
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
         I = array(0., 0., 0.,  0.,  0., 0.,)
         for element in self.elements:
-            p = e.centroid()  # not really coded across the board
-            m = e.mass()
+            p = e.Centroid()  # not really coded across the board
+            m = e.Mass()
             (x,y,z) = p
             I[0] = m*x*x  # Ixx
             I[1] = m*y*y  # Iyy

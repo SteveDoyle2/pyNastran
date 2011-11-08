@@ -150,21 +150,21 @@ def getElementStats(fem1,fem2):
     for key,e in sorted(fem1.elements.items()):
         try:
             if isinstance(e,ShellElement):
-                a = e.area()
-                m = e.mass()
+                a = e.Area()
+                m = e.Mass()
             elif isinstance(e,SolidElement):
-                #v = e.volume()
-                #m = e.mass()
+                #v = e.Volume()
+                #m = e.Mass()
                 pass
             elif isinstance(e,LineElement):
-                L = e.length()
-                m = e.mass()
+                L = e.Length()
+                m = e.Mass()
             elif isinstance(e,RigidElement):
                 pass
             elif isinstance(e,SpringElement):
-                L = e.length()
+                L = e.Length()
             elif isinstance(e,PointElement):
-                m = e.mass()
+                m = e.Mass()
             else:
                 print "stats - e.type = ",e.type
                 #try:
@@ -174,9 +174,8 @@ def getElementStats(fem1,fem2):
                 ###
             ###
         except:
-                print "*stats - e.type = ",e.type
-                raise
-            ###
+            print "*stats - e.type = ",e.type
+            raise
         ###
     ###
 

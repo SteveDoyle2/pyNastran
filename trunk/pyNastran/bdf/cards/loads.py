@@ -184,7 +184,7 @@ class FORCE1(Force):
         self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.Normalize()
 
-    def Node(self):
+    def NodeID(self):
         if isinstance(self.node,int):
             return self.node
         return self.node.nid
@@ -223,7 +223,7 @@ class FORCE2(Force):
         self.xyz = cross(v12,v34)
         self.Normalize()
 
-    def Node(self):
+    def NodeID(self):
         if isinstance(self.node,int):
             return self.node
         return self.node.nid
