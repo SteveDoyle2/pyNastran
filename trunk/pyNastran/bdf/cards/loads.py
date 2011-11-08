@@ -140,8 +140,6 @@ class Moment(OneDeeLoad):
         return self.xyz*self.mag
 
 
-
-#class FORCE2(Force):
 class FORCE(Force):
     type = 'FORCE'
     def __init__(self,card):
@@ -173,9 +171,6 @@ class FORCE1(Force):
     """
     type = 'FORCE1'
     def __init__(self,card):
-        """
-        FORCE          3       1            100.      0.      0.      1.
-        """
         Force.__init__(self,card)
         self.node = card.field(2)
         self.mag  = card.field(3)
@@ -195,11 +190,49 @@ class FORCE1(Force):
         return self.node.nid
 
     def __repr__(self):
-        fields = ['FORCE1',self.lid,self.Node(),self.mag,self.g1,self.g2]
+        (node,g1,g2) = self.nodeIDs([self.node,self.g1,self.g2])
+        fields = ['FORCE1',self.lid,node,self.mag,g1,g2]
         return self.printCard(fields)
 
+class FORCE2(Force):
+    """
+    Defines a static concentrated force at a grid point by specification of a magnitude and
+    four grid points that determine the direction.
+    """
+    type = 'FORCE2'
+    def __init__(self,card):
+        """
+        FORCE2 SID G F G1 G2 G3 G4
+        """
+        Force.__init__(self,card)
+        self.node = card.field(2)
+        self.mag  = card.field(3)
+        self.g1   = card.field(4)
+        self.g2   = card.field(5)
+        self.g3   = card.field(5)
+        self.g4   = card.field(5)
 
-#class MOMENT1(Moment):
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        self.node = mdodel.Node(self.node)
+
+        v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
+        v34 = model.Node(self.g4).Position() - model.Node(self.g3).Position()
+        v12 = v12/norm(v12)
+        v34 = v34/norm(v34)
+        self.xyz = cross(v12,v34)
+        self.Normalize()
+
+    def Node(self):
+        if isinstance(self.node,int):
+            return self.node
+        return self.node.nid
+
+    def __repr__(self):
+        (node,g1,g2,g3,g4) = self.nodeIDs([self.node,self.g1,self.g2,self.g3,self.g4])
+        fields = ['FORCE2',self.lid,node,self.mag,g1,g2,g3,g4]
+        return self.printCard(fields)
+
 class MOMENT(Moment):    # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
     def __init__(self,card):
@@ -228,6 +261,39 @@ class MOMENT(Moment):    # can i copy the force init without making the MOMENT a
         fields = ['MOMENT',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
 
+class MOMENT1(Moment):
+    type = 'MOMENT1'
+    def __init__(self,card):
+        """
+        Defines a static concentrated moment at a grid point by specifying a magnitude and
+        two grid points that determine the direction
+
+        MOMENT1 SID G M G1 G2
+        """
+        Moment.__init__(self,card)
+        self.node = card.field(2)
+        self.mag  = card.field(3)
+        self.g1   = card.field(4)
+        self.g2   = card.field(5)
+        self.g3   = card.field(6)
+        self.g4   = card.field(7)
+
+        xyz = card.fields(5,8,[0.,0.,0.])
+        assert len(xyz)==3,'xyz=%s' %(xyz)
+        self.xyz = array(xyz)
+
+    def crossReference(self,model):
+        """@todo cross reference and fix repr function"""
+        self.node = mdodel.Node(self.node)
+        self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
+        self.Normalize()
+
+    def __repr__(self):
+        (node,g1,g2) = self.nodeIDs([self.node,self.g1,self.g2])
+        fields = ['MOMENT1',self.lid,node,self.mag,g1,g2]
+        return self.printCard(fields)
+
+
 class MOMENT2(Moment):
     type = 'MOMENT2'
     def __init__(self,card):
@@ -255,7 +321,7 @@ class MOMENT2(Moment):
         v12 = g2.Position()-g1.Position()
         v34 = g4.Position()-g3.Position()
         v12 = v12/norm(v12)
-        v12 = v34/norm(v34)
+        v34 = v34/norm(v34)
         self.xyz = cross(v12,v34)
 
     def __repr__(self):

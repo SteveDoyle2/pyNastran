@@ -282,7 +282,9 @@ class writeMesh(object):
         return msg
 
     def writeOptimization(self):
-        msg = '$OPTIMIZATION\n'
+        msg = ''
+        if self.dconstrs or self.desvars or self.ddvals:
+            msg += '$OPTIMIZATION\n'
         for ID,dconstr in sorted(self.dconstrs.items()):
             msg += str(dconstr)
         for ID,desvar in sorted(self.desvars.items()):
@@ -292,7 +294,9 @@ class writeMesh(object):
         return msg
 
     def writeDynamic(self):
-        msg = '$DYNAMIC\n'
+        msg = ''
+        if self.dareas or self.nlparms:
+            msg += '$DYNAMIC\n'
         for ID,darea in sorted(self.dareas.items()):
             msg += str(darea)
         for ID,nlparm in sorted(self.nlparms.items()):
@@ -373,6 +377,8 @@ class writeMesh(object):
             #print ""
             msg += printCard(rejectCard)
 
+        if self.rejects:
+            msg += '$REJECT_LINES\n'
         for rejectLines in self.rejects:
             if rejectLines[0][0]==' ':
                 continue

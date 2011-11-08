@@ -135,8 +135,9 @@ class MAT1(Material):
         #print "MAT1 - self.E=%s self.nu=%s" %(self.E,self.nu)
         G_default = self.E/2./(1+self.nu)
         G    = self.setBlankIfDefault(self.G,G_default)
+        rho  = self.setBlankIfDefault(self.rho,1e-8)
         #G = self.G
-        fields = ['MAT1',self.mid,self.E,G,self.nu,self.rho,self.a,TRef,self.ge,
+        fields = ['MAT1',self.mid,self.E,G,self.nu,rho,self.a,TRef,self.ge,
                   self.St,self.Sc,self.Ss,self.Mcsid]
         return self.printCard(fields)
 

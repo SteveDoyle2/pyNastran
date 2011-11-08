@@ -372,7 +372,8 @@ class CaseControlDeck(object):
         subcase0 = self.subcases[0]
         for (iSubcase,subcase) in sorted(self.subcases.items()):
             #if iSubcase==0:
-            msg += str(subcase)
+            msg += subcase.writeSubcase(subcase0)
+            #msg += str(subcase)
             #else:
             #    msg += subcase.writeSubcase(subcase0)
             #print "\n"

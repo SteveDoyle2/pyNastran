@@ -275,11 +275,11 @@ class PBEAM(LineProperty):
         LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
-        print "pid    = ",self.pid
+        #print "pid    = ",self.pid
 
         nFields = card.nFields()-1 # -1 for PBEAM field
         fields = card.fields()
-        print "  fields = ",fields
+        #print "  fields = ",fields
 
         self.so  = [None] ## @todo what are these values???
         self.xxb = [None]
@@ -304,29 +304,32 @@ class PBEAM(LineProperty):
         #print "fieldsMid = ",fieldsMid
 
         #fields = card.fields(9)
-        print ""
-        print "  nFields = ",nFields
+        #print ""
+        #print "  nFields = ",nFields
         #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
         # counting continuation cards
         nMajor    = nFields/16
         nLeftover = nFields%16
-        print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
+        #print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
         if nLeftover==0:
             nMajor-=1
 
         if nMajor==0:
             nMajor=1
-
         
+        x = (nMajor)*16+1
+        if card.field(x) in ['YES','YESA','NO']: # there is no footer
+            nMajor +=1
+            x+=16
 
-        print "  nMajor = ",nMajor
+        #print "  nMajor = ",nMajor
         for nRepeated in range(1,nMajor):
-            print "  adding a major"
+            #print "  adding a major"
             nStart = nRepeated*16+1  # field 17 is the first possible so
             propFields = card.fields(nStart,nStart+16)
             #print "propFields = ",propFields
             
-            print "  so = ",propFields[0]
+            #print "  so = ",propFields[0]
             assert propFields[0] in [None,'YES','YESA','NO'],"SO=%s for PBEAM pid=%s" %(propFields[0],self.pid)
             self.so.append( propFields[0])
             self.xxb.append(propFields[1])
@@ -347,9 +350,10 @@ class PBEAM(LineProperty):
         #print "nRepeated = ",nRepeated
 
         # footer fields
-        x = (nMajor)*16+1
         self.k1   = card.field(x,1.0)
-        print "  k1 = ",self.k1
+        
+        assert self.k1 not in ['YES','YESA','NO'],'error reading PBEAM card pid=%s' %(self.pid)
+        #print "  k1 = ",self.k1
         self.k2   = card.field(x+1,1.0)
         self.s1   = card.field(x+2,0.0)
         self.s2   = card.field(x+3,0.0)
@@ -386,7 +390,7 @@ class PBEAM(LineProperty):
         
         #print len(self.so)
         i = 0
-        print "pid=%s" %(self.pid)
+        #print "pid=%s" %(self.pid)
         for (so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.J,self.NSM,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
@@ -407,7 +411,7 @@ class PBEAM(LineProperty):
             e2 = self.setBlankIfDefault(e2,0.0)
             f2 = self.setBlankIfDefault(f2,0.0)
 
-            print "  i = ",i
+            #print "  i = ",i
             if i==0:
                 fields +=        [A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
             else:
@@ -439,8 +443,8 @@ class PBEAM(LineProperty):
         #print "n1a=%s n2a=%s" %(n1a,n2a)
         #print "n1b=%s n2b=%s" %(n1b,n2b)
 
-        footer = [self.k1,k2,s1,s2,nsia,nsib,cwa,cwb,
-                   m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b]
+        footer = [k1,k2,s1,s2,nsia,nsib,cwa,cwb,
+                  m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b]
         
         #if footer == [self.k1,None,None,None,None,None,None,None,   None,None,None,None,None,None,None,None]:
         #    footer = []
@@ -491,7 +495,6 @@ class ShellProperty(Property):
     def __init__(self,card):
         Property.__init__(self,card)
         pass
-    
 
     def S(self):
         """"
@@ -882,6 +885,7 @@ class PSHELL(ShellProperty):
         self.pid  = card.field(1)
         self.mid  = card.field(2)
         self.t    = card.field(3)
+        assert self.t>0.0,'the thickness must be defined on the PSHELL card (Ti field not supported)'
         
         ## Material identification number for bending
         self.mid2 = card.field(4)
@@ -890,9 +894,21 @@ class PSHELL(ShellProperty):
         self.mid3  = card.field(6)
         self.tst   = card.field(7,0.833333)
         self.nsm   = card.field(8,0.0)
-        self.z1    = card.field(9)
-        self.z2    = card.field(10)
+
+        tOver2 = self.t/2.
+        self.z1    = card.field(9,-tOver2)
+        self.z2    = card.field(10,tOver2)
         self.mid4  = card.field(11)
+
+        if self.mid2 is None:
+            assert self.mid3 is None
+        else: # mid2 is defined
+            #print "self.mid2 = ",self.mid2
+            assert self.mid2 >= -1
+            #assert self.mid3 >   0
+
+        if self.mid is not None and self.mid2 is not None:
+            assert self.mid4==None
 
     def rho(self):
         return self.mid.rho
@@ -912,8 +928,16 @@ class PSHELL(ShellProperty):
         #self.mid4 = mesh.Material(self.mid4)
 
     def __repr__(self):
-        fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
-                  self.z1,self.z2,self.mid4]
+        twelveIt3 = self.setBlankIfDefault(self.twelveIt3,1.0)
+        tst       = self.setBlankIfDefault(self.tst,0.833333)
+        nsm       = self.setBlankIfDefault(self.nsm,0.0)
+
+        tOver2 = self.t/2.
+        z1 = self.setBlankIfDefault(self.z1,-tOver2)
+        z2 = self.setBlankIfDefault(self.z2, tOver2)
+
+        fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,twelveIt3,self.mid3,tst,nsm,
+                           z1,z2,self.mid4]
         return self.printCard(fields)
 
 class PSOLID(SolidProperty):
