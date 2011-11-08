@@ -93,7 +93,10 @@ class Subcase(object):
         #msg += 'id=%s   ' %(self.id)
         (value,options,paramType) = param
         
-        spaces = '    '*self.id
+        spaces = ''
+        if self.id>0:
+            spaces = '    '
+
         if paramType=='SUBCASE-type':
             if self.id>0:
                 msg += 'SUBCASE %s\n' %(self.id)
@@ -196,8 +199,28 @@ class Subcase(object):
             del self.params['SUBCASE']
         #print "self.params %s = %s" %(self.id,self.params)
 
-    def writeSubcase(self):
-        pass
+    def writeSubcase(self,subcase0):
+        if self.id==0:
+            msg = str(self)
+        else:
+            msg = 'SUBCASE %s\n' %(self.id)
+            for (key,param) in sorted(self.params.items()):
+                if key in subcase0.params and subcase0.params[key]==param:
+                    pass
+                else:
+                    if 'key'=='BEGIN':
+                        continue
+                    else:
+                        #print "key=%s param=%s" %(key,param)
+                        (value,options,paramType) = param
+                        #print "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
+                        msg += self.printParam(key,param,printBeginBulk=False)
+                        #print ""
+                    ###
+                ###
+        if self.id>0 and 'BEGIN' in self.params:
+            msg += self.printParam('BEGIN',self.params['BEGIN'])
+        return msg
 
     def __repr__(self):
         """
