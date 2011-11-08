@@ -148,11 +148,11 @@ class getMethods(object):
     def DDVal(self,oid):
         return self.ddvals[oid]
 
-    def NLParml(self,nid):
+    def NLParm(self,nid):
         return self.nlparms[nid]
 
     def massProperties(self):
-                  Ixx Iyy Izz, Ixy, Ixz Iyz
+                 #Ixx Iyy Izz, Ixy, Ixz Iyz
         I = array(0., 0., 0.,  0.,  0., 0.,)
         for element in self.elements:
             p = e.centroid()  # not really coded across the board
@@ -220,7 +220,7 @@ class addMethods(object):
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
-        assert elem.eid not in self.elements,'eid=%s oldElement=\n%s' %(elem.eid,self.elements[elem.eid])
+        assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
         assert elem.eid>0
         self.elements[elem.eid] = elem
 
@@ -318,7 +318,7 @@ class addMethods(object):
 
     def addAero(self,aero):
         assert aero.acsid not in self.aeros
-        assert aero.acsid>0
+        assert aero.acsid>=0
         self.aeros[aero.acsid] = aero
 
     def addCAero(self,caero):

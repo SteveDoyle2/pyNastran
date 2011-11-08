@@ -275,23 +275,28 @@ class PBEAM(LineProperty):
         LineProperty.__init__(self,card)
         self.pid = card.field(1)
         self.mid = card.field(2)
+        print "pid    = ",self.pid
+
+        nFields = card.nFields()-1 # -1 for PBEAM field
+        fields = card.fields()
+        print "  fields = ",fields
 
         self.so  = [None] ## @todo what are these values???
         self.xxb = [None]
         self.A   = [card.field(3) ]
-        self.i1  = [card.field(4) ]
-        self.i2  = [card.field(5) ]
-        self.i12 = [card.field(6) ]
-        self.J   = [card.field(7) ]
+        self.i1  = [card.field(4,0.0) ]
+        self.i2  = [card.field(5,0.0) ]
+        self.i12 = [card.field(6,0.0) ]
+        self.J   = [card.field(7,0.0) ]
         self.NSM = [card.field(8,0.0) ]
-        self.c1  = [card.field(9) ]
-        self.c2  = [card.field(10)]
-        self.d1  = [card.field(11)]
-        self.d2  = [card.field(12)]
-        self.e1  = [card.field(13)]
-        self.e2  = [card.field(14)]
-        self.f1  = [card.field(15)]
-        self.f2  = [card.field(16)]
+        self.c1  = [card.field(9,0.0) ]
+        self.c2  = [card.field(10,0.0)]
+        self.d1  = [card.field(11,0.0)]
+        self.d2  = [card.field(12,0.0)]
+        self.e1  = [card.field(13,0.0)]
+        self.e2  = [card.field(14,0.0)]
+        self.f1  = [card.field(15,0.0)]
+        self.f2  = [card.field(16,0.0)]
         
         #fields = card.fields(0)
         #print "fieldsPBEAM = ",fields
@@ -299,56 +304,68 @@ class PBEAM(LineProperty):
         #print "fieldsMid = ",fieldsMid
 
         #fields = card.fields(9)
-        nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
+        print ""
+        print "  nFields = ",nFields
+        #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
         # counting continuation cards
         nMajor    = nFields/16
         nLeftover = nFields%16
-        #print "nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
+        print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
         if nLeftover==0:
             nMajor-=1
 
-        #print "nMajor = ",nMajor
-        for nRepeated in range(1,nMajor+1):
+        if nMajor==0:
+            nMajor=1
+
+        
+
+        print "  nMajor = ",nMajor
+        for nRepeated in range(1,nMajor):
+            print "  adding a major"
             nStart = nRepeated*16+1  # field 17 is the first possible so
             propFields = card.fields(nStart,nStart+16)
             #print "propFields = ",propFields
+            
+            print "  so = ",propFields[0]
+            assert propFields[0] in [None,'YES','YESA','NO'],"SO=%s for PBEAM pid=%s" %(propFields[0],self.pid)
             self.so.append( propFields[0])
             self.xxb.append(propFields[1])
             self.A.append(  propFields[2])
-            self.i1.append( propFields[3])
-            self.i2.append( propFields[4])
-            self.i12.append(propFields[5])
-            self.J.append(  propFields[6])
+            self.i1.append( self.setDefaultIfBlank(propFields[3],0.0))
+            self.i2.append( self.setDefaultIfBlank(propFields[4],0.0))
+            self.i12.append(self.setDefaultIfBlank(propFields[5],0.0))
+            self.J.append(  self.setDefaultIfBlank(propFields[6],0.0))
             self.NSM.append(self.setDefaultIfBlank(propFields[7],0.0))
-            self.c1.append( propFields[8])
-            self.c2.append( propFields[9])
-            self.d1.append( propFields[10])
-            self.d2.append( propFields[11])
-            self.e1.append( propFields[12])
-            self.e2.append( propFields[13])
-            self.f1.append( propFields[14])
-            self.f2.append( propFields[15])
+            self.c1.append( self.setDefaultIfBlank(propFields[8],0.0))
+            self.c2.append( self.setDefaultIfBlank(propFields[9],0.0))
+            self.d1.append( self.setDefaultIfBlank(propFields[10],0.0))
+            self.d2.append( self.setDefaultIfBlank(propFields[11],0.0))
+            self.e1.append( self.setDefaultIfBlank(propFields[12],0.0))
+            self.e2.append( self.setDefaultIfBlank(propFields[13],0.0))
+            self.f1.append( self.setDefaultIfBlank(propFields[14],0.0))
+            self.f2.append( self.setDefaultIfBlank(propFields[15],0.0))
         #print "nRepeated = ",nRepeated
 
         # footer fields
-        x = (nMajor)*16+17
-        self.k1   = card.field(x)
-        self.k2   = card.field(x+1)
-        self.s1   = card.field(x+2)
-        self.s2   = card.field(x+3)
-        self.nsia = card.field(x+4)
-        self.nsib = card.field(x+5)
-        self.cwa  = card.field(x+6)
-        self.cwb  = card.field(x+7)
+        x = (nMajor)*16+1
+        self.k1   = card.field(x,1.0)
+        print "  k1 = ",self.k1
+        self.k2   = card.field(x+1,1.0)
+        self.s1   = card.field(x+2,0.0)
+        self.s2   = card.field(x+3,0.0)
+        self.nsia = card.field(x+4,0.0)
+        self.nsib = card.field(x+5,self.nsia)
+        self.cwa  = card.field(x+6,0.0)
+        self.cwb  = card.field(x+7,self.cwa)
 
-        self.m1a = card.field(x+8)
-        self.m2a = card.field(x+9)
-        self.m1b = card.field(x+10)
-        self.m2b = card.field(x+11)
-        self.n1a = card.field(x+12)
-        self.n2a = card.field(x+13)
-        self.n1b = card.field(x+14)
-        self.n2b = card.field(x+15)
+        self.m1a = card.field(x+8,0.0)
+        self.m2a = card.field(x+9,self.m1a)
+        self.m1b = card.field(x+10,0.0)
+        self.m2b = card.field(x+11,self.m1b)
+        self.n1a = card.field(x+12,0.0)
+        self.n2a = card.field(x+13,self.n1a)
+        self.n1b = card.field(x+14,0.0)
+        self.n2b = card.field(x+15,self.n1b)
 
     def area(self):
         """@warning area field not supported fully on PBEAM card"""
@@ -369,17 +386,65 @@ class PBEAM(LineProperty):
         
         #print len(self.so)
         i = 0
+        print "pid=%s" %(self.pid)
         for (so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.J,self.NSM,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
+
+            i1  = self.setBlankIfDefault(i1,0.0)
+            i2  = self.setBlankIfDefault(i2,0.0)
+            i12 = self.setBlankIfDefault(i12,0.0)
+            J   = self.setBlankIfDefault(J,0.0)
+
             NSM = self.setBlankIfDefault(NSM,0.0)
+            #c1 = self.setBlankIfDefault(c1,0.0)
+            d1 = self.setBlankIfDefault(d1,0.0)
+            e1 = self.setBlankIfDefault(e1,0.0)
+            f1 = self.setBlankIfDefault(f1,0.0)
+
+            c2 = self.setBlankIfDefault(c2,0.0)
+            d2 = self.setBlankIfDefault(d2,0.0)
+            e2 = self.setBlankIfDefault(e2,0.0)
+            f2 = self.setBlankIfDefault(f2,0.0)
+
+            print "  i = ",i
             if i==0:
                 fields +=        [A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
             else:
                 fields += [so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2]
             i+=1
-        fields += [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
-                   self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
+        k1 = self.setBlankIfDefault(self.k1,1.0)
+        k2 = self.setBlankIfDefault(self.k2,1.0)
+        s1 = self.setBlankIfDefault(self.s1,0.0)
+        s2 = self.setBlankIfDefault(self.s2,0.0)
+        
+        nsia = self.setBlankIfDefault(self.nsia,0.0)
+        nsib = self.setBlankIfDefault(self.nsib,self.nsia)
+
+        cwa = self.setBlankIfDefault(self.cwa,0.0)
+        cwb = self.setBlankIfDefault(self.cwb,self.cwa)
+
+        m1a = self.setBlankIfDefault(self.m1a,0.0)
+        m2a = self.setBlankIfDefault(self.m2a,self.m1a)
+        m1b = self.setBlankIfDefault(self.m1b,0.0)
+        m2b = self.setBlankIfDefault(self.m2b,self.m1b)
+
+        #print "m1a=%s m2a=%s" %(m1a,m2a)
+        #print "m1b=%s m2b=%s" %(m1b,m2b)
+
+        n1a = self.setBlankIfDefault(self.n1a,0.0)
+        n2a = self.setBlankIfDefault(self.n2a,self.n1a)
+        n1b = self.setBlankIfDefault(self.n1b,0.0)
+        n2b = self.setBlankIfDefault(self.n2b,self.n1b)
+        #print "n1a=%s n2a=%s" %(n1a,n2a)
+        #print "n1b=%s n2b=%s" %(n1b,n2b)
+
+        footer = [self.k1,k2,s1,s2,nsia,nsib,cwa,cwb,
+                   m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b]
+        
+        #if footer == [self.k1,None,None,None,None,None,None,None,   None,None,None,None,None,None,None,None]:
+        #    footer = []
+        fields+=footer
         #print fields
         return self.printCard(fields)
         

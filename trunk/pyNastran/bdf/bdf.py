@@ -88,15 +88,15 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
 
-        'CORD1R','CORD1C','CORD1S',
-        'CORD2R','CORD2C','CORD2S',
+        #'CORD1R','CORD1C','CORD1S',
+        'CORD2R',#'CORD2C','CORD2S',
         'ENDDATA',
         
         'TEMP',#'TEMPD',
         'QBDY1','QBDY2','QBDY3','QHBDY',
         'CHBDYE','CHBDYG','CHBDYP',
         'PCONV','PCONVM','PHBDY',
-        'RADM','RADBC','CONV',
+        'RADBC','CONV',  #'RADM',
         
         # optimization
         'DCONSTR','DESVAR','DDVAL',
@@ -196,7 +196,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         # dynamic cards
         ## stores DAREA
-        self.dareas   = {}
+        self.dareas  = {}
         self.nlparms = {}
 
         # aero cards
@@ -355,16 +355,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
         #print "\n\n"
 
-    def read(self,infilename,includeDir=None,debug=False,xref=True,log=None):
+    def read(self,infilename,includeDir=None,xref=True,log=None):
         """
         main read method for the bdf
+        @param infilename the input bdf
+        @param includeDir the relative path to any include files (default=None if no include files)
+        @param xref should the bdf be cross referenced (default=True)
+        @param log a logger object (default=None -> a simplified one will be created)
         """
-        
         self._setInfile(infilename,includeDir,log)
 
         self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
-        self.debug = debug
+
+        #self.debug = True
         if self.debug:
             self.log().info("*FEM_Mesh.read")
         self.readExecutiveControlDeck()
@@ -399,7 +403,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             line = lineIn.strip()
             if self.debug:
                 (n) = self.getLineNumber()
-                print "line[%s]*= |%r|" %(n,line.upper())
+                self.log().debug("line[%s]*= |%r|" %(n,line.upper()))
             self.executiveControlLines.append(lineIn)
             if 'CEND' in line:
                 break
@@ -415,7 +419,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()
             if 'SOL ' in uline:
-                print "line = ",uline
+                #print "line = ",uline
                 if ',' in uline:
                     sline = uline.split(',') # SOL 600,method
                     solValue = sline[0]
@@ -453,12 +457,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         ## the integer of the solution type (e.g. SOL 101)
         try:
-            print "sol = |%s|" %(sol)
             self.sol = int(sol)
+            #print "sol = |%s|" %(sol)
         except:
-            print "sol = |%r|" %(sol)
+            #print "sol = |%r|" %(sol)
             self.sol = self.solmap_toValue[sol]
-            print "sol = ",self.sol
+            #print "sol = ",self.sol
 
         if self.sol==600:
             ## solution 600 method modifier
@@ -579,7 +583,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #print "RcardName = |%s|" %(cardName)
             return False
         if cardName.strip():
-            print "RcardName = |%s|" %(cardName)
+            self.log().info("RejectCardName = |%s|" %(cardName))
         return True
 
     def getIncludeFileName(self,cardLines,cardName):
@@ -661,7 +665,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             cardName = self.getCardName(card)
             
             if 'ENDDATA' in cardName:
-                print cardName
+                #print cardName
                 break # exits while loop
             #self.log().debug('cardName = |%s|' %(cardName))
             
@@ -736,8 +740,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #print "card = ",card
         cardObj = BDF_Card(card,oldCardObj=None)
         if self.debug:
-            print "*oldCardObj = \n",oldCardObj
-            print "*cardObj = \n",cardObj
+            self.log().debug("*oldCardObj = \n%s" %(oldCardObj))
+            self.log().debug("*cardObj = \n%s" %(cardObj))
         #cardObj.applyOldFields(iCard)
 
         try:
@@ -1125,8 +1129,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 darea = DAREA(cardObj)
                 self.addDArea(darea)
             elif cardName=='NLPARM':
-                nlparm = NLPARM(cardObj)
-                self.addNLParm(nlparm)
+                nlparmObj = NLPARM(cardObj)
+                self.addNLParm(nlparmObj)
 
             # aero
             elif cardName=='SPLINE1':
@@ -1214,6 +1218,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.rejectCards.append(card)
             ###
         except:
+            print "cardName = |%r|" %(cardName)
             print "failed! Unreduced Card=%s\n" %(ListPrint(card))
             print "filename = %s\n" %(self.infilename)
             raise

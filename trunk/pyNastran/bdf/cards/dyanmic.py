@@ -59,7 +59,7 @@ class RLOAD2(BaseCard): # not integrated
         fields = ['RLOAD2',self.sid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,Type]
         return self.printCard(fields)
 
-def NLPARM(BaseCard):
+class NLPARM(BaseCard):
     """
     Defines a set of parameters for nonlinear static analysis iteration strategy
     

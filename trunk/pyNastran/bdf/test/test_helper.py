@@ -11,6 +11,7 @@ testPath = pyNastran.bdf.test.__path__[0]
 #print "testPath = ",testPath
 
 def runAllFilesInFolder(folder,debug=False,xref=True):
+    debug = True
     print "folder = ",folder
     filenames  = os.listdir(folder)
     filenames2 = []
@@ -38,7 +39,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
     fem1 = BDF(debug=debug)
     try:
         #print "xref = ",xref
-        fem1.read(bdfModel,debug=debug,xref=xref,log=None)
+        fem1.read(bdfModel,xref=xref,log=None)
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
@@ -46,7 +47,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
         #fem1.writeAsCTRIA3(outModel)
 
         fem2 = BDF(debug=debug)
-        fem2.read(outModel,debug=debug,xref=xref,log=None)
+        fem2.read(outModel,xref=xref,log=None)
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'
@@ -60,9 +61,9 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
-        #traceback.print_exc(file=sys.stdout)
+        traceback.print_exc(file=sys.stdout)
         #print msg
-        #print "-"*80
+        print "-"*80
         raise
     ###
     print "-"*80
