@@ -18,7 +18,7 @@ class SpringElement(Element):
         Element.__init__(self,card)
         self.eid = card.field(1)
 
-    def length_noXref(self,n1=None,n2=None):
+    def Length_noXref(self,n1=None,n2=None):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
@@ -33,7 +33,11 @@ class SpringElement(Element):
         L = norm(n1.Position()-n2.Position())
         return L
 
-    def length(self):
+    def Centroid(self):
+        p = (self.nodes[1].Position()-self.nodes[0].Position())/2.
+        return p
+
+    def Length(self):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
@@ -42,9 +46,9 @@ class SpringElement(Element):
             the model must be cross-referenced already
         """
         #print self.type
-        return self.length_noXref(self.nodes[1],self.nodes[0])
+        return self.Length_noXref(self.nodes[1],self.nodes[0])
 
-    def mass(self):
+    def Mass(self):
         return 0.0
 
 class CELAS1(SpringElement):
@@ -202,15 +206,12 @@ class CVISC(CROD):
         fields = ['CVISC',self.eid]
 ###
 
-
 class PointElement(Element):
     def __init__(self,card):
         Element.__init__(self,card)
         
-    def mass(self):
-        return self.Mass
-
-
+    def Mass(self):
+        return self.mass
 
 class CMASS1(PointElement):
     """
@@ -228,8 +229,8 @@ class CMASS1(PointElement):
         self.g2 = card.field(5)
         self.c2 = card.field(6)
 
-    def mass(self):
-        return self.pid.Mass
+    def Mass(self):
+        return self.pid.mass
 
     def crossReference(self,mesh):
         """
@@ -251,7 +252,7 @@ class CMASS2(PointElement):
     def __init__(self,card):
         PointElement.__init__(self,card)
         self.eid  = card.field(1)
-        self.Mass = card.field(2,0.)
+        self.mass = card.field(2,0.)
         self.g1 = card.field(3)
         self.c1 = card.field(4)
         self.g2 = card.field(5)
@@ -265,8 +266,8 @@ class CMASS2(PointElement):
         pass
 
     def __repr__(self):
-        Mass = self.setBlankIfDefault(self.Mass,0.0)
-        fields = ['CMASS2',self.eid,self.Mass,self.g1,self.c1,self.g2,self.c2]
+        mass = self.setBlankIfDefault(self.mass,0.0)
+        fields = ['CMASS2',self.eid,mass,self.g1,self.c1,self.g2,self.c2]
         return self.printCard(fields)
 
 class CMASS3(PointElement):
@@ -284,6 +285,7 @@ class CMASS3(PointElement):
 
     def crossReference(self,mesh):
         """
+        links up the propertiy ID
         """
         #self.s1 = mesh.Node(self.s1)
         #self.s2 = mesh.Node(self.s2)
@@ -302,7 +304,7 @@ class CMASS4(PointElement):
     def __init__(self,card):
         PointElement.__init__(self,card)
         self.eid  = card.field(1)
-        self.Mass = card.field(2,0.)
+        self.mass = card.field(2,0.)
         self.s1 = card.field(3)
         self.s2 = card.field(4)
 
@@ -314,7 +316,7 @@ class CMASS4(PointElement):
         pass
 
     def __repr__(self):
-        fields = ['CMASS4',self.eid,self.Mass,self.s1,self.s2]
+        fields = ['CMASS4',self.eid,self.mass,self.s1,self.s2]
         return self.printCard(fields)
 
    
@@ -332,7 +334,7 @@ class CONM2(PointElement): # v0.1 not done
         self.eid  = card.field(1)
         self.gid  = card.field(2)
         self.cid  = card.field(3,0)
-        self.Mass = card.field(4,0.0)
+        self.mass = card.field(4,0.0)
         self.X    = array(card.fields(5,8,[0.,0.,0.]))
         self.I    = card.fields(9,15,[0.]*6)
 
@@ -345,6 +347,7 @@ class CONM2(PointElement): # v0.1 not done
         #else:
         #    raise Exception('CONM2 cid !=0 is not coded...')
         ###
+
     def __repr__(self):
         I = []
         for i in self.I:
@@ -361,8 +364,8 @@ class CONM2(PointElement): # v0.1 not done
 
 
         cid  = self.setBlankIfDefault(self.cid,0)
-        Mass = self.setBlankIfDefault(self.Mass,0.0)
-        fields = ['CONM2',self.eid,self.gid,cid,Mass]+X+I
+        mass = self.setBlankIfDefault(self.mass,0.0)
+        fields = ['CONM2',self.eid,self.gid,cid,mass]+X+I
         return self.printCard(fields)
 
    

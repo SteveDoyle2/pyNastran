@@ -19,9 +19,9 @@ class PMASS(PointProperty):
         
         nOffset *= 2
         self.pid = card.field(1+nOffset)
-        self.Mass = card.field(2+nOffset,0.)
+        self.mass = card.field(2+nOffset,0.)
 
-    def mass(self):
+    def Mass(self):
         return self.mass
 
     def __repr__(self):
@@ -60,10 +60,10 @@ class LineProperty(Property):
     def D_shear(self):
         pass
     
-    def rho(self):
+    def Rho(self):
         return self.mid.rho
 
-    def nsm(self):
+    def Nsm(self):
         return self.nsm
 
     def E(self):
@@ -258,7 +258,7 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def nsm():
+    def Nsm():
         return self.nsm
 
     def __repr__(self):
@@ -288,7 +288,7 @@ class PBEAM(LineProperty):
         self.i2  = [card.field(5,0.0) ]
         self.i12 = [card.field(6,0.0) ]
         self.J   = [card.field(7,0.0) ]
-        self.NSM = [card.field(8,0.0) ]
+        self.nsm = [card.field(8,0.0) ]
         self.c1  = [card.field(9,0.0) ]
         self.c2  = [card.field(10,0.0)]
         self.d1  = [card.field(11,0.0)]
@@ -338,7 +338,7 @@ class PBEAM(LineProperty):
             self.i2.append( self.setDefaultIfBlank(propFields[4],0.0))
             self.i12.append(self.setDefaultIfBlank(propFields[5],0.0))
             self.J.append(  self.setDefaultIfBlank(propFields[6],0.0))
-            self.NSM.append(self.setDefaultIfBlank(propFields[7],0.0))
+            self.nsm.append(self.setDefaultIfBlank(propFields[7],0.0))
             self.c1.append( self.setDefaultIfBlank(propFields[8],0.0))
             self.c2.append( self.setDefaultIfBlank(propFields[9],0.0))
             self.d1.append( self.setDefaultIfBlank(propFields[10],0.0))
@@ -376,10 +376,10 @@ class PBEAM(LineProperty):
         #raise Exception(self.A[0])
         return self.A[0]
 
-    def nsm(self):
+    def Nsm(self):
         """@warning nsm field not supported fully on PBEAM card"""
         #raise Exception(self.nsm[0])
-        return self.NSM[0]
+        return self.nsm[0]
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
@@ -391,8 +391,8 @@ class PBEAM(LineProperty):
         #print len(self.so)
         i = 0
         #print "pid=%s" %(self.pid)
-        for (so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
-            self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.J,self.NSM,
+        for (so,xxb,A,i1,i2,i12,J,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
+            self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.J,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
 
             i1  = self.setBlankIfDefault(i1,0.0)
@@ -400,7 +400,7 @@ class PBEAM(LineProperty):
             i12 = self.setBlankIfDefault(i12,0.0)
             J   = self.setBlankIfDefault(J,0.0)
 
-            NSM = self.setBlankIfDefault(NSM,0.0)
+            nsm = self.setBlankIfDefault(nsm,0.0)
             #c1 = self.setBlankIfDefault(c1,0.0)
             d1 = self.setBlankIfDefault(d1,0.0)
             e1 = self.setBlankIfDefault(e1,0.0)
@@ -413,9 +413,9 @@ class PBEAM(LineProperty):
 
             #print "  i = ",i
             if i==0:
-                fields +=        [A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
+                fields +=        [A,i1,i2,i12,J,nsm,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
             else:
-                fields += [so,xxb,A,i1,i2,i12,J,NSM,c1,c2,d1,d2,e1,e2,f1,f2]
+                fields += [so,xxb,A,i1,i2,i12,J,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
             i+=1
         k1 = self.setBlankIfDefault(self.k1,1.0)
         k2 = self.setBlankIfDefault(self.k2,1.0)
@@ -477,7 +477,7 @@ class PBEAM3(LineProperty): # not done, cleanup
         self.fz = card.field(16)
         # more...
 
-    def nsm(self):
+    def Nsm(self):
         """@warning nsm field not supported fully on PBEAM3 card"""
         #raise Exception(self.nsm[0])
         return self.nsm
@@ -782,11 +782,11 @@ class PCOMP(ShellProperty):
         Mid = self.plies[iPly][0]
         return Mid
 
-    #def nsm(self,iPly):
+    #def Nsm(self,iPly):
     #    material = self.material(iPly)
     #    return material.nsm
 
-    def nsm(self):
+    def Nsm(self):
         return self.nsm
 
     def mid(self,iPly):
@@ -825,16 +825,16 @@ class PCOMP(ShellProperty):
             return massPerArea
         ###
         else:
-            rho = self.rho(iPly)
+            rho = self.Rho(iPly)
             t = self.plies[iPly][1]
             return rho*t+self.nsm
         ###
 
-    def rho(self,iPly):
+    def Rho(self,iPly):
         mid = self.material(iPly)
         return mid.rho
 
-    def thickness(self,iPly='all'):
+    def Thickness(self,iPly='all'):
         if iPly=='all': # get all layers
             t = 0.
             for (iply,ply) in enumerate(self.plies):
@@ -908,7 +908,7 @@ class PSHELL(ShellProperty):
         
         ## Material identification number for bending
         self.mid2 = card.field(4)
-        ## \f$ \frac{12I}{t^3} \f
+        ## \f$ \frac{12I}{t^3} \f$
         self.twelveIt3 = card.field(5,1.0)  # poor name
         self.mid3  = card.field(6)
         self.tst   = card.field(7,0.833333)
@@ -929,7 +929,7 @@ class PSHELL(ShellProperty):
         if self.mid is not None and self.mid2 is not None:
             assert self.mid4==None
 
-    def rho(self):
+    def Rho(self):
         return self.mid.rho
 
     def massPerArea(self):

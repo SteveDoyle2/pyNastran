@@ -316,10 +316,8 @@ class Element(BaseCard):
         if not nodes:
            nodes = self.nodes
         if isinstance(nodes[0],int):
-            #print 'if'
             return [node     for node in nodes]
         else:
-            #print 'else'
             return [node.nid for node in nodes]
         ###
 
@@ -349,21 +347,20 @@ class Element(BaseCard):
         centroid = (n1+n2+n3)/3.
         return centroid
 
-    #def Area(self,a,b):
-    #    return 0.5*numpy.linalg.norm(numpy.cross(a,b))
-
     def __repr__(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()
         return self.printCard(fields)
 
-    def length(self):
-        raise Exception('length not implemented in the %s class' %(self.type))
-    def area(self):
-        raise Exception('area not implemented in the %s class' %(self.type))
-    def volume(self):
-        raise Exception('volume not implemented in the %s class' %(self.type))
-    def mass(self):
-        raise Exception('mass not implemented in the %s class' %(self.type))
+    def Centroid(self):
+        raise Exception('Centroid not implemented in the %s class' %(self.type))
+    def Length(self):
+        raise Exception('Length not implemented in the %s class' %(self.type))
+    def Area(self):
+        raise Exception('Area not implemented in the %s class' %(self.type))
+    def Volume(self):
+        raise Exception('Volume not implemented in the %s class' %(self.type))
+    def Mass(self):
+        raise Exception('Mass not implemented in the %s class' %(self.type))
 
     def Jacobian(self):
         raise Exception('Jacobian not implemented for %s' %(self.type))

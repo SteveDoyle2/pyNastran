@@ -3,7 +3,6 @@ In order for a card to be supported, it must read AND write ALL fields.  Importa
 Cards Supported Reading/Writing (version 0.1 beta)
 
 ----Nodes----:
-RINGAX (done)
 GRID   (done)
 GRDSET (done)
 
@@ -166,6 +165,7 @@ Missed v0.1
 
 nodes
 SPOINT (needs integration)
+RINGAX (needs integration)
 
 Aero
 AEPARM  (needs integration)

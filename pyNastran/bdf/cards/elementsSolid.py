@@ -11,7 +11,7 @@ class SolidElement(Element):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid   = mesh.Property(self.pid)
 
-    def mass(self):
+    def Mass(self):
         return self.Rho()*self.volume()
     
     def Rho(self):
@@ -83,7 +83,7 @@ class CTETRA4(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
 
-    def volume(self):
+    def Volume(self):
         """
         V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
         

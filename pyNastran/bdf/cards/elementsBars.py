@@ -16,9 +16,9 @@ class LineElement(Element):
         """torsional constant"""
         return self.pid.C()
 
-    def area(self):
+    def Area(self):
         """returns the area of the element face"""
-        raise Exception('implement self.area() for %s' %(self.type))
+        raise Exception('implement self.Area() for %s' %(self.type))
     
     def E(self):
         """returns the Young's Modulus  \f$ E \f$"""
@@ -36,38 +36,38 @@ class LineElement(Element):
         """returns the Moment of Inertia.   \f$ I \f$"""
         return self.pid.mid.Izz
 
-    def nu(self):
+    def Nu(self):
         """returns Poisson's Ratio  \f$ \nu \f$"""
         return self.pid.mid.nu
     
-    def rho(self):
+    def Rho(self):
         """returns the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
-        #raise Exception('implement self.rho() for %s' %(self.type))
+        #raise Exception('implement self.Rho() for %s' %(self.type))
         return self.pid.mid.rho
 
-    def nsm(self):
+    def Nsm(self):
         """Placeholder method for the non-structural mass"""
-        raise Exception('implement self.area() for %s' %(self.type))
+        raise Exception('implement self.Area() for %s' %(self.type))
 
-    def mass(self):
+    def Mass(self):
         """
         returns the mass of a bar/beam/rod element
         
         \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
         """
-        L = self.length()
+        L = self.Length()
         #print "type = ",self.type
         
         #try:
         #    print "mat  = ",self.mid.type
         #except:
         #    print "no material"
-        #print "rho",self.rho()
-        #print "area",self.area()
-        #print "nsm",self.nsm()
+        #print "rho",self.Rho()
+        #print "area",self.Area()
+        #print "nsm",self.Nsm()
         #print "L",L
-        mass = (self.rho()*self.area() + self.nsm())*L
+        mass = (self.Rho()*self.Area() + self.Nsm())*L
         #print "mass",mass
         #print "---"
         return mass
@@ -76,7 +76,7 @@ class LineElement(Element):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid   = mesh.Property(self.pid)
 
-    def length_noXref(self,n1=None,n2=None):
+    def Length_noXref(self,n1=None,n2=None):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
@@ -91,14 +91,14 @@ class LineElement(Element):
         L = norm(n1.Position()-n2.Position())
         return L
 
-    def length(self):
+    def Length(self):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
         @param self the object pointer
         """
         #print self.type
-        return self.length_noXref(self.nodes[1],self.nodes[0])
+        return self.Length_noXref(self.nodes[1],self.nodes[0])
 
     def k_Axial(self):
         """
@@ -112,7 +112,7 @@ class LineElement(Element):
           \end{array} \right]
         \f]
         """
-        L = self.length()
+        L = self.Length()
         E = self.E()
         A = self.Area()
         kMag = A*E/(2*L)
@@ -133,12 +133,12 @@ class LineElement(Element):
         \f]
         @warning formula not verified
         """
-        L = self.length()
+        L = self.Length()
         G = self.G()
         J = self.J()
-        #A = self.area()
+        #A = self.Area()
         #kMag = A*E/(2*L)
-        kMag = L/GJ
+        kMag = L/(G*J)
         M = Matrix(ones(1,1))
         M[0,1] = M[1,0] = -1
         return M
@@ -157,7 +157,7 @@ class LineElement(Element):
           \end{array} \right]
         \f] 
         """
-        L = self.length()
+        L = self.Length()
         E = self.E()
         I = self.I()
         kMag = E*I/LLL
@@ -192,10 +192,10 @@ class CROD(LineElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
 
-    def area(self):
+    def Area(self):
         return self.pid.A
 
-    def nsm(self):
+    def Nsm(self):
         return self.pid.nsm
 
     def __repr__(self):
@@ -208,8 +208,8 @@ class CTUBE(CROD):
     def __init__(self,card):
         CROD.__init__(self,card)
     ###
-    def area():
-        return self.pid.area()
+    def Area():
+        return self.pid.Area()
 ###
 
 class CONROD(CROD):
@@ -237,7 +237,7 @@ class CONROD(CROD):
         """torsional constant"""
         return self.c
 
-    def area(self):
+    def Area(self):
         return self.A
     
     def E(self):
@@ -256,17 +256,17 @@ class CONROD(CROD):
         """returns the Moment of Inertia.   \f$ I \f$"""
         return self.mid.Izz
 
-    def nu(self):
+    def Nu(self):
         """returns Poisson's Ratio  \f$ \nu \f$"""
         return self.mid.nu
     
-    def rho(self):
+    def Rho(self):
         """returns the material density  \f$ \rho \f$"""
         return self.mid.rho
 
-    def nsm(self):
+    def Nsm(self):
         """Placeholder method for the non-structural mass"""
-        return self.NSM
+        return self.nsm
 
     def Stiffness(self,bdf): # ,bdf,L,A,E
         """
@@ -344,14 +344,14 @@ class CBAR(LineElement):
         self.w2b = float(card.field(15,0.0))
         self.w3b = float(card.field(16,0.0))
 
-    def area(self):
+    def Area(self):
         return self.pid.A
 
-    def length(self):
-        L = self.length_noXref(self.ga,self.gb)
+    def Length(self):
+        L = self.Length_noXref(self.ga,self.gb)
         return L
 
-    def nsm(self):
+    def Nsm(self):
         return self.pid.nsm
 
     def initX_G0(self,card):
@@ -484,12 +484,12 @@ class CBEAM(CBAR):
             raise CardInstantiationError(msg)
         ###
 
-    def area(self):
-        return self.pid.area()
+    def Area(self):
+        return self.pid.Area()
 
-    def nsm(self):
+    def Nsm(self):
         #print "CBEAM pid = ",str(self.pid)
-        return self.pid.nsm()
+        return self.pid.Nsm()
 
     def getOfft_Bit_defaults(self):
         if self.isOfft:
