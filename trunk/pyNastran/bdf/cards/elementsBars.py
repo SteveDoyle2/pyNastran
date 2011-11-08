@@ -54,7 +54,7 @@ class LineElement(Element):
         """
         returns the mass of a bar/beam/rod element
         
-        \f[ \large  mass = \left( \rhoA + nsm \right) L  \f]
+        \f[ \large  mass = \left( \rho A + nsm \right) L  \f]
         """
         L = self.length()
         #print "type = ",self.type
@@ -109,7 +109,7 @@ class LineElement(Element):
           \begin{array}{cc}
               1 & -1 \\
              -1 &  1
-          \end{array} \right)
+          \end{array} \right]
         \f]
         """
         L = self.length()
@@ -124,21 +124,21 @@ class LineElement(Element):
         """
         Returns the torsional stiffness matrix.
 
-        \f[ \large   k_{Axial} = \frac{AE}{2L} 
+        \f[ \large   k_{Axial} = \frac{L}{GJ} 
           \left[
           \begin{array}{cc}
               1 & -1 \\
              -1 &  1
-          \end{array} \right)
+          \end{array} \right]
         \f]
         @warning formula not verified
         """
         L = self.length()
-        #G = self.G()
-        #J = self.J()
-        #kmag = L/GJ ???
-        A = self.area()
-        kMag = A*E/(2*L)
+        G = self.G()
+        J = self.J()
+        #A = self.area()
+        #kMag = A*E/(2*L)
+        kMag = L/GJ
         M = Matrix(ones(1,1))
         M[0,1] = M[1,0] = -1
         return M
@@ -154,7 +154,7 @@ class LineElement(Element):
              6L &  4L^2 & -6L &  2L^2  \\
             -12 & -6L   &  12 & -6L    \\
              6L &  2L^2 & -6L &  4L^2
-          \end{array} \right)
+          \end{array} \right]
         \f] 
         """
         L = self.length()

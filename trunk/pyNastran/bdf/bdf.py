@@ -51,7 +51,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
         'PARAM','INCLUDE',  # '='
-        'GRID','GRDSET','RINGAX',
+        'GRID','GRDSET', #'RINGAX',
 
         'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',
@@ -758,9 +758,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='GRID':
                 node = GRID(cardObj)
                 self.addNode(node)
-            elif cardName=='RINGAX':
-                node = RINGAX(cardObj)
-                self.addNode(node)
+            #elif cardName=='RINGAX':
+            #    node = RINGAX(cardObj)
+            #    self.addNode(node)
             #elif cardName=='SPOINT':  # not done
             #    node = SPOINT(cardObj)
             #    self.addNode(node)
@@ -1003,7 +1003,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='FORCE':
                 force = FORCE(cardObj)
                 self.addLoad(force)
-            elif cardName=='FORCE1': # not done
+            elif cardName=='FORCE1':
                 force = FORCE1(cardObj)
                 self.addLoad(force)
             elif cardName=='FORCE2':
@@ -1012,7 +1012,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='MOMENT':
                 moment = MOMENT(cardObj)
                 self.addLoad(moment)
-            elif cardName=='MOMENT1': # not added
+            elif cardName=='MOMENT1':
                 moment = MOMENT1(cardObj)
                 self.addLoad(moment)
             elif cardName=='MOMENT2':

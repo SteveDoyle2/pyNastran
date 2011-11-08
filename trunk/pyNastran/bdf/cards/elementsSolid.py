@@ -86,12 +86,30 @@ class CTETRA4(SolidElement):
     def volume(self):
         """
         V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
+        
+        \f[ \large V = {(a-d) \dot \left( (b-d) \times (c-d) \right) }{6} \f]
         """
         (n1,n2,n3,n4) = self.nodePositions()
         V = dot((n1-n4),cross(n2-n4,n3-n4))/6.
         return V
 
     def Jacobian(self):
+        """
+        \f[ \large   [J] = 
+          \left[
+          \begin{array}{ccc}
+              1   & 1   & 1   \\
+              x_1 & y_1 & z_1 \\
+              x_2 & y_2 & z_2 \\
+              x_3 & y_3 & z_3 \\
+              x_4 & y_4 & z_4 \\
+          \end{array} \right]
+        \f]
+         @todo
+            this has got to be wrong
+         @warning
+            this has got to be wrong
+        """
         m = matrix((6,6),'d')
         m[0][0] = m[0][1] = m[0][2] = m[0][2] = 1.
         m[1][0]=n1[0]; m[2][0]=n1[1]; m[3][0]=n1[2];
