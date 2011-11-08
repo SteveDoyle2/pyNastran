@@ -6,7 +6,6 @@ Cards Supported Reading/Writing (version 0.1 beta)
 RINGAX (done)
 GRID   (done)
 GRDSET (done)
-SPOINT (needs integration)
 
 ----Elements----:
 CONM2  (cid=0)
@@ -16,7 +15,6 @@ CELAS2 (done)
 CELAS3 (done)
 CELAS4 (done)
 
-CBEND
 CBAR   (done)
 CBEAM  (done)
 CONROD (done)
@@ -87,9 +85,6 @@ PELAS   (done)
 
 PROD    (done)
 PBEAM   (done)
-PBEND
-PBEAML
-PBARL
 PBAR    (done)
 PTUBE   (done)
 
@@ -100,12 +95,11 @@ PSOLID  (done)
 PLSOLID (done)
 
 ----Loads----:
-LSEQ
 LOAD    (done)
 
 FORCE   (done)
 FORCE1  (done)
-FORCE2
+FORCE2  (done)
 
 PLOAD   (done)
 PLOAD1  (done)
@@ -113,12 +107,11 @@ PLOAD2  (done)
 PLOAD4  (done)
 
 MOMENT  (done)
-MOMENT1
+MOMENT1 (done)
 MOMENT2 (done)
 
 ----Thermal Loads----:
 TEMP   (done)
-TEMPD  (needs integration)
 
 QHBDY  (done)
 QBDY1  (done)
@@ -131,7 +124,6 @@ CHBDYG (done)
 CHBDYP (done)
 
 ----Thermal BCs----:
-RADM   (needs integration)
 RADBC  (done)
 CONV   (done)
 
@@ -141,9 +133,7 @@ PCONVM (done)
 PHBDY  (done)
 
 ----Coordinates----:
-CORD2R (done???)
-CORD2C (partial???)
-CORD2S
+CORD2R (done)
 
 ----Dynamic----:
 DAREA   (done)
@@ -156,9 +146,6 @@ GUST    (done)
 GRAV    (done)
 FLUTTER (done)
 FLFACT  (done)
-AEPARM  (needs integration)
-AESTAT  (needs integration)
-AESURFS (needs integration)
 
 CAERO1  (done)
 SPLINE1 (done)
@@ -174,6 +161,40 @@ PARAM (done)
 
 
 -----------------------------------------------
+Missed v0.1
+
+
+nodes
+SPOINT (needs integration)
+
+Aero
+AEPARM  (needs integration)
+AESTAT  (needs integration)
+AESURFS (needs integration)
+
+Coords
+CORD2C (partial???)
+CORD2S
+
+Temperature
+TEMPD  (needs integration)
+
+elements
+CBEND
+
+properties
+PBEND
+PBEAML
+PBARL
+
+loads
+LSEQ
+
+radiation
+RADM   (needs integration)
+-----------------------------------------------
+
+
 Potential (v0.2) - these will be added in groupings...maybe (not necessarily in order):
 If you want a certain group...ask!
 **************
