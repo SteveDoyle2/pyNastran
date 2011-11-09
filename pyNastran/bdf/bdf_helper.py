@@ -14,6 +14,12 @@ class getMethods(object):
         raise Exception('use self.nodeIDs()')
         return sorted(self.nodes.keys())
 
+    def nNodes(self):
+        return len(self.nodes)
+        
+    def nElements(self):
+        return len(self.elements)
+
     def nodeIDs(self):
         return self.nodes.keys()
         

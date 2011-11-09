@@ -155,6 +155,12 @@ class FORCE(Force):
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
 
+    def F(self):
+        return {self.node:  self.mag*self.xyz}
+
+    #def nodeID(self):
+    #    return self.node
+
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
         pass

@@ -24,7 +24,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     #def setCardsToInclude():
     #    pass
 
-    def __init__(self,debug=True):
+    def __init__(self,debug=True,log=None):
+        if log is None:
+            from pyNastran.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            log = loggerObj.startLog('debug') # or info
+        self.log = log
+
         ## allows the BDF variables to be scoped properly (i think...)
         getMethods.__init__(self)
         addMethods.__init__(self)
@@ -165,6 +171,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.sol = None
         ## used in solution 600
         self.solMethod = None
+        self.iSolLine = None
+        self.caseControlDeck = CaseControlDeck([],self.log)
+        #self.executiveControlLines = [self.sol]
 
         # main structural block
         ## store the PARAM cards
@@ -237,16 +246,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
-    def _setInfile(self,infilename,includeDir=None,log=None):
+    def _setInfile(self,infilename,includeDir=None):
         """
         sets up the basic file/lines/cardCounting operations
         """
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog('debug') # or info
-        self.log = log
-
         ## automatically rejects every parsable card (default=False)
         self.autoReject   = False
         ## is the active file done reading
@@ -355,7 +358,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
         #print "\n\n"
 
-    def read(self,infilename,includeDir=None,xref=True,log=None):
+    def read(self,infilename,includeDir=None,xref=True):
         """
         main read method for the bdf
         @param infilename the input bdf
@@ -363,7 +366,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         @param xref should the bdf be cross referenced (default=True)
         @param log a logger object (default=None -> a simplified one will be created)
         """
-        self._setInfile(infilename,includeDir,log)
+        self._setInfile(infilename,includeDir)
 
         self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()

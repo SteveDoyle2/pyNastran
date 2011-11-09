@@ -135,7 +135,9 @@ class writeMesh(object):
             newSol = 'SOL 600,%s\n' %(self.solMethod)
         else:
             newSol = 'SOL %s\n' %(self.sol)
-        self.executiveControlLines[self.iSolLine] = newSol
+        
+        if self.iSolLine is not None:
+            self.executiveControlLines[self.iSolLine] = newSol
 
         for line in self.executiveControlLines:
             msg += line+'\n'
