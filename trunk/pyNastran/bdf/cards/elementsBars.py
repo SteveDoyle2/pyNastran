@@ -1,6 +1,8 @@
+import sys
+
 from baseCard import Mid
 
-from numpy import matrix,zeros,ones
+from numpy import matrix,zeros,ones,array,transpose,dot
 from numpy.linalg import norm
 
 class CardInstantiationError(RuntimeError):
@@ -217,6 +219,7 @@ class CONROD(CROD):
     def __init__(self,card):
         LineElement.__init__(self,card)
         self.eid  = int(card.field(1))
+        print "self.eid = ",self.eid
 
         nids = card.fields(2,4)
         self.prepareNodeIDs(nids)
@@ -268,17 +271,106 @@ class CONROD(CROD):
         """Placeholder method for the non-structural mass"""
         return self.nsm
 
-    def Stiffness(self,bdf): # ,bdf,L,A,E
+    def Rmatrix(self,model):
+        """
+        where   \f$ [R]_{ij} \f$ is the tranformation matrix
+        \f[ \large  [R]_{ij} \left[ 
+          \begin{array}{ccc}
+              g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
+              g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
+              g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
+          \end{array} \right]
+        \f] 
+        """
+        
+        (n1,n2) = self.nodeIDs()
+        p1 = model.Node(n1).xyz
+        p2 = model.Node(n2).xyz
+        v1 = p2-p1
+        v1 = v1/norm(v1)
+        
+        v1x = array([v1[0],0.,0.])
+        v1y = array([0.,v1[1],0.])
+        v1z = array([0.,0.,v1[2]])
+        
+        g1x = array([1.,0.,0.])
+        g1y = array([0.,1.,0.])
+        #g1z = array([0.,0.,1.])
+
+        #R = matrix([  global rod
+        #            [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
+        #            [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
+        #            [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
+        #          ]) # rod
+
+        R = matrix([ # there can be no z component
+                    [dot(v1x,g1x),dot(v1y,g1x)],
+                    [dot(v1x,g1y),dot(v1y,g1y)],
+                  ]) # rod
+        return R
+        
+    def Lambda(self,model):
+        R = self.Rmatrix(model)
+        Lambda = matrix(zeros((2,4),'d'))
+        #print "R = \n",R
+        Lambda[0,0] = R[0,0]
+        Lambda[0,1] = R[1,1]
+
+        Lambda[1,2] = R[0,0]
+        Lambda[1,3] = R[1,1]
+        return Lambda
+
+    def Stiffness(self,model):
+        Lambda = self.Lambda(model)
+        #print "Lambda = \n",Lambda
+        
+        k = self.Stiffness1D(model) #/250000.
+        #print R
+        #print k
+        K = dot(dot(transpose(Lambda),k),Lambda)
+        print "K[%s] = \n%s\n" %(self.eid,K)
+        #sys.exit()
+        return K
+
+    def displacementStress(self,model,q):
+        (n1,n2) = self.nodeIDs()
+        Lambda = self.Lambda(model)
+        
+        ix1 = (n1-1)*2
+        iy1 = (n1-1)*2+1
+
+        ix2 = (n2-1)*2
+        iy2 = (n2-1)*2+1
+
+        #print "q[%s] = %s" %(ix1,q[ix1])
+        #print "q[%s] = %s" %(iy1,q[iy1])
+        #print "q[%s] = %s" %(ix2,q[ix2])
+        #print "q[%s] = %s" %(iy2,q[iy2])
+
+        q2 = array([q[ix1],q[iy1],q[ix2],q[iy2]])
+        print "q[%s] = %s" %(self.eid,q2)
+        #print "Lambda = \n",Lambda
+        
+        #print "Lsize = ",Lambda.shape
+        #print "qsize = ",q.shape
+        u = dot(array(Lambda),q2)
+        #L = self.Length()
+        EL = self.E()/self.Length()
+        
+        stressX = -EL*u[0]+EL*u[1]
+        print "stressX = %s [psi]" %(stressX)
+
+    def Stiffness1D(self,model):
         """
         @todo remove this method after making sure it still works
         """
         #L = norm(r)
         (n1,n2) = self.nodeIDs()
-        node1 = bdf.Node(n1)
-        node2 = bdf.Node(n2)
+        node1 = model.Node(n1)
+        node2 = model.Node(n2)
 
-        p1 = bdf.Node(n1).xyz
-        p2 = bdf.Node(n2).xyz
+        p1 = model.Node(n1).xyz
+        p2 = model.Node(n2).xyz
         #print "node1 = ",node1
         #print "node2 = ",node2
         L = norm(p1-p2)
@@ -288,11 +380,12 @@ class CONROD(CROD):
             raise RuntimeError(msg)
         
         A = self.A
-        mat = bdf.Material(self.mid)
+        mat = self.mid
         E = mat.E
         #print "L = ",L
         K = A*E/L*matrix([[1.,-1.],[-1.,1.]]) # rod
         
+        print "A=%g E=%g L=%g  AE/L=%g" %(A,E,L,A*E/L)
         #print "K = \n",K
         return K
 
