@@ -1,0 +1,56 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+In order to check the software will work read/write a BDF with a given set of cards, it's useful to run the test_helper.py utility.  You can the use a program like "Beyond Compare" to see the differences for yourself.
+
+= Details =
+
+Navigate to the pyNastran/bdf/test directory and type
+
+{{{
+
+>> test_helper.py cylinder.bdf > test.out
+
+
+}}}
+
+The file test.out will be created...
+
+{{{
+INFO:    fname=bdf.pyc                lineNo=371    ---starting BDF.read of cylinder.bdf---
+INFO:    fname=bdf.pyc                lineNo=589    RejectCardName = |TEMPD|
+INFO:    fname=bdf.pyc                lineNo=384    ---finished BDF.read of cylinder.bdf---
+INFO:    fname=bdf_writeMesh.pyc      lineNo=68     ***writing cylinder02.bdf_out
+
+
+INFO:    fname=bdf.pyc                lineNo=371    ---starting BDF.read of cylinder.bdf_out---
+INFO:    fname=bdf.pyc                lineNo=589    RejectCardName = |TEMPD|
+INFO:    fname=bdf.pyc                lineNo=384    ---finished BDF.read of cylinder.bdf_out---
+INFO:    fname=bdf_writeMesh.pyc      lineNo=68     ***writing cylinder02.bdf_out2
+
+
+diffKeys1=[] diffKeys2=[]
+   key=CHEXA   value1=52   value2=52
+   key=CPENTA  value1=52   value2=52
+   key=ENDDATA value1=1    value2=1
+   key=GRID    value1=135  value2=135
+  *key=INCLUDE value1=1    value2=0
+   key=MAT4    value1=1    value2=1
+   key=NLPARM  value1=1    value2=1
+   key=PARAM   value1=2    value2=2
+   key=PSOLID  value1=1    value2=1
+   key=SPC     value1=28   value2=28
+   key=TEMP    value1=18   value2=18
+  -key=TEMPD   value1=1    value2=1
+----------------------------------------------------------------
+
+}}}
+
+
+It's broken into 3 sections:
+ * Section 1 - tellls you what file was read and what cards were rejected.
+ * Section 2 - uses the output of Section 1 to test again (helps to verifies fields weren't shifted)
+ * Section 3 - prints out a cards that were found in the BDF along with the value of each.  
+ * A star indicates a cards was not written out and you should be careful of useing the code.  Note that INCLUDE files always have stars by them.
+ * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card was ignored in both cases.
