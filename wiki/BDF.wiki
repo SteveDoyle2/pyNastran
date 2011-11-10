@@ -1,4 +1,5 @@
 #summary Usage of the BDF class
+#labels Featured
 
 = Introduction =
 
@@ -15,36 +16,39 @@ Add your content here.  Format your content with:
 = Usage = 
 {{{
 mesh = BDF(bdfFileIn) # instantiates the class with the default set of cards
-mesh.setCardsToInclude(['GRID','CQUAD4','PSHELL','MAT1','CORD2C'])
+mesh.setCardsToInclude(['GRID','CQUAD4','PSHELL','MAT1','CORD2R'])  # not required, but lets you limit the cards if there's a problem with one
+
+node100 = ['GRID',id,cp,x,y,z,cd,ps,seid]  # Note that None may be used for default values
+mesh.AddCard(node100)  # adds the new GRID card to the bdf
 
 mesh.read()   # reads the bdf
 mesh.write(bdfFileOut) # writes the bdf
+mesh.writeAsPatran(bdfFileOut2) # writes the bdf with the properties and elements interspersed
+
+
 
 c1 = mesh.Coord(1) # gets coordinate system 1
-print c1.type # CORD2C
+print c1.type # CORD2R
 print c1 # prints the card in small field format version (8-character width)
 
 n1 = mesh.Node(1) # gets element 1
-print n1.type
-print n1.Position() # gets the position of the node in the global coordinate system (COORD2R.id=0)
-print n1.Position(1) # gets the position of the node in the coordinate system 1
+print n1.type  # GRID
+print n1.Position() # gets the position of the node in the global coordinate system (CORD2R.id=0)
+
 
 e1 = mesh.Element(1) # gets element 1
 print e1.type # CQUAD4
 print e1.nodes # [1,2,3,4]
 print e1.zOffset # 0.2
+print e1.Mass()  # returns the mass if a BAR or SHELL element
 
 p1 = mesh.Property(1) # gets property 1
 print p1.type # PSHELL
 print p1.t  # thickness (per the nastran QRG)
+
 m1 = mesh.Material(1) # gets material 1
 print m1.type # MAT1
 print m.E     # predefined on card
 print m.nu    # predefined on card
 print m.G     # calculated based on E, nu
 }}}
-
-= Cards Supported =
-  * [Cards_Version_0.1]
-  * [Cards_Version_0.2]
-  * [Cards_Future]
