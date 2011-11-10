@@ -45,15 +45,20 @@ print c1 # prints the card in small field format version (8-character width)
 
 n1 = mesh.Node(1)   # gets element 1
 print n1.type       # GRID
+print n1.cp         # gets the Cp coordinate card
+print n1.Cp()       # gets the Cp ID
+print n1.cd         # gets the Cd coordinate card
+print n1.Cd()       # gets the Cd ID
 print n1.Position() # gets the position of the node in the global coordinate system (CORD2R.id=0)
 
 
 e1 = mesh.Element(1) # gets element 1
-print e1.type    # CQUAD4
-print e1.nodes   # [1,2,3,4]
-print e1.zOffset # 0.2
-print e1.Nsm()   # gets the non-structural mass
-print e1.pid.nsm # gets the non-structural mass
+print e1.type      # CQUAD4
+print e1.nodeIDs() # [1,2,3,4]
+print e1.nodes     # [nodeObj1,nodeObj2,nodeObj3,nodeObj4]
+print e1.zOffset   # 0.2
+print e1.Nsm()     # gets the non-structural mass
+print e1.pid.nsm   # gets the non-structural mass
 # the function version will work for any
 # element (assuming it has the quantity)
 
