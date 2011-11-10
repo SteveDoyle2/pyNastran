@@ -1,5 +1,5 @@
 
----v0.1 (working)---
+---v0.1---
 See "RoadMap.txt" for a list of the BDF cards that are supported.
 It's nice and long :)
 
