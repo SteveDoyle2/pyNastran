@@ -10,7 +10,7 @@ Navigate to the pyNastran/bdf/test directory and type
 
 {{{
 
->> test_helper.py cylinder.bdf > test.out
+>> python test_helper.py cylinder.bdf > test.out
 
 
 }}}
