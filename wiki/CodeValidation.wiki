@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary How to tell if pyNastran will work on your BDF
 
 = Introduction =
 
@@ -49,7 +49,7 @@ diffKeys1=[] diffKeys2=[]
 
 
 It's broken into 3 sections:
- * Section 1 - tellls you what file was read and what cards were rejected.
+ * Section 1 - tells you what file was read and what cards were rejected.
  * Section 2 - uses the output of Section 1 to test again (helps to verifies fields weren't shifted)
  * Section 3 - prints out a cards that were found in the BDF along with the value of each.  
  * A star indicates a cards was not written out and you should be careful of useing the code.  Note that INCLUDE files always have stars by them.
