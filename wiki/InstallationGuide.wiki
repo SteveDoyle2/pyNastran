@@ -51,7 +51,7 @@ Enjoy!
 == Install Doxygen ==
  * download and install Doxygen http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html
 
-== Install PyNastran ==
+== Install pyNastran ==
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
 
