@@ -127,8 +127,8 @@ class Tester(unittest.TestCase):
 
         for nid,grid in enumerate(grids):
             (cid,x,y,z) = grid
-            mesh.addCard(['GRID',nid,cid,x,y,z],'GRID')
-            gridObj = mesh.Node(nid)
+            mesh.addCard(['GRID',nid+1,cid,x,y,z],'GRID')
+            gridObj = mesh.Node(nid+1)
             if debug:
                 print gridObj
 
@@ -144,7 +144,7 @@ class Tester(unittest.TestCase):
 
         for i,grid in enumerate(gridsExpected):
             (cid,x,y,z) = grid
-            node = mesh.Node(i)
+            node = mesh.Node(i+1)
             pos  = node.Position()
             n = array([x,y,z])
             
