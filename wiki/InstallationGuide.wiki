@@ -24,7 +24,7 @@
 
 = Install Procedure - User =
 
-== Downloading Python ==
+== Download Python ==
 The software has been tested Python 2.6
 
 I use *Python(x,y)-2.6.5.6*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.4 to 2.7 are probably fine, but good luck!
@@ -34,10 +34,10 @@ I use *Python(x,y)-2.6.5.6*, but it shouldn't matter too much as long as your ve
  * numpy 1.5.1  http://numpy.org/
 
 
-== Downloading pyNastran ==
+== Download pyNastran ==
  * Click the downloads page and download the most recent version
 
-== Installing pyNastran ==
+== Install pyNastran ==
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
 
@@ -47,16 +47,16 @@ Enjoy!
 = Install Procedure - Developer =
 
 == Install Subversion ==
- * install Subversion.  I use http://tortoisesvn.net/
+ * download install Subversion.  I use http://tortoisesvn.net/
 
-== Downloading Doxygen ==
- * install Doxygen http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html
+== Install Doxygen ==
+ * download and install Doxygen http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html
 
-== Installing PyNastran ==
+== Install PyNastran ==
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
 
-== Creating the Documentation ==
+== Create the Documentation ==
  * Navigate to pyNastran directory on the command line
  * run *doxygen Doxyfile* to generate the documentation
 
@@ -66,4 +66,4 @@ Enjoy!
 === Linux Step ===
  * open Doxyfile in a text editor and change the python path from    *C:\Python26\python.exe* to your executable location (likely */usr/bin/python* or some variation on that)
 
-Enjoy!
+Glad to have you aboard!
