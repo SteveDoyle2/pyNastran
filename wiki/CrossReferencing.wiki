@@ -7,8 +7,6 @@ Cross-Referencing the BDF is a way of linking nodes, elements, properties, mater
 = Example With/Without Cross-Referencing =
 
 {{{
-#Assume Node1 = ['GRID',cp,x,y,z] # the other fields are going to be the defaults
-
 mesh = BDF() # instantiates the class with the default set of cards
 
 #---NODES---
