@@ -286,7 +286,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #print self.isOpened
         if self.isOpened[infileName]==False:
             self.activeFileNames.append(infileName)
-            #self.log().info("*FEM_Mesh bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
+            #self.log().info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
             assert os.path.exists(infileName),"infileName=|%s| does not exist..." %(infileName)
             infile = open(infileName,'r')
             self.infilesPack.append(infile)
@@ -368,20 +368,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         self._setInfile(infilename,includeDir)
 
-        self.log().info('---starting FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
+        self.log().info('---starting BDF.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
 
         #self.debug = True
         if self.debug:
-            self.log().info("*FEM_Mesh.read")
+            self.log().info("*BDF.read")
         self.readExecutiveControlDeck()
         self.readCaseControlDeck(self.infilename)
         self.readBulkDataDeck()
         #self.closeFile()
         self.crossReference(xref=xref)
         if self.debug:
-            self.log().debug("***FEM_Mesh.read")
-        self.log().info('---finished FEM_Mesh.read of %s---' %(os.path.relpath(self.infilename)))
+            self.log().debug("***BDF.read")
+        self.log().info('---finished BDF.read of %s---' %(os.path.relpath(self.infilename)))
         sys.stdout.flush()
 
         isDone = self.foundEndData

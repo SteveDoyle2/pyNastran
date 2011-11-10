@@ -36,18 +36,18 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
     bdfModel = os.path.join(testPath,folder,bdfFilename)
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
-    fem1 = BDF(debug=debug)
+    fem1 = BDF(debug=debug,log=None)
     try:
         #print "xref = ",xref
-        fem1.read(bdfModel,xref=xref,log=None)
+        fem1.read(bdfModel,xref=xref)
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
         fem1.writeAsPatran(outModel)
         #fem1.writeAsCTRIA3(outModel)
 
-        fem2 = BDF(debug=debug)
-        fem2.read(outModel,xref=xref,log=None)
+        fem2 = BDF(debug=debug,log=None)
+        fem2.read(outModel,xref=xref)
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'
@@ -199,3 +199,6 @@ def printPoints(fem1,fem2):
     print coord
     #print coord.Stats()
 
+if __name__=='__main__':
+    bdfFileName = sys.argv[1]
+    runBDF('',bdfFileName)
