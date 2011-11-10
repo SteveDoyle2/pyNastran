@@ -4,6 +4,10 @@
 
 In order to check the software will work read/write a BDF with a given set of cards, it's useful to run the test_helper.py utility.  You can then use a program like "Beyond Compare" to see the differences for yourself.  Most of the changes you'll see are related to positioning of cards, precision of the data fields, and values that were the default value are left blank in order to simplify the file.
 
+
+*An ENDDATA card is highly recommended* as it's an easy way to tell if all the lines were parsed properly.
+
+
 = Details =
 
 Navigate to the pyNastran/bdf/test directory and type
@@ -53,4 +57,5 @@ It's broken into 3 sections:
  * Section 2 - uses the output of Section 1 to test again (helps to verifies fields weren't shifted)
  * Section 3 - prints out a cards that were found in the BDF along with the value of each.  
  * A star indicates a cards was not written out and you should be careful of useing the code.  Note that INCLUDE files always have stars by them.
- * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card was ignored in both cases.
+ * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card 
+was ignored in both cases.
