@@ -1,0 +1,10 @@
+SOL 123  $ made up solution
+CEND
+STRESS(PLOT,PUNCH) = 5
+INCLUDE 'testB.bdf'
+$back from testB
+DISP(PLOT,PUNCH) = 5
+BEGIN BULK
+GRID 1,
+INCLUDE 'testC.bdf'
+ENDDATA
