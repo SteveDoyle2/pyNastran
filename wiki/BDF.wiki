@@ -15,39 +15,54 @@ Add your content here.  Format your content with:
 
 = Usage = 
 {{{
-mesh = BDF(bdfFileIn) # instantiates the class with the default set of cards
-mesh.setCardsToInclude(['GRID','CQUAD4','PSHELL','MAT1','CORD2R'])  # not required, but lets you limit the cards if there's a problem with one
+mesh = BDF(debug=True,log=None)
+# instantiates the class with the default set of cards
+# debug - prints messages
+# log   - if you pass in a python logging object that will be used
+# instead of the dummy logger that is created internally
 
-node100 = ['GRID',id,cp,x,y,z,cd,ps,seid]  # Note that None may be used for default values
-mesh.addCard(node100)  # adds the new GRID card to the bdf
+mesh.cardsToRead = set(['GRID','CQUAD4','PSHELL','MAT1','CORD2R'])
+# not required, but lets you limit the cards
+# if there's a problem with one
 
-mesh.read()   # reads the bdf
+node100 = ['GRID',id,cp,x,y,z,cd,ps,seid]
+# Note that None may be used for default values
+
+mesh.addCard(node100,'GRID')  # adds the new GRID card to the bdf
+
+mesh.read(bdfFileIn,includeDir=None) # reads the bdf
+#includeDir lets you append path information onto the include files
+#xref=True links up nodes, elements, properties, materials to make it easier to reference data
+
 mesh.write(bdfFileOut) # writes the bdf
 mesh.writeAsPatran(bdfFileOut2) # writes the bdf with the properties and elements interspersed
 
 
 
 c1 = mesh.Coord(1) # gets coordinate system 1
-print c1.type # CORD2R
+print c1.type      # CORD2R
 print c1 # prints the card in small field format version (8-character width)
 
-n1 = mesh.Node(1) # gets element 1
-print n1.type  # GRID
+n1 = mesh.Node(1)   # gets element 1
+print n1.type       # GRID
 print n1.Position() # gets the position of the node in the global coordinate system (CORD2R.id=0)
 
 
 e1 = mesh.Element(1) # gets element 1
-print e1.type # CQUAD4
-print e1.nodes # [1,2,3,4]
+print e1.type    # CQUAD4
+print e1.nodes   # [1,2,3,4]
 print e1.zOffset # 0.2
 print e1.Nsm()   # gets the non-structural mass
-print e1.pid.nsm # gets the non-structural mass; the function version will work for any element (assuming it has the quantity)
+print e1.pid.nsm # gets the non-structural mass
+# the function version will work for any
+# element (assuming it has the quantity)
+
 print e1.Mass()  # returns the mass if a BAR or SHELL element
 
 
 p1 = mesh.Property(1) # gets property 1
 print p1.type # PSHELL
-print p1.t  # thickness (per the nastran QRG)
+print p1.t    # thickness (per the nastran QRG)
 
 m1 = mesh.Material(1) # gets material 1
 print m1.type # MAT1
