@@ -2,7 +2,7 @@
 
 = Introduction =
 
-In order to check the software will work read/write a BDF with a given set of cards, it's useful to run the test_helper.py utility.  You can the use a program like "Beyond Compare" to see the differences for yourself.
+In order to check the software will work read/write a BDF with a given set of cards, it's useful to run the test_helper.py utility.  You can then use a program like "Beyond Compare" to see the differences for yourself.  Most of the changes you'll see are related to positioning of cards, precision of the data fields, and values that were the default value are left blank in order to simplify the file.
 
 = Details =
 
