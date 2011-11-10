@@ -19,7 +19,7 @@ mesh = BDF(bdfFileIn) # instantiates the class with the default set of cards
 mesh.setCardsToInclude(['GRID','CQUAD4','PSHELL','MAT1','CORD2R'])  # not required, but lets you limit the cards if there's a problem with one
 
 node100 = ['GRID',id,cp,x,y,z,cd,ps,seid]  # Note that None may be used for default values
-mesh.AddCard(node100)  # adds the new GRID card to the bdf
+mesh.addCard(node100)  # adds the new GRID card to the bdf
 
 mesh.read()   # reads the bdf
 mesh.write(bdfFileOut) # writes the bdf
@@ -40,7 +40,10 @@ e1 = mesh.Element(1) # gets element 1
 print e1.type # CQUAD4
 print e1.nodes # [1,2,3,4]
 print e1.zOffset # 0.2
+print e1.Nsm()   # gets the non-structural mass
+print e1.pid.nsm # gets the non-structural mass; the function version will work for any element (assuming it has the quantity)
 print e1.Mass()  # returns the mass if a BAR or SHELL element
+
 
 p1 = mesh.Property(1) # gets property 1
 print p1.type # PSHELL
