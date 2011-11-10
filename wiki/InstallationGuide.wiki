@@ -34,7 +34,7 @@ I use *Python(x,y)-2.6.5.6*, but it shouldn't matter too much as long as your ve
 
 
 == Download pyNastran ==
- * Click the downloads page and download the most recent version
+ * Click the downloads page and download the most recent version http://code.google.com/p/pynastran/downloads/list
 
 == Install pyNastran ==
  * Navigate to pyNastran directory on the command line
