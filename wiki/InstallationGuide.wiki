@@ -2,13 +2,23 @@
 #labels Featured,Phase-Deploy
 
 
-= Overview = 
+= User Overview = 
+ * Install Python
+ * Install numpy
+ * Install scipy
+ * Download the latest pyNastran release
+ * Extract the zip file
+ * Navigate to pyNastran directory on the command line
+ * run *python setup.py develop* to install the package
+
+
+= Developer Overview = 
  * Install Python
  * Install numpy
  * Install scipy
  * install Doxygen
  * run *doxygen Doxyfile* to generate the documentation
- * Download pyNastran (requires subversion or a released version)
+ * Download pyNastran (requires subversion)
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
  * run *python all_tests.py* to verify the software
@@ -43,4 +53,5 @@ I use *Python(x,y)-2.6.5.6*, but it shouldn't matter too much as long as your ve
 = Installing PyNastran =
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
- * run *python all_tests.py*.  This should run _*xxx*_ tests with *_0_* failures.
+
+Enjoy!
