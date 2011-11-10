@@ -30,7 +30,7 @@ node100 = ['GRID',id,cp,x,y,z,cd,ps,seid]
 
 mesh.addCard(node100,'GRID')  # adds the new GRID card to the bdf
 
-mesh.read(bdfFileIn,includeDir=None) # reads the bdf
+mesh.read(bdfFileIn,includeDir=None,xref=True) # reads the bdf
 #includeDir lets you append path information onto the include files
 #xref=True links up nodes, elements, properties, materials to make it easier to reference data
 
@@ -74,4 +74,5 @@ print m1.type # MAT1
 print m.E     # predefined on card
 print m.nu    # predefined on card
 print m.G     # calculated based on E, nu
+
 }}}
