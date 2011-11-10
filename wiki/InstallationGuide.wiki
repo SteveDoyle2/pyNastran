@@ -20,7 +20,6 @@
  * run *doxygen Doxyfile* to generate the documentation
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
- * run *python all_tests.py* to verify the software
 
 = Install Procedure - User =
 
