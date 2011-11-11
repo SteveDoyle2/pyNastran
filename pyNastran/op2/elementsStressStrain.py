@@ -50,7 +50,7 @@ class ElementsStressStrain(object):
 
                 (grid,sxx,txy,s1,vm,syy,txy,s2,szz,txz,s3) = unpack('iffffffffff',eData[0:44])
                 print "eid=%s grid=%s s1=%i s2=%i s3=%s" %(eid,grid,s1,s2,s3)
-                sys.exit()
+                sys.exit('CTETRA_39')
                 smax = max(s1,s2,s3)
                 smin = min(s1,s2,s3)
 

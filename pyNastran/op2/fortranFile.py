@@ -7,6 +7,7 @@ from struct import unpack,pack
 class FortranFile(object):
     def __init__(self):
         self.endian = '>'
+        self.bufferSize = 65535
     
     def setEndian(self,endian):
         self.endian = endian
@@ -18,11 +19,18 @@ class FortranFile(object):
         """
         a header is defined as (4,i,4), where i is an integer
         """
-        data = self.op2.read(12)
-        ints = self.getInts(data)
+        self.printSection(60)
+        #data = self.op2.read(12)
+        ints = self.readFullIntBlock()
         print "header ints = %s" %(repr(ints))
-        self.n += 12
-        assert ints[0]==ints[2]==4,"header ints=(%s, %2s, %s) expected=%s" %(ints[0],ints[1],ints[2],expected)
+        #self.n += 12*4
+        
+        if len(ints)>3:
+            print "   might be a buffer block..."
+            ints = self.readFullIntBlock()
+            
+        
+        assert ints[0]==ints[2]==4,"header ints=(%s) expected=%s\n" %(str(ints),expected)
         return ints[1]
 
     def readString(self,nData):
@@ -137,9 +145,9 @@ class FortranFile(object):
         strings = self.getStrings(data)
         print "ints    = ",ints
         #print "longs   = ",longs
-        print "floats  = ",floats
-        print "doubles = ",doubles
-        print "strings = |%r|" %(''.join(strings))
+        #print "floats  = ",floats
+        #print "doubles = ",doubles
+        #print "strings = |%r|" %(''.join(strings))
 
     def getData(self,n):
         """
@@ -238,6 +246,42 @@ class FortranFile(object):
         self.n+=nValues+4
         self.goto(self.n)
         return data
+
+    def readFullBlock(self):
+        """
+        reads a fortran formatted data block
+        nWords  data1 data2 data3 nWords
+        includes nWords in the output
+        """
+        data = self.op2.read(4)
+        nValues, = unpack('i',data)
+        self.n+=4
+        data = self.op2.read(nValues)
+        self.n+=nValues+4
+        self.goto(self.n)
+
+    def readFullIntBlock(self):
+        """
+        reads a fortran formatted block
+        assumes that the data is made up of integers only
+        """
+        """
+        reads a fortran formatted data block
+        nWords  data1 data2 data3 nWords
+        includes nWords in the output
+        """
+        data = self.op2.read(4)
+        nValues, = unpack('i',data)
+        self.n+=4
+        data = self.op2.read(nValues)
+        self.n+=nValues+4
+        self.goto(self.n)
+
+        #nInts = len(data)/4
+        nInts = len(data)/4
+        #print "**nInts = ",nInts
+        ints = unpack('i'*nInts,data)
+        return [nValues]+list(ints)+[nValues]
 
     def readStringBlock(self):
         """
@@ -359,6 +403,7 @@ class FortranFile(object):
             isAnotherTable = True
         else:# marker=0
             isAnotherTable = False
+        isAnotherTable = True
         ###
         #print "isAnotherTable = ",isAnotherTable
         self.n -= 24  # subtract off the header [0,2] or [0,0]
@@ -368,8 +413,9 @@ class FortranFile(object):
     def hasMoreTables(self):
         print self.printSection(120)
         try:
-            marker1 = self.getMarker()
-            marker2 = self.getMarker()
+            marker1 = self.getMarker('[4,0,4]')
+            marker2 = self.getMarker('[4,0,4] or [4,2,4]')
+
             marker = [marker1,marker2]
             print "marker = ",marker
             if marker==[0,2]:

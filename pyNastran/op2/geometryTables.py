@@ -6,6 +6,7 @@ from struct import unpack
 class GeometryTables(object):
 
     def readTable_Geom1(self):
+        print "--------GEOM 1---------"
         word = self.readTableName(rewind=False) # GEOM1
         print "*tableName = |%r|" %(word)
 
@@ -34,9 +35,19 @@ class GeometryTables(object):
         self.readMarkers([-4,1,0])  #3
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
-        print "*ints = ",ints
+        
+        if bufferWords==3:
+            print "maybe a buffer block..."
+            ints = self.readIntBlock() # buffer block...        
+            print "  **ints = ",ints, len(ints)
+            bufferSize = ints[0]
+        
+        self.printSection(100)
+        #ints = self.readIntBlock()
+        #print "*ints = ",ints, len(ints)
+
+        #assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
+        #print "*ints = ",ints
 
         self.readMarkers([-5,1,0])
         markerA = self.getMarker('A')
@@ -47,14 +58,14 @@ class GeometryTables(object):
             return
         print "markerA=%s  markerB=%s" %(markerA,markerB)
         #print "bufferWords = ",bufferWords,bufferWords*4
-
-        self.printSection(100)
+        #sys.exit('end of geom 1')
+        #self.printSection(100)
 
     def geom2(self):
         ints = self.readIntBlock()
         print "*ints = ",ints
         self.readMarkers([-1,7])
-        sys.exit('a')
+        #sys.exit('geometryTable-geom2')
         ints = self.readIntBlock()
         print "*ints = ",ints
 
@@ -123,7 +134,7 @@ class GeometryTables(object):
 
         self.printSection(200)
 
-        sys.exit('geom1')
+        sys.exit('geom1 exit')
 
     def readTable_Geom2(self):
         word = self.readTableName(rewind=False) # GEOM2

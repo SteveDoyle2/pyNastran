@@ -17,7 +17,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
     
     def readTapeCode(self):
         self.printSection(500)
-        sys.exit('a')
+        #sys.exit('op2-readTapeCode')
         self.readMarkers([3])
         ints = self.readIntBlock()
         #print "*ints = ",ints
@@ -41,6 +41,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
         self.n = self.op2.tell()
         print "self.n = ",self.n
         self.readTapeCode()
+        #sys.exit('end of tape code')
 
         isAnotherTable = True
         while isAnotherTable:
@@ -52,10 +53,14 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
                     self.readTable_Geom1()
                 elif tableName=='GEOM2': # elements
                     self.readTable_Geom2()
+                    print self.printSection(80)
                 elif tableName=='GEOM3': # static/thermal loads
+                    print "**************"
                     self.readTable_Geom3()
+                    print "**************"
+                    sys.exit('end of geom3')
                 elif tableName=='GEOM4': # constraints
-                    self.readTable_Geom3()
+                    self.readTable_Geom4()
 
                 elif tableName=='EPT':   # element properties
                     self.readTable_EPT()
