@@ -1,5 +1,3 @@
-
----v0.1---
 See "RoadMap.txt" for a list of the BDF cards that are supported.
 It's nice and long :)
 
@@ -12,6 +10,14 @@ Dicussion Page:  http://groups.google.com/group/pynastran-discuss?pli=1
 If you have a bug/want a new feature or card, leave some feedback on the
 Issues List:     http://code.google.com/p/pynastran/issues/list
 
+
+---v0.2---
+Overall
+   - nothing done yet...
+
+
+
+---v0.1 released 2011/11/09 ---
 
 Overall
    - an executive control deck, case control deck, and bulk data deck

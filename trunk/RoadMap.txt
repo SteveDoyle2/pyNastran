@@ -1,6 +1,30 @@
+-----v0.2-----
+
+OP2 Planned Tables
+   - OS1X1 Table (Isotropic Stresses/Strain)
+      - CQUAD4  (144)
+      - CTRIA3  (73)
+      - CHEXA
+      - CPENTA
+      - CTETRA (39)
+      - CONROD
+      - CROD
+
+   - OES1C1 Table (Composite Stresses/Strain)
+      - CQUAD4
+      - CTRIA3
+
+   - OUG Table (displacement/velocity/acceleration)
+   - OQG Table (single/multipoint constraint forces)
+   - OEF Table (element forces)
+   - OEE Table (element energy strain/kinetic/loss)
+   - KDICT Table (element stiffness table)
+
+-----v0.1-----
+
 In order for a card to be supported, it must read AND write ALL fields.  Important calculated parameters are nice, but not required.
 
-Cards Supported Reading/Writing (version 0.1 beta)
+BDF Cards Supported Reading/Writing (version 0.1 beta)
 
 ----Nodes----:
 GRID   (done)
