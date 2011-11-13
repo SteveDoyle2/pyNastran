@@ -19,16 +19,15 @@ class FortranFile(object):
         """
         a header is defined as (4,i,4), where i is an integer
         """
-        self.printSection(60)
+        #self.printSection(60)
         #data = self.op2.read(12)
         ints = self.readFullIntBlock()
         print "header ints = %s" %(repr(ints))
         #self.n += 12*4
         
-        if len(ints)>3:
+        if len(ints)==5:
             print "   might be a buffer block..."
             ints = self.readFullIntBlock()
-            
         
         assert ints[0]==ints[2]==4,"header ints=(%s) expected=%s\n" %(str(ints),expected)
         return ints[1]
@@ -145,9 +144,9 @@ class FortranFile(object):
         strings = self.getStrings(data)
         print "ints    = ",ints
         #print "longs   = ",longs
-        #print "floats  = ",floats
+        print "floats  = ",floats
         #print "doubles = ",doubles
-        #print "strings = |%r|" %(''.join(strings))
+        print "strings = |%r|" %(''.join(strings))
 
     def getData(self,n):
         """
@@ -196,15 +195,16 @@ class FortranFile(object):
         tableCode = self.readHeader(expected)
         return tableCode
         
-    def readMarkers(self,markers):
+    def readMarkers(self,markers,tableName=None):
         """
         reads a set of predefined markers e.g. [-4,1,0]
         and makes sure it is correct
         """
         for marker in markers:
             tableCode = self.readHeader(marker)
-            assert marker==tableCode
+            assert marker==tableCode,'tableName=%s found=%s expected=%s' %(tableName,tableCode,marker)
         ###
+        print "@markers = ",markers
         print ""
 
     def getNMarkers(self,nMarkers,rewind=False):
@@ -271,6 +271,9 @@ class FortranFile(object):
         includes nWords in the output
         """
         data = self.op2.read(4)
+        if len(data)==0:
+            print "found the end of the file..."
+            return []
         nValues, = unpack('i',data)
         self.n+=4
         data = self.op2.read(nValues)
@@ -372,7 +375,7 @@ class FortranFile(object):
         #[1,0,0] marks the end of the table
         
         i = 0
-        error = 50
+        error = 80
         n = self.n
         endIndex = -1
         data = "dummy"
@@ -396,7 +399,7 @@ class FortranFile(object):
 
         self.op2.seek(self.n)
         "self.op2.tell() = ",self.op2.tell()
-        self.printSection(200)
+        #self.printSection(200)
         marker = self.getMarker()
         print "marker = ",marker
         if marker==2:
@@ -411,7 +414,7 @@ class FortranFile(object):
         return isAnotherTable
 
     def hasMoreTables(self):
-        print self.printSection(120)
+        #print self.printSection(120)
         try:
             marker1 = self.getMarker('[4,0,4]')
             marker2 = self.getMarker('[4,0,4] or [4,2,4]')

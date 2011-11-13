@@ -12,7 +12,8 @@ from elementsStressStrain import ElementsStressStrain
 class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
     def __init__(self,infileName): 
         self.infilename = infileName
-        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
+        #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
     
     def readTapeCode(self):
@@ -55,28 +56,40 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
                     self.readTable_Geom2()
                     print self.printSection(80)
                 elif tableName=='GEOM3': # static/thermal loads
-                    print "**************"
+                    #print "**************"
                     self.readTable_Geom3()
                     print "**************"
-                    sys.exit('end of geom3')
+                    #sys.exit('end of geom3')
                 elif tableName=='GEOM4': # constraints
                     self.readTable_Geom4()
+                    print "**************"
 
                 elif tableName=='EPT':   # element properties
                     self.readTable_EPT()
+                    print "**************"
                 elif tableName=='MPTS':  # material properties
                     self.readTable_MPTS()
+                    print "**************"
 
+
+                elif tableName=='OEF1X':  # ???
+                    self.readTable_OEF1X()
+                    print "**************"
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
+                    print "**************"
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUGV1()
+                    print "**************"
                 elif tableName=='OES1X1': # stress
                     self.readTable_OES1X1()
+                    print "**************"
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
-                print "---isAnotherTable---"
-                (isAnotherTable) = self.hasMoreTables()
+                #print "---isAnotherTable---"
+                #(isAnotherTable) = self.hasMoreTables()
+                isAnotherTable = True
+                self.printSection(100)
             else:
                 (isAnotherTable) = self.skipNextTable()
                 continue
@@ -182,8 +195,167 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
         #print str(dispObj)
 
         self.readMarkers([-5,1,0])
+        return
+        #self.printSection(100)
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-6,1,0])
+        bufferWords = self.getMarker()
+        #self.printSection(100)
+        data = self.readBlock()
+        #sys.exit('ougv1 - stop')
+        self.readMarkers([-7,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-8,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-9,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-10,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-11,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-12,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-13,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-14,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-15,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-16,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-17,1,0])
+        bufferWords = self.getMarker()
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()
+
+        self.readMarkers([-2,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-3,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-4,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+        self.readMarkers([-5,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+        self.readMarkers([-6,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+        self.readMarkers([-7,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+        self.readMarkers([-8,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-9,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-10,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-11,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+        self.readMarkers([-12,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-13,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+
+        self.readMarkers([-14,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-15,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-16,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-17,1,0])
+        bufferWords = self.getMarker()
+        data = self.readBlock()
+
+        self.readMarkers([-18,1,0])
+        bufferWords = self.getMarker()
+        eid = unpack('i',data[0:4])
+
+        data = self.readBlock()
+        print "---------"
+        self.printBlock(data)
+        
+        
+        
+
+        #self.readMarkers([-1,7])
+        #bufferWords = self.getMarker()
+        #data = self.readBlock()
+        #self.printSection(160)
+
+
         #assert self.op2.tell()==4780,self.op2.tell()
         #sys.exit('end of displacements')
+        #self.readTable_OEF1X()
+        sys.exit('end of ougv1')
+
+    def readTable_OEF1X(self):
+        ## OEF1X
+        word = self.readTableName(rewind=False) # OEF1X
+        print "word = |%r|" %(word)
+
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()
+        print "*ints = ",ints
+
 
     def readScalars(self,deviceCode,data,scalarObject):
         while data:
@@ -259,14 +431,20 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
 
         data = self.getData(bufferWords*4)
         #self.printBlock(data)
+
+        stress = stressObject(1) # @todo dummy for now...
         if elementType==144:
-            self.CQUAD4_144(data)  # 144
+            self.CQUAD4_144(data,stress)  # 144
+            print "found cquad)144"
         elif elementType==74:
-            self.CTRIA3_74(data)  # 74
+            print "found ctria_74"
+            self.CTRIA3_74(data,stress)  # 74
         elif elementType==39:
-            self.CTETRA_39(data)  # 39
+            self.CTETRA_39(data,stress)  # 39
         else:
             raise RuntimeError('elementType=%s -> %s is not supported' %(elementType,self.ElementType(elementType)))
+
+        print stress
 
         self.readMarkers([-5,1,0,])
         #print "tell5 = ",self.op2.tell()

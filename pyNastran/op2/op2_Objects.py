@@ -79,3 +79,44 @@ class fluxObject(scalarObject):
     def add(self,nodeID,v1,v2,v3,v4=None,v5=None,v6=None):
         fluxs[nodeID] = array([v1,v2,v3])
 
+
+class stressObject(scalarObject):
+    def __init__(self,iSubcase):
+        scalarObject.__init__(self,iSubcase)
+        self.oxx = {}
+        self.oyy = {}
+        self.oxy = {}
+        self.txy = {}
+        self.majorP = {}
+        self.minorP = {}
+        self.ovm = {}
+
+    def addNewEid(self,eid,nodeID,oxx,oyy,txy,majorP,minorP,ovm):
+        self.oxx[eid] = {nodeID: oxx}
+        self.oyy[eid] = {nodeID: oyy}
+        self.txy[eid] = {nodeID: txy}
+        self.majorP[eid] = {nodeID: majorP}
+        self.minorP[eid] = {nodeID: minorP}
+        self.ovm[eid]    = {nodeID: ovm}
+
+    def add(self,eid,nodeID,oxx,oyy,txy,majorP,minorP,ovm):
+        print self.oxx
+        self.oxx[eid][nodeID] = oxx
+        self.oyy[eid][nodeID] = oyy
+        self.txy[eid][nodeID] = txy
+        self.majorP[eid][nodeID] = majorP
+        self.minorP[eid][nodeID] = minorP
+        self.ovm[eid][nodeID] = ovm
+
+    def __repr__(self):
+        msg = ''
+        for eid,oxxNodes in self.oxx.items():
+            for nid in oxxNodes:
+                oxx = self.oxx[eid][nid]
+                oyy = self.oyy[eid][nid]
+                txy = self.txy[eid][nid]
+                ovm = self.ovm[eid][nid]
+                print "eid=%s nid=%s oxx=%i oyy=%i txy=%i ovm=%i" %(eid,nid,oxx,oyy,txy,ovm)
+            ###
+        ###
+        return msg

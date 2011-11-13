@@ -215,22 +215,37 @@ class GeometryTables(object):
 
         self.readMarkers([-3,1,0]) # 24
         bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        self.skip(4*26)
-
-        self.readMarkers([-4,1,0]) # 9
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        self.skip(4*11)
-
-        self.readMarkers([-5,1,0]) # 3
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        self.skip(4*5)
-
-        self.readMarkers([-6,1,0])
-        assert self.op2.tell()==1488,self.op2.tell()
+        #print "bufferWords = ",bufferWords,bufferWords*4
+        #self.printSection(4*187)
+        ints = self.readIntBlock()
+        print "ints = ",ints
+        #self.skip(4*26)
         
+
+        #self.printSection(4*30)
+        #self.readMarkers([-4,1,0]) # 9
+        #bufferWords = self.getMarker()
+        #print "bufferWords = ",bufferWords,bufferWords*4
+        #ints = self.readIntBlock()
+        #print "4,-1,0,ints = ",ints
+        #self.skip(4*11)
+
+
+        data = self.readTableData([-4,1,0],'GEOM3')        
+        data = self.readTableData([-5,1,0],'GEOM3')
+        print "time for block section 6..."
+        
+        self.readMarkers([-6,1,0])
+        #assert self.op2.tell()==1488,self.op2.tell()
+        
+
+    def readTableData(self,markers,tableName):
+        self.readMarkers(markers,tableName) # 3
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
+        self.printSection(80)
+        data = self.readBlock()
+        return data
 
     def readTable_Geom4(self):
         # GEOM4
