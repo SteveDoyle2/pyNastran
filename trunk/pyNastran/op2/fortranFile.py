@@ -28,8 +28,10 @@ class FortranFile(object):
         if len(ints)==5:
             print "   might be a buffer block..."
             ints = self.readFullIntBlock()
+        elif len(ints)==0:
+            return None
         
-        assert ints[0]==ints[2]==4,"header ints=(%s) expected=%s\n" %(str(ints),expected)
+        assert ints[0]==ints[2]==4,"header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
         return ints[1]
 
     def readString(self,nData):
@@ -202,6 +204,8 @@ class FortranFile(object):
         """
         for marker in markers:
             tableCode = self.readHeader(marker)
+            if tableCode==None:
+                return
             assert marker==tableCode,'tableName=%s found=%s expected=%s' %(tableName,tableCode,marker)
         ###
         print "@markers = ",markers
@@ -305,7 +309,7 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nInts = len(data)/4
-        print "**nInts = ",nInts
+        #print "**nInts = ",nInts
         ints = unpack('i'*nInts,data)
         return ints
 
@@ -345,7 +349,7 @@ class FortranFile(object):
         n = self.n
         #print ""
         self.readMarkers([0,2])
-        word = self.readStringBlock()  # GEOM1
+        word = self.readStringBlock()
         #print "*word = |%r|" %(word)
 
         #print "n      = ",n

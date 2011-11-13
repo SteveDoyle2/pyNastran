@@ -8,12 +8,16 @@ from struct import unpack
 from op2_Objects import *
 from geometryTables import GeometryTables
 from elementsStressStrain import ElementsStressStrain
+from ougv1 import OUGV1
+from oqg1  import OQG1
+from oes   import OES
 
-class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
+
+class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OES):
     def __init__(self,infileName): 
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
     
     def readTapeCode(self):
@@ -84,6 +88,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
                 elif tableName=='OES1X1': # stress
                     self.readTable_OES1X1()
                     print "**************"
+                    sys.exit('stopping after oes1x1')
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "---isAnotherTable---"
@@ -108,255 +113,6 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
 
         #self.printSection(4*51+12)
         
-
-    def readTable_OQG1(self):
-        ## OQG1
-        word = self.readTableName(rewind=False) # OQG1
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) # 7
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-3,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-
-        data = self.getData(4)
-        bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
-        data = self.getData(4*50)
-        aCode = self.getBlockIntEntry(data,1)
-        print "aCode = ",aCode
-        (analysisCode,deviceCode,tableCode,three,subcase) = self.parseAnalysisCode(data)
-
-
-        word = self.readString(384)
-        print "word = |%s|" %(word)
-        self.readHollerith()
-        
-        self.readMarkers([-4,1,0])
-        wordCount = self.getMarker()
-        data = self.readBlock()
-        #self.printBlock(data)
-
-        iSubcase = 1 ## @todo temporary
-        spcForcesObj = spcForcesObject(iSubcase)
-        self.readScalars(deviceCode,data,spcForcesObj)
-
-        self.readMarkers([-5,1,0])
-        #print str(spcForcesObj)
-
-    def readTable_OUGV1(self):
-        ## OUGV1
-        word = self.readTableName(rewind=False) # OUGV1
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) # 7
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-3,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4,'\n'
-
-        data = self.getData(4)
-        bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
-        data = self.getData(4*50)
-        aCode = self.getBlockIntEntry(data,1)
-        print "aCode = ",aCode
-        (analysisCode,deviceCode,tableCode,three,subcase) = self.parseAnalysisCode(data)
-        #self.printBlock(data)
-
-        word = self.readString(384)
-        print "word = |%s|" %(word)
-        self.readHollerith()
-
-        self.readMarkers([-4,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-        
-        iSubcase = 1 ## @todo temporary
-        dispObj = displacementObject(iSubcase)
-        self.readScalars(deviceCode,data,dispObj)
-        #print str(dispObj)
-
-        self.readMarkers([-5,1,0])
-        return
-        #self.printSection(100)
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-6,1,0])
-        bufferWords = self.getMarker()
-        #self.printSection(100)
-        data = self.readBlock()
-        #sys.exit('ougv1 - stop')
-        self.readMarkers([-7,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-8,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-9,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-10,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-11,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-12,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-13,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-14,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-15,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-16,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-17,1,0])
-        bufferWords = self.getMarker()
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-
-        self.readMarkers([-2,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-3,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-4,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-        self.readMarkers([-5,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-        self.readMarkers([-6,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-        self.readMarkers([-7,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-        self.readMarkers([-8,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-9,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-10,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-11,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-        self.readMarkers([-12,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-13,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-
-        self.readMarkers([-14,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-15,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-16,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-17,1,0])
-        bufferWords = self.getMarker()
-        data = self.readBlock()
-
-        self.readMarkers([-18,1,0])
-        bufferWords = self.getMarker()
-        eid = unpack('i',data[0:4])
-
-        data = self.readBlock()
-        print "---------"
-        self.printBlock(data)
-        
-        
-        
-
-        #self.readMarkers([-1,7])
-        #bufferWords = self.getMarker()
-        #data = self.readBlock()
-        #self.printSection(160)
-
-
-        #assert self.op2.tell()==4780,self.op2.tell()
-        #sys.exit('end of displacements')
-        #self.readTable_OEF1X()
-        sys.exit('end of ougv1')
-
-    def readTable_OEF1X(self):
-        ## OEF1X
-        word = self.readTableName(rewind=False) # OEF1X
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-
     def readScalars(self,deviceCode,data,scalarObject):
         while data:
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = unpack('iiffffff',data[0:32])
@@ -367,89 +123,6 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain):
             scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###
-
-    def readTable_OES1X1(self):
-        word = self.readTableName(rewind=False) # OES1X1
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-1,7])
-        print "****",self.op2.tell()
-        data = self.readBlock()
-        #self.printBlock(data)
-        print "****",self.op2.tell()
-        #assert self.op2.tell()==4880
-
-        self.readMarkers([-2,1,0,7])
-        word = self.readStringBlock()  # OES1
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-3,1,0]) # 146
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        
-        data = self.getData(4)
-        bufferSize, = unpack('i',data)
-        data = self.getData(4*51)
-
-        nWide = self.getBlockIntEntry(data,10)
-        #print "nWide = ",nWide
-        thermal = self.getBlockIntEntry(data,21)
-
-        (analysisCode,deviceCode,tCode,elementType,iSubcase) = self.parseAnalysisCode(data)
-        data = data[16:]
-        
-        (word5,word6,word7) = unpack('iii',data[:12]) # depends on analysisCode,tCode
-        print "word5=%s word6=%s word7=%s" %(word5,word6,word7)
-        data = data[12:]
-
-        (loadset,fcode,numWordsEntry,sCode) = unpack('iiii',data[:16])
-        print "loadset=%s fcode=%s numWordsEntry=%s sCode=%s" %(loadset,fcode,numWordsEntry,sCode)
-        print "thermal=%s" %(thermal)
-        data = data[16:]
-
-       
-        word = self.readString(4*(63+32)) # subcase and label
-        self.readHollerith()
-        
-        print "n4 = ",self.n
-
-        print "word* = |%s|" %(word)
-        self.readMarkers([-4,1,0])
-        #self.printSection(100)
-
-        data = self.getData(16)
-        #self.printBlock(data)
-        bufferWords, = unpack('i',data[4:8])
-
-        print "*********************"
-        #bufferWords = self.getMarker() # 87 - buffer
-        print "bufferWords = ",bufferWords,bufferWords*4
-        print "*elementType = ",elementType
-        
-        print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
-        #assert self.op2.tell()==5656
-
-        data = self.getData(bufferWords*4)
-        #self.printBlock(data)
-
-        stress = stressObject(1) # @todo dummy for now...
-        if elementType==144:
-            self.CQUAD4_144(data,stress)  # 144
-            print "found cquad)144"
-        elif elementType==74:
-            print "found ctria_74"
-            self.CTRIA3_74(data,stress)  # 74
-        elif elementType==39:
-            self.CTETRA_39(data,stress)  # 39
-        else:
-            raise RuntimeError('elementType=%s -> %s is not supported' %(elementType,self.ElementType(elementType)))
-
-        print stress
-
-        self.readMarkers([-5,1,0,])
-        #print "tell5 = ",self.op2.tell()
-        self.readMarkers([0,0,])
-        #print "end tell = ",self.op2.tell()
 
     def parseAnalysisCode(self,data):
         #self.printBlock(data)

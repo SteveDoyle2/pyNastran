@@ -100,7 +100,7 @@ class stressObject(scalarObject):
         self.ovm[eid]    = {nodeID: ovm}
 
     def add(self,eid,nodeID,oxx,oyy,txy,majorP,minorP,ovm):
-        print self.oxx
+        #print self.oxx
         self.oxx[eid][nodeID] = oxx
         self.oyy[eid][nodeID] = oyy
         self.txy[eid][nodeID] = txy
@@ -116,7 +116,7 @@ class stressObject(scalarObject):
                 oyy = self.oyy[eid][nid]
                 txy = self.txy[eid][nid]
                 ovm = self.ovm[eid][nid]
-                print "eid=%s nid=%s oxx=%i oyy=%i txy=%i ovm=%i" %(eid,nid,oxx,oyy,txy,ovm)
+                print "eid=%s nid=%s oxx=%-4i oyy=%-4i txy=%-4i ovm=%-4i" %(eid,nid,oxx,oyy,txy,ovm)
             ###
         ###
         return msg
