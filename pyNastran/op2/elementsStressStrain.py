@@ -20,7 +20,8 @@ class ElementsStressStrain(object):
             (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                  fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
             eid = (eid - 1) / 10
-            stress.addNewEid(eid,grid,sx1,sy1,txy1,major1,minor1,vm1)
+            stress.addNewEid(eid,'C1',sx1,sy1,txy1,major1,minor1,vm1)
+            stress.add(      eid,'C2',sx2,sy2,txy2,major2,minor2,vm2)
 
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
