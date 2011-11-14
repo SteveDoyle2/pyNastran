@@ -1,4 +1,6 @@
 import sys
+from struct import unpack
+from op2_Objects import stressObject
 
 class OES(object):
     def readTable_OES1X1(self):
@@ -77,7 +79,7 @@ class OES(object):
         else:
             raise RuntimeError('elementType=%s -> %s is not supported' %(elementType,self.ElementType(elementType)))
 
-        print stress
+        #print stress
 
         self.readMarkers([-5,1,0,])
         #print "tell5 = ",self.op2.tell()

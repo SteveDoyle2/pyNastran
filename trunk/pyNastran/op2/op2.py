@@ -5,7 +5,6 @@ import sys
 import struct
 from struct import unpack
 
-from op2_Objects import *
 from geometryTables import GeometryTables
 from elementsStressStrain import ElementsStressStrain
 from ougv1 import OUGV1
@@ -17,7 +16,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
     def __init__(self,infileName): 
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
+        #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1',]  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
     
     def readTapeCode(self):
@@ -113,17 +114,6 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
         #self.printSection(4*51+12)
         
-    def readScalars(self,deviceCode,data,scalarObject):
-        while data:
-            (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = unpack('iiffffff',data[0:32])
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            grid = (gridDevice-deviceCode)/10
-            #print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
-            scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
-            data = data[32:]
-        ###
-
     def parseAnalysisCode(self,data):
         #self.printBlock(data)
         (aCode,tCode,elementType,iSubcase) = unpack('iiii',data[:16])
