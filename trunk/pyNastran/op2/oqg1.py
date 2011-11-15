@@ -24,6 +24,10 @@ class OQG1(object):
 
         self.readMarkers([-5,1,0])
         print str(self.spcForcesObj)
+
+        #self.printSection(80)
+        #sys.exit('end of oqg1')
+    
     
     def readTable_OQG1_3_4(self,iTable):
         self.readMarkers([iTable,1,0])  # iTable=-3
@@ -36,7 +40,7 @@ class OQG1(object):
         data = self.getData(4*50)
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
-        (analysisCode,deviceCode,tableCode,three,subcase) = self.parseAnalysisCode(data)
+        (tableCode,three,subcase) = self.parseApproachCode(data)
 
 
         word = self.readString(384)
@@ -50,8 +54,8 @@ class OQG1(object):
 
         iSubcase = 1 ## @todo temporary
         self.spcForcesObj = spcForcesObject(iSubcase)
-        self.readScalars(deviceCode,data,self.spcForcesObj)
-    
+        self.readScalars(data,self.spcForcesObj)
+        
     def readScalars(self,data,scalarObject):
         while data:
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = unpack('iiffffff',data[0:32])
@@ -62,4 +66,5 @@ class OQG1(object):
             scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###
+        
 

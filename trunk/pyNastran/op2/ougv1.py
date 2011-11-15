@@ -24,12 +24,12 @@ class OUGV1(object):
         data = self.getData(4*50)
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
-        (self.analysisCode,self.deviceCode,self.tableCode,three,self.iSubcase) = self.parseAnalysisCode(data)
+        (self.tableCode,three,self.iSubcase) = self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
         dt       = self.getValues(data,'f',5)
         self.thermal  = self.getValues(data,'i',23)
         print "*iSubcase=%s dt=%s"%(self.iSubcase,dt)
-        print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
+        print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
         print self.codeInformation(sCode=None,tCode=None,thermal=self.thermal)
 
         #self.printBlock(data)
@@ -40,22 +40,22 @@ class OUGV1(object):
         #return (analysisCode,tableCode,thermal)
 
     def isDisplacement(self):
-        if self.analysisCode==1:
+        if self.approachCode==1:
             return True
         return False
 
     def isTransientDisplacement(self):
-        if self.analysisCode==6 and self.tableCode==1:
+        if self.approachCode==6 and self.tableCode==1:
             return True
         return False
 
     def isForces(self,tableCode,approachCode,thermal):
-        if(tableCode==3 and approachCode==1 and thermal==0):
+        if(approachCode==1 and tableCode==3 and thermal==0):
             return True
         return False
 
     def isFluxes(self,tableCode,approachCode,thermal):
-        if(tableCode==3 and approachCode==1 and thermal==1):
+        if(approachCode==1 and tableCode==3 and thermal==1):
             return True
         return False
 
@@ -63,7 +63,7 @@ class OUGV1(object):
         self.readMarkers([iTable,1,0]) # iTable=-4
         bufferWords = self.getMarker('OUGV1')
         data = self.readBlock()
-        self.printBlock(data)
+        #self.printBlock(data)
         
         if self.isDisplacement():
             self.dispObj = displacementObject(self.iSubcase)
@@ -102,14 +102,20 @@ class OUGV1(object):
         
             print str(self.dispObj)
 
+            n = self.n
+            self.readMarkers([iTable,1,0],'OUGV1')
+
             markerA = self.getMarker('A')
             markerB = self.getMarker('B')
             self.n-=24
             self.op2.seek(self.n)
             print "markerA=%s markerB=%s" %(markerA,markerB)
+            
+
+            self.printSection(120)
             #break
 
-        sys.exit('end of displacementA')
+        #sys.exit('end of displacementA')
         return
 
 
