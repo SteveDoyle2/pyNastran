@@ -61,7 +61,7 @@ class GeometryTables(object):
         #sys.exit('end of geom 1')
         #self.printSection(100)
 
-    def geom2(self):
+    def _geom2(self):
         ints = self.readIntBlock()
         print "*ints = ",ints
         self.readMarkers([-1,7])
@@ -184,9 +184,9 @@ class GeometryTables(object):
         print "*ints = ",ints
         self.printSection(200)
         
-        if self.isTableDone([-6,1]):
-            print "couldnt find table 6 in GEOM2..."
-            return
+        #if self.isTableDone([-6,1]):
+        #    print "couldnt find table 6 in GEOM2..."
+        #    return
 
         self.readMarkers([-6,1,0])
         bufferWords = self.getMarker()  # 31
