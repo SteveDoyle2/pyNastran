@@ -12,9 +12,7 @@ class ElementsStressStrain(object):
         #self.data = self.data[4:]
         print "*****"
         while self.data:
-            assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
             eData     = self.data[0:4*17]
-            assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
             self.data = self.data[4*17: ]
             #print "len(data) = ",len(eData)
             out = unpack('iffffffffffffffff',eData[0:68])
@@ -22,17 +20,15 @@ class ElementsStressStrain(object):
             (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                  fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
             eid = (eid - 1) / 10
-            stress.addNewEid(eid,'C1',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            stress.add(      eid,'C2',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            stress.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            stress.add(               eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             #print "len(data) = ",len(data)
 
             #sys.exit('asdf')
-        assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
-        self.skip(4)
-        assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
+        self.skip(4) ## @todo may cause problems later...
         ###
 
     def CTETRA_39(self,stress):  # doesnt work..
@@ -84,6 +80,7 @@ class ElementsStressStrain(object):
         #term = data[0:4] CEN/
         #data = data[4:]
         print "*****"
+        #self.printBlock(self.data)
         while len(self.data)>=348: # 2+17*5 = 87 -> 87*4 = 348
             nodeID = 'Centroid'
             (eid,_,_,_,_) = unpack("issss",self.data[0:8])
@@ -95,7 +92,8 @@ class ElementsStressStrain(object):
             (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                   fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
             grid = 'C'
-            stress.addNewEid(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            stress.addNewEid('CQUAD4',eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            stress.add(               eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
 
             for nodeID in range(nNodes):   #nodes pts
@@ -105,22 +103,21 @@ class ElementsStressStrain(object):
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                       fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
 
-                stress.add(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 #print "len(data) = ",len(self.data)
-                #self.printBlock(data)
+                #self.printBlock(self.data)
+                stress.addNewNode(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                stress.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             ###
-            print '--------------------'
-            print "len(data) = ",len(self.data)
-            print "tell = ",self.op2.tell()
+            #print '--------------------'
+            #print "len(data) = ",len(self.data)
+            #print "tell = ",self.op2.tell()
             
             #self.printSection(100)
             #sys.exit('asdf')
             #self.dn += 348
-        assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
-        self.skip(4)
-        assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
+        self.skip(4)  ## @todo may be a problem later on...
         ###
 
 
