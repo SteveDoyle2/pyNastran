@@ -17,10 +17,13 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1',]  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
+        #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OQG1','OUGV1','OES1X1','OSTR1X']  # 'OUGV1','GEOM1','GEOM2'
+        #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
-    
+        self.stress = {}
+        self.strain = {}
+
     def readTapeCode(self):
         self.printSection(500)
         #sys.exit('op2-readTapeCode')
@@ -51,7 +54,13 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
         isAnotherTable = True
         while isAnotherTable:
-            tableName = self.readTableName(rewind=True)
+            print '-'*80
+            try:
+                tableName = self.readTableName(rewind=True)
+            except AssertionError:  # the isAnotherTable method sucks...
+                isAnotherTable = False
+                print "***poor exit, but it worked..."
+                break
             print "tableName = |%r|" %(tableName)
  
             if tableName in self.tablesToRead:
@@ -61,35 +70,27 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                     self.readTable_Geom2()
                     print self.printSection(80)
                 elif tableName=='GEOM3': # static/thermal loads
-                    #print "**************"
                     self.readTable_Geom3()
-                    print "**************"
                     #sys.exit('end of geom3')
                 elif tableName=='GEOM4': # constraints
                     self.readTable_Geom4()
-                    print "**************"
 
                 elif tableName=='EPT':   # element properties
                     self.readTable_EPT()
-                    print "**************"
                 elif tableName=='MPTS':  # material properties
                     self.readTable_MPTS()
-                    print "**************"
 
 
                 elif tableName=='OEF1X':  # ???
                     self.readTable_OEF1X()
-                    print "**************"
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
-                    print "**************"
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUGV1()
-                    print "**************"
                 elif tableName=='OES1X1': # stress
                     self.readTable_OES1X1()
-                    print "**************"
-                    sys.exit('stopping after oes1x1')
+                elif tableName=='OSTR1X': # strain
+                    self.readTable_OES1X1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "---isAnotherTable---"
@@ -114,10 +115,11 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
         #self.printSection(4*51+12)
         
-    def parseAnalysisCode(self,data):
+    def parseApproachCode(self,data):
         #self.printBlock(data)
         (aCode,tCode,elementType,iSubcase) = unpack('iiii',data[:16])
-        deviceCode   = aCode%10
-        approachCode = (aCode-deviceCode)/10
-        print "aCode=%s analysisCode=%s deviceCode=%s tCode=%s elementType=%s iSubcase=%s" %(aCode,approachCode,deviceCode,tCode,elementType,iSubcase)
-        return (approachCode,deviceCode,tCode,elementType,iSubcase)
+        self.deviceCode   = aCode%10
+        self.approachCode = (aCode-self.deviceCode)/10
+        print "aCode=%s analysisCode=%s deviceCode=%s tCode=%s elementType=%s iSubcase=%s" %(aCode,self.approachCode,self.deviceCode,tCode,elementType,iSubcase)
+        print "tableType = ",self.printTableCode(tCode)
+        return (tCode,elementType,iSubcase)

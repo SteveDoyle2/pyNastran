@@ -22,7 +22,7 @@ class FortranFile(object):
         #self.printSection(60)
         #data = self.op2.read(12)
         ints = self.readFullIntBlock()
-        print "header ints = %s" %(repr(ints))
+        #print "header ints = %s" %(repr(ints))
         #self.n += 12*4
         
         if len(ints)==5:
@@ -149,13 +149,18 @@ class FortranFile(object):
         print "floats  = ",floats
         #print "doubles = ",doubles
         print "strings = |%r|" %(''.join(strings))
+        print "nWords = ",len(data)/4
 
     def getData(self,n):
         """
         gets a data set of length N
         """
+        assert n>0
+        #assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
         data = self.op2.read(n)
         self.n+=n
+        #print "n =",n
+        #assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
         return data
 
     def getBlockIntEntry(self,data,n):
@@ -197,6 +202,9 @@ class FortranFile(object):
         tableCode = self.readHeader(expected)
         return tableCode
         
+    def readMarker(self,expected=None):
+        return self.getMarker(expected)
+        
     def readMarkers(self,markers,tableName=None):
         """
         reads a set of predefined markers e.g. [-4,1,0]
@@ -206,7 +214,7 @@ class FortranFile(object):
             tableCode = self.readHeader(marker)
             if tableCode==None:
                 return
-            assert marker==tableCode,'tableName=%s found=%s expected=%s' %(tableName,tableCode,marker)
+            assert marker==tableCode,'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
         ###
         print "@markers = ",markers
         print ""
@@ -369,10 +377,11 @@ class FortranFile(object):
         skips a table
         @todo fix bugs
         """
-        word = self.readTableName(rewind=False) # GEOM1
-        print "skippingTable |%s|" %(word)
+        tableName = self.readTableName(rewind=False) # GEOM1
+        print "skippingTable |%s|" %(tableName)
+        print "self.n = ",self.n
 
-        self.readMarkers([-1,7])
+        self.readMarkers([-1,7],tableName)
         
         dataPack = (4,1,4,  4,0,4,  4,0,4)  # marks the end of the table
         binaryData = pack('iiiiiiiii',*dataPack)
@@ -415,6 +424,9 @@ class FortranFile(object):
         #print "isAnotherTable = ",isAnotherTable
         self.n -= 24  # subtract off the header [0,2] or [0,0]
         self.op2.seek(self.n)
+        print "self.n = ",self.n
+        print "---table %s is skipped---" %(tableName)
+        
         return isAnotherTable
 
     def hasMoreTables(self):
