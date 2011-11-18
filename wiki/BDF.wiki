@@ -3,7 +3,7 @@
 
 = Introduction =
 
-This section discusses the BDF class and how to use it.
+This section discusses the BDF class and how to use it.  Make sure you read the CrossReferencing section.
 
 
 = Usage = 
