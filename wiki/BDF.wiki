@@ -6,13 +6,6 @@
 This section discusses the BDF class and how to use it.
 
 
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
-
 = Usage = 
 {{{
 mesh = BDF(debug=True,log=None)
