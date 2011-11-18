@@ -8,6 +8,8 @@ This section discusses the BDF class and how to use it.
 
 = Usage = 
 {{{
+from pyNastran.bdf.bdf import BDF
+
 mesh = BDF(debug=True,log=None)
 # instantiates the class with the default set of cards
 # debug - prints messages
