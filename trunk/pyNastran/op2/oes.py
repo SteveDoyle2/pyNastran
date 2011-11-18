@@ -1,7 +1,7 @@
 import sys
 import copy
 from struct import unpack
-from op2_Objects import stressObject,strainObject
+from op2_Objects import barStressObject,plateStressObject,plateStrainObject,solidStressObject
 
 class OES(object):
     def readTable_OES1X1(self):
@@ -31,9 +31,12 @@ class OES(object):
             isDone = self.readTable_OES_4(iTable-1)
             
             if self.sCode==11:
-                print self.strain[self.iSubcase]
+                print self.plateStrain[self.iSubcase]
             else:
-                print self.stress[self.iSubcase]
+                pass
+                #print self.barStress[self.iSubcase]
+                #print self.plateStress[self.iSubcase]
+                #print self.solidStress[self.iSubcase]
             iTable -= 2
 
             n = self.n
@@ -175,12 +178,12 @@ class OES(object):
             print "***markerA = ",markerA
             #self.printSection(140)
 
-            #print self.stress[self.iSubcase]
+            #print self.plateStress[self.iSubcase]
             
             iTable-=1
             if j>10000:
-            #    sys.exit('check...')
-            #j+=1
+                sys.exit('check...')
+            j+=1
             print "isOesDone = ",isOesDone
             
         print "isOesDone = ",isOesDone
@@ -204,26 +207,95 @@ class OES(object):
         return bits
         
     def instatiateStressStrainObject(self):
+        if self.elementType==34:
+            return self.instatiateBarObject()
+        elif self.elementType==67 or self.elementType==68:
+            return self.instatiateSolidObject()
+        elif self.elementType==144:
+            return self.instatiatePlateObject()
+        else:
+            msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            raise Exception(msg)
+        ###
+
+    def instatiateBarObject(self):
         """
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
         """
-        print "starting a stress/strain object"
+        print "starting a BAR stress/strain object"
         print "    iSubcase = ",self.iSubcase
         print "    sCode    = ",self.sCode
         #bits = self.parseStressCode()
-        if (self.iSubcase not in self.stress) and (self.iSubcase not in self.strain):
+        if (self.iSubcase not in self.barStress) and (self.iSubcase not in self.barStrain):
             print "making new subcase..."
 
         if (self.sCode==0 or self.sCode==1):
-            if self.iSubcase not in self.stress:
-                self.stress[self.iSubcase] = stressObject(self.iSubcase)
-            return self.stress[self.iSubcase]
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.barStress:
+                self.barStress[self.iSubcase] = barStressObject(self.iSubcase)
+            return self.barStress[self.iSubcase]
 
         elif (self.sCode==10 or self.sCode==11):
-            if self.iSubcase not in self.strain:
-                self.strain[self.iSubcase] = strainObject(self.iSubcase)
-            return self.strain[self.iSubcase]
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.barStrain:
+                self.barStrain[self.iSubcase] = barStrainObject(self.iSubcase)
+            return self.barStrain[self.iSubcase]
+        else:
+            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
+        ###
+
+    def instatiatePlateObject(self):
+        """
+        Creates a stress/strain object if necessary
+        @todo I dont like the double return blocks, but it'll work...
+        """
+        print "starting a PLATE stress/strain object"
+        print "    iSubcase = ",self.iSubcase
+        print "    sCode    = ",self.sCode
+        #bits = self.parseStressCode()
+        if (self.iSubcase not in self.plateStress) and (self.iSubcase not in self.plateStrain):
+            print "making new subcase..."
+
+        if (self.sCode==0 or self.sCode==1):
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.plateStress:
+                self.plateStress[self.iSubcase] = plateStressObject(self.iSubcase)
+            return self.plateStress[self.iSubcase]
+
+        elif (self.sCode==10 or self.sCode==11):
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.plateStrain:
+                self.plateStrain[self.iSubcase] = plateStrainObject(self.iSubcase)
+            return self.plateStrain[self.iSubcase]
+        else:
+            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
+        ###
+
+    def instatiateSolidObject(self):
+        """
+        Creates a stress/strain object if necessary
+        @todo I dont like the double return blocks, but it'll work...
+        """
+        print "starting a SOLID stress/strain object"
+        print "    iSubcase = ",self.iSubcase
+        print "    sCode    = ",self.sCode
+        #bits = self.parseStressCode()
+        if (self.iSubcase not in self.solidStress) and (self.iSubcase not in self.solidStrain):
+            print "making new subcase..."
+
+        if (self.sCode==0 or self.sCode==1):
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.solidStress:
+                print "created new solidObject for iSubcase=%s" %(self.iSubcase)
+                self.solidStress[self.iSubcase] = solidStressObject(self.iSubcase)
+            return self.solidStress[self.iSubcase]
+
+        elif (self.sCode==10 or self.sCode==11):
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.solidStrain:
+                self.solidStrain[self.iSubcase] = solidStrainObject(self.iSubcase)
+            return self.solidStrain[self.iSubcase]
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
@@ -267,39 +339,108 @@ class OES(object):
         #self.printBlock(data)
 
         stressStrainObj = self.instatiateStressStrainObject()
-        if self.elementType==144:
+        if self.elementType==144: # cquad4
             print "    found cquad_144"
-            self.CQUAD4_144(stressStrainObj)  # 144
+            self.CQUAD4_144(stressStrainObj)
         elif self.elementType==74:
             print "    found ctria_74"
-            self.CTRIA3_74(stressStrainObj)  # 74
+            self.CTRIA3_74(stressStrainObj) # ctria3
         elif self.elementType==39:
             print "    found ctetra_39"
-            self.CTETRA_39(stressStrainObj)  # 39
+            self.CTETRA_39(stressStrainObj)
+
+        elif self.elementType == 34:   # cbar
+            print "    found cbar_34"
+            self.CBAR_34(stressStrainObj)
+
+        elif self.elementType in [67,68]:   # chexa/cpenta
+            print "    found hexa_67 / cpenta_68"
+            self.CHEXA_67(stressStrainObj)
         else:
             self.printSection(100)
-            raise RuntimeError('elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType)))
+            msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            raise RuntimeError(msg)
 
         #assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
+
+        #elif self.elementType == 4:    # cshear
+
+        #elif self.elementType == 33:   # cquad4_33
+        #elif self.elementType == 34:   # cbar
+        #elif self.elementType == 35:   # cconeax
+        #elif self.elementType == 38:   # cgap
+        #elif self.elementType == 39:   # ctetra
+        #elif self.elementType == 40:   # cbush1d
+
+        #elif self.elementType == 47:   # caxif2
+        #elif self.elementType == 48:   # caxif3
+        #elif self.elementType == 49:   # caxif4
+        #elif self.elementType == 50:   # cslot3
+        #elif self.elementType == 51:   # cslot4
+        #elif self.elementType == 53:   # ctriax6
+        #elif self.elementType == 55:   # cdum3
+        #elif self.elementType == 56:   # cdum4
+        #elif self.elementType == 57:   # cdum5
+        #elif self.elementType == 58:   # cdum6
+        #elif self.elementType == 59:   # cdum7
+        #elif self.elementType == 60:   # cdum8/crac2d
+        #elif self.elementType == 64:   # cquad8
+        #elif self.elementType == 67:   # chexa
+        #elif self.elementType == 68:   # cpenta
+        #elif self.elementType == 69:   # cbend
+        #elif self.elementType == 70:   # ctriar
+        #elif self.elementType == 74:   # ctria3
+        #elif self.elementType == 75:   # ctria6
+        #elif self.elementType == 82:   # cquadr
+        #elif self.elementType == 100:  # cbar w/ cbarao or pload1
+
+        #elif self.elementType == 102:  # cbush
+
+        #elif self.elementType == 144:  # cquad_144 - corner stresses
+
         # rods
         #if   self.elementType == 1:    # crod
         #elif self.elementType == 2:    # cbeam
-        #elif self.elementType == 34:   # cbar
+        #elif self.elementType == 3:    # ctube
+        #elif self.elementType == 10:   # conrod
 
+        #springs
+        #elif self.elementType == 11:   # celas1
+        #elif self.elementType == 12:   # celas2
+        #elif self.elementType == 13:   # celas3
+        #elif self.elementType == 14:   # celas4
+        
         #plate
         #elif self.elementType == 74:   # ctria3
         #elif self.elementType == 144:  # cquad_144
         #elif self.elementType == 33:   # cquad_33
 
-        #solid
+        #solid (???)
         #elif self.elementType == 39:  # ctetra
         #elif self.elementType == 67:  # chexa
         #elif self.elementType == 68:  # cpenta
 
         # composite plate
-        #elif self.elementType == 95:  # quad4
-        #elif self.elementType == 96:  # quad8
-        #elif self.elementType == 97:  # tria3
-        #elif self.elementType == 98:  # tria6
+        #elif self.elementType == 94:   # quad4 (composite)
+        #elif self.elementType == 95:   # quad8 (composite)
+        #elif self.elementType == 97:   # tria3 (composite) - same as quad4 composite
+        #elif self.elementType == 98:   # tria6 (composite) - same as quad8 composite ??? said quad4
+
+        # nonlinear
+        #elif self.elementType == 85:   # tetra  (nonlinear)
+        #elif self.elementType == 86:   # gap    (nonlinear)
+        #elif self.elementType == 87:   # ctube  (nonlinear)
+        #elif self.elementType == 88:   # tria3  (nonlinear) - same as quad4
+        #elif self.elementType == 89:   # crod   (nonlinear)
+        #elif self.elementType == 90:   # quad4  (nonlinear)
+        #elif self.elementType == 91:   # cpenta (nonlinear)
+        #elif self.elementType == 92:   # conrod (nonlinear)
+        #elif self.elementType == 93:   # chexa  (nonlinear)
+        
+        # acoustic
+        #elif self.elementType == 76:   # chexa  (acoustic)
+        #elif self.elementType == 77:   # cpenta (acoustic)
+        #elif self.elementType == 78:   # ctetra (acoustic)
+        #elif self.elementType == 101:  # caabsf (acoustic)
         return isDone,isOesDone
 

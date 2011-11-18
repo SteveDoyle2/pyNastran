@@ -2,7 +2,27 @@ import sys
 from struct import unpack
 
 class ElementsStressStrain(object):
-    def CTRIA3_74(self,stress):
+    def CBAR_34(self,stress): # works
+        
+        while len(self.data)>=40:
+            self.printSection(60)
+            eData     = self.data[0:4*10]
+            self.data = self.data[4*10: ]
+            #print "len(data) = ",len(eData)
+
+            (eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc) = unpack('ifffffffff',eData[0:40])
+            eid = (eid - 1) / 10
+            stress.addNewEid('CBAR',eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc)
+
+            print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%i smax=%i smin=%i MSt=%i MSc=%i" %(eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc)
+            print "len(data) = ",len(self.data)
+
+            #sys.exit('asdf')
+        self.skip(4) ## @todo may cause problems later...
+        ###
+        print "done with CBAR-34"
+
+    def CTRIA3_74(self,stress): # works
         """
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
@@ -71,7 +91,89 @@ class ElementsStressStrain(object):
         self.skip(4)
         ###
 
-    def CQUAD4_144(self,stress):
+    def CHEXA_67(self,stress):  # doesnt work..
+        """
+        stress is extracted at the centroid
+        """
+        print "starting solid element..."
+        #nNodes = 5 # 1 centroid + 4 corner points
+        #self.printSection(20)
+        #term      = self.data[0:4] CEN/
+        #self.data = self.data[4:]
+        print "*****"
+
+        nNodes=1  # this is a minimum, it will be reset later
+        while len(self.data)>=16+84*nNodes+170:
+            #self.printBlock(self.data)
+           
+            (eid,cid,a,b,c,d,nNodes) = unpack("iissssi",self.data[0:16])
+            print "abcd = |%s|" %(a+b+c+d)
+            print "eid=%s cid=%s nNodes=%s" %(eid,cid,nNodes)
+            assert nNodes < 21
+            assert cid >= 0
+            self.data = self.data[16:]
+            eid = (eid - 1) / 10
+            assert eid >= 0
+
+            if(  nNodes==4):  elementType = "CTETRA"
+            elif(nNodes==8):  elementType = "CHEXA"
+            elif(nNodes==6):
+                elementType = "CPENTA"
+                
+            else:
+                raise Exception('not supported....')
+
+            print "len(data) = ",len(self.data)
+            for nodeID in range(nNodes):   #nodes pts, +1 for centroid (???)
+                print "len(data)A = ",len(self.data)
+                eData     = self.data[0:4*21]
+                self.data = self.data[4*21: ]
+                print "len(data)B = ",len(self.data)
+
+                #print "self.tableCode = ",self.tableCode
+                
+                #print "len(data) = ",len(self.data)
+                out = unpack('iffffffffffffffffffff',self.data[0:4*21])
+                (grid,sxx,sxy,s1,a1,a2,a3,pressure,svm,syy,syz,s2,b1,b2,b3,szz,sxz,s3,c1,c2,c3) = out
+
+                #out = unpack('iffffffffff',self.data[0:4*11])
+                #(grid,oxx,txy,o1,ovm,oyy,tyz,o2,ozz,txz,o3) = out
+
+                print "%s eid=%s cid=%s nodef=%s grid=%s s1=%i s2=%i s3=%i svm=%i" %(elementType,eid,cid,nNodes,grid,s1,s2,s3,svm)
+                smax = max(s1,s2,s3)
+                smin = min(s1,s2,s3)
+                
+                aCos = []
+                bCos = []
+                cCos = []
+                if nodeID==0:
+                    stress.addNewEid(elementType,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                else:
+                    stress.add(                  eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                #self.printBlock(data)
+            #sys.exit('finished a CEHXA')
+            print self.solidStress[self.iSubcase]
+            ###
+            print '--------------------'
+            print "len(data) = ",len(self.data)
+            print "84*nNodes=",84*nNodes,nNodes,len(self.data)>=84*nNodes
+            
+            #self.printSection(100)
+            self.printBlock(self.data[0:100])
+            #self.printBlock(self.data[1:100])
+            #self.printBlock(self.data[2:100])
+            #self.printBlock(self.data[3:100])
+            #sys.exit('asdf')
+
+        if len(self.data)>20:
+            print "*******there may be a problem..."
+            self.printBlock(self.data)
+        self.skip(4)
+        ###
+
+    def CQUAD4_144(self,stress): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
