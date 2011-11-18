@@ -7,6 +7,9 @@ Cross-Referencing the BDF is a way of linking nodes, elements, properties, mater
 = Example With/Without Cross-Referencing =
 
 {{{
+import numpy
+from pyNastran.bdf.bdf import BDF
+
 mesh = BDF() # instantiates the class with the default set of cards
 
 #---NODES---
