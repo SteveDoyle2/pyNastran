@@ -21,8 +21,13 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.tablesToRead = ['OQG1','OUGV1','OES1X1','OSTR1X']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
-        self.stress = {}
-        self.strain = {}
+
+        self.barStress   = {}
+        self.barStrain   = {}
+        self.plateStress = {}
+        self.plateStrain = {}
+        self.solidStress = {}
+        self.solidStrain = {}
 
     def readTapeCode(self):
         self.printSection(500)
