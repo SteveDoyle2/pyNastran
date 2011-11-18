@@ -6,12 +6,16 @@ Cross-Referencing the BDF is a way of linking nodes, elements, properties, mater
 
 = Example With/Without Cross-Referencing =
 
+== Initialize the Model ==
 {{{
 import numpy
 from pyNastran.bdf.bdf import BDF
 
 mesh = BDF() # instantiates the class with the default set of cards
+}}}
 
+== Getting the Position of a Grid Point ==
+{{{
 #---NODES---
 # with cross-referencing
 mesh.read(xref=True) # reads the bdf
@@ -38,8 +42,10 @@ print n1.Position() # crashes
 cp = n1.Cp()
 coord = mesh.Coord(cp)
 position = coord.transformToGlobal(n1.xyz) # equivalent to n1.Position()
+}}}
 
-
+== Getting the Mass of an Element ==
+{{{
 #----ELEMENTS---
 # with cross-referencing
 mesh.read(xref=True)        # reads the bdf
