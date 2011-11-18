@@ -22,6 +22,8 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
+        self.rodStress   = {}
+        self.rodStrain   = {}
         self.barStress   = {}
         self.barStrain   = {}
         self.plateStress = {}

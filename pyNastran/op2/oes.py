@@ -1,7 +1,10 @@
 import sys
 import copy
 from struct import unpack
-from op2_Objects import barStressObject,plateStressObject,plateStrainObject,solidStressObject
+from op2_Objects import (rodStressObject,rodStrainObject,
+                        barStressObject,
+                        plateStressObject,plateStrainObject,
+                        solidStressObject)
 
 class OES(object):
     def readTable_OES1X1(self):
@@ -206,7 +209,7 @@ class OES(object):
         print "bits = ",bits
         return bits
         
-    def instatiateStressStrainObject(self):
+    def instantiateStressStrainObject(self):
         if self.elementType==34:
             return self.instatiateBarObject()
         elif self.elementType==67 or self.elementType==68:
@@ -218,7 +221,34 @@ class OES(object):
             raise Exception(msg)
         ###
 
-    def instatiateBarObject(self):
+    def instantiateRodObject(self):
+        """
+        Creates a stress/strain object if necessary
+        @todo I dont like the double return blocks, but it'll work...
+        """
+        print "starting a ROD stress/strain object"
+        print "    iSubcase = ",self.iSubcase
+        print "    sCode    = ",self.sCode
+        #bits = self.parseStressCode()
+        if (self.iSubcase not in self.rodStress) and (self.iSubcase not in self.rodStrain):
+            print "making new subcase..."
+
+        if (self.sCode==0 or self.sCode==1):
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.rodStress:
+                self.rodStress[self.iSubcase] = rodStressObject(self.iSubcase)
+            return self.rodStress[self.iSubcase]
+
+        elif (self.sCode==10 or self.sCode==11):
+            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.barStrain:
+                self.rodStrain[self.iSubcase] = rodStrainObject(self.iSubcase)
+            return self.rodStrain[self.iSubcase]
+        else:
+            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
+        ###
+
+    def instantiateBarObject(self):
         """
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
@@ -245,7 +275,7 @@ class OES(object):
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
 
-    def instatiatePlateObject(self):
+    def instantiatePlateObject(self):
         """
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
@@ -272,7 +302,7 @@ class OES(object):
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
 
-    def instatiateSolidObject(self):
+    def instantiateSolidObject(self):
         """
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
@@ -338,23 +368,34 @@ class OES(object):
         #print "self.n = ",self.n
         #self.printBlock(data)
 
-        stressStrainObj = self.instatiateStressStrainObject()
-        if self.elementType==144: # cquad4
-            print "    found cquad_144"
-            self.CQUAD4_144(stressStrainObj)
-        elif self.elementType==74:
-            print "    found ctria_74"
-            self.CTRIA3_74(stressStrainObj) # ctria3
-        elif self.elementType==39:
-            print "    found ctetra_39"
-            self.CTETRA_39(stressStrainObj)
+        #stressStrainObj = self.instatiateStressStrainObject()
+        if self.elementType==1: # crod
+            print "    found crod_1"
+            stressStrainObj = self.instantiateRodObject()
+            self.CROD_1(stressStrainObj)
 
         elif self.elementType == 34:   # cbar
             print "    found cbar_34"
+            stressStrainObj = self.instantiateBarObject()
             self.CBAR_34(stressStrainObj)
 
-        elif self.elementType in [67,68]:   # chexa/cpenta
+        elif self.elementType==144: # cquad4
+            print "    found cquad_144"
+            stressStrainObj = self.instantiatePlateObject()
+            self.CQUAD4_144(stressStrainObj)
+        elif self.elementType==74:  # ctria
+            print "    found ctria_74"
+            stressStrainObj = self.instantiatePlateObject()
+            self.CTRIA3_74(stressStrainObj) # ctria3
+
+
+        #elif self.elementType==39:
+        #    print "    found ctetra_39"
+        #    stressStrainObj = self.instantiateSolidObject()
+        #    self.CTETRA_39(stressStrainObj)
+        elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
             print "    found hexa_67 / cpenta_68"
+            stressStrainObj = self.instantiateSolidObject()
             self.CHEXA_67(stressStrainObj)
         else:
             self.printSection(100)

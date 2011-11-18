@@ -2,8 +2,27 @@ import sys
 from struct import unpack
 
 class ElementsStressStrain(object):
+    def CROD_1(self,stress): # works
+        while len(self.data)>=20:
+            self.printSection(40)
+            eData     = self.data[0:20]
+            self.data = self.data[20: ]
+            #print "len(data) = ",len(eData)
+
+            (eid,axial,axialMS,torsion,torsionMS) = unpack('iffff',eData[0:20])
+            eid = (eid - 1) / 10
+            stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+
+            print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            print "len(data) = ",len(self.data)
+
+            #sys.exit('asdf')
+        self.skip(4) ## @todo may cause problems later...
+        ###
+        print self.rodStress[self.iSubcase]
+        print "done with CROD-1"
+
     def CBAR_34(self,stress): # works
-        
         while len(self.data)>=40:
             self.printSection(60)
             eData     = self.data[0:4*10]
@@ -91,7 +110,7 @@ class ElementsStressStrain(object):
         self.skip(4)
         ###
 
-    def CHEXA_67(self,stress):  # doesnt work..
+    def CHEXA_67(self,stress):  # kind of works...
         """
         stress is extracted at the centroid
         """
@@ -117,9 +136,7 @@ class ElementsStressStrain(object):
 
             if(  nNodes==4):  elementType = "CTETRA"
             elif(nNodes==8):  elementType = "CHEXA"
-            elif(nNodes==6):
-                elementType = "CPENTA"
-                
+            elif(nNodes==6):  elementType = "CPENTA"
             else:
                 raise Exception('not supported....')
 
@@ -147,9 +164,10 @@ class ElementsStressStrain(object):
                 bCos = []
                 cCos = []
                 if nodeID==0:
-                    stress.addNewEid(elementType,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                    print "adding new eid"
+                    stress.addNewEid(elementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
                 else:
-                    stress.add(                  eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                    stress.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 #self.printBlock(data)

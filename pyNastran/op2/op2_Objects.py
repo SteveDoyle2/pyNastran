@@ -141,6 +141,7 @@ class plateStrainObject(scalarObject):
         self.evm = {}
 
     def addNewEid(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+        #print "Plate add..."
         self.eType[eid] = eType
         self.curvature[eid] = {nodeID: [curvature]}
         self.exx[eid] = {nodeID: [exx]}
@@ -222,6 +223,7 @@ class plateStressObject(scalarObject):
         self.ovm = {}
 
     def addNewEid(self,eType,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+        #print "Plate Strain add..."
         self.eType[eid] = eType
         self.fiberDistance[eid] = {nodeID: [fd]}
         self.oxx[eid] = {nodeID: [oxx]}
@@ -287,7 +289,7 @@ class plateStressObject(scalarObject):
 
 
 
-class barStressObject(scalarObject):
+class rodStressObject(scalarObject):
     """
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
     ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
@@ -301,12 +303,44 @@ class barStressObject(scalarObject):
         self.torsion = {}
         self.SMt = {}
 
-    def addNewEid(self,axial,SMa,torsion,SMt):
-        self.eType[eid] = self.eType
+    def addNewEid(self,eid,axial,SMa,torsion,SMt):
+        #print "Rod Stress add..."
         self.axial[eid] = axial
         self.SMa[eid] = SMa
         self.torsion[eid] = torsion
         self.SMt[eid] = SMt
+
+    def __repr__(self):
+        msg = ''
+        for eid in sorted(self.axial):
+            axial   = self.axial[eid]
+            torsion = self.torsion[eid]
+            SMa = self.SMa[eid]
+            SMt = self.SMt[eid]
+            print "eid=%s eType=%s axial=%-4i torsion=%-4i" %(eid,self.eType,axial,torsion)
+        return msg
+
+class rodStrainObject(scalarObject):
+    """
+                                     S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
+    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+      ID.        STRAIN       MARGIN        STRAIN      MARGIN
+    """
+    def __init__(self,iSubcase):
+        scalarObject.__init__(self,iSubcase)
+        self.eType = 'CROD'
+        self.axial = {}
+        #self.SMa = {}
+        self.torsion = {}
+        #self.SMt = {}
+
+    def addNewEid(self,axial,SMa,torsion,SMt):
+        #print "Rod Strain add..."
+        self.eType[eid] = self.eType
+        self.axial[eid] = axial
+        #self.SMa[eid] = SMa
+        self.torsion[eid] = torsion
+        #self.SMt[eid] = SMt
 
     def __repr__(self):
         msg = ''
@@ -334,10 +368,11 @@ class barStressObject(scalarObject):
         self.axial = {}
         self.smax = {}
         self.smin = {}
-        self.MS_tension = {}
-        self.MS_compression = {}
+        #self.MS_tension = {}
+        #self.MS_compression = {}
 
     def addNewEid(self,eType,eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc):
+        #print "Bar Stress add..."
         self.eType[eid] = eType
         self.s1[eid] = [s1]
         self.s2[eid] = [s2]
@@ -346,8 +381,8 @@ class barStressObject(scalarObject):
         self.axial[eid] = [axial]
         self.smax[eid] = [smax]
         self.smin[eid] = [smin]
-        self.MS_tension[eid]     = [MSt]
-        self.MS_compression[eid] = [MSc]
+        #self.MS_tension[eid]     = [MSt]
+        #self.MS_compression[eid] = [MSc]
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #if nodeID==0: raise Exception(msg)
@@ -387,32 +422,35 @@ class solidStressObject(scalarObject):
     def __init__(self,iSubcase):
         scalarObject.__init__(self,iSubcase)
         self.eType = {}
+        self.cid = {}
         self.oxx = {}
         self.oyy = {}
         self.ozz = {}
         self.txy = {}
         self.tyz = {}
         self.txz = {}
-        self.aCos = {}
-        self.bCos = {}
-        self.cCos = {}
-        self.pressure = {}
+        #self.aCos = {}
+        #self.bCos = {}
+        #self.cCos = {}
+        #self.pressure = {}
         self.ovm = {}
 
-    def addNewEid(self,eType,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
+    def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
+        #print "Solid Stress add..."
         self.eType[eid] = eType
+        self.cid[eid]  = cid
         self.oxx[eid]  = {nodeID: oxx}
         self.oyy[eid]  = {nodeID: oyy}
         self.ozz[eid]  = {nodeID: ozz}
         self.txy[eid]  = {nodeID: txy}
         self.tyz[eid]  = {nodeID: tyz}
         self.txz[eid]  = {nodeID: txz}
-        self.aCos[eid] = {nodeID: aCos}
-        self.bCos[eid] = {nodeID: bCos}
-        self.cCos[eid] = {nodeID: cCos}
-        self.pressure[eid] = {nodeID: pressure}
+        #self.aCos[eid] = {nodeID: aCos}
+        #self.bCos[eid] = {nodeID: bCos}
+        #self.cCos[eid] = {nodeID: cCos}
+        #self.pressure[eid] = {nodeID: pressure}
         self.ovm[eid]      = {nodeID: ovm}
-        msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
+        msg = "*eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
         if nodeID==0: raise Exception(msg)
 
@@ -430,7 +468,10 @@ class solidStressObject(scalarObject):
         self.tyz[eid][nodeID] = tyz
         self.txz[eid][nodeID] = txz
 
-        self.pressure[eid][nodeID] = pressure
+        #self.aCos[eid][nodeID] = aCos
+        #self.bCos[eid][nodeID] = bCos
+        #self.cCos[eid][nodeID] = cCos
+        #self.pressure[eid][nodeID] = pressure
         self.ovm[eid][nodeID] = ovm
 
         if nodeID==0: raise Exception(msg)
