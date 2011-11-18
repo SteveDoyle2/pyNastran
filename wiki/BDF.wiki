@@ -51,7 +51,10 @@ e1 = mesh.Element(1) # gets element 1
 print e1.type      # CQUAD4
 print e1.nodeIDs() # [1,2,3,4]
 print e1.nodes     # [nodeObj1,nodeObj2,nodeObj3,nodeObj4]
-print e1.zOffset   # 0.2
+print e1.zOffset   # 0.2 - only for shells
+print e1.Length()  # length of the element (only for Bars - CONROD, CROD, CBEAM, CBAR)
+print e1.Area()    # area of the element   (only for CTRIA, CQUAD)
+print e1.Volume()  # volume of the element (only for CTETRA right now)
 print e1.Nsm()     # gets the non-structural mass
 print e1.pid.nsm   # gets the non-structural mass
 # the function version will work for any
