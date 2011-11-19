@@ -11,15 +11,17 @@ from elementsStressStrain import ElementsStressStrain
 from ougv1 import OUGV1
 from oqg1  import OQG1
 from oes   import OES
+from oef   import OEF
 
 
-class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OES):
+
+class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OES,OEF):
     def __init__(self,infileName): 
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OQG1','OUGV1','OES1X1','OSTR1X']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OQG1','OUGV1','OES1X1','OSTR1X','OEF1X']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
@@ -32,6 +34,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.forces = {}
         self.fluxes = {}
 
+        self.nonlinearForces = {}
+        self.nonlinearFluxes = {}
+
         self.rodStress   = {}
         self.rodStrain   = {}
         self.barStress   = {}
@@ -43,6 +48,8 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
     def printResults(self):
         results = [self.displacements,self.temperatures,
+                   self.nonlinearTemperatures,self.nonlinearDisplacements,
+                   self.nonlinearForces,self.nonlinearFluxes,
                    self.forces,self.fluxes,
                    self.rodStress,self.rodStrain,
                    self.barStress,self.barStrain,
@@ -120,14 +127,12 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
 
                 elif tableName=='OEF1X':  # ???
-                    self.readTable_OEF1X()
+                    self.readTable_OEF()
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUGV1()
-                elif tableName=='OES1X1': # stress
-                    self.readTable_OES1X1()
-                elif tableName=='OSTR1X': # strain
+                elif tableName in ['OES1X1','OSTR1X']: # stress/strain
                     self.readTable_OES1X1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
@@ -156,11 +161,14 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
     def parseApproachCode(self,data):
         #self.printBlock(data)
         (aCode,tCode,elementType,iSubcase) = unpack('iiii',data[:16])
+        self.iSubcase = iSubcase
+        self.tableCode = tCode%1000
+        self.sortCode = tCode/1000
         self.deviceCode   = aCode%10
         self.approachCode = (aCode-self.deviceCode)/10
-        print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,elementType,iSubcase)
-        print "tableType = ",self.printTableCode(tCode)
-        return (tCode,elementType,iSubcase)
+        print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
+        print "tableType = ",self.printTableCode(self.tableCode)
+        return (elementType)
 
     def getValues(self,data,sFormat,iWordStart,iWordStop=None):
         """

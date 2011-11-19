@@ -16,7 +16,6 @@ class ElementsStressStrain(object):
             print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             print "len(data) = ",len(self.data)
 
-            #sys.exit('asdf')
         self.skip(4) ## @todo may cause problems later...
         ###
         print self.rodStress[self.iSubcase]

@@ -78,7 +78,7 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%9s ' %('GRID')
+        msg += '%-9s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -88,7 +88,7 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
             (dx,dy,dz) = displacement
             (rx,ry,rz) = rotation
 
-            msg += '%9i ' %(nodeID)
+            msg += '%-9i ' %(nodeID)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:
@@ -192,8 +192,8 @@ class temperatureObject(scalarObject): # approachCode=1, tableCode=1
         return msg
 
 class fluxObject(scalarObject): # approachCode=1, tableCode=3
-    def __init__(self,iSubcase):
-        scalarObject.__init__(self,iSubcase,dt=None)
+    def __init__(self,iSubcase,dt=None):
+        scalarObject.__init__(self,iSubcase)
 
         self.dt = dt
         if dt is not None:
@@ -203,14 +203,14 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3
         
 
     def add(self,nodeID,v1,v2,v3,v4=None,v5=None,v6=None):
-        assert 0>nodeID>1000000000, 'nodeID=%s' %(nodeID)
-        assert nodeID not in self.fluxs
-        fluxs[nodeID] = array([v1,v2,v3])
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.fluxes
+        self.fluxes[nodeID] = array([v1,v2,v3])
 
     def __repr__(self):
         msg = '---HEAT FLUX---\n'
-        msg += '%-8s %-8s %-8s %-8s\n' %('GRID','Fx','Fy','Fz')
-        for nodeID,flux in sorted(self.fluxs.items()):
+        msg += '%-8s %-8s %-8s %-8s\n' %('GRID','xFlux','yFlux','zFlux')
+        for nodeID,flux in sorted(self.fluxes.items()):
             msg += '%9i ' %(nodeID)
 
             for val in flux:
@@ -222,6 +222,59 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3
             msg += '\n'
         return msg
 
+class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
+    def __init__(self,iSubcase,loadStep):
+        scalarObject.__init__(self,iSubcase)
+
+        self.loadStep = loadStep
+        self.eTypes = {}
+        if loadStep is None:
+            self.fluxes = {}
+            self.gradients = {}
+        else:
+            self.fluxes    = {loadStep: {}}
+            self.gradients = {loadStep: {}}
+            #raise Exception('transient not supported for flux yet...')
+        ###
+
+    def add(self,nodeID,eType,v1,v2,v3,v4=None,v5=None,v6=None):
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.fluxes[self.loadStep]
+        self.fluxes[   self.loadStep][nodeID] = array([v1,v2,v3])
+        self.gradients[self.loadStep][nodeID] = array([v1,v2,v3])
+        self.eTypes[nodeID] = eType
+
+    def updateDt(self,loadStep):
+        """
+        this method is called if the object
+        already exits and a new time step is found
+        """
+        assert loadStep>=0.
+        self.loadStep = loadStep
+        self.temperatures[loadStep] = {}
+
+    def __repr__(self):
+        msg = '---NONLINEAR GRADIENTS & HEAT FLUX---\n'
+        msg += 'loadStep = %g\n' %(self.loadStep)
+
+        for dt,fluxPack in sorted(self.fluxes.items()):
+            msg += '%-10s %-8s %-10s %-10s %-10s %-10s %-10s %-10s\n' %('GRID','eType','xGrad','yGrad','zGrad','xFlux','yFlux','zFlux')
+            
+            for nodeID,flux in sorted(fluxPack.items()):
+                eType = self.eTypes[nodeID]
+                msg += '%-10i %-8s ' %(nodeID,eType)
+                gradients = self.gradients[dt][nodeID]
+
+                for val in list(gradients)+list(flux):
+                    if abs(val)<1e-6:
+                        msg += '%-10s ' %('0.')
+                    else:
+                        msg += '%-10i ' %(val)
+                    ###
+                msg += '\n'
+            ###
+        return msg
+
 class nonlinearTemperatureObject(scalarObject): # approachCode=10, tableCode=1
     def __init__(self,iSubcase,loadStep):
         scalarObject.__init__(self,iSubcase)
@@ -230,14 +283,14 @@ class nonlinearTemperatureObject(scalarObject): # approachCode=10, tableCode=1
         assert loadStep>=0.
         self.temperatures = {loadStep: {}}
 
-    def updateDt(self,loadStep=None):
+    def updateDt(self,loadStep):
         """
         this method is called if the object
         already exits and a new time step is found
         """
-        assert dt>=0.
-        self.loadStep = dt
-        self.temperatures[dt] = {}
+        assert loadStep>=0.
+        self.loadStep = loadStep
+        self.temperatures[loadStep] = {}
 
     def add(self,nodeID,v1,v2,v3,v4,v5,v6): # addTransient
         #msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
