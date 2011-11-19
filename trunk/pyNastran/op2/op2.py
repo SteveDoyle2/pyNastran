@@ -25,6 +25,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
         self.displacements = {}
         self.temperatures  = {}
+        
+        self.nonlinearTemperatures = {}
+        self.nonlinearDisplacements = {}
 
         self.forces = {}
         self.fluxes = {}
@@ -158,3 +161,30 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,elementType,iSubcase)
         print "tableType = ",self.printTableCode(tCode)
         return (tCode,elementType,iSubcase)
+
+    def getValues(self,data,sFormat,iWordStart,iWordStop=None):
+        """
+        extracts the ith word from the data structure as the provided type
+        supports multiple inputs with iWordStop (note this is words, not outputs)
+        @warning
+            works with nastran syntax, not standard python syntax
+            this makes it work with what's documented in the DMAP manual
+        """
+        if iWordStop==None:
+            #print "iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4)
+            ds = data[(iWordStart-1)*4:iWordStart*4]
+            return unpack(sFormat,ds)[0]
+            
+        #print "type(data) = ",type(data)
+        ds = data[(iWordStart-1)*4:(iWordStop-1)*4]
+        return unpack(sFormat,ds)
+        
+    def getValues8(self,data,sFormat,iWordStart,iWordStop=None):
+        if iWordStop==None:
+            ds = data[iWordStart*8:(iWordStart+1)*8]
+            return unpack(sFormat,ds)[0]
+            
+        #print "type(data) = ",type(data)
+        ds = data[iWordStart*8:iWordStop*8]
+        return unpack(sFormat,ds)
+        
