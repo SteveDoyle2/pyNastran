@@ -298,7 +298,9 @@ class plateStrainObject(scalarObject):
     def addNewEid(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
-        assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
+        
+        if nodeID is not 'C': # centroid
+            assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
         assert eid not in self.exx
         self.eType[eid] = eType
         self.curvature[eid] = {nodeID: [curvature]}
@@ -318,7 +320,8 @@ class plateStrainObject(scalarObject):
         #print msg
         #print self.oxx
         #print self.fiberDistance
-        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        if nodeID is not 'C': # centroid
+            assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         self.curvature[eid][nodeID].append(curvature)
         self.exx[eid][nodeID].append(exx)
         self.eyy[eid][nodeID].append(eyy)

@@ -1,20 +1,49 @@
 -----v0.2-----
 
-OP2 Planned Tables
+In order for an OP2 card to be supported, it must read
+the important fields on the card.  So things like
+directional cosines and Margins of Safety (usually blank anyways)
+arent needed.
+
+OP2 Reader
    - OS1X1 Table (Isotropic Stresses/Strain)
-      - CQUAD4  (144)
-      - CTRIA3  (73)
-      - CHEXA
-      - CPENTA
-      - CTETRA (39)
-      - CONROD
-      - CROD
+      - CROD    (1   - done)
+      - CBAR    (34  - done)
+      - CTETRA  (39  - done)
+      - CHEXA   (67  - done)
+      - CPENTA  (68  - almost...)
+      - CTRIA3  (74  - done)
+      - CQUAD4  (144 - done)
+      - CONROD  (10)
+      
+      - CQUAD4 (33)
+      - CQUAD8 (64)
+      - CTRIA6 (75)
+      - CELAS1 (11)
+      - CELAS2 (12)
+      - CELAS3 (13)
+      - CELAS4 (14)
+
+      # nonlinear
+      - CTETRA (85)
+      - CTRIA3 (88)
+      - CROD   (89)
+      - CQUAD4 (90)
+      - CPENTA (91)
+      - CONROD (92)
+      - CHEXA  (92)
 
    - OES1C1 Table (Composite Stresses/Strain)
-      - CQUAD4
-      - CTRIA3
+      - CQUAD4 (94)
+      - CQUAD8 (95)
+      - CTRIA3 (97)
+      - CTRIA6 (98)
 
    - OUG Table (displacement/velocity/acceleration)
+      - displacement           / temperature           (done)
+      - transient displacement / transient temperature (done)
+      - spc forces             / heat flux             (done)
+      
    - OQG Table (single/multipoint constraint forces)
    - OEF Table (element forces)
    - OEE Table (element energy strain/kinetic/loss)
