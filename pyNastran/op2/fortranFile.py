@@ -404,7 +404,7 @@ class FortranFile(object):
             self.op2.seek(n+i*bufferSize)
             i+=1
         
-        print "i = ",i
+        #print "i = ",i
         assert endIndex>0,'couldnt find the end of the table'
         self.n = self.n+(i-1)*bufferSize + endIndex # 36 so it gets to the end of the table markersNext=[0] or [2]
         

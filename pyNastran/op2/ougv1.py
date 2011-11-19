@@ -3,36 +3,12 @@ import copy
 from struct import unpack
 
 # pyNastran
-from op2_Objects import temperatureObject,fluxObject,displacementObject
+from ougv1_Objects import (temperatureObject,displacementObject,
+                           nonlinearTemperatureObject,
+                           fluxObject)
 
 class OUGV1(object):
 
-    def getValues(self,data,sFormat,iWordStart,iWordStop=None):
-        """
-        extracts the ith word from the data structure as the provided type
-        supports multiple inputs with iWordStop (note this is words, not outputs)
-        @warning
-            works with nastran syntax, not standard python syntax
-            this makes it work with what's documented in the DMAP manual
-        """
-        if iWordStop==None:
-            print "iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4)
-            ds = data[(iWordStart-1)*4:iWordStart*4]
-            return unpack(sFormat,ds)[0]
-            
-        #print "type(data) = ",type(data)
-        ds = data[(iWordStart-1)*4:(iWordStop-1)*4]
-        return unpack(sFormat,ds)
-        
-    def getValues8(self,data,sFormat,iWordStart,iWordStop=None):
-        if iWordStop==None:
-            ds = data[iWordStart*8:(iWordStart+1)*8]
-            return unpack(sFormat,ds)[0]
-            
-        #print "type(data) = ",type(data)
-        ds = data[iWordStart*8:iWordStop*8]
-        return unpack(sFormat,ds)
-        
     def readTable_OUGV1(self):
         ## OUGV1
         tableName = self.readTableName(rewind=False) # OUGV1
@@ -132,22 +108,28 @@ class OUGV1(object):
 
         elif self.approachCode==6: # transient
             self.dt = self.getValues(data,'f',5) ## time step
-            print "*****self.dt = ",self.dt
+            print "DT(5)=%s" %(self.dt)
         elif self.approachCode==7: # pre-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## load set
+            print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==8: # post-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
+            print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.approachCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
+            print "LFTSFQ(5)=%s  EIGR(6)=%s  EIGI(7)=%s" %(self.lftsfq,self.eigr,self.eigi)
         elif self.approachCode==10: # nonlinear statics
-            self.lftsfq = self.getValues(data,'i',5) ## load step
+            self.lftsfq = self.getValues(data,'f',5) ## load step
+            print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.approachCode==11: # old geometric nonlinear statics
             self.lsdvmn = self.getValues(data,'i',5)
+            print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.lsdvmn = self.getValues(data,'i',5)
+            print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
         # tCode=2
@@ -253,17 +235,28 @@ class OUGV1(object):
                 self.displacements[self.iSubcase] = self.obj
             elif self.approachCode==1 and self.tableCode==3: # spc forces
                 print "isForces"
+                raise Exception('is this correct???')
+                self.obj = spcForcesObject(self.iSubcase)
+                self.spcForces[self.iSubcase] = self.obj
             elif self.approachCode==6 and self.tableCode==1: # transient displacement
                 print "isTransientDisplacement"
+
+                #self.createTransientObj(self.displacments,displacementObject,dt)
                 if self.iSubcase in self.displacements:
                     self.obj = self.displacements[self.iSubcase]
                     self.obj.updateDt(self.dt)
                 else:
                     self.obj = displacementObject(self.iSubcase,dt=self.dt)
                 self.displacements[self.iSubcase] = self.obj
+
+            elif self.approachCode==10 and self.tableCode==1: # nonlinear static displacement
+                print "isNonlinearStaticDisplacement"
+                self.createTransientObj(self.nonlinearDisplacments,displacementObject,dt)
+                self.nonlinearDisplacements[self.iSubcase] = self.obj
             else:
                 raise Exception('not supported OUGV1 solution...')
             ###
+
         elif self.thermal==1:
             if self.approachCode==1 and self.tableCode==1: # temperature
                 print "isTemperature"
@@ -271,16 +264,22 @@ class OUGV1(object):
 
             elif self.approachCode==1 and self.tableCode==3: # heat fluxes
                 print "isFluxes"
-                self.obj = temperatureObject(self.iSubcase,dt=self.dt)
+                self.obj = fluxObject(self.iSubcase,dt=self.dt)
                 self.fluxes[self.iSubcase] = self.obj
             elif self.approachCode==6 and self.tableCode==1: # transient temperature
                 print "isTransientTemperature"
+                #self.createTransientObj(self.temperatures,temperatureObject,dt)
                 if self.iSubcase in self.temperatures:
                     self.obj = self.temperatures[self.iSubcase]
                     self.obj.updateDt(self.dt)
                 else:
                     self.obj = temperatureObject(self.iSubcase,dt=self.dt)
                 self.temperatures[self.iSubcase] = self.obj
+
+            elif self.approachCode==10 and self.tableCode==1: # nonlinear static displacement
+                print "isNonlinearStaticDisplacement"
+                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
+                self.nonlinearDisplacements[self.iSubcase] = self.obj
             else:
                 raise Exception('not supported OUGV1 solution...')
             ###
@@ -292,6 +291,15 @@ class OUGV1(object):
         
         print "-------finished OUGV1----------"
         return (isTable4Done,isBlockDone)
+
+    def createTransientObject(self,storageObj,classObj,dt):
+        """@note dt can also be loadStep depending on the class"""
+        if self.iSubcase in storageObj:
+            self.obj = storageObj[self.iSubcase]
+            self.obj.updateDt(dt)
+        else:
+            self.obj = classObj(self.iSubcase,dt)
+        ###
 
     def isDisplacement(self):
         if self.approachCode==1 and self.thermal==0:
@@ -322,13 +330,3 @@ class OUGV1(object):
         if(approachCode==1 and tableCode==3 and thermal==1):
             return True
         return False
-
-    def readTable_OEF1X(self):
-        ## OEF1X
-        tableName = self.readTableName(rewind=False) # OEF1X
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
