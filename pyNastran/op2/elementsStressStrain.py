@@ -9,7 +9,7 @@ class ElementsStressStrain(object):
             self.data = self.data[20: ]
             #print "len(data) = ",len(eData)
 
-            (eid,axial,axialMS,torsion,torsionMS) = unpack('iffff',eData[0:20])
+            (eid,axial,axialMS,torsion,torsionMS) = unpack('iffff',eData)
             eid = (eid - 1) / 10
             stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
 
@@ -22,21 +22,28 @@ class ElementsStressStrain(object):
         print self.rodStress[self.iSubcase]
         print "done with CROD-1"
 
-    def CBAR_34(self,stress): # works
-        while len(self.data)>=40:
-            self.printSection(60)
-            eData     = self.data[0:4*10]
-            self.data = self.data[4*10: ]
+    def CBAR_34(self,stress):
+        #print "len(data) = ",len(self.data)
+        while len(self.data)>=64:
+            self.printBlock(self.data)
+            eData     = self.data[0:4*16]
+            self.data = self.data[4*16: ]
             #print "len(data) = ",len(eData)
 
-            (eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc) = unpack('ifffffffff',eData[0:40])
+            (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                 s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)= unpack('ifffffffffffffff',eData)
             eid = (eid - 1) / 10
-            stress.addNewEid('CBAR',eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc)
+            stress.addNewEid('CBAR',eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                                        s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)
 
-            print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%i smax=%i smin=%i MSt=%i MSc=%i" %(eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc)
-            print "len(data) = ",len(self.data)
+            #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i smax=%i smin=%i MSt=%i MSc=%i" %(eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,MSc)
+            #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" %(s1b,s2b,s3b,s4b,smaxb,sminb)
+            #print "len(data) = ",len(self.data)
 
-            #sys.exit('asdf')
+        if len(self.data)>4:
+            print "there may be a problem len(self.data)=%s" %(len(self.data))
+            self.printBlock(self.data)
+        #sys.exit('asdf')
         self.skip(4) ## @todo may cause problems later...
         ###
         print "done with CBAR-34"
@@ -90,7 +97,7 @@ class ElementsStressStrain(object):
                 eData     = self.data[0:4*11]
                 self.data = self.data[4*11: ]
 
-                (grid,sxx,txy,s1,vm,syy,txy,s2,szz,txz,s3) = unpack('iffffffffff',eData[0:44])
+                (grid,sxx,txy,s1,vm,syy,txy,s2,szz,txz,s3) = unpack('iffffffffff',eData)
                 print "eid=%s grid=%s s1=%i s2=%i s3=%s" %(eid,grid,s1,s2,s3)
                 sys.exit('CTETRA_39')
                 smax = max(s1,s2,s3)
@@ -150,7 +157,7 @@ class ElementsStressStrain(object):
                 #print "self.tableCode = ",self.tableCode
                 
                 #print "len(data) = ",len(self.data)
-                out = unpack('iffffffffffffffffffff',self.data[0:4*21])
+                out = unpack('iffffffffffffffffffff',self.data[0:4*21])  ## @warning this could be a bug...
                 (grid,sxx,sxy,s1,a1,a2,a3,pressure,svm,syy,syz,s2,b1,b2,b3,szz,sxz,s3,c1,c2,c3) = out
 
                 #out = unpack('iffffffffff',self.data[0:4*11])

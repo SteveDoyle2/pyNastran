@@ -58,11 +58,13 @@ class OQG1(object):
         
     def readScalars(self,data,scalarObject):
         while data:
+            #print "len(data) = ",len(data)
+            #self.printBlock(data[32:])
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = unpack('iiffffff',data[0:32])
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-self.deviceCode)/10
-            #print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
+            #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###
