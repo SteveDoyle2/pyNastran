@@ -3,24 +3,81 @@ from numpy import array
 class scalarObject(object):
     def __init__(self,iSubcase):
         self.iSubcase = iSubcase
-    def add6(self,nodeID,v1,v2,v3,v4,v5,v6):
-        pass
-    def add3(self,nodeID,v1,v2,v3):
-        pass
 
 class displacementObject(scalarObject):
-    def __init__(self,iSubcase):
+    def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
-        self.displacements = {}
-        self.rotations     = {}
+        self.dt = dt
+        
+        ## this could get very bad very quick, but it could be great!
+        ## basically it's a way to handle transients without making
+        ## a whole new class
+        if self.dt is None:
+            self.displacements = {}
+            self.rotations     = {}
+        else:
+            assert dt>=0.
+            self.displacements = {dt: {}}
+            self.rotations     = {dt: {}}
+            self.add = self.addTransient
+            self.addBinary = self.addBinaryTransient
+            self.__repr__ = self.__reprTransient__  # why cant i do this...
+        ###
 
-    def add(self,nodeID,v1,v2,v3,v4,v5,v6):
+    def updateDt(self,dt=None):
+        """@todo not really sure how to use this yet..."""
+        assert dt>=0.
+        self.dt = dt
+        self.displacements[dt] = {}
+
+    def addBinary(self,deviceCode,data):
+        (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
+        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        assert 0<nodeID<1000000000, msg
+        assert nodeID not in self.displacements
+
         self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+    ###
 
+    def addBinaryTransient(self,deviceCode,data):
+        raise Exception('not implemented...')
+        (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
+        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        assert 0<nodeID<1000000000, msg
+        assert nodeID not in self.displacements
+
+        self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
+    def add(self,nodeID,v1,v2,v3,v4,v5,v6):
+        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        assert 0<nodeID<1000000000, msg
+        assert nodeID not in self.displacements
+
+        self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
+    def addTransient(self,nodeID,v1,v2,v3,v4,v5,v6):
+        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        assert 0<nodeID<1000000000, msg
+        assert nodeID not in self.displacements
+        
+        self.displacements[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[self.dt][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
+    def __reprTransient__(self):
+        print "Transient..."
+        raise Exception('this could be cool...')
+        return self.__repr__()
 
     def __repr__(self):
         msg = '---DISPLACEMENTS---\n'
+        if self.dt is not None:
+            msg += 'dt = %g\n' %(self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
         msg += '%9s ' %('GRID')
         for header in headers:
@@ -45,17 +102,53 @@ class displacementObject(scalarObject):
 
 
 class spcForcesObject(scalarObject):
-    def __init__(self,iSubcase):
+    def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
-        self.forces  = {}
-        self.moments = {}
+        self.dt = dt
+
+        if self.dt is None:
+            self.forces  = {}
+            self.moments = {}
+        else:
+            assert dt>=0.
+            self.forces  = {dt: {}}
+            self.moments = {dt: {}}
+            self.add = self.addTransient
+            self.__repr__ = self.__reprTransient__  # why cant i do this...
+        ###
+
+    def updateDt(self,dt=None):
+        """
+        this method is called if the object
+        already exits and a new time step is found
+        """
+        assert dt>=0.
+        self.dt = dt
+        self.forces[dt]    = {}
+        self.momenents[dt] = {}
+
+    #def addBinary(self,deviceCode,data):
+    #    print "*******add********"
+    #    (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
 
     def add(self,nodeID,v1,v2,v3,v4,v5,v6):
-        self.forces[nodeID]  = array([v1,v2,v3]) # Fx,Fy,Fz
+        msg = 'nodeID=%s' %(nodeID)
+        assert 0<nodeID<1000000000,msg
+        assert nodeID not in self.forces
+        self.forces[ nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
         self.moments[nodeID] = array([v4,v5,v6]) # Mx,My,Mz
+
+    def addTransient(self,nodeID,v1,v2,v3,v4,v5,v6):
+        msg = 'nodeID=%s' %(nodeID)
+        assert 0<nodeID<1000000000,msg
+        assert nodeID not in self.forces
+        self.forces[ self.dt][nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
+        self.moments[self.dt][nodeID] = array([v4,v5,v6]) # Mx,My,Mz
 
     def __repr__(self):
         msg = '---SPC FORCES---\n'
+        if self.dt is not None:
+            msg += 'dt = %g\n' %(self.dt)
 
         headers = ['Fx','Fy','Fz','Mx','My','Mz']
         msg += '%9s ' %('GRID')
@@ -80,23 +173,83 @@ class spcForcesObject(scalarObject):
         return msg
 
 class temperatureObject(scalarObject):
-    def __init__(self,iSubcase):
+    def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
+        self.dt = dt
         self.temperatures = {}
+        
+        print "dt = ",self.dt
+        if self.dt is None:
+            self.temperatures = {}
+        else:
+            self.temperatures = {self.dt:{}}
+            self.add = self.addTransient
+            self.addBinary = self.addBinaryTransient
+            #self.__repr__ = self.__reprTransient__  # why cant i do this...            
+        ###
 
-    def add(self,nodeID,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+    def updateDt(self,dt):
+        """
+        this method is called if the object
+        already exits and a new time step is found
+        """
+        assert dt>=0.
+        self.dt = dt
+        self.temperatures[dt] = {}
+
+    def addBinary(self,deviceCode,data):
+        (nodeID,v1) = unpack('if',data[0:8])
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.temperatures
         self.temperatures[nodeID] = v1
 
+    def addBinaryTransient(self,deviceCode,data):
+        raise Exception('not implemented...')
+        (nodeID,v1) = unpack('if',data[0:8])
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.temperatures
+        self.temperatures[nodeID] = v1
+
+    def add(self,nodeID,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.temperatures
+        self.temperatures[nodeID] = v1
+
+    def addTransient(self,nodeID,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.temperatures
+        self.temperatures[self.dt][nodeID] = v1
+
+    def __reprTransient__(self):
+        msg = '---TEMPERATURE---\n'
+        msg += '%-8s %-8s\n' %('GRID','TEMPERATURE')
+
+        for dt,temperatures in sorted(self.temperatures.items()):
+            msg += 'dt = %g\n' %(dt)
+            for nodeID,T in sorted(temperatures.items()):
+                msg += '%9i ' %(nodeID)
+
+                if abs(T)<1e-6:
+                    msg += '%10s\n' %(0)
+                else:
+                    msg += '%10g\n' %(T)
+                ###
+            ###
+        return msg
+
     def __repr__(self):
+        if self.dt is not None:
+            return self.__reprTransient__()
+
         msg = '---TEMPERATURE---\n'
         msg += '%-8s %-8s\n' %('GRID','TEMPERATURE')
         for nodeID,T in sorted(self.temperatures.items()):
             msg += '%9i ' %(nodeID)
 
-            if abs(val)<1e-6:
-                msg += '%10s' %(0)
+            if abs(T)<1e-6:
+                msg += '%10s\n' %(0)
             else:
-                msg += '%10i\n' %(val)
+                msg += '%10g\n' %(T)
             ###
         return msg
 
@@ -106,6 +259,8 @@ class fluxObject(scalarObject):
         self.fluxs = {}
 
     def add(self,nodeID,v1,v2,v3,v4=None,v5=None,v6=None):
+        assert 0>nodeID>1000000000, 'nodeID=%s' %(nodeID)
+        assert nodeID not in self.fluxs
         fluxs[nodeID] = array([v1,v2,v3])
 
     def __repr__(self):
@@ -142,6 +297,9 @@ class plateStrainObject(scalarObject):
 
     def addNewEid(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "Plate add..."
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
+        assert eid not in self.exx
         self.eType[eid] = eType
         self.curvature[eid] = {nodeID: [curvature]}
         self.exx[eid] = {nodeID: [exx]}
@@ -151,7 +309,6 @@ class plateStrainObject(scalarObject):
         self.majorP[eid] = {nodeID: [majorP]}
         self.minorP[eid] = {nodeID: [minorP]}
         self.evm[eid]    = {nodeID: [evm]}
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
         if nodeID==0: raise Exception(msg)
 
@@ -161,6 +318,7 @@ class plateStrainObject(scalarObject):
         #print msg
         #print self.oxx
         #print self.fiberDistance
+        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         self.curvature[eid][nodeID].append(curvature)
         self.exx[eid][nodeID].append(exx)
         self.eyy[eid][nodeID].append(eyy)
@@ -174,6 +332,8 @@ class plateStrainObject(scalarObject):
     def addNewNode(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "***addNewNode"
         #print self.oxx
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        assert nodeID not in self.exx[eid],msg
         self.curvature[eid][nodeID] = [curvature]
         self.exx[eid][nodeID] = [exx]
         self.eyy[eid][nodeID] = [eyy]
@@ -182,12 +342,11 @@ class plateStrainObject(scalarObject):
         self.majorP[eid][nodeID] = [majorP]
         self.minorP[eid][nodeID] = [minorP]
         self.evm[eid][nodeID] = [evm]
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
         if nodeID==0: raise Exception(msg)
 
     def __repr__(self):
-        msg = ''
+        msg = '---PLATE STRAIN---\n'
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
@@ -200,7 +359,8 @@ class plateStrainObject(scalarObject):
                     major = self.majorP[eid][nid][iLayer]
                     minor = self.minorP[eid][nid][iLayer]
                     evm = self.evm[eid][nid][iLayer]
-                    print "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                    msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                ###
             ###
         ###
         return msg
@@ -224,6 +384,7 @@ class plateStressObject(scalarObject):
 
     def addNewEid(self,eType,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "Plate Strain add..."
+        assert eid not in self.oxx
         self.eType[eid] = eType
         self.fiberDistance[eid] = {nodeID: [fd]}
         self.oxx[eid] = {nodeID: [oxx]}
@@ -256,6 +417,7 @@ class plateStressObject(scalarObject):
     def addNewNode(self,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addNewNode"
         #print self.oxx
+        assert nodeID not in self.oxx[eid]
         self.fiberDistance[eid][nodeID] = [fd]
         self.oxx[eid][nodeID] = [oxx]
         self.oyy[eid][nodeID] = [oyy]
@@ -269,7 +431,7 @@ class plateStressObject(scalarObject):
         if nodeID==0: raise Exception(msg)
 
     def __repr__(self):
-        msg = ''
+        msg = '---PLATE STRESS---\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
@@ -282,7 +444,8 @@ class plateStressObject(scalarObject):
                     major = self.majorP[eid][nid][iLayer]
                     minor = self.minorP[eid][nid][iLayer]
                     ovm = self.ovm[eid][nid][iLayer]
-                    print "eid=%s eType=%s nid=%s iLayer=%s oxx=%-4i oyy=%-4i txy=%-4i ovm=%-4i" %(eid,eType,nid,iLayer,oxx,oyy,txy,ovm)
+                    msg += "eid=%-4s eType=%s nid=%-4s iLayer=%s oxx=%-4i oyy=%-4i txy=%-4i ovm=%-4i\n" %(eid,eType,nid,iLayer,oxx,oyy,txy,ovm)
+                ###
             ###
         ###
         return msg
@@ -311,13 +474,13 @@ class rodStressObject(scalarObject):
         self.SMt[eid] = SMt
 
     def __repr__(self):
-        msg = ''
+        msg = '---ROD STRESSES---\n'
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
             SMa = self.SMa[eid]
             SMt = self.SMt[eid]
-            print "eid=%s eType=%s axial=%-4i torsion=%-4i" %(eid,self.eType,axial,torsion)
+            msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
 class rodStrainObject(scalarObject):
@@ -343,13 +506,13 @@ class rodStrainObject(scalarObject):
         #self.SMt[eid] = SMt
 
     def __repr__(self):
-        msg = ''
+        msg = '---ROD STRAINS---\n'
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
             SMa = self.SMa[eid]
             SMt = self.SMt[eid]
-            print "eid=%s eType=%s axial=%-4i torsion=%-4i" %(eid,eType,axial,torsion)
+            msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,eType,axial,torsion)
         return msg
 
 class barStressObject(scalarObject):
@@ -371,39 +534,41 @@ class barStressObject(scalarObject):
         #self.MS_tension = {}
         #self.MS_compression = {}
 
-    def addNewEid(self,eType,eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc):
+    def addNewEid(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                                 s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
-        self.s1[eid] = [s1]
-        self.s2[eid] = [s2]
-        self.s3[eid] = [s3]
-        self.s4[eid] = [s4]
-        self.axial[eid] = [axial]
-        self.smax[eid] = [smax]
-        self.smin[eid] = [smin]
-        #self.MS_tension[eid]     = [MSt]
-        #self.MS_compression[eid] = [MSc]
+        self.s1[eid] = [s1a,s1b]
+        self.s2[eid] = [s2a,s2b]
+        self.s3[eid] = [s3a,s3b]
+        self.s4[eid] = [s4a,s4b]
+        self.axial[eid] = axial
+        self.smax[eid] = [smaxa,smaxb]
+        self.smin[eid] = [smina,sminb]
+        #self.MS_tension[eid]     = MSt
+        #self.MS_compression[eid] = MSc
+
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #if nodeID==0: raise Exception(msg)
 
     def __repr__(self):
-        msg = ''
-        return msg
-        for eid,oxxNodes in sorted(self.oxx.items()):
+        msg = '---BAR STRESS---\n'
+
+        for eid,S1s in sorted(self.s1.items()):
             eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                for iLayer in range(len(self.oxx[eid][nid])):
-                    fd    = self.fiberDistance[eid][nid][iLayer]
-                    oxx = self.oxx[eid][nid][iLayer]
-                    oyy = self.oyy[eid][nid][iLayer]
-                    txy = self.txy[eid][nid][iLayer]
-                    angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    ovm = self.ovm[eid][nid][iLayer]
-                    print "eid=%s eType=%s nid=%s iLayer=%s oxx=%-4i oyy=%-4i txy=%-4i ovm=%-4i" %(eid,eType,nid,iLayer,oxx,oyy,txy,ovm)
-            ###
+            axial = self.axial[eid]
+            #MSt = self.MSt[eid]
+            #MSc = self.MSc[eid]
+
+            s1 = self.s1[eid]
+            s2 = self.s2[eid]
+            s3 = self.s3[eid]
+            s4 = self.s4[eid]
+            smax  = self.smax[eid]
+            smin  = self.smin[eid]
+            msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%4i smax=%-4i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
+            msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-4i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
         ###
         return msg
 
@@ -477,7 +642,7 @@ class solidStressObject(scalarObject):
         if nodeID==0: raise Exception(msg)
 
     def __repr__(self):
-        msg = ''
+        msg = '---SOLID STRESS---\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
@@ -488,7 +653,7 @@ class solidStressObject(scalarObject):
                 tyz = self.tyz[eid][nid]
                 txz = self.txz[eid][nid]
                 ovm = self.ovm[eid][nid]
-                print "eid=%s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
+                msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
             ###
         ###
         return msg

@@ -1,5 +1,6 @@
 from fortranFile import FortranFile
 from op2Codes import Op2Codes
+from op2Errors import *
 import os
 import sys
 import struct
@@ -22,6 +23,12 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
+        self.displacements = {}
+        self.temperatures  = {}
+
+        self.forces = {}
+        self.fluxes = {}
+
         self.rodStress   = {}
         self.rodStrain   = {}
         self.barStress   = {}
@@ -31,6 +38,23 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.solidStress = {}
         self.solidStrain = {}
 
+    def printResults(self):
+        results = [self.displacements,self.temperatures,
+                   self.forces,self.fluxes,
+                   self.rodStress,self.rodStrain,
+                   self.barStress,self.barStrain,
+                   self.plateStress,self.plateStrain,
+                   self.solidStress,self.solidStrain]
+        
+        msg = '---ALL RESULTS---\n'
+        for result in results:
+            for iSubcase,res in sorted(result.items()):
+                msg += 'iSubcase = %s\n' %(iSubcase)
+                msg += str(res) + '\n'
+            ###
+        ###
+        return msg
+        
     def readTapeCode(self):
         self.printSection(500)
         #sys.exit('op2-readTapeCode')
@@ -64,6 +88,10 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
             print '-'*80
             try:
                 tableName = self.readTableName(rewind=True)
+            except EndOfFileError:  # the isAnotherTable method sucks...
+                isAnotherTable = False
+                print "***ok exit, but it could be better..."
+                break
             except AssertionError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 print "***poor exit, but it worked..."
@@ -103,7 +131,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                 #print "---isAnotherTable---"
                 #(isAnotherTable) = self.hasMoreTables()
                 isAnotherTable = True
-                self.printSection(100)
+                #self.printSection(100)
             else:
                 (isAnotherTable) = self.skipNextTable()
                 continue
@@ -127,6 +155,6 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         (aCode,tCode,elementType,iSubcase) = unpack('iiii',data[:16])
         self.deviceCode   = aCode%10
         self.approachCode = (aCode-self.deviceCode)/10
-        print "aCode=%s analysisCode=%s deviceCode=%s tCode=%s elementType=%s iSubcase=%s" %(aCode,self.approachCode,self.deviceCode,tCode,elementType,iSubcase)
+        print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,elementType,iSubcase)
         print "tableType = ",self.printTableCode(tCode)
         return (tCode,elementType,iSubcase)

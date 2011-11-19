@@ -4,6 +4,9 @@
 import struct
 from struct import unpack,pack
 
+#pyNastran
+from op2Errors import *
+
 class FortranFile(object):
     def __init__(self):
         self.endian = '>'
@@ -252,6 +255,8 @@ class FortranFile(object):
         nWords  data1 data2 data3 nWords
         """
         data = self.op2.read(4)
+        if len(data)==0:
+            raise EndOfFileError("data=('')")
         nValues, = unpack('i',data)
         self.n+=4
         data = self.op2.read(nValues)
