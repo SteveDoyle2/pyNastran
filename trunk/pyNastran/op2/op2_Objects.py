@@ -54,7 +54,7 @@ class spcForcesObject(scalarObject):
             msg += 'dt = %g\n' %(self.dt)
 
         headers = ['Fx','Fy','Fz','Mx','My','Mz']
-        msg += '%9s ' %('GRID')
+        msg += '%-9s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -64,7 +64,7 @@ class spcForcesObject(scalarObject):
             (Fx,Fy,Fz) = force
             (Mx,My,Mz) = moment
 
-            msg += '%9i ' %(nodeID)
+            msg += '%-9i ' %(nodeID)
             vals = [Fx,Fy,Fz,Mx,My,Mx]
             for val in vals:
                 if abs(val)<1e-6:
@@ -147,6 +147,12 @@ class plateStrainObject(scalarObject):
 
     def __repr__(self):
         msg = '---PLATE STRAIN---\n'
+        headers = ['eType','nID','iLayer','oxx','oyy','ozz','txy','tyz','txz','ovm']
+        msg += '%9s ' %('EID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
@@ -159,7 +165,18 @@ class plateStrainObject(scalarObject):
                     major = self.majorP[eid][nid][iLayer]
                     minor = self.minorP[eid][nid][iLayer]
                     evm = self.evm[eid][nid][iLayer]
-                    msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                    
+                    msg += '%9i ' %(eid)
+                    vals = [nodeID,iLayer,exx,eyy,ezz,exy,eyz,exz,evm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0.')
+                        else:
+                            msg += '%-10.3g ' %(val)
+                        ###
+                    msg += '\n'
+
+                    #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
                 ###
             ###
         ###
@@ -232,6 +249,12 @@ class plateStressObject(scalarObject):
 
     def __repr__(self):
         msg = '---PLATE STRESS---\n'
+        headers = ['eType','nodeID','iLayer','oxx','oyy','txy','ovm']
+        msg += '%-6s ' %('EID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
@@ -244,7 +267,16 @@ class plateStressObject(scalarObject):
                     major = self.majorP[eid][nid][iLayer]
                     minor = self.minorP[eid][nid][iLayer]
                     ovm = self.ovm[eid][nid][iLayer]
-                    msg += "eid=%-4s eType=%s nid=%-4s iLayer=%s oxx=%-4i oyy=%-4i txy=%-4i ovm=%-4i\n" %(eid,eType,nid,iLayer,oxx,oyy,txy,ovm)
+
+                    msg += '%-6i %10s %10s ' %(eid,eType,nid)
+                    vals = [iLayer,oxx,oyy,txy,ovm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10i ' %(val)
+                        ###
+                    msg += '\n'
                 ###
             ###
         ###
@@ -443,6 +475,11 @@ class solidStressObject(scalarObject):
 
     def __repr__(self):
         msg = '---SOLID STRESS---\n'
+        headers = ['eType','nodeID','iLayer','oxx','oyy','ozz','txy','tyz','txz','ovm']
+        msg += '%-6s ' %('EID')
+        for header in headers:
+            msg += '%-10s ' %(header)
+        msg += '\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
@@ -453,7 +490,16 @@ class solidStressObject(scalarObject):
                 tyz = self.tyz[eid][nid]
                 txz = self.txz[eid][nid]
                 ovm = self.ovm[eid][nid]
-                msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
+                msg += '%-6i %-10s %-10s ' %(eid,eType,nid)
+                vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%-10s ' %('0')
+                    else:
+                        msg += '%-10i ' %(val)
+                    ###
+                msg += '\n'
+                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
             ###
         ###
         return msg

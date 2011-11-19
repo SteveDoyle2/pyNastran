@@ -94,7 +94,7 @@ class OES(object):
         #print "nWide = ",nWide
         thermal = self.getBlockIntEntry(data,21)
 
-        (tCode,self.elementType,self.iSubcase) = self.parseApproachCode(data)
+        (self.elementType) = self.parseApproachCode(data)
         data = data[16:]
         
         (word5,word6,word7) = unpack('iii',data[:12]) # depends on analysisCode,tCode
@@ -412,8 +412,8 @@ class OES(object):
         @todo I dont like the double return blocks, but it'll work...
         """
         print "starting a BAR stress/strain object"
-        print "    iSubcase = ",self.iSubcase
-        print "    sCode    = ",self.sCode
+        print "    iSubcase = %s" %(self.iSubcase)
+        print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
         if (self.iSubcase not in self.barStress) and (self.iSubcase not in self.barStrain):
             print "making new subcase..."
@@ -439,8 +439,8 @@ class OES(object):
         @todo I dont like the double return blocks, but it'll work...
         """
         print "starting a PLATE stress/strain object"
-        print "    iSubcase = ",self.iSubcase
-        print "    sCode    = ",self.sCode
+        print "    iSubcase = %s" %(self.iSubcase)
+        print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
         if (self.iSubcase not in self.plateStress) and (self.iSubcase not in self.plateStrain):
             print "making new subcase..."
@@ -466,8 +466,8 @@ class OES(object):
         @todo I dont like the double return blocks, but it'll work...
         """
         print "starting a SOLID stress/strain object"
-        print "    iSubcase = ",self.iSubcase
-        print "    sCode    = ",self.sCode
+        print "    iSubcase = %s" %(self.iSubcase)
+        print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
         if (self.iSubcase not in self.solidStress) and (self.iSubcase not in self.solidStrain):
             print "making new subcase..."

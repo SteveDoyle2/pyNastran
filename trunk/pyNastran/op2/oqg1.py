@@ -40,7 +40,7 @@ class OQG1(object):
         data = self.getData(4*50)
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
-        (tableCode,three,subcase) = self.parseApproachCode(data)
+        (three) = self.parseApproachCode(data)
 
 
         word = self.readString(384)
@@ -52,8 +52,7 @@ class OQG1(object):
         data = self.readBlock()
         #self.printBlock(data)
 
-        iSubcase = 1 ## @todo temporary
-        self.spcForcesObj = spcForcesObject(iSubcase)
+        self.spcForcesObj = spcForcesObject(self.iSubcase)
         self.readScalars(data,self.spcForcesObj)
         
     def readScalars(self,data,scalarObject):
