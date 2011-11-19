@@ -1,0 +1,4 @@
+
+class EndOfFileError(RuntimeError):
+    pass
+
