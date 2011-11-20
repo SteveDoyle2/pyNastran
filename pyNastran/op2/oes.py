@@ -4,19 +4,24 @@ from struct import unpack
 from op2_Objects import (rodStressObject,rodStrainObject,
                         barStressObject,
                         plateStressObject,plateStrainObject,
-                        solidStressObject)
+                        solidStressObject,
+                        compositePlateStressObject,compositePlateStrainObject)
 
 class OES(object):
-    def readTable_OES1X1(self):
+
+    def getBufferWords(self):
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
+        assert bufferWords >0
+        return bufferWords
+
+    def readTable_OES1(self):
         tableName = self.readTableName(rewind=False) # OES1X1
-        print "OES table = |%r|" %(tableName)
+        print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
-        #print "****",self.op2.tell()
         data = self.readBlock()
         #self.printBlock(data)
-        #print "****",self.op2.tell()
-        #assert self.op2.tell()==4880
 
         self.readMarkers([-2,1,0,7])
         word = self.readStringBlock()  # OES1
@@ -24,7 +29,7 @@ class OES(object):
 
         iTable = -3
         markerA=None; markerB=None
-        self.readMarkers([iTable,1,0]) # 146
+        self.readMarkers([iTable,1,0],'OES') # 146
         while [markerA,markerB]!=[0,2]:
             #self.markerStart = self.n
             print "reading Table 3...iTable=%s" %(iTable)
@@ -55,33 +60,11 @@ class OES(object):
 
             self.readMarkers([iTable,1,0],'OES')
             print "i read the markers!!!"
-            #markerB = self.getMarker('B')
-            #self.n-=24
-            #self.op2.seek(self.n)
-            #print "markerA=%s markerB=%s" %(markerA,markerB)
         ###
         self.readMarkers([iTable,1,0],'OES')
-        #print "tell5 = ",self.op2.tell()
         #self.printSection(100)
-        #self.readMarkers([0,])
-        #self.readMarker() # 0 or 2
-        
-        
-        print "exiting stress/strain table..."
-        #self.printSection(180)
-        #self.readIntBlock()
-
-        #word = self.readTableName(rewind=True) # OES1X1
+        print str(self.obj)
         #print "OES table = |%r|" %(word)
-
-        #print "end tell = ",self.op2.tell()
-
-
-    def getBufferWords(self):
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        assert bufferWords >0
-        return bufferWords
 
     def readTable_OES_3(self,iTable):
         bufferWords = self.getBufferWords()
@@ -96,7 +79,6 @@ class OES(object):
 
         (self.elementType) = self.parseApproachCode(data)
         data = data[16:]
-        
         (word5,word6,word7) = unpack('iii',data[:12]) # depends on analysisCode,tCode
         print "word5=%s word6=%s word7=%s" %(word5,word6,word7)
         data = data[12:]
@@ -107,20 +89,25 @@ class OES(object):
         data = data[16:]
         assert thermal==0 # 1 is heat transfer
 
-       
-        word = self.readString(4*(63+33)) # title, subtitle, and label
+        print self.codeInformation()
+        self.readTitle()
+        
+        print "n4 = ",self.n
+
+
+    def readTitle(self):
+        word = self.readString(384) # titleSubtitleLabel
         Title    = word[0:128]
         Subtitle = word[128:256]
         Label    = word[256:]
+        #print "Title    %s |%s|" %(len(Title   ),Title)
+        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle)
+        #print "Label    %s |%s|" %(len(Label   ),Label)
         print "Title    %s |%s|" %(len(Title   ),Title.strip())
         print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
         print "Label    %s |%s|" %(len(Label   ),Label.strip())
         self.readHollerith()
-        
-        print "n4 = ",self.n
 
-        #print "titleSubtitleLabel = |%s|" %(word)
-        
     def isStatics(self):
         if self.approachCode==1 and self.tableCode==1:
             return True
@@ -233,7 +220,7 @@ class OES(object):
             isTable4Done = True
             return isTable4Done,isBlockDone
         elif bufferWords==0:
-            #print "bufferWords 0"
+            print "bufferWords 0 - done with Table4"
             isTable4Done = True
             isBlockDone = True
             return isTable4Done,isBlockDone
@@ -280,6 +267,11 @@ class OES(object):
             print "    found hexa_67 / cpenta_68"
             stressStrainObj = self.instantiateSolidObject()
             self.CHEXA_67(stressStrainObj)
+        elif self.elementType in [95,97]: # CQUAD4, CTRIA3 (composite)
+            print "making a 95 or 97!"
+            stressStrainObj = self.instantiateCompositePlateObject()
+            self.CQUAD4_95(stressStrainObj)
+            print "i finished!"
         else:
             self.printSection(100)
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
@@ -322,7 +314,6 @@ class OES(object):
         #elif self.elementType == 144:  # cquad_144 - corner stresses
 
         # rods
-        #if   self.elementType == 1:    # crod
         #elif self.elementType == 2:    # cbeam
         #elif self.elementType == 3:    # ctube
         #elif self.elementType == 10:   # conrod
@@ -334,8 +325,6 @@ class OES(object):
         #elif self.elementType == 14:   # celas4
         
         #plate
-        #elif self.elementType == 74:   # ctria3
-        #elif self.elementType == 144:  # cquad_144
         #elif self.elementType == 33:   # cquad_33
 
         #solid (???)
@@ -344,8 +333,8 @@ class OES(object):
         #elif self.elementType == 68:  # cpenta
 
         # composite plate
-        #elif self.elementType == 94:   # quad4 (composite)
-        #elif self.elementType == 95:   # quad8 (composite)
+        #elif self.elementType == 95:   # quad4 (composite)
+        #elif self.elementType == 96:   # quad8 (composite)
         #elif self.elementType == 97:   # tria3 (composite) - same as quad4 composite
         #elif self.elementType == 98:   # tria6 (composite) - same as quad8 composite ??? said quad4
 
@@ -359,6 +348,7 @@ class OES(object):
         #elif self.elementType == 91:   # cpenta (nonlinear)
         #elif self.elementType == 92:   # conrod (nonlinear)
         #elif self.elementType == 93:   # chexa  (nonlinear)
+        #elif self.elementType == 94:   # cbeam  (nonlinear)
         
         # acoustic
         #elif self.elementType == 76:   # chexa  (acoustic)
@@ -429,6 +419,33 @@ class OES(object):
             if self.iSubcase not in self.barStrain:
                 self.barStrain[self.iSubcase] = barStrainObject(self.iSubcase)
             return self.barStrain[self.iSubcase]
+        else:
+            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
+        ###
+
+    def instantiateCompositePlateObject(self):
+        """
+        Creates a stress/strain object if necessary
+        @todo I dont like the double return blocks, but it'll work...
+        """
+        print "starting a COMPOSITE PLATE stress/strain object"
+        print "    iSubcase = %s" %(self.iSubcase)
+        print "    sCode    = %s" %(self.sCode)
+        #bits = self.parseStressCode()
+        if (self.iSubcase not in self.compositePlateStress) and (self.iSubcase not in self.compositePlateStrain):
+            print "making new subcase..."
+
+        if (self.sCode==0 or self.sCode==1):
+            #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.compositePlateStress:
+                self.compositePlateStress[self.iSubcase] = compositePlateStressObject(self.iSubcase)
+            return self.compositePlateStress[self.iSubcase]
+
+        elif (self.sCode==10 or self.sCode==11):
+            #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
+            if self.iSubcase not in self.plateStrain:
+                self.compositePlateStrain[self.iSubcase] = compositePlateStrainObject(self.iSubcase)
+            return self.compositePlateStrain[self.iSubcase]
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###

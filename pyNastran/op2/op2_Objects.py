@@ -54,7 +54,7 @@ class spcForcesObject(scalarObject):
             msg += 'dt = %g\n' %(self.dt)
 
         headers = ['Fx','Fy','Fz','Mx','My','Mz']
-        msg += '%-9s ' %('GRID')
+        msg += '%-8s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -64,13 +64,13 @@ class spcForcesObject(scalarObject):
             (Fx,Fy,Fz) = force
             (Mx,My,Mz) = moment
 
-            msg += '%-9i ' %(nodeID)
+            msg += '%-8i ' %(nodeID)
             vals = [Fx,Fy,Fz,Mx,My,Mx]
             for val in vals:
                 if abs(val)<1e-6:
                     msg += '%10s ' %(0)
                 else:
-                    msg += '%10.3e ' %(val)
+                    msg += '%10.2f ' %(val)
                 ###
             msg += '\n'
         return msg
@@ -283,6 +283,181 @@ class plateStressObject(scalarObject):
         return msg
 
 
+class compositePlateStressObject(scalarObject):
+    """
+    ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+      ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+    """
+    def __init__(self,iSubcase):
+        scalarObject.__init__(self,iSubcase)
+        self.eType = {}
+        self.o11 = {}
+        self.o22 = {}
+        self.t12 = {}
+        self.t1z = {}
+        self.t2z = {}
+        self.angle  = {}
+        self.majorP = {}
+        self.minorP = {}
+        self.ovm = {}
+
+    def addNewEid(self,eType,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
+        """all points are located at the centroid"""
+        #print "Composite Plate Strain add..."
+        assert eid not in self.o11
+        self.eType[eid] = eType
+        self.o11[eid] = [o11]
+        self.o22[eid] = [o22]
+        self.t12[eid] = [t12]
+        self.t1z[eid] = [t1z]
+        self.t2z[eid] = [t2z]
+        self.angle[eid]  = [angle]
+        self.majorP[eid] = [majorP]
+        self.minorP[eid] = [minorP]
+        self.ovm[eid]    = [ovm]
+        msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+        #print msg
+        #if nodeID==0: raise Exception(msg)
+
+    def add(self,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
+        #print "***add"
+        msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+        #print msg
+        #print self.o11
+        self.o11[eid].append(o11)
+        self.o22[eid].append(o22)
+        self.t12[eid].append(t12)
+        self.t1z[eid].append(t1z)
+        self.t2z[eid].append(t2z)
+        self.angle[eid].append(angle)
+        self.majorP[eid].append(majorP)
+        self.minorP[eid].append(minorP)
+        self.ovm[eid].append(ovm)
+        #if nodeID==0: raise Exception(msg)
+
+    def __repr__(self):
+        msg = '---COMPOSITE PLATE STRESS---\n'
+        headers = ['eType','iLayer','o11','o22','t12','t1z','t2z','ovm']
+        msg += '%-6s ' %('EID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for eid,o11s in sorted(self.o11.items()):
+            eType = self.eType[eid]
+            for iLayer in range(len(o11s)):
+                o11 = self.o11[eid][iLayer]
+                o22 = self.o22[eid][iLayer]
+                t12 = self.t12[eid][iLayer]
+                t1z = self.t1z[eid][iLayer]
+                t2z = self.t2z[eid][iLayer]
+
+                angle = self.angle[eid][iLayer]
+                major = self.majorP[eid][iLayer]
+                minor = self.minorP[eid][iLayer]
+                ovm   = self.ovm[eid][iLayer]
+
+                msg += '%-6i %10s ' %(eid,eType)
+                vals = [iLayer,o11,o22,t12,t1z,t2z,ovm]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10i ' %(val)
+                    ###
+                msg += '\n'
+            ###
+        ###
+        return msg
+
+class compositePlateStrainObject(scalarObject):
+    """
+    ???
+    ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+      ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+    """
+    def __init__(self,iSubcase):
+        scalarObject.__init__(self,iSubcase)
+        self.eType = {}
+        self.e11 = {}
+        self.e22 = {}
+        self.e12 = {}
+        self.e1z = {}
+        self.e2z = {}
+        self.angle  = {}
+        self.majorP = {}
+        self.minorP = {}
+        self.evm = {}
+
+    def addNewEid(self,eType,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
+        """all points are located at the centroid"""
+        #print "Composite Plate Strain add..."
+        assert eid not in self.e11
+        self.eType[eid] = eType
+        self.e11[eid] = [e11]
+        self.e22[eid] = [e22]
+        self.e12[eid] = [e12]
+        self.e1z[eid] = [e1z]
+        self.e2z[eid] = [e2z]
+        self.angle[eid]  = [angle]
+        self.majorP[eid] = [majorP]
+        self.minorP[eid] = [minorP]
+        self.evm[eid]    = [evm]
+        msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
+        #print msg
+        #if nodeID==0: raise Exception(msg)
+
+    def add(self,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
+        #print "***add"
+        msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
+        #print msg
+        #print self.o11
+        self.e11[eid].append(e11)
+        self.e22[eid].append(e22)
+        self.e12[eid].append(e12)
+        self.e1z[eid].append(e1z)
+        self.e2z[eid].append(e2z)
+        self.angle[eid].append(angle)
+        self.majorP[eid].append(majorP)
+        self.minorP[eid].append(minorP)
+        self.evm[eid].append(evm)
+        #if nodeID==0: raise Exception(msg)
+
+    def __repr__(self):
+        msg = '---COMPOSITE PLATE STAIN---\n'
+        headers = ['eType','iLayer','e11','e22','e12','e1z','e2z','evm']
+        msg += '%-6s ' %('EID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for eid,o11s in sorted(self.e11.items()):
+            eType = self.eType[eid]
+            for iLayer in range(len(e11s)):
+                e11 = self.o11[eid][iLayer]
+                e22 = self.o22[eid][iLayer]
+                e12 = self.t12[eid][iLayer]
+                e1z = self.t1z[eid][iLayer]
+                e2z = self.t2z[eid][iLayer]
+
+                angle = self.angle[eid][iLayer]
+                major = self.majorP[eid][iLayer]
+                minor = self.minorP[eid][iLayer]
+                evm   = self.evm[eid][iLayer]
+
+                msg += '%-6i %10s ' %(eid,eType)
+                vals = [iLayer,e11,e22,e12,e1z,e2z,ovm]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10.3g ' %(val)
+                    ###
+                msg += '\n'
+            ###
+        ###
+        return msg
+
 
 class rodStressObject(scalarObject):
     """
@@ -307,12 +482,27 @@ class rodStressObject(scalarObject):
 
     def __repr__(self):
         msg = '---ROD STRESSES---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['axial','torsion','MS_tension','MS_comp']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
             SMa = self.SMa[eid]
             SMt = self.SMt[eid]
-            msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
+            msg += '%-6i %6s ' %(eid,self.eType)
+            vals = [axial,torsion,SMa,SMt]
+            for val in vals:
+                if abs(val)<1e-6:
+                    msg += '%10s ' %('0')
+                else:
+                    msg += '%10i ' %(val)
+                ###
+            msg += '\n'
+            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
 class rodStrainObject(scalarObject):
@@ -339,12 +529,26 @@ class rodStrainObject(scalarObject):
 
     def __repr__(self):
         msg = '---ROD STRAINS---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['axial','torsion','MS_tension','MS_compression']
+        for header in headers:
+            msg += '%8s ' %(header)
+        msg += '\n'
+
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
             SMa = self.SMa[eid]
             SMt = self.SMt[eid]
-            msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,eType,axial,torsion)
+            msg += '%-6i %6s ' %(eid,self.eType)
+            vals = [axial,torsion,SMa,SMt]
+            for val in vals:
+                if abs(val)<1e-6:
+                    msg += '%8s ' %('0')
+                else:
+                    msg += '%8i ' %(val)
+                ###
+            msg += '\n'
         return msg
 
 class barStressObject(scalarObject):
@@ -386,6 +590,11 @@ class barStressObject(scalarObject):
 
     def __repr__(self):
         msg = '---BAR STRESS---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['s1','s2','s3','s4','Axial','sMax','sMin']
+        for header in headers:
+            msg += '%6s ' %(header)
+        msg += '\n'
 
         for eid,S1s in sorted(self.s1.items()):
             eType = self.eType[eid]
@@ -399,8 +608,31 @@ class barStressObject(scalarObject):
             s4 = self.s4[eid]
             smax  = self.smax[eid]
             smin  = self.smin[eid]
-            msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%4i smax=%-4i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-            msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-4i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
+            msg += '%-6i %6s ' %(eid,eType)
+            vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0]]
+            for val in vals:
+                if abs(val)<1e-6:
+                    msg += '%6s ' %('0')
+                else:
+                    msg += '%6i ' %(val)
+                ###
+            msg += '\n'
+
+            msg += '%s ' %(' '*13)
+            vals = [s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1]]
+            for val in vals:
+                if isinstance(val,str):
+                    msg += '%6s ' %(val)
+                elif abs(val)<1e-6:
+                    msg += '%6s ' %('0')
+                else:
+                    msg += '%6i ' %(val)
+                ###
+            msg += '\n'
+
+
+            #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
+            #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
         ###
         return msg
 
@@ -475,10 +707,10 @@ class solidStressObject(scalarObject):
 
     def __repr__(self):
         msg = '---SOLID STRESS---\n'
-        headers = ['eType','nodeID','iLayer','oxx','oyy','ozz','txy','tyz','txz','ovm']
-        msg += '%-6s ' %('EID')
+        headers = ['oxx','oyy','ozz','txy','tyz','txz','ovm']
+        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
         for header in headers:
-            msg += '%-10s ' %(header)
+            msg += '%9s ' %(header)
         msg += '\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
@@ -490,13 +722,13 @@ class solidStressObject(scalarObject):
                 tyz = self.tyz[eid][nid]
                 txz = self.txz[eid][nid]
                 ovm = self.ovm[eid][nid]
-                msg += '%-6i %-10s %-10s ' %(eid,eType,nid)
+                msg += '%-6i %6s %8s ' %(eid,eType,nid)
                 vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
                 for val in vals:
                     if abs(val)<1e-6:
-                        msg += '%-10s ' %('0')
+                        msg += '%9s ' %('0')
                     else:
-                        msg += '%-10i ' %(val)
+                        msg += '%9i ' %(val)
                     ###
                 msg += '\n'
                 #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)

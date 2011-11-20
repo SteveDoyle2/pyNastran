@@ -47,11 +47,6 @@ class OEF(object):
             n = self.n
             #self.printSection(100)
 
-            #markerA = self.getMarker('A')
-            #markerB = self.getMarker('B')
-            #self.n-=24
-            #self.op2.seek(self.n)
-            #print "markerA=%s markerB=%s" %(markerA,markerB)
             self.readMarkers([iTable,1,0],'OEF')
             print "i read the markers!!!"
    
@@ -61,12 +56,10 @@ class OEF(object):
             #self.j+=1
 
             #self.printSection(120)
-            #break
+        ###
         self.readMarkers([iTable,1,0],'OEF')
         #self.printSection(100)
         print str(self.obj)
-
-        #sys.exit('end of displacementA')
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -74,10 +67,8 @@ class OEF(object):
 
         data = self.getData(4)
         bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
         data = self.getData(4*50)
         
-        #print "---dataBlock 200---"
         #self.printBlock(data)
         
         
@@ -91,7 +82,6 @@ class OEF(object):
         self.numwide  = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
         self.oCode    = self.getValues(data,'i',11) ## undefined in DMAP...
         self.thermal  = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
-        
         print "dLoadID(8)=%s fCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.fCode,self.numwide,self.oCode,self.thermal)
         
         ## assuming tCode=1
@@ -140,22 +130,8 @@ class OEF(object):
         print self.codeInformation(sCode=None,tCode=None,thermal=self.thermal)
 
         #self.printBlock(data)
+        self.readTitle()
 
-        word = self.readString(384) # titleSubtitleLabel
-        #print "word = |%s|" %(word)
-        #word = self.readString(4*(63+33)) # title, subtitle, and label
-        Title    = word[0:128]
-        Subtitle = word[128:256]
-        Label    = word[256:]
-        #print "Title    %s |%s|" %(len(Title   ),Title)
-        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle)
-        #print "Label    %s |%s|" %(len(Label   ),Label)
-        print "Title    %s |%s|" %(len(Title   ),Title.strip())
-        print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
-        print "Label    %s |%s|" %(len(Label   ),Label.strip())
-
-
-        self.readHollerith()
         #return (analysisCode,tableCode,thermal)
 
         #if self.j==3:
@@ -266,7 +242,7 @@ class OEF(object):
                 print "isTransientTemperature"
                 #raise Exception('verify...')
                 self.createTransientObject(self.temperatures,temperatureObject,self.dt)
-                self.temperatures[self.iSubcase] = self.obj
+                self.temperatures[self.iSubcase] = self.obj  ## @todo modify the name of this...
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
@@ -279,7 +255,6 @@ class OEF(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        #self.printBlock(data[0:self.numwide*4])
         
         self.readForces(data,self.obj)
         #print self.obj
@@ -289,6 +264,7 @@ class OEF(object):
 
         
     def readForces(self,data,scalarObject):
+        #self.printBlock(data[0:self.numwide*4])
         while data:
             #print "len(data) = ",len(data)
             #self.printBlock(data[32:])
@@ -352,26 +328,26 @@ class OEF(object):
         return False
 
     def isTransientDisplacement(self):
-        if self.approachCode==6 and self.tableCode==1 and self.thermal==0:
+        if self.approachCode==6 and self.sortCode==0 and self.thermal==0:
             return True
         return False
 
     def isTemperature(self):
-        if self.approachCode==1 and self.thermal==1:
+        if self.approachCode==1 and self.sortCode==0 and self.thermal==1:
             return True
         return False
 
     def isTransientTemperature(self):
-        if self.approachCode==6 and self.tableCode==1 and self.thermal==1:
+        if self.approachCode==6 and self.sortCode==0 and self.thermal==1:
             return True
         return False
 
-    def isForces(self,tableCode,approachCode,thermal):
-        if(approachCode==1 and tableCode==3 and thermal==0):
+    def isForces(self):
+        if(approachCode==1 and self.sortCode==1 and self.thermal==0):
             return True
         return False
 
-    def isFluxes(self,tableCode,approachCode,thermal):
-        if(approachCode==1 and tableCode==3 and thermal==1):
+    def isFluxes(self):
+        if(self.approachCode==1 and self.sortCode==1 and self.thermal==1):
             return True
         return False
