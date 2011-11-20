@@ -8,7 +8,7 @@ from ougv1_Objects import (temperatureObject,displacementObject,
                            fluxObject)
 
 class OUGV1(object):
-
+    """Table of displacements/velocities/acceleration/heat flux/temperature"""
     def readTable_OUG1(self):
         ## OUGV1
         tableName = self.readTableName(rewind=False) # OUGV1
@@ -22,7 +22,6 @@ class OUGV1(object):
         bufferWords = self.getMarker()
         print "1-bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
-        print "*ints = ",ints
         
         markerA = -4
         markerB = 0
@@ -53,8 +52,6 @@ class OUGV1(object):
             #    print str(self.obj)
             #    sys.exit('check...j=%s dt=6E-2 dx=%s' %(self.j,'1.377e+01'))
             #self.j+=1
-
-            #self.printSection(120)
         ###
         self.readMarkers([iTable,1,0],'OUGV1')
         #self.printSection(100)
@@ -62,19 +59,12 @@ class OUGV1(object):
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):
-        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq']
+        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag','thermal']
         self.deleteAttributes(params)
     
-    def deleteAttributes(self,params):
-        params += ['deviceCode','approachCode','tableCode''iSubcase','data','elementType']
-        for param in params:
-            if hasattr(self,param):
-                print '%s = %s' %(param,getattr(self,param))
-                delattr(self,param)
-
     def readTable_OUGV1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
-        print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
         bufferSize, = unpack('i',data)
@@ -88,9 +78,9 @@ class OUGV1(object):
         (three) = self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
-        self.rCode  = self.getValues(data,'i',8) ## random code
-        self.fCode  = self.getValues(data,'i',9) ## format code
-        self.numwde = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
+        self.rCode   = self.getValues(data,'i',8) ## random code
+        self.fCode   = self.getValues(data,'i',9) ## format code
+        self.numWide = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
         self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
         self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
         
@@ -269,15 +259,6 @@ class OUGV1(object):
         
         print "-------finished OUGV1----------"
         return (isTable4Done,isBlockDone)
-
-    def createTransientObject(self,storageObj,classObj,dt):
-        """@note dt can also be loadStep depending on the class"""
-        if self.iSubcase in storageObj:
-            self.obj = storageObj[self.iSubcase]
-            self.obj.updateDt(dt)
-        else:
-            self.obj = classObj(self.iSubcase,dt)
-        ###
 
     def isDisplacement(self):
         if self.approachCode==1 and self.thermal==0:

@@ -46,7 +46,6 @@ class OGP(object):
 
             n = self.n
             #self.printSection(100)
-
             self.readMarkers([iTable,1,0],'OGP')
             print "i read the markers!!!"
    
@@ -63,7 +62,7 @@ class OGP(object):
         self.deleteAttributes_OGP()
 
     def deleteAttributes_OGP(self):
-        params = ['lsdvm','mode','eigr','eign','eigi','modeCycle','freq','time','lftsfq']
+        params = ['lsdvm','mode','eigr','eign','eigi','modeCycle','freq','time','lftsfq','dLoadID','fCode','numWide','oCode']
         self.deleteAttributes(params)
 
     def readTable_OGP_3(self,iTable): # iTable=-3
@@ -84,10 +83,10 @@ class OGP(object):
 
         self.dLoadID  = self.getValues(data,'i',8)  ## dynamic load set ID/random code
         self.fCode    = self.getValues(data,'i',9)  ## format code
-        self.numwide  = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
+        self.numWide  = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
         self.oCode    = self.getValues(data,'i',11) ## undefined in DMAP...
         self.thermal  = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
-        print "dLoadID(8)=%s fCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.fCode,self.numwide,self.oCode,self.thermal)
+        print "dLoadID(8)=%s fCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.fCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
         if self.approachCode==1:   # statics
@@ -275,8 +274,8 @@ class OGP(object):
         
     def readOGPForces(self,data,scalarObject):
         deviceCode = self.deviceCode
-        #self.printBlock(data[0:self.numwide*4])
-        dn = self.numwide*4
+        #self.printBlock(data[0:self.numWide*4])
+        dn = self.numWide*4
         while data:
             #print "len(data) = ",len(data)
             eData = data[0:dn]
