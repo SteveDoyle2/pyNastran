@@ -267,11 +267,10 @@ class OES(object):
             print "    found hexa_67 / cpenta_68"
             stressStrainObj = self.instantiateSolidObject()
             self.CHEXA_67(stressStrainObj)
-        elif self.elementType in [95,97]: # CQUAD4, CTRIA3 (composite)
-            print "making a 95 or 97!"
+        elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
+            print "making a 95/96/97 or 98!"
             stressStrainObj = self.instantiateCompositePlateObject()
             self.CQUAD4_95(stressStrainObj)
-            print "i finished!"
         else:
             self.printSection(100)
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
@@ -333,10 +332,6 @@ class OES(object):
         #elif self.elementType == 68:  # cpenta
 
         # composite plate
-        #elif self.elementType == 95:   # quad4 (composite)
-        #elif self.elementType == 96:   # quad8 (composite)
-        #elif self.elementType == 97:   # tria3 (composite) - same as quad4 composite
-        #elif self.elementType == 98:   # tria6 (composite) - same as quad8 composite ??? said quad4
 
         # nonlinear
         #elif self.elementType == 85:   # tetra  (nonlinear)
@@ -435,13 +430,13 @@ class OES(object):
         if (self.iSubcase not in self.compositePlateStress) and (self.iSubcase not in self.compositePlateStrain):
             print "making new subcase..."
 
-        if (self.sCode==0 or self.sCode==1):
+        if self.sCode in [0,1,16,17]: # stress
             #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.compositePlateStress:
                 self.compositePlateStress[self.iSubcase] = compositePlateStressObject(self.iSubcase)
             return self.compositePlateStress[self.iSubcase]
 
-        elif (self.sCode==10 or self.sCode==11):
+        elif self.sCode in [10,11,13,14,15,26,27,30,31]: # strain
             #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.plateStrain:
                 self.compositePlateStrain[self.iSubcase] = compositePlateStrainObject(self.iSubcase)

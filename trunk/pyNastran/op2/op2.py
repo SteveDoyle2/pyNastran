@@ -21,7 +21,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
@@ -31,6 +31,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.nonlinearTemperatures = {}
         self.nonlinearDisplacements = {}
 
+        self.temperatureForces = {}
         self.forces = {}
         self.fluxes = {}
 
@@ -60,6 +61,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                    
                    # OEF
                    self.nonlinearForces,self.nonlinearFluxes,
+                   self.temperatureForces,
                    
                    # OQG1
                    self.spcForces,
@@ -143,12 +145,12 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
 
                 elif tableName=='OEF1X':  # ???
-                    self.readTable_OEF()
+                    self.readTable_OEF1()
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUG1()
-                elif tableName in ['OES1X1','OSTR1X','OES1C']: # stress/strain
+                elif tableName in ['OES1X1','OSTR1X','OES1C','OSTR1C']: # stress/strain
                     self.readTable_OES1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
