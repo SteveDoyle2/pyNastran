@@ -9,7 +9,7 @@ from ougv1_Objects import (temperatureObject,displacementObject,
 
 class OEF(object):
     """Table of element forces"""
-    def readTable_OEF(self):
+    def readTable_OEF1(self):
         ## OEF
         tableName = self.readTableName(rewind=False) # OEF
         print "tableName = |%r|" %(tableName)
@@ -127,7 +127,7 @@ class OEF(object):
         
         print "*iSubcase=%s"%(self.iSubcase)
         print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
-        print self.codeInformation(sCode=None,tCode=None,thermal=self.thermal)
+        print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
@@ -216,7 +216,7 @@ class OEF(object):
             elif self.approachCode==6 and self.sortCode==0: # transient displacement
                 print "isTransientDisplacement"
 
-                self.createTransientObject(self.displacments,displacementObject,self.dt)
+                self.createTransientObject(self.displacments,displacementObject,self.time)
                 self.displacements[self.iSubcase] = self.obj
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
@@ -241,8 +241,9 @@ class OEF(object):
             elif self.approachCode==6 and self.sortCode==0: # transient temperature
                 print "isTransientTemperature"
                 #raise Exception('verify...')
-                self.createTransientObject(self.temperatures,temperatureObject,self.dt)
-                self.temperatures[self.iSubcase] = self.obj  ## @todo modify the name of this...
+                self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
+                self.temperatureForces[self.iSubcase] = self.obj  ## @todo modify the name of this...
+                #self.readForces(data,self.obj)
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
@@ -276,7 +277,7 @@ class OEF(object):
                 (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
             elif self.numwide==8: ## @todo CHBDY - how do i add this to the case...
                 (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
-                sys.stderr.write('skipping CHBDY')
+                sys.stderr.write('**********skipping CHBDY**********\n')
                 data = data[self.numwide*4:]
                 continue
             else:

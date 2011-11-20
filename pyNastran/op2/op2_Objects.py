@@ -146,9 +146,9 @@ class plateStrainObject(scalarObject):
         if nodeID==0: raise Exception(msg)
 
     def __repr__(self):
-        msg = '---PLATE STRAIN---\n'
-        headers = ['eType','nID','iLayer','oxx','oyy','ozz','txy','tyz','txz','ovm']
-        msg += '%9s ' %('EID')
+        msg = '---ISOTROPIC PLATE STRAIN---\n'
+        headers = ['exx','eyy','ezz','exy','eyz','exz','evm']
+        msg += '%-6s %6s %8s %7s ' %('EID','eType','nodeID','iLayer')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -166,13 +166,13 @@ class plateStrainObject(scalarObject):
                     minor = self.minorP[eid][nid][iLayer]
                     evm = self.evm[eid][nid][iLayer]
                     
-                    msg += '%9i ' %(eid)
-                    vals = [nodeID,iLayer,exx,eyy,ezz,exy,eyz,exz,evm]
+                    msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
+                    vals = [exx,eyy,ezz,exy,eyz,exz,evm]
                     for val in vals:
                         if abs(val)<1e-6:
                             msg += '%10s ' %('0.')
                         else:
-                            msg += '%-10.3g ' %(val)
+                            msg += '%10.3g ' %(val)
                         ###
                     msg += '\n'
 
@@ -248,9 +248,9 @@ class plateStressObject(scalarObject):
         if nodeID==0: raise Exception(msg)
 
     def __repr__(self):
-        msg = '---PLATE STRESS---\n'
-        headers = ['eType','nodeID','iLayer','oxx','oyy','txy','ovm']
-        msg += '%-6s ' %('EID')
+        msg = '---ISOTROPIC PLATE STRESS---\n'
+        headers = ['oxx','oyy','txy','ovm']
+        msg += '%-6s %6s %8s %7s ' %('EID','eType','nodeID','iLayer')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -268,8 +268,8 @@ class plateStressObject(scalarObject):
                     minor = self.minorP[eid][nid][iLayer]
                     ovm = self.ovm[eid][nid][iLayer]
 
-                    msg += '%-6i %10s %10s ' %(eid,eType,nid)
-                    vals = [iLayer,oxx,oyy,txy,ovm]
+                    msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
+                    vals = [oxx,oyy,txy,ovm]
                     for val in vals:
                         if abs(val)<1e-6:
                             msg += '%10s ' %('0')
@@ -337,8 +337,8 @@ class compositePlateStressObject(scalarObject):
 
     def __repr__(self):
         msg = '---COMPOSITE PLATE STRESS---\n'
-        headers = ['eType','iLayer','o11','o22','t12','t1z','t2z','ovm']
-        msg += '%-6s ' %('EID')
+        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
+        headers = ['o11','o22','t12','t1z','t2z','ovm']
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -357,8 +357,8 @@ class compositePlateStressObject(scalarObject):
                 minor = self.minorP[eid][iLayer]
                 ovm   = self.ovm[eid][iLayer]
 
-                msg += '%-6i %10s ' %(eid,eType)
-                vals = [iLayer,o11,o22,t12,t1z,t2z,ovm]
+                msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
+                vals = [o11,o22,t12,t1z,t2z,ovm]
                 for val in vals:
                     if abs(val)<1e-6:
                         msg += '%10s ' %('0')
@@ -425,28 +425,28 @@ class compositePlateStrainObject(scalarObject):
 
     def __repr__(self):
         msg = '---COMPOSITE PLATE STAIN---\n'
-        headers = ['eType','iLayer','e11','e22','e12','e1z','e2z','evm']
-        msg += '%-6s ' %('EID')
+        headers = ['e11','e22','e12','e1z','e2z','evm']
+        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,o11s in sorted(self.e11.items()):
+        for eid,e11s in sorted(self.e11.items()):
             eType = self.eType[eid]
             for iLayer in range(len(e11s)):
-                e11 = self.o11[eid][iLayer]
-                e22 = self.o22[eid][iLayer]
-                e12 = self.t12[eid][iLayer]
-                e1z = self.t1z[eid][iLayer]
-                e2z = self.t2z[eid][iLayer]
+                e11 = self.e11[eid][iLayer]
+                e22 = self.e22[eid][iLayer]
+                e12 = self.e12[eid][iLayer]
+                e1z = self.e1z[eid][iLayer]
+                e2z = self.e2z[eid][iLayer]
 
                 angle = self.angle[eid][iLayer]
                 major = self.majorP[eid][iLayer]
                 minor = self.minorP[eid][iLayer]
                 evm   = self.evm[eid][iLayer]
 
-                msg += '%-6i %10s ' %(eid,eType)
-                vals = [iLayer,e11,e22,e12,e1z,e2z,ovm]
+                msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
+                vals = [e11,e22,e12,e1z,e2z,evm]
                 for val in vals:
                     if abs(val)<1e-6:
                         msg += '%10s ' %('0')
