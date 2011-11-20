@@ -266,7 +266,7 @@ class OES(object):
         elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
             print "    found hexa_67 / cpenta_68"
             stressStrainObj = self.instantiateSolidObject()
-            self.CHEXA_67(stressStrainObj)
+            self.CSOLID_67(stressStrainObj)
         elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
             print "making a 95/96/97 or 98!"
             stressStrainObj = self.instantiateCompositePlateObject()

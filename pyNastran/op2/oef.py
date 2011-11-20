@@ -268,7 +268,7 @@ class OEF(object):
         #self.printBlock(data[0:self.numwide*4])
         while data:
             #print "len(data) = ",len(data)
-            #self.printBlock(data[32:])
+            #self.printBlock(data[:self.numwide*4])
             gridDevice, = unpack('i',data[0:4])
             eType = ''.join(unpack('cccccccc',data[4:12]))
             #print "eType = ",eType

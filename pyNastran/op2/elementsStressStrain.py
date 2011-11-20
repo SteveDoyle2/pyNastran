@@ -5,7 +5,7 @@ class ElementsStressStrain(object):
     def CROD_1(self,stress): # works
         deviceCode = self.deviceCode
         while len(self.data)>=20:
-            self.printSection(40)
+            #self.printSection(40)
             eData     = self.data[0:20]
             self.data = self.data[20: ]
             #print "len(data) = ",len(eData)
@@ -19,14 +19,43 @@ class ElementsStressStrain(object):
 
         self.skip(4) ## @todo may cause problems later...
         ###
-        print self.rodStress[self.iSubcase]
+        #print self.rodStress[self.iSubcase]
         print "done with CROD-1"
+
+    def CBEAM_2(self,stress): # not tested; CBEAM class not written
+        deviceCode = self.deviceCode
+        nNodes = 11
+        while len(self.data)>=20:
+            #self.printSection(40)
+            eData     = self.data[0:44]
+            self.data = self.data[44: ]
+            #print "len(data) = ",len(eData)
+
+            (eid,nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = struct.unpack('iifffffffff', eData)
+            eid = (eid - deviceCode) / 10
+            stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+            
+            for iNode in range(nNodes):
+                eData     = self.data[0:40]
+                self.data = self.data[40: ]
+                (nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = struct.unpack('iifffffffff', eData)
+                stress.add(eid,axial,axialMS,torsion,torsionMS)
+
+            print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            print "len(data) = ",len(self.data)
+
+        if len(data)>4:
+            self.printBlock(self.data)
+        self.skip(4) ## @todo may cause problems later...
+        ###
+        print self.beamStress[self.iSubcase]
+        print "done with CBEAM-2"
 
     def CBAR_34(self,stress):
         deviceCode = self.deviceCode
         #print "len(data) = ",len(self.data)
         while len(self.data)>=64:
-            self.printBlock(self.data)
+            #self.printBlock(self.data)
             eData     = self.data[0:4*16]
             self.data = self.data[4*16: ]
             #print "len(data) = ",len(eData)
@@ -115,12 +144,12 @@ class ElementsStressStrain(object):
             print '--------------------'
             print "len(data) = ",len(self.data)
             
-            self.printSection(100)
+            #self.printSection(100)
             #sys.exit('asdf')
         self.skip(4)
         ###
 
-    def CHEXA_67(self,stress):  # kind of works...
+    def CSOLID_67(self,stress):  # kind of works...
         """
         stress is extracted at the centroid
         """
@@ -287,7 +316,6 @@ class ElementsStressStrain(object):
             stress.addNewEid('CQUAD4',eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             stress.add(               eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
@@ -311,5 +339,4 @@ class ElementsStressStrain(object):
             #self.dn += 348
         self.skip(4)  ## @todo may be a problem later on...
         ###
-
 

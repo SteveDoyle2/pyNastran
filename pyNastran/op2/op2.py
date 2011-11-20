@@ -12,16 +12,17 @@ from ougv1 import OUGV1
 from oqg1  import OQG1
 from oes   import OES
 from oef   import OEF
+from ogp   import OGP
 
 
 
-class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OES,OEF):
+class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OES,OEF,OGP):
     def __init__(self,infileName): 
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
@@ -38,6 +39,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.nonlinearForces = {}
         self.nonlinearFluxes = {}
 
+        # OES
         self.rodStress   = {}
         self.rodStrain   = {}
         self.barStress   = {}
@@ -46,32 +48,38 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.plateStrain = {}
         self.solidStress = {}
         self.solidStrain = {}
-        
         self.compositePlateStress = {}
         self.compositePlateStrain = {}
-        
+
         self.spcForces = {}
+        
+        # OGP
+        self.appliedLoads = {}
 
     def printResults(self):
         results = [
-                   # OUGV1
+                   # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
+                   #       SPC Forces
                    self.displacements,self.temperatures,
                    self.nonlinearTemperatures,self.nonlinearDisplacements,
                    self.forces,self.fluxes,
                    
-                   # OEF
+                   # OEF - Applied Forces/Temperatures
                    self.nonlinearForces,self.nonlinearFluxes,
                    self.temperatureForces,
                    
-                   # OQG1
+                   # OQG1 - 
                    self.spcForces,
                    
-                   # OES
+                   # OES - Stress/Strain
                    self.rodStress,self.rodStrain,
                    self.barStress,self.barStrain,
                    self.plateStress,self.plateStrain,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
+                   
+                   # OGP - Applied Force/Moment
+                   self.appliedLoads,
                    ]
         
         msg = '---ALL RESULTS---\n'
@@ -142,9 +150,11 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                     self.readTable_EPT()
                 elif tableName=='MPTS':  # material properties
                     self.readTable_MPTS()
+                elif tableName in ['OGPFB1']: # displacements/velocity/acceleration
+                    self.readTable_OGP1()
 
 
-                elif tableName=='OEF1X':  # ???
+                elif tableName=='OEF1X':  # applied loads
                     self.readTable_OEF1()
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
