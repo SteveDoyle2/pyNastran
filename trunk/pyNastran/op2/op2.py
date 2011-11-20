@@ -26,16 +26,20 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
+        self.iSubcaseNameMap = {}
+
+        # OUG
         self.displacements = {}
         self.temperatures  = {}
         
-        self.nonlinearTemperatures = {}
+        self.nonlinearTemperatures  = {}
         self.nonlinearDisplacements = {}
 
-        self.temperatureForces = {}
         self.forces = {}
         self.fluxes = {}
 
+        # OEF
+        self.temperatureForces = {}
         self.nonlinearForces = {}
         self.nonlinearFluxes = {}
 
@@ -51,6 +55,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.compositePlateStress = {}
         self.compositePlateStrain = {}
 
+        # OQG
         self.spcForces = {}
         
         # OGP
@@ -224,3 +229,45 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         ds = data[iWordStart*8:iWordStop*8]
         return unpack(sFormat,ds)
         
+    def deleteAttributes(self,params):
+        params += ['deviceCode','approachCode','tableCode''iSubcase','data','elementType']
+        for param in params:
+            if hasattr(self,param):
+                print '%s = %s' %(param,getattr(self,param))
+                delattr(self,param)
+
+    def createTransientObject(self,storageObj,classObj,dt):
+        """@note dt can also be loadStep depending on the class"""
+        if self.iSubcase in storageObj:
+            self.obj = storageObj[self.iSubcase]
+            self.obj.updateDt(dt)
+        else:
+            self.obj = classObj(self.iSubcase,dt)
+        ###
+
+    def getBufferWords(self):
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
+        assert bufferWords >0
+        return bufferWords
+
+    def readTitle(self):
+        word = self.readString(384) # titleSubtitleLabel
+        Title    = word[0:128].strip()
+        Subtitle = word[128:256].strip()
+        Label    = word[256:].strip()
+        #print "Title    %s |%s|" %(len(Title   ),Title)
+        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle)
+        #print "Label    %s |%s|" %(len(Label   ),Label)
+        #print "Title    %s |%s|" %(len(Title   ),Title.strip())
+        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
+        #print "Label    %s |%s|" %(len(Label   ),Label.strip())
+        print "Title    |%s|" %(Title)
+        print "Subtitle |%s|" %(Subtitle)
+        print "Label    |%s|" %(Label)
+
+        self.readHollerith()
+        
+        self.Title = Title.strip()
+        if self.iSubcase not in self.iSubcaseNameMap:
+            self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
