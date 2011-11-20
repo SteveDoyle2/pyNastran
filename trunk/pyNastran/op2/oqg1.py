@@ -23,7 +23,7 @@ class OQG1(object):
         iTable -= 2
 
         self.readMarkers([-5,1,0])
-        print str(self.spcForcesObj)
+        print str(self.spcForces[self.iSubcase])
 
         #self.printSection(80)
         #sys.exit('end of oqg1')
@@ -52,8 +52,8 @@ class OQG1(object):
         data = self.readBlock()
         #self.printBlock(data)
 
-        self.spcForcesObj = spcForcesObject(self.iSubcase)
-        self.readScalars(data,self.spcForcesObj)
+        self.spcForces[self.iSubcase] = spcForcesObject(self.iSubcase)
+        self.readScalars(data,self.spcForces[self.iSubcase])
         
     def readScalars(self,data,scalarObject):
         while data:

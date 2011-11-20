@@ -9,7 +9,7 @@ from ougv1_Objects import (temperatureObject,displacementObject,
 
 class OUGV1(object):
 
-    def readTable_OUGV1(self):
+    def readTable_OUG1(self):
         ## OUGV1
         tableName = self.readTableName(rewind=False) # OUGV1
         print "tableName = |%r|" %(tableName)
@@ -28,7 +28,7 @@ class OUGV1(object):
         markerB = 0
 
         #self.j = 0
-        iTable=-3
+        iTable = -3
         self.readMarkers([iTable,1,0],'OUGV1')
         while [markerA,markerB]!=[0,2]:
             self.readTable_OUGV1_3(iTable)
@@ -46,12 +46,6 @@ class OUGV1(object):
 
             n = self.n
             #self.printSection(100)
-
-            #markerA = self.getMarker('A')
-            #markerB = self.getMarker('B')
-            #self.n-=24
-            #self.op2.seek(self.n)
-            #print "markerA=%s markerB=%s" %(markerA,markerB)
             self.readMarkers([iTable,1,0],'OUGV1')
             print "i read the markers!!!"
    
@@ -61,12 +55,22 @@ class OUGV1(object):
             #self.j+=1
 
             #self.printSection(120)
-            #break
+        ###
         self.readMarkers([iTable,1,0],'OUGV1')
         #self.printSection(100)
         print str(self.obj)
+        self.deleteAttributes_OUG()
 
-        #sys.exit('end of displacementA')
+    def deleteAttributes_OUG(self):
+        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq']
+        self.deleteAttributes(params)
+    
+    def deleteAttributes(self,params):
+        params += ['deviceCode','approachCode','tableCode''iSubcase','data']
+        for param in params:
+            if hasattr(self,param):
+                print '%s = %s' %(param,getattr(self,param))
+                delattr(self,param)
 
     def readTable_OUGV1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -74,10 +78,8 @@ class OUGV1(object):
 
         data = self.getData(4)
         bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
         data = self.getData(4*50)
         
-        #print "---dataBlock 200---"
         #self.printBlock(data)
         
         
@@ -138,25 +140,11 @@ class OUGV1(object):
         
         print "*iSubcase=%s"%(self.iSubcase)
         print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
-        print self.codeInformation(sCode=None,tCode=None,thermal=self.thermal)
+        print self.codeInformation()
 
         #self.printBlock(data)
+        self.readTitle()
 
-        word = self.readString(384) # titleSubtitleLabel
-        #print "word = |%s|" %(word)
-        #word = self.readString(4*(63+33)) # title, subtitle, and label
-        Title    = word[0:128]
-        Subtitle = word[128:256]
-        Label    = word[256:]
-        #print "Title    %s |%s|" %(len(Title   ),Title)
-        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle)
-        #print "Label    %s |%s|" %(len(Label   ),Label)
-        print "Title    %s |%s|" %(len(Title   ),Title.strip())
-        print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
-        print "Label    %s |%s|" %(len(Label   ),Label.strip())
-
-
-        self.readHollerith()
         #return (analysisCode,tableCode,thermal)
 
         #if self.j==3:
@@ -302,7 +290,7 @@ class OUGV1(object):
         return False
 
     def isTemperature(self):
-        if self.approachCode==1 and self.sortCode==0 self.thermal==1:
+        if self.approachCode==1 and self.sortCode==0 and self.thermal==1:
             return True
         return False
 

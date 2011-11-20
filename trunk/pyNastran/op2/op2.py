@@ -21,7 +21,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OQG1','OUGV1','OES1X1','OSTR1X','OEF1X']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
@@ -45,16 +45,32 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.plateStrain = {}
         self.solidStress = {}
         self.solidStrain = {}
+        
+        self.compositePlateStress = {}
+        self.compositePlateStrain = {}
+        
+        self.spcForces = {}
 
     def printResults(self):
-        results = [self.displacements,self.temperatures,
+        results = [
+                   # OUGV1
+                   self.displacements,self.temperatures,
                    self.nonlinearTemperatures,self.nonlinearDisplacements,
-                   self.nonlinearForces,self.nonlinearFluxes,
                    self.forces,self.fluxes,
+                   
+                   # OEF
+                   self.nonlinearForces,self.nonlinearFluxes,
+                   
+                   # OQG1
+                   self.spcForces,
+                   
+                   # OES
                    self.rodStress,self.rodStrain,
                    self.barStress,self.barStrain,
                    self.plateStress,self.plateStrain,
-                   self.solidStress,self.solidStrain]
+                   self.solidStress,self.solidStrain,
+                   self.compositePlateStress,self.compositePlateStrain,
+                   ]
         
         msg = '---ALL RESULTS---\n'
         for result in results:
@@ -131,9 +147,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
-                    self.readTable_OUGV1()
-                elif tableName in ['OES1X1','OSTR1X']: # stress/strain
-                    self.readTable_OES1X1()
+                    self.readTable_OUG1()
+                elif tableName in ['OES1X1','OSTR1X','OES1C']: # stress/strain
+                    self.readTable_OES1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "---isAnotherTable---"

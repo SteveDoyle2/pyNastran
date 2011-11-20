@@ -78,7 +78,7 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-9s ' %('GRID')
+        msg += '%-8s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -88,7 +88,7 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
             (dx,dy,dz) = displacement
             (rx,ry,rz) = rotation
 
-            msg += '%-9i ' %(nodeID)
+            msg += '%-8i ' %(nodeID)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:
