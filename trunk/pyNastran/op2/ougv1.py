@@ -55,7 +55,7 @@ class OUGV1(object):
         ###
         self.readMarkers([iTable,1,0],'OUGV1')
         #self.printSection(100)
-        print str(self.obj)
+        #print str(self.obj)
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):

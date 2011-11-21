@@ -45,7 +45,10 @@ class ElementsStressStrain(object):
             print "len(data) = ",len(self.data)
 
         if len(data)>4:
+            print "*******there may be a problem..."
+            print "lenExpected=%s len(data)=%s" %(20,len(self.data))
             self.printBlock(self.data)
+            print "*******there may be a problem..."
         self.skip(4) ## @todo may cause problems later...
         ###
         print self.beamStress[self.iSubcase]
@@ -71,8 +74,10 @@ class ElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
 
         if len(self.data)>4:
-            print "there may be a problem len(self.data)=%s" %(len(self.data))
+            print "*******there may be a problem..."
+            print "lenExpected=%s len(data)=%s" %(64,len(self.data))
             self.printBlock(self.data)
+            print "*******there may be a problem..."
         #sys.exit('asdf')
         self.skip(4) ## @todo may cause problems later...
         ###
@@ -162,49 +167,72 @@ class ElementsStressStrain(object):
         print "*****"
 
         nNodes=1  # this is a minimum, it will be reset later
-        while len(self.data)>=16+84*nNodes+170:
-            #self.printBlock(self.data)
-           
-            (eid,cid,a,b,c,d,nNodes) = unpack("iissssi",self.data[0:16])
-            print "abcd = |%s|" %(a+b+c+d)
-            print "eid=%s cid=%s nNodes=%s" %(eid,cid,nNodes)
-            assert nNodes < 21
-            assert cid >= 0
+        nNodesExpected = 1
+        while len(self.data)>= 16+84*nNodesExpected:
+            eData     = self.data[0:16]
             self.data = self.data[16:]
+            #self.printBlock(eData)
+
+            (eid,cid,a,b,c,d,nNodes) = unpack("iissssi",eData)
+            print "abcd = |%s|" %(a+b+c+d)
+            print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
+            
+            assert nNodes < 21,self.printBlock(eData)
+            assert cid >= 0
             eid = (eid - deviceCode) / 10
             assert eid >= 0
 
-            if(  nNodes==4):  elementType = "CTETRA"
-            elif(nNodes==8):  elementType = "CHEXA"
-            elif(nNodes==6):  elementType = "CPENTA"
+            if(  nNodes in [4,10]):
+                elementType = "CTETRA"
+                nNodesExpected = 5
+            elif(nNodes in [6,15]):
+                elementType = "CPENTA"
+                nNodesExpected = 7
+            elif(nNodes in [8,20]):
+                elementType = "CHEXA"
+                nNodesExpected = 9
             else:
-                raise Exception('not supported....')
+                raise Exception('not supported....nNodes=%s' %(nNodes))
 
-            print "len(data) = ",len(self.data)
-            for nodeID in range(nNodes):   #nodes pts, +1 for centroid (???)
-                print "len(data)A = ",len(self.data)
-                eData     = self.data[0:4*21]
+            #print "len(data) = ",len(self.data)
+            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
+                #print "len(data)A = ",len(self.data)
+                eData     = self.data[0:4*21]  # for the stresses
                 self.data = self.data[4*21: ]
-                print "len(data)B = ",len(self.data)
+                #print "len(data)B = ",len(self.data)
+                #self.printBlock(eData)
 
                 #print "self.tableCode = ",self.tableCode
                 
                 #print "len(data) = ",len(self.data)
-                out = unpack('iffffffffffffffffffff',self.data[0:4*21])  ## @warning this could be a bug...
-                (grid,sxx,sxy,s1,a1,a2,a3,pressure,svm,syy,syz,s2,b1,b2,b3,szz,sxz,s3,c1,c2,c3) = out
+                
+                gridDevice, = unpack('i',eData[0:4])
+                #print "gridDevice = ",gridDevice
+                if gridDevice==0:
+                    grid = 'C'
+                else:
+                    #grid = (gridDevice - deviceCode) / 10
+                    grid = gridDevice
+                ###
 
-                #out = unpack('iffffffffff',self.data[0:4*11])
-                #(grid,oxx,txy,o1,ovm,oyy,tyz,o2,ozz,txz,o3) = out
+                out = unpack('ffffffffffffffffffff',eData[4:4*21])  ## @warning this could be a bug...
+                (sxx,sxy,s1,a1,a2,a3,pressure,svm,
+                 syy,syz,s2,b1,b2,b3,
+                 szz,sxz,s3,c1,c2,c3) = out
+                
+                #print "%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" %(elementType,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm)
+                #print "%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                %(elementType,eid,cid,grid,syy,syz,s2,b1,b2,b3)
+                #print "%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                %(elementType,eid,cid,grid,szz,sxz,s3,c1,c2,c3)
+                #print ""
 
-                print "%s eid=%s cid=%s nodef=%s grid=%s s1=%i s2=%i s3=%i svm=%i" %(elementType,eid,cid,nNodes,grid,s1,s2,s3,svm)
-                smax = max(s1,s2,s3)
-                smin = min(s1,s2,s3)
+                #smax = max(s1,s2,s3)
+                #smin = min(s1,s2,s3)
                 
                 aCos = []
                 bCos = []
                 cCos = []
                 if nodeID==0:
-                    print "adding new eid"
+                    #print "adding new eid"
                     stress.addNewEid(elementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
                 else:
                     stress.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
@@ -212,14 +240,13 @@ class ElementsStressStrain(object):
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 #self.printBlock(data)
             #sys.exit('finished a CEHXA')
-            print self.solidStress[self.iSubcase]
+            #print self.solidStress[self.iSubcase]
             ###
             print '--------------------'
             print "len(data) = ",len(self.data)
-            print "84*nNodes=",84*nNodes,nNodes,len(self.data)>=84*nNodes
             
             #self.printSection(100)
-            self.printBlock(self.data[0:100])
+            #self.printBlock(self.data[0:100])
             #self.printBlock(self.data[1:100])
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
@@ -227,7 +254,10 @@ class ElementsStressStrain(object):
 
         if len(self.data)>20:
             print "*******there may be a problem..."
+            print "offset+84*nNodesExpected=%s len(data)=%s" %(16+84*nNodesExpected,len(self.data))
             self.printBlock(self.data)
+            print "*******there may be a problem..."
+        
         self.skip(4)
         ###
 
