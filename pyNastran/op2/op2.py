@@ -265,9 +265,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #print "Title    %s |%s|" %(len(Title   ),Title.strip())
         #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
         #print "Label    %s |%s|" %(len(Label   ),Label.strip())
-        print "Title    |%s|" %(Title)
-        print "Subtitle |%s|" %(Subtitle)
-        print "Label    |%s|" %(Label)
+        #print "Title    |%s|" %(Title)
+        #print "Subtitle |%s|" %(Subtitle)
+        #print "Label    |%s|" %(Label)
 
         self.readHollerith()
         

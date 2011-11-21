@@ -1,4 +1,5 @@
-from op2_Objects import scalarObject,array
+from struct import pack
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class displacementObject(scalarObject): # approachCode=1, tableCode=1
     def __init__(self,iSubcase,dt=None):
@@ -18,6 +19,7 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
             self.add = self.addTransient
             self.addBinary = self.addBinaryTransient
             self.__repr__ = self.__reprTransient__  # why cant i do this...
+            #self.writeOp2 = self.writeOp2Transient
         ###
 
     def updateDt(self,dt=None):
@@ -72,6 +74,45 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
         print "Transient..."
         raise Exception('this could be cool...')
         return self.__repr__()
+
+    def writeOp2(self,block3,deviceCode=1):
+        """
+        creates the binary data for writing the table
+        @warning hasnt been tested...
+        """
+        msg = block3
+        for nodeID,displacement in sorted(self.displacements.items()):
+            rotation = self.rotations[nodeID]
+            (dx,dy,dz) = displacement
+            (rx,ry,rz) = rotation
+            
+            grid = nodeID*10+deviceCode
+            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
+        ###
+        return msg
+
+    #def writeOp2Transient(self,block3,deviceCode=1):
+    #    """
+    #    creates the binary data for writing the table
+    #    @warning hasnt been tested...
+    #    @warning dt slot needs to be fixed...
+    #    """
+    #    msg = ''
+    #    for dt,displacements in sorted(self.displacements.items()):
+    #        XXX = 50 ## this isnt correct... @todo update dt
+    #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
+    #        #msg += 'dt = %g\n' %(dt)
+    #
+    #        for nodeID,displacement in sorted(displacements.items()):
+    #            rotation = self.rotations[nodeID]
+    #            (dx,dy,dz) = displacement
+    #            (rx,ry,rz) = rotation
+    #
+    #            grid = nodeID*10+deviceCode
+    #            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
+    #        ###
+    #    ###
+    #    return msg
 
     def __repr__(self):
         msg = '---DISPLACEMENTS---\n'
@@ -175,6 +216,37 @@ class temperatureObject(scalarObject): # approachCode=1, tableCode=1
             ###
         return msg
 
+    def writeOp2(self,block3,deviceCode=1):
+        """
+        creates the binary data for writing the table
+        @warning hasnt been tested...
+        """
+        msg = block3
+        for nodeID,T in sorted(self.temperatures.items()):
+            grid = nodeID*10+deviceCode
+            msg += pack('iffffff',grid,T,0,0,0,0,0)
+        ###
+        return msg
+
+    def writeOp2Transient(self,block3,deviceCode=1):
+        """
+        creates the binary data for writing the table
+        @warning hasnt been tested...
+        @warning dt slot needs to be fixed...
+        """
+        msg = ''
+        for dt,temperatures in sorted(self.temperatures.items()):
+            XXX = 50 ## this isnt correct... @todo update dt
+            msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
+            #msg += 'dt = %g\n' %(dt)
+    
+            for nodeID,T in sorted(temperatures.items()):
+                grid = nodeID*10+deviceCode
+                msg += pack('iffffff',grid,T,0,0,0,0,0)
+            ###
+        ###
+        return msg
+
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()
@@ -206,6 +278,18 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         assert nodeID not in self.fluxes
         self.fluxes[nodeID] = array([v1,v2,v3])
+
+    def writeOp2(self,block3,deviceCode=1):
+        """
+        creates the binary data for writing the table
+        @warning hasnt been tested...
+        """
+        msg = block3
+        for nodeID,flux in sorted(self.fluxes.items()):
+            grid = nodeID*10+deviceCode
+            msg += pack('iffffff',grid,flux[0],flux[1],flux[2],0,0,0)
+        ###
+        return msg
 
     def __repr__(self):
         msg = '---HEAT FLUX---\n'

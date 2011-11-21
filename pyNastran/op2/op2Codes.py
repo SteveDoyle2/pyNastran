@@ -237,53 +237,191 @@ class Op2Codes(object):
             232 : 'QUADRLC',
             233 : 'TRIARLC',
         }
-        return elements[eCode]
+        return elements[eCode] # +'_'+str(eCode)
 
     def printTableCode(self,tableCode):
         tableCodeContent = tableCode%1000
         dataFormat = tableCode/1000
         print "tableCodeContent=%s dataFormat=%s" %(tableCodeContent,dataFormat)
         tableContent = {
-            1  : 'OUG',  # Displacement vector
-            2  : 'OPG',  # Load vector
-            3  : 'OQG',  # SPC Force vector
-            4  : 'OEF',  # Element force/flux
-            5  : 'OES',  # Element stress/strain
-            6  : 'LAMA', # Eigenvalue summary
-            7  : 'OUG',  # Eigenvector
+            1  : 'OUG - Displacement vector',
+            2  : 'OPG - Load vector',
+            3  : 'OQG - SPC Force vector',
+            4  : 'OEF - Element force/flux',
+            5  : 'OES - Element stress/strain',
+            6  : 'LAMA - Eigenvalue summary',
+            7  : 'OUG - Eigenvector',
             8  : None,
-            9  : 'OEIGS',# Eigenvalue analysis summary
-            10 : 'OUG',  # Velocity vector
-            11 : 'OUG',  # Acceleration vector
-            12 : 'OPG',  # Nonlinear force vector
-            13 : 'OGPWG',# Grid point weight generator
-            14 : 'OUG',  # Eigenvector (solution set)
-            15 : 'OUG',  # Displacement vector (solution set)
-            16 : 'OUG',  # Velocity vector (solution set)
-            17 : 'OUG',  # Acceleration vector (solutin set)
-            18 : 'OEE',  # Element strain energy
-            19 : 'OGF',  # Grid point force balanc
-            20 : 'OES',  # Stresses at grid points
-            21 : 'OES',  # Strain/curvature at grid points
-            22 : 'OELOF1', # Element internal forces/moments
-            23 : 'OELOP1', # Summation of element oriented forces on adjacent elements
-            24 : 'OEP', # Element pressures
-            25 : 'OEF', # Composite failure indices
-            26 : 'OGS', # Grid point stresses (surface)
-            27 : 'OGS', # Grid point stresses (volume - direct)
-            28 : 'OGS', # Grid point stresses (volume - princial)
-            29 : 'OGS', # Element stress discontinuities (surface)
-            30 : 'OGS', # Element stress discontinuities (volume - direct)
-            31 : 'OGS', # Element stress discontinuities (volume - princial)
-            32 : 'OGS', # Grid point stress discontinuities (surface)
-            33 : 'OGS', # Grid point stress discontinuities (volume - direct)
-            34 : 'OGS', # Grid point stress discontinuities (volume - princial)
-            35 : 'OGS', # Grid point stresses (plane stress)
-            36 : 'OEE', # Element kinetic energy
-            37 : 'OEE', # Element energy loss
-            38 : 'OMM', # MaxMin summary
-            39 : 'OQG', # MPC forces
-            40 : 'OGPKE', # Grip point kinetic energy
+            9  : 'OEIGS - Eigenvalue analysis summary',
+            10 : 'OUG - Velocity vector',
+            11 : 'OUG - Acceleration vector',
+            12 : 'OPG - Nonlinear force vector',
+            13 : 'OGPWG - Grid point weight generator',
+            14 : 'OUG - Eigenvector (solution set)',
+            15 : 'OUG - Displacement vector (solution set)',
+            16 : 'OUG - Velocity vector (solution set)',
+            17 : 'OUG - Acceleration vector (solutin set)',
+            18 : 'OEE - Element strain energy',
+            19 : 'OGF - Grid point force balanc',
+            20 : 'OES - Stresses at grid points',
+            21 : 'OES - Strain/curvature at grid points',
+            22 : 'OELOF1 - Element internal forces/moments',
+            23 : 'OELOP1 - Summation of element oriented forces on adjacent elements',
+            24 : 'OEP - Element pressures',
+            25 : 'OEF - Composite failure indices',
+            26 : 'OGS - Grid point stresses (surface)',
+            27 : 'OGS - Grid point stresses (volume - direct)',
+            28 : 'OGS - Grid point stresses (volume - princial)',
+            29 : 'OGS - Element stress discontinuities (surface)',
+            30 : 'OGS - Element stress discontinuities (volume - direct)',
+            31 : 'OGS - Element stress discontinuities (volume - princial)',
+            32 : 'OGS - Grid point stress discontinuities (surface)',
+            33 : 'OGS - Grid point stress discontinuities (volume - direct)',
+            34 : 'OGS - Grid point stress discontinuities (volume - princial)',
+            35 : 'OGS - Grid point stresses (plane stress)',
+            36 : 'OEE - Element kinetic energy',
+            37 : 'OEE - Element energy loss',
+            38 : 'OMM - MaxMin summary',
+            39 : 'OQG - MPC forces',
+            40 : 'OGPKE - Grip point kinetic energy',
         }
         print "table = %s" %(tableContent[tableCodeContent])
 
+
+    def codeInformation(self):
+        """
+        prints the general table information
+        DMAP - page 60-63
+        """
+        deviceCode   = self.deviceCode
+        #approachCode = self.approachCode
+        #tableCode    = self.tableCode
+        sortCode     = self.sortCode
+
+        formatCode = None
+        if hasattr(self, 'fCode'):
+            formatCode = self.fCode
+
+        sCode = None
+        if hasattr(self, 'sCode'):
+            sCode = self.sCode
+
+        thermal = None
+        if hasattr(self, 'thermal'):
+            thermal = self.thermal 
+
+        sWord = ''
+        if(  sCode==0):  sWord += 'Coordinate Element - Stress Max Shear or Octahedral'
+        elif(sCode==14): sWord += 'Coordinate Element - Strain Fiber Max Shear or Octahedral'
+
+        elif(sCode==1):  sWord += 'Coordinate Element - Stress von Mises Max Shear or Octahedral'
+        elif(sCode==10): sWord += 'Coordinate Element - Strain Curvature Max Shear'
+
+        elif(sCode==11): sWord += 'Coordinate Element - Strain Curvature von Mises'
+        elif(sCode==15): sWord += 'Coordinate Element - Strain Fiber von Mises'
+
+        elif(sCode==16): sWord += 'Coordinate Material - Stress Max Shear or Octahedral'
+        elif(sCode==17): sWord += 'Coordinate Material - Stress von Mises Max Shear or Octahedral'
+
+        elif(sCode==26): sWord += 'Coordinate Material - Strain Curvature Max Shear'
+        elif(sCode==30): sWord += 'Coordinate Material - Strain Fiber Max Shear or Octahedral'
+
+        elif(sCode==27): sWord += 'Coordinate Material - Strain Curvature von Mises'
+        elif(sCode==31): sWord += 'Coordinate Material - Strain Fiber von Mises'
+        else:
+            sWord = "Stress or Strain - UNDEFINED"
+
+        format = ''
+        if(  formatCode==1):  format = "Real"
+        elif(formatCode==2):  format = "Real/Imaginary"
+        elif(formatCode==3):  format = "Magnitude/Phase"
+
+        tWord = ''
+        if(  self.sortCode==0): sortWord = 'Real'
+        elif(self.sortCode==1): sortWord = 'Real/Imaginary'
+        elif(self.sortCode==2): sortWord = 'Random Responses'
+        else:
+            tWord = ''
+            #msg = 'unsupported tCode:  tCode=%s\n' %(tCode)
+            #raise Exception(msg)
+
+        if(  thermal==0): thermalWord = 'isHeatTransfer = False'
+        elif(thermal==1): thermalWord = 'isHeatTransfer = True'
+        else:
+            thermalWord = ''
+            #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
+            #raise Exception(msg)
+        
+        approach=''
+        if(  self.approachCode== 1):  approach = "Statics"
+        elif(self.approachCode== 2):  approach = "Normal modes or buckling (real eignevalues)"
+        elif(self.approachCode== 3):  approach = "Differential Stiffness 0 - obsolete"
+        elif(self.approachCode== 4):  approach = "Differential Stiffness 1 - obsolete"
+        elif(self.approachCode== 5):  approach = "Frequency"
+        elif(self.approachCode== 6):  approach = "Transient"
+        elif(self.approachCode== 7):  approach = "Pre-buckling"
+        elif(self.approachCode== 8):  approach = "Post-buckling"
+        elif(self.approachCode== 9):  approach = "Complex eigenvalues"
+        elif(self.approachCode==10):  approach = "Nonlinear statics"
+        elif(self.approachCode==11):  approach = "Geometric nonlinear statics"
+
+        device=''
+        if(  self.deviceCode==1):  device = "Print"
+        elif(self.deviceCode==2):  device = "Plot"
+        elif(self.deviceCode==3):  device = "Print and Plot"
+        elif(self.deviceCode==4):  device = "Punch"
+        elif(self.deviceCode==5):  device = "Print and Punch"
+        elif(self.deviceCode==6):  device = "Plot and Punch"
+        elif(self.deviceCode==7):  device = "Print, Plot, and Punch"
+
+        table = ''
+        if(  self.tableCode== 1):  table = "OUG - Displacement vector/scalar"
+        elif(self.tableCode== 2):  table = "OPG - Load vector"
+        elif(self.tableCode== 3):  table = "OQG - SPC Force vector"
+        elif(self.tableCode== 4):  table = "OEF - Element Force (or Flux)"
+        elif(self.tableCode== 5):  table = "OES - Element Stress/Strain"
+        elif(self.tableCode== 6):  table = "LAMA - Eigenvalue summary"
+        elif(self.tableCode== 7):  table = "OUG - Eigenvector"
+        elif(self.tableCode== 8):  table = "none - Grid point singularity table (obsolete)"
+        elif(self.tableCode== 9):  table = "OEIGS - Eigenvalue analysis summary"
+        elif(self.tableCode==10):  table = "OUG - Velocity vector"
+        elif(self.tableCode==11):  table = "OUG -Acceleration vector"
+        elif(self.tableCode==12):  table = "OPG - Nonlinear force vector"
+        elif(self.tableCode==13):  table = "OGPWG - Grid point weight generator"
+        elif(self.tableCode==14):  table = "OUG - Eigenvector (solution set)"
+        elif(self.tableCode==15):  table = "OUG - Displacement vector (solution set)"
+        elif(self.tableCode==16):  table = "OUG - Velocity vector (solution set)"
+        elif(self.tableCode==17):  table = "OUG - Acceleration vector (solution set)"
+        elif(self.tableCode==18):  table = "OEE - Element strain energy"
+        elif(self.tableCode==19):  table = "OGF - Grid point force balance"
+        elif(self.tableCode==20):  table = "OES - Stresses at grid points (from the CURV module)"
+        elif(self.tableCode==21):  table = "OES - Strain/curvature at grid points"
+        elif(self.tableCode==22):  table = "OELOF1 - Element internal forces and moments"
+        elif(self.tableCode==23):  table = "OELOP1 - Summation of element oriented forces on adjacent elements"
+        elif(self.tableCode==24):  table = "OEP - Element pressures"
+        elif(self.tableCode==25):  table = "OEF - Composite failure indicies"
+        elif(self.tableCode==26):  table = "OGS - Grid point stresses (surface)"
+        elif(self.tableCode==27):  table = "OGS - Grid point stresses (volume -- direct)"
+        elif(self.tableCode==28):  table = "OGS - Grid point stresses (volume -- principal)"
+        elif(self.tableCode==29):  table = "OGS - Element stress discontinuities (surface)"
+        elif(self.tableCode==30):  table = "OGS - Element stress discontinuities (volume -- direct)"
+        elif(self.tableCode==31):  table = "OGS - Element stress discontinuities (volume -- principal)"
+        elif(self.tableCode==32):  table = "OGS - Grid point stress discontinuities (surface)"
+        elif(self.tableCode==33):  table = "OGS - Grid point stress discontinuities (volume -- direct)"
+        elif(self.tableCode==34):  table = "OGS - Grid point stress discontinuities (volume -- principal)"
+        elif(self.tableCode==35):  table = "OGS - Grid point stress discontinuities (plane strain)"
+        elif(self.tableCode==36):  table = "OEE - Element kinetic energy"
+        elif(self.tableCode==37):  table = "OEE - Element energy loss"
+        elif(self.tableCode==38):  table = "OMM - Max/Min summary"
+        elif(self.tableCode==39):  table = "OQG - MPC Forces"
+        elif(self.tableCode==40):  table = "OGPKE - Grip point kinetic energy"
+
+        msg  = "  approachCode = %-2s %s\n" %(self.approachCode,approach)
+        msg += "  deviceCode   = %-2s %s\n" %(self.deviceCode,device)
+        msg += "  tableCode    = %-2s %s\n" %(self.tableCode,table)
+        msg += "  fCode        = %-2s %s\n" %(formatCode,format)
+        msg += "  sortCode     = %-2s %s\n" %(self.sortCode,sortWord)
+        msg += "  sCode        = %-2s %s\n" %(sCode,sWord)
+        msg += "  thermal      = %-2s %s\n" %(thermal,thermalWord)
+        #print msg
+        return msg

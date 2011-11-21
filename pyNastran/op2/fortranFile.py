@@ -16,7 +16,7 @@ class FortranFile(object):
 
     def readHollerith(self):
         self.skip(4)  # weird hollerith
-
+        
     def readHeader(self,expected):
         """
         a header is defined as (4,i,4), where i is an integer
@@ -312,9 +312,10 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nLetters = len(data)
-        letters = unpack('s'*nLetters,data)
+        letters = unpack('s'*nLetters,data)  ## @todo should this be c instead of s???
         word = ''.join(letters)
         #print "word = |%s|" %(word)
+        print "nLetters=%s word=|%s|" %(nLetters,word)
         return word
 
     def readIntBlock(self):
