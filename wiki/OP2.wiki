@@ -1,0 +1,40 @@
+#summary Usage of the Op2 Reader
+
+= Introduction =
+
+This is how the version 0.2 OP2 reading software works if you're interested.  *Don't try and use the version 0.1 software unless you have a very simple CQUAD4 static model.*
+
+= Details =
+
+
+{{{
+
+from pyNastran.op2.op2 import OP2
+
+infileName = 'fem.op2'
+
+op2Obj = OP2(infileName)  # instantiates the object
+op2Obj.read()  # yup, that simple...
+
+
+# lets assume the code crashed on the GEOM1 table...
+# let's read only the OES1X1 (isotropic stress table)
+op2Obj2 = OP2(infileName)  # instantiates the object
+op2Obj2.tablesToRead = set(['OES1X1'])
+op2Obj2.read()
+
+# lets print the results
+print op2Obj.printResults() # prints ALL results from ALL tables
+
+# lets print the plate stress only
+# and then print oxx and ovm (x-stress and von mises stress)
+for iSubcase,stressCase in op2Obj.plateStress.items():
+    print stressCase
+
+    for eid in stressCase:
+        print stressCase[eid].oxx
+        print stressCase[eid].ovm
+
+## NOTE:  there are no interface methods to these objects yet...
+
+}}}
