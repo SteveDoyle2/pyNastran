@@ -1,4 +1,4 @@
-
+from struct import pack
 
 class Oes1Writer(object):
     def writeOES1(self):
