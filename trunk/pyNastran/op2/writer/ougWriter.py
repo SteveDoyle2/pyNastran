@@ -1,4 +1,4 @@
-
+from struct import pack
 
 class Ougv1Writer(object):
     def writeOUGV1():

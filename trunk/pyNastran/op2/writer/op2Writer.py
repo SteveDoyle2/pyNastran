@@ -4,19 +4,26 @@ from pyNastran.op2.writer.ougWriter import Ougv1Writer
 
 class Op2Writer(Ougv1Writer,Oes1Writer):
     self.hollerith = pack('i',584) # assumes a 128 character string
+    def pack(self,format,*vals):
+        return [str(val) for val in vals]
+
+    def writeStart(self):
+        self.writeMarkers([3,7])
+        self.writeStringBlock('NASTRAN FORT TAPE ID CODE - ',28)
+        self.writeMarkers([2,-1])
 
     def writeOp2(self,op2Name):
         op2 = open(op2Name,'wb')
-        self.writeHeader()
-        self.writeGEOM1()
-        self.writeGEOM2()
-        self.writeGEOM3()
-        self.writeGEOM4()
+        self.writeStart()
+        #self.writeGEOM1()
+        #self.writeGEOM2()
+        #self.writeGEOM3()
+        #self.writeGEOM4()
         
-        self.writeEPT()
-        self.writeMPTS()
+        #self.writeEPT()
+        #self.writeMPTS()
 
-        self.writeOQG1() # spc forces
+        #self.writeOQG1() # spc forces
 
         #self.writeOGP()
         #self.writeOGF()
