@@ -3,9 +3,10 @@ import copy
 from struct import unpack
 
 # pyNastran
-from ougv1_Objects import (temperatureObject,displacementObject,
-                           nonlinearTemperatureObject,
-                           fluxObject)
+from pyNastran.op2.resultObjects.ougv1_Objects import (
+     temperatureObject,displacementObject,
+     nonlinearTemperatureObject,
+     fluxObject)
 
 class OUGV1(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""

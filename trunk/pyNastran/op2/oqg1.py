@@ -1,6 +1,6 @@
 import sys
 from struct import unpack
-from op2_Objects import spcForcesObject
+from pyNastran.op2.resultObjects.op2_Objects import spcForcesObject
 
 class OQG1(object):
     def readTable_OQG1(self):

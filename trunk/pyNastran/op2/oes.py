@@ -1,11 +1,12 @@
 import sys
 import copy
 from struct import unpack
-from oes_Objects import (rodStressObject,rodStrainObject,
-                        barStressObject,
-                        plateStressObject,plateStrainObject,
-                        solidStressObject,
-                        compositePlateStressObject,compositePlateStrainObject)
+from pyNastran.op2.resultObjects.oes_Objects import (
+    rodStressObject,rodStrainObject,
+    barStressObject,
+    plateStressObject,plateStrainObject,
+    solidStressObject,
+    compositePlateStressObject,compositePlateStrainObject)
 
 class OES(object):
     """Table of stresses/strains"""

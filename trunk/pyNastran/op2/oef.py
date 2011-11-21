@@ -3,9 +3,10 @@ import copy
 from struct import unpack
 
 # pyNastran
-from ougv1_Objects import (temperatureObject,displacementObject,
-                           nonlinearTemperatureObject,
-                           fluxObject,nonlinearFluxObject)
+from pyNastran.op2.resultObjects.ougv1_Objects import (
+    temperatureObject,displacementObject,
+    nonlinearTemperatureObject,
+    fluxObject,nonlinearFluxObject)
 
 class OEF(object):
     """Table of element forces"""
