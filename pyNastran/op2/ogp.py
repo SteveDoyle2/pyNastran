@@ -3,10 +3,11 @@ import copy
 from struct import unpack
 
 # pyNastran
-from ougv1_Objects import (temperatureObject,
-                           nonlinearTemperatureObject,
-                           fluxObject,nonlinearFluxObject)
-from opg_Objects import appliedLoadsObject
+from pyNastran.op2.resultObjects.ougv1_Objects import (
+    temperatureObject,
+    nonlinearTemperatureObject,
+    fluxObject,nonlinearFluxObject)
+from pyNastran.op2.resultObjects.opg_Objects import appliedLoadsObject
 
 
 class OGP(object):
