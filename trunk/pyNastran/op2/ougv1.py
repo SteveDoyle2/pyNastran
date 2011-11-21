@@ -79,8 +79,8 @@ class OUGV1(object):
         (three) = self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
-        self.rCode   = self.getValues(data,'i',8) ## random code
-        self.fCode   = self.getValues(data,'i',9) ## format code
+        self.rCode   = self.getValues(data,'i',8)  ## random code
+        self.fCode   = self.getValues(data,'i',9)  ## format code
         self.numWide = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
         self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
         self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
