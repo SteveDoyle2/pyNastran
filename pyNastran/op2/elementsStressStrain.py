@@ -174,13 +174,11 @@ class ElementsStressStrain(object):
             #self.printBlock(eData)
 
             (eid,cid,a,b,c,d,nNodes) = unpack("iissssi",eData)
-            print "abcd = |%s|" %(a+b+c+d)
-            print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
+            #print "abcd = |%s|" %(a+b+c+d)
+            #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
             assert nNodes < 21,self.printBlock(eData)
-            assert cid >= 0
             eid = (eid - deviceCode) / 10
-            assert eid >= 0
 
             if(  nNodes in [4,10]):
                 elementType = "CTETRA"
@@ -242,8 +240,8 @@ class ElementsStressStrain(object):
             #sys.exit('finished a CEHXA')
             #print self.solidStress[self.iSubcase]
             ###
-            print '--------------------'
-            print "len(data) = ",len(self.data)
+            #print '--------------------'
+            #print "len(data) = ",len(self.data)
             
             #self.printSection(100)
             #self.printBlock(self.data[0:100])

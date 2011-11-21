@@ -1,7 +1,7 @@
 import sys
 import copy
 from struct import unpack
-from op2_Objects import (rodStressObject,rodStrainObject,
+from oes_Objects import (rodStressObject,rodStrainObject,
                         barStressObject,
                         plateStressObject,plateStrainObject,
                         solidStressObject,

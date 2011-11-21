@@ -14,7 +14,7 @@ OP2 Reader
          
          - CTETRA  (39  - done)
          - CHEXA   (67  - done)
-         - CPENTA  (68  - almost...)
+         - CPENTA  (68  - done)
          - CTRIA3  (74  - done)
          - CQUAD4  (144 - done)
          - CONROD  (10)
@@ -34,11 +34,12 @@ OP2 Reader
          - CQUAD4 (90)
          - CPENTA (91)
          - CONROD (92)
-         - CHEXA  (92)
+         - CHEXA  (93)
+         - CBEAM  (94)
 
       - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
-         - CQUAD4 (94 - done)
-         - CQUAD8 (95 - done)
+         - CQUAD4 (95 - done)
+         - CQUAD8 (96 - done)
          - CTRIA3 (97 - done)
          - CTRIA6 (98 - done)
 
@@ -57,7 +58,7 @@ OP2 Reader
    - OEF1X Table (element forces)
       - applied temperatures (done)
       - applied transient temperatures (done)
-      - applied transient heat flux - just as long as OES tables
+      - applied transient heat flux - it's just as long as the OES table...
 
    - OEE Table (element energy strain/kinetic/loss)
    - KDICT Table (element stiffness table)
