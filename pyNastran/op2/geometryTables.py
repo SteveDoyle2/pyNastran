@@ -58,83 +58,9 @@ class GeometryTables(object):
             return
         print "markerA=%s  markerB=%s" %(markerA,markerB)
         #print "bufferWords = ",bufferWords,bufferWords*4
-        #sys.exit('end of geom 1')
-        #self.printSection(100)
+        self.printSection(100)
+        sys.exit('stopping on geom 1')
 
-    def _geom2(self):
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        self.readMarkers([-1,7])
-        #sys.exit('geometryTable-geom2')
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0])
-        bufferWords = self.getMarker()
-        word = self.readStringBlock()
-        print "bufferWords = ",bufferWords,bufferWords*4
- 
-        print "word = ",word
-        
-        self.readMarkers([-3,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-4,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-5,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-6,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-7,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-8,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-9,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-10,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-11,1,0])
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-
-
-        self.printSection(200)
-
-        sys.exit('geom1 exit')
 
     def readTable_Geom2(self):
         word = self.readTableName(rewind=False) # GEOM2
@@ -164,25 +90,26 @@ class GeometryTables(object):
         bufferWords = self.getMarker()
         print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
-        print "*ints = ",ints
+        #print "*ints = ",ints
         #assert len(ints)==37
-
+        
         # these sections arent always in the op2...
         if self.isTableDone([-5,1]):
             print "couldnt find table 5 in GEOM2..."
             return
-        print "tell = ",self.op2.tell(),self.n
+        #print "tell = ",self.op2.tell(),self.n
+
         self.readMarkers([-5,1,0])
-        return
-        #assert self.op2.tell()==28568, "***tell = %s" %(self.op2.tell())
+        if self.checkForGeom3():
+            return
+
         bufferWords = self.getMarker()  # 31
         print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         print "*ints = ",ints
 
-        ints = self.readIntBlock()  ## @todo  need this for large problems....
-        print "*ints = ",ints
-        self.printSection(200)
+        #ints = self.readIntBlock()  ## @todo  need this for large problems....
+        #print "*ints = ",ints
         
         #if self.isTableDone([-6,1]):
         #    print "couldnt find table 6 in GEOM2..."
@@ -190,13 +117,33 @@ class GeometryTables(object):
 
         self.readMarkers([-6,1,0])
         bufferWords = self.getMarker()  # 31
-        print "bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
-        print "*ints = ",ints
+
+        iTable = -7
+        while 1:  ## @todo could this cause an infinite loop...i dont this so...
+            self.readMarkers([iTable,1,0])
+
+            if self.checkForGeom3():
+                return
+            bufferWords = self.getMarker()
+            ints = self.readIntBlock()
+
+            #self.printSection(100)
+            iTable -= 1
+        ###
 
         
-        #self.printSection(200)
-        #assert self.op2.tell()==976,self.op2.tell()
+        self.printSection(100)
+        sys.exit('end block of geom2...this should never happen...')
+
+
+    def checkForGeom3(self):
+        foundTable = False
+        word = self.readTableName(rewind=True,stopOnFailure=False) # GEOM2
+        if word == 'GEOM3':
+            foundTable = True
+        print "geom3word = ",word
+        return foundTable
 
     def readTable_Geom3(self):
         ## GEOM3
@@ -231,7 +178,7 @@ class GeometryTables(object):
         #self.skip(4*11)
 
 
-        data = self.readTableData([-4,1,0],'GEOM3')        
+        data = self.readTableData([-4,1,0],'GEOM3')
         data = self.readTableData([-5,1,0],'GEOM3')
         print "time for block section 6..."
         

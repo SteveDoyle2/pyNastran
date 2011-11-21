@@ -58,7 +58,7 @@ class OES(object):
         ###
         self.readMarkers([iTable,1,0],'OES')
         #self.printSection(100)
-        print str(self.obj)
+        
         self.deleteAttributes_OES()
 
     def deleteAttributes_OES(self):
@@ -151,9 +151,6 @@ class OES(object):
         print "bits = ",bits
         return bits
         
-    def verifyBufferSize(self,bufferWords):
-        assert bufferWords>0,self.printSection(220)
-
     def readTable_OES_4(self,iTable):
         #self.readMarkers([iTable,1,0])
         markerA = 4
@@ -174,9 +171,10 @@ class OES(object):
             markerA = self.getMarker('A')
             self.n-=12
             self.op2.seek(self.n)
-            
+
             self.n = self.op2.tell()
             print "***markerA = ",markerA
+            #sys.exit('check...end of table issueB...')
             #self.printSection(140)
 
             #print self.plateStress[self.iSubcase]
@@ -186,7 +184,7 @@ class OES(object):
                 sys.exit('check...')
             j+=1
             print "isBlockDone = ",isBlockDone
-            
+            #print "*******restarting table 4**********"
         print "isBlockDone = ",isBlockDone
         return isBlockDone
 
@@ -227,7 +225,6 @@ class OES(object):
 
         #stressStrainObj = self.instatiateStressStrainObject()
         self.readElementTable()
-
         return isTable4Done,isBlockDone
 
     def readElementTable(self):
@@ -255,7 +252,7 @@ class OES(object):
         #    stressStrainObj = self.instantiateSolidObject()
         #    self.CTETRA_39(stressStrainObj)
         elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
-            print "    found hexa_67 / cpenta_68"
+            print "    found ctetra_39 / hexa_67 / cpenta_68"
             stressStrainObj = self.instantiateSolidObject()
             self.CSOLID_67(stressStrainObj)
         elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
@@ -267,6 +264,7 @@ class OES(object):
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             raise RuntimeError(msg)
 
+        #print stressStrainObj
 
         #elif self.elementType == 4:    # cshear
 

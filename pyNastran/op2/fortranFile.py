@@ -1,7 +1,6 @@
 #import os
-#import sys
 
-import struct
+import sys
 from struct import unpack,pack
 
 #pyNastran
@@ -171,7 +170,7 @@ class FortranFile(object):
         given a data set, grabs the nth word and casts it as an integer
         """
         data2 = data[4*(n-1):4*(n-1)+4]
-        return struct.unpack('i',data2)[0]
+        return unpack('i',data2)[0]
         
     def printSection(self,nBytes):
         """
@@ -238,15 +237,18 @@ class FortranFile(object):
     def isTableDone(self,expectedMarkers):
         markers = self.getNMarkers(len(expectedMarkers),rewind=True)
         print "getMarkers = ",markers
-
+        
         if markers==[-1,7]:
             return True
         elif markers==expectedMarkers:
+            #sys.exit(expectedMarkers)
             return False
         else:
             raise RuntimeError('this should never happen...invalid markers...expected=%s markers=%s' %(expectedMarkers,markers))
 
     def goto(self,n):
+        #print "goto n = |%s|" %(n)
+        assert n>0
         self.op2.seek(n)
 
     def readBlock(self):
@@ -355,27 +357,36 @@ class FortranFile(object):
         self.n -= n
         self.op2.seek(self.n)
 
-    def readTableName(self,rewind=True):
+    def readTableName(self,rewind=True,stopOnFailure=True):
         """
         peeks into a table to check it's name
         """
         n = self.n
-        #print ""
-        self.readMarkers([0,2])
-        word = self.readStringBlock()
-        #print "*word = |%r|" %(word)
+        try:
+            #print ""
+            self.readMarkers([0,2])
+            word = self.readStringBlock()
+            #print "*word = |%r|" %(word)
 
-        #print "n      = ",n
-        #print "self.n = ",self.n
-        #print "op2.tell = ",self.op2.tell()
-        #print "******"
-        if rewind:
-            self.n = n
-            self.op2.seek(n)
-        #print "n      = ",n
-        #print "self.n = ",self.n
-        #print "op2.tell = ",self.op2.tell()
-        return word.strip()
+            #print "n      = ",n
+            #print "self.n = ",self.n
+            #print "op2.tell = ",self.op2.tell()
+            #print "******"
+            if rewind:
+                self.n = n
+                self.op2.seek(n)
+            #print "n      = ",n
+            #print "self.n = ",self.n
+            #print "op2.tell = ",self.op2.tell()
+            return word.strip()
+        except:
+            if rewind and not stopOnFailure:
+                self.n = n
+                self.op2.seek(n)
+                return
+            raise
+            ###
+        ###
 
     def skipNextTable(self,bufferSize=10000):
         """

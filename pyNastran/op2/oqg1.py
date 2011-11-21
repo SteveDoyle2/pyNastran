@@ -23,7 +23,7 @@ class OQG1(object):
         iTable -= 2
 
         self.readMarkers([-5,1,0])
-        print str(self.spcForces[self.iSubcase])
+        #print str(self.spcForces[self.iSubcase])
 
         #self.printSection(80)
         #sys.exit('end of oqg1')

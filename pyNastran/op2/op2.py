@@ -22,8 +22,8 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
-        #self.tablesToRead = ['OUGV1',]  # 'OUGV1','GEOM1','GEOM2'
+        #self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
         self.iSubcaseNameMap = {}
@@ -97,7 +97,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         return msg
         
     def readTapeCode(self):
-        self.printSection(500)
+        #self.printSection(500)
         #sys.exit('op2-readTapeCode')
         self.readMarkers([3])
         ints = self.readIntBlock()
@@ -251,6 +251,9 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         assert bufferWords >0
         return bufferWords
 
+    def verifyBufferSize(self,bufferWords):
+        assert bufferWords>0,self.printSection(220)
+
     def readTitle(self):
         word = self.readString(384) # titleSubtitleLabel
         Title    = word[0:128].strip()
@@ -271,3 +274,4 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.Title = Title.strip()
         if self.iSubcase not in self.iSubcaseNameMap:
             self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
+
