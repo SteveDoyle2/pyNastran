@@ -4,9 +4,11 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.resultObjects.ougv1_Objects import (
-     temperatureObject,displacementObject,
-     nonlinearTemperatureObject,
-     fluxObject)
+     temperatureObject,displacementObject,  # approachCode=1, sortCode=0
+     eigenVectorObject,                     # approachCode=2, sortCode=0
+     fluxObject,                            # approachCode=1, sortCode=3
+     nonlinearTemperatureObject,            # approachCode=10,sortCode=0
+     )
 
 class OUGV1(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
@@ -89,13 +91,15 @@ class OUGV1(object):
         self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
         self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
         
+        self.printBlock(data)
         ## assuming tCode=1
         if self.approachCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.approachCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eigr      = self.getValues(data,'f',6) ## real eigenvalue
-            self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
+            self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type - F1???
+            print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         elif self.approachCode==3: # differential stiffness
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.approachCode==4: # differential stiffness
@@ -210,9 +214,16 @@ class OUGV1(object):
                 raise Exception('is this correct???')
                 self.obj = spcForcesObject(self.iSubcase)
                 self.spcForces[self.iSubcase] = self.obj
+
+            elif self.approachCode==2 and self.sortCode==0: # nonlinear static displacement
+                print "isNonlinearStaticDisplacement"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
+                self.eigenvectors[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+
             elif self.approachCode==6 and self.sortCode==0: # transient displacement
                 print "isTransientDisplacement"
-
                 self.createTransientObject(self.displacments,displacementObject,self.dt)
                 self.displacements[self.iSubcase] = self.obj
 
@@ -220,6 +231,7 @@ class OUGV1(object):
                 print "isNonlinearStaticDisplacement"
                 self.createTransientObject(self.nonlinearDisplacments,displacementObject,self.dt)
                 self.nonlinearDisplacements[self.iSubcase] = self.obj
+
             else:
                 raise Exception('not supported OUGV1 solution...')
             ###

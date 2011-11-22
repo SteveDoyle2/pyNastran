@@ -6,9 +6,9 @@ from struct import unpack
 class GeometryTables(object):
 
     def readTable_Geom1(self):
-        print "--------GEOM 1---------"
-        word = self.readTableName(rewind=False) # GEOM1
-        print "*tableName = |%r|" %(word)
+        tableName = self.readTableName(rewind=False) # GEOM1
+        self.tableInit(tableName)
+        print "*tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         fields = self.readIntBlock()
@@ -41,30 +41,50 @@ class GeometryTables(object):
             ints = self.readIntBlock() # buffer block...        
             print "  **ints = ",ints, len(ints)
             bufferSize = ints[0]
+            print "bufferSize = ",bufferSize
         
-        self.printSection(100)
-        #ints = self.readIntBlock()
+        #data = self.getData(4*bufferWords)
+        ints = self.readIntBlock()
         #print "*ints = ",ints, len(ints)
 
         #assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
         #print "*ints = ",ints
 
-        self.readMarkers([-5,1,0])
-        markerA = self.getMarker('A')
-        markerB = self.getMarker('B')
-        if [markerA,markerB]==[0,2]:
-            self.n-=24
-            self.op2.seek(self.n)
-            return
-        print "markerA=%s  markerB=%s" %(markerA,markerB)
-        #print "bufferWords = ",bufferWords,bufferWords*4
-        self.printSection(100)
-        sys.exit('stopping on geom 1')
+        if 0:
+            self.readMarkers([-5,1,0])
+            markerA = self.getMarker('A')
+            markerB = self.getMarker('B')
+            if [markerA,markerB]==[0,2]:
+                self.n-=24
+                self.op2.seek(self.n)
+                return
+            print "markerA=%s  markerB=%s" %(markerA,markerB)
+            #print "bufferWords = ",bufferWords,bufferWords*4
+            self.printSection(100)
+            sys.exit('stopping on geom 1')
+
+        if 1:
+            iTable = -5
+            while 1:  ## @todo could this cause an infinite loop...i dont this so...
+                self.printSection(100)
+                self.readMarkers([iTable,1,0])
+
+                if self.checkForNextTable():
+                    return
+                bufferWords = self.getMarker()
+                ints = self.readIntBlock()
+                self.op2Debug.write('ints = %s\n' %(str(ints)))
+
+                #self.printSection(100)
+                iTable -= 1
+            ###
+        ###
 
 
     def readTable_Geom2(self):
-        word = self.readTableName(rewind=False) # GEOM2
-        print "tableName = |%r|" %(word)
+        tableName = self.readTableName(rewind=False) # GEOM2
+        self.tableInit(tableName)
+        print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
@@ -80,7 +100,7 @@ class GeometryTables(object):
         while 1:  ## @todo could this cause an infinite loop...i dont this so...
             self.readMarkers([iTable,1,0])
         
-            if self.checkForGeom3():
+            if self.checkForNextTable():
                 return
             bufferWords = self.getMarker()
             ints = self.readIntBlock()
@@ -95,18 +115,19 @@ class GeometryTables(object):
         sys.exit('end block of geom2...this should never happen...')
 
 
-    def checkForGeom3(self):
+    def checkForNextTable(self):
         foundTable = False
-        word = self.readTableName(rewind=True,stopOnFailure=False) # GEOM2
-        if word == 'GEOM3':
+        word = self.readTableName(rewind=True,stopOnFailure=False)
+        if word != None:
             foundTable = True
         print "geom3word = ",word
         return foundTable
 
     def readTable_Geom3(self):
         ## GEOM3
-        word = self.readTableName(rewind=False) # GEOM3
-        print "tableName = |%r|" %(word)
+        tableName = self.readTableName(rewind=False) # GEOM3
+        self.tableInit(tableName)
+        print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
@@ -154,8 +175,9 @@ class GeometryTables(object):
 
     def readTable_Geom4(self):
         # GEOM4
-        word = self.readTableName(rewind=False) # GEOM4
-        print "tableName = |%r|" %(word)
+        tableName = self.readTableName(rewind=False) # GEOM4
+        self.tableInit(tableName)
+        print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
@@ -189,9 +211,9 @@ class GeometryTables(object):
         print "------------"
 
     def readTable_EPT(self):
-        # EPT
-        word = self.readTableName(rewind=False) # EPT
-        print "word = |%r|" %(word)
+        tableName = self.readTableName(rewind=False) # EPT
+        self.tableInit(tableName)
+        print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
@@ -219,9 +241,9 @@ class GeometryTables(object):
         self.readMarkers([-5,1,0])
 
     def readTable_MPTS(self):
-        ## MPTS
-        word = self.readTableName(rewind=False) # MPTS
-        print "word = |%r|" %(word)
+        tableName = self.readTableName(rewind=False) # MPTS
+        self.tableInit(tableName)
+        print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         ints = self.readIntBlock()
@@ -249,6 +271,4 @@ class GeometryTables(object):
 
         self.readMarkers([-5,1,0])
         print "------------"
-        assert self.op2.tell()==2692,self.op2.tell()
-
 

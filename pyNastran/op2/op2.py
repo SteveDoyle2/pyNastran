@@ -32,6 +32,8 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.displacements = {}
         self.temperatures  = {}
         
+        self.eigenvectors = {}
+
         self.nonlinearTemperatures  = {}
         self.nonlinearDisplacements = {}
 
@@ -66,6 +68,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
                    self.displacements,self.temperatures,
+                   self.eigenvectors,
                    self.nonlinearTemperatures,self.nonlinearDisplacements,
                    self.forces,self.fluxes,
                    

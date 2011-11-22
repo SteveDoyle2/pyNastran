@@ -59,6 +59,7 @@ class OQG1(object):
     def readScalars(self,data,scalarObject):
         deviceCode = self.deviceCode
         while data:
+            #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
             #self.printBlock(data[32:])
             out = unpack('iiffffff',data[0:32])
@@ -68,7 +69,7 @@ class OQG1(object):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
+            scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###
         

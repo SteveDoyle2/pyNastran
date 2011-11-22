@@ -1,7 +1,7 @@
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
-class displacementObject(scalarObject): # approachCode=1, tableCode=1
+class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
         self.dt = dt
@@ -140,18 +140,8 @@ class displacementObject(scalarObject): # approachCode=1, tableCode=1
             msg += '\n'
         return msg
 
-class nonlinearDisplacementObject(scalarObject): # approachCode=10, tableCode=1
-    def __init__(self,iSubcase,loadStep):
-        scalarObject.__init__(self,iSubcase)
-        self.loadStep = loadStep
-        
-        assert loadStep>=0.
-        self.displacements = {loadStep: {}}
-        raise Exception('not implemented')
 
-#---------------------------------------------------------------------------------
-
-class temperatureObject(scalarObject): # approachCode=1, tableCode=1
+class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
         self.dt = dt
@@ -263,7 +253,10 @@ class temperatureObject(scalarObject): # approachCode=1, tableCode=1
             ###
         return msg
 
-class fluxObject(scalarObject): # approachCode=1, tableCode=3
+#---------------------------------------------------------------------------------
+#class staticFluxObj(scalarObject): # approachCode=1, tableCode=3 - whatever the static version of this is...
+
+class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
     def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
 
@@ -306,7 +299,89 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3
             msg += '\n'
         return msg
 
-class nonlinearTemperatureObject(scalarObject): # approachCode=10, tableCode=1
+#---------------------------------------------------------------------------------
+class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
+    """
+    EIGENVALUE =  6.158494E+07
+        CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+
+    POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+           1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+        2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+        2003      G      0.0            0.0            0.0            0.0            0.0            0.0
+    """
+    def __init__(self,iSubcase,eigReal):
+        scalarObject.__init__(self,iSubcase)
+        self.eigReal = int(eigReal)
+        
+        self.updateDt = self.updateEigReal
+        
+        assert eigReal>=0.
+        self.displacements = {eigReal: {}}
+        self.rotations     = {eigReal: {}}
+
+    def updateEigReal(self,eigReal):
+        """
+        this method is called if the object
+        already exits and a new time step is found
+        """
+        assert eigReal>=0.
+        self.eigReal = int(eigReal)
+        self.displacements[eigReal] = {}
+        self.rotations[eigReal] = {}
+
+    def add(self,nodeID,Type,v1,v2,v3,v4,v5,v6):
+        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        assert 0<nodeID<1000000000, msg
+        assert nodeID not in self.displacements
+
+        self.displacements[self.eigReal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[self.eigReal][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
+    def __repr__(self):
+        msg = '---EIGENVECTORS---\n'
+        #if self.eigReal is not None:
+        #    msg += 'eigReal = %g\n' %(self.eigReal)
+        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+        headerLine = '%-8s ' %('nodeID')
+        for header in headers:
+            headerLine += '%10s ' %(header)
+        headerLine += '\n'
+
+        for freq,eigVals in sorted(self.displacements.items()):
+            msg += 'eigenvalueReal = %e\n' %(freq)
+            msg += headerLine
+            for nodeID,displacement in sorted(eigVals.items()):
+                rotation = self.rotations[freq][nodeID]
+                (dx,dy,dz) = displacement
+                (rx,ry,rz) = rotation
+
+                msg += '%-8i ' %(nodeID)
+                vals = [dx,dy,dz,rx,ry,rz]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %(0)
+                    else:
+                        msg += '%10.3e ' %(val)
+                    ###
+                msg += '\n'
+            ###
+            msg += '\n'
+        return msg
+
+#---------------------------------------------------------------------------------
+
+class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
+    def __init__(self,iSubcase,loadStep):
+        scalarObject.__init__(self,iSubcase)
+        self.loadStep = loadStep
+        
+        assert loadStep>=0.
+        self.displacements = {loadStep: {}}
+        raise Exception('not implemented')
+
+class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, thermal=1
     def __init__(self,iSubcase,loadStep):
         scalarObject.__init__(self,iSubcase)
         self.loadStep = loadStep
