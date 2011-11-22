@@ -101,6 +101,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #sys.exit('op2-readTapeCode')
         self.readMarkers([3])
         ints = self.readIntBlock()
+        self.op2Debug.write('%s\n' %(str(ints)))
         #print "*ints = ",ints
         self.readMarkers([7])
 
@@ -118,6 +119,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
     def read(self):
         self.op2 = open(self.infilename,'rb')
+        self.op2Debug = open('debug.out','wb')
         
         self.n = self.op2.tell()
         print "self.n = ",self.n
@@ -233,7 +235,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         params += ['deviceCode','approachCode','tableCode''iSubcase','data','elementType']
         for param in params:
             if hasattr(self,param):
-                print '%s = %s' %(param,getattr(self,param))
+                #print '%s = %s' %(param,getattr(self,param))
                 delattr(self,param)
 
     def createTransientObject(self,storageObj,classObj,dt):
@@ -247,6 +249,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
 
     def getBufferWords(self):
         bufferWords = self.getMarker()
+        print "buffMarker = |%s|" %(bufferWords)
         print "bufferWords = ",bufferWords,bufferWords*4
         assert bufferWords >0
         return bufferWords
@@ -275,3 +278,6 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         if self.iSubcase not in self.iSubcaseNameMap:
             self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
+    def tableInit(self,word):
+        msg = '*'*20+word+'*'*20+'\n'
+        self.op2Debug.write(msg)

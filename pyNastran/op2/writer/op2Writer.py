@@ -26,8 +26,8 @@ class Op2Writer(Ougv1Writer,Oes1Writer):
         #self.writeOQG1() # spc forces
 
         #self.writeOGP()
-        #self.writeOGF()
         self.writeOUGV1() # displacements/temps/heatFlux
+        #self.writeOGF1()
         self.writeOES1()  # stress
         
     def printHeader(word,nChars):

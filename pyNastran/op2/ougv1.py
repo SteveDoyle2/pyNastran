@@ -13,6 +13,7 @@ class OUGV1(object):
     def readTable_OUG1(self):
         ## OUGV1
         tableName = self.readTableName(rewind=False) # OUGV1
+        self.tableInit(tableName)
         print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7],'OUGV1')
@@ -21,8 +22,10 @@ class OUGV1(object):
 
         self.readMarkers([-2,1,0],'OUGV1') # 7
         bufferWords = self.getMarker()
+        self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         print "1-bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
+        self.op2Debug.write('ints=%s\n' %(str(ints)))
         
         markerA = -4
         markerB = 0
@@ -65,13 +68,14 @@ class OUGV1(object):
     
     def readTable_OUGV1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
+        self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
         bufferSize, = unpack('i',data)
         data = self.getData(4*50)
         
-        #self.printBlock(data)
+        self.printBlock(data)
         
         
         aCode = self.getBlockIntEntry(data,1)
@@ -147,7 +151,6 @@ class OUGV1(object):
         #self.readMarkers([iTable,1,0])
         markerA = 4
         
-        j = 0
         while markerA>None:
             self.markerStart = copy.deepcopy(self.n)
             #self.printSection(180)
@@ -160,7 +163,7 @@ class OUGV1(object):
                 self.op2.seek(self.n)
                 break
             print "finished reading ougv1 table..."
-            markerA = self.getMarker('A')
+            markerA = self.getMarker('A',debug=False)
             self.n-=12
             self.op2.seek(self.n)
             
@@ -170,17 +173,7 @@ class OUGV1(object):
 
             #print self.plateStress[self.iSubcase]
             
-            try:
-                del self.analysisCode
-                del self.tableCode
-                del self.thermal
-                #del self.dt
-            except:
-                pass
             iTable-=1
-            if j>10000:
-                sys.exit('check...')
-            j+=1
             print "isBlockDone = ",isBlockDone
             
         print "isBlockDone = ",isBlockDone
@@ -188,7 +181,7 @@ class OUGV1(object):
 
     def readTable_OUGV1_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
-        isBlockDone = False
+        isBlockDone  = False
 
         bufferWords = self.getMarker('OUGV1')
         #print len(bufferWords)

@@ -3,10 +3,12 @@ import copy
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.resultObjects.ougv1_Objects import (
-    temperatureObject,displacementObject,
-    nonlinearTemperatureObject,
-    fluxObject,nonlinearFluxObject)
+#from pyNastran.op2.resultObjects.ougv1_Objects import (
+#    temperatureObject,displacementObject,
+#    nonlinearTemperatureObject,
+#    fluxObject,nonlinearFluxObject)
+from pyNastran.op2.resultObjects.oef_Objects import (
+    nonlinearFluxObject)
 
 class OEF(object):
     """Table of element forces"""
@@ -60,7 +62,7 @@ class OEF(object):
         ###
         self.readMarkers([iTable,1,0],'OEF')
         #self.printSection(100)
-        print str(self.obj)
+        #print str(self.obj)
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -244,11 +246,11 @@ class OEF(object):
                 #raise Exception('verify...')
                 self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
                 self.temperatureForces[self.iSubcase] = self.obj  ## @todo modify the name of this...
-                #self.readForces(data,self.obj)
+                self.readForces(data,self.obj)
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.lftsfq)
+                self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.loadStep)
                 self.nonlinearFluxes[self.iSubcase] = self.obj
                 self.readForcesNonlinear(data,self.obj)
             else:
@@ -258,14 +260,16 @@ class OEF(object):
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         
-        self.readForces(data,self.obj)
+        #self.readForces(data,self.obj)
         #print self.obj
+        del self.obj
         
         print "-------finished OEF----------"
         return (isTable4Done,isBlockDone)
 
         
     def readForces(self,data,scalarObject):
+        print "readForces..."
         #self.printBlock(data[0:self.numwide*4])
         while data:
             #print "len(data) = ",len(data)
@@ -292,10 +296,12 @@ class OEF(object):
             scalarObject.add(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             data = data[self.numwide*4:]
         ###
+        sys.exit()
         #print self.obj
         #sys.exit('check...')
 
     def readForcesNonlinear(self,data,scalarObject):
+        print "readForcesNonlinear..."
         while data:
             #print "len(data) = ",len(data)
             #self.printBlock(data[32:])
@@ -316,8 +322,8 @@ class OEF(object):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-self.deviceCode)/10
-            #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
-            print type(scalarObject)
+            #print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+            #print type(scalarObject)
             scalarObject.add(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             data = data[self.numwide*4:]
         ###

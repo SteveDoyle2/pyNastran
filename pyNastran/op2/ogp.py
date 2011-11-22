@@ -3,10 +3,10 @@ import copy
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.resultObjects.ougv1_Objects import (
-    temperatureObject,
-    nonlinearTemperatureObject,
-    fluxObject,nonlinearFluxObject)
+#from pyNastran.op2.resultObjects.ougv1_Objects import (
+#    temperatureObject,
+#    nonlinearTemperatureObject,
+#    fluxObject,nonlinearFluxObject)
 from pyNastran.op2.resultObjects.opg_Objects import appliedLoadsObject
 
 

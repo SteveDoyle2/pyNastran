@@ -76,57 +76,15 @@ class GeometryTables(object):
         word = self.readStringBlock()
         #print "word = |%r|" %(word)
 
-        self.readMarkers([-3,1,0]) # 17
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-
-        #marker = self.getMarker() # 17
-        #print "marker = ",marker
-        #self.printTableCode(marker)
-        ints = self.readIntBlock()  ## @todo do i need this...
-        #print "*ints = ",ints
-
-        self.readMarkers([-4,1,0]) # 3
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-        #assert len(ints)==37
-        
-        # these sections arent always in the op2...
-        if self.isTableDone([-5,1]):
-            print "couldnt find table 5 in GEOM2..."
-            return
-        #print "tell = ",self.op2.tell(),self.n
-
-        self.readMarkers([-5,1,0])
-        if self.checkForGeom3():
-            return
-
-        bufferWords = self.getMarker()  # 31
-        print "bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        #ints = self.readIntBlock()  ## @todo  need this for large problems....
-        #print "*ints = ",ints
-        
-        #if self.isTableDone([-6,1]):
-        #    print "couldnt find table 6 in GEOM2..."
-        #    return
-
-        self.readMarkers([-6,1,0])
-        bufferWords = self.getMarker()  # 31
-        ints = self.readIntBlock()
-
-        iTable = -7
+        iTable = -3
         while 1:  ## @todo could this cause an infinite loop...i dont this so...
             self.readMarkers([iTable,1,0])
-
+        
             if self.checkForGeom3():
                 return
             bufferWords = self.getMarker()
             ints = self.readIntBlock()
+            self.op2Debug.write('ints = %s\n' %(str(ints)))
 
             #self.printSection(100)
             iTable -= 1
