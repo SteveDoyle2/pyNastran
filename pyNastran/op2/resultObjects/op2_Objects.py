@@ -34,14 +34,14 @@ class spcForcesObject(scalarObject):
     #    print "*******add********"
     #    (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
 
-    def add(self,nodeID,v1,v2,v3,v4,v5,v6):
+    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = 'nodeID=%s' %(nodeID)
         assert 0<nodeID<1000000000,msg
         assert nodeID not in self.forces
         self.forces[ nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
         self.moments[nodeID] = array([v4,v5,v6]) # Mx,My,Mz
 
-    def addTransient(self,nodeID,v1,v2,v3,v4,v5,v6):
+    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = 'nodeID=%s' %(nodeID)
         assert 0<nodeID<1000000000,msg
         assert nodeID not in self.forces

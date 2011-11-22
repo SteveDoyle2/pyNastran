@@ -58,6 +58,7 @@ class OQG1(object):
         
     def readScalars(self,data,scalarObject):
         deviceCode = self.deviceCode
+        #print type(scalarObject)
         while data:
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
