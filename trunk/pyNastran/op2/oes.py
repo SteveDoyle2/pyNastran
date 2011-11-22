@@ -11,8 +11,10 @@ from pyNastran.op2.resultObjects.oes_Objects import (
 class OES(object):
     """Table of stresses/strains"""
     def readTable_OES1(self):
+        self.op2Debug.write("***OES table***\n")
         tableName = self.readTableName(rewind=False) # OES1X1
         print "tableName = |%r|" %(tableName)
+        self.tableInit(tableName)
 
         self.readMarkers([-1,7])
         data = self.readBlock()
@@ -61,6 +63,7 @@ class OES(object):
         #self.printSection(100)
         
         self.deleteAttributes_OES()
+        self.op2Debug.write("***end of OES table***\n")
 
     def deleteAttributes_OES(self):
         params = ['sCode','elementType','obj','iSubcase','markerStart','loadSet','fCode','numWide','sCode','thermal']
@@ -71,7 +74,11 @@ class OES(object):
         
         data = self.getData(4)
         bufferSize, = unpack('i',data)
+        self.op2Debug.write('bufferSize=|%s|\n' %(str(bufferSize)))
+
         data = self.getData(4*50)
+        self.printBlock(data)
+        self.op2Debug.write('block3header\n')
 
         self.parseApproachCode(data)
         
@@ -195,10 +202,12 @@ class OES(object):
         #self.printSection(100)
 
         data = self.getData(16)
+        self.printBlock(data)
         #print "16 block..."
         #self.printBlock(data)
         #self.printBlock(data)
         bufferWords, = unpack('i',data[4:8])
+        self.op2Debug.write('bufferWords=|%s|\n' %(str(bufferWords)))
 
         print "*********************"
         #bufferWords = self.getMarker() # 87 - buffer
@@ -221,8 +230,9 @@ class OES(object):
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
         self.data = self.getData(bufferWords*4)
+        self.op2Debug.write('reading big data block\n')
         #print "self.n = ",self.n
-        #self.printBlock(data)
+        #self.printBlock(self.data)
 
         #stressStrainObj = self.instatiateStressStrainObject()
         self.readElementTable()

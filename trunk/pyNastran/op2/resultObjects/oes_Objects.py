@@ -72,7 +72,7 @@ class plateStrainObject(scalarObject):
 
     def __repr__(self):
         msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = ['exx','eyy','ezz','exy','eyz','exz','evm']
+        headers = ['exx','eyy','exy','eMajor','eMinor','evm']
         msg += '%-6s %6s %8s %7s ' %('EID','eType','nodeID','iLayer')
         for header in headers:
             msg += '%10s ' %(header)
@@ -92,7 +92,7 @@ class plateStrainObject(scalarObject):
                     evm = self.evm[eid][nid][iLayer]
                     
                     msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
-                    vals = [exx,eyy,ezz,exy,eyz,exz,evm]
+                    vals = [exx,eyy,exy,major,minor,evm]
                     for val in vals:
                         if abs(val)<1e-6:
                             msg += '%10s ' %('0.')

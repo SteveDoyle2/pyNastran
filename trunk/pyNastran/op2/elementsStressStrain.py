@@ -3,6 +3,7 @@ from struct import unpack
 
 class ElementsStressStrain(object):
     def CROD_1(self,stress): # works
+        self.op2Debug.write('---CROD_1---\n')
         deviceCode = self.deviceCode
         while len(self.data)>=20:
             #self.printSection(40)
@@ -10,7 +11,9 @@ class ElementsStressStrain(object):
             self.data = self.data[20: ]
             #print "len(data) = ",len(eData)
 
-            (eid,axial,axialMS,torsion,torsionMS) = unpack('iffff',eData)
+            out = unpack('iffff',eData)
+            (eid,axial,axialMS,torsion,torsionMS) = out
+            self.op2Debug.write('%s\n' %(str(out)))
             eid = (eid - deviceCode) / 10
             stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
 
@@ -23,6 +26,7 @@ class ElementsStressStrain(object):
         print "done with CROD-1"
 
     def CBEAM_2(self,stress): # not tested; CBEAM class not written
+        self.op2Debug.write('---BEAM_2---\n')
         deviceCode = self.deviceCode
         nNodes = 11
         while len(self.data)>=20:
@@ -31,14 +35,18 @@ class ElementsStressStrain(object):
             self.data = self.data[44: ]
             #print "len(data) = ",len(eData)
 
-            (eid,nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = struct.unpack('iifffffffff', eData)
+            out = struct.unpack('iifffffffff', eData)
+            (eid,nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
+            self.op2Debug.write('%s\n' %(str(out)))
             eid = (eid - deviceCode) / 10
             stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
             
             for iNode in range(nNodes):
                 eData     = self.data[0:40]
                 self.data = self.data[40: ]
-                (nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = struct.unpack('iifffffffff', eData)
+                out = struct.unpack('iifffffffff', eData)
+                (nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
+                self.op2Debug.write('%s\n' %(str(out)))
                 stress.add(eid,axial,axialMS,torsion,torsionMS)
 
             print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
@@ -55,6 +63,7 @@ class ElementsStressStrain(object):
         print "done with CBEAM-2"
 
     def CBAR_34(self,stress):
+        self.op2Debug.write('---CBAR_34---\n')
         deviceCode = self.deviceCode
         #print "len(data) = ",len(self.data)
         while len(self.data)>=64:
@@ -88,6 +97,7 @@ class ElementsStressStrain(object):
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
         """
+        self.op2Debug.write('---CTRIA3_74---\n')
         deviceCode = self.deviceCode
         #self.printSection(20)
         #term      = self.data[0:4] CEN/
@@ -106,6 +116,7 @@ class ElementsStressStrain(object):
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             stress.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             stress.add(               eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            self.op2Debug.write('%s\n' %(str(out)))
 
             #print "len(data) = ",len(data)
 
@@ -117,6 +128,7 @@ class ElementsStressStrain(object):
         """
         stress is extracted at the centroid
         """
+        self.op2Debug.write('---CTETRA_39---\n')
         deviceCode = self.deviceCode
         nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
@@ -134,7 +146,9 @@ class ElementsStressStrain(object):
                 eData     = self.data[0:4*11]
                 self.data = self.data[4*11: ]
 
-                (grid,sxx,txy,s1,vm,syy,txy,s2,szz,txz,s3) = unpack('iffffffffff',eData)
+                out = unpack('iffffffffff',eData)
+                (grid,sxx,txy,s1,vm,syy,txy,s2,szz,txz,s3) = out
+                self.op2Debug.write('%s\n' %(str(out)))
                 print "eid=%s grid=%s s1=%i s2=%i s3=%s" %(eid,grid,s1,s2,s3)
                 sys.exit('CTETRA_39')
                 smax = max(s1,s2,s3)
@@ -158,6 +172,7 @@ class ElementsStressStrain(object):
         """
         stress is extracted at the centroid
         """
+        self.op2Debug.write('---CSOLID_67---\n')
         print "starting solid element..."
         deviceCode = self.deviceCode
         #nNodes = 5 # 1 centroid + 4 corner points
@@ -173,7 +188,9 @@ class ElementsStressStrain(object):
             self.data = self.data[16:]
             #self.printBlock(eData)
 
-            (eid,cid,a,b,c,d,nNodes) = unpack("iissssi",eData)
+            out = unpack("iissssi",eData)
+            (eid,cid,a,b,c,d,nNodes) = out
+            self.op2Debug.write('%s\n' %(str(out)))
             #print "abcd = |%s|" %(a+b+c+d)
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
@@ -214,6 +231,7 @@ class ElementsStressStrain(object):
                 ###
 
                 out = unpack('ffffffffffffffffffff',eData[4:4*21])  ## @warning this could be a bug...
+                self.op2Debug.write('%s\n' %(str(out)))
                 (sxx,sxy,s1,a1,a2,a3,pressure,svm,
                  syy,syz,s2,b1,b2,b3,
                  szz,sxz,s3,c1,c2,c3) = out
@@ -263,6 +281,7 @@ class ElementsStressStrain(object):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
+        self.op2Debug.write('---CQUAD4_95---\n')
         print "getting a composite element..."
         deviceCode = self.deviceCode
         eType = self.ElementType(self.elementType)
@@ -277,6 +296,7 @@ class ElementsStressStrain(object):
             eData     = self.data[0:4*11]
             self.data = self.data[4*11: ]
             out = unpack('iifffffffff',eData)
+            self.op2Debug.write('%s\n' %(str(out)))
             (eid,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
             eid = (eid - deviceCode) / 10  ## @todo adjust with deviceCode...
             stress.addNewEid(eType,eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
@@ -292,6 +312,7 @@ class ElementsStressStrain(object):
                 out = unpack('iifffffffff',eData)
                 
                 (eid2,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
+                self.op2Debug.write('%s\n' %(str(out)))
                 eid2 = (eid2 - deviceCode) / 10  ## @todo adjust with deviceCode...
                 if eid2!=eid:
                     eid = eid2
@@ -323,6 +344,7 @@ class ElementsStressStrain(object):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
+        self.op2Debug.write('---CQUAD4_144---\n')
         deviceCode = self.deviceCode
         nNodes = 4 # centroid + 4 corner points
         #self.printSection(20)
@@ -338,6 +360,7 @@ class ElementsStressStrain(object):
             eData     = self.data[0:4*17]
             self.data = self.data[4*17: ]
             out = unpack('iffffffffffffffff',eData[0:68])  # 17
+            self.op2Debug.write('%s\n' %(str(out)))
             (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                   fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
             grid = 'C'
@@ -348,6 +371,7 @@ class ElementsStressStrain(object):
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
                 out = unpack('iffffffffffffffff',eData[0:68])
+                self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                       fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
 

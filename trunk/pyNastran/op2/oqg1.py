@@ -6,6 +6,7 @@ class OQG1(object):
     def readTable_OQG1(self):
         ## OQG1
         word = self.readTableName(rewind=False) # OQG1
+        self.tableInit(word)
         print "word = |%r|" %(word)
 
         self.readMarkers([-1,7])
@@ -50,19 +51,22 @@ class OQG1(object):
         self.readMarkers([iTable-1,1,0])  # iTable=-4
         wordCount = self.getMarker()
         data = self.readBlock()
-        #self.printBlock(data)
+        self.printBlock(data)
 
         self.spcForces[self.iSubcase] = spcForcesObject(self.iSubcase)
         self.readScalars(data,self.spcForces[self.iSubcase])
         
     def readScalars(self,data,scalarObject):
+        deviceCode = self.deviceCode
         while data:
             #print "len(data) = ",len(data)
             #self.printBlock(data[32:])
-            (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = unpack('iiffffff',data[0:32])
+            out = unpack('iiffffff',data[0:32])
+            (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
+            self.op2Debug.write('%s\n' %(str(out)))
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
-            grid = (gridDevice-self.deviceCode)/10
+            grid = (gridDevice-deviceCode)/10
             #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,dx,dy,dz,rx,ry,rz)
             data = data[32:]
