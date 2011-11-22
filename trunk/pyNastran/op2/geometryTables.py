@@ -44,13 +44,13 @@ class GeometryTables(object):
             print "bufferSize = ",bufferSize
         
         #data = self.getData(4*bufferWords)
-        ints = self.readIntBlock()
+        #ints = self.readIntBlock()
         #print "*ints = ",ints, len(ints)
 
         #assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
         #print "*ints = ",ints
 
-        if 0:
+        if 1:
             self.readMarkers([-5,1,0])
             markerA = self.getMarker('A')
             markerB = self.getMarker('B')
@@ -63,7 +63,7 @@ class GeometryTables(object):
             self.printSection(100)
             sys.exit('stopping on geom 1')
 
-        if 1:
+        if 0:
             iTable = -5
             while 1:  ## @todo could this cause an infinite loop...i dont this so...
                 self.printSection(100)

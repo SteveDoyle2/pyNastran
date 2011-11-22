@@ -52,7 +52,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def add(self,nodeID,v1,v2,v3,v4,v5,v6):
+    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
         assert nodeID not in self.displacements
@@ -61,7 +61,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def addTransient(self,nodeID,v1,v2,v3,v4,v5,v6):
+    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
         assert nodeID not in self.displacements
@@ -179,12 +179,12 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         assert nodeID not in self.temperatures
         self.temperatures[nodeID] = v1
 
-    def add(self,nodeID,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+    def add(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         assert nodeID not in self.temperatures
         self.temperatures[nodeID] = v1
 
-    def addTransient(self,nodeID,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+    def addTransient(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         assert nodeID not in self.temperatures
         self.temperatures[self.dt][nodeID] = v1
@@ -267,7 +267,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
             raise Exception('transient not supported for flux yet...')
         
 
-    def add(self,nodeID,v1,v2,v3,v4=None,v5=None,v6=None):
+    def add(self,nodeID,gridType,v1,v2,v3,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         assert nodeID not in self.fluxes
         self.fluxes[nodeID] = array([v1,v2,v3])
@@ -317,6 +317,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         self.updateDt = self.updateEigReal
         
         assert eigReal>=0.
+        self.gridTypes = {}
         self.displacements = {eigReal: {}}
         self.rotations     = {eigReal: {}}
 
@@ -330,11 +331,19 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         self.displacements[eigReal] = {}
         self.rotations[eigReal] = {}
 
-    def add(self,nodeID,Type,v1,v2,v3,v4,v5,v6):
+    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
         assert nodeID not in self.displacements
 
+        if gridType==0:
+            Type = 'S'
+        elif gridType==1:
+            Type = 'G'
+        else:
+            raise Exception('invalid grid type,,,')
+
+        self.gridTypes[nodeID] = Type
         self.displacements[self.eigReal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.eigReal][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
     ###
@@ -344,7 +353,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         #if self.eigReal is not None:
         #    msg += 'eigReal = %g\n' %(self.eigReal)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        headerLine = '%-8s ' %('nodeID')
+        headerLine = '%-8s %8s ' %('nodeID','GridType',)
         for header in headers:
             headerLine += '%10s ' %(header)
         headerLine += '\n'
@@ -354,16 +363,17 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             msg += headerLine
             for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[freq][nodeID]
+                Type = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
-                msg += '%-8i ' %(nodeID)
+                msg += '%-8i %8s ' %(nodeID,Type)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
                         msg += '%10s ' %(0)
                     else:
-                        msg += '%10.3e ' %(val)
+                        msg += '%10.3g ' %(val)
                     ###
                 msg += '\n'
             ###
@@ -398,7 +408,7 @@ class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, t
         self.loadStep = loadStep
         self.temperatures[loadStep] = {}
 
-    def add(self,nodeID,v1,v2,v3,v4,v5,v6): # addTransient
+    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6): # addTransient
         #msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
         msg = "nodeID=%s v1=%s" %(nodeID,v1)
         #print msg

@@ -15,8 +15,7 @@ from oef   import OEF
 from ogp   import OGP
 
 
-
-class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OES,OEF,OGP):
+class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,DYNAMICS,OUGV1,OEF,OGP,OES):
     def __init__(self,infileName): 
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
