@@ -276,6 +276,7 @@ class FortranFile(object):
     def goto(self,n):
         #print "goto n = |%s|" %(n)
         assert n>0
+        self.n = n
         self.op2.seek(n)
 
     def readBlock(self):

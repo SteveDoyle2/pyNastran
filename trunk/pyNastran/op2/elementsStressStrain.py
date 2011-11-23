@@ -12,16 +12,27 @@ class ElementsStressStrain(object):
             - [4,4,x,4] where x is the next buffer size, which may have another buffer
         the end of the final buffer block has
             - nothing!
+        
+        The code knows that the large buffer is the default size and the
+        only way there will be a smaller buffer is if there are no more
+        buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
+        this end shift.  An extra marker value is read, but no big deal.
         Beyond that it's just appending some data to the binary string
         and calling the function that's passed in
         """
-        if len(self.data)>=4:
-            self.skip(4)
-        ###
+        #print stress
+        print "len(data) = ",len(self.data)
+        marker = self.readInts(1)
+        print "marker = ",marker
+        #if marker[0]==4:
+        #    print "found a 4 - end of unbuffered table"
+
         if len(self.data)>0:
-            print "*******len(self.data)=%s...assuming a buffer block"
+            print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
             markers = self.readHeader()
             data = self.readBlock()
+            if len(data)<marker:
+                self.goto(self.n-4) # handles last buffer not having an extra 4
             self.data += data
             func(stress)
         ###
