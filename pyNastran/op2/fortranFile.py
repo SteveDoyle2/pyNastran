@@ -17,7 +17,7 @@ class FortranFile(object):
     def readHollerith(self):
         self.skip(4)  # weird hollerith
         
-    def readHeader(self,expected,debug=True):
+    def readHeader(self,expected=None,debug=True):
         """
         a header is defined as (4,i,4), where i is an integer
         """
@@ -28,7 +28,8 @@ class FortranFile(object):
         #self.n += 12*4
         
         if len(ints)==5:
-            print "   might be a buffer block..."
+            print "   buffer block..."
+            self.hasBuffer = True
             ints = self.readFullIntBlock()
             if debug:
                 self.op2Debug.write('bufferBlcok = |%s|\n' %(str(ints)))
