@@ -15,7 +15,7 @@ from oef   import OEF
 from ogp   import OGP
 
 
-class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,DYNAMICS,OUGV1,OEF,OGP,OES):
+class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OEF,OGP,OES):
     def __init__(self,infileName): 
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
@@ -102,6 +102,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,DYNAMICS
         #self.printSection(500)
         #sys.exit('op2-readTapeCode')
         self.readMarkers([3])
+        self.printSection(20)
         ints = self.readIntBlock()
         self.op2Debug.write('%s\n' %(str(ints)))
         #print "*ints = ",ints
