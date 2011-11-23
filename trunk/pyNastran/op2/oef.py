@@ -7,6 +7,9 @@ from struct import unpack
 #    temperatureObject,displacementObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
+
+from pyNastran.op2.resultObjects.ougv1_Objects import (
+    temperatureObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
 
@@ -296,7 +299,6 @@ class OEF(object):
             scalarObject.add(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             data = data[self.numwide*4:]
         ###
-        sys.exit()
         #print self.obj
         #sys.exit('check...')
 
@@ -330,32 +332,3 @@ class OEF(object):
         #print self.obj
         #sys.exit('check...')
         
-    def isDisplacement(self):
-        if self.approachCode==1 and self.thermal==0:
-            return True
-        return False
-
-    def isTransientDisplacement(self):
-        if self.approachCode==6 and self.sortCode==0 and self.thermal==0:
-            return True
-        return False
-
-    def isTemperature(self):
-        if self.approachCode==1 and self.sortCode==0 and self.thermal==1:
-            return True
-        return False
-
-    def isTransientTemperature(self):
-        if self.approachCode==6 and self.sortCode==0 and self.thermal==1:
-            return True
-        return False
-
-    def isForces(self):
-        if(approachCode==1 and self.sortCode==1 and self.thermal==0):
-            return True
-        return False
-
-    def isFluxes(self):
-        if(self.approachCode==1 and self.sortCode==1 and self.thermal==1):
-            return True
-        return False

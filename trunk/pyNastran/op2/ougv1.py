@@ -189,7 +189,7 @@ class OUGV1(object):
 
         bufferWords = self.getMarker('OUGV1')
         #print len(bufferWords)
-        data = self.readBlock()
+        self.data = self.readBlock()
         #self.printBlock(data)
 
         if bufferWords==146:  # table -4 is done, restarting table -3
@@ -260,38 +260,9 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars(data,self.obj)
+        self.readScalars(self.obj)
         #print self.obj
         
         print "-------finished OUGV1----------"
         return (isTable4Done,isBlockDone)
 
-    def isDisplacement(self):
-        if self.approachCode==1 and self.thermal==0:
-            return True
-        return False
-
-    def isTransientDisplacement(self):
-        if self.approachCode==6 and self.sortCode==0 and self.thermal==0:
-            return True
-        return False
-
-    def isTemperature(self):
-        if self.approachCode==1 and self.sortCode==0 and self.thermal==1:
-            return True
-        return False
-
-    def isTransientTemperature(self):
-        if self.approachCode==6 and self.sortCode==0 and self.thermal==1:
-            return True
-        return False
-
-    def isForces(self):
-        if(approachCode==1 and self.sortCode==1 and self.thermal==0):
-            return True
-        return False
-
-    def isFluxes(self):
-        if(self.approachCode==1 and self.sortCode==1 and self.thermal==1):
-            return True
-        return False

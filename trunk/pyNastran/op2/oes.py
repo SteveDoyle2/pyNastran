@@ -488,37 +488,3 @@ class OES(object):
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
 
-    def isStatics(self):
-        if self.approachCode==1 and self.tableCode==1:
-            return True
-        return False
-
-    def isTransient(self):
-        if self.approachCode==6 and self.tableCode==1:
-            return True
-        return False
-
-    def isNonlinearStatics(self):
-        if self.approachCode==10 and self.tableCode==1:
-            return True
-        return False
-
-    def isStress(self):
-        if self.sCode==1:
-            return True
-        return False
-
-    def isStrain(self):
-        if self.sCode==0:
-            return True
-        return False
-    
-    def isStaticStress(self):
-        if self.isStatics() and self.isStress():
-            return True
-        return False
-
-    def isStaticStrain(self):
-        if self.isStatics() and self.isStrain():
-            return True
-        return False

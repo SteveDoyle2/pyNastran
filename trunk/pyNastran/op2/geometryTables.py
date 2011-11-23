@@ -32,25 +32,27 @@ class GeometryTables(object):
         #    ints = ints[6:]
         #    print "coord1 = ",coord1
 
-        self.readMarkers([-4,1,0])  #3
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        
-        if bufferWords==3:
-            print "maybe a buffer block..."
-            ints = self.readIntBlock() # buffer block...        
-            print "  **ints = ",ints, len(ints)
-            bufferSize = ints[0]
-            print "bufferSize = ",bufferSize
-        
-        #data = self.getData(4*bufferWords)
-        #ints = self.readIntBlock()
-        #print "*ints = ",ints, len(ints)
 
-        #assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
-        #print "*ints = ",ints
+        if 0:
+            self.readMarkers([-4,1,0])  #3
+            bufferWords = self.getMarker()
+            print "bufferWords = ",bufferWords,bufferWords*4
 
-        if 1:
+            if bufferWords==3:
+                print "maybe a buffer block..."
+                ints = self.readIntBlock() # buffer block...
+                print "  **ints = ",ints, len(ints)
+                bufferSize = ints[0]
+                print "bufferSize = ",bufferSize
+
+            #data = self.getData(4*bufferWords)
+            #ints = self.readIntBlock()
+            #print "*ints = ",ints, len(ints)
+
+            #assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
+            #print "*ints = ",ints
+
+            self.printSection(220)
             self.readMarkers([-5,1,0])
             markerA = self.getMarker('A')
             markerB = self.getMarker('B')
@@ -63,8 +65,8 @@ class GeometryTables(object):
             self.printSection(100)
             sys.exit('stopping on geom 1')
 
-        if 0:
-            iTable = -5
+        if 1:
+            iTable = -4
             while 1:  ## @todo could this cause an infinite loop...i dont this so...
                 self.printSection(100)
                 self.readMarkers([iTable,1,0])
