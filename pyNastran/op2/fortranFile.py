@@ -426,6 +426,7 @@ class FortranFile(object):
         @todo fix bugs
         """
         tableName = self.readTableName(rewind=False) # GEOM1
+        self.tableInit(tableName)
         print "skippingTable |%s|" %(tableName)
         print "self.n = ",self.n
 
