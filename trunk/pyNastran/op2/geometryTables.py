@@ -2,8 +2,40 @@ import os
 import sys
 import struct
 from struct import unpack
+from op2Errors import *
+
+class GeomObj(object):
+    def __init__(self):
+        pass
+    def geomFunc(self,data):
+        pass
 
 class GeometryTables(object):
+
+    def checkForNextTable(self):
+        foundTable = False
+        word = self.readTableName(rewind=True,stopOnFailure=False)
+        if word != None:
+            foundTable = True
+        #print "geomWord = ",word
+        return foundTable
+
+    def checkForNextSubTable(self,n):
+        foundSubTable = False
+        #print "tell = ",self.op2.tell()
+        
+        try:
+            nOld = self.op2.tell()
+            self.readMarkers([n,1,0])
+            foundSubTable=True
+            print "subtable :) = ",foundSubTable
+        except InvalidMarkerError:
+            foundSubTable = False
+        ###
+        self.n = nOld
+        self.op2.seek(self.n)
+
+        return foundSubTable
 
     def readTable_Geom1(self):
         tableName = self.readTableName(rewind=False) # GEOM1
@@ -19,69 +51,75 @@ class GeometryTables(object):
         print "bufferWords = ",bufferWords,bufferWords*4
         word = self.readStringBlock()
 
-        self.readMarkers([-3,1,0])
-        marker = self.getMarker() # 35,315,1571
-        print "marker = ",marker
-        #self.printTableCode(marker)
+        # table -3
+        (tableName,isNextTable,isNextSubTable) = self.readGeom1SubTable(-3)
+        print "*"*80
+
         
+        # table -4
+        (tableName,isNextTable,isNextSubTable) = self.readGeom1SubTable(-4)
+        print "*"*80
+
+        # table -5
+        self.readMarkers([-5,1,0])
+        tableName = self.readTableName(rewind=True,stopOnFailure=False)
+        #print "*tableName = |%r|" %(tableName)
+        if tableName:
+            assert tableName=='GEOM2'
+            #sys.exit('successTable5')
+            print 'endTable5'
+            return
+
+        #self.printSection(220)
+        marker = self.getMarker()
+        print "marker = ",marker
         ints = self.readIntBlock()
-        #print "*ints = ",ints, len(ints)
 
-        #while ints:  ## @todo is this correct???
-        #    coord1 = ints[:6]
-        #    ints = ints[6:]
-        #    print "coord1 = ",coord1
+        isNextTable = self.checkForNextTable()
+        isNextSubTable = self.checkForNextSubTable(-6)
+        print "tell=%s isNextTable=%s isNextSubTable=%s" %(self.op2.tell(),isNextTable,isNextSubTable)
+        self.readMarkers([-6,1,0])
 
 
-        if 0:
-            self.readMarkers([-4,1,0])  #3
-            bufferWords = self.getMarker()
-            print "bufferWords = ",bufferWords,bufferWords*4
+        tableName = self.readTableName(rewind=True,stopOnFailure=False)
+        print "*tableName = |%r|" %(tableName)
+        assert tableName=='GEOM2'
 
-            if bufferWords==3:
-                print "maybe a buffer block..."
-                ints = self.readIntBlock() # buffer block...
-                print "  **ints = ",ints, len(ints)
-                bufferSize = ints[0]
-                print "bufferSize = ",bufferSize
+        #self.printSection(220)
+        #sys.exit('successTable6')
+        print 'endTable6'
 
-            #data = self.getData(4*bufferWords)
-            #ints = self.readIntBlock()
-            #print "*ints = ",ints, len(ints)
 
-            #assert len(ints)==bufferWords,'len(ints)=%s bufferWords=%s' %(len(ints),bufferWords)
-            #print "*ints = ",ints
 
-            self.printSection(220)
-            self.readMarkers([-5,1,0])
-            markerA = self.getMarker('A')
-            markerB = self.getMarker('B')
-            if [markerA,markerB]==[0,2]:
-                self.n-=24
-                self.op2.seek(self.n)
-                return
-            print "markerA=%s  markerB=%s" %(markerA,markerB)
-            #print "bufferWords = ",bufferWords,bufferWords*4
-            self.printSection(100)
-            sys.exit('stopping on geom 1')
+    def readGeom1SubTable(self,iTable):
+        i=0
+        isNextTable=False
+        isNextSubTable=False
+        self.readMarkers([iTable,1,0])
 
-        if 1:
-            iTable = -4
-            while 1:  ## @todo could this cause an infinite loop...i dont this so...
-                self.printSection(100)
-                self.readMarkers([iTable,1,0])
+        tableName = self.readTableName(rewind=True,stopOnFailure=False)
+        if tableName:
+            print "**tableName = |%r|" %(tableName)
+            return tableName,isNextTable,isNextSubTable
 
-                if self.checkForNextTable():
-                    return
-                bufferWords = self.getMarker()
-                ints = self.readIntBlock()
-                self.op2Debug.write('ints = %s\n' %(str(ints)))
+        while isNextSubTable==False and isNextTable==False:
+            #print self.printSection(100)
+            marker = self.getMarker()
+            #print "marker = ",marker
+            if marker<0:
+                msg = 'marker is less than 0...'
+                raise Exception(msg)
+            data = self.readBlock()
 
-                #self.printSection(100)
-                iTable -= 1
-            ###
-        ###
-
+            isNextTable = self.checkForNextTable()
+            isNextSubTable = self.checkForNextSubTable(iTable-1)
+            print "i=%s tell=%s isNextTable=%s isNextSubTable=%s" %(i,self.op2.tell(),isNextTable,isNextSubTable)
+            print "---------------"
+            #if i==13:
+            #    sys.exit('stopA')
+            i+=1
+        ### while
+        return (tableName,isNextTable,isNextSubTable)
 
     def readTable_Geom2(self):
         tableName = self.readTableName(rewind=False) # GEOM2
@@ -116,14 +154,6 @@ class GeometryTables(object):
         self.printSection(100)
         sys.exit('end block of geom2...this should never happen...')
 
-
-    def checkForNextTable(self):
-        foundTable = False
-        word = self.readTableName(rewind=True,stopOnFailure=False)
-        if word != None:
-            foundTable = True
-        print "geom3word = ",word
-        return foundTable
 
     def readTable_Geom3(self):
         ## GEOM3
