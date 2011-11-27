@@ -51,7 +51,7 @@ class OQG1(object):
         self.readMarkers([iTable-1,1,0])  # iTable=-4
         wordCount = self.getMarker()
         self.data = self.readBlock()
-        self.printBlock(self.data)
+        #self.printBlock(self.data)
 
         self.spcForces[self.iSubcase] = spcForcesObject(self.iSubcase)
         self.readScalars(self.spcForces[self.iSubcase])
@@ -60,10 +60,12 @@ class OQG1(object):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-        while data:
+        while len(data)>=32:
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
             #self.printBlock(data[32:])
+            msg = 'len(data)=%s\n'%(len(data))
+            assert len(data)>=32,msg+self.printSection(120)
             out = unpack('iiffffff',data[0:32])
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
             self.op2Debug.write('%s\n' %(str(out)))
@@ -75,6 +77,7 @@ class OQG1(object):
             data = data[32:]
         ###
         self.data = data
+        #print self.printSection(200)
         self.handleScalarBuffer(self.readScalars,scalarObject)
 
     def handleScalarBuffer(self,func,stress):
@@ -98,10 +101,20 @@ class OQG1(object):
         print "len(data) = ",len(self.data)
         #if marker[0]==4:
         #    print "found a 4 - end of unbuffered table"
+        
+        nOld = self.n
+        markers = self.readHeader()
+        #print "markers = ",markers
+        if markers<0:
+            self.goto(nOld)
+            print self.printSection(120)
+            #sys.exit('found a marker')
+            print 'found a marker'
 
-        if len(self.data)>0:
+        else:
             print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
-            markers = self.readHeader()
+            #markers = self.readHeader()
+            #print "markers = ",markers
             data = self.readBlock()
             #if len(data)<marker:
             #    self.goto(self.n-4) # handles last buffer not having an extra 4

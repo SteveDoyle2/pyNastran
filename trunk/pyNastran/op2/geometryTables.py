@@ -52,12 +52,12 @@ class GeometryTables(object):
         word = self.readStringBlock()
 
         # table -3
-        (tableName,isNextTable,isNextSubTable) = self.readGeom1SubTable(-3)
+        (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(-3)
         print "*"*80
 
         
         # table -4
-        (tableName,isNextTable,isNextSubTable) = self.readGeom1SubTable(-4)
+        (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(-4)
         print "*"*80
 
         # table -5
@@ -90,8 +90,7 @@ class GeometryTables(object):
         print 'endTable6'
 
 
-
-    def readGeom1SubTable(self,iTable):
+    def readGeomSubTable(self,iTable):
         i=0
         isNextTable=False
         isNextSubTable=False
@@ -138,13 +137,15 @@ class GeometryTables(object):
 
         iTable = -3
         while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            self.readMarkers([iTable,1,0])
+            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
+
+            #self.readMarkers([iTable,1,0])
         
             if self.checkForNextTable():
                 return
-            bufferWords = self.getMarker()
-            ints = self.readIntBlock()
-            self.op2Debug.write('ints = %s\n' %(str(ints)))
+            #bufferWords = self.getMarker()
+            #ints = self.readIntBlock()
+            #self.op2Debug.write('ints = %s\n' %(str(ints)))
 
             #self.printSection(100)
             iTable -= 1
