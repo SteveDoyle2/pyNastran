@@ -102,7 +102,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.printSection(500)
         #sys.exit('op2-readTapeCode')
         self.readMarkers([3])
-        self.printSection(20)
+        #self.printSection(20)
         ints = self.readIntBlock()
         self.op2Debug.write('%s\n' %(str(ints)))
         #print "*ints = ",ints
@@ -138,7 +138,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                 isAnotherTable = False
                 print "***ok exit, but it could be better..."
                 break
-            except AssertionError:  # the isAnotherTable method sucks...
+            except InvalidMarkerError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 print "***poor exit, but it worked..."
                 break

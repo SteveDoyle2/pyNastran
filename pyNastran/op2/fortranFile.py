@@ -37,7 +37,9 @@ class FortranFile(object):
         elif len(ints)==0:
             return None
         
-        assert ints[0]==ints[2]==4,"header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
+        assert ints[0]==ints[2]==4, "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
+        #if not(ints[0]==ints[2]==4):
+        #    raise InvalidMarkerError("header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected))
         if debug:
             self.op2Debug.write('[4,%s,4]\n' %(ints[1]))
         return ints[1]
@@ -161,7 +163,7 @@ class FortranFile(object):
         ints    = self.getInts(data)
         #longs   = self.getLongs(data)
         floats  = self.getFloats(data)
-        doubles = self.getDoubles(data)
+        #doubles = self.getDoubles(data)
         strings = self.getStrings(data)
         print "ints    = ",ints
         #print "longs   = ",longs
@@ -169,12 +171,15 @@ class FortranFile(object):
         #print "doubles = ",doubles
         print "strings = |%r|" %(''.join(strings))
         print "nWords = ",len(data)/4
+        print "tell   = ",self.op2.tell()
 
     def getData(self,n):
         """
         gets a data set of length N
         """
-        assert n>0
+        if n<=0:
+            raise ZeroBufferError()
+
         #assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
         data = self.op2.read(n)
         self.n+=n
@@ -230,7 +235,7 @@ class FortranFile(object):
     def readMarker(self,expected=None):
         return self.getMarker(expected)
         
-    def readMarkers(self,markers,tableName=None,debug=False):
+    def readMarkers(self,markers,tableName=None,debug=False,printErrorOnFailure=True):
         """
         reads a set of predefined markers e.g. [-4,1,0]
         and makes sure it is correct
@@ -239,7 +244,12 @@ class FortranFile(object):
             tableCode = self.readHeader(marker,debug)
             if tableCode==None:
                 return
-            assert marker==tableCode,'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
+            if marker!=tableCode:
+                msg = ''
+                if printErrorOnFailure:
+                    msg = 'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
+                raise InvalidMarkerError(msg)
+            ###
         ###
         msg = ''
         for i in markers:
