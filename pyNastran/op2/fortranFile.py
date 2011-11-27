@@ -160,18 +160,20 @@ class FortranFile(object):
         prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
         """
+        msg = ''
         ints    = self.getInts(data)
         #longs   = self.getLongs(data)
         floats  = self.getFloats(data)
         #doubles = self.getDoubles(data)
         strings = self.getStrings(data)
-        print "ints    = ",ints
-        #print "longs   = ",longs
-        print "floats  = ",floats
-        #print "doubles = ",doubles
-        print "strings = |%r|" %(''.join(strings))
-        print "nWords = ",len(data)/4
-        print "tell   = ",self.op2.tell()
+        msg += "ints    = %s\n" %(str(ints))
+        #msg += "longs  = %s\n" %(longs)
+        msg += "floats  = %s\n" %(str(floats))
+        #msg += "doubles = %s\n" %(doubles)
+        msg += "strings = |%r|\n" %(''.join(strings))
+        msg += "nWords  = %s\n" %(len(data)/4)
+        msg += "tell    = %s\n" %(self.op2.tell())
+        return msg
 
     def getData(self,n):
         """
@@ -199,8 +201,9 @@ class FortranFile(object):
         prints data, but doesn't move the cursor
         """
         data = self.op2.read(nBytes)
-        self.printBlock(data)
+        msg = self.printBlock(data)
         self.op2.seek(self.n)
+        return msg
     
     def skip(self,n):
         """skips nBits"""
