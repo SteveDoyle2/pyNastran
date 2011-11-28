@@ -562,6 +562,92 @@ class barStressObject(scalarObject):
         return msg
 
 
+class barStrainObject(scalarObject):
+    """
+                               S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
+    ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
+      ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
+    """
+    def __init__(self,iSubcase):
+        scalarObject.__init__(self,iSubcase)
+        self.eType = {}
+        self.e1 = {}
+        self.e2 = {}
+        self.e3 = {}
+        self.e4 = {}
+        self.axial = {}
+        self.emax = {}
+        self.emin = {}
+        #self.MS_tension = {}
+        #self.MS_compression = {}
+
+    def addNewEid(self,eType,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
+                                 e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
+        #print "Bar Stress add..."
+        self.eType[eid] = eType
+        self.e1[eid] = [e1a,e1b]
+        self.e2[eid] = [e2a,e2b]
+        self.e3[eid] = [e3a,e3b]
+        self.e4[eid] = [e4a,e4b]
+        self.axial[eid] = axial
+        self.emax[eid] = [emaxa,emaxb]
+        self.emin[eid] = [emina,eminb]
+        #self.MS_tension[eid]     = MSt
+        #self.MS_compression[eid] = MSc
+
+        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        #print msg
+        #if nodeID==0: raise Exception(msg)
+
+    def __repr__(self):
+        msg = '---BAR STRAIN---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['e1','e2','e3','e4','Axial','eMax','eMin']
+        for header in headers:
+            msg += '%6s ' %(header)
+        msg += '\n'
+
+        for eid,E1s in sorted(self.e1.items()):
+            eType = self.eType[eid]
+            axial = self.axial[eid]
+            #MSt = self.MSt[eid]
+            #MSc = self.MSc[eid]
+
+            e1 = self.e1[eid]
+            e2 = self.e2[eid]
+            e3 = self.e3[eid]
+            e4 = self.e4[eid]
+            emax  = self.emax[eid]
+            emin  = self.emin[eid]
+            msg += '%-6i %6s ' %(eid,eType)
+            vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0]]
+            for val in vals:
+                if abs(val)<1e-6:
+                    msg += '%6s ' %('0')
+                else:
+                    msg += '%6i ' %(val)
+                ###
+            msg += '\n'
+
+            msg += '%s ' %(' '*13)
+            vals = [e1[1],e2[1],e3[1],e4[1],'',emax[1],emin[1]]
+            for val in vals:
+                if isinstance(val,str):
+                    msg += '%6s ' %(val)
+                elif abs(val)<1e-6:
+                    msg += '%6s ' %('0')
+                else:
+                    msg += '%6i ' %(val)
+                ###
+            msg += '\n'
+
+
+            #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
+            #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
+        ###
+        return msg
+
+
 class solidStressObject(scalarObject):
     """
                           S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )

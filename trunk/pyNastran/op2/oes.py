@@ -3,7 +3,7 @@ import copy
 from struct import unpack
 from pyNastran.op2.resultObjects.oes_Objects import (
     rodStressObject,rodStrainObject,
-    barStressObject,
+    barStressObject,barStrainObject,
     plateStressObject,plateStrainObject,
     solidStressObject,
     compositePlateStressObject,compositePlateStrainObject)
@@ -202,7 +202,7 @@ class OES(object):
         #self.printSection(100)
 
         data = self.getData(16)
-        self.printBlock(data)
+        print self.printBlock(data)
         #print "16 block..."
         #self.printBlock(data)
         #self.printBlock(data)
@@ -230,9 +230,11 @@ class OES(object):
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
         self.data = self.getData(bufferWords*4)
+        #print "bufferWords = ",bufferWords
         self.op2Debug.write('reading big data block\n')
         #print "self.n = ",self.n
-        #self.printBlock(self.data)
+        #print 'reading big data block'
+        #print self.printBlock(self.data)
 
         #stressStrainObj = self.instatiateStressStrainObject()
         self.readElementTable()
@@ -249,14 +251,18 @@ class OES(object):
             stressStrainObj = self.instantiateBarObject()
             self.CBAR_34(stressStrainObj)
 
-        elif self.elementType==144: # cquad4
-            print "    found cquad_144"
+        elif self.elementType==33: # cquad4_33
+            print "    found cquad_33"
             stressStrainObj = self.instantiatePlateObject()
-            self.CQUAD4_144(stressStrainObj)
+            self.CQUAD4_33(stressStrainObj)
         elif self.elementType==74:  # ctria
             print "    found ctria_74"
             stressStrainObj = self.instantiatePlateObject()
             self.CTRIA3_74(stressStrainObj) # ctria3
+        elif self.elementType==144: # cquad4
+            print "    found cquad_144"
+            stressStrainObj = self.instantiatePlateObject()
+            self.CQUAD4_144(stressStrainObj)
 
         #elif self.elementType==39:
         #    print "    found ctetra_39"
@@ -271,7 +277,7 @@ class OES(object):
             stressStrainObj = self.instantiateCompositePlateObject()
             self.CQUAD4_95(stressStrainObj)
         else:
-            self.printSection(100)
+            self.printBlock(self.data[0:100])
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             raise RuntimeError(msg)
 
@@ -451,7 +457,7 @@ class OES(object):
                 self.plateStress[self.iSubcase] = plateStressObject(self.iSubcase)
             return self.plateStress[self.iSubcase]
 
-        elif self.sCode in [10,11]:
+        elif self.sCode in [10,11,15]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.plateStrain:
                 self.plateStrain[self.iSubcase] = plateStrainObject(self.iSubcase)
