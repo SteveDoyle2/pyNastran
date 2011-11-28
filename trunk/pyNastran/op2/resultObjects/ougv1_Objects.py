@@ -22,6 +22,9 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             #self.writeOp2 = self.writeOp2Transient
         ###
 
+    def setLoadID(self,loadID):
+        self.loadID = loadID
+
     def updateDt(self,dt=None):
         """
         this method is called if the object

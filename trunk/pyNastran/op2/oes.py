@@ -65,7 +65,8 @@ class OES(object):
         self.op2Debug.write("***end of OES table***\n")
 
     def deleteAttributes_OES(self):
-        params = ['sCode','elementType','obj','iSubcase','markerStart','loadSet','fCode','numWide','sCode','thermal']
+        params = ['sCode','elementType','obj','markerStart','loadSet','formatCode','sCode','thermal',
+                  'lsdvmn','mode','eign','modeCycle','freq','mode','eigr','eigi','dt']
         self.deleteAttributes(params)
 
     def readTable_OES_3(self,iTable):
@@ -76,20 +77,20 @@ class OES(object):
         self.op2Debug.write('bufferSize=|%s|\n' %(str(bufferSize)))
 
         data = self.getData(4*50)
-        self.printBlock(data)
+        #self.printBlock(data) # on
         self.op2Debug.write('block3header\n')
 
         self.parseApproachCode(data)
         
         self.elementType = self.getValues(data,'i',3)
-        self.loadSet = self.getValues(data,'i',8)
-        self.fCode   = self.getValues(data,'i',9)
-        self.numWide = self.getValues(data,'i',10)
-        self.sCode   = self.getValues(data,'i',11)
-        self.thermal = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
+        self.loadSet    = self.getValues(data,'i',8)
+        self.formatCode = self.getValues(data,'i',9)
+        self.numWide    = self.getValues(data,'i',10)
+        self.sCode      = self.getValues(data,'i',11)
+        self.thermal    = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
         assert self.thermal==0
 
-        print "loadset=%s fcode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.fCode,self.numWide,self.sCode)
+        print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
         print "self.thermal=%s" %(self.thermal)
 
         ## assuming tCode=1
@@ -200,7 +201,7 @@ class OES(object):
         #self.printSection(100)
 
         data = self.getData(16)
-        print self.printBlock(data)
+        #print self.printBlock(data) # on
         #print "16 block..."
         #self.printBlock(data)
         #self.printBlock(data)
@@ -348,10 +349,10 @@ class OES(object):
         #elif self.elementType == 68:  # cpenta (done)
 
         # composite plate
-        elif self.elementType == 95: # CQUAD4 (done)
-        elif self.elementType == 96: # CQUAD8 (done)
-        elif self.elementType == 97: # CTRIA3 (done)
-        elif self.elementType == 98: # CTRIA6 (done)
+        #elif self.elementType == 95: # CQUAD4 (done)
+        #elif self.elementType == 96: # CQUAD8 (done)
+        #elif self.elementType == 97: # CTRIA3 (done)
+        #elif self.elementType == 98: # CTRIA6 (done)
 
         # nonlinear
         #elif self.elementType == 85:   # tetra  (nonlinear)

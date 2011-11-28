@@ -65,7 +65,7 @@ class OGP(object):
         self.deleteAttributes_OGP()
 
     def deleteAttributes_OGP(self):
-        params = ['lsdvm','mode','eigr','eign','eigi','modeCycle','freq','time','lftsfq','dLoadID','fCode','numWide','oCode']
+        params = ['lsdvm','mode','eigr','eign','eigi','modeCycle','freq','time','lftsfq','dLoadID','formatCode','numWide','oCode']
         self.deleteAttributes(params)
 
     def readTable_OGP_3(self,iTable): # iTable=-3
@@ -84,12 +84,12 @@ class OGP(object):
         (three) = self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
-        self.dLoadID  = self.getValues(data,'i',8)  ## dynamic load set ID/random code
-        self.fCode    = self.getValues(data,'i',9)  ## format code
-        self.numWide  = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
-        self.oCode    = self.getValues(data,'i',11) ## undefined in DMAP...
-        self.thermal  = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
-        print "dLoadID(8)=%s fCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.fCode,self.numWide,self.oCode,self.thermal)
+        self.dLoadID    = self.getValues(data,'i',8)  ## dynamic load set ID/random code
+        self.formatCode = self.getValues(data,'i',9)  ## format code
+        self.numWide    = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
+        self.oCode      = self.getValues(data,'i',11) ## undefined in DMAP...
+        self.thermal    = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
+        print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
         if self.approachCode==1:   # statics
