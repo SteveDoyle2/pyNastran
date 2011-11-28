@@ -84,13 +84,13 @@ class OUGV1(object):
         (three) = self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
-        self.rCode   = self.getValues(data,'i',8)  ## random code
-        self.fCode   = self.getValues(data,'i',9)  ## format code
-        self.numWide = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
+        self.rCode        = self.getValues(data,'i',8)  ## random code
+        self.formatCode   = self.getValues(data,'i',9)  ## format code
+        self.numWide      = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
         self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
         self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
         
-        self.printBlock(data)
+        #self.printBlock(data) # on
         ## assuming tCode=1
         if self.approachCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
@@ -120,7 +120,7 @@ class OUGV1(object):
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
-            print "LFTSFQ(5)=%s  EIGR(6)=%s  EIGI(7)=%s" %(self.lftsfq,self.eigr,self.eigi)
+            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.approachCode==10: # nonlinear statics
             self.lftsfq = self.getValues(data,'f',5) ## load step
             print "LFTSFQ(5) = %s" %(self.lftsfq)

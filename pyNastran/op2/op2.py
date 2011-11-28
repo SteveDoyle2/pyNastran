@@ -152,10 +152,8 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                     self.readTable_Geom1()
                 elif tableName=='GEOM2': # elements
                     self.readTable_Geom2()
-                    print self.printSection(80)
                 elif tableName=='GEOM3': # static/thermal loads
                     self.readTable_Geom3()
-                    #sys.exit('end of geom3')
                 elif tableName=='GEOM4': # constraints
                     self.readTable_Geom4()
 
@@ -186,7 +184,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
             else:
                 (isAnotherTable) = self.skipNextTable()
                 continue
-            print self.printSection(140)
+            #print self.printSection(140)
             print "*** finished tableName = |%r|" %(tableName)
             ###
         ###
@@ -242,7 +240,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         return unpack(sFormat,ds)
         
     def deleteAttributes(self,params):
-        params += ['deviceCode','approachCode','tableCode''iSubcase','data','elementType']
+        params += ['deviceCode','approachCode','tableCode','iSubcase','data','numWide']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))

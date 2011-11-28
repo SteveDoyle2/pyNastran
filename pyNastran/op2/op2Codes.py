@@ -300,8 +300,8 @@ class Op2Codes(object):
         sortCode     = self.sortCode
 
         formatCode = None
-        if hasattr(self, 'fCode'):
-            formatCode = self.fCode
+        if hasattr(self, 'formatCode'):
+            formatCode = self.formatCode
 
         sCode = None
         if hasattr(self, 'sCode'):
@@ -332,19 +332,23 @@ class Op2Codes(object):
         else:
             sWord = "Stress or Strain - UNDEFINED"
 
-        format = ''
-        if(  formatCode==1):  format = "Real"
-        elif(formatCode==2):  format = "Real/Imaginary"
-        elif(formatCode==3):  format = "Magnitude/Phase"
+        formatWord = ''
+        if(  formatCode==1):  formatWord = "Real"
+        elif(formatCode==2):  formatWord = "Real/Imaginary"
+        elif(formatCode==3):  formatWord = "Magnitude/Phase"
+        else:
+            sortWord = ''
+            msg = 'unsupported formatCode:  formatCode=%s\n' %(formatCode)
+            raise Exception(msg)
 
-        tWord = ''
+        sortWord = ''
         if(  self.sortCode==0): sortWord = 'Real'
         elif(self.sortCode==1): sortWord = 'Real/Imaginary'
         elif(self.sortCode==2): sortWord = 'Random Responses'
         else:
-            tWord = ''
-            #msg = 'unsupported tCode:  tCode=%s\n' %(tCode)
-            #raise Exception(msg)
+            sortWord = ''
+            msg = 'unsupported tCode:  tCode=%s\n' %(tCode)
+            raise Exception(msg)
 
         if(  thermal==0): thermalWord = 'isHeatTransfer = False'
         elif(thermal==1): thermalWord = 'isHeatTransfer = True'
@@ -420,7 +424,7 @@ class Op2Codes(object):
         msg  = "  approachCode = %-2s %s\n" %(self.approachCode,approach)
         msg += "  deviceCode   = %-2s %s\n" %(self.deviceCode,device)
         msg += "  tableCode    = %-2s %s\n" %(self.tableCode,table)
-        msg += "  fCode        = %-2s %s\n" %(formatCode,format)
+        msg += "  formatCode   = %-2s %s\n" %(formatCode,formatWord)
         msg += "  sortCode     = %-2s %s\n" %(self.sortCode,sortWord)
         msg += "  sCode        = %-2s %s\n" %(sCode,sWord)
         msg += "  thermal      = %-2s %s\n" %(thermal,thermalWord)

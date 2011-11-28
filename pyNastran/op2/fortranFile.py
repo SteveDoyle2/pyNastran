@@ -161,6 +161,7 @@ class FortranFile(object):
         determine table info.  doesn't move cursor.
         """
         msg = ''
+        #raise Exception('disabled...')
         ints    = self.getInts(data)
         #longs   = self.getLongs(data)
         floats  = self.getFloats(data)
