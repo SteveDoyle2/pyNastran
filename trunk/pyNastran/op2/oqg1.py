@@ -107,9 +107,9 @@ class OQG1(object):
         #print "markers = ",markers
         if markers<0:
             self.goto(nOld)
-            print self.printSection(120)
+            #print self.printSection(120)
             #sys.exit('found a marker')
-            print 'found a marker'
+            #print 'found a marker'
 
         else:
             print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
