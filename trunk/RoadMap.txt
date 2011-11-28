@@ -6,6 +6,10 @@ directional cosines and Margins of Safety (usually blank anyways)
 arent needed.
 
 OP2 Reader
+   - GEOM1/GEOM2/GEOM3/GEOM4/EPT/MPTS/DYNAMICS
+      - all this information is contained within the BDF
+      - skipped
+
    - OES
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
          - CROD    (1   - done)
@@ -19,7 +23,7 @@ OP2 Reader
          - CQUAD4  (144 - done)
          - CONROD  (10)
          
-         - CQUAD4 (33)
+         - CQUAD4 (33 - done)
          - CQUAD8 (64)
          - CTRIA6 (75)
          - CELAS1 (11)
@@ -59,6 +63,7 @@ OP2 Reader
       - applied temperatures (done)
       - applied transient temperatures (done)
       - applied transient heat flux - it's just as long as the OES table...
+         - CHBDY
 
    - OEE Table (element energy strain/kinetic/loss)
    - KDICT Table (element stiffness table)

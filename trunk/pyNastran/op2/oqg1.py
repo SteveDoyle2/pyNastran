@@ -98,7 +98,7 @@ class OQG1(object):
         and calling the function that's passed in
         """
         #print stress
-        print "len(data) = ",len(self.data)
+        #print "len(data) = ",len(self.data)
         #if marker[0]==4:
         #    print "found a 4 - end of unbuffered table"
         

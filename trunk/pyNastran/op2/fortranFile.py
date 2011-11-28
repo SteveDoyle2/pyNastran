@@ -172,7 +172,7 @@ class FortranFile(object):
         #msg += "doubles = %s\n" %(doubles)
         msg += "strings = |%r|\n" %(''.join(strings))
         msg += "nWords  = %s\n" %(len(data)/4)
-        msg += "tell    = %s\n" %(self.op2.tell())
+        #msg += "tell    = %s\n" %(self.op2.tell())
         return msg
 
     def getData(self,n):
@@ -243,6 +243,7 @@ class FortranFile(object):
         reads a set of predefined markers e.g. [-4,1,0]
         and makes sure it is correct
         """
+        foundMarkers = []
         for marker in markers:
             tableCode = self.readHeader(marker,debug)
             if tableCode==None:
@@ -250,16 +251,20 @@ class FortranFile(object):
             if marker!=tableCode:
                 msg = ''
                 if printErrorOnFailure:
-                    msg = 'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
-                raise InvalidMarkerError(msg)
+                    msg  = '\nmarkers=%s foundMarkers=%s\n' %(markers,foundMarkers)
+                    msg += 'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
+                raise InvalidMarkersError(msg)
+            foundMarkers.append(marker)
             ###
         ###
         msg = ''
         for i in markers:
             msg += '[4,'+str(i)+',4] + '
         self.op2Debug.write(msg[:-3]+'\n')
-        print "@markers = ",markers
-        print ""
+        if debug:
+            print "@markers = ",markers
+            print ""
+        ###
 
     def getNMarkers(self,nMarkers,rewind=False):
         """gets the next N markers, verifies they're correct"""
@@ -355,8 +360,9 @@ class FortranFile(object):
         nLetters = len(data)
         letters = unpack('s'*nLetters,data)  ## @todo should this be c instead of s???
         word = ''.join(letters)
+
         #print "word = |%s|" %(word)
-        print "nLetters=%s word=|%s|" %(nLetters,word)
+        #print "nLetters=%s word=|%s|" %(nLetters,word)
         if debug:
             self.op2Debug.write('|%s|\n' %(str(word)))
         return word
@@ -401,11 +407,11 @@ class FortranFile(object):
         self.n -= n
         self.op2.seek(self.n)
 
-    def readTableName(self,rewind=True,stopOnFailure=True):
+    def readTableName(self,rewind=True,debug=True,stopOnFailure=True):
         """
         peeks into a table to check it's name
         """
-        debug = True
+        #debug = True
         if rewind:
             debug = False
         n = self.n

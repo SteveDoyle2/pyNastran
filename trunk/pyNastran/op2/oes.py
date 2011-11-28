@@ -18,7 +18,7 @@ class OES(object):
 
         self.readMarkers([-1,7])
         data = self.readBlock()
-        #self.printBlock(data)
+        #print self.printBlock(data)
 
         self.readMarkers([-2,1,0,7])
         word = self.readStringBlock()  # OES1
@@ -46,9 +46,9 @@ class OES(object):
             iTable -= 2
 
             if isBlockDone:
-                print "***"
+                #print "***"
                 print "iTable = ",iTable
-                print "$$$$"
+                #print "$$$$"
                 #self.n = self.markerStart
                 #self.op2.seek(self.n)
                 break
@@ -56,8 +56,7 @@ class OES(object):
 
             n = self.n
             self.readMarkers([iTable,1,0],'OES')
-            print "i read the markers!!!"
-   
+            #print "i read the markers!!!"
         ###
         self.readMarkers([iTable,1,0],'OES')
         #self.printSection(100)
@@ -140,8 +139,7 @@ class OES(object):
 
         print self.codeInformation()
         self.readTitle()
-        
-        print "n4 = ",self.n
+        #print "n4 = ",self.n
 
     def parseStressCode(self):
         bits = [0,0,0,0,0]
@@ -226,7 +224,6 @@ class OES(object):
             return isTable4Done,isBlockDone
 
         print "*elementType = ",self.elementType
-        
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
         self.data = self.getData(bufferWords*4)
@@ -264,16 +261,12 @@ class OES(object):
             stressStrainObj = self.instantiatePlateObject()
             self.CQUAD4_144(stressStrainObj)
 
-        #elif self.elementType==39:
-        #    print "    found ctetra_39"
-        #    stressStrainObj = self.instantiateSolidObject()
-        #    self.CTETRA_39(stressStrainObj)
         elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
             print "    found ctetra_39 / hexa_67 / cpenta_68"
             stressStrainObj = self.instantiateSolidObject()
             self.CSOLID_67(stressStrainObj)
         elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
-            print "making a 95/96/97 or 98!"
+            print "    found a 95/96/97 or 98!"
             stressStrainObj = self.instantiateCompositePlateObject()
             self.CQUAD4_95(stressStrainObj)
         else:

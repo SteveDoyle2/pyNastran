@@ -215,8 +215,8 @@ class OUGV1(object):
                 self.obj = spcForcesObject(self.iSubcase)
                 self.spcForces[self.iSubcase] = self.obj
 
-            elif self.approachCode==2 and self.sortCode==0: # nonlinear static displacement
-                print "isNonlinearStaticDisplacement"
+            elif self.approachCode==2 and self.sortCode==0: # nonlinear static eigenvector
+                print "isEigenvector"
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
                 self.eigenvectors[self.iSubcase] = self.obj
@@ -233,7 +233,7 @@ class OUGV1(object):
                 self.nonlinearDisplacements[self.iSubcase] = self.obj
 
             else:
-                raise Exception('not supported OUGV1 solution...')
+                raise Exception('unsupported OUGV1 solution...')
             ###
 
         elif self.thermal==1:
@@ -255,7 +255,7 @@ class OUGV1(object):
                 self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
                 self.nonlinearTemperatures[self.iSubcase] = self.obj
             else:
-                raise Exception('not supported OUGV1 solution...')
+                raise Exception('unsupported OUGV1 thermal solution...')
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
