@@ -125,7 +125,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.op2Debug = open('debug.out','wb')
         
         self.n = self.op2.tell()
-        print "self.n = ",self.n
+        #print "self.n = ",self.n
         self.readTapeCode()
         #sys.exit('end of tape code')
 
@@ -141,7 +141,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
             except InvalidMarkersError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 print "***poor exit, but it worked..."
-                raise
+                #raise
                 break
             except:
                 raise

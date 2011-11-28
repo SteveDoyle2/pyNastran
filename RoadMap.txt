@@ -68,6 +68,174 @@ OP2 Reader
    - OEE Table (element energy strain/kinetic/loss)
    - KDICT Table (element stiffness table)
 
+----OES LONG VERSION----
+
+All Thermal=0
+
+CROD_1 (0/6)
+ - sCode6=0 (Strain)
+   - tCode7=0,1 (Real & Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+ - sCode6=0 (Stress)
+   - tCode7=0,1 (Real & Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+CBEAM_2 (None)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=11
+   - tCode7=1 (Real/Imaginary)
+     numWide=11
+   - tCode7=2 (Random)
+     numWide=7
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=11
+   - tCode7=1 (Real/Imaginary)
+     numWide=11
+   - tCode7=2 (Random)
+     numWide=7
+
+CTUBE_3 (None)
+ - sCode6=0 (Strain)
+   - tCode7=0,1 (Real & Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+ - sCode6=0 (Stress)
+   - tCode7=0,1,2 (Real & Real/Imaginary & Random)
+     numWide=5
+
+CSHEAR_4 (None)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=3
+   - tCode7=1 (Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=4
+   - tCode7=1 (Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+CQUAD4_33 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+
+CBAR_34 (None)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=17
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=17
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+
+CTRIA3_74 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+CTRIA6_75 (None)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=19 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=19 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+CTETRA_39/CHEXA_67/CPENTA_68 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=25 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=25 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+CQUAD4_95/CQUAD8_96/CTRIA3_97/CTRIA6_98 (done)
+ - sCode6=0 (Strain)
+     numWide=11 (done)
+
+ - sCode6=0 (Stress)
+     numWide=11 (done)
+
+CQUAD4_144
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=19 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=19 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+
 ------------------------------v0.1------------------------------
 
 In order for a card to be supported, it must read AND write ALL fields.  Important calculated parameters are nice, but not required.
