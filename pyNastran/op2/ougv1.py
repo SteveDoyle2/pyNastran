@@ -20,12 +20,12 @@ class OUGV1(object):
 
         self.readMarkers([-1,7],'OUGV1')
         ints = self.readIntBlock()
-        print "*ints = ",ints
+        #print "*ints = ",ints
 
         self.readMarkers([-2,1,0],'OUGV1') # 7
         bufferWords = self.getMarker()
         self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
-        print "1-bufferWords = ",bufferWords,bufferWords*4
+        #print "1-bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
         self.op2Debug.write('ints=%s\n' %(str(ints)))
         
@@ -41,9 +41,9 @@ class OUGV1(object):
             iTable -= 2
 
             if isBlockDone:
-                print "***"
-                print "iTable = ",iTable
-                print "$$$$"
+                #print "***"
+                #print "iTable = ",iTable
+                #print "$$$$"
                 #self.n = self.markerStart
                 #self.op2.seek(self.n)
                 break
@@ -76,8 +76,7 @@ class OUGV1(object):
         data = self.getData(4)
         bufferSize, = unpack('i',data)
         data = self.getData(4*50)
-        
-        self.printBlock(data)
+        #print self.printBlock(data)
         
         
         aCode = self.getBlockIntEntry(data,1)
@@ -160,9 +159,9 @@ class OUGV1(object):
             #self.printSection(180)
             self.readMarkers([iTable,1,0])
             print "starting OUGV1 table 4..."
-            isTable4Done,isBlockDone = self.readTable_OUGV1_4_Data(iTable)
+            (isTable4Done,isBlockDone) = self.readTable_OUGV1_4_Data(iTable)
             if isTable4Done:
-                print "done with OUGV14"
+                print "done with OUGV1-4"
                 self.n = self.markerStart
                 self.op2.seek(self.n)
                 break
@@ -172,15 +171,15 @@ class OUGV1(object):
             self.op2.seek(self.n)
             
             self.n = self.op2.tell()
-            print "***markerA = ",markerA
+            #print "***markerA = ",markerA
             #self.printSection(140)
 
             #print self.plateStress[self.iSubcase]
             
             iTable-=1
             print "isBlockDone = ",isBlockDone
-            
-        print "isBlockDone = ",isBlockDone
+        ###
+        #print "isBlockDone = ",isBlockDone
         return isBlockDone
 
     def readTable_OUGV1_4_Data(self,iTable): # iTable=-4
@@ -196,7 +195,7 @@ class OUGV1(object):
             isTable4Done = True
             return isTable4Done,isBlockDone
         elif bufferWords==0:
-            print "bufferWords 0 - done with Table4"
+            #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             isBlockDone = True
             return isTable4Done,isBlockDone

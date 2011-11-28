@@ -148,7 +148,6 @@ class ElementsStressStrain(object):
             #print "tell = ",self.op2.tell()
             
             #self.printSection(100)
-            #sys.exit('asdf')
             #self.dn += 348
         ###
         self.handleStressBuffer(self.CQUAD4_33,stress)
