@@ -242,7 +242,8 @@ class Op2Codes(object):
     def printTableCode(self,tableCode):
         tableCodeContent = tableCode%1000
         dataFormat = tableCode/1000
-        print "tableCodeContent=%s dataFormat=%s" %(tableCodeContent,dataFormat)
+        msg = ''
+        msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
         tableContent = {
             1  : 'OUG - Displacement vector',
             2  : 'OPG - Load vector',
@@ -285,8 +286,8 @@ class Op2Codes(object):
             39 : 'OQG - MPC forces',
             40 : 'OGPKE - Grip point kinetic energy',
         }
-        print "table = %s" %(tableContent[tableCodeContent])
-
+        msg += 'table = %s' %(tableContent[tableCodeContent])
+        return msg
 
     def codeInformation(self):
         """

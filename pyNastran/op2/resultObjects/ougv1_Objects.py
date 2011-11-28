@@ -312,14 +312,15 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
     """
     def __init__(self,iSubcase,eigReal):
         scalarObject.__init__(self,iSubcase)
-        self.eigReal = int(eigReal)
-        
+        #self.eigReal = int(eigReal)
+        self.eigReal = eigReal
         self.updateDt = self.updateEigReal
+        #print "eigReal = %s" %(eigReal)
         
         assert eigReal>=0.
         self.gridTypes = {}
-        self.displacements = {eigReal: {}}
-        self.rotations     = {eigReal: {}}
+        self.displacements = {self.eigReal: {}}
+        self.rotations     = {self.eigReal: {}}
 
     def updateEigReal(self,eigReal):
         """
@@ -327,9 +328,11 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         already exits and a new time step is found
         """
         assert eigReal>=0.
-        self.eigReal = int(eigReal)
-        self.displacements[eigReal] = {}
-        self.rotations[eigReal] = {}
+        #self.eigReal = int(eigReal)
+        self.eigReal = eigReal
+        print "eigReal = %s" %(eigReal)
+        self.displacements[self.eigReal] = {}
+        self.rotations[self.eigReal] = {}
 
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
@@ -344,22 +347,32 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             raise Exception('invalid grid type,,,')
 
         self.gridTypes[nodeID] = Type
+        #print 'self.eigReal = %s' %(self.eigReal),type(self.eigReal)
+        #print "d = ",self.displacements
         self.displacements[self.eigReal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.eigReal][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
     ###
 
+    def eigenvalues(self):
+        return sorted(self.displacements.keys())
+
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
+        msg += '-eigenvalues-\n'
+        for i,eigenvalue in enumerate(self.eigenvalues()):
+            msg += '%-2s %f\n' %(i,eigenvalue)
+        msg += '\n'
+
         #if self.eigReal is not None:
         #    msg += 'eigReal = %g\n' %(self.eigReal)
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+        headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
         headerLine = '%-8s %8s ' %('nodeID','GridType',)
         for header in headers:
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
         for freq,eigVals in sorted(self.displacements.items()):
-            msg += 'eigenvalueReal = %e\n' %(freq)
+            msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
             for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[freq][nodeID]

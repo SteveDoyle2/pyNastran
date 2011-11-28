@@ -22,7 +22,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['GEOM1','GEOM2','GEOM4','EPT','OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
         self.iSubcaseNameMap = {}
@@ -133,15 +133,18 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         while isAnotherTable:
             print '-'*80
             try:
-                tableName = self.readTableName(rewind=True)
+                tableName = self.readTableName(rewind=True,stopOnFailure=False)
             except EndOfFileError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 print "***ok exit, but it could be better..."
                 break
-            except InvalidMarkerError:  # the isAnotherTable method sucks...
+            except InvalidMarkersError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 print "***poor exit, but it worked..."
+                raise
                 break
+            except:
+                raise
             print "tableName = |%r|" %(tableName)
  
             if tableName in self.tablesToRead:
@@ -175,12 +178,12 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "---isAnotherTable---"
-                #(isAnotherTable) = self.hasMoreTables()
-                isAnotherTable = True
-                #self.printSection(100)
+                (isAnotherTable) = self.hasMoreTables()
+                #isAnotherTable = True
             else:
                 (isAnotherTable) = self.skipNextTable()
                 continue
+            print self.printSection(140)
             print "*** finished tableName = |%r|" %(tableName)
             ###
         ###
@@ -205,7 +208,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         self.deviceCode   = aCode%10
         self.approachCode = (aCode-self.deviceCode)/10
         print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
-        print "tableType = ",self.printTableCode(self.tableCode)
+        print self.printTableCode(self.tableCode)
         return (elementType)
 
     def getValues(self,data,sFormat,iWordStart,iWordStop=None):
@@ -226,6 +229,7 @@ class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OE
         return unpack(sFormat,ds)
         
     def getValues8(self,data,sFormat,iWordStart,iWordStop=None):
+        raise Exception('is this used...')
         if iWordStop==None:
             ds = data[iWordStart*8:(iWordStart+1)*8]
             return unpack(sFormat,ds)[0]
