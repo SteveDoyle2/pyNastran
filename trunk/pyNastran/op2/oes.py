@@ -242,7 +242,14 @@ class OES(object):
             print "    found crod_1"
             stressStrainObj = self.instantiateRodObject()
             self.CROD_1(stressStrainObj)
-
+        #elif self.elementType == 2:   # cbeam
+        #    print "    found cbeam_2"
+        #    stressStrainObj = self.instantiateBeamObject()
+        #    self.CBEAM_2(stressStrainObj)
+        #elif self.elementType == 10:   # conrod
+        #    print "    found cbeam_2"
+        #    stressStrainObj = self.instantiateConrodObject()
+        #    self.CONROD_10(stressStrainObj)
         elif self.elementType == 34:   # cbar
             print "    found cbar_34"
             stressStrainObj = self.instantiateBarObject()
@@ -276,13 +283,17 @@ class OES(object):
 
         #print stressStrainObj
 
+        #elif self.elementType == 1:    # crod     (done)
+        #elif self.elementType == 2:    # cbeam    (untested)
+        #elif self.elementType == 3:    # ctube
         #elif self.elementType == 4:    # cshear
+        #elif self.elementType == 10:   # conrod
 
-        #elif self.elementType == 33:   # cquad4_33
-        #elif self.elementType == 34:   # cbar
+        #elif self.elementType == 33:   # cquad4_33 (done)
+        #elif self.elementType == 34:   # cbar      (done)
         #elif self.elementType == 35:   # cconeax
         #elif self.elementType == 38:   # cgap
-        #elif self.elementType == 39:   # ctetra
+        #elif self.elementType == 39:   # ctetra    (done)
         #elif self.elementType == 40:   # cbush1d
 
         #elif self.elementType == 47:   # caxif2
@@ -298,23 +309,29 @@ class OES(object):
         #elif self.elementType == 59:   # cdum7
         #elif self.elementType == 60:   # cdum8/crac2d
         #elif self.elementType == 64:   # cquad8
-        #elif self.elementType == 67:   # chexa
-        #elif self.elementType == 68:   # cpenta
+        #elif self.elementType == 67:   # chexa    (done)
+        #elif self.elementType == 68:   # cpenta   (done)
         #elif self.elementType == 69:   # cbend
         #elif self.elementType == 70:   # ctriar
         #elif self.elementType == 74:   # ctria3
         #elif self.elementType == 75:   # ctria6
         #elif self.elementType == 82:   # cquadr
+        #elif self.elementType == 95: # CQUAD4    (done)
+        #elif self.elementType == 96: # CQUAD8    (done)
+        #elif self.elementType == 97: # CTRIA3    (done)
+        #elif self.elementType == 98: # CTRIA6    (done)
         #elif self.elementType == 100:  # cbar w/ cbarao or pload1
 
         #elif self.elementType == 102:  # cbush
+        #elif self.elementType == 144:  # cquad_144 - corner stresses (done)
 
-        #elif self.elementType == 144:  # cquad_144 - corner stresses
 
-        # rods
-        #elif self.elementType == 2:    # cbeam
+        # rods/bars/beams
+        #elif self.elementType == 1:    # crod   (done)
+        #elif self.elementType == 2:    # cbeam  (untested)
         #elif self.elementType == 3:    # ctube
         #elif self.elementType == 10:   # conrod
+        #elif self.elementType == 34:   # cbar   (done)
 
         #springs
         #elif self.elementType == 11:   # celas1
@@ -323,14 +340,18 @@ class OES(object):
         #elif self.elementType == 14:   # celas4
         
         #plate
-        #elif self.elementType == 33:   # cquad_33
+        #elif self.elementType == 33:   # cquad_33 (done)
 
         #solid (???)
-        #elif self.elementType == 39:  # ctetra
-        #elif self.elementType == 67:  # chexa
-        #elif self.elementType == 68:  # cpenta
+        #elif self.elementType == 39:  # ctetra (done)
+        #elif self.elementType == 67:  # chexa  (done)
+        #elif self.elementType == 68:  # cpenta (done)
 
         # composite plate
+        elif self.elementType == 95: # CQUAD4 (done)
+        elif self.elementType == 96: # CQUAD8 (done)
+        elif self.elementType == 97: # CTRIA3 (done)
+        elif self.elementType == 98: # CTRIA6 (done)
 
         # nonlinear
         #elif self.elementType == 85:   # tetra  (nonlinear)
