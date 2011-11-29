@@ -4,8 +4,8 @@ from baseCard import Element
 from pyNastran.general.generalMath import Area
 
 class ShellElement(Element):
-    def __init__(self,card):
-        Element.__init__(self,card)
+    def __init__(self,card,data):
+        Element.__init__(self,card,data)
 
     def Area(self):
         raise Exception('area undefined for %s' %(self.type))
@@ -22,21 +22,36 @@ class ShellElement(Element):
 
 class CTRIA3(ShellElement):
     type = 'CTRIA3'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
-        self.pid = card.field(2)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
 
-        nids = card.fields(3,6)
+            nids = card.fields(3,6)
+
+            self.thetaMcid = card.field(6,0.0)
+            self.zOffset   = card.field(7,0.0)
+
+            self.TFlag = card.field(10,0)
+            self.T1 = card.field(11,1.0)
+            self.T2 = card.field(12,1.0)
+            self.T3 = card.field(13,1.0)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:5]
+
+            self.thetaMcid = data[5]
+            self.zOffset   = data[6]
+            self.TFlag     = data[7]
+            self.T1 = data[8]
+            self.T2 = data[9]
+            self.T3 = data[10]
+        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
-
-        self.thetaMcid = card.field(6,0.0)
-        self.zOffset   = card.field(7,0.0)
-
-        self.TFlag = card.field(10,0)
-        self.T1 = card.field(11,1.0)
-        self.T2 = card.field(12,1.0)
-        self.T3 = card.field(13,1.0)
 
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
@@ -95,8 +110,10 @@ class CTRIA3(ShellElement):
 
 class CTRIA6(CTRIA3):
     type = 'CTRIA6'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
         self.pid = card.field(2)
 
         nids = card.fields(3,9)
@@ -125,8 +142,10 @@ class CTRIA6(CTRIA3):
 
 class CTRIAR(CTRIA3):
     type = 'CTRIAR'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
         self.pid = card.field(2)
 
         nids = card.fields(3,6)
@@ -149,8 +168,10 @@ class CTRIAR(CTRIA3):
 
 class CTRIAX(CTRIA3):
     type = 'CTRIAX'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
 
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids)
@@ -162,8 +183,10 @@ class CTRIAX(CTRIA3):
 
 class CTRIAX6(CTRIA3):
     type = 'CTRIAX6'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
 
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids)
@@ -179,27 +202,44 @@ class CTRIAX6(CTRIA3):
 
 class CQUAD4(ShellElement):
     type = 'CQUAD4'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
-        self.pid = card.field(2)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
 
-        nids = card.fields(3,7)
+            nids = card.fields(3,7)
+
+            self.thetaMcid = card.field(7,0.0)
+            self.zOffset   = card.field(8,0.0)
+
+            self.TFlag = card.field(10,0)
+            self.T1 = card.field(11,1.0)
+            self.T2 = card.field(12,1.0)
+            self.T3 = card.field(13,1.0)
+            self.T4 = card.field(14,1.0)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:6]
+
+            self.thetaMcid = data[6]
+            self.zOffset   = data[7]
+            self.TFlag     = data[8]
+            self.T1 = data[9]
+            self.T2 = data[10]
+            self.T3 = data[11]
+            self.T4 = data[12]
+        ###            
         self.prepareNodeIDs(nids)
+        assert len(self.nodes)==4,'CQUAD4'
 
         #print "self.xi = ",self.xi
         #print "nodes = ",self.nodes
-        assert len(self.nodes)==4,'CQUAD4'
         #for nid in nids:
         #    self.nodes.append(int(nid))
-        
-        self.thetaMcid = card.field(7,0.0)
-        self.zOffset   = card.field(8,0.0)
 
-        self.TFlag = card.field(10,0)
-        self.T1 = card.field(11,1.0)
-        self.T2 = card.field(12,1.0)
-        self.T3 = card.field(13,1.0)
-        self.T4 = card.field(14,1.0)
         #print 'self.T1 = ',self.T1
         #sys.exit()
         #if self.id==20020:
@@ -331,9 +371,11 @@ class CQUAD4(ShellElement):
 
 class CQUADR(CQUAD4):
     type = 'CQUADR'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
 
+        ## element ID number
+        self.eid = int(card.field(1))
         nids = card.fields(3,12)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
@@ -346,8 +388,10 @@ class CQUADR(CQUAD4):
 
 class CQUAD(CQUAD4):
     type = 'CQUAD'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
         self.pid = card.field(2)
 
         nids = card.fields(3,12)
@@ -371,8 +415,10 @@ class CQUAD(CQUAD4):
 
 class CQUAD8(CQUAD4):
     type = 'CQUAD8'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
         self.pid = card.field(2)
 
         nids = card.fields(3,11)
@@ -396,8 +442,10 @@ class CQUAD8(CQUAD4):
 
 class CQUADX(CQUAD4):
     type = 'CQUADX'
-    def __init__(self,card):
-        ShellElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ShellElement.__init__(self,card,data)
+        ## element ID number
+        self.eid = int(card.field(1))
         self.pid = card.field(2)
 
         nids = card.fields(3,12)

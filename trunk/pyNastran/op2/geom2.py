@@ -4,7 +4,7 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-#from pyNastran.bdf.cards.nodes import GRID
+from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4
 
 
 class Geometry2(object):
@@ -31,7 +31,8 @@ class Geometry2(object):
             data  = data[56:]
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
             dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4]
-            #CQUAD4(None,dataInit)
+            elem = CQUAD4(None,dataInit)
+            self.addElement(elem)
         ###
 
     def readCROD(self,data):
@@ -44,7 +45,8 @@ class Geometry2(object):
             data  = data[16:]
             (eid,pid,n1,n2) = unpack('iiii',eData)
             dataInit = [eid,pid,n1,n2]
-            #CROD(None,dataInit)
+            #elem = CROD(None,dataInit)
+            #self.addElement(elem)
         ###
 
     def readCTRIA3(self,data):
@@ -52,12 +54,14 @@ class Geometry2(object):
         (5959,59,282)    - the marker for Record 93
         """
         print "reading CTRIA3"
-        while len(data)>=48: # 12*4
-            eData = data[:48]
-            data  = data[48:]
-            (eid,pid,n1,n2,n3,theta,zoffs,blank,tflag,t1,t2,t3) = unpack('iiiiiffiifff',eData)
-            dataInit = [eid,pid,n1,n2,n3,theta,zoffs,blank,tflag,t1,t2,t3]
-            #CQUAD4(None,dataInit)
+        while len(data)>=52: # 13*4
+            eData = data[:52]
+            data  = data[52:]
+            (eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3) = unpack('iiiiiffiiifff',eData)
+            #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
+            dataInit = [eid,pid,n1,n2,n3,theta,zoffs,blank1,tflag,t1,t2,t3]
+            elem = CTRIA3(None,dataInit)
+            self.addElement(elem)
         ###
 
     def readCTUBE(self,data):
@@ -70,7 +74,8 @@ class Geometry2(object):
             data  = data[16:]
             (eid,pid,n1,n2) = unpack('iiii',eData)
             dataInit = [eid,pid,n1,n2]
-            #CTUBE(None,dataInit)
+            #elem = CTUBE(None,dataInit)
+            self.addElement(elem)
         ###
 
     def readSPOINT(self,data):
@@ -82,6 +87,7 @@ class Geometry2(object):
             eData = data[:4]
             data  = data[4:]
             (nid) = unpack('i',eData)
-            #SPOINT(None,[nid])
+            #node = SPOINT(None,[nid])
+            #self.addNode(node)
         ###
 

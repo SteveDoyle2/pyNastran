@@ -226,8 +226,8 @@ class addMethods(object):
         self.nodes[node.nid] = node
 
     def addElement(self,elem):
-        assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
-        assert elem.eid>0
+        #assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
+        assert elem.eid>0,'eid=%s elem=%s' %(elem.eid,elem)
         self.elements[elem.eid] = elem
 
     def addThermalElement(self,elem):  # same function at the moment...

@@ -7,12 +7,13 @@ from numpy import array
 from baseCard import BaseCard
 
 class Ring(BaseCard): # base class
-    def __init__(self,card):
-        pass
+    def __init__(self,card,data):
+        assert card is None or data is None
 
 class Node(BaseCard): # base class
-    def __init__(self,card):
-        pass
+    def __init__(self,card,data):
+        assert card is None or data is None
+
     def crossReference(self,mesh):
         raise Exception('%s hasnt implemented a crossReference method' %(self.type))
 
@@ -66,8 +67,8 @@ class SPOINT(Node):
     SPOINT 5   THRU 649
     """
     type = 'SPOINT'
-    def __init__(self,card):
-        Node.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Node.__init__(self,card,data)
         fields  = card.fields(1)
         nFields = card.nFields()
         
@@ -97,7 +98,7 @@ class GRDSET(Node):
     Defines default options for fields 3, 7, 8, and 9 of all GRID entries.
     """
     type = 'GRDSET'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         ## Grid point coordinate system
         self.cp  = card.field(2,0)
         
@@ -130,9 +131,8 @@ class GRID(Node):
         if coming from a BDF object, card is used
         if coming from the OP2, data is used
         """
-        Node.__init__(self,card)
+        Node.__init__(self,card,data)
 
-        assert card is None or data is None
         if card is None:
             self.nid = data[0]
             self.cp = data[1]
