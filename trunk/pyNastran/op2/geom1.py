@@ -6,11 +6,6 @@ from struct import unpack
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.nodes import GRID
 
-class GeomObj(object):
-    def __init__(self):
-        pass
-    def geomFunc(self,data):
-        pass
 
 class Geometry1(object):
 
@@ -26,34 +21,6 @@ class Geometry1(object):
                             (4501,45,1):     self.readNodes,  # record 17
                          }
         self.readRecordTable('GEOM1')
-
-    def readRecordTable(self,expectedTableName):
-        """
-        @note assumes self.iTableMap has already been set
-        """
-        tableName = self.readTableName(rewind=False) # GEOM1
-        self.tableInit(tableName)
-        print "*tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        fields = self.readIntBlock()
-        #print "fields = ",fields
-
-        self.readMarkers([-2,1,0]) # 2
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-        word = self.readStringBlock()
-
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
-        
-            if self.checkForNextTable():
-                #sys.exit('end of geom1')
-                return
-            iTable -= 1
-        ###
-        sys.exit('end of geom1-huh')
 
     def readCord1C(self,data):
         """

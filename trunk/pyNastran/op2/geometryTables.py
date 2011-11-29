@@ -5,6 +5,9 @@ from struct import unpack
 
 from pyNastran.op2.op2Errors import *
 from pyNastran.op2.geom1 import Geometry1
+from pyNastran.op2.geom2 import Geometry2
+#from pyNastran.op2.geom3 import Geometry3
+#from pyNastran.op2.geom4 import Geometry4
 
 class GeomObj(object):
     def __init__(self):
@@ -12,7 +15,35 @@ class GeomObj(object):
     def geomFunc(self,data):
         pass
 
-class GeometryTables(Geometry1):
+class GeometryTables(Geometry1,Geometry2):
+
+    def readRecordTable(self,expectedTableName):
+        """
+        @note assumes self.iTableMap has already been set
+        """
+        tableName = self.readTableName(rewind=False) # GEOM1
+        self.tableInit(tableName)
+        print "*tableName = |%r|" %(tableName)
+
+        self.readMarkers([-1,7])
+        fields = self.readIntBlock()
+        #print "fields = ",fields
+
+        self.readMarkers([-2,1,0]) # 2
+        bufferWords = self.getMarker()
+        #print "bufferWords = ",bufferWords,bufferWords*4
+        word = self.readStringBlock()
+
+        iTable = -3
+        while 1:  ## @todo could this cause an infinite loop...i dont this so...
+            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
+        
+            if self.checkForNextTable():
+                #sys.exit('end of geom1')
+                return
+            iTable -= 1
+        ###
+        sys.exit('end of %s-this should never happen...' %(expectedTableName))
 
     def checkForNextTable(self):
         foundTable = False
@@ -88,82 +119,6 @@ class GeometryTables(Geometry1):
         
         #print "exiting the geom sub table"
         return (tableName,isNextTable,isNextSubTable)
-
-#-----
-# GEOM2
-
-    def readCQUAD4(self,data):
-        """
-        (2958,51,177)    - the marker for Record 69
-        (13900,139,9989) - the marker for Record 70
-        """
-        print "reading CQUAD4"
-        while len(data)>=56: # 14*4
-            eData = data[:56]
-            data  = data[56:]
-            (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
-            dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4]
-            CQUAD4(None,dataInit)
-        ###
-
-    def readCROD(self,data):
-        """
-        (3001,30,48)    - the marker for Record 93
-        """
-        print "reading CROD"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
-            (eid,pid,n1,n2) = unpack('iiii',eData)
-            dataInit = [eid,pid,n1,n2]
-            CROD(None,dataInit)
-        ###
-
-    def readCTRIA3(self,data):
-        """
-        (5959,59,282)    - the marker for Record 93
-        """
-        print "reading CTRIA3"
-        while len(data)>=48: # 12*4
-            eData = data[:48]
-            data  = data[48:]
-            (eid,pid,n1,n2,n3,theta,zoffs,blank,tflag,t1,t2,t3) = unpack('iiiiiffiifff',eData)
-            dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4]
-            CQUAD4(None,dataInit)
-        ###
-
-    def readCTUBE(self,data):
-        """
-        (3701,37,49)    - the marker for Record 103
-        """
-        print "reading CTUBE"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
-            (eid,pid,n1,n2) = unpack('iiii',eData)
-            dataInit = [eid,pid,n1,n2]
-            CTUBE(None,dataInit)
-        ###
-
-    def readSPOINT(self,data):
-        """
-        (5551,49,105)    - the marker for Record 118
-        """
-        print "reading SPOINT"
-        while len(data)>=4: # 4*4
-            eData = data[:4]
-            data  = data[4:]
-            (nid) = unpack('i',eData)
-            SPOINT(None,[nid])
-        ###
-
-    def readTable_Geom2(self):
-        self.iTableMap = {}
-        self.readRecordTable('GEOM2')
-
-# GEOM2
-#-----
-# GEOM3
 
     def readTable_Geom3(self):
         self.iTableMap = {}
