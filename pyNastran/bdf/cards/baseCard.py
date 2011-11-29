@@ -271,7 +271,8 @@ def Mid(self):
 
 class Property(BaseCard):
     mid = 0 # ???
-    def __init__(self,card):
+    def __init__(self,card,data):
+        assert card is None or data is None
         #self.type = card[0]
         pass
 
@@ -289,11 +290,10 @@ class Property(BaseCard):
 
 class Element(BaseCard):
     pid = 0 # CONM2, rigid
-    def __init__(self,card):
+    def __init__(self,card,data):
+        assert card is None or data is None
         ## the list of node IDs for an element (default=None)
         self.nodes = None
-        ## element ID number
-        self.eid = int(card.field(1))
         #self.nids = []
         pass
 

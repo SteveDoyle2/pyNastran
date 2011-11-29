@@ -13,10 +13,10 @@ from oqg1  import OQG1
 from oes   import OES
 from oef   import OEF
 from ogp   import OGP
-from pyNastran.bdf.bdf_helper import addMethods,writeMesh
+from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
 
 
-class Op2(addMethods,writeMesh, # BDF methods
+class Op2(getMethods,addMethods,writeMesh, # BDF methods
           FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OEF,OGP,OES):
 
     def bdfInit(self,log=None):
