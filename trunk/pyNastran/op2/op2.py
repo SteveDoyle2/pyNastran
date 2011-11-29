@@ -31,22 +31,29 @@ class Op2(addMethods,writeMesh, # BDF methods
         self.executiveControlLines = []
         self.caseControlDeck = None
         
-        self.nodes = {}
-        self.params = {}
+        self.params  = {}
+        self.nodes   = {}
         self.gridSet = None
+
+        self.elements   = {}
         self.properties = {}
-        self.elements = {}
-        self.materials = {}
-        self.loads = {}
-        self.dareas = {}
+        self.materials  = {}
+
+        self.coords = {}
+
+
+        self.loads   = {}
+        self.dareas  = {}
         self.nlparms = {}
-        self.flfacts = {}
-        self.aeros = {}
-        self.gusts = {}
+
+        self.flfacts  = {}
+        self.aeros    = {}
+        self.gusts    = {}
         self.flutters = {}
-        self.splines = {}
-        self.caeros = {}
-        self.gravs = {}
+        self.splines  = {}
+        self.caeros   = {}
+        self.gravs    = {}
+
         self.phbdys = {}
         self.convectionProperties = {}
         self.bcs = {}
