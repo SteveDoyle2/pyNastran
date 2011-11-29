@@ -13,10 +13,57 @@ from oqg1  import OQG1
 from oes   import OES
 from oef   import OEF
 from ogp   import OGP
+from pyNastran.bdf.bdf_helper import addMethods,writeMesh
 
 
-class Op2(FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OEF,OGP,OES):
-    def __init__(self,infileName): 
+class Op2(addMethods,writeMesh, # BDF methods
+          FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OEF,OGP,OES):
+
+    def bdfInit(self,log=None):
+        if log is None:
+            from pyNastran.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            log = loggerObj.startLog('debug') # or info
+        self.log = log
+
+        self.sol = None
+        self.iSolLine = None
+        self.executiveControlLines = []
+        self.caseControlDeck = None
+        
+        self.nodes = {}
+        self.params = {}
+        self.gridSet = None
+        self.properties = {}
+        self.elements = {}
+        self.materials = {}
+        self.loads = {}
+        self.dareas = {}
+        self.nlparms = {}
+        self.flfacts = {}
+        self.aeros = {}
+        self.gusts = {}
+        self.flutters = {}
+        self.splines = {}
+        self.caeros = {}
+        self.gravs = {}
+        self.phbdys = {}
+        self.convectionProperties = {}
+        self.bcs = {}
+        self.constraints = {}
+        self.suports = {}
+        self.spcObject = None
+        self.mpcObject = None
+        self.dconstrs = {}
+        self.desvars = {}
+        self.ddvals = {}
+        self.rejectCards = []
+        self.rejects = []
+
+
+    def __init__(self,infileName):
+        self.bdfInit()
+
         self.infilename = infileName
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'

@@ -221,7 +221,7 @@ class addMethods(object):
 
     def addNode(self,node):
         #print node
-        assert node.nid not in self.nodes
+        #assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[node.nid],node)  ## @todo enable before release...
         assert node.nid>0
         self.nodes[node.nid] = node
 
