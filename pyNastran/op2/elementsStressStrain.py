@@ -326,7 +326,6 @@ class ElementsStressStrain(object):
         #self.printBlock(self.data)
         assert self.numWide==11,'invalid numWide...numWide=%s' %(self.numWide)
         while len(self.data)>=40: # 2+17*5 = 87 -> 87*4 = 348
-            #nodeID = 'Centroid'
             eData     = self.data[0:4*11]
             self.data = self.data[4*11: ]
             out = unpack('iifffffffff',eData)
@@ -387,43 +386,93 @@ class ElementsStressStrain(object):
         #print "*****"
         #self.printBlock(self.data)
         assert self.numWide==87,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=348: # 2+17*5 = 87 -> 87*4 = 348
-            nodeID = 'Centroid'
-            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
-            self.data = self.data[8:]  # 2
-            eid = (eid - deviceCode) / 10
-            eData     = self.data[0:4*17]
-            self.data = self.data[4*17: ]
-            out = unpack('iffffffffffffffff',eData[0:68])  # 17
-            self.op2Debug.write('%s\n' %(str(out)))
-            (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                  fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-            grid = 'C'
-            stress.addNewEid('CQUAD4',eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            stress.add(               eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-
-            for nodeID in range(nNodes):   #nodes pts
+        if self.numWide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
+            while len(self.data)>=348: # 2+17*5 = 87 -> 87*4 = 348
+                (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+                self.data = self.data[8:]  # 2
+                eid = (eid - deviceCode) / 10
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
-                out = unpack('iffffffffffffffff',eData[0:68])
+                out = unpack('iffffffffffffffff',eData)  # len=17*4
                 self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                       fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
+                grid = 'C'
+                stress.addNewEid('CQUAD4',eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                stress.add(               eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                for nodeID in range(nNodes):   #nodes pts
+                    eData     = self.data[0:4*17]
+                    self.data = self.data[4*17: ]
+                    out = unpack('iffffffffffffffff',eData)
+                    self.op2Debug.write('%s\n' %(str(out)))
+                    (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
+                          fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
+
+                    #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                    #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                    #print "len(data) = ",len(self.data)
+                    #self.printBlock(self.data)
+                    stress.addNewNode(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                    stress.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                ###
+                #print '--------------------'
                 #print "len(data) = ",len(self.data)
-                #self.printBlock(self.data)
-                stress.addNewNode(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                stress.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                #print "tell = ",self.op2.tell()
+
+                #self.printSection(100)
+                #sys.exit('asdf')
+                #self.dn += 348
             ###
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-            #print "tell = ",self.op2.tell()
-            
-            #self.printSection(100)
-            #sys.exit('asdf')
-            #self.dn += 348
         ###
+        elif self.numWide==77:
+            while len(self.data)>=308: # 2+15*5 = 77 -> 77*4 = 308
+                (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+                self.data = self.data[8:]  # 2
+                eid = (eid - deviceCode) / 10
+                eData     = self.data[0:4*15]
+                self.data = self.data[4*15: ]
+
+                out = unpack('iffffffffffffff',eData)  # 15
+                self.op2Debug.write('%s\n' %(str(out)))
+                (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
+                      fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
+
+                for nodeID in range(nNodes):   #nodes pts
+                    eData     = self.data[0:4*15]
+                    self.data = self.data[4*15: ]
+                    out = unpack('iffffffffffffff',eData)
+                    self.op2Debug.write('%s\n' %(str(out)))
+                    (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
+                          fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
+                ###
+            ###
+        ###
+        elif self.numWide==47:
+            while len(self.data)>=188: # 2+9*5 = 47 -> 47*4 = 188
+                (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+                self.data = self.data[8:]  # 2
+                eid = (eid - deviceCode) / 10
+                eData     = self.data[0:4*9]
+                self.data = self.data[4*9: ]
+
+                out = unpack('iffffffff',eData)  # 9
+                self.op2Debug.write('%s\n' %(str(out)))
+                (grid,fd1,sx1,sy1,txy1,
+                      fd2,sx2,sy2,txy2) = out
+
+                for nodeID in range(nNodes):   #nodes pts
+                    eData     = self.data[0:4*9]
+                    self.data = self.data[4*9: ]
+                    out = unpack('iffffffff',eData)
+                    self.op2Debug.write('%s\n' %(str(out)))
+                    (grid,fd1,sx1,sy1,txy1,
+                          fd2,sx2,sy2,txy2) = out
+                    ###
+                ###
+            ###
+        ###
+        else:
+            raise Exception('invalid numWide')
         self.handleStressBuffer(self.CQUAD4_144,stress)
 
