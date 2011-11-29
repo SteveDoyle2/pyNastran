@@ -72,23 +72,23 @@ OP2 Reader
 
 All Thermal=0
 
-CROD_1 (0/6)
+CROD_1 (2/6)
  - sCode6=0 (Strain)
    - tCode7=0,1 (Real & Real/Imaginary)
-     numWide=5
+     numWide=5 (done 1/2)
    - tCode7=2 (Random)
      numWide=3
 
  - sCode6=0 (Stress)
    - tCode7=0,1 (Real & Real/Imaginary)
-     numWide=5
+     numWide=5 (done 1/2)
    - tCode7=2 (Random)
      numWide=3
 
-CBEAM_2 (None)
+CBEAM_2 (2/6 not integrated)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
-     numWide=11
+     numWide=11 (not integrated)
    - tCode7=1 (Real/Imaginary)
      numWide=11
    - tCode7=2 (Random)
@@ -96,7 +96,7 @@ CBEAM_2 (None)
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
-     numWide=11
+     numWide=11 (not integrated)
    - tCode7=1 (Real/Imaginary)
      numWide=11
    - tCode7=2 (Random)
@@ -145,10 +145,10 @@ CQUAD4_33 (2/6)
    - tCode7=1 (Real/Imaginary)
      numWide=15
 
-CBAR_34 (None)
+CBAR_34 (2/5)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
-     numWide=17
+     numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
      numWide=15
    - tCode7=2 (Random)
@@ -156,7 +156,7 @@ CBAR_34 (None)
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
-     numWide=17
+     numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
      numWide=15
 
@@ -180,7 +180,7 @@ CTRIA3_74 (2/6)
 CTRIA6_75 (None)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
-     numWide=19 (done)
+     numWide=19
    - tCode7=1 (Real/Imaginary)
      numWide=17
    - tCode7=2 (Random)
@@ -188,7 +188,7 @@ CTRIA6_75 (None)
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
-     numWide=19 (done)
+     numWide=19
    - tCode7=1 (Real/Imaginary)
      numWide=17
    - tCode7=2 (Random)
@@ -218,22 +218,22 @@ CQUAD4_95/CQUAD8_96/CTRIA3_97/CTRIA6_98 (done)
  - sCode6=0 (Stress)
      numWide=11 (done)
 
-CQUAD4_144
+CQUAD4_144 (2/6 done; 4/6 not integrated)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
      numWide=19 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=17
+     numWide=17 (not integrated)
    - tCode7=2 (Random)
-     numWide=11
+     numWide=11 (not integrated)
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=19 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=17
+     numWide=17 (not integrated)
    - tCode7=2 (Random)
-     numWide=11
+     numWide=11 (not integrated)
 
 
 ------------------------------v0.1------------------------------
