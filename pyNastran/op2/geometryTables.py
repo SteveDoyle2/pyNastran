@@ -4,7 +4,7 @@ import struct
 from struct import unpack
 
 from pyNastran.op2.op2Errors import *
-from pyNastran.op2.geometryTable1 import Geometry1
+from pyNastran.op2.geom1 import Geometry1
 
 class GeomObj(object):
     def __init__(self):
@@ -41,46 +41,54 @@ class GeometryTables(Geometry1):
 
         return foundSubTable
 
-    def readTable_Geom1(self):
-        self.nodes  = {}
-        self.coords = {}
+    def readGeomSubTable(self,iTable):
+        i=0
+        isNextTable=False
+        isNextSubTable=False
+        self.readMarkers([iTable,1,0])
+        #print self.iTableMap
 
-        tableName = self.readTableName(rewind=False) # GEOM1
-        self.tableInit(tableName)
-        print "*tableName = |%r|" %(tableName)
+        tableName = self.readTableName(rewind=True,stopOnFailure=False)
+        if tableName:
+            print "**tableName = |%r|" %(tableName)
+            return tableName,isNextTable,isNextSubTable
 
-        self.readMarkers([-1,7])
-        fields = self.readIntBlock()
-        #print "fields = ",fields
+        data = ''
+        isTableActive=False
+        while isNextSubTable==False and isNextTable==False:
+            #print self.printSection(100)
+            marker = self.getMarker()
+            #print "marker = ",marker
+            if marker<0:
+                msg = 'marker is less than 0...'
+                raise Exception(msg)
+            data += self.readBlock()
+            if not isTableActive:
+                tableType = unpack('iii',data[:12])
+                data = data[12:]
 
-        self.readMarkers([-2,1,0]) # 2
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-        word = self.readStringBlock()
+            #print "iTable=%s lenGeomData=%s" %(iTable,len(data))
 
-        self.iTableMap = {
-                            (1701,17,6):     self.readCord1C, # record 1
-                            (1801,18,5):     self.readCord1R, # record 2
-                            (1901,19,7):     self.readCord1S, # record 3
-                            (2001,20,9):     self.readCord2C, # record 4
-                            (2101,21,8):     self.readCord2R, # record 5
-                            (2201,22,10):    self.readCord2S, # record 6
-                            (14301,143,651): self.readCord3R, # record 7
-                            (4501,45,1):     self.readNodes,  # record 17
-                         }
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
+            if tableType in self.iTableMap:
+                #print "reading  iTable=%-3s with tableType=%s" %(iTable,tableType)
+                self.iTableMap[tableType](data)
+            else:
+                print "skipping iTable=%-3s with tableType=%s" %(iTable,tableType)
+
+            #self.op2Debug.write('ints = %s\n' %(str(ints)))
+
+            isNextTable = self.checkForNextTable()
+            isNextSubTable = self.checkForNextSubTable(iTable-1)
+            #print "i=%s tell=%s isNextTable=%s isNextSubTable=%s" %(i,self.op2.tell(),isNextTable,isNextSubTable)
+            #if i==13:
+            #    sys.exit('stopA')
+            i+=1
+            isTableActive=True
+        ### while
         
-            if self.checkForNextTable():
-                #sys.exit('end of geom1')
-                return
-            iTable -= 1
-        ###
-        sys.exit('end of geom1-huh')
-        
+        #print "exiting the geom sub table"
+        return (tableName,isNextTable,isNextSubTable)
 
-# GEOM1
 #-----
 # GEOM2
 
@@ -149,260 +157,30 @@ class GeometryTables(Geometry1):
             SPOINT(None,[nid])
         ###
 
+    def readTable_Geom2(self):
+        self.iTableMap = {}
+        self.readRecordTable('GEOM2')
+
 # GEOM2
 #-----
 # GEOM3
 
-
-    def readGeomSubTable(self,iTable):
-        i=0
-        isNextTable=False
-        isNextSubTable=False
-        self.readMarkers([iTable,1,0])
-        #print self.iTableMap
-
-        tableName = self.readTableName(rewind=True,stopOnFailure=False)
-        if tableName:
-            print "**tableName = |%r|" %(tableName)
-            return tableName,isNextTable,isNextSubTable
-
-        data = ''
-        isTableActive=False
-        while isNextSubTable==False and isNextTable==False:
-            #print self.printSection(100)
-            marker = self.getMarker()
-            #print "marker = ",marker
-            if marker<0:
-                msg = 'marker is less than 0...'
-                raise Exception(msg)
-            data += self.readBlock()
-            if not isTableActive:
-                tableType = unpack('iii',data[:12])
-                data = data[12:]
-
-            #print "iTable=%s lenGeomData=%s" %(iTable,len(data))
-
-            if tableType in self.iTableMap:
-                #print "reading  iTable=%-3s with tableType=%s" %(iTable,tableType)
-                self.iTableMap[tableType](data)
-            else:
-                print "skipping iTable=%-3s with tableType=%s" %(iTable,tableType)
-
-            #self.op2Debug.write('ints = %s\n' %(str(ints)))
-
-            isNextTable = self.checkForNextTable()
-            isNextSubTable = self.checkForNextSubTable(iTable-1)
-            #print "i=%s tell=%s isNextTable=%s isNextSubTable=%s" %(i,self.op2.tell(),isNextTable,isNextSubTable)
-            #if i==13:
-            #    sys.exit('stopA')
-            i+=1
-            isTableActive=True
-        ### while
-        
-        #print "exiting the geom sub table"
-        return (tableName,isNextTable,isNextSubTable)
-
-    def readTable_Geom2(self):
-        self.iTableMap = {}
-        #self.readTable_Geom1()
-        #return
-
-        tableName = self.readTableName(rewind=False) # GEOM2/GEOM3/GEOM4/EPT/MPTS/DYNAMICS
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) #2
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-        word = self.readStringBlock()
-        #print "word = |%r|" %(word)
-
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
-
-            if self.checkForNextTable():
-                return
-            print "----end of SubTable=%s----" %(iTable)
-            iTable -= 1
-        ###
-
-        
-        self.printSection(100)
-        sys.exit('end block...this should never happen...')
-
-
     def readTable_Geom3(self):
-        self.readTable_Geom2()
-        return
-
-        ## GEOM3
-        tableName = self.readTableName(rewind=False) # GEOM3
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0])
-        bufferWords = self.getMarker() # 2
-        print "bufferWords = ",bufferWords,bufferWords*4
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        self.readMarkers([-3,1,0]) # 24
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-        #self.printSection(4*187)
-        ints = self.readIntBlock()
-        print "ints = ",ints
-        #self.skip(4*26)
-        
-
-        #self.printSection(4*30)
-        #self.readMarkers([-4,1,0]) # 9
-        #bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-        #ints = self.readIntBlock()
-        #print "4,-1,0,ints = ",ints
-        #self.skip(4*11)
-
-
-        data = self.readTableData([-4,1,0],'GEOM3')
-        data = self.readTableData([-5,1,0],'GEOM3')
-        print "time for block section 6..."
-        
-        self.readMarkers([-6,1,0])
-        #assert self.op2.tell()==1488,self.op2.tell()
-        
-
-    def readTableData(self,markers,tableName):
-        self.readMarkers(markers,tableName) # 3
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        self.printSection(80)
-        data = self.readBlock()
-        return data
+        self.iTableMap = {}
+        self.readRecordTable('GEOM3')
 
     def readTable_Geom4(self):
-        self.readTable_Geom2()
-        return
-
-        # GEOM4
-        tableName = self.readTableName(rewind=False) # GEOM4
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) # 2
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
-
-            if self.checkForNextTable():
-                return
-            iTable -= 1
-        ###
-        sys.exit('end block of geom4...this should never happen...')
-
-        print "------------"
+        self.iTableMap = {}
+        self.readRecordTable('GEOM4')
 
     def readTable_EPT(self):
-        self.readTable_Geom2()
-        return
-
-        tableName = self.readTableName(rewind=False) # EPT
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) # 2
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        print "------------"
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
-
-            if self.checkForNextTable():
-                return
-            iTable -= 1
-        ###
-        sys.exit('end block of EPT...this should never happen...')
+        self.iTableMap = {}
+        self.readRecordTable('EPT')
 
     def readTable_MPTS(self):
-        self.readTable_Geom2()
-        return
-
-        tableName = self.readTableName(rewind=False) # MPTS
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) # 2
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
-
-            if self.checkForNextTable():
-                return
-            iTable -= 1
-        ###
-        sys.exit('end block of MPTS...this should never happen...')
+        self.iTableMap = {}
+        self.readRecordTable('MPTS')
 
     def readTable_DYNAMICS(self):
-        self.readTable_Geom2()
-        return
-
-        tableName = self.readTableName(rewind=False) # DYNAMICS
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7])
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-
-        self.readMarkers([-2,1,0]) # 2
-        bufferWords = self.getMarker()
-        #print "bufferWords = ",bufferWords,bufferWords*4
-
-        word = self.readStringBlock()
-        print "word = |%r|" %(word)
-
-        iTable = -3
-        while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
-
-            if self.checkForNextTable():
-                return
-            iTable -= 1
-        ###
-        sys.exit('end block of DYNAMICS...this should never happen...')
+        self.iTableMap = {}
+        self.readRecordTable('DYNAMICS')
