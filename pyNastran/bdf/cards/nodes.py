@@ -125,33 +125,51 @@ class GRDSET(Node):
 
 class GRID(Node):
     type = 'GRID'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
+        """
+        if coming from a BDF object, card is used
+        if coming from the OP2, data is used
+        """
         Node.__init__(self,card)
 
+        assert card is None or data is None
+        if card is None:
+            self.nid = data[0]
+            self.cp = data[1]
+            self.xyz = array(data[2:4])
+            self.cd = data[5]
+            self.ps = data[6]
+            self.seid = data[7]
+        else:
+            ## Node ID
+            self.nid = int(card.field(1))
 
-        ## Node ID
-        self.nid = int(card.field(1))
+            ## Grid point coordinate system
+            self.cp = card.field(2,0)
 
-        ## Grid point coordinate system
-        self.cp = card.field(2,0)
+            xyz = card.fields(3,6,[0.,0.,0.])  ## @todo is standard nastran to set <0,0,0>as the defaults???
+            #displayCard(card)
+            #print "xyz = ",xyz
+            self.xyz = array(xyz)
 
-        xyz = card.fields(3,6,[0.,0.,0.])  ## @todo is standard nastran to set <0,0,0>as the defaults???
-        #displayCard(card)
-        #print "xyz = ",xyz
-        self.xyz = array(xyz)
+            ## Analysis coordinate system
+            self.cd = card.field(6,0)
 
-        ## Analysis coordinate system
-        self.cd = card.field(6,0)
+            ## SPC constraint
+            self.ps = card.field(7,0)
 
-        ## SPC constraint
-        self.ps = card.field(7,0)
+            ## Superelement ID
+            self.seid = card.field(8,0)
 
-        ## Superelement ID
-        self.seid = card.field(8,0)
-
-        #print "xyz = ",self.xyz
-        #print "cd = ",self.cd
-        #print "ps = ",self.ps
+            #print "xyz = ",self.xyz
+            #print "cd = ",self.cd
+            #print "ps = ",self.ps
+        ###
+        assert self.nid > 0
+        assert self.cp >= 0
+        assert self.cd >= 0
+        assert self.ps >= 0
+        assert self.seid >= 0
 
     def Position(self,debug=False):
         #print type(self.cp)
