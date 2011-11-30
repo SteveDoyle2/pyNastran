@@ -9,12 +9,12 @@ from baseCard import Property
 
 class PointProperty(Property):
     type = 'PointProperty'
-    def __init__(self,card):
-        Property.__init__(self,card)
+    def __init__(self,card,data):
+        Property.__init__(self,card,data)
         pass
 
 class PMASS(PointProperty):
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         PointProperty.__init__(self,card,nOffset=0)
         
         nOffset *= 2
@@ -29,13 +29,13 @@ class PMASS(PointProperty):
 
 class SpringProperty(Property):
     type = 'SpringProperty'
-    def __init__(self,card):
-        Property.__init__(self,card)
+    def __init__(self,card,data):
+        Property.__init__(self,card,data)
         pass
 
 class PELAS(SpringProperty):
     type = 'PELAS'
-    def __init__(self,card,nPELAS=0):
+    def __init__(self,card=None,nPELAS=0,data=None):
         SpringProperty.__init__(self,card)
         self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
         self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
@@ -48,8 +48,8 @@ class PELAS(SpringProperty):
 
 class LineProperty(Property):
     type = 'LineProperty'
-    def __init__(self,card):
-        Property.__init__(self,card)
+    def __init__(self,card,data):
+        Property.__init__(self,card,data)
         pass
     def D_bending(self):
         pass
@@ -77,8 +77,8 @@ class LineProperty(Property):
 
 class PROD(LineProperty):
     type = 'PROD'
-    def __init__(self,card):
-        LineProperty.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        LineProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.A   = card.field(3)
@@ -97,8 +97,8 @@ class PROD(LineProperty):
 
 class PTUBE(LineProperty):
     type = 'PTUBE'
-    def __init__(self,card):
-        LineProperty.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        LineProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.OD1 = card.field(3)
@@ -165,14 +165,14 @@ class PTUBE(LineProperty):
 
 class PBAR(LineProperty):
     type = 'PBAR'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         @todo
             support solution 600 default
             do a check for mid -> MAT1      for structural
             do a check for mid -> MAT4/MAT5 for thermal
         """
-        LineProperty.__init__(self,card)
+        LineProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.A   = card.field(3,0.0)
@@ -239,8 +239,8 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
     "T1", "I1", "CHAN1", "Z", "CHAN2", "T2", "BOX1", "HEXA", "HAT",
     "HAT1", "DBOX"] # for GROUP="MSCBML0"
 
-    def __init__(self,card):
-        LineProperty.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        LineProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.group = card.field(3,'MSCBMLO')
@@ -268,11 +268,11 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
 
 class PBEAM(LineProperty):
     type = 'PBEAM'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         @todo fix 0th entry of self.so, self.xxb
         """
-        LineProperty.__init__(self,card)
+        LineProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         #print "pid    = ",self.pid
@@ -455,8 +455,8 @@ class PBEAM(LineProperty):
 #class PBEAML(LineProperty): #not done
 class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'
-    def __init__(self,card):
-        LineProperty.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        LineProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
 
@@ -492,8 +492,8 @@ class PBEAM3(LineProperty): # not done, cleanup
 
 class ShellProperty(Property):
     type = 'ShellProperty'
-    def __init__(self,card):
-        Property.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Property.__init__(self,card,data)
         pass
 
     def S(self):
@@ -701,8 +701,8 @@ class PCOMP(ShellProperty):
               300705      .5   0.0+0     YES
     """
     type = 'PCOMP'
-    def __init__(self,card): # not done, cleanup
-        ShellProperty.__init__(self,card)
+    def __init__(self,card=None,data=None): # not done, cleanup
+        ShellProperty.__init__(self,card,data)
         
         #fields = card.fields(1)
 
@@ -865,8 +865,8 @@ class PCOMP(ShellProperty):
 
 class SolidProperty(Property):
     type = 'SolidProperty'
-    def __init__(self,card):
-        Property.__init__(self,card)
+    def __init__(self,card,data):
+        Property.__init__(self,card,data)
         pass
 
 class PLSOLID(SolidProperty):
@@ -877,8 +877,8 @@ class PLSOLID(SolidProperty):
     PLSOLID 20 21
     """
     type = 'PLSOLID'
-    def __init__(self,card):
-        SolidProperty.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        SolidProperty.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.ge  = card.field(3)
@@ -966,15 +966,25 @@ class PSOLID(SolidProperty):
     PSOLID 2 100 6 TWO GRID REDUCED
     """
     type = 'PSOLID'
-    def __init__(self,card):
-        SolidProperty.__init__(self,card)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.cordm  = card.field(3,0)
-        self.integ  = card.field(4)
-        self.stress = card.field(5)
-        self.isop   = card.field(6)
-        self.fctn   = card.field(7,'SMECH')
+    def __init__(self,card=None,data=None):
+        SolidProperty.__init__(self,card,data)
+        if card:
+            self.pid    = card.field(1)
+            self.mid    = card.field(2)
+            self.cordm  = card.field(3,0)
+            self.integ  = card.field(4)
+            self.stress = card.field(5)
+            self.isop   = card.field(6)
+            self.fctn   = card.field(7,'SMECH')
+        else:
+            self.pid    = data[0]
+            self.mid    = data[1]
+            self.cordm  = data[2]
+            self.integ  = data[3]
+            self.stress = data[4]
+            self.isop   = data[5]
+            self.fctn   = data[6]
+        ###
 
     def __repr__(self):
         cordm = self.setBlankIfDefault(self.cordm,0)
@@ -984,8 +994,8 @@ class PSOLID(SolidProperty):
 
 class PCONEAX(Property): #not done
     type = 'PCONEAX'
-    def __init__(self,card):
-        Property.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Property.__init__(self,card,data)
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.group = card.field(3,'MSCBMLO')
