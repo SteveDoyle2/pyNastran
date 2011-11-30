@@ -8,9 +8,9 @@ from baseCard import BaseCard
 
 class Material(BaseCard):
     """Base Material Class"""
-    def __init__(self,card):
+    def __init__(self,card,data):
+        pass
         #self.type = card[0]
-        self.mid  = card.field(1)
 
     def crossReference(self,mesh):
         pass
@@ -21,25 +21,25 @@ class Material(BaseCard):
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
-    def __init__(self,card):
-        Material.__init__(self,card)
+    def __init__(self,card,data):
+        Material.__init__(self,card,data)
 
 
 class AnisotropicMaterial(Material):
     """Anisotropic Material Class"""
-    def __init__(self,card):
-        Material.__init__(self,card)
+    def __init__(self,card,data):
+        Material.__init__(self,card,data)
 
 class ThermalMaterial(Material):
     """Thermal Material Class"""
-    def __init__(self,card):
-        Material.__init__(self,card) 
+    def __init__(self,card,data):
+        Material.__init__(self,card,data) 
 
 
 class CREEP(Material):
     type = 'CREEP'
-    def __init__(self,card):
-        Material.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Material.__init__(self,card,data)
         self.mid  = card.field(2) # mid
         self.T0   = card.field(3,0.0)
         self.exp  = card.field(4,1e-9)
@@ -70,18 +70,33 @@ class MAT1(Material):
     MAT1     1      1.03+7  3.9615+6.3      .098
     """
     type = 'MAT1'
-    def __init__(self,card):
-        Material.__init__(self,card) #mid
+    def __init__(self,card=None,data=None):
+        Material.__init__(self,card,data) #mid
 
-        self.set_E_G_nu(card)
-        self.rho  = card.field(5,1e-8)
-        self.a    = card.field(6)
-        self.TRef = card.field(7,0.0)
-        self.ge = card.field(8)
-        self.St = card.field(9)
-        self.Sc = card.field(10)
-        self.Ss = card.field(11)
-        self.Mcsid = card.field(12)
+        if card:
+            self.mid  = card.field(1)
+            self.set_E_G_nu(card)
+            self.rho  = card.field(5,1e-8)
+            self.a    = card.field(6,0.0)
+            self.TRef = card.field(7,0.0)
+            self.ge   = card.field(8,0.0)
+            self.St   = card.field(9,0.0)
+            self.Sc   = card.field(10,0.0)
+            self.Ss   = card.field(11,0.0)
+            self.Mcsid = card.field(12,0)
+        else:
+            self.mid   = data[0]
+            self.E     = data[1]
+            self.G     = data[2]
+            self.nu    = data[3]
+            self.rho   = data[4]
+            self.a     = data[5]
+            self.TRef  = data[6]
+            self.ge    = data[7]
+            self.St    = data[8]
+            self.Sc    = data[9]
+            self.Ss    = data[10]
+            self.Mcsid = data[11]
 
     #def G(self):
     #    return self.G
@@ -136,9 +151,16 @@ class MAT1(Material):
         G_default = self.E/2./(1+self.nu)
         G    = self.setBlankIfDefault(self.G,G_default)
         rho  = self.setBlankIfDefault(self.rho,1e-8)
+
+        a   = self.setBlankIfDefault(self.a,0.)
+        ge  = self.setBlankIfDefault(self.ge,0.)
+        St  = self.setBlankIfDefault(self.St,0.)
+        Sc  = self.setBlankIfDefault(self.Sc,0.)
+        Ss  = self.setBlankIfDefault(self.Ss,0.)
+        Mcsid = self.setBlankIfDefault(self.Mcsid,0)
         #G = self.G
-        fields = ['MAT1',self.mid,self.E,G,self.nu,rho,self.a,TRef,self.ge,
-                  self.St,self.Sc,self.Ss,self.Mcsid]
+        fields = ['MAT1',self.mid,self.E,G,self.nu,rho,a,TRef,ge,
+                  St,Sc,Ss,Mcsid]
         return self.printCard(fields)
 
 class MAT2(AnisotropicMaterial):
@@ -151,9 +173,10 @@ class MAT2(AnisotropicMaterial):
     MCSID
     """
     type = 'MAT2'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         AnisotropicMaterial.__init__(self,card) # mid
         
+        self.mid  = card.field(1)
         self.G11  = card.field(2,0.0)
         self.G12  = card.field(3,0.0)
         self.G13  = card.field(4,0.0)
@@ -192,9 +215,10 @@ class MAT3(AnisotropicMaterial):
     -    -   GZX AX  ATH AZ TREF GE
     """
     type = 'MAT3'
-    def __init__(self,card):
-        AnisotropicMaterial.__init__(self,card) # mid
+    def __init__(self,card=None,data=None):
+        AnisotropicMaterial.__init__(self,card,data)
         
+        self.mid  = card.field(1)
         self.ex    = card.field(2)
         self.eth   = card.field(3)
         self.ez    = card.field(4)
@@ -226,9 +250,10 @@ class MAT4(ThermalMaterial):
     TCH TDELTA QLAT
     """
     type = 'MAT4'
-    def __init__(self,card):
-        ThermalMaterial.__init__(self,card) # mid
+    def __init__(self,card=None,data=None):
+        ThermalMaterial.__init__(self,card,data)
         
+        self.mid  = card.field(1)
         self.k    = card.field(2)
         self.cp   = card.field(3,0.0)
         self.rho  = card.field(4,1.0)
@@ -256,9 +281,10 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     RHO HGEN
     """
     type = 'MAT5'
-    def __init__(self,card):
-        ThermalMaterial.__init__(self,card) # mid
+    def __init__(self,card=None,data=None):
+        ThermalMaterial.__init__(self,card,data)
 
+        self.mid  = card.field(1)
         self.kxx  = card.field(2)
         self.kxy  = card.field(3)
         self.kxz  = card.field(4)
@@ -283,8 +309,9 @@ class MAT8(AnisotropicMaterial):
     elements.
     MAT8          10  1.25+7  9.75+6     .28  1.11+7                   2.4-2"""
     type = 'MAT8'
-    def __init__(self,card):
-        AnisotropicMaterial.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        AnisotropicMaterial.__init__(self,card,data)
+        self.mid  = card.field(1)
         self.E11  = card.field(2)
         self.E22  = card.field(3)
         self.nu12 = card.field(4)
@@ -333,8 +360,8 @@ class MAT9(AnisotropicMaterial):
     A2 A3 A4 A5 A6 TREF GE
     """
     type = 'MAT9'
-    def __init__(self,card):
-        AnisotropicMaterial.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        AnisotropicMaterial.__init__(self,card,data)
         self.mid = card.field(1)
         self.G11 = card.field(2, 0.0)
         self.G12 = card.field(3, 0.0)
@@ -382,8 +409,8 @@ class MAT10(Material):
     MAT10 MID BULK RHO C GE
     """
     type = 'MAT10'
-    def __init__(self,card):
-        Material.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Material.__init__(self,card,data)
         self.mid  = card.field(1)
         (self.bulk,self.rho,self.c) = self.getBulkRhoC(card)
         self.ge = card.field(5)
