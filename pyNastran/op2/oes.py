@@ -314,7 +314,7 @@ class OES(object):
         #elif self.elementType == 68:   # cpenta   (done)
         #elif self.elementType == 69:   # cbend
         #elif self.elementType == 70:   # ctriar
-        #elif self.elementType == 74:   # ctria3
+        #elif self.elementType == 74:   # ctria3  (done)
         #elif self.elementType == 75:   # ctria6
         #elif self.elementType == 82:   # cquadr
         #elif self.elementType == 95: # CQUAD4    (done)

@@ -6,8 +6,11 @@ from struct import unpack
 from pyNastran.op2.op2Errors import *
 from pyNastran.op2.geom1 import Geometry1
 from pyNastran.op2.geom2 import Geometry2
-#from pyNastran.op2.geom3 import Geometry3
-#from pyNastran.op2.geom4 import Geometry4
+from pyNastran.op2.geom3 import Geometry3
+from pyNastran.op2.geom4 import Geometry4
+#from pyNastran.op2.ept  import EPT
+#from pyNastran.op2.mpts import MPTS
+#from pyNastran.op2.dynamics import DYNAMICS
 
 class GeomObj(object):
     def __init__(self):
@@ -15,7 +18,7 @@ class GeomObj(object):
     def geomFunc(self,data):
         pass
 
-class GeometryTables(Geometry1,Geometry2):
+class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4):
 
     def readRecordTable(self,expectedTableName):
         """
@@ -120,20 +123,16 @@ class GeometryTables(Geometry1,Geometry2):
         #print "exiting the geom sub table"
         return (tableName,isNextTable,isNextSubTable)
 
-    def readTable_Geom3(self):
-        self.iTableMap = {}
-        self.readRecordTable('GEOM3')
-
-    def readTable_Geom4(self):
-        self.iTableMap = {}
-        self.readRecordTable('GEOM4')
-
     def readTable_EPT(self):
-        self.iTableMap = {}
+        self.iTableMap = {
+                         #(2402, 24, 281): self.
+                         }
         self.readRecordTable('EPT')
 
     def readTable_MPTS(self):
-        self.iTableMap = {}
+        self.iTableMap = {
+                         #(103, 1, 77): self.
+                         }
         self.readRecordTable('MPTS')
 
     def readTable_DYNAMICS(self):

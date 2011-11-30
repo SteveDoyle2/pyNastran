@@ -2,10 +2,8 @@ from numpy import dot, cross,matrix
 from elements import Element
 
 class SolidElement(Element):
-    def __init__(self,card):
-        Element.__init__(self,card)
-        self.eid = card.field(1)
-        self.pid = card.field(2)
+    def __init__(self,card,data):
+        Element.__init__(self,card,data)
 
     def crossReference(self,mesh):
         self.nodes = mesh.Nodes(self.nodes)
@@ -23,9 +21,14 @@ class CHEXA8(SolidElement):
     G7 G8
     """
     type = 'CHEXA'
-    def __init__(self,card):
-        SolidElement.__init__(self,card)
-        #print "hexa = ",card
+    def __init__(self,card=None,data=None):
+        SolidElement.__init__(self,card,data)
+        if card:
+            #print "hexa = ",card
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+        else:
+            raise Exception('not implemented')
         nids = card.fields(3,11)
         #print "nids = ",nids
         self.prepareNodeIDs(nids)
@@ -38,9 +41,14 @@ class CHEXA20(CHEXA8):
     G15 G16 G17 G18 G19 G20
     """
     type = 'CHEXA'
-    def __init__(self,card):
-        SolidElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        SolidElement.__init__(self,card,data)
 
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+        else:
+            raise Exception('not implemented')
         nids = card.fields(3,23)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         msg = 'len(nids)=%s nids=%s' %(len(nids),nids)
@@ -51,9 +59,14 @@ class CPENTA6(SolidElement):
     CPENTA EID PID G1 G2 G3 G4 G5 G6
     """
     type = 'CPENTA'
-    def __init__(self,card):
-        SolidElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        SolidElement.__init__(self,card,data)
 
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+        else:
+            raise Exception('not implemented')
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==6
@@ -65,9 +78,14 @@ class CPENTA15(CPENTA6):
     G15
     """
     type = 'CPENTA'
-    def __init__(self,card):
-        SolidElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        SolidElement.__init__(self,card,data)
 
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+        else:
+            raise Exception('not implemented')
         nids = card.fields(3,18)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=15
@@ -77,9 +95,17 @@ class CTETRA4(SolidElement):
     CTETRA EID PID G1 G2 G3 G4
     """
     type = 'CTETRA'
-    def __init__(self,card):
-        SolidElement.__init__(self,card)
-        nids = card.fields(3,7)
+    def __init__(self,card=None,data=None):
+        SolidElement.__init__(self,card,data)
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            nids = card.fields(3,7)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:]
+            assert len(data)==6,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
 
@@ -126,8 +152,16 @@ class CTETRA10(CTETRA4):
              265     334     101     102
     """
     type = 'CTETRA'
-    def __init__(self,card):
-        SolidElement.__init__(self,card)
-        nids = card.fields(3,13)
+    def __init__(self,card=None,data=None):
+        SolidElement.__init__(self,card,data)
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            nids = card.fields(3,13)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:]
+            assert len(data)==12,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=10
