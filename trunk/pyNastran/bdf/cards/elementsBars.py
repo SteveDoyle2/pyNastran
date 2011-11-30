@@ -185,12 +185,17 @@ class LineElement(Element):
 
 class CROD(LineElement):
     type = 'CROD'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         LineElement.__init__(self,card)
-        self.eid = int(card.field(1))
-        self.pid = int(card.field(2,self.eid))
-
-        nids = card.fields(3,5)
+        if card:
+            self.eid = int(card.field(1))
+            self.pid = int(card.field(2,self.eid))
+            nids = card.fields(3,5)
+        else:
+            self.eid = data[0]
+            self.eid = data[1]
+            nids = data[2:4]
+        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
 
@@ -207,8 +212,8 @@ class CROD(LineElement):
 
 class CTUBE(CROD):
     type = 'CTUBE'
-    def __init__(self,card):
-        CROD.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        CROD.__init__(self,card,data)
     ###
     def Area():
         return self.pid.Area()
@@ -216,21 +221,31 @@ class CTUBE(CROD):
 
 class CONROD(CROD):
     type = 'CONROD'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         LineElement.__init__(self,card)
-        self.eid  = int(card.field(1))
-        print "self.eid = ",self.eid
+        if card:
+            self.eid  = int(card.field(1))
+            print "self.eid = ",self.eid
 
-        nids = card.fields(2,4)
+            nids = card.fields(2,4)
+
+            self.mid = int(card.field(4))
+            self.A   = float(card.field(5))
+            self.J   = float(card.field(6,0.0))
+            self.c   = float(card.field(7,0.0))
+            self.NSM = float(card.field(8,0.0))
+        else:
+            self.eid = data[0]
+            nids = data[1:3]
+            self.mid = data[3]
+            self.A   = data[4]
+            self.J   = data[5]
+            self.c   = data[6]
+            NSM      = data[7]
+        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
         #print self.nodes
-        
-        self.mid = int(card.field(4))
-        self.A   = float(card.field(5))
-        self.J   = float(card.field(6,0.0))
-        self.c   = float(card.field(7,0.0))
-        self.NSM = float(card.field(8,0.0))
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
@@ -295,9 +310,9 @@ class CONROD(CROD):
         
         g1x = array([1.,0.,0.])
         g1y = array([0.,1.,0.])
-        #g1z = array([0.,0.,1.])
+        g1z = array([0.,0.,1.])
 
-        #R = matrix([  global rod
+        #R = matrix([  #global rod
         #            [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
         #            [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
         #            [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
@@ -312,12 +327,20 @@ class CONROD(CROD):
     def Lambda(self,model):
         R = self.Rmatrix(model)
         Lambda = matrix(zeros((2,4),'d'))
-        #print "R = \n",R
+        #Lambda = matrix(zeros((2,6),'d')) # 3D
+        print "R = \n",R
         Lambda[0,0] = R[0,0]
         Lambda[0,1] = R[1,1]
+        #Lambda[0,2] = R[2,2] # 3D
 
         Lambda[1,2] = R[0,0]
         Lambda[1,3] = R[1,1]
+
+        # 3D
+        #Lambda[1,3] = R[0,0]
+        #Lambda[1,4] = R[1,1]
+        #Lambda[1,5] = R[2,2]
+        print "Lambda = \n",Lambda
         return Lambda
 
     def Stiffness(self,model):
@@ -341,6 +364,14 @@ class CONROD(CROD):
 
         ix2 = (n2-1)*2
         iy2 = (n2-1)*2+1
+
+        #ix1 = (n1-1)*3
+        #iy1 = (n1-1)*3+1
+        #iyz = (n1-1)*3+2
+
+        #ix2 = (n2-1)*2
+        #iy2 = (n2-1)*2+1
+        #iz2 = (n2-1)*2+2
 
         #print "q[%s] = %s" %(ix1,q[ix1])
         #print "q[%s] = %s" %(iy1,q[iy1])
@@ -413,29 +444,47 @@ class CBAR(LineElement):
                                0.0+0   0.0+0     -9.   0.0+0   0.0+0     -9.
     """
     type = 'CBAR'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         LineElement.__init__(self,card)
-        self.pid = int(card.field(2,self.eid))
-        self.ga  = int(card.field(3))
-        self.gb  = int(card.field(4))
-        self.initX_G0(card)
+        if card:
+            self.pid = int(card.field(2,self.eid))
+            self.ga  = int(card.field(3))
+            self.gb  = int(card.field(4))
+            self.initX_G0(card)
 
-        self.offt = card.field(8,'GGG')
-        #print 'self.offt = |%s|' %(self.offt)
+            self.offt = card.field(8,'GGG')
+            #print 'self.offt = |%s|' %(self.offt)
+
+            self.pa = card.field(9)
+            self.pb = card.field(10)
+
+            self.w1a = float(card.field(11,0.0))
+            self.w2a = float(card.field(12,0.0))
+            self.w3a = float(card.field(13,0.0))
+
+            self.w1b = float(card.field(14,0.0))
+            self.w2b = float(card.field(15,0.0))
+            self.w3b = float(card.field(16,0.0))
+        else: ## @todo verify
+            self.eid  = data[0]
+            self.pid  = data[1]
+            self.ga   = data[2]
+            self.gb   = data[3]
+            self.offt = str(data[4]) # GGG
+            self.pa   = data[5]
+            self.pb   = data[6]
+
+            self.w1a = data[7]
+            self.w2a = data[8]
+            self.w3a = data[9]
+
+            self.w1b = data[10]
+            self.w2b = data[11]
+            self.w3b = data[12]
+        ###
         assert self.offt[0] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
         assert self.offt[1] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
         assert self.offt[2] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
-
-        self.pa = card.field(9)
-        self.pb = card.field(10)
-        
-        self.w1a = float(card.field(11,0.0))
-        self.w2a = float(card.field(12,0.0))
-        self.w3a = float(card.field(13,0.0))
-
-        self.w1b = float(card.field(14,0.0))
-        self.w2b = float(card.field(15,0.0))
-        self.w3b = float(card.field(16,0.0))
 
     def Area(self):
         return self.pid.A
@@ -532,28 +581,31 @@ class CBEAM(CBAR):
     SA SB
     """
     type = 'CBEAM'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         LineElement.__init__(self,card)
-        self.pid = int(card.field(2,self.eid))
-        self.ga = int(card.field(3))
-        self.gb = int(card.field(4))
+        if card:
+            self.pid = int(card.field(2,self.eid))
+            self.ga = int(card.field(3))
+            self.gb = int(card.field(4))
 
-        self.initX_G0(card)
-        self.initOfftBit(card)
-        self.pa = card.field(9)
-        self.pb = card.field(10)
-        
-        self.w1a = float(card.field(11,0.0))
-        self.w2a = float(card.field(12,0.0))
-        self.w3a = float(card.field(13,0.0))
+            self.initX_G0(card)
+            self.initOfftBit(card)
+            self.pa = card.field(9)
+            self.pb = card.field(10)
 
-        self.w1b = float(card.field(14,0.0))
-        self.w2b = float(card.field(15,0.0))
-        self.w3b = float(card.field(16,0.0))
+            self.w1a = float(card.field(11,0.0))
+            self.w2a = float(card.field(12,0.0))
+            self.w3a = float(card.field(13,0.0))
 
-        self.sa = card.field(17)
-        self.sb = card.field(18)
-    
+            self.w1b = float(card.field(14,0.0))
+            self.w2b = float(card.field(15,0.0))
+            self.w3b = float(card.field(16,0.0))
+
+            self.sa = card.field(17)
+            self.sb = card.field(18)
+        else:
+            raise Exception('not implemented...')
+
     def initOfftBit(self,card):
         field8 = card.field(8)
         if isinstance(field8,float):

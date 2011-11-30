@@ -257,7 +257,8 @@ class CQUAD4(ShellElement):
         T2 = self.setBlankIfDefault(self.T2,1.0)
         T3 = self.setBlankIfDefault(self.T3,1.0)
         T4 = self.setBlankIfDefault(self.T4,1.0)
-        if debug:
+        #if debug:
+        if 1:
             print "nodes     = ",self.nodes
 
             print "self.zOffset   = ",self.zOffset

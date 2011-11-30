@@ -18,13 +18,14 @@ class Geometry1(object):
                             (2101,21,8):     self.readCord2R, # record 5
                             (2201,22,10):    self.readCord2S, # record 6
                             (14301,143,651): self.readCord3R, # record 7
-                            (4501,45,1):     self.readNodes,  # record 17
+                            (4501,45,1):     self.readGrid,   # record 17
                          }
         self.readRecordTable('GEOM1')
 
     def readCord1C(self,data):
         """
         (1701,17,6) - the marker for Record 1
+        @todo create object
         """
         print "reading CORD1C"
         while len(data)>=24: # 6*4
@@ -36,6 +37,7 @@ class Geometry1(object):
     def readCord1R(self,data):
         """
         (1801,18,5) - the marker for Record 2
+        @todo create object
         """
         print "reading CORD1R"
         while len(data)>=24: # 6*4
@@ -47,6 +49,7 @@ class Geometry1(object):
     def readCord1S(self,data):
         """
         (1901,19,7) - the marker for Record 3
+        @todo create object
         """
         print "reading CORD1S"
         while len(data)>=24: # 6*4
@@ -58,6 +61,7 @@ class Geometry1(object):
     def readCord2C(self,data):
         """
         (2001,20,9) - the marker for Record 4
+        @todo create object
         """
         print "reading CORD2C"
         while len(data)>=52: # 13*4
@@ -70,6 +74,7 @@ class Geometry1(object):
     def readCord2R(self,data):
         """
         (2101,21,8) - the marker for Record 5
+        @todo create object
         """
         print "reading CORD2R"
         while len(data)>=52: # 13*4
@@ -80,7 +85,10 @@ class Geometry1(object):
         ###
 
     def readCord2S(self,data):
-        """(2201,22,10) - the marker for Record 6"""
+        """
+        (2201,22,10) - the marker for Record 6
+        @todo create object
+        """
         print "reading CORD2S"
         while len(data)>=52: # 13*4
             eData = data[:52]
@@ -93,6 +101,7 @@ class Geometry1(object):
         """
         (14301,143,651) - the marker for Record 7
         @todo isnt this a CORD3G, not a CORD3R ???
+        @todo create object
         """
         print "reading CORD3R"
         while len(data)>=16: # 4*4
@@ -101,7 +110,7 @@ class Geometry1(object):
             (cid,n1,n2,n3) = unpack('iiii',eData)
         ###
 
-    def readNodes(self,data):
+    def readGrid(self,data):
         """(4501,45,1) - the marker for Record 17"""
         print "reading NODES"
         while len(data)>=32: # 8*4
@@ -117,4 +126,8 @@ class Geometry1(object):
             #print str(grid)[:-1]
         ###
         #print "len(data) = ",len(data)
-        
+
+# integrated into readGeom1 function
+#-------------------------------------
+# not integrated
+

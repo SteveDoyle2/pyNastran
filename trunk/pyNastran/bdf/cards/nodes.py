@@ -133,14 +133,7 @@ class GRID(Node):
         """
         Node.__init__(self,card,data)
 
-        if card is None:
-            self.nid = data[0]
-            self.cp = data[1]
-            self.xyz = array(data[2:4])
-            self.cd = data[5]
-            self.ps = data[6]
-            self.seid = data[7]
-        else:
+        if card:
             ## Node ID
             self.nid = int(card.field(1))
 
@@ -164,6 +157,14 @@ class GRID(Node):
             #print "xyz = ",self.xyz
             #print "cd = ",self.cd
             #print "ps = ",self.ps
+        else:
+            self.nid  = data[0]
+            self.cp   = data[1]
+            self.xyz  = array(data[2:5])
+            self.cd   = data[5]
+            self.ps   = data[6]
+            self.seid = data[7]
+            assert len(self.xyz)==3
         ###
         assert self.nid > 0
         assert self.cp >= 0

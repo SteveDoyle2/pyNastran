@@ -7,9 +7,9 @@ from baseCard import BaseCard
 class Load(BaseCard):
     """defines the DefaultLoad class"""
     type = 'DefLoad'
-    def __init__(self,card):
+    def __init__(self,card,data):
+        pass
         #self.type = card[0]
-        self.lid  = card.field(1)
 
     #def normalize(self,v):
     #    #print "v = ",v
@@ -44,7 +44,7 @@ class LSEQ(BaseCard):  # how does this work...
     Defines a sequence of static load sets
     """
     type = 'LSEQ'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.sid  = card.field(1)
         self.exciteID = card.field(2)
         self.lid = card.field(3)
@@ -69,7 +69,7 @@ class LSEQ(BaseCard):  # how does this work...
 
 class LOAD(Load):
     type = 'LOAD'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         @todo parse the loads data to have scale factor and load
         """
@@ -109,8 +109,8 @@ class LOAD(Load):
 
 class OneDeeLoad(Load): # FORCE/MOMENT
     type = '1D_Load'
-    def __init__(self,card):
-        Load.__init__(self,card)
+    def __init__(self,card,data):
+        Load.__init__(self,card,data)
 
     def normalize(self):
         """
@@ -125,16 +125,16 @@ class OneDeeLoad(Load): # FORCE/MOMENT
 
 class Force(OneDeeLoad):
     type = '1D_Load'
-    def __init__(self,card):
-        OneDeeLoad.__init__(self,card)
+    def __init__(self,card,data):
+        OneDeeLoad.__init__(self,card,data)
 
     def F(self):
         return self.xyz*self.mag
 
 class Moment(OneDeeLoad):
     type = 'Moment'
-    def __init__(self,card):
-        OneDeeLoad.__init__(self,card)
+    def __init__(self,card,data):
+        OneDeeLoad.__init__(self,card,data)
 
     def M(self):
         return self.xyz*self.mag
@@ -142,16 +142,25 @@ class Moment(OneDeeLoad):
 
 class FORCE(Force):
     type = 'FORCE'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         FORCE          3       1            100.      0.      0.      1.
         """
-        Force.__init__(self,card)
-        self.node = card.field(2)
-        self.cid  = card.field(3,0)
-        self.mag  = card.field(4)
+        Force.__init__(self,card,data)
+        if card:
+            self.lid  = card.field(1)
+            self.node = card.field(2)
+            self.cid  = card.field(3,0)
+            self.mag  = card.field(4)
 
-        xyz = card.fields(5,8,[0.,0.,0.])
+            xyz = card.fields(5,8,[0.,0.,0.])
+        else:
+            self.lid  = data[0]
+            self.node = data[1]
+            self.cid  = data[2]
+            self.mag  = data[3]
+            xyz  = data[4:7]
+
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
 
@@ -176,12 +185,21 @@ class FORCE1(Force):
     two grid points that determine the direction.
     """
     type = 'FORCE1'
-    def __init__(self,card):
-        Force.__init__(self,card)
-        self.node = card.field(2)
-        self.mag  = card.field(3)
-        self.g1   = card.field(4)
-        self.g2   = card.field(5)
+    def __init__(self,card=None,data=None):
+        Force.__init__(self,card,data)
+        if card:
+            self.lid  = card.field(1)
+            self.node = card.field(2)
+            self.mag  = card.field(3)
+            self.g1   = card.field(4)
+            self.g2   = card.field(5)
+        else:
+            self.lid  = data[0]
+            self.node = data[1]
+            self.mag  = data[2]
+            self.g1   = data[3]
+            self.g2   = data[4]
+        ###
 
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -206,17 +224,28 @@ class FORCE2(Force):
     four grid points that determine the direction.
     """
     type = 'FORCE2'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         FORCE2 SID G F G1 G2 G3 G4
         """
-        Force.__init__(self,card)
-        self.node = card.field(2)
-        self.mag  = card.field(3)
-        self.g1   = card.field(4)
-        self.g2   = card.field(5)
-        self.g3   = card.field(5)
-        self.g4   = card.field(5)
+        Force.__init__(self,card,data)
+        if card:
+            self.lid  = card.field(1)
+            self.node = card.field(2)
+            self.mag  = card.field(3)
+            self.g1   = card.field(4)
+            self.g2   = card.field(5)
+            self.g3   = card.field(5)
+            self.g4   = card.field(5)
+        else:
+            self.lid  = data[0]
+            self.node = data[1]
+            self.mag  = data[2]
+            self.g1   = data[3]
+            self.g2   = data[4]
+            self.g3   = data[5]
+            self.g4   = data[6]
+        ###
 
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -241,7 +270,7 @@ class FORCE2(Force):
 
 class MOMENT(Moment):    # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         Defines a static concentrated moment at a grid point by specifying a scale factor and
         a vector that determines the direction.
@@ -249,7 +278,8 @@ class MOMENT(Moment):    # can i copy the force init without making the MOMENT a
         MOMENT SID G CID M    N1  N2  N3
         MOMENT 2   5   6 2.9 0.0 1.0 0.0
         """
-        Moment.__init__(self,card)
+        Moment.__init__(self,card,data)
+        self.lid  = card.field(1)
         self.node = card.field(2)
         self.cid  = card.field(3,0)
         self.mag  = card.field(4)
@@ -269,14 +299,15 @@ class MOMENT(Moment):    # can i copy the force init without making the MOMENT a
 
 class MOMENT1(Moment):
     type = 'MOMENT1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         Defines a static concentrated moment at a grid point by specifying a magnitude and
         two grid points that determine the direction
 
         MOMENT1 SID G M G1 G2
         """
-        Moment.__init__(self,card)
+        Moment.__init__(self,card,data)
+        self.lid  = card.field(1)
         self.node = card.field(2)
         self.mag  = card.field(3)
         self.g1   = card.field(4)
@@ -302,14 +333,15 @@ class MOMENT1(Moment):
 
 class MOMENT2(Moment):
     type = 'MOMENT2'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         Defines a static concentrated moment at a grid point by specification of a magnitude
         and four grid points that determine the direction.
 
         MOMENT2 SID G M G1 G2 G3 G4
         """
-        Moment.__init__(self,card)
+        Moment.__init__(self,card,data)
+        self.lid  = card.field(1)
         self.node = card.field(2)
         self.mag  = card.field(3)
         self.g1   = card.field(4)
@@ -337,7 +369,7 @@ class MOMENT2(Moment):
 
 class PLOAD(Load):
     type = 'PLOAD'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.lid = card.field(1)
         self.p   = card.field(2)
         self.nodes = card.fields(3,8)
@@ -356,7 +388,7 @@ class PLOAD1(Load):
     validTypes = ['FX','FY','FZ','FXE','FYE','FZE',
                   'MX','MY','MZ','MXE','MYE','MZE']
     validScales = ['LE','FR','LEPR','FRPR']
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.lid   = card.field(1)
         self.eid   = card.field(2)
         self.Type  = card.field(3)
@@ -378,7 +410,7 @@ class PLOAD1(Load):
 
 class PLOAD2(Load):  # todo:  support THRU
     type = 'PLOAD2'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.lid = card.field(1)
         self.p   = card.field(2)
         self.nodes = card.fields(3,9)
@@ -398,7 +430,7 @@ class PLOAD2(Load):  # todo:  support THRU
 
 class PLOAD4(Load):
     type = 'PLOAD4'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.lid = card.field(1)
         self.eid = card.field(2)
         p1 = card.field(3)
