@@ -49,6 +49,9 @@ class CTRIA3(ShellElement):
             self.T1 = data[8]
             self.T2 = data[9]
             self.T3 = data[10]
+            if self.T1==-1.0: self.T1=1.0
+            if self.T2==-1.0: self.T2=1.0
+            if self.T3==-1.0: self.T3=1.0
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
@@ -231,6 +234,10 @@ class CQUAD4(ShellElement):
             self.T2 = data[10]
             self.T3 = data[11]
             self.T4 = data[12]
+            if self.T1==-1.0: self.T1=1.0
+            if self.T2==-1.0: self.T2=1.0
+            if self.T3==-1.0: self.T3=1.0
+            if self.T4==-1.0: self.T4=1.0
         ###            
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4,'CQUAD4'
@@ -257,8 +264,8 @@ class CQUAD4(ShellElement):
         T2 = self.setBlankIfDefault(self.T2,1.0)
         T3 = self.setBlankIfDefault(self.T3,1.0)
         T4 = self.setBlankIfDefault(self.T4,1.0)
-        #if debug:
-        if 1:
+        if debug:
+        #if 1:
             print "nodes     = ",self.nodes
 
             print "self.zOffset   = ",self.zOffset

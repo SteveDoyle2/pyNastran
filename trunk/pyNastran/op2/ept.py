@@ -4,22 +4,43 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.properties import PROD,PSHELL,PSOLID
+from pyNastran.bdf.cards.properties import PROD,PBAR,PBEAM,PSHELL,PSOLID,PCOMP,PTUBE
 
 class EPT(object):
 
     def readTable_EPT(self):
+        self.bigProperties = {}
         self.iTableMap = {
-                         (902,9,29):      self.readPRod,
-                         #(1002,10,42):    self.readPShear,
-                         (2402, 24, 281): self.readPSolid,
-                         (2302,23,283):   self.readPShell,
-                         
+                         (3201,32,55):    self.readNSM,     # record 2
+                         (52,20,181):     self.readPBar,   # record 11 - buggy
+                         (2706,27,287):   self.readPComp,   # record 22
+                         (902,9,29):      self.readPRod,    # record 49
+                         #(1002,10,42):    self.readPShear, # record 50
+                         (2402, 24, 281): self.readPSolid,  # record 51
+                         (2302,23,283):   self.readPShell,  # record 52
+                         (1602,16,30):    self.readPTube,   # record 56
                          }
         self.readRecordTable('EPT')
 
 # HGSUPPR
-# NSM
+
+    def readNSM(self,data):
+        """
+        NSM(3201,32,55) - the marker for Record 2
+        """
+        print "reading NSM"
+        while len(data)>=16: # 4*4
+            eData = data[:16]
+            data  = data[16:]
+            out = unpack('iccccif',eData)
+            (sid,A,B,C,D,ID,value) = out
+            propSet = A+B+C+D
+            print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
+            prop = NSM(None,[sid,propSet,ID,value])
+            self.addProperty(prop)
+        ###
+
+
 # NSM1
 # NSML1
 # NSMADD
@@ -28,7 +49,25 @@ class EPT(object):
 # PAABSF
 # PACABS
 # PACBAR
-# PBAR
+
+    def readPBar(self,data):
+        """
+        PBAR(52,20,181) - the marker for Record 11
+        @warning this makes a funny property...
+        """
+        print "reading PBAR"
+        while len(data)>=76: # 19*4
+            eData = data[:76]
+            data  = data[76:]
+            out = unpack('iifffffffffffffffff',eData)
+            #print "len(out) = ",len(out)
+            print out
+            (pid,mid,a,I1,I2,J,nsm,fe,c1,c2,d1,d2,e1,e2,f1,f2,k1,k2,I12) = out
+            prop = PBAR(None,out)
+            self.addProperty(prop)
+            #sys.exit()
+        ###
+
 # PBARL
 # PBCOMP
 # PBEAM
@@ -39,7 +78,38 @@ class EPT(object):
 # PBUSH
 # PBUSH1D
 # PBUSHT
-# PCOMP
+
+    def readPComp(self,data):
+        """
+        PCOMP(2706,27,287) - the marker for Record 22
+        """
+        print "reading PCOMP"
+        while len(data)>=32: # 8*4 - dynamic
+            eData = data[:32]
+            data  = data[32:]
+            out = unpack('iifffiff',eData)
+            (pid,nLayers,z0,nsm,sb,ft,Tref,ge,) = out
+            
+            eData = data[:16*(nLayers+1)]
+            data  = data[16*(nLayers+1):]
+            
+            Mid=[]; T=[]; Theta=[]; Sout=[]
+            for n in range(nLayers):
+                #print "len(eData) = ",len(eData)
+                (mid,t,theta,sout) = unpack('iffi',eData[0:16])
+                Mid.append(mid)
+                T.append(t)
+                Theta.append(theta)
+                Sout.append(sout)
+                eData = eData[16:]
+            ###
+            
+            dataIn = [pid,z0,nsm,sb,ft,Tref,ge,Mid,T,Theta,Sout]
+            print "PCOMP = %s" %(dataIn)
+            prop = PCOMP(None,dataIn)
+            self.addProperty(prop)
+        ###
+
 # PCOMPA
 # PCONEAX
 # PCONV
@@ -104,9 +174,15 @@ class EPT(object):
             eData = data[:44]
             data  = data[44:]
             out = unpack('iifififfffi',eData)
+            print "PSHELL = ",out
             (pid,mid1,t,mid2,bk,mid3,ts,nsm,z1,z2,mid4) = out
             prop = PSHELL(None,out)
-            self.addProperty(prop)
+
+            if max(pid,mid1,mid2,mid3,mid4)>1e8:
+                self.bigProperties[pid] = prop
+            else:
+                self.addProperty(prop)
+            ###
         ###
 
 
@@ -128,7 +204,23 @@ class EPT(object):
 # PSOLIDL
 # PTRIA6
 # PTSHELL
-# PTUBE
+
+    def readPTube(self,data):
+        """
+        PTUBE(1602,16,30) - the marker for Record 56
+        @todo OD2 only exists for heat transfer...how do i know if there's heat transfer...
+        @warning assuming OD2 is not written (only done for thermal)
+        """
+        print "reading PTUBE"
+        while len(data)>=20: # 5*4
+            eData = data[:20]
+            data  = data[20:] # or 24
+            (pid,mid,OD,t,nsm) = unpack('iifff',eData)
+            dataIn = [pid,mid,OD,t,nsm]
+            prop = PTUBE(None,dataIn)
+            self.addProperty(prop)
+        ###
+
 # PSET
 # PVAL
 # PVISC

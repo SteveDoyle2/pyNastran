@@ -5,27 +5,28 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4
-from pyNastran.bdf.cards.elementsBars  import CROD
+from pyNastran.bdf.cards.elementsBars  import CROD,CBAR
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA15,CHEXA8,CHEXA20
 
 class Geometry2(object):
 
     def readTable_Geom2(self):
         self.iTableMap = {
-                           (201,2,69):       self.readCDamp1, # 16
-                           (301,3,70):       self.readCDamp2, # 17
-                           (401,4,71):       self.readCDamp3, # 18
-                           (501,5,72):       self.readCDamp4, # 19
-                           (10608,106,404):  self.readCDamp5, # 20
-                           (601,6,73):       self.readCElas1, # 29
-                           (701,7,74):       self.readCElas2, # 30
-                           (801,8,75):       self.readCElas3, # 31
-                           (901,9,76):       self.readCElas4, # 32
+                           (2408, 24, 180):  self.readCBar,   # record 8
+                           (201,2,69):       self.readCDamp1, # record 16
+                           (301,3,70):       self.readCDamp2, # record 17
+                           (401,4,71):       self.readCDamp3, # record 18
+                           (501,5,72):       self.readCDamp4, # record 19
+                           (10608,106,404):  self.readCDamp5, # record 20
+                           (601,6,73):       self.readCElas1, # record 29
+                           (701,7,74):       self.readCElas2, # record 30
+                           (801,8,75):       self.readCElas3, # record 31
+                           (901,9,76):       self.readCElas4, # record 32
                            (2958,51,177):    self.readCQUAD4, # record 69
                            (13900,139,9989): self.readCQUAD4, # record 70
                            (3001,30,48):     self.readCROD,   # record 80
-                          #(12201,122,9013): self.readCTETP,  # 86
-                           (5508,55,217):    self.readCTETRA, # 87
+                          #(12201,122,9013): self.readCTETP,  # record 86
+                           (5508,55,217):    self.readCTETRA, # record 87
                            (5959,59,282):    self.readCTRIA3, # record 93
                            (3701,37,49):     self.readCTUBE,  # record 103
                            (5551,49,105):    self.readSPOINT, # record 118
@@ -48,9 +49,39 @@ class Geometry2(object):
 # CBUSH1D
 # CCONE
 
+    def readCBar(self,data):
+        """
+        CBAR(2408,24,180) - the marker for Record 8
+        @todo create object
+        """
+        print "reading CBAR"
+        while len(data)>=64: # 16*4
+            eData = data[:64]
+            data  = data[64:]
+            f, = unpack('i',eData[28:32])
+            print "len(eData) = %s" %(len(eData))
+            if   f==0:
+                out = unpack('iiiifffiiiffffff',eData)
+                (eid,pid,ga,gb,x1,x2,  x3,  f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataInit = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+            elif f==1:
+                out = unpack('iiiifffiiiffffff',eData)
+                (eid,pid,ga,gb,x1,x2,  x3,  f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataInit = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+            elif f==2:
+                out = unpack('iiiiiiifiiffffff',eData)
+                (eid,pid,ga,gb,g0,junk,junk,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataInit = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+            else:
+                raise Exception('invalid f value...f=%s' %(f))
+            ###
+            elem = CBAR(None,dataInit)
+            self.addElement(elem)
+        ###
+
     def readCDamp1(self,data):
         """
-        (201,2,69) - the marker for Record 16
+        CDAMP(201,2,69) - the marker for Record 16
         @todo create object
         """
         print "reading CDAMP1"
@@ -213,10 +244,6 @@ class Geometry2(object):
             data  = data[56:]
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
-            if t1==-1.0: t1=1.0
-            if t2==-1.0: t2=1.0
-            if t3==-1.0: t3=1.0
-            if t4==-1.0: t4=1.0
             dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD4(None,dataInit)
             self.addElement(elem)
@@ -318,9 +345,6 @@ class Geometry2(object):
             data  = data[52:]
             (eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3) = unpack('iiiiiffiiifff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
-            if t1==-1.0: t1=1.0
-            if t2==-1.0: t2=1.0
-            if t3==-1.0: t3=1.0
             dataInit = [eid,pid,n1,n2,n3,theta,zoffs,tflag,t1,t2,t3]
             elem = CTRIA3(None,dataInit)
             self.addElement(elem)

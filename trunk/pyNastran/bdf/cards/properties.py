@@ -173,29 +173,52 @@ class PBAR(LineProperty):
             do a check for mid -> MAT4/MAT5 for thermal
         """
         LineProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.A   = card.field(3,0.0)
-        self.I1  = card.field(4,0.0)
-        self.I2  = card.field(5,0.0)
-        self.J   = card.field(6,0.0) # default=1/2(I1+I2) for SOL=600, otherwise 0.0
-        self.nsm = card.field(7,0.0)
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.A   = card.field(3,0.0)
+            self.I1  = card.field(4,0.0)
+            self.I2  = card.field(5,0.0)
+            self.J   = card.field(6,0.0) # default=1/2(I1+I2) for SOL=600, otherwise 0.0
+            self.nsm = card.field(7,0.0)
 
-        self.C1  = card.field(9, 0.0)
-        self.C2  = card.field(10,0.0)
-        self.D1  = card.field(11,0.0)
-        self.D2  = card.field(12,0.0)
-        self.E1  = card.field(13,0.0)
-        self.E2  = card.field(14,0.0)
-        self.F1  = card.field(15,0.0)
-        self.F2  = card.field(16,0.0)
+            self.C1  = card.field(9, 0.0)
+            self.C2  = card.field(10,0.0)
+            self.D1  = card.field(11,0.0)
+            self.D2  = card.field(12,0.0)
+            self.E1  = card.field(13,0.0)
+            self.E2  = card.field(14,0.0)
+            self.F1  = card.field(15,0.0)
+            self.F2  = card.field(16,0.0)
 
-        self.K1  = card.field(17)
-        self.K2  = card.field(18)
-        self.I12 = card.field(19,0.0)
-        if self.A==0.0:
-            assert self.K1==None
-            assert self.K2==None
+            self.K1  = card.field(17)
+            self.K2  = card.field(18)
+            self.I12 = card.field(19,0.0)
+            if self.A==0.0:
+                assert self.K1==None
+                assert self.K2==None
+            ###
+        else:
+            self.mid = data[0]
+            self.pid = data[1]
+            self.A   = data[2]
+            self.I1  = data[3]
+            self.I2  = data[4]
+            self.J   = data[5]
+            self.nsm = data[6]
+            #self.fe  = data[7] ## @todo not documented....
+            self.C1  = data[8]
+            self.C2  = data[9]
+            self.D1  = data[10]
+            self.D2  = data[11]
+            self.E1  = data[12]
+            self.E2  = data[13]
+            self.F1  = data[14]
+            self.F2  = data[15]
+            self.K1  = data[16]
+            self.K2  = data[17]
+            self.I12 = data[18]
+        ###
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
@@ -273,103 +296,107 @@ class PBEAM(LineProperty):
         @todo fix 0th entry of self.so, self.xxb
         """
         LineProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        #print "pid    = ",self.pid
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            #print "pid    = ",self.pid
 
-        nFields = card.nFields()-1 # -1 for PBEAM field
-        fields = card.fields()
-        #print "  fields = ",fields
+            nFields = card.nFields()-1 # -1 for PBEAM field
+            fields = card.fields()
+            #print "  fields = ",fields
 
-        self.so  = [None] ## @todo what are these values???
-        self.xxb = [None]
-        self.A   = [card.field(3) ]
-        self.i1  = [card.field(4,0.0) ]
-        self.i2  = [card.field(5,0.0) ]
-        self.i12 = [card.field(6,0.0) ]
-        self.J   = [card.field(7,0.0) ]
-        self.nsm = [card.field(8,0.0) ]
-        self.c1  = [card.field(9,0.0) ]
-        self.c2  = [card.field(10,0.0)]
-        self.d1  = [card.field(11,0.0)]
-        self.d2  = [card.field(12,0.0)]
-        self.e1  = [card.field(13,0.0)]
-        self.e2  = [card.field(14,0.0)]
-        self.f1  = [card.field(15,0.0)]
-        self.f2  = [card.field(16,0.0)]
-        
-        #fields = card.fields(0)
-        #print "fieldsPBEAM = ",fields
-        #fieldsMid = fields[16:]
-        #print "fieldsMid = ",fieldsMid
+            self.so  = [None] ## @todo what are these values???
+            self.xxb = [None]
+            self.A   = [card.field(3) ]
+            self.i1  = [card.field(4,0.0) ]
+            self.i2  = [card.field(5,0.0) ]
+            self.i12 = [card.field(6,0.0) ]
+            self.J   = [card.field(7,0.0) ]
+            self.nsm = [card.field(8,0.0) ]
+            self.c1  = [card.field(9,0.0) ]
+            self.c2  = [card.field(10,0.0)]
+            self.d1  = [card.field(11,0.0)]
+            self.d2  = [card.field(12,0.0)]
+            self.e1  = [card.field(13,0.0)]
+            self.e2  = [card.field(14,0.0)]
+            self.f1  = [card.field(15,0.0)]
+            self.f2  = [card.field(16,0.0)]
 
-        #fields = card.fields(9)
-        #print ""
-        #print "  nFields = ",nFields
-        #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
-        # counting continuation cards
-        nMajor    = nFields/16
-        nLeftover = nFields%16
-        #print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
-        if nLeftover==0:
-            nMajor-=1
+            #fields = card.fields(0)
+            #print "fieldsPBEAM = ",fields
+            #fieldsMid = fields[16:]
+            #print "fieldsMid = ",fieldsMid
 
-        if nMajor==0:
-            nMajor=1
-        
-        x = (nMajor)*16+1
-        if card.field(x) in ['YES','YESA','NO']: # there is no footer
-            nMajor +=1
-            x+=16
+            #fields = card.fields(9)
+            #print ""
+            #print "  nFields = ",nFields
+            #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
+            # counting continuation cards
+            nMajor    = nFields/16
+            nLeftover = nFields%16
+            #print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
+            if nLeftover==0:
+                nMajor-=1
 
-        #print "  nMajor = ",nMajor
-        for nRepeated in range(1,nMajor):
-            #print "  adding a major"
-            nStart = nRepeated*16+1  # field 17 is the first possible so
-            propFields = card.fields(nStart,nStart+16)
-            #print "propFields = ",propFields
-            
-            #print "  so = ",propFields[0]
-            assert propFields[0] in [None,'YES','YESA','NO'],"SO=%s for PBEAM pid=%s" %(propFields[0],self.pid)
-            self.so.append( propFields[0])
-            self.xxb.append(propFields[1])
-            self.A.append(  propFields[2])
-            self.i1.append( self.setDefaultIfBlank(propFields[3],0.0))
-            self.i2.append( self.setDefaultIfBlank(propFields[4],0.0))
-            self.i12.append(self.setDefaultIfBlank(propFields[5],0.0))
-            self.J.append(  self.setDefaultIfBlank(propFields[6],0.0))
-            self.nsm.append(self.setDefaultIfBlank(propFields[7],0.0))
-            self.c1.append( self.setDefaultIfBlank(propFields[8],0.0))
-            self.c2.append( self.setDefaultIfBlank(propFields[9],0.0))
-            self.d1.append( self.setDefaultIfBlank(propFields[10],0.0))
-            self.d2.append( self.setDefaultIfBlank(propFields[11],0.0))
-            self.e1.append( self.setDefaultIfBlank(propFields[12],0.0))
-            self.e2.append( self.setDefaultIfBlank(propFields[13],0.0))
-            self.f1.append( self.setDefaultIfBlank(propFields[14],0.0))
-            self.f2.append( self.setDefaultIfBlank(propFields[15],0.0))
-        #print "nRepeated = ",nRepeated
+            if nMajor==0:
+                nMajor=1
 
-        # footer fields
-        self.k1   = card.field(x,1.0)
-        
-        assert self.k1 not in ['YES','YESA','NO'],'error reading PBEAM card pid=%s' %(self.pid)
-        #print "  k1 = ",self.k1
-        self.k2   = card.field(x+1,1.0)
-        self.s1   = card.field(x+2,0.0)
-        self.s2   = card.field(x+3,0.0)
-        self.nsia = card.field(x+4,0.0)
-        self.nsib = card.field(x+5,self.nsia)
-        self.cwa  = card.field(x+6,0.0)
-        self.cwb  = card.field(x+7,self.cwa)
+            x = (nMajor)*16+1
+            if card.field(x) in ['YES','YESA','NO']: # there is no footer
+                nMajor +=1
+                x+=16
 
-        self.m1a = card.field(x+8,0.0)
-        self.m2a = card.field(x+9,self.m1a)
-        self.m1b = card.field(x+10,0.0)
-        self.m2b = card.field(x+11,self.m1b)
-        self.n1a = card.field(x+12,0.0)
-        self.n2a = card.field(x+13,self.n1a)
-        self.n1b = card.field(x+14,0.0)
-        self.n2b = card.field(x+15,self.n1b)
+            #print "  nMajor = ",nMajor
+            for nRepeated in range(1,nMajor):
+                #print "  adding a major"
+                nStart = nRepeated*16+1  # field 17 is the first possible so
+                propFields = card.fields(nStart,nStart+16)
+                #print "propFields = ",propFields
+
+                #print "  so = ",propFields[0]
+                assert propFields[0] in [None,'YES','YESA','NO'],"SO=%s for PBEAM pid=%s" %(propFields[0],self.pid)
+                self.so.append( propFields[0])
+                self.xxb.append(propFields[1])
+                self.A.append(  propFields[2])
+                self.i1.append( self.setDefaultIfBlank(propFields[3],0.0))
+                self.i2.append( self.setDefaultIfBlank(propFields[4],0.0))
+                self.i12.append(self.setDefaultIfBlank(propFields[5],0.0))
+                self.J.append(  self.setDefaultIfBlank(propFields[6],0.0))
+                self.nsm.append(self.setDefaultIfBlank(propFields[7],0.0))
+                self.c1.append( self.setDefaultIfBlank(propFields[8],0.0))
+                self.c2.append( self.setDefaultIfBlank(propFields[9],0.0))
+                self.d1.append( self.setDefaultIfBlank(propFields[10],0.0))
+                self.d2.append( self.setDefaultIfBlank(propFields[11],0.0))
+                self.e1.append( self.setDefaultIfBlank(propFields[12],0.0))
+                self.e2.append( self.setDefaultIfBlank(propFields[13],0.0))
+                self.f1.append( self.setDefaultIfBlank(propFields[14],0.0))
+                self.f2.append( self.setDefaultIfBlank(propFields[15],0.0))
+            #print "nRepeated = ",nRepeated
+
+            # footer fields
+            self.k1   = card.field(x,1.0)
+
+            assert self.k1 not in ['YES','YESA','NO'],'error reading PBEAM card pid=%s' %(self.pid)
+            #print "  k1 = ",self.k1
+            self.k2   = card.field(x+1,1.0)
+            self.s1   = card.field(x+2,0.0)
+            self.s2   = card.field(x+3,0.0)
+            self.nsia = card.field(x+4,0.0)
+            self.nsib = card.field(x+5,self.nsia)
+            self.cwa  = card.field(x+6,0.0)
+            self.cwb  = card.field(x+7,self.cwa)
+
+            self.m1a = card.field(x+8,0.0)
+            self.m2a = card.field(x+9,self.m1a)
+            self.m1b = card.field(x+10,0.0)
+            self.m2b = card.field(x+11,self.m1b)
+            self.n1a = card.field(x+12,0.0)
+            self.n2a = card.field(x+13,self.n1a)
+            self.n1b = card.field(x+14,0.0)
+            self.n2b = card.field(x+15,self.n1b)
+        else:
+            raise Exception('not supported')
+        ###
 
     def area(self):
         """@warning area field not supported fully on PBEAM card"""
@@ -704,54 +731,78 @@ class PCOMP(ShellProperty):
     def __init__(self,card=None,data=None): # not done, cleanup
         ShellProperty.__init__(self,card,data)
         
-        #fields = card.fields(1)
+        if card:
+            #fields = card.fields(1)
 
-        self.pid = card.field(1)
-        self.z0   = card.field(2)
-        self.nsm  = card.field(3,0.0)
-        self.sb   = card.field(4,0.0)
-        self.ft   = card.field(5)
-        self.TRef = card.field(6,0.0)
-        self.ge   = card.field(7,0.0)
-        
-        ## symmetric flag - default = No Symmetry (NO)
-        self.lam  = card.field(8)
-        #print "lam = ",self.lam
-        
-        nPlyFields = card.nFields()-8 # -8 for the first 8 fields (1st line)
-        #plyCards = card.fields(9)
-        
-        # counting plies
-        nMajor    = nPlyFields/4
-        nLeftover = nPlyFields%4
-        if nLeftover:
-            nMajor+=1
-        nplies = nMajor
+            self.pid = card.field(1)
+            self.z0   = card.field(2)
+            self.nsm  = card.field(3,0.0)
+            self.sb   = card.field(4,0.0)
+            self.ft   = card.field(5)
+            self.TRef = card.field(6,0.0)
+            self.ge   = card.field(7,0.0)
 
-        #iPly = 0
-        plies = []
-        for i in range(9,nplies*4,4):  # doesnt support single ply per line
-            defaults = [None,None,0.0,'NO']
-            (mid,t,theta,sout) = card.fields(i,i+4,defaults)
-            ply = [mid,t,theta,sout]
-            if ply!=defaults: # if they're not all defaults...
-                plies.append(ply)
-            #iPly +=1
-        #print "nplies = ",nplies
-        
-        ## list of plies
-        self.plies = plies
-        
-        #self.plies = []
-        #if self.lam=='SYM':
-        #    if nplies%2==1:  # 0th layer is the core layer
-        #        plies[0][1] = plies[0][1]/2. # cut the thickness in half to make the ply have an even number of plies, is there a better way???
-        #
-        #    pliesLower = plies.reverse()
-        #    self.plies = pliesLower+plies
-        #    #print str(self)
+            ## symmetric flag - default = No Symmetry (NO)
+            self.lam  = card.field(8)
+            #print "lam = ",self.lam
+
+            nPlyFields = card.nFields()-8 # -8 for the first 8 fields (1st line)
+            #plyCards = card.fields(9)
+
+            # counting plies
+            nMajor    = nPlyFields/4
+            nLeftover = nPlyFields%4
+            if nLeftover:
+                nMajor+=1
+            nplies = nMajor
+
+            #iPly = 0
+            plies = []
+            for i in range(9,nplies*4,4):  # doesnt support single ply per line
+                defaults = [None,None,0.0,'NO']
+                (mid,t,theta,sout) = card.fields(i,i+4,defaults)
+                ply = [mid,t,theta,sout]
+                if ply!=defaults: # if they're not all defaults...
+                    plies.append(ply)
+                #iPly +=1
+            #print "nplies = ",nplies
+
+            ## list of plies
+            self.plies = plies
+
+            #self.plies = []
+            #if self.lam=='SYM':
+            #    if nplies%2==1:  # 0th layer is the core layer
+            #        plies[0][1] = plies[0][1]/2. # cut the thickness in half to make the ply have an even number of plies, is there a better way???
+            #
+            #    pliesLower = plies.reverse()
+            #    self.plies = pliesLower+plies
+            #    #print str(self)
+            ###
+            #sys.exit()
+        else:
+            print "len(data) = ",len(data)
+            self.pid  = data[0]
+            self.z0   = data[1]
+            self.nsm  = data[2]
+            self.sb   = data[3]
+            self.ft   = data[4]
+            self.TRef = data[5]
+            self.ge   = data[6]
+
+            self.lam  = None ## @todo No Symmetry - check if this is correct
+
+            Mid   = data[7]
+            T     = data[8]
+            Theta = data[9]
+            Sout  = data[10]
+
+            self.plies = []
+            #ply = [mid,t,theta,sout]
+            for (mid,t,theta,sout) in zip(Mid,T,Theta,Sout):
+                self.plies.append([mid,t,theta,sout])
+            ###
         ###
-        #sys.exit()
 
     def hasCoreLayer(self):
         """is there a center layer (matters most for a symmetrical ply)"""
@@ -838,11 +889,11 @@ class PCOMP(ShellProperty):
         if iPly=='all': # get all layers
             t = 0.
             for (iply,ply) in enumerate(self.plies):
-                t += self.thickness(iply)
+                t += self.Thickness(iply)
             ###
             if self.isSymmetrical():
                 if self.isCoreLayer():
-                    t -= self.thickness(0)/2.  # cut out the thickness of half the core layer
+                    t -= self.Thickness(0)/2.  # cut out the thickness of half the core layer
                 return t*2.
             return t
             ###
@@ -853,7 +904,15 @@ class PCOMP(ShellProperty):
         ###
 
     def __repr__(self):
-        fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
+        #print "t = ",self.Thickness()
+
+        nsm  = self.setBlankIfDefault(self.nsm,0.0)
+        sb   = self.setBlankIfDefault(self.sb,0.0)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge   = self.setBlankIfDefault(self.ge,0.0)
+        z0 = self.setBlankIfDefault(self.z0,-0.5*self.Thickness())
+
+        fields = ['PCOMP',self.pid,z0,nsm,sb,self.ft,TRef,ge,self.lam,]
         #print "plies = ",self.plies
         for (iPly,ply) in enumerate(self.plies):
             (_mid,t,theta,sout) = ply
@@ -899,35 +958,51 @@ class PSHELL(ShellProperty):
     Z1 Z2 MID4
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
-    def __init__(self,card):
-        ShellProperty.__init__(self,card)
-        self.pid  = card.field(1)
-        self.mid  = card.field(2)
-        self.t    = card.field(3)
+    def __init__(self,card=None,data=None):
+        ShellProperty.__init__(self,card,data)
+        if card:
+            self.pid  = card.field(1)
+            self.mid  = card.field(2)
+            self.t    = card.field(3)
+
+            ## Material identification number for bending
+            self.mid2 = card.field(4)
+            ## \f$ \frac{12I}{t^3} \f$
+            self.twelveIt3 = card.field(5,1.0)  # poor name
+            self.mid3  = card.field(6)
+            self.tst   = card.field(7,0.833333)
+            self.nsm   = card.field(8,0.0)
+
+            tOver2 = self.t/2.
+            self.z1    = card.field(9,-tOver2)
+            self.z2    = card.field(10,tOver2)
+            self.mid4  = card.field(11)
+            if self.mid2 is None:
+                assert self.mid3 is None
+            else: # mid2 is defined
+                #print "self.mid2 = ",self.mid2
+                assert self.mid2 >= -1
+                #assert self.mid3 >   0
+
+            if self.mid is not None and self.mid2 is not None:
+                assert self.mid4==None
+            ###
+        else:
+            self.pid       = data[0]
+            self.mid       = data[1]
+            self.t         = data[2]
+            self.mid2      = data[3]
+            self.twelveIt3 = data[4]
+            self.mid3      = data[5]
+            self.tst       = data[6]
+            self.nsm       = data[7]
+            self.z1        = data[8]
+            self.z2        = data[9]
+            self.mid4      = data[10]
+            maxMid = max(self.mid,self.mid2,self.mid3,self.mid4)
+        ###
+
         assert self.t>0.0,'the thickness must be defined on the PSHELL card (Ti field not supported)'
-        
-        ## Material identification number for bending
-        self.mid2 = card.field(4)
-        ## \f$ \frac{12I}{t^3} \f$
-        self.twelveIt3 = card.field(5,1.0)  # poor name
-        self.mid3  = card.field(6)
-        self.tst   = card.field(7,0.833333)
-        self.nsm   = card.field(8,0.0)
-
-        tOver2 = self.t/2.
-        self.z1    = card.field(9,-tOver2)
-        self.z2    = card.field(10,tOver2)
-        self.mid4  = card.field(11)
-
-        if self.mid2 is None:
-            assert self.mid3 is None
-        else: # mid2 is defined
-            #print "self.mid2 = ",self.mid2
-            assert self.mid2 >= -1
-            #assert self.mid3 >   0
-
-        if self.mid is not None and self.mid2 is not None:
-            assert self.mid4==None
 
     def Rho(self):
         return self.mid.rho
@@ -957,6 +1032,7 @@ class PSHELL(ShellProperty):
 
         fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,twelveIt3,self.mid3,tst,nsm,
                            z1,z2,self.mid4]
+        print fields
         return self.printCard(fields)
 
 class PSOLID(SolidProperty):

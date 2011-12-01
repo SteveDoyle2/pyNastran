@@ -214,7 +214,7 @@ class OGP(object):
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         if self.thermal==0:
             if self.approachCode==1 and self.sortCode==0: # displacement
-                print "isDisplacement"
+                print "isAppliedLoads"
                 self.obj = appliedLoadsObject(self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj
             elif self.approachCode==1 and self.sortCode==1: # spc forces

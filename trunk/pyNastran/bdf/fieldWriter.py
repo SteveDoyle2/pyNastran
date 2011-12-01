@@ -1,9 +1,17 @@
 from types import NoneType
+from numpy import allclose
 
 def setBlankIfDefault(value,default):
     """used when setting the output data of a card to clear default values"""
-    if value==default and type(value)==type(default):
+    #print "value=%s default=%s" %(value,default)
+    if isinstance(value,str):
+        if value==default:
+            return None
+        return value
+    elif type(value)==type(default) and allclose(value,default):
+        #print "value=%s default=%s same=%s" %(value,default,True)
         return None
+    #print "value=%s default=%s same=%s" %(value,default,False)
     return value
 
 def setDefaultIfBlank(value,default):
