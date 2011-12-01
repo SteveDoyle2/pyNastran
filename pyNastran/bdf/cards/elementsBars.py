@@ -11,8 +11,8 @@ class CardInstantiationError(RuntimeError):
 from elements import Element
 
 class LineElement(Element):
-    def __init__(self,card):
-        Element.__init__(self,card)
+    def __init__(self,card,data):
+        Element.__init__(self,card,data)
 
     def C(self):
         """torsional constant"""
@@ -186,7 +186,7 @@ class LineElement(Element):
 class CROD(LineElement):
     type = 'CROD'
     def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card)
+        LineElement.__init__(self,card,data)
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2,self.eid))
@@ -222,7 +222,7 @@ class CTUBE(CROD):
 class CONROD(CROD):
     type = 'CONROD'
     def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card)
+        LineElement.__init__(self,card,data)
         if card:
             self.eid  = int(card.field(1))
             print "self.eid = ",self.eid
@@ -445,7 +445,7 @@ class CBAR(LineElement):
     """
     type = 'CBAR'
     def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card)
+        LineElement.__init__(self,card,data)
         if card:
             self.pid = int(card.field(2,self.eid))
             self.ga  = int(card.field(3))
@@ -455,8 +455,8 @@ class CBAR(LineElement):
             self.offt = card.field(8,'GGG')
             #print 'self.offt = |%s|' %(self.offt)
 
-            self.pa = card.field(9)
-            self.pb = card.field(10)
+            self.pa = card.field(9,0)
+            self.pb = card.field(10,0)
 
             self.w1a = float(card.field(11,0.0))
             self.w2a = float(card.field(12,0.0))
@@ -466,21 +466,39 @@ class CBAR(LineElement):
             self.w2b = float(card.field(15,0.0))
             self.w3b = float(card.field(16,0.0))
         else: ## @todo verify
-            self.eid  = data[0]
-            self.pid  = data[1]
-            self.ga   = data[2]
-            self.gb   = data[3]
-            self.offt = str(data[4]) # GGG
-            self.pa   = data[5]
-            self.pb   = data[6]
+            #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+            #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
 
-            self.w1a = data[7]
-            self.w2a = data[8]
-            self.w3a = data[9]
+            main = data[0]
 
-            self.w1b = data[10]
-            self.w2b = data[11]
-            self.w3b = data[12]
+            flag = data[1][0]
+            if flag in [0,1]:
+                self.g0 = None
+                self.x1 = data[1][1]
+                self.x2 = data[1][2]
+                self.x3 = data[1][3]
+            else:
+                self.g0 = data[1][1]
+                self.x1 = None
+                self.x2 = None
+                self.x3 = None
+
+            self.eid  = main[0]
+            self.pid  = main[1]
+            self.ga   = main[2]
+            self.gb   = main[3]
+            #self.offt = str(data[4]) # GGG
+            self.offt = 'GGG'
+            self.pa   = main[4]
+            self.pb   = main[5]
+
+            self.w1a = main[6]
+            self.w2a = main[7]
+            self.w3a = main[8]
+
+            self.w1b = main[9]
+            self.w2b = main[10]
+            self.w3b = main[11]
         ###
         assert self.offt[0] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
         assert self.offt[1] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
@@ -557,6 +575,9 @@ class CBAR(LineElement):
         ###
 
     def __repr__(self):
+        pa = self.setBlankIfDefault(self.pa,0)
+        pb = self.setBlankIfDefault(self.pb,0)
+
         w1a = self.setBlankIfDefault(self.w1a,0.0)
         w2a = self.setBlankIfDefault(self.w2a,0.0)
         w3a = self.setBlankIfDefault(self.w3a,0.0)
@@ -566,7 +587,7 @@ class CBAR(LineElement):
         (x1,x2,x3) = self.getX_G0_defaults()
         offt = self.setBlankIfDefault(self.offt,'GGG')
         fields = ['CBAR',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
-                  self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b]
+                         pa,pb,w1a,w2a,w3a,w1b,w2b,w3b]
 
         return self.printCard(fields)
 
@@ -582,7 +603,7 @@ class CBEAM(CBAR):
     """
     type = 'CBEAM'
     def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card)
+        LineElement.__init__(self,card,data)
         if card:
             self.pid = int(card.field(2,self.eid))
             self.ga = int(card.field(3))

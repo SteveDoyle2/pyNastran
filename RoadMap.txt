@@ -1,27 +1,114 @@
 ------------------------------v0.2------------------------------
 
-In order for an OP2 card to be supported, it must read
-the important fields on the card.  So things like
-directional cosines and Margins of Safety (usually blank anyways)
-arent needed.
+In order for an OP2 card to be supported, it somewhat depends on the table.
+
+For the Result Tables:
+    It must read the important fields on the card.  So things like
+    directional cosines and Margins of Safety (usually blank anyways)
+    arent needed.
+
+For the BDF Tables:
+    The restrictions are a bit looser on this (for now).  It needs to look like
+    the BDF that was input.  These were going to get pushed off until
+    later, but found out that it was a good way to learn defaults for
+    variables that the QRG doesn't list.  For example, on the GRID card
+    there is a PS field, which is a nodal SPC.  A 0 value is now used instead of a
+    None.  A FEM code using this should be able to handle both, so it's not that
+    big a deal, but it makes it easier when writing the OP2 to not have to
+    worry about None values.
+    
+    NOTE:  just because a card is read, doesn't mean it can be used as a standard BDF card
+           so you should write it out and read it back in before using it.
+
+The "card" notation is more for the developer than the user.
+For example, the CORD1C card is the first card listed in the
+GEOM1 table and is identified as #1.  It's that simple.  So if you
+see a gap in the numbers, that means there are missing cards.
+For convenience, the last card is listed as well.
 
 OP2 Reader
-   - GEOM1/GEOM2/GEOM3/GEOM4/EPT/MPTS/DYNAMICS
-      - all this information is contained within the BDF
-      - skipped
+   - GEOM1
+     - CORD1C  (1, needs integration)
+     - CORD1R  (2, needs integration)
+     - CORD1S  (3, needs integration)
+     - CORD2C  (4, needs integration)
+     - CORD2R  (5, done)
+     - CORD2S  (6, needs integration)
+     - CORD3R  (7, needs integration)
+     - GRID    (17,done)
+     - SWLDPRM (34)
+   
+   - GEOM2
+     - CBAR    (8,  done)
+     - CDAMP1  (16, needs integration)
+     - CDAMP2  (17, needs integration)
+     - CDAMP3  (18, needs integration)
+     - CDAMP4  (19, needs integration)
+     - CDAMP5  (20, needs integration)
+     - CELAS1  (29, needs integration)
+     - CELAS2  (30, needs integration)
+     - CELAS3  (31, needs integration)
+     - CELAS4  (32, needs integration)
+     - CQUAD4  (69, done)
+     - CQUAD4  (70, done)
+     - CROD    (80, done)
+     - CTETP   (86, needs integration)
+     - CTETRA  (87, done)
+     - CTRIA3  (93, done)
+     - CTUBE   (103,done)
+     - SPOINT  (118,needs integration)
+     - WELDP   (125)
+
+   - GEOM3
+     - FORCE   (3,done)
+     - FORCE1  (4,done)
+     - FORCE2  (5,done)
+     - GRAV    (7,done)
+     - LOAD    (8,done)
+     - PEDGE   (42)
+   
+   - GEOM4
+     - SPC1
+     - SPCADD
+     - USET1   (63)
+   
+   - EPT
+     - NSM     (2, needs integration)
+     - PCOMP   (22,done)
+     - PROD    (49,done)
+     - PSHEAR  (50,needs integration)
+     - PSOLID  (51,done)
+     - PSHELL  (52,done)
+     - PTUBE   (56,done)
+     - VIEW3D  (63)
+
+   - MPT
+     - CREEP   (1,done)
+     - MAT1    (2,done)
+     - MAT2    (3,done)
+     - MAT3    (4,done)
+     - MAT4    (5,done)
+     - MAT5    (6,done)
+     - MAT8    (7,done)
+     - MAT10   (9,done)
+     - TSTEPNL (29)
+
+   - DYNAMIC
+     - None
+     - UNBALNC (40)
 
    - OES
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
          - CROD    (1   - done)
-         - CBAR    (34  - done)
          - CBEAM   (2)
+         - CONROD  (10)
+         - CBAR    (34  - done)
          
          - CTETRA  (39  - done)
          - CHEXA   (67  - done)
          - CPENTA  (68  - done)
          - CTRIA3  (74  - done)
          - CQUAD4  (144 - done)
-         - CONROD  (10)
          
          - CQUAD4 (33 - done)
          - CQUAD8 (64)
@@ -48,21 +135,22 @@ OP2 Reader
          - CTRIA6 (98 - done)
 
    - OUGV1 Table (displacement/velocity/acceleration)
-      - displacement           / temperature           (done)
-      - transient displacement / transient temperature (done)
-      - spc forces             / heat flux             (done)
+      - displacement           / temperature           (approachCode=1, sortCode=0, done)
+      - eigenvectors           /                       (approachCode=2, sortCode=0, done)
+      -                        / heat flux             (approachCode=1, sortCode=1, done)
+      - transient displacement / transient temperature (approachCode=6, sortCode=0, done)
+      - nonlinear displacement / nonlinear temperature (approachCode=10,sortCode=0, done)
 
    - OGP1 Table (grid point forces)
       - OGPFB1
-        - static structural forces applied at the nodes (applied/element/spc/total forces & moments)  (done)
+        - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
       
    - OQGV1 Table (single/multipoint constraint forces)
-      - spc forces (done)
+      - spc forces (needs cleanup) # verify
 
    - OEF1X Table (element forces)
-      - applied temperatures (done)
-      - applied transient temperatures (done)
-      - applied transient heat flux - it's just as long as the OES table...
+        temperatureForces (approachCode=6, sortCode=0,done)
+        nonlinearFluxes   (approachCode=10,sortCode=0,done) - long table...
          - CHBDY
 
    - OEE Table (element energy strain/kinetic/loss)

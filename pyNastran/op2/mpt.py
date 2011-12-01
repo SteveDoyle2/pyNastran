@@ -9,19 +9,18 @@ from pyNastran.bdf.cards.materials import CREEP,MAT1,MAT2,MAT3,MAT4,MAT5,MAT8,MA
 class MPT(object):
 
     def readTable_MPTS(self):
+        self.bigMaterials = {}
         self.iTableMap = {
-                         (1003,10,245): self.readCreep,
-                         (103,1,77):    self.readMat1,
-                         (203,2,78):    self.readMat2,
-                         (1403,14,122): self.readMat3,
-                         (2103,21,234): self.readMat4,
-                         (2203,22,235): self.readMat5,
-                         (2503,25,288): self.readMat8,
-                         (2801,28,365): self.readMat10,
+                         (1003,10,245): self.readCreep, # record 1
+                         (103,1,77):    self.readMat1,  # record 2
+                         (203,2,78):    self.readMat2,  # record 3
+                         (1403,14,122): self.readMat3,  # record 4
+                         (2103,21,234): self.readMat4,  # record 5
+                         (2203,22,235): self.readMat5,  # record 6
+                         (2503,25,288): self.readMat8,  # record 7
+                         (2801,28,365): self.readMat10, # record 9
                          }
         self.readRecordTable('MPTS')
-
-# CREEP
 
     def readCreep(self,data):
         """
@@ -61,8 +60,14 @@ class MPT(object):
             data  = data[68:]
             out = unpack('ifffffffffffffffi',eData)
             (mid,g1,g2,g3,g4,g5,g6,rho,aj1,aj2,aj3,TRef,ge,St,Sc,Ss,mcsid) = out
+            #print "MAT2 = ",out
             mat = MAT2(None,out)
-            self.addMaterial(mat)
+
+            if mid>1e8:
+                self.bigMaterials[mid] = mat
+            else:
+                self.addMaterial(mat)
+            ###
         ###
 
     def readMat3(self,data):

@@ -7,8 +7,7 @@ from pyNastran.bdf.BDF_Card import BDF_Card
 from baseCard import BaseCard
 
 class Coord(BaseCard):
-    def __init__(self,card):
-        ## coordinate system ID
+    def __init__(self,card,data):
         self.isCrossReferenced = False
         self.isResolved = False
 
@@ -40,9 +39,8 @@ class Coord(BaseCard):
         return self.printCard(fields)
 
 class Cord2x(Coord):
-    def __init__(self,card):
-        self.cid  = card.field(1)
-        Coord.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Coord.__init__(self,card,data)
     
     def Rid(self):
         """Returns the reference coordinate system self.rid"""
@@ -244,23 +242,36 @@ class CORD1R(Cord1x):
 
 class CORD2R(Cord2x):  # working for simple cases...
     type = 'CORD2R'
-    def __init__(self,card=['CORD2R',0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
-        if isinstance(card,list):
-            card = BDF_Card(card)
-        Cord2x.__init__(self,card)
+    def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
+        #if isinstance(card,list):
+        #    card = BDF_Card(card)
+        Cord2x.__init__(self,card,data)
         #self.isResolved = False
+        
+        if card:
+            ## coordinate system ID
+            self.cid  = card.field(1)
+            ## reference coordinate system ID
+            self.rid = card.field(2,0)
 
-        ## reference coordinate system ID
-        self.rid = card.field(2,0)
+            ## origin in a point relative to the rid coordinate system
+            self.eo = array( card.fields(3,6 ,[0.,0.,0.]) )
+            ## z-axis in a point relative to the rid coordinate system
+            self.ez = array( card.fields(6,9 ,[0.,0.,0.]) )
+            ## a point on the xz-plane relative to the rid coordinate system
+            self.ex = array( card.fields(9,12,[0.,0.,0.]) )
+        else:
+            self.cid = data[0]
+            self.rid = data[1]
+            self.eo  = array(data[2:5])
+            self.ez  = array(data[5:8])
+            self.ex  = array(data[8:11])
+        
+        assert len(self.eo)==3
+        assert len(self.ez)==3
+        assert len(self.ex)==3
         if self.rid==0:
             self.isResolved = True
-
-        ## origin in a point relative to the rid coordinate system
-        self.eo = array( card.fields(3,6 ,[0.,0.,0.]) )
-        ## z-axis in a point relative to the rid coordinate system
-        self.ez = array( card.fields(6,9 ,[0.,0.,0.]) )
-        ## a point on the xz-plane relative to the rid coordinate system
-        self.ex = array( card.fields(9,12,[0.,0.,0.]) )
         self.setup()
         
     def crossReference(self,model):

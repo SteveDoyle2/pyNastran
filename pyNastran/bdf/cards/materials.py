@@ -174,26 +174,47 @@ class MAT2(AnisotropicMaterial):
     """
     type = 'MAT2'
     def __init__(self,card=None,data=None):
-        AnisotropicMaterial.__init__(self,card) # mid
+        AnisotropicMaterial.__init__(self,card,data)
         
-        self.mid  = card.field(1)
-        self.G11  = card.field(2,0.0)
-        self.G12  = card.field(3,0.0)
-        self.G13  = card.field(4,0.0)
-        self.G22  = card.field(5,0.0)
-        self.G23  = card.field(6,0.0)
-        self.G33  = card.field(7,0.0)
+        if card:
+            self.mid  = card.field(1)
+            self.G11  = card.field(2,0.0)
+            self.G12  = card.field(3,0.0)
+            self.G13  = card.field(4,0.0)
+            self.G22  = card.field(5,0.0)
+            self.G23  = card.field(6,0.0)
+            self.G33  = card.field(7,0.0)
 
-        self.rho  = card.field(8)
-        self.a1   = card.field(9)
-        self.a2   = card.field(10)
-        self.a3   = card.field(11)
-        self.TRef = card.field(12,0.0)
-        self.ge   = card.field(13)
-        self.St   = card.field(14)
-        self.Sc   = card.field(15)
-        self.Ss   = card.field(16)
-        self.Mcsid = card.field(17)
+            self.rho  = card.field(8)
+            self.a1   = card.field(9)
+            self.a2   = card.field(10)
+            self.a3   = card.field(11)
+            self.TRef = card.field(12,0.0)
+            self.ge   = card.field(13)
+            self.St   = card.field(14)
+            self.Sc   = card.field(15)
+            self.Ss   = card.field(16)
+            self.Mcsid = card.field(17)
+        else:
+            self.mid  = data[0]
+            self.G11  = data[1]
+            self.G12  = data[2]
+            self.G13  = data[3]
+            self.G22  = data[4]
+            self.G23  = data[5]
+            self.G33  = data[6]
+
+            self.rho  = data[7]
+            self.a1   = data[8]
+            self.a2   = data[9]
+            self.a3   = data[10]
+            self.TRef = data[11]
+            self.ge   = data[12]
+            self.St   = data[13]
+            self.Sc   = data[14]
+            self.Ss   = data[15]
+            self.Mcsid = data[16]
+        ###
 
     def __repr__(self):
         G11 = self.setBlankIfDefault(self.G11,0.0)

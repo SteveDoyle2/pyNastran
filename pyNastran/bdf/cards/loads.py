@@ -73,33 +73,40 @@ class LOAD(Load):
         """
         @todo parse the loads data to have scale factor and load
         """
-        fields   = card.fields()
-        
-        ## load ID
-        self.lid = card.field(1)
-        #self.id  = self.lid
+        if card:
+            fields   = card.fields()
 
-        ## overall scale factor
-        self.s  = card.field(2)
-        
-        nFields = len(fields)-2
-        nLoads  = nFields/2
-        #print "nFields = ",nFields
-        #print "nLoads  = ",nLoads
-        
-        loads = card.fields(3) # temp list
-        assert len(loads)%2==0
-        
-        ## individual scale factors (corresponds to loadIDs)
-        self.scaleFactors = []
+            ## load ID
+            self.lid = card.field(1)
+            #self.id  = self.lid
 
-        ## individual loadIDs (corresponds to scaleFactors)
-        self.loadIDs = []
+            ## overall scale factor
+            self.s  = card.field(2)
 
-        for i in range(0,nLoads,2):   # alternating of scale factor & load set ID
-            self.scaleFactors.append(loads[i  ])
-            self.loadIDs.append(     loads[i+1])
-    
+            nFields = len(fields)-2
+            nLoads  = nFields/2
+            #print "nFields = ",nFields
+            #print "nLoads  = ",nLoads
+
+            loads = card.fields(3) # temp list
+            assert len(loads)%2==0
+
+            ## individual scale factors (corresponds to loadIDs)
+            self.scaleFactors = []
+
+            ## individual loadIDs (corresponds to scaleFactors)
+            self.loadIDs = []
+
+            for i in range(0,nLoads,2):   # alternating of scale factor & load set ID
+                self.scaleFactors.append(loads[i  ])
+                self.loadIDs.append(     loads[i+1])
+        else:
+            self.lid = data[0]
+            self.s   = data[1]
+            self.scaleFactors = data[2]
+            self.loadIDs      = data[3]
+        ###
+
     def __repr__(self):
         fields = ['LOAD',self.lid,self.s]
         for scaleFactor,loadID in zip(self.scaleFactors,self.loadIDs):

@@ -4,7 +4,7 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-#from pyNastran.bdf.cards.loads import FORCE,FORCE1,FORCE2
+#from pyNastran.bdf.cards.constraints import SPC,SPCADD
 
 class Geometry4(object):
 
@@ -17,7 +17,7 @@ class Geometry4(object):
 
     #def readSPC1
     #def readSPCADD
-    
+
 # ASET
 # ASET1
 # BNDGRID
