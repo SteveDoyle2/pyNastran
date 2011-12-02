@@ -4,13 +4,13 @@ import struct
 from struct import unpack
 
 from pyNastran.op2.op2Errors import *
-from pyNastran.op2.geom1 import Geometry1
-from pyNastran.op2.geom2 import Geometry2
-from pyNastran.op2.geom3 import Geometry3
-from pyNastran.op2.geom4 import Geometry4
-from pyNastran.op2.ept import EPT
-from pyNastran.op2.mpt import MPT
-#from pyNastran.op2.dynamics import DYNAMICS
+from pyNastran.op2.tables.geom1 import Geometry1
+from pyNastran.op2.tables.geom2 import Geometry2
+from pyNastran.op2.tables.geom3 import Geometry3
+from pyNastran.op2.tables.geom4 import Geometry4
+from pyNastran.op2.tables.ept import EPT
+from pyNastran.op2.tables.mpt import MPT
+#from pyNastran.op2.tables.dynamics import DYNAMICS
 
 class GeomObj(object):
     def __init__(self):
