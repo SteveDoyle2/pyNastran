@@ -10,8 +10,14 @@ class Geometry4(object):
 
     def readTable_Geom4(self):
         self.iTableMap = {
-                         #(5481, 58, 12): self.
-                         #(5491, 59, 13): self.
+                         #(6901,  69,295): self.readRBE2,    # record 24
+                         #(5501,  55, 16): self.readSPC,     # record 44
+                         #(5481,  58, 12): self.readSPC1,    # record 45
+                         #(5491,  59, 13): self.readSPCADD,  # record 46
+                         #(10100,101,472): self.readSUPORT1, # record 60
+                         #(4901, 49, 17)
+                         #(4891, 60, 83)
+                         
                          }
         self.readRecordTable('GEOM4')
 

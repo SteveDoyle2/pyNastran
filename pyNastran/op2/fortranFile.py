@@ -28,10 +28,10 @@ class FortranFile(object):
         #self.n += 12*4
         
         if len(ints)==5:
-            print "   buffer block..."
+            #print "   buffer block..."
             self.hasBuffer = True
             ints = self.readFullIntBlock()
-            if debug:
+            if debug and self.makeOp2Debug:
                 self.op2Debug.write('bufferBlcok = |%s|\n' %(str(ints)))
             
         elif len(ints)==0:
@@ -40,7 +40,7 @@ class FortranFile(object):
         assert ints[0]==ints[2]==4, "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
         #if not(ints[0]==ints[2]==4):
         #    raise InvalidMarkerError("header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected))
-        if debug:
+        if debug and self.makeOp2Debug:
             self.op2Debug.write('[4,%s,4]\n' %(ints[1]))
         return ints[1]
 
@@ -50,7 +50,8 @@ class FortranFile(object):
         """
         data = self.op2.read(nData)
         string = ''.join(self.getStrings(data))
-        self.op2Debug.write('|%s|\n' %(str(string)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('|%s|\n' %(str(string)))
         self.n += nData
         return string
 
@@ -70,7 +71,7 @@ class FortranFile(object):
 
         iFormat = 'i'*nInts
         ints = unpack(iFormat,data)
-        if debug:
+        if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(ints)))
 
         self.n+=nData
@@ -83,7 +84,7 @@ class FortranFile(object):
         data = self.op2.read(nData)
         self.n += nData
         doubles = self.getDoubles(data)
-        if debug:
+        if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(doubles)))
         return doubles
 
@@ -94,7 +95,7 @@ class FortranFile(object):
         data = self.op2.read(nData)
         self.n += nData
         floats = self.getFloats(data)
-        if debug:
+        if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(floats)))
         return floats
 
@@ -117,7 +118,7 @@ class FortranFile(object):
         #print "nInts = ",nInts
         iFormat = 'i'*nInts
         ints = unpack(iFormat,data[:nInts*4])
-        if debug:
+        if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(ints)))
         return ints
 
@@ -190,6 +191,9 @@ class FortranFile(object):
         #assert self.op2.tell()==self.n,'tell=%s n=%s' %(self.op2.tell(),self.n)
         return data
 
+    def readData(self,n):
+        return self.getData(n)
+
     def getBlockIntEntry(self,data,n):
         """
         given a data set, grabs the nth word and casts it as an integer
@@ -208,9 +212,11 @@ class FortranFile(object):
     
     def skip(self,n):
         """skips nBits"""
-        self.op2Debug.write('skipping\n')
+        if self.makeOp2Debug:
+            self.op2Debug.write('skipping\n')
         self.printSection(4)
-        self.op2Debug.write('skipped\n')
+        if self.makeOp2Debug:
+            self.op2Debug.write('skipped\n')
         #print "\n--SKIP--"
         #print "tell = ",self.op2.tell()
         #print "n = ",n
@@ -222,9 +228,11 @@ class FortranFile(object):
 
     def scan(self,n):
         """same as skip, but actually reads the data instead of using seek"""
-        self.op2Debug.write('skipping %s\n' %(n))
+        if self.makeOp2Debug:
+            self.op2Debug.write('skipping %s\n' %(n))
         self.printSection(4)
-        self.op2Debug.write('skipped\n')
+        if self.makeOp2Debug:
+            self.op2Debug.write('skipped\n')
         data = self.op2.read(n)
         self.n+=n
 
@@ -261,7 +269,8 @@ class FortranFile(object):
         msg = ''
         for i in markers:
             msg += '[4,'+str(i)+',4] + '
-        self.op2Debug.write(msg[:-3]+'\n')
+        if self.makeOp2Debug:
+            self.op2Debug.write(msg[:-3]+'\n')
         if debug:
             print "@markers = ",markers
             print ""
@@ -364,7 +373,7 @@ class FortranFile(object):
 
         #print "word = |%s|" %(word)
         #print "nLetters=%s word=|%s|" %(nLetters,word)
-        if debug:
+        if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(word)))
         return word
 

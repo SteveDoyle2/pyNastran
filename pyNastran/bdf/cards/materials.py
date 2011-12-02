@@ -273,18 +273,31 @@ class MAT4(ThermalMaterial):
     type = 'MAT4'
     def __init__(self,card=None,data=None):
         ThermalMaterial.__init__(self,card,data)
-        
-        self.mid  = card.field(1)
-        self.k    = card.field(2)
-        self.cp   = card.field(3,0.0)
-        self.rho  = card.field(4,1.0)
-        self.H    = card.field(5)
-        self.mu   = card.field(6)
-        self.hgen = card.field(7,1.0)
-        self.refEnthalpy = card.field(8)
-        self.tch    = card.field(9)
-        self.tdelta = card.field(10)
-        self.qlat   = card.field(11)
+        if card:
+            self.mid  = card.field(1)
+            self.k    = card.field(2)
+            self.cp   = card.field(3,0.0)
+            self.rho  = card.field(4,1.0)
+            self.H    = card.field(5)
+            self.mu   = card.field(6)
+            self.hgen = card.field(7,1.0)
+            self.refEnthalpy = card.field(8)
+            self.tch    = card.field(9)
+            self.tdelta = card.field(10)
+            self.qlat   = card.field(11)
+        else:
+            self.mid  = data[0]
+            self.k    = data[1]
+            self.cp   = data[2]
+            self.rho  = data[3]
+            self.H    = data[4]
+            self.mu   = data[5]
+            self.hgen = data[6]
+            self.refEnthalpy = data[7]
+            self.tch    = data[8]
+            self.tdelta = data[9]
+            self.qlat   = data[10]
+        ###
 
     def __repr__(self):
         rho  = self.setBlankIfDefault(self.rho,1.0)
@@ -332,41 +345,74 @@ class MAT8(AnisotropicMaterial):
     type = 'MAT8'
     def __init__(self,card=None,data=None):
         AnisotropicMaterial.__init__(self,card,data)
-        self.mid  = card.field(1)
-        self.E11  = card.field(2)
-        self.E22  = card.field(3)
-        self.nu12 = card.field(4)
+        if card:
+            self.mid  = card.field(1)
+            self.E11  = card.field(2)
+            self.E22  = card.field(3)
+            self.nu12 = card.field(4)
 
-        self.G12  = card.field(5,0.0)
-        self.G1z  = card.field(6,1e8)
-        self.G2z  = card.field(7,1e8)
-        self.rho  = card.field(8)
-        self.a1   = card.field(9,0.0)
-        self.a2   = card.field(10,0.0)
-        self.TRef = card.field(11,0.0)
-        self.Xt   = card.field(12)
-        self.Xc   = card.field(13,self.Xt)
-        self.Yt   = card.field(14)
-        self.Yc   = card.field(15,self.Yt)
-        self.S    = card.field(16)
-        self.ge   = card.field(17)
-        self.F12  = card.field(18,0.0)
-        self.strn = card.field(19)
+            self.G12  = card.field(5,0.0)
+            self.G1z  = card.field(6,1e8)
+            self.G2z  = card.field(7,1e8)
+            self.rho  = card.field(8,0.0)
+            self.a1   = card.field(9,0.0)
+            self.a2   = card.field(10,0.0)
+            self.TRef = card.field(11,0.0)
+            self.Xt   = card.field(12,0.0)
+            self.Xc   = card.field(13,self.Xt)
+            self.Yt   = card.field(14,0.0)
+            self.Yc   = card.field(15,self.Yt)
+            self.S    = card.field(16,0.0)
+            self.ge   = card.field(17,0.0)
+            self.F12  = card.field(18,0.0)
+            self.strn = card.field(19,0.0)
+        else:
+            self.mid  = data[0]
+            self.E11  = data[1]
+            self.E22  = data[2]
+            self.nu12 = data[3]
+
+            self.G12  = data[4]
+            self.G1z  = data[5]
+            self.G2z  = data[6]
+            self.rho  = data[7]
+            self.a1   = data[8]
+            self.a2   = data[9]
+            self.TRef = data[10]
+            self.Xt   = data[11]
+            self.Xc   = data[12]
+            self.Yt   = data[13]
+            self.Yc   = data[14]
+            self.S    = data[15]
+            self.ge   = data[16]
+            self.F12  = data[17]
+            self.strn = data[18]
+            
 
     def __repr__(self):
+        G12  = self.setBlankIfDefault(self.G12,0.)
         G1z  = self.setBlankIfDefault(self.G1z,1e8)
         G2z  = self.setBlankIfDefault(self.G2z,1e8)
 
+        rho  = self.setBlankIfDefault(self.rho, 0.0)
         a1   = self.setBlankIfDefault(self.a1, 0.0)
         a2   = self.setBlankIfDefault(self.a2, 0.0)
         Tref = self.setBlankIfDefault(self.TRef,0.0)
+
+        Xt   = self.setBlankIfDefault(self.Xt, 0.)
+        Yt   = self.setBlankIfDefault(self.Yt, 0.)
+
         Xc   = self.setBlankIfDefault(self.Xc, self.Xt)
         Yc   = self.setBlankIfDefault(self.Yc, self.Yt)
-        F12  = self.setBlankIfDefault(self.F12,0.0)
         
-        fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,self.G12,G1z,G2z,self.rho,
-                  a1,a2,Tref,self.Xt,Xc,self.Yt,Yc,self.S,
-                  self.ge,F12,self.strn]
+        S    = self.setBlankIfDefault(self.S,   0.0)
+        ge   = self.setBlankIfDefault(self.ge,  0.0)
+        F12  = self.setBlankIfDefault(self.F12, 0.0)
+        strn = self.setBlankIfDefault(self.strn,0.0)
+        
+        fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,G12,G1z,G2z,rho,
+                  a1,a2,Tref,Xt,Xc,Yt,Yc,S,
+                  ge,F12,strn]
         #print fields
         return self.printCard(fields)
 

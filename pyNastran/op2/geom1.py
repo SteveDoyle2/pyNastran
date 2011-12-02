@@ -10,6 +10,47 @@ from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD2R,CORD2C,CORD3G #C
 
 class Geometry1(object):
 
+    def readDesvar(self,data):
+        out = unpack('iiccccccccfff',data[0:28])
+        (idvid,dvid,alabel1,bLabel1,cLabel1,dLabel1,alabel2,bLabel2,cLabel2,dLabel2,vmin,vmax,delx) = out
+        label1 = alabel1+bLabel1+cLabel1+dLabel1
+        label2 = alabel2+bLabel2+cLabel2+dLabel2
+        #print "ivid=%s dvid=%s label1=%s label2=%s vmax=%g vmin=%g delx=%g" %(idvid,dvid,label1,label2,vmin,vmax,delx)
+        #self.readData(8)
+
+    def readTable_DesTab(self):
+        tableName = self.readTableName(rewind=False) # DESTAB
+        print "tableName = |%r|" %(tableName)
+
+        self.readMarkers([-1,7],'DESTAB')
+        ints = self.readIntBlock()
+        #print "*ints = ",ints
+
+        self.readMarkers([-2,1,0],'DESTAB')
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords
+        word = self.readStringBlock() # DESTAB
+        #print "word = ",word
+
+        iTable = -3
+        imax   = -241
+        while iTable > imax:
+            #self.printSection(80)
+            self.readMarkers([iTable,1,0],'DESTAB')
+            bufferWords = self.getMarker()
+            #print "bufferWords = ",bufferWords
+            data = self.readBlock()
+            #print "len(data) = ",len(data)
+            self.readDesvar(data)
+            iTable -= 1
+
+
+        #self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
+        #print "1-bufferWords = ",bufferWords,bufferWords*4
+
+        print self.printSection(300)
+        sys.exit('asdf')
+
     def readTable_Geom1(self):
         self.iTableMap = {
                             #(1701,17,6):    self.readCord1C, # record 1
@@ -19,7 +60,7 @@ class Geometry1(object):
                             (2101,21,8):     self.readCord2R, # record 5
                             #(2201,22,10):   self.readCord2S, # record 6
                             (14301,143,651): self.readCord3G, # record 7
-                            (4501,45,1):     self.readGrid,   # record 17
+                            #(4501,45,1):     self.readGrid,   # record 17 - slow
                          }
         self.readRecordTable('GEOM1')
 
@@ -127,7 +168,7 @@ class Geometry1(object):
 
     def readGrid(self,data):
         """(4501,45,1) - the marker for Record 17"""
-        print "reading NODES"
+        print "reading GRID"
         while len(data)>=32: # 8*4
             eData = data[:32]
             data  = data[32:]

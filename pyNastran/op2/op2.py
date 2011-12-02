@@ -26,6 +26,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
             log = loggerObj.startLog('debug') # or info
         self.log = log
 
+        self.makeOp2Debug = False
+
         self.sol = None
         self.iSolLine = None
         self.executiveControlLines = []
@@ -76,7 +78,11 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','EPT','MPTS','DYNAMICS','OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
+        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','EPT','MPTS','DYNAMICS',
+                             'DESTAB',
+                             'OQG1','OUGV1','OEF1X',
+                             'OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1','OESNLXR'] # DIT
+                             
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
         self.iSubcaseNameMap = {}
@@ -158,7 +164,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.readMarkers([3])
         #self.printSection(20)
         ints = self.readIntBlock()
-        self.op2Debug.write('%s\n' %(str(ints)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('%s\n' %(str(ints)))
         #print "*ints = ",ints
         self.readMarkers([7])
 
@@ -176,7 +183,9 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
     def read(self):
         self.op2 = open(self.infilename,'rb')
-        self.op2Debug = open('debug.out','wb')
+        
+        if self.makeOp2Debug:
+            self.op2Debug = open('debug.out','wb')
         
         self.n = self.op2.tell()
         #print "self.n = ",self.n
@@ -218,6 +227,9 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 elif tableName=='DYNAMICS':  # dyanmic info
                     self.readTable_DYNAMICS()
 
+                elif tableName=='DESTAB':  # design variable table
+                    self.readTable_DesTab()
+
                 elif tableName in ['OGPFB1']: # displacements/velocity/acceleration
                     self.readTable_OGP1()
 
@@ -228,7 +240,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                     self.readTable_OQG1()
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUG1()
-                elif tableName in ['OES1X1','OSTR1X','OES1C','OSTR1C']: # stress/strain
+                elif tableName in ['OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR']: # stress/strain
                     self.readTable_OES1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
@@ -342,4 +354,5 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
     def tableInit(self,word):
         msg = '*'*20+word+'*'*20+'\n'
-        self.op2Debug.write(msg)
+        if self.makeOp2Debug:
+            self.op2Debug.write(msg)

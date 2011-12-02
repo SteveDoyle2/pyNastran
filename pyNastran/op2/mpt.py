@@ -19,6 +19,8 @@ class MPT(object):
                          (2203,22,235): self.readMat5,  # record 6
                          (2503,25,288): self.readMat8,  # record 7
                          (2801,28,365): self.readMat10, # record 9
+                         #(3003,30,286): self.read
+                         #(3103,31,337): self.read
                          }
         self.readRecordTable('MPTS')
 

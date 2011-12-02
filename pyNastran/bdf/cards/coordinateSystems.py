@@ -39,7 +39,7 @@ class Coord(BaseCard):
         return self.printCard(fields)
 
 class Cord2x(Coord):
-    def __init__(self,card=None,data=None):
+    def __init__(self,card,data):
         Coord.__init__(self,card,data)
     
     def Rid(self):
@@ -84,8 +84,8 @@ class Cord2x(Coord):
 
 
 class Cord1x(Coord):
-    def __init__(self,card):
-        Coord.__init__(self,card)
+    def __init__(self,card,data):
+        Coord.__init__(self,card,data)
 
     def resolveCid(self):
         ## the origin
@@ -266,7 +266,7 @@ class CORD2R(Cord2x):  # working for simple cases...
             self.eo  = array(data[2:5])
             self.ez  = array(data[5:8])
             self.ex  = array(data[8:11])
-        
+        ###
         assert len(self.eo)==3
         assert len(self.ez)==3
         assert len(self.ex)==3
@@ -369,19 +369,29 @@ class CORD2R(Cord2x):  # working for simple cases...
         return self.printCard(fields)
 
 
-class CORD2C(Coord):  # not done...
+class CORD2C(Cord2x):  # not done...
     type = 'CORD2C'
-    def __init__(self,card=['CORD2C',0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
-        if isinstance(card,list):
-            card = BDF_Card(card)
+    def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
+        #if isinstance(card,list):
+        #    card = BDF_Card(card)
 
-        Cord2x.__init__(self,card)
-        self.rid = card.field(2,0)
+        Cord2x.__init__(self,card,data)
+        if card:
+            self.cid  = card.field(1)
+            self.rid = card.field(2,0)
+
+            #print card
+            self.eo = array( card.fields(3,6 ,[0.,0.,0.]) )
+            self.ez = array( card.fields(6,9 ,[0.,0.,0.]) )
+            self.ex = array( card.fields(9,12,[0.,0.,0.]) )
+        else:
+            self.cid = data[0]
+            self.rid = data[0]
+            self.eo  = array(data[2:5])
+            self.ez  = array(data[5:8])
+            self.ex  = array(data[8:11])
+        ###
         
-        #print card
-        self.eo = array( card.fields(3,6 ,[0.,0.,0.]) )
-        self.ez = array( card.fields(6,9 ,[0.,0.,0.]) )
-        self.ex = array( card.fields(9,12,[0.,0.,0.]) )
         assert len(self.eo)==3,self.eo
         assert len(self.ez)==3,self.ez
         assert len(self.ex)==3,self.ex
