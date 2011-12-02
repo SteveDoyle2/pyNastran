@@ -13,7 +13,6 @@ from pyNastran.op2.resultObjects.opg_Objects import appliedLoadsObject
 class OGP(object):
     """Table of element forces"""
     def readTable_OGP1(self):
-        ## OGP
         tableName = self.readTableName(rewind=False) # OGP
         print "tableName = |%r|" %(tableName)
 

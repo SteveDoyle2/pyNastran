@@ -79,12 +79,22 @@ class PROD(LineProperty):
     type = 'PROD'
     def __init__(self,card=None,data=None):
         LineProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.A   = card.field(3)
-        self.J   = card.field(4)
-        self.c   = card.field(5,0.0)
-        self.nsm = card.field(6,0.0)
+
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.A   = card.field(3)
+            self.J   = card.field(4)
+            self.c   = card.field(5,0.0)
+            self.nsm = card.field(6,0.0)
+        else:
+            self.pid = data[0]
+            self.mid = data[1]
+            self.A   = data[2]
+            self.J   = data[3]
+            self.c   = data[4]
+            self.nsm = data[5]
+        ###
 
     def crossReference(self,mesh):
         self.mid = mesh.Material(self.mid)
@@ -1032,7 +1042,7 @@ class PSHELL(ShellProperty):
 
         fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,twelveIt3,self.mid3,tst,nsm,
                            z1,z2,self.mid4]
-        print fields
+        #print fields
         return self.printCard(fields)
 
 class PSOLID(SolidProperty):
@@ -1060,6 +1070,9 @@ class PSOLID(SolidProperty):
             self.stress = data[4]
             self.isop   = data[5]
             self.fctn   = data[6]
+
+            if self.fctn=='SMEC':
+                self.fctn = 'SMECH'
         ###
 
     def __repr__(self):
@@ -1075,13 +1088,13 @@ class PCONEAX(Property): #not done
         self.pid = card.field(1)
         self.mid = card.field(2)
         self.group = card.field(3,'MSCBMLO')
-        self.type = card.field(4)
+        self.Type = card.field(4)
         self.dim = [] # confusing entry...
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
     def __repr__(self):
-        fields = ['PCONEAX',self.pid,self.Mid()]
+        fields = ['PCONEAX',self.pid,self.Mid(),sefl.group,self.Type,]
         return self.printCard(fields)
     

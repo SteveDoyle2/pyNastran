@@ -15,7 +15,13 @@ class Geometry3(object):
                          (4001,40,20): self.readForce1, # record 4
                          (4101,41,22): self.readForce2, # record 5
                          (4401,44,26): self.readGrav,   # record 7
-                         (4551, 61, 84): self.readLoad, # record 8
+                         (4551,61,84): self.readLoad,   # record 8
+
+                         #(2109,21,414): self.read
+                         #(5641,65,98):  self.read
+                         #(5701,57,27):  self.read
+                         #(5641,65,98):  self.read
+
                          }
         self.readRecordTable('GEOM3')
 

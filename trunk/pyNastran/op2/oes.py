@@ -11,7 +11,8 @@ from pyNastran.op2.resultObjects.oes_Objects import (
 class OES(object):
     """Table of stresses/strains"""
     def readTable_OES1(self):
-        self.op2Debug.write("***OES table***\n")
+        if self.makeOp2Debug:
+            self.op2Debug.write("***OES table***\n")
         tableName = self.readTableName(rewind=False) # OES1X1
         print "tableName = |%r|" %(tableName)
         self.tableInit(tableName)
@@ -62,7 +63,8 @@ class OES(object):
         #self.printSection(100)
         
         self.deleteAttributes_OES()
-        self.op2Debug.write("***end of OES table***\n")
+        if self.makeOp2Debug:
+            self.op2Debug.write("***end of OES table***\n")
 
     def deleteAttributes_OES(self):
         params = ['sCode','elementType','obj','markerStart','loadSet','formatCode','sCode','thermal',
@@ -74,11 +76,13 @@ class OES(object):
         
         data = self.getData(4)
         bufferSize, = unpack('i',data)
-        self.op2Debug.write('bufferSize=|%s|\n' %(str(bufferSize)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferSize=|%s|\n' %(str(bufferSize)))
 
         data = self.getData(4*50)
         #self.printBlock(data) # on
-        self.op2Debug.write('block3header\n')
+        if self.makeOp2Debug:
+            self.op2Debug.write('block3header\n')
 
         self.parseApproachCode(data)
         
@@ -187,10 +191,10 @@ class OES(object):
             #print self.plateStress[self.iSubcase]
             
             iTable-=1
-            if j>10000:
-                sys.exit('check...')
+            #if j>10000:
+            #    sys.exit('check...')
             j+=1
-            print "isBlockDone = ",isBlockDone
+            #print "isBlockDone = ",isBlockDone
             #print "*******restarting table 4**********"
         print "isBlockDone = ",isBlockDone
         return isBlockDone
@@ -206,7 +210,8 @@ class OES(object):
         #self.printBlock(data)
         #self.printBlock(data)
         bufferWords, = unpack('i',data[4:8])
-        self.op2Debug.write('bufferWords=|%s|\n' %(str(bufferWords)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferWords=|%s|\n' %(str(bufferWords)))
 
         print "*********************"
         #bufferWords = self.getMarker() # 87 - buffer
@@ -229,7 +234,8 @@ class OES(object):
         
         self.data = self.getData(bufferWords*4)
         #print "bufferWords = ",bufferWords
-        self.op2Debug.write('reading big data block\n')
+        if self.makeOp2Debug:
+            self.op2Debug.write('reading big data block\n')
         #print "self.n = ",self.n
         #print 'reading big data block'
         #print self.printBlock(self.data)
@@ -240,7 +246,7 @@ class OES(object):
 
     def readElementTable(self):
         if self.elementType==1: # crod
-            print "    found crod_1"
+            #print "    found crod_1"
             stressStrainObj = self.instantiateRodObject()
             self.CROD_1(stressStrainObj)
         #elif self.elementType == 2:   # cbeam
@@ -252,29 +258,34 @@ class OES(object):
         #    stressStrainObj = self.instantiateConrodObject()
         #    self.CONROD_10(stressStrainObj)
         elif self.elementType == 34:   # cbar
-            print "    found cbar_34"
+            #print "    found cbar_34"
             stressStrainObj = self.instantiateBarObject()
             self.CBAR_34(stressStrainObj)
 
         elif self.elementType==33: # cquad4_33
-            print "    found cquad_33"
+            #print "    found cquad_33"
             stressStrainObj = self.instantiatePlateObject()
             self.CQUAD4_33(stressStrainObj)
         elif self.elementType==74:  # ctria
-            print "    found ctria_74"
+            #print "    found ctria_74"
             stressStrainObj = self.instantiatePlateObject()
             self.CTRIA3_74(stressStrainObj) # ctria3
         elif self.elementType==144: # cquad4
-            print "    found cquad_144"
+            #print "    found cquad_144"
             stressStrainObj = self.instantiatePlateObject()
             self.CQUAD4_144(stressStrainObj)
 
         elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
-            print "    found ctetra_39 / hexa_67 / cpenta_68"
+            #print "    found ctetra_39 / hexa_67 / cpenta_68"
             stressStrainObj = self.instantiateSolidObject()
             self.CSOLID_67(stressStrainObj)
+        elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
+            #print "    found ctetra_85 / hexa_93 / cpenta_91"
+            stressStrainObj = self.instantiateSolidObject()
+            self.CSOLID_85(stressStrainObj)
+
         elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
-            print "    found a 95/96/97 or 98!"
+            #print "    found a 95/96/97 or 98!"
             stressStrainObj = self.instantiateCompositePlateObject()
             self.CQUAD4_95(stressStrainObj)
         else:

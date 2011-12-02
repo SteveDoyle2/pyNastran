@@ -24,10 +24,12 @@ class OUGV1(object):
 
         self.readMarkers([-2,1,0],'OUGV1') # 7
         bufferWords = self.getMarker()
-        self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "1-bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
-        self.op2Debug.write('ints=%s\n' %(str(ints)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('ints=%s\n' %(str(ints)))
         
         markerA = -4
         markerB = 0
@@ -70,7 +72,8 @@ class OUGV1(object):
     
     def readTable_OUGV1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
-        self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
@@ -213,7 +216,7 @@ class OUGV1(object):
                 raise Exception('is this correct???')
                 self.obj = spcForcesObject(self.iSubcase)
                 self.spcForces[self.iSubcase] = self.obj
-
+                
             elif self.approachCode==2 and self.sortCode==0: # nonlinear static eigenvector
                 print "isEigenvector"
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)

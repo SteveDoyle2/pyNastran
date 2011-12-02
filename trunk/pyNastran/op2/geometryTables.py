@@ -26,7 +26,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         """
         tableName = self.readTableName(rewind=False) # GEOM1
         self.tableInit(tableName)
-        print "*tableName = |%r|" %(tableName)
+        #print "*tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7])
         fields = self.readIntBlock()
@@ -39,9 +39,9 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
 
         iTable = -3
         while 1:  ## @todo could this cause an infinite loop...i dont this so...
-            (tableName,isNextTable,isNextSubTable) = self.readGeomSubTable(iTable)
+            (tableName,isNextTable,isNextSubTable,isFileDone) = self.readGeomSubTable(iTable)
         
-            if self.checkForNextTable():
+            if self.checkForNextTable() or isFileDone:
                 #sys.exit('end of geom1')
                 return
             iTable -= 1
@@ -57,6 +57,30 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         #print '---checked---'
         #print "geomWord = ",word
         return foundTable
+
+    def checkFileDone(self,n):
+        isFileDone = False
+        #print "tell = ",self.op2.tell()
+        
+        nOld = self.op2.tell()
+        try:
+            #print self.printSection(60)
+            self.readMarkers([n,1,0])
+            markerA = self.getMarker()
+            markerB = self.getMarker()
+            #print "markerA=%s markerB=%s" %(markerA,markerB)
+            #self.readMarkers([0,0])
+            #print "subtable :) = ",foundSubTable
+            if [markerA,markerB]==[0,0]:
+                isFileDone = True
+            ###
+        except:
+            pass
+        ###
+        self.n = nOld
+        self.op2.seek(self.n)
+        #print "isFileDone = ",isFileDone
+        return isFileDone
 
     def checkForNextSubTable(self,n):
         foundSubTable = False
@@ -84,13 +108,13 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
 
         tableName = self.readTableName(rewind=True,stopOnFailure=False)
         if tableName:
-            print "**tableName = |%r|" %(tableName)
-            return tableName,isNextTable,isNextSubTable
+            #print "**tableName = |%r|" %(tableName)
+            return tableName,isNextTable,isNextSubTable,False
 
         data = ''
         isTableActive=False
         while isNextSubTable==False and isNextTable==False:
-            #print self.printSection(100)
+            #print self.printSection(200)
             marker = self.getMarker()
             #print "marker = ",marker
             if marker<0:
@@ -113,6 +137,10 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
 
             isNextTable = self.checkForNextTable()
             isNextSubTable = self.checkForNextSubTable(iTable-1)
+            isFileDone = self.checkFileDone(iTable-1)
+            if isFileDone:
+                isNextTable=True
+            
             #print "i=%s tell=%s isNextTable=%s isNextSubTable=%s" %(i,self.op2.tell(),isNextTable,isNextSubTable)
             #if i==13:
             #    sys.exit('stopA')
@@ -121,7 +149,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         ### while
         
         #print "exiting the geom sub table"
-        return (tableName,isNextTable,isNextSubTable)
+        return (tableName,isNextTable,isNextSubTable,isFileDone)
 
     def readTable_DYNAMICS(self):
         self.iTableMap = {}

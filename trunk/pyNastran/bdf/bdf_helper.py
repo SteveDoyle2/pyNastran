@@ -225,8 +225,9 @@ class addMethods(object):
         assert node.nid>0
         self.nodes[node.nid] = node
 
-    def addElement(self,elem):
-        #assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
+    def addElement(self,elem,allowOverwrites=False):
+        if not allowOverwrites:
+            assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
         assert elem.eid>0,'eid=%s elem=%s' %(elem.eid,elem)
         self.elements[elem.eid] = elem
 
@@ -236,8 +237,9 @@ class addMethods(object):
         #assert elem.eid>0
         #self.elements[elem.eid] = elem
 
-    def addProperty(self,prop):
-        assert prop.pid not in self.properties,'eid=%s oldElement=\n%s' %(prop.pid,self.properties[prop.pid])
+    def addProperty(self,prop,allowOverwrites=False):
+        if not allowOverwrites:
+            assert prop.pid not in self.properties,'eid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
         assert prop.pid>0
         self.properties[prop.pid] = prop
 

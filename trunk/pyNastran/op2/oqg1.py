@@ -25,10 +25,12 @@ class OQG1(object):
 
         self.readMarkers([-2,1,0],'OQG1') # 7
         bufferWords = self.getMarker()
-        self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "1-bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
-        self.op2Debug.write('ints=%s\n' %(str(ints)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('ints=%s\n' %(str(ints)))
         
         markerA = -4
         markerB = 0
@@ -71,7 +73,8 @@ class OQG1(object):
     
     def readTable_OQG1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
-        self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
+        if self.makeOp2Debug:
+            self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
@@ -281,7 +284,8 @@ class OQG1(object):
             assert len(data)>=32,msg+self.printSection(120)
             out = unpack('iiffffff',data[0:32])
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
-            self.op2Debug.write('%s\n' %(str(out)))
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
