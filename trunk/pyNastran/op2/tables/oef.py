@@ -21,53 +21,10 @@ class OEF(object):
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEF()
 
-    def readResultsTable(self,table3,table4Data):
-        tableName = self.readTableName(rewind=False) # OEF
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7],tableName)
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-
-        self.readMarkers([-2,1,0],tableName) # 7
-        bufferWords = self.getMarker()
-        #print "1-bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-        
-        markerA = -4
-        markerB = 0
-
-        iTable=-3
-        self.readMarkers([iTable,1,0],tableName)
-        while [markerA,markerB]!=[0,2]:
-            table3(iTable)
-            isBlockDone = self.readTable4(table4Data,iTable-1)
-            iTable -= 2
-
-            if isBlockDone:
-                #print "iTable = ",iTable
-                #self.n = self.markerStart
-                #self.op2.seek(self.n)
-                break
-            ###
-
-            n = self.n
-
-            self.readMarkers([iTable,1,0],tableName)
-            print "i read the markers!!!"
-   
-        ###
-        self.readMarkers([iTable,1,0],tableName)
-        #print str(self.obj)
-        if self.makeOp2Debug:
-            self.op2Debug.write("***end of %s table***\n" %(tableName))
-
     def deleteAttributes_OEF(self):
         params = ['elementType','dLoadID','loadID','obj','markerStart','oCode',
                   'eigr','eigi','eign','mode','freq','time','thermal',]
         self.deleteAttributes(params)
-
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
