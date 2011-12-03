@@ -9,7 +9,7 @@ from struct import unpack
 #    fluxObject,nonlinearFluxObject)
 
 from pyNastran.op2.resultObjects.ougv1_Objects import (
-    temperatureObject)
+    displacementObject,temperatureObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
 
@@ -66,6 +66,15 @@ class OEF(object):
         self.readMarkers([iTable,1,0],'OEF')
         #self.printSection(100)
         #print str(self.obj)
+        self.deleteAttributes_OEF()
+        if self.makeOp2Debug:
+            self.op2Debug.write("***end of OEF table***\n")
+
+    def deleteAttributes_OEF(self):
+        params = ['elementType','dLoadID','loadID','obj','markerStart','oCode',
+                  'eigr','eigi','eign','mode','freq','time','thermal',]
+        self.deleteAttributes(params)
+
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -80,14 +89,14 @@ class OEF(object):
         
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
-        (three) = self.parseApproachCode(data)
-        #iSubcase = self.getValues(data,'i',4)
-
-        self.dLoadID    = self.getValues(data,'i',8)  ## dynamic load set ID/random code
-        self.formatCode = self.getValues(data,'i',9)  ## format code
-        self.numWide    = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
-        self.oCode      = self.getValues(data,'i',11) ## undefined in DMAP...
-        self.thermal    = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
+        
+        self.parseApproachCode(data)
+        self.elementType = self.getValues(data,'i',3)  ## element type
+        self.dLoadID     = self.getValues(data,'i',8)  ## dynamic load set ID/random code
+        self.formatCode  = self.getValues(data,'i',9)  ## format code
+        self.numWide     = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
+        self.oCode       = self.getValues(data,'i',11) ## undefined in DMAP...
+        self.thermal     = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
         print "dLoadID(8)=%s formatCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
@@ -187,7 +196,7 @@ class OEF(object):
 
         bufferWords = self.getMarker('OEF')
         #print len(bufferWords)
-        data = self.readBlock()
+        self.data = self.readBlock()
         #self.printBlock(data)
 
         if bufferWords==146:  # table -4 is done, restarting table -3
@@ -200,27 +209,33 @@ class OEF(object):
             return isTable4Done,isBlockDone
 
 
+        assert self.formatCode==1
+
         isBlockDone = not(bufferWords)
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         if self.thermal==0:
             if self.approachCode==1 and self.sortCode==0: # displacement
-                print "isDisplacement"
+                print "isForces"
                 self.obj = displacementObject(self.iSubcase)
-                self.displacements[self.iSubcase] = self.obj
+                self.displacementForces[self.iSubcase] = self.obj
+                self.readForces(self.obj)
+
             #elif self.approachCode==1 and self.sortCode==1: # spc forces
             #    print "isForces"
             #    raise Exception('is this correct???')
             #    self.obj = spcForcesObject(self.iSubcase)
             #    self.spcForces[self.iSubcase] = self.obj
             elif self.approachCode==6 and self.sortCode==0: # transient displacement
-                print "isTransientDisplacement"
-                self.createTransientObject(self.displacments,displacementObject,self.time)
-                self.displacements[self.iSubcase] = self.obj
+                print "isTransientForces"
+                self.createTransientObject(self.displacmentForces,displacementObject,self.time)
+                self.displacementForces[self.iSubcase] = self.obj
+                self.readForces(self.obj)
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
-                print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.nonlinearDisplacments,displacementObject,self.dt)
-                self.nonlinearDisplacements[self.iSubcase] = self.obj
+                print "isNonlinearStaticForces"
+                self.createTransientObject(self.nonlinearForces,displacementObject,self.loadStep)
+                self.nonlinearForces[self.iSubcase] = self.obj
+                self.readForcesNonlinear(self.obj)
             else:
                 raise Exception('not supported OEF solution...')
             ###
@@ -246,7 +261,7 @@ class OEF(object):
                 print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.loadStep)
                 self.nonlinearFluxes[self.iSubcase] = self.obj
-                self.readForcesNonlinear(data,self.obj)
+                self.readForcesNonlinear(self.obj)
             else:
                 raise Exception('not supported OEF solution...')
             ###
@@ -258,14 +273,18 @@ class OEF(object):
         #print self.obj
         del self.obj
         
+        #print self.printSection(120)
+
         print "-------finished OEF----------"
         return (isTable4Done,isBlockDone)
 
         
-    def readForces(self,data,scalarObject):
+    def readForces(self,scalarObject):
         print "readForces..."
+        data = self.data
         #self.printBlock(data[0:self.numWide*4])
-        while data:
+        reqLen = 4*self.numWide
+        while len(data)>=reqLen:
             #print "len(data) = ",len(data)
             #self.printBlock(data[:self.numWide*4])
             gridDevice, = unpack('i',data[0:4])
@@ -292,34 +311,65 @@ class OEF(object):
         ###
         #print self.obj
         #sys.exit('check...')
+        self.handleResultsBuffer(self.readForces,scalarObject,debug=False)
 
-    def readForcesNonlinear(self,data,scalarObject):
+    def readForcesNonlinear(self,scalarObject):
         print "readForcesNonlinear..."
-        while data:
-            #print "len(data) = ",len(data)
+        data = self.data
+
+        if self.elementType==12:
+            if self.tableCode in [0,2]:  nWords = 2
+            else:                        nWords = 3
+        ###
+        else:
+            raise Exception('need to define the word size')
+        ###
+        reqLen = 4*nWords
+
+        while len(data)>=reqLen:
+            #print "len(data) = ",len(data),reqLen
             #self.printBlock(data[32:])
             gridDevice, = unpack('i',data[0:4])
-            eType = ''.join(unpack('cccccccc',data[4:12]))
+            #eType = ''.join(unpack('cccccccc',data[4:12]))
             #print "eType = ",eType
             #print "len(data[8:40]"
-            if self.numWide in [9,10]:
-                (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
-            elif self.numWide==8: ## @todo CHBDY - how do i add this to the case...
-                (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
-                sys.stderr.write('skipping CHBDY')
-                data = data[self.numWide*4:]
-                continue
+            #print "elementType=%s" %(self.elementType)
+
+            if self.elementType==12:
+                if self.tableCode in [0,2]:
+                    force = unpack('f',data[4:8])
+                else:
+                    (forceReal,forceImag) = unpack('ff',data[4:12])
+                ###
+            ###
             else:
-                raise Exception('only CBEAM/CBAR/CTUBE/2D/3D elements supported...so no special thermal elements...numwde=%s' %(self.numWide))
+                raise Exception('elementType=%s' %(self.elementType))
+            ###
+
+            #if self.numWide in [9,10]:
+            #    (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
+            #elif self.numWide==2: ## @todo CHBDY - how do i add this to the case...
+            #    (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
+            #    sys.stderr.write('skipping CHBDY\n')
+            #    data = data[self.numWide*4:]
+            #    continue
+            #elif self.numWide==8: ## @todo CHBDY - how do i add this to the case...
+            #    (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
+            #    sys.stderr.write('skipping CHBDY\n')
+            #    data = data[self.numWide*4:]
+            #    continue
+            #else:
+            #    raise Exception('only CBEAM/CBAR/CTUBE/2D/3D elements supported...so no special thermal elements...numwde=%s' %(self.numWide))
             
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-self.deviceCode)/10
             #print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             #print type(scalarObject)
-            scalarObject.add(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+            #scalarObject.add(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             data = data[self.numWide*4:]
         ###
         #print self.obj
         #sys.exit('check...')
+        self.handleResultsBuffer(self.readForcesNonlinear,scalarObject,debug=False)
         

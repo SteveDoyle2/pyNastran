@@ -234,12 +234,11 @@ class OQG1(object):
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
-                raise Exception('is this correct???')
-                self.createTransientObject(self.nonlinearDisplacments,displacementObject,self.dt)
-                self.nonlinearDisplacements[self.iSubcase] = self.obj
+                self.createTransientObject(self.realImagConstraints,displacementObject,self.lftsfq)
+                self.realImagConstraints[self.iSubcase] = self.obj
 
             else:
-                raise Exception('unsupported OQG1 solution...')
+                raise Exception('unsupported OQG1 static solution...')
             ###
 
         elif self.thermal==1:
@@ -266,11 +265,49 @@ class OQG1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars(self.obj)
+        if self.formatCode==1:
+            self.readScalars(self.obj)
+        elif self.formatCode==2:
+            self.readFormat2(self.obj)
+        else:
+            raise Exception('only formatCode=1...formatCode=|%s|' %(self.formatCode))
         #print self.obj
         
         print "-------finished OQG1----------"
         return (isTable4Done,isBlockDone)
+
+    def readFormat2(self,scalarObject):
+        data = self.data
+        deviceCode = self.deviceCode
+        #print type(scalarObject)
+        while len(data)>=56:
+            #print "self.numWide = ",self.numWide
+            #print "len(data) = ",len(data)
+            self.printBlock(data[80:])
+            msg = 'len(data)=%s\n'%(len(data))
+            assert len(data)>=56,msg+self.printSection(120)
+            out = unpack('iiffffffffffff',data[0:56])
+            (gridDevice,gridType,dx, dy, dz, rx, ry, rz,
+                                 dxi,dyi,dzi,rxi,ryi,rzi) = out
+            
+            #gridType...1 for grid...2 for scalar
+
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            #print "gridDevice = ",gridDevice
+            #print "deviceCode = ",deviceCode
+            grid = (gridDevice-deviceCode)/10
+            #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            print "grid=%-5s  dx=%g  dy=%g  dz=%g  rx=%g  ry=%g  rz=%g"  %(grid,dx, dy, dz, rx, ry, rz)
+            print "           dxi=%g dyi=%g dzi=%g rxi=%g ryi=%g rzi=%g" %(     dxi,dyi,dzi,rxi,ryi,rzi)
+            #scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
+            
+            sys.exit('checkASDF')
+            data = data[56:]
+        ###
+        self.data = data
+        #print self.printSection(200)
+        self.handleResultsBuffer(self.readScalars,scalarObject)
 
     def readScalars(self,scalarObject):
         data = self.data
@@ -289,15 +326,16 @@ class OQG1(object):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
-            #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            #if grid<100:
+            #    print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###
         self.data = data
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars,scalarObject)
+        self.handleResultsBuffer(self.readScalars,scalarObject,debug=False)
 
-    def handleResultsBuffer(self,func,stress):
+    def handleResultsBuffer(self,func,stress,debug=False):
         """
         works by knowing that:
         the end of an unbuffered table has a
@@ -318,7 +356,10 @@ class OQG1(object):
         #print "len(data) = ",len(self.data)
         #if marker[0]==4:
         #    print "found a 4 - end of unbuffered table"
-        
+
+        if debug:
+            print self.printSection(120)
+
         nOld = self.n
         markers = self.readHeader()
         #print "markers = ",markers
@@ -329,7 +370,7 @@ class OQG1(object):
             #print 'found a marker'
 
         else:
-            print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
+            #print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
             #markers = self.readHeader()
             #print "markers = ",markers
             data = self.readBlock()

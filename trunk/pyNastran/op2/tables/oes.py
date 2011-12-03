@@ -215,7 +215,7 @@ class OES(object):
 
         print "*********************"
         #bufferWords = self.getMarker() # 87 - buffer
-        print "OES4 bufferWords = ",bufferWords,bufferWords*4
+        #print "OES4 bufferWords = ",bufferWords,bufferWords*4
         #self.verifyBufferSize(bufferWords)
         
         isBlockDone = not(bufferWords)
@@ -257,9 +257,15 @@ class OES(object):
         #    stressStrainObj = self.instantiateBeamObject()
         #    self.CBEAM_2(stressStrainObj)
         #elif self.elementType == 10:   # conrod
-        #    print "    found cbeam_2"
+        #    print "    found conrod_10"
         #    stressStrainObj = self.instantiateConrodObject()
         #    self.CONROD_10(stressStrainObj)
+
+        elif self.elementType == 12:   # celas2
+            print "    found celas2_12"
+            #stressStrainObj = self.instantiateCelasObject()
+            stressStrainObj = None
+            self.CELAS2_12(stressStrainObj)
         elif self.elementType == 34:   # cbar
             #print "    found cbar_34"
             stressStrainObj = self.instantiateBarObject()
