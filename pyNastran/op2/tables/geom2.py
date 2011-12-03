@@ -8,19 +8,19 @@ from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CSHEAR
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA15,CHEXA8,CHEXA20
+from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
 
 class Geometry2(object):
-
     def readTable_Geom2(self):
         self.iTableMap = {
                            (2408, 24, 180):  self.readCBAR,   # record 8
-                           (201,2,69):       self.readCDAMP1, # record 16 - not done
-                           (301,3,70):       self.readCDAMP2, # record 17 - not done
-                           (401,4,71):       self.readCDAMP3, # record 18 - not done
-                           (501,5,72):       self.readCDAMP4, # record 19 - not done
-                           (10608,106,404):  self.readCDAMP5, # record 20 - not done
+                           (201,2,69):       self.readCDAMP1, # record 16 - not tested
+                           (301,3,70):       self.readCDAMP2, # record 17 - not tested
+                           (401,4,71):       self.readCDAMP3, # record 18 - not tested
+                           (501,5,72):       self.readCDAMP4, # record 19 - not tested
+                           (10608,106,404):  self.readCDAMP5, # record 20 - not tested
                            (601,6,73):       self.readCELAS1, # record 29
-                           #(701,7,74):       self.readCELAS2, # record 30
+                           #(701,7,74):      self.readCELAS2, # record 30
                            (801,8,75):       self.readCELAS3, # record 31
                            (901,9,76):       self.readCELAS4, # record 32
                            (1501,15,64):     self.readCONM2,  # record 57
@@ -28,14 +28,14 @@ class Geometry2(object):
                            (13900,139,9989): self.readCQUAD4, # record 70
                            (3001,30,48):     self.readCROD,   # record 80
                            (12201,122,9013): self.readCTETP,  # record 86 - not done
-                           #(5508,55,217):    self.readCTETRA, # record 87
+                           #(5508,55,217):   self.readCTETRA, # record 87
                            (5959,59,282):    self.readCTRIA3, # record 93
                            (3701,37,49):     self.readCTUBE,  # record 103
                            (5551,49,105):    self.readSPOINT, # record 118 - not done
-                           #(7308, 73, 253)
-                           #(4108, 41, 280)
-                           #(10808, 108, 406)
-
+                           (7308,73,253):    self.readCHEXA,  # record 45
+                           (4108,41,280):    self.readCPENTA, # record 62
+                           (10808,108,406):  self.readCHBDYG, # record 43
+                           #(10908,109,407): self.readCHBDYP, # record 44 - not done
                          }
         self.readRecordTable('GEOM2')
 
@@ -62,7 +62,6 @@ class Geometry2(object):
     def readCBAR(self,data):
         """
         CBAR(2408,24,180) - the marker for Record 8
-        @todo create object
         """
         #print "reading CBAR"
         while len(data)>=64: # 16*4
@@ -73,32 +72,32 @@ class Geometry2(object):
             if   f==0:
                 out = unpack('iiiifffiiiffffff',eData)
                 (eid,pid,ga,gb,x1,x2,  x3,  f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataInit = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
             elif f==1:
                 out = unpack('iiiifffiiiffffff',eData)
                 (eid,pid,ga,gb,x1,x2,  x3,  f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataInit = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
             elif f==2:
                 out = unpack('iiiiiiifiiffffff',eData)
                 (eid,pid,ga,gb,g0,junk,junk,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataInit = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             else:
                 raise Exception('invalid f value...f=%s' %(f))
             ###
-            elem = CBAR(None,dataInit)
+            elem = CBAR(None,dataIn)
             self.addOp2Element(elem)
         ###
 
     def readCDAMP1(self,data):
         """
         CDAMP1(201,2,69) - the marker for Record 16
-        @todo create object
         """
         print "reading CDAMP1"
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
-            (eid,pid,g1,g2,c1,c2) = unpack('iiiiii',eData)
+            out = unpack('iiiiii',eData)
+            (eid,pid,g1,g2,c1,c2) = out
             elem = CDAMP1(None,out)
             self.addOp2Element(elem)
         ###
@@ -106,13 +105,13 @@ class Geometry2(object):
     def readCDAMP2(self,data):
         """
         CDAMP2(301,3,70) - the marker for Record 17
-        @todo create object
         """
         print "reading CDAMP2"
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
-            (eid,b,g1,g2,c1,c2) = unpack('ifiiii',eData)
+            out = unpack('ifiiii',eData)
+            (eid,b,g1,g2,c1,c2) = out
             elem = CDAMP2(None,out)
             self.addOp2Element(elem)
         ###
@@ -120,13 +119,13 @@ class Geometry2(object):
     def readCDAMP3(self,data):
         """
         CDAMP3(401,4,71) - the marker for Record 18
-        @todo create object
         """
         print "reading CDAMP3"
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,pid,s1,s2) = unpack('iiii',eData)
+            out = unpack('iiii',eData)
+            (eid,pid,s1,s2) = out
             elem = CDAMP3(None,out)
             self.addOp2Element(elem)
         ###
@@ -134,13 +133,13 @@ class Geometry2(object):
     def readCDAMP4(self,data):
         """
         CDAMP4(501,5,72) - the marker for Record 19
-        @todo create object
         """
         print "reading CDAMP4"
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,b,s1,s2) = unpack('ifii',eData)
+            out = unpack('ifii',eData)
+            (eid,b,s1,s2) = out
             elem = CDAMP4(None,out)
             self.addOp2Element(elem)
         ###
@@ -148,13 +147,14 @@ class Geometry2(object):
     def readCDAMP5(self,data):
         """
         CDAMP5(10608,106,404) - the marker for Record 20
-        @todo create object
         """
         print "reading CDAMP5"
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,pid,s1,s2) = unpack('iiii',eData)
+            out = unpack('iiii',eData)
+            (eid,pid,s1,s2) = out
+            elem = CDAMP5(None,out)
             self.addOp2Element(elem)
         ###
 
@@ -203,7 +203,8 @@ class Geometry2(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,pid,s1,s2) = unpack('iiii',eData)
+            out = unpack('iiii',eData)
+            (eid,pid,s1,s2) = out
             elem = CELAS3(None,out)
             self.addOp2Element(elem)
         ###
@@ -216,7 +217,8 @@ class Geometry2(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,k,s1,s2) = unpack('ifii',eData)
+            out = unpack('ifii',eData)
+            (eid,k,s1,s2) = out
             elem = CELAS4(None,out)
             self.addOp2Element(elem)
         ###
@@ -246,8 +248,43 @@ class Geometry2(object):
 # CHACBR
 # CHBDYE
 # CHBDYG
+
+    def readCHBDYG(self,data):
+        """
+        CHBDYG(10808,108,406) - the marker for Record 43
+        """
+        print "reading CHBDYG"
+        while len(data)>=64: # 16*4
+            eData = data[:64]
+            data  = data[64:]
+            (eid,blank,Type,iviewf,iviewb,radmidf,radmidb,blank2,
+                      g1,g2,g3,g4,g5,g6,g7,g8) = unpack('iiiiiiiiiiiiiiii',eData)
+            dataIn = [eid,Type,iviewf,iviewb,radmidf,radmidb,
+                      g1,g2,g3,g4,g5,g6,g7,g8]
+            elem = CHBDYG(None,dataIn)
+            self.addOp2Element(elem)
+        ###
+
 # CHBDYP
-# CHEXA
+
+    #def readCHBDYP(self,data):
+    #    pass
+
+    def readCHEXA(self,data):
+        """
+        CHEXA(7308,73,253) - the marker for Record 45
+        """
+        print "reading CHEXA"
+        while len(data)>=88: # 22*4
+            eData = data[:88]
+            data  = data[88:]
+            out = unpack('iiiiiiiiiiiiiiiiiiiiii',eData)
+            (eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,
+             g11,g12,g13,g14,g15,g16,g17,g18,g19,g20) = out
+            elem = CHEXA(None,out)
+            self.addOp2Element(elem)
+        ###
+
 # CHEXA20F
 # CHEXAFD
 # CHEXAL
@@ -264,7 +301,22 @@ class Geometry2(object):
 # CONV
 # CONVM
 # CPENP
-# CPENTA
+
+    def readCPENTA(self,data):
+        """
+        CPENTA(4108,41,280) - the marker for Record 62
+        """
+        print "reading CPENTA"
+        while len(data)>=88: # 22*4
+            eData = data[:88]
+            data  = data[88:]
+            out = unpack('iiiiiiiiiiiiiiiiiiiiii',eData)
+            (eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,
+             g11,g12,g13,g14,g15) = out
+            elem = CPENTA(None,out)
+            self.addOp2Element(elem)
+        ###
+
 # CPENPR
 # CPENT15F
 # CPENT6FD
@@ -274,8 +326,8 @@ class Geometry2(object):
 
     def readCQUAD4(self,data):
         """
-        (2958,51,177)    - the marker for Record 69
-        (13900,139,9989) - the marker for Record 70
+        CQUAD4(2958,51,177)    - the marker for Record 69
+        CQUAD4(13900,139,9989) - the marker for Record 70
         """
         #print "reading CQUAD4"
         while len(data)>=56: # 14*4
@@ -307,9 +359,9 @@ class Geometry2(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,pid,n1,n2) = unpack('iiii',eData)
-            dataInit = [eid,pid,n1,n2]
-            elem = CROD(None,dataInit)
+            out = unpack('iiii',eData)
+            (eid,pid,n1,n2) = out
+            elem = CROD(None,out)
             self.addOp2Element(elem)
         ###
 
@@ -342,8 +394,8 @@ class Geometry2(object):
             print "f  = ",f
             print "b1  = ",b1
             print "ee = ",ee
-            dataInit = [eid,pid,n1,n2,n2,n3,n4]
-            elem = CTETRA4(None,dataInit)
+            dataIn = [eid,pid,n1,n2,n2,n3,n4]
+            elem = CTETRA4(None,dataIn)
             self.addOp2Element(elem)
         ###
 
@@ -380,10 +432,11 @@ class Geometry2(object):
         while len(data)>=52: # 13*4
             eData = data[:52]
             data  = data[52:]
-            (eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3) = unpack('iiiiiffiiifff',eData)
+            out = unpack('iiiiiffiiifff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
-            dataInit = [eid,pid,n1,n2,n3,theta,zoffs,tflag,t1,t2,t3]
-            elem = CTRIA3(None,dataInit)
+            (eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3) = out
+            dataIn = [eid,pid,n1,n2,n3,theta,zoffs,tflag,t1,t2,t3]
+            elem = CTRIA3(None,dataIn)
             self.addOp2Element(elem)
         ###
 
@@ -405,9 +458,9 @@ class Geometry2(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            (eid,pid,n1,n2) = unpack('iiii',eData)
-            dataInit = [eid,pid,n1,n2]
-            elem = CTUBE(None,dataInit)
+            out = unpack('iiii',eData)
+            (eid,pid,n1,n2) = out
+            elem = CTUBE(None,out)
             self.addOp2Element(elem)
         ###
 

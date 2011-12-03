@@ -377,9 +377,15 @@ class MOMENT2(Moment):
 class PLOAD(Load):
     type = 'PLOAD'
     def __init__(self,card=None,data=None):
-        self.lid = card.field(1)
-        self.p   = card.field(2)
-        self.nodes = card.fields(3,8)
+        if card:
+            self.lid = card.field(1)
+            self.p   = card.field(2)
+            self.nodes = card.fields(3,8)
+        else:
+            self.lid   = data[0]
+            self.p     = data[1]
+            self.nodes = data[2:]
+            raise Exception('not supported')
         assert len(self.nodes)==4
     
     def crossReference(self,model):
@@ -396,17 +402,28 @@ class PLOAD1(Load):
                   'MX','MY','MZ','MXE','MYE','MZE']
     validScales = ['LE','FR','LEPR','FRPR']
     def __init__(self,card=None,data=None):
-        self.lid   = card.field(1)
-        self.eid   = card.field(2)
-        self.Type  = card.field(3)
-        self.scale = card.field(4)
+        if card:
+            self.lid   = card.field(1)
+            self.eid   = card.field(2)
+            self.Type  = card.field(3)
+            self.scale = card.field(4)
+            self.x1 = card.field(5)
+            self.p1 = card.field(6)
+            self.x2 = card.field(7)
+            self.p2 = card.field(8)
+        else:
+            self.lid   = data[0]
+            self.eid   = data[1]
+            self.Type  = data[2]
+            self.scale = data[3]
+            self.x1 = data[4]
+            self.p1 = data[5]
+            self.x2 = data[6]
+            self.p2 = data[7]
+        ###
         assert self.Type  in self.validTypes, '%s is an invalid type on the PLOAD1 card' %(self.type)
         assert self.scale in self.validScales,'%s is an invalid scale on the PLOAD1 card' %(self.scale)
-        self.x1 = card.field(5)
-        self.p1 = card.field(6)
-        self.x2 = card.field(7)
-        self.p2 = card.field(8)
-    
+
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
         pass
@@ -418,14 +435,22 @@ class PLOAD1(Load):
 class PLOAD2(Load):  # todo:  support THRU
     type = 'PLOAD2'
     def __init__(self,card=None,data=None):
-        self.lid = card.field(1)
-        self.p   = card.field(2)
-        self.nodes = card.fields(3,9)
+        if card:
+            self.lid = card.field(1)
+            self.p   = card.field(2)
+            self.nodes = card.fields(3,9)
+
+            if card.field(4)=='THRU':
+                print "found a THRU on PLOAD2"
+                pass
+            ###
+        else:
+            self.lid   = data[0]
+            self.p     = data[1]
+            self.nodes = data[2:]
+        ###
         assert len(self.nodes)==6
         
-        if card.field(4)=='THRU':
-            print "found a THRU on PLOAD2"
-            pass
     
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -436,32 +461,46 @@ class PLOAD2(Load):  # todo:  support THRU
         return self.printCard(fields)
 
 class PLOAD4(Load):
+    """
+    @todo needs work on g1
+    """
     type = 'PLOAD4'
     def __init__(self,card=None,data=None):
-        self.lid = card.field(1)
-        self.eid = card.field(2)
-        p1 = card.field(3)
-        p  = card.fields(4,7,[p1,p1,p1])
-        self.p = [p1]+p
-        
-        if card.field(7)=='THRU':
-            #print "found a THRU on PLOAD4"
-            pass
-            eid2 = card.field(8)
-            self.eids= self.expandThru([self.eid,'THRU',eid2])
-            self.g3 = None
-            self.g4 = None
-        else:   # used for CPENTA, CHEXA
-            self.eids = None
-            self.g3 = card.field(7)
-            self.g4 = card.field(8)
+        if card:
+            self.lid = card.field(1)
+            self.eid = card.field(2)
+            p1 = card.field(3)
+            p  = card.fields(4,7,[p1,p1,p1])
+            self.p = [p1]+p
+
+            if card.field(7)=='THRU':
+                #print "found a THRU on PLOAD4"
+                pass
+                eid2 = card.field(8)
+                self.eids= self.expandThru([self.eid,'THRU',eid2])
+                self.g3 = None
+                self.g4 = None
+            else:   # used for CPENTA, CHEXA
+                self.eids = None
+                self.g3 = card.field(7)
+                self.g4 = card.field(8)
+            ###
+
+            ## Coordinate system identification number. See Remark 2. (Integer >= 0;Default=0)
+            self.cid     = card.field(9,0)
+            self.NVector = card.fields(10,13,[0.,0.,0.])
+            self.sorl    = card.field(13,'SURF')
+        else:
+            self.lid     = data[0]
+            self.eid     = data[1]
+            self.p       = data[2]
+            self.g3      = data[3]
+            self.g4      = data[4]
+            self.cid     = data[5]
+            self.NVector = data[6]
+            self.sor1    = data[7]
         ###
-        
-        ## Coordinate system identification number. See Remark 2. (Integer >= 0;Default=0)
-        self.cid     = card.field(9,0)
-        self.NVector = card.fields(10,13,[0.,0.,0.])
-        self.sorl    = card.field(13,'SURF')
-    
+
     def crossReference(self,model):
         self.cid = model.Coord(self.cid)
         if self.g1: self.g1 = model.Node(self.g1)
