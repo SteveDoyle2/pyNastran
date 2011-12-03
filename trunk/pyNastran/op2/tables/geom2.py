@@ -24,12 +24,12 @@ class Geometry2(object):
                            (801,8,75):       self.readCELAS3, # record 31
                            (901,9,76):       self.readCELAS4, # record 32
                            (1501,15,64):     self.readCONM2,  # record 57
-                           (2958,51,177):    self.readCQUAD4, # record 69
-                           (13900,139,9989): self.readCQUAD4, # record 70
+                           #(2958,51,177):    self.readCQUAD4, # record 69
+                           #(13900,139,9989): self.readCQUAD4, # record 70
                            (3001,30,48):     self.readCROD,   # record 80
                            (12201,122,9013): self.readCTETP,  # record 86 - not done
                            #(5508,55,217):   self.readCTETRA, # record 87
-                           (5959,59,282):    self.readCTRIA3, # record 93
+                           #(5959,59,282):    self.readCTRIA3, # record 93
                            (3701,37,49):     self.readCTUBE,  # record 103
                            (5551,49,105):    self.readSPOINT, # record 118 - not done
                            (7308,73,253):    self.readCHEXA,  # record 45

@@ -232,7 +232,10 @@ class OES(object):
         print "*elementType = ",self.elementType
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
-        self.data = self.getData(bufferWords*4)
+        self.rewind(4)
+        self.data = self.readBlock()  # 348
+        #print "len(self.data) = ",len(self.data)
+
         #print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('reading big data block\n')
