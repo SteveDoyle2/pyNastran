@@ -4,33 +4,37 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.aero  import GRAV
-from pyNastran.bdf.cards.loads import FORCE,FORCE1,FORCE2,LOAD
+from pyNastran.bdf.cards.aero    import GRAV
+from pyNastran.bdf.cards.loads   import *
+from pyNastran.bdf.cards.thermal import *
 
 class Geometry3(object):
 
     def readTable_Geom3(self):
         self.iTableMap = {
-                         (4201,42,18): self.readForce,  # record 3
-                         (4001,40,20): self.readForce1, # record 4
-                         (4101,41,22): self.readForce2, # record 5
-                         (4401,44,26): self.readGrav,   # record 7
-                         (4551,61,84): self.readLoad,   # record 8
+                         (4201,42,18): self.readFORCE,  # record 3
+                         (4001,40,20): self.readFORCE1, # record 4
+                         (4101,41,22): self.readFORCE2, # record 5
+                         (4401,44,26): self.readGRAV,   # record 7
+                         (4551,61,84): self.readLOAD,   # record 8
 
-                         #(2109,21,414): self.read
-                         #(5641,65,98):  self.read
-                         #(5701,57,27):  self.read
-                         #(5641,65,98):  self.read
+                         (7209,72,299): self.readPLOAD4,# record 20
+                         (4509,45,239): self.readQBDY1, # record 24
+                         (4909,49,240): self.readQBDY2, # record 25
+                         (2109,21,414): self.readQBDY3, # record 26
+                         (5641,65,98):  self.readTEMP,  # record 32
+                         (5701,57,27):  self.readTEMPD, # record 33
 
                          }
         self.readRecordTable('GEOM3')
 
+
 # ACCEL
 # ACCEL1
 
-    def readForce(self,data):
+    def readFORCE(self,data):
         """
-        (4201,42,18) - the marker for Record 3
+        FORCE(4201,42,18) - the marker for Record 3
         """
         print "reading FORCE"
         while len(data)>=28: # 7*4
@@ -42,9 +46,9 @@ class Geometry3(object):
             self.addLoad(load)
         ###
 
-    def readForce1(self,data):
+    def readFORCE1(self,data):
         """
-        (4001,40,20) - the marker for Record 4
+        FORCE1(4001,40,20) - the marker for Record 4
         """
         print "reading FORCE1"
         while len(data)>=16: # 4*4
@@ -56,9 +60,9 @@ class Geometry3(object):
             self.addLoad(load)
         ###
 
-    def readForce2(self,data):
+    def readFORCE2(self,data):
         """
-        (4101,41,22) - the marker for Record 5
+        FORCE2(4101,41,22) - the marker for Record 5
         """
         print "reading FORCE2"
         while len(data)>=28: # 7*4
@@ -72,7 +76,7 @@ class Geometry3(object):
 
 # GMLOAD
 
-    def readGrav(self,data):
+    def readGRAV(self,data):
         """
         GRAV(4401,44,26) - the marker for Record 7
         @todo add object
@@ -87,7 +91,7 @@ class Geometry3(object):
             self.addGrav(grav)
         ###
 
-    def readLoad(self,data):
+    def readLOAD(self,data):
         """
         (4551, 61, 84) - the marker for Record 8
         @todo add object
@@ -118,6 +122,7 @@ class Geometry3(object):
             self.addLoad(load)
         ###
 
+
 # LOADCYH
 # LOADCYN
 # LOADCYT
@@ -129,20 +134,109 @@ class Geometry3(object):
 # PLOAD1
 # PLOAD2
 # PLOAD3
-# PLOAD4
+
+    def readPLOAD4(self,data):
+        """
+        PLOAD4(7209,72,299) - the marker for Record 20
+        """
+        print "reading PLOAD4"
+        while len(data)>=64: # 16*4
+            eData = data[:64]
+            data  = data[64:]
+            out = unpack('iiffffiiifffssssssssssssssss',eData)
+            (sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3,s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8) = out
+            sdrlA = s1+s2+s3+s4
+            sdrlB = s5+s6+s7+s8
+            ldirA = L1+L2+L3+L4
+            ldirB = L5+L6+L7+L8
+            load = PLOAD4(None,[sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3,sdrlA,sdrlB,ldirA,ldirB])
+            self.addLoad(load)
+        ###
+
 # PLOADX
 # PLOADX1
 # PRESAX
 # QBDY1
 # QBDY2
-# QBDY3
+
+
+    def readQBDY1(self,data):
+        """
+        QBDY1(4509,45,239) - the marker for Record 24
+        """
+        print "reading QBDY1"
+        while len(data)>=12: # 3*4
+            eData = data[:12]
+            data  = data[12:]
+            out = unpack('ifi',eData)
+            (sid,q0,eid) = out
+            load = QBDY1(None,out)
+            self.addThermalLoad(load)
+        ###
+
+    def readQBDY2(self,data):
+        """
+        QBDY2(4909,49,240) - the marker for Record 25
+        """
+        print "reading QBDY2"
+        while len(data)>=40: # 10*4
+            eData = data[:40]
+            data  = data[40:]
+            out = unpack('iiffffffff',eData)
+            (sid,eid,q1,q2,q3,q4,q5,q6,q7,q8) = out
+            load = QBDY2(None,out)
+            self.addThermalLoad(load)
+        ###
+
+    def readQBDY3(self,data):
+        """
+        QBDY3(2109,21,414) - the marker for Record 26
+        """
+        print "reading QBDY3"
+        while len(data)>=16: # 4*4
+            eData = data[:16]
+            data  = data[16:]
+            out = unpack('ifii',eData)
+            (sid,q0,cntrlnd,eid) = out
+            load = QBDY3(None,out)
+            self.addThermalLoad(load)
+        ###
+
+    def readTEMP(self,data):
+        """
+        TEMP(5701,57,27) - the marker for Record 32
+        """
+        print "reading TEMP"
+        while len(data)>=12: # 3*4
+            eData = data[:12]
+            data  = data[12:]
+            out = unpack('iif',eData)
+            (sid,g,T) = out
+            load = TEMP(None,out)
+            self.addThermalLoad(load)
+        ###
+
+    def readTEMPD(self,data):
+        """
+        TEMPD(5641,65,98) - the marker for Record 33
+        """
+        print "reading TEMPD"
+        while len(data)>=8: # 4*4
+            eData = data[:8]
+            data  = data[8:]
+            out = unpack('if',eData)
+            (sid,T) = out
+            load = TEMPD(None,out)
+            self.addThermalLoad(load)
+        ###
+
 # QHBDY
 # QVECT
 # QVOL
 # RFORCE
 # SLOAD
-# TEMP
-# TEMPD
+# TEMP(5701,57,27) # 32
+# TEMPD(5641,65,98) # 33
 # TEMPEST
 # TEMPF
 # TEMP1C

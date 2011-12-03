@@ -19,9 +19,11 @@ class MPT(object):
                          (2203,22,235): self.readMat5,  # record 6
                          (2503,25,288): self.readMat8,  # record 7
                          (2801,28,365): self.readMat10, # record 9
-                         #(3003,30,286): self.read
-                         #(3103,31,337): self.read
+                         (503,5,90):    self.readMATS1, # record 12 - not done
+                         (3003,30,286): self.readNLPARM, # record 27 - not done
+                         (3103,31,337): self.readTSTEPNL, # record 29 - not done
                          }
+
         self.readRecordTable('MPTS')
 
     def readCreep(self,data):
@@ -146,7 +148,23 @@ class MPT(object):
 
 # MAT11
 # MATHP
-# MATS1
+
+    def readMATS1(self,data):
+        """
+        MATS1(503,5,90) - record 12
+        @todo add object
+        """
+        print "reading MATS1"
+        while len(data)>=44: # 11*4
+            eData = data[:44]
+            data  = data[44:]
+            out = unpack('iiifiiffiii',eData)
+            (mid,tid,Type,h,yf,hr,limit1,limit2,a,b,c) = out
+            dataIn = [mid,tid,Type,h,yf,hr,limit1,limit2]
+            #mat = MATS1(None,dataIn)
+            #self.addMaterial(mat)
+        ###
+
 # MATT1
 # MATT2
 # MATT3
@@ -161,6 +179,37 @@ class MPT(object):
 # RADBND
 # RADM
 # RADMT
-# NLPARM
+
+    def readNLPARM(self,data):
+        """
+        NLPARM(3003,30,286) - record 27
+        @todo add object
+        """
+        print "reading NLPARM"
+        while len(data)>=76: # 19*4
+            eData = data[:76]
+            data  = data[76:]
+            out = unpack('iifiiiiifffiiiffiff',eData)
+            (sid,ninc,dt,kmethod,kstep,maxiter,conv,intout,epsu,epsp,epsw,
+             maxdiv,maxqn,maxls,fstress,lstol,maxbis,maxr,rtolb) = out
+            #mat = NLPARM(None,out)
+            #self.addMaterial(mat)
+        ###
+
 # NLPCI
-# TSTEPNL
+
+    def readTSTEPNL(self,data):
+        """
+        TSTEPNL(3103,31,337) - record 29
+        @todo add object
+        """
+        print "reading TSTEPNL"
+        while len(data)>=88: # 19*4
+            eData = data[:88]
+            data  = data[88:]
+            out = unpack('iifiiiiifffiiifiiiffff',eData)
+            (sid,ndt,dt,no,kmethod,kstep,maxiter,conv,epsu,epsp,epsw,
+             maxdiv,maxqn,maxls,fstress,lstol,maxbis,adjust,rb,maxr,utol,rtolb) = out
+            #mat = TSTEPNL(None,out)
+            #self.addMaterial(mat)
+        ###

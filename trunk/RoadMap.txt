@@ -65,6 +65,10 @@ OP2 Reader
      - FORCE2  (5,done)
      - GRAV    (7,done)
      - LOAD    (8,done)
+     - PLOAD4  (20)
+     - QBDY1   (24,done)
+     - QBDY2   (25,done)
+     - QBDY3   (26,done)
      - PEDGE   (42)
    
    - GEOM4
@@ -91,6 +95,8 @@ OP2 Reader
      - MAT5    (6,done)
      - MAT8    (7,done)
      - MAT10   (9,done)
+     - MATS1
+     - NLPARM
      - TSTEPNL (29)
 
    - DYNAMIC
@@ -99,27 +105,27 @@ OP2 Reader
 
    - OES
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
-         - CROD    (1   - done)
+         - CROD    (1,done)
          - CBEAM   (2)
          - CONROD  (10)
-         - CBAR    (34  - done)
+         - CBAR    (34,done)
          
-         - CTETRA  (39  - done)
-         - CHEXA   (67  - done)
-         - CPENTA  (68  - done)
-         - CTRIA3  (74  - done)
-         - CQUAD4  (144 - done)
+         - CTETRA  (39, done)
+         - CHEXA   (67, done)
+         - CPENTA  (68, done)
+         - CTRIA3  (74, done)
+         - CQUAD4  (144,done)
          
-         - CQUAD4 (33 - done)
+         - CQUAD4 (33,done)
          - CQUAD8 (64)
          - CTRIA6 (75)
-         - CELAS1 (11)
-         - CELAS2 (12)
-         - CELAS3 (13)
-         - CELAS4 (14)
+         - CELAS1 (11,done)
+         - CELAS2 (12,done)
+         - CELAS3 (13,done)
+         - CELAS4 (14,done)
 
          # nonlinear
-         - CTETRA (85)
+         - CTETRA (85 - in progress)
          - CTRIA3 (88)
          - CROD   (89)
          - CQUAD4 (90)
@@ -129,10 +135,10 @@ OP2 Reader
          - CBEAM  (94)
 
       - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
-         - CQUAD4 (95 - done)
-         - CQUAD8 (96 - done)
-         - CTRIA3 (97 - done)
-         - CTRIA6 (98 - done)
+         - CQUAD4 (95,done)
+         - CQUAD8 (96,done)
+         - CTRIA3 (97,done)
+         - CTRIA6 (98,done)
 
    - OUGV1 Table (displacement/velocity/acceleration)
       - displacement           / temperature           (approachCode=1, sortCode=0, done)
