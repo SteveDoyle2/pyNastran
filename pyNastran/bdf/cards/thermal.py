@@ -28,7 +28,7 @@ class ThermalProperty(ThermalCard):
         pass
 
 class ThermalLoadDefault(ThermalCard):
-    def __init__(self,card):
+    def __init__(self,card,data):
         pass
 
 class ThermalLoad(ThermalCard):
@@ -113,29 +113,39 @@ class CHBDYG(ThermalElement):
     def __init__(self,card=None,data=None):
         ThermalElement.__init__(self,card,data)
         
-        ## Surface element ID
-        self.eid  = card.field(1)
-        # no field 2
-        
-        ## Surface type
-        self.Type = card.field(3)
-        assert self.Type in ['REV','AREA3','AREA4','AREA6','AREA8']
+        if card:
+            ## Surface element ID
+            self.eid  = card.field(1)
+            # no field 2
 
-        ## A VIEW entry identification number for the front face
-        self.iViewFront  = card.field(4,0)
+            ## Surface type
+            self.Type = card.field(3)
+            assert self.Type in ['REV','AREA3','AREA4','AREA6','AREA8']
 
-        ## A VIEW entry identification number for the back face
-        self.iViewBack  = card.field(8,0)
+            ## A VIEW entry identification number for the front face
+            self.iViewFront  = card.field(4,0)
 
-        ## RADM identification number for front face of surface element (Integer > 0)
-        self.radMidFront = card.field(6,0)
-        
-        ## RADM identification number for back face of surface element (Integer > 0)
-        self.radMidBack = card.field(7,0)
-        # no field 8
-        
-        ## Grid point IDs of grids bounding the surface (Integer > 0)
-        self.grids = card.fields(9)
+            ## A VIEW entry identification number for the back face
+            self.iViewBack  = card.field(8,0)
+
+            ## RADM identification number for front face of surface element (Integer > 0)
+            self.radMidFront = card.field(6,0)
+
+            ## RADM identification number for back face of surface element (Integer > 0)
+            self.radMidBack = card.field(7,0)
+            # no field 8
+
+            ## Grid point IDs of grids bounding the surface (Integer > 0)
+            self.grids = card.fields(9)
+        else:
+            self.eid         = data[0]
+            self.Type        = data[1]
+            self.iViewFront  = data[2]
+            self.iViewBack   = data[3]
+            self.radMidFront = data[4]
+            self.radMidBack  = data[5]
+            self.grids       = data[6:14]
+        ###
 
     def crossReference(self,mesh):
         pass
@@ -350,7 +360,7 @@ class CONV(ThermalBC):
     """
     type = 'CONV'
     def __init__(self,card=None,data=None):
-        #ThermalBC.__init__(self,card)
+        #ThermalBC.__init__(self,card,data)
         ## CHBDYG, CHBDYE, or CHBDYP surface element identification number. (Integer > 0)
         self.eid     = card.field(1)
         
@@ -445,14 +455,20 @@ class QBDY1(ThermalLoad):
     def __init__(self,card=None,data=None):
         ThermalLoad.__init__(self,card,data)  # self.sid
         
-        ## Load set identification number. (Integer > 0)
-        self.sid = card.field(1)
+        if card:
+            ## Load set identification number. (Integer > 0)
+            self.sid = card.field(1)
 
-        ## Heat flux into element (FLOAT)
-        self.Q0 = card.field(2)
-        eids    = card.fields(3)
-        ## CHBDYj element identification numbers (Integer)
-        self.eids = self.expandThru(eids)  # @warning should this use expandThruBy ???
+            ## Heat flux into element (FLOAT)
+            self.Q0 = card.field(2)
+            eids    = card.fields(3)
+            ## CHBDYj element identification numbers (Integer)
+            self.eids = self.expandThru(eids)  # @warning should this use expandThruBy ???
+        else:
+            self.sid  = data[0]
+            self.Q0   = data[1]
+            self.eids = data[2:]
+        ###
 
     #def crossReference(self,model):
     #    pass
@@ -472,14 +488,19 @@ class QBDY2(ThermalLoad): # not tested
     type = 'QBDY2'
     def __init__(self,card=None,data=None):
         ThermalLoad.__init__(self,card,data)
-        
-        ## Load set identification number. (Integer > 0)
-        self.sid   = card.field(1)
-        ## Identification number of an CHBDYj element. (Integer > 0)
-        self.eid   = card.field(2)
-        ## Heat flux at the i-th grid point on the referenced CHBDYj element. (Real or blank)
-        self.qFlux = self.removeTrailingNones(card.fields(3))
 
+        if card:
+            ## Load set identification number. (Integer > 0)
+            self.sid   = card.field(1)
+            ## Identification number of an CHBDYj element. (Integer > 0)
+            self.eid   = card.field(2)
+            ## Heat flux at the i-th grid point on the referenced CHBDYj element. (Real or blank)
+            self.qFlux = self.removeTrailingNones(card.fields(3))
+        else:
+            self.sid = data[0]
+            self.eid = data[1]
+            self.qFlux = data[2]
+        ###
     #def crossReference(self,model):
     #    pass
 
@@ -496,18 +517,25 @@ class QBDY3(ThermalLoad):
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY3'
-    def __init__(self,card):
-        ThermalLoad.__init__(self,card)
-        
-        ## Load set identification number. (Integer > 0)
-        self.sid = card.field(1)
-        ## Heat flux into element
-        self.Q0      = card.field(2)
-        ## Control point for thermal flux load. (Integer > 0; Default = 0)
-        self.cntrlnd = card.field(3,0)
-        eids         = card.fields(4)
-        ## CHBDYj element identification numbers
-        self.eids = self.expandThruBy(eids)
+    def __init__(self,card=None,data=None):
+        ThermalLoad.__init__(self,card,data)
+
+        if card:
+            ## Load set identification number. (Integer > 0)
+            self.sid = card.field(1)
+            ## Heat flux into element
+            self.Q0      = card.field(2)
+            ## Control point for thermal flux load. (Integer > 0; Default = 0)
+            self.cntrlnd = card.field(3,0)
+            eids         = card.fields(4)
+            ## CHBDYj element identification numbers
+            self.eids = self.expandThruBy(eids)
+        else:
+            self.sid     = data[0]
+            self.Q0      = data[1]
+            self.cntrlnd = data[2]
+            self.eids    = data[3:]
+        ###
 
     #def crossReference(self,model):
     #    pass
@@ -526,21 +554,29 @@ class QHBDY(ThermalLoad):
     def __init__(self,card=None,data=None):
         ThermalLoad.__init__(self,card,data)
         
-        ## Load set identification number. (Integer > 0)
-        self.sid = card.field(1)
+        if card:
+            ## Load set identification number. (Integer > 0)
+            self.sid = card.field(1)
 
-        self.flag = card.field(2)
-        assert self.flag in ['POINT','LINE','REV','AREA3','AREA4','AREA6','AREA8']
-        
-        ## Magnitude of thermal flux into face. Q0 is positive for heat into the surface. (Real)
-        self.Q0   = card.field(3)
-        
-        ## Area factor depends on type. (Real > 0.0 or blank)
-        self.af    = card.field(4)
-        self.grids = card.fields(5)
+            self.flag = card.field(2)
+            assert self.flag in ['POINT','LINE','REV','AREA3','AREA4','AREA6','AREA8']
 
-        ## Grid point identification of connected grid points. (Integer > 0 or blank)
-        self.grids = self.expandThruBy(self.grids)
+            ## Magnitude of thermal flux into face. Q0 is positive for heat into the surface. (Real)
+            self.Q0   = card.field(3)
+
+            ## Area factor depends on type. (Real > 0.0 or blank)
+            self.af    = card.field(4)
+            self.grids = card.fields(5)
+
+            ## Grid point identification of connected grid points. (Integer > 0 or blank)
+            self.grids = self.expandThruBy(self.grids)
+        else:
+            self.sid   = data[0]
+            self.flag  = data[1]
+            self.Q0    = data[2]
+            self.af    = data[3]
+            self.grids = data[4:]
+        ###
 
     #def crossReference(self,model):
     #    pass
@@ -605,15 +641,19 @@ class TEMPD(ThermalLoadDefault):
     type = 'TEMPD'
     def __init__(self,card=None,data=None):
         ThermalLoadDefault.__init__(self,card,data)
-        
-        fields = card.fields(1)
-        nFields = len(fields)
-        assert nFields%2==0
-        
-        ## dictionary of temperatures where the key is the set ID (SIDi) and the value is the temperature (Ti)
-        self.temperatures={}
-        for i in range(0,nFields,2):
-            self.temperatures[fields[i]] = fields[i+1]
+        if card:
+
+            fields = card.fields(1)
+            nFields = len(fields)
+            assert nFields%2==0
+
+            ## dictionary of temperatures where the key is the set ID (SIDi) and the value is the temperature (Ti)
+            self.temperatures={}
+            for i in range(0,nFields,2):
+                self.temperatures[fields[i]] = fields[i+1]
+            ###
+        else:
+            self.temperatures = {data[0]: data[1] }
         ###
 
     def add(self,tempdObj):

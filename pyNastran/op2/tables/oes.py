@@ -201,7 +201,7 @@ class OES(object):
 
     def readTable_OES_4_Data(self):
         isTable4Done = False
-        isBlockDone = False
+        isBlockDone  = False
         #self.printSection(100)
 
         data = self.getData(16)

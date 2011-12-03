@@ -7,7 +7,7 @@ from struct import unpack
 from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CSHEAR,CONM2
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE
-from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA15,CHEXA8,CHEXA20
+from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
 from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
 
 class Geometry2(object):
@@ -35,7 +35,7 @@ class Geometry2(object):
                            (7308,73,253):    self.readCHEXA,  # record 45
                            (4108,41,280):    self.readCPENTA, # record 62
                            (10808,108,406):  self.readCHBDYG, # record 43
-                           #(10908,109,407): self.readCHBDYP, # record 44 - not done
+                           #(10908,109,407):  self.readCHBDYP, # record 44 - not done
                          }
         self.readRecordTable('GEOM2')
 
@@ -281,7 +281,13 @@ class Geometry2(object):
             out = unpack('iiiiiiiiiiiiiiiiiiiiii',eData)
             (eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,
              g11,g12,g13,g14,g15,g16,g17,g18,g19,g20) = out
-            elem = CHEXA(None,out)
+
+            dataIn   = [eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,]
+            bigNodes = [g9,g10,g11,g12,g13,g14,g15,g16,g17,g18,g19,g20]
+            if sum(bigNodes)>0:
+                elem = CHEXA20(None,dataIn+bigNodes)
+            else:
+                elem = CHEXA8(None,dataIn)
             self.addOp2Element(elem)
         ###
 
@@ -307,13 +313,19 @@ class Geometry2(object):
         CPENTA(4108,41,280) - the marker for Record 62
         """
         print "reading CPENTA"
-        while len(data)>=88: # 22*4
-            eData = data[:88]
-            data  = data[88:]
-            out = unpack('iiiiiiiiiiiiiiiiiiiiii',eData)
+        while len(data)>=68: # 17*4
+            eData = data[:68]
+            data  = data[68:]
+            out = unpack('iiiiiiiiiiiiiiiii',eData)
             (eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,
              g11,g12,g13,g14,g15) = out
-            elem = CPENTA(None,out)
+            
+            dataIn   = [eid,pid,g1,g2,g3,g4,g5,g6]
+            bigNodes = [g7,g8,g9,g10,g11,g12,g13,g14,g15]
+            if sum(bigNodes)>0:
+                elem = CPENTA15(None,dataIn+bigNodes)
+            else:
+                elem = CPENTA6(None,dataIn)
             self.addOp2Element(elem)
         ###
 
@@ -365,7 +377,6 @@ class Geometry2(object):
             self.addOp2Element(elem)
         ###
 
-
 # CRROD
 # CSEAM
 # CSHEAR
@@ -410,11 +421,13 @@ class Geometry2(object):
             out = unpack('iiiiiiiiiiii',eData)
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = out
             #print "out = ",out
-            n = [n1,n2,n3,n4,n5,n6,n7,n8,n9,n10]
-            
-            #print "n  = ",n
-            dataInit = [eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10]
-            elem = CTETRA10(None,dataInit)
+
+            dataIn   = [eid,pid,n1,n2,n3,n4]
+            bigNodes = [g5,g6,g7,g8,g9,g10]
+            if sum(bigNodes)>0:
+                elem = CTETRA10(None,dataIn+bigNodes)
+            else:
+                elem = CTETRA4(None,dataIn)
             self.addOp2Element(elem)
         ###
 
