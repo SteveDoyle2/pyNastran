@@ -491,14 +491,22 @@ class PLOAD4(Load):
             self.NVector = card.fields(10,13,[0.,0.,0.])
             self.sorl    = card.field(13,'SURF')
         else:
+            print "PLOAD4 = ",data
             self.lid     = data[0]
             self.eid     = data[1]
             self.p       = data[2]
-            self.g3      = data[3]
-            self.g4      = data[4]
+
+            self.g1      = data[3]
+            self.g34     = data[4]
             self.cid     = data[5]
             self.NVector = data[6]
-            self.sor1    = data[7]
+
+            self.sorl    = data[7]
+            #assert len(data)==8
+            
+            self.g3 = self.g1
+            self.g4 = self.g34
+            self.eids = None
         ###
 
     def crossReference(self,model):
