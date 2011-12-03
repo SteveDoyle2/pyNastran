@@ -27,9 +27,12 @@ class CHEXA8(SolidElement):
             #print "hexa = ",card
             self.eid = card.field(1)
             self.pid = card.field(2)
+            nids = card.fields(3,11)
         else:
-            raise Exception('not implemented')
-        nids = card.fields(3,11)
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = data[2:]
+            assert len(data)==10,'len(data)=%s data=%s' %(len(data),data)
         #print "nids = ",nids
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==8
@@ -47,9 +50,11 @@ class CHEXA20(CHEXA8):
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
+            nids = card.fields(3,23)
         else:
-            raise Exception('not implemented')
-        nids = card.fields(3,23)
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = data[2:]
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         msg = 'len(nids)=%s nids=%s' %(len(nids),nids)
         assert len(self.nodes)<=20,msg
@@ -65,9 +70,12 @@ class CPENTA6(SolidElement):
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
+            nids = card.fields(3,9)
         else:
-            raise Exception('not implemented')
-        nids = card.fields(3,9)
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = data[2:]
+            assert len(data)==8,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==6
 
@@ -84,9 +92,12 @@ class CPENTA15(CPENTA6):
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
+            nids = card.fields(3,18)
         else:
-            raise Exception('not implemented')
-        nids = card.fields(3,18)
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:]
+            assert len(data)==17,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=15
 

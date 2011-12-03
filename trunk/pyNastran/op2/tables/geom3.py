@@ -219,6 +219,7 @@ class Geometry3(object):
     def readTEMPD(self,data):
         """
         TEMPD(5641,65,98) - the marker for Record 33
+        @todo add object
         """
         print "reading TEMPD"
         while len(data)>=8: # 4*4
@@ -227,7 +228,7 @@ class Geometry3(object):
             out = unpack('if',eData)
             (sid,T) = out
             load = TEMPD(None,out)
-            self.addThermalLoad(load)
+            #self.addThermalLoad(load)
         ###
 
 # QHBDY
