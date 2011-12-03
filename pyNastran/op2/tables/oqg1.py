@@ -295,9 +295,9 @@ class OQG1(object):
         ###
         self.data = data
         #print self.printSection(200)
-        self.handleScalarBuffer(self.readScalars,scalarObject)
+        self.handleResultsBuffer(self.readScalars,scalarObject)
 
-    def handleScalarBuffer(self,func,stress):
+    def handleResultsBuffer(self,func,stress):
         """
         works by knowing that:
         the end of an unbuffered table has a

@@ -3,42 +3,6 @@ from struct import unpack
 
 class ElementsStressStrain(object):
 
-    def handleStressBuffer(self,func,stress):
-        """
-        works by knowing that:
-        the end of an unbuffered table has a
-            - [4]
-        the end of an table with a buffer has a
-            - [4,4,x,4] where x is the next buffer size, which may have another buffer
-        the end of the final buffer block has
-            - nothing!
-        
-        The code knows that the large buffer is the default size and the
-        only way there will be a smaller buffer is if there are no more
-        buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
-        this end shift.  An extra marker value is read, but no big deal.
-        Beyond that it's just appending some data to the binary string
-        and calling the function that's passed in
-        """
-        #print stress
-        #print "len(data) = ",len(self.data)
-        marker = self.readInts(1)
-        #print "marker = ",marker
-        #if marker[0]==4:
-        #    print "found a 4 - end of unbuffered table"
-
-        if len(self.data)>0:
-            #print "*******len(self.data)=%s...assuming a buffer block" %(len(self.data))
-            print self.printSection(40)
-            markers = self.readHeader()
-            data = self.readBlock()
-            if len(data)<marker:
-                print "****found a small block...should be the end..."
-                self.goto(self.n-4) # handles last buffer not having an extra 4
-            self.data += data
-            func(stress)
-        ###
-
     def CROD_1(self,stress): # works
         if self.makeOp2Debug:
             self.op2Debug.write('---CROD_1---\n')
@@ -60,7 +24,7 @@ class ElementsStressStrain(object):
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleStressBuffer(self.CROD_1,stress)
+        self.handleResultsBuffer(self.CROD_1,stress)
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CROD-1"
@@ -96,7 +60,7 @@ class ElementsStressStrain(object):
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleStressBuffer(self.CBEAM_2,stress)
+        self.handleResultsBuffer(self.CBEAM_2,stress)
         #print self.beamStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CBEAM-2"
@@ -162,7 +126,7 @@ class ElementsStressStrain(object):
             #self.printSection(100)
             #self.dn += 348
         ###
-        self.handleStressBuffer(self.CQUAD4_33,stress)
+        self.handleResultsBuffer(self.CQUAD4_33,stress)
 
     def CBAR_34(self,stress): # ???
         if self.makeOp2Debug:
@@ -186,7 +150,7 @@ class ElementsStressStrain(object):
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" %(s1b,s2b,s3b,s4b,smaxb,sminb)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleStressBuffer(self.CBAR_34,stress)
+        self.handleResultsBuffer(self.CBAR_34,stress)
         if self.makeOp2Debug:
             print "done with CBAR-34"
 
@@ -296,7 +260,7 @@ class ElementsStressStrain(object):
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
         ###
-        self.handleStressBuffer(self.CSOLID_67,stress)
+        self.handleResultsBuffer(self.CSOLID_67,stress)
         #print self.solidStress[self.iSubcase]
 
     def CSOLID_85(self,stress):  # works
@@ -333,7 +297,6 @@ class ElementsStressStrain(object):
             
             assert nNodes < 21,self.printBlock(eData)
             eid = (eid - deviceCode) / 10
-
             if(  nNodes in [4,10]):
                 elementType = "CTETRA"
                 nNodesExpected = 5
@@ -405,7 +368,7 @@ class ElementsStressStrain(object):
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
         ###
-        self.handleStressBuffer(self.CSOLID_85,stress)
+        self.handleResultsBuffer(self.CSOLID_85,stress)
         #print self.solidStress[self.iSubcase]
 
     def CTRIA3_74(self,stress): # works
@@ -439,7 +402,7 @@ class ElementsStressStrain(object):
 
             #print "len(data) = ",len(data)
         ###
-        self.handleStressBuffer(self.CTRIA3_74,stress)
+        self.handleResultsBuffer(self.CTRIA3_74,stress)
 
     def CQUAD4_95(self,stress): # works (doesnt handle all stress/strain cases tho
         """
@@ -505,7 +468,7 @@ class ElementsStressStrain(object):
             #sys.exit('asdf')
             #self.dn += 348
         ###
-        self.handleStressBuffer(self.CQUAD4_95,stress)
+        self.handleResultsBuffer(self.CQUAD4_95,stress)
 
     def CQUAD4_144(self,stress): # works
         """
@@ -615,5 +578,5 @@ class ElementsStressStrain(object):
         ###
         else:
             raise Exception('invalid numWide')
-        self.handleStressBuffer(self.CQUAD4_144,stress)
+        self.handleResultsBuffer(self.CQUAD4_144,stress)
 
