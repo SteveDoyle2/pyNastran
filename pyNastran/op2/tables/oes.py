@@ -10,61 +10,12 @@ from pyNastran.op2.resultObjects.oes_Objects import (
 
 class OES(object):
     """Table of stresses/strains"""
+
     def readTable_OES1(self):
-        if self.makeOp2Debug:
-            self.op2Debug.write("***OES table***\n")
-        tableName = self.readTableName(rewind=False) # OES1X1
-        print "tableName = |%r|" %(tableName)
-        self.tableInit(tableName)
-
-        self.readMarkers([-1,7])
-        data = self.readBlock()
-        #print self.printBlock(data)
-
-        self.readMarkers([-2,1,0,7])
-        word = self.readStringBlock()  # OES1
-        print "OESword = |%r|" %(word)
-
-        iTable = -3
-        markerA=None; markerB=None
-        self.readMarkers([iTable,1,0],'OES') # 146
-        while [markerA,markerB]!=[0,2]:
-            #self.markerStart = self.n
-            print "reading Table 3...iTable=%s" %(iTable)
-            self.readTable_OES_3(iTable)
-            #if isDone:
-            #    self.n = self.markerStart
-            isBlockDone = self.readTable_OES_4(iTable-1)
-            
-            if self.sCode==11:
-                pass
-                #print self.plateStrain[self.iSubcase]
-            else:
-                pass
-                #print self.barStress[self.iSubcase]
-                #print self.plateStress[self.iSubcase]
-                #print self.solidStress[self.iSubcase]
-            iTable -= 2
-
-            if isBlockDone:
-                #print "***"
-                print "iTable = ",iTable
-                #print "$$$$"
-                #self.n = self.markerStart
-                #self.op2.seek(self.n)
-                break
-            ###
-
-            n = self.n
-            self.readMarkers([iTable,1,0],'OES')
-            #print "i read the markers!!!"
-        ###
-        self.readMarkers([iTable,1,0],'OES')
-        #self.printSection(100)
-        
+        table3 = self.readTable_OES_3
+        table4Data = self.readTable_OES_4_Data
+        self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OES()
-        if self.makeOp2Debug:
-            self.op2Debug.write("***end of OES table***\n")
 
     def deleteAttributes_OES(self):
         params = ['sCode','elementType','obj','markerStart','loadSet','formatCode','sCode','thermal',
@@ -161,45 +112,8 @@ class OES(object):
         #bits.reverse()
         print "bits = ",bits
         return bits
-        
-    def readTable_OES_4(self,iTable):
-        #self.readMarkers([iTable,1,0])
-        markerA = 4
-        
-        j = 0
-        while markerA>None:
-            self.markerStart = copy.deepcopy(self.n)
-            #self.printSection(180)
-            self.readMarkers([iTable,1,0])
-            print "starting OES table 4..."
-            isTable4Done,isBlockDone = self.readTable_OES_4_Data()
-            if isTable4Done:
-                print "done with OES4"
-                self.n = self.markerStart
-                self.op2.seek(self.n)
-                break
-            print "finished reading stress table..."
-            markerA = self.getMarker('A')
-            self.n-=12
-            self.op2.seek(self.n)
 
-            self.n = self.op2.tell()
-            print "***markerA = ",markerA
-            #sys.exit('check...end of table issueB...')
-            #self.printSection(140)
-
-            #print self.plateStress[self.iSubcase]
-            
-            iTable-=1
-            #if j>10000:
-            #    sys.exit('check...')
-            j+=1
-            #print "isBlockDone = ",isBlockDone
-            #print "*******restarting table 4**********"
-        print "isBlockDone = ",isBlockDone
-        return isBlockDone
-
-    def readTable_OES_4_Data(self):
+    def readTable_OES_4_Data(self,iTable):
         isTable4Done = False
         isBlockDone  = False
         #self.printSection(100)

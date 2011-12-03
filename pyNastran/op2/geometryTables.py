@@ -131,8 +131,10 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                 #print "reading  iTable=%-3s with tableType=%s" %(iTable,tableType)
                 self.iTableMap[tableType](data)
             else:
-                print "skipping iTable=%-3s with tableType=%s" %(iTable,tableType)
-
+                if not(tableType[0]==tableType[1]==tableType[2]):
+                    print "skipping iTable=%-3s with tableType=%s" %(iTable,tableType)
+                ###
+            ###
             #self.op2Debug.write('ints = %s\n' %(str(ints)))
 
             isNextTable = self.checkForNextTable()
