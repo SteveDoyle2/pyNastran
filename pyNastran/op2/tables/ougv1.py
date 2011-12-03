@@ -231,7 +231,7 @@ class OUGV1(object):
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.nonlinearDisplacments,displacementObject,self.dt)
+                self.createTransientObject(self.nonlinearDisplacements,displacementObject,self.lftsfq)
                 self.nonlinearDisplacements[self.iSubcase] = self.obj
 
             else:

@@ -103,6 +103,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.temperatureForces = {}
         self.nonlinearForces = {}
         self.nonlinearFluxes = {}
+        nonlinearForces = {}
 
         # OES
         self.rodStress   = {}
@@ -117,7 +118,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.compositePlateStrain = {}
 
         # OQG
-        self.spcForces = {}
+        self.spcForces           = {} # approachCode=1,  sortCode=0 formatCode=0
+        self.realImagConstraints = {} # approachCode=10, sortCode=1 formatCode=1
         
         # OGP
         self.appliedLoads = {}

@@ -135,21 +135,27 @@ class Geometry3(object):
 # PLOAD2
 # PLOAD3
 
-    def readPLOAD4(self,data):
+    def readPLOAD4(self,data): ## inconsistent with DMAP
         """
         PLOAD4(7209,72,299) - the marker for Record 20
         """
         print "reading PLOAD4"
-        while len(data)>=64: # 16*4
-            eData = data[:64]
-            data  = data[64:]
-            out = unpack('iiffffiiifffssssssssssssssss',eData)
-            (sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3,s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8) = out
-            sdrlA = s1+s2+s3+s4
-            sdrlB = s5+s6+s7+s8
-            ldirA = L1+L2+L3+L4
-            ldirB = L5+L6+L7+L8
-            load = PLOAD4(None,[sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3,sdrlA,sdrlB,ldirA,ldirB])
+        while len(data)>=48: # 13*4
+            eData = data[:48]
+            data  = data[48:]
+                         #iiffffiiifffi   ssssssssssssssss
+            out = unpack('iiffffiiifff',eData)
+            (sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3) = out
+            #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
+            #sdrlA = s1+s2+s3+s4
+            #sdrlB = s5+s6+s7+s8
+            #ldirA = L1+L2+L3+L4
+            #ldirB = L5+L6+L7+L8
+            sdrlA = None
+            sdrlB = None
+            ldirA = None
+            ldirB = None
+            load = PLOAD4(None,[sid,eid,[p1,p2,p3,p4],g1,g34,cid,[n1,n2,n3],sdrlA,sdrlB,ldirA,ldirB])
             self.addLoad(load)
         ###
 

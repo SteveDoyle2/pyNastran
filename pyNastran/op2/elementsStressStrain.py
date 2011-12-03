@@ -65,6 +65,58 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with CBEAM-2"
 
+    def CELAS2_12(self,stress): # adding...
+        """
+        doesnt support results yet
+        """
+        print '---CELAS2_12---\n'
+        if self.makeOp2Debug:
+            self.op2Debug.write('---CELAS2_12---\n')
+        deviceCode = self.deviceCode
+        assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
+
+        if self.tableCode in [0,2]:
+            minBuffer = 8
+            def parse(eData):
+                (eid,force) = unpack('if',eData)
+                eid = (eid - deviceCode) / 10
+                #if force>1.:
+                #    print "eid=%s force=%s" %(eid,force)
+                return (eid,force)
+                ###
+            ###
+        else:
+            minBuffer = 12
+            def parse(eData):
+                (eid,sReal,sImag) = unpack('iff',eData)
+                eid = (eid - deviceCode) / 10
+                #if sReal>1e-5:
+                #    print "eid=%s force=%s imag=%s" %(eid,sReal,sImag)
+                return (eid,sReal,sImag)
+            ###
+        ###
+
+        while len(self.data)>=minBuffer:
+            #self.printSection(40)
+            eData     = self.data[0:minBuffer]
+            self.data = self.data[minBuffer: ]
+            #print "len(data) = ",len(eData)
+
+            parse(eData)
+            #if self.tableCode in [0,2]:
+            #    force = unpack('f',eData[4:8])
+            #else:
+            #    (sReal,sImag) = unpack('ff',eData[4:12])
+            ###
+
+            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.CELAS2_12,stress)
+        #print self.rodStress[self.iSubcase]
+        if self.makeOp2Debug:
+            print "done with CELAS2-12"
+
     def CQUAD4_33(self,stress): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
@@ -163,7 +215,7 @@ class ElementsStressStrain(object):
         """
         if self.makeOp2Debug:
             self.op2Debug.write('---CSOLID_67---\n')
-        print "starting solid element..."
+        #print "starting solid element..."
         deviceCode = self.deviceCode
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
@@ -272,7 +324,7 @@ class ElementsStressStrain(object):
         """
         if self.makeOp2Debug:
             self.op2Debug.write('---CSOLID_85---\n')
-        print "starting nonlinear solid element..."
+        #print "starting nonlinear solid element..."
         deviceCode = self.deviceCode
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
