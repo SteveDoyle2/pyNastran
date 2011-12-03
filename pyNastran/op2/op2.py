@@ -8,16 +8,11 @@ from struct import unpack
 
 from geometryTables import GeometryTables
 from elementsStressStrain import ElementsStressStrain
-from pyNastran.op2.tables.ougv1 import OUGV1
-from pyNastran.op2.tables.oqg1  import OQG1
-from pyNastran.op2.tables.oes   import OES
-from pyNastran.op2.tables.oef   import OEF
-from pyNastran.op2.tables.ogp   import OGP
 from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
-
+from pyNastran.op2.tables.resultTable import ResultTable
 
 class Op2(getMethods,addMethods,writeMesh, # BDF methods
-          FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,OQG1,OUGV1,OEF,OGP,OES):
+          FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,ResultTable):
 
     def bdfInit(self,log=None):
         if log is None:
