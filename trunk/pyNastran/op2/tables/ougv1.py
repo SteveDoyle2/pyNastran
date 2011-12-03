@@ -12,58 +12,11 @@ from pyNastran.op2.resultObjects.ougv1_Objects import (
 
 class OUGV1(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
+
     def readTable_OUG1(self):
-        ## OUGV1
-        tableName = self.readTableName(rewind=False) # OUGV1
-        self.tableInit(tableName)
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7],'OUGV1')
-        ints = self.readIntBlock()
-        #print "*ints = ",ints
-
-        self.readMarkers([-2,1,0],'OUGV1') # 7
-        bufferWords = self.getMarker()
-        if self.makeOp2Debug:
-            self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
-        #print "1-bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        if self.makeOp2Debug:
-            self.op2Debug.write('ints=%s\n' %(str(ints)))
-        
-        markerA = -4
-        markerB = 0
-
-        #self.j = 0
-        iTable = -3
-        self.readMarkers([iTable,1,0],'OUGV1')
-        while [markerA,markerB]!=[0,2]:
-            self.readTable_OUGV1_3(iTable)
-            isBlockDone = self.readTable_OUGV1_4(iTable-1)
-            iTable -= 2
-
-            if isBlockDone:
-                #print "***"
-                #print "iTable = ",iTable
-                #print "$$$$"
-                #self.n = self.markerStart
-                #self.op2.seek(self.n)
-                break
-            ###
-
-            n = self.n
-            #self.printSection(100)
-            self.readMarkers([iTable,1,0],'OUGV1')
-            print "i read the markers!!!"
-   
-            #if self.j==3:
-            #    print str(self.obj)
-            #    sys.exit('check...j=%s dt=6E-2 dx=%s' %(self.j,'1.377e+01'))
-            #self.j+=1
-        ###
-        self.readMarkers([iTable,1,0],'OUGV1')
-        #self.printSection(100)
-        #print str(self.obj)
+        table3 = self.readTable_OUGV1_3
+        table4Data = self.readTable_OUGV1_4_Data
+        self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):
@@ -153,38 +106,6 @@ class OUGV1(object):
         #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
         ###
 
-    def readTable_OUGV1_4(self,iTable):
-        #self.readMarkers([iTable,1,0])
-        markerA = 4
-        
-        while markerA>None:
-            self.markerStart = copy.deepcopy(self.n)
-            #self.printSection(180)
-            self.readMarkers([iTable,1,0])
-            print "starting OUGV1 table 4..."
-            (isTable4Done,isBlockDone) = self.readTable_OUGV1_4_Data(iTable)
-            if isTable4Done:
-                print "done with OUGV1-4"
-                self.n = self.markerStart
-                self.op2.seek(self.n)
-                break
-            print "finished reading ougv1 table..."
-            markerA = self.getMarker('A',debug=False)
-            self.n-=12
-            self.op2.seek(self.n)
-            
-            self.n = self.op2.tell()
-            #print "***markerA = ",markerA
-            #self.printSection(140)
-
-            #print self.plateStress[self.iSubcase]
-            
-            iTable-=1
-            print "isBlockDone = ",isBlockDone
-        ###
-        #print "isBlockDone = ",isBlockDone
-        return isBlockDone
-
     def readTable_OUGV1_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
         isBlockDone  = False
@@ -202,7 +123,6 @@ class OUGV1(object):
             isTable4Done = True
             isBlockDone = True
             return isTable4Done,isBlockDone
-
 
         isBlockDone = not(bufferWords)
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)

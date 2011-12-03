@@ -16,15 +16,20 @@ from pyNastran.op2.resultObjects.oef_Objects import (
 class OEF(object):
     """Table of element forces"""
     def readTable_OEF1(self):
-        ## OEF
+        table3     = self.readTable_OEF_3
+        table4Data = self.readTable_OEF_4_Data
+        self.readResultsTable(table3,table4Data)
+        self.deleteAttributes_OEF()
+
+    def readResultsTable(self,table3,table4Data):
         tableName = self.readTableName(rewind=False) # OEF
         print "tableName = |%r|" %(tableName)
 
-        self.readMarkers([-1,7],'OEF')
+        self.readMarkers([-1,7],tableName)
         ints = self.readIntBlock()
-        print "*ints = ",ints
+        #print "*ints = ",ints
 
-        self.readMarkers([-2,1,0],'OEF') # 7
+        self.readMarkers([-2,1,0],tableName) # 7
         bufferWords = self.getMarker()
         #print "1-bufferWords = ",bufferWords,bufferWords*4
         ints = self.readIntBlock()
@@ -33,42 +38,30 @@ class OEF(object):
         markerA = -4
         markerB = 0
 
-        #self.j = 0
         iTable=-3
-        self.readMarkers([iTable,1,0],'OEF')
+        self.readMarkers([iTable,1,0],tableName)
         while [markerA,markerB]!=[0,2]:
-            self.readTable_OEF_3(iTable)
-            isBlockDone = self.readTable_OEF_4(iTable-1)
+            table3(iTable)
+            isBlockDone = self.readTable4(table4Data,iTable-1)
             iTable -= 2
 
             if isBlockDone:
-                #print "***"
                 #print "iTable = ",iTable
-                #print "$$$$"
                 #self.n = self.markerStart
                 #self.op2.seek(self.n)
                 break
             ###
 
             n = self.n
-            #self.printSection(100)
 
-            self.readMarkers([iTable,1,0],'OEF')
+            self.readMarkers([iTable,1,0],tableName)
             print "i read the markers!!!"
    
-            #if self.j==3:
-            #    print str(self.obj)
-            #    sys.exit('check...j=%s dt=6E-2 dx=%s' %(self.j,'1.377e+01'))
-            #self.j+=1
-
-            #self.printSection(120)
         ###
-        self.readMarkers([iTable,1,0],'OEF')
-        #self.printSection(100)
+        self.readMarkers([iTable,1,0],tableName)
         #print str(self.obj)
-        self.deleteAttributes_OEF()
         if self.makeOp2Debug:
-            self.op2Debug.write("***end of OEF table***\n")
+            self.op2Debug.write("***end of %s table***\n" %(tableName))
 
     def deleteAttributes_OEF(self):
         params = ['elementType','dLoadID','loadID','obj','markerStart','oCode',
@@ -83,9 +76,7 @@ class OEF(object):
         data = self.getData(4)
         bufferSize, = unpack('i',data)
         data = self.getData(4*50)
-        
         #self.printBlock(data)
-        
         
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
@@ -154,17 +145,16 @@ class OEF(object):
         #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
         ###
 
-    def readTable_OEF_4(self,iTable):
+    def readTable4(self,table4Data,iTable):
         #self.readMarkers([iTable,1,0])
         markerA = 4
         
-        j = 0
         while markerA>None:
             self.markerStart = copy.deepcopy(self.n)
             #self.printSection(180)
             self.readMarkers([iTable,1,0])
             print "starting OEF table 4..."
-            isTable4Done,isBlockDone = self.readTable_OEF_4_Data(iTable)
+            isTable4Done,isBlockDone = table4Data(iTable)
             if isTable4Done:
                 print "done with OEF4"
                 self.n = self.markerStart
@@ -177,14 +167,8 @@ class OEF(object):
             
             self.n = self.op2.tell()
             #print "***markerA = ",markerA
-            #self.printSection(140)
-
-            #print self.plateStress[self.iSubcase]
             
             iTable-=1
-            #if j>10000:
-            #    sys.exit('check...')
-            j+=1
             #print "isBlockDone = ",isBlockDone
         ###    
         #print "isBlockDone = ",isBlockDone
@@ -255,7 +239,7 @@ class OEF(object):
                 #raise Exception('verify...')
                 self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
                 self.temperatureForces[self.iSubcase] = self.obj  ## @todo modify the name of this...
-                self.readForces(data,self.obj)
+                self.readForces(self.obj)
 
             elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
@@ -279,51 +263,101 @@ class OEF(object):
         return (isTable4Done,isBlockDone)
 
         
+    def setupOEF(self,elementType,elementName,numWide,deviceCode):
+        """length of result"""
+        print "elementType=%s numWide=%s type=%s" %(elementType,numWide,elementName)
+        if numWide in [9,10]:
+            func = self.readOEF_2D_3D
+            isSkipped = False
+        elif numWide==8:
+            func = self.readOEF_CHBDY
+            isSkipped = True
+        else:
+            raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,name))
+        ###
+        self.deviceCode = deviceCode
+        return (40,func,isSkipped) # 8*4
+
+    def readOEF_2D_3D(self,data):
+        print "read_2D_3D"
+        gridDevice, = unpack('i',data[0:4])
+        grid = (gridDevice-self.deviceCode)/10
+        eType = ''.join(unpack('cccccccc',data[4:12]))
+        (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
+        print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+        
+        return (grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+
+    def readOEF_CHBDY(self,data):
+        print "read_CHBDYx"
+        gridDevice, = unpack('i',data[0:4])
+        grid = (gridDevice-self.deviceCode)/10
+        eType = ''.join(unpack('cccccccc',data[4:12]))
+        (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
+        return (grid,eType,fApplied,freeConv,forceConv,fRad,fTotal)
+
     def readForces(self,scalarObject):
         print "readForces..."
+        print type(scalarObject)
         data = self.data
         #self.printBlock(data[0:self.numWide*4])
-        reqLen = 4*self.numWide
+        
+        (reqLen,func,isSkipped) = self.setupOEF(self.elementType,self.ElementType(self.elementType),self.numWide,self.deviceCode)
         while len(data)>=reqLen:
+            eData = data[:reqLen]
             #print "len(data) = ",len(data)
             #self.printBlock(data[:self.numWide*4])
-            gridDevice, = unpack('i',data[0:4])
-            eType = ''.join(unpack('cccccccc',data[4:12]))
             #print "eType = ",eType
             #print "len(data[8:40]"
-            if self.numWide in [9,10]:
-                (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
-            elif self.numWide==8: ## @todo CHBDY - how do i add this to the case...
-                (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
-                sys.stderr.write('**********skipping CHBDY**********\n')
-                data = data[self.numWide*4:]
-                continue
-            else:
-                raise Exception('only CBEAM/CBAR/CTUBE/2D/3D elements supported...so no special thermal elements...numWide=%s' %(self.numWide))
-            
+
+            if not isSkipped:
+                out = func(eData)
+                scalarObject.add(*out)
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
-            grid = (gridDevice-self.deviceCode)/10
+            #grid = (gridDevice-self.deviceCode)/10
             #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             #print type(scalarObject)
-            scalarObject.add(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
-            data = data[self.numWide*4:]
+            #scalarObject.add(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+            data = data[reqLen:]
         ###
         #print self.obj
         #sys.exit('check...')
         self.handleResultsBuffer(self.readForces,scalarObject,debug=False)
 
+
+    def passFunc(self,data):
+        return
+
+    #def readOEF_2D_3D(self,data):
+    #    gridDevice, = unpack('i',data[0:4])
+    #    grid = (gridDevice-self.deviceCode)/10
+    #    eType = ''.join(unpack('cccccccc',data[4:12]))
+    #    (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
+    #    return (grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+
+    def getOEF_nWords(self):
+        if self.thermal==0:
+            if self.elementType==12: # CELAS2
+                if self.tableCode in [0,2]:  nWords = 2
+                else:                        nWords = 3
+            ###
+            else:
+                raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType)))
+            ###
+        else: # thermal
+            nWords = self.numWide
+        ###
+        return nWords
+
     def readForcesNonlinear(self,scalarObject):
         print "readForcesNonlinear..."
         data = self.data
 
-        if self.elementType==12:
-            if self.tableCode in [0,2]:  nWords = 2
-            else:                        nWords = 3
-        ###
-        else:
-            raise Exception('need to define the word size')
-        ###
+        print 'thermal skipping elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType))
+        sys.stderr.write('thermal skipping elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType)))
+        
+        nWords = self.getOEF_nWords()
         reqLen = 4*nWords
 
         while len(data)>=reqLen:
@@ -343,7 +377,8 @@ class OEF(object):
                 ###
             ###
             else:
-                raise Exception('elementType=%s' %(self.elementType))
+                pass
+                #raise Exception('elementType=%s' %(self.elementType))
             ###
 
             #if self.numWide in [9,10]:

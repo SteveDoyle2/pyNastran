@@ -13,54 +13,9 @@ from pyNastran.op2.resultObjects.opg_Objects import appliedLoadsObject
 class OGP(object):
     """Table of element forces"""
     def readTable_OGP1(self):
-        tableName = self.readTableName(rewind=False) # OGP
-        print "tableName = |%r|" %(tableName)
-
-        self.readMarkers([-1,7],'OGP')
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-
-        self.readMarkers([-2,1,0],'OGP') # 7
-        bufferWords = self.getMarker()
-        print "1-bufferWords = ",bufferWords,bufferWords*4
-        ints = self.readIntBlock()
-        print "*ints = ",ints
-        
-        markerA = -4
-        markerB = 0
-
-        #self.j = 0
-        iTable=-3
-        self.readMarkers([iTable,1,0],'OGP')
-        while [markerA,markerB]!=[0,2]:
-            self.readTable_OGP_3(iTable)
-            isBlockDone = self.readTable_OGP_4(iTable-1)
-            iTable -= 2
-
-            if isBlockDone:
-                print "***"
-                print "iTable = ",iTable
-                print "$$$$"
-                #self.n = self.markerStart
-                #self.op2.seek(self.n)
-                break
-            ###
-
-            n = self.n
-            #self.printSection(100)
-            self.readMarkers([iTable,1,0],'OGP')
-            print "i read the markers!!!"
-   
-            #if self.j==3:
-            #    print str(self.obj)
-            #    sys.exit('check...j=%s dt=6E-2 dx=%s' %(self.j,'1.377e+01'))
-            #self.j+=1
-
-            #self.printSection(120)
-        ###
-        self.readMarkers([iTable,1,0],'OGP')
-        #self.printSection(100)
-        #print str(self.obj)
+        table3     = self.readTable_OGP_3
+        table4Data = self.readTable_OGP_4_Data
+        self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OGP()
 
     def deleteAttributes_OGP(self):
@@ -69,7 +24,7 @@ class OGP(object):
 
     def readTable_OGP_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
-        print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
         bufferSize, = unpack('i',data)
@@ -79,7 +34,7 @@ class OGP(object):
         
         
         aCode = self.getBlockIntEntry(data,1)
-        print "aCode = ",aCode
+        #print "aCode = ",aCode
         (three) = self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
@@ -146,49 +101,6 @@ class OGP(object):
         #    #print str(self.obj)
         #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
         ###
-
-    def readTable_OGP_4(self,iTable):
-        #self.readMarkers([iTable,1,0])
-        markerA = 4
-        
-        j = 0
-        while markerA>None:
-            self.markerStart = copy.deepcopy(self.n)
-            #self.printSection(180)
-            self.readMarkers([iTable,1,0])
-            print "starting OGP table 4..."
-            isTable4Done,isBlockDone = self.readTable_OGP_4_Data(iTable)
-            if isTable4Done:
-                print "done with OGP4"
-                self.n = self.markerStart
-                self.op2.seek(self.n)
-                break
-            print "finished reading ogp table..."
-            markerA = self.getMarker('A')
-            self.n-=12
-            self.op2.seek(self.n)
-            
-            self.n = self.op2.tell()
-            print "***markerA = ",markerA
-            #self.printSection(140)
-
-            #print self.plateStress[self.iSubcase]
-            
-            try:
-                del self.analysisCode
-                del self.tableCode
-                del self.thermal
-                #del self.dt
-            except:
-                pass
-            iTable-=1
-            if j>10000:
-                sys.exit('check...')
-            j+=1
-            print "isBlockDone = ",isBlockDone
-            
-        print "isBlockDone = ",isBlockDone
-        return isBlockDone
 
     def readTable_OGP_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
