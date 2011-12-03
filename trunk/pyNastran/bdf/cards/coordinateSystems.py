@@ -362,7 +362,8 @@ class CORD2R(Cord2x):  # working for simple cases...
         #eo = self.eo
         #ez = self.ez
         #ex = self.ex
-        fields = ['CORD2R',self.cid,self.Rid()] +list(self.eo)+list(self.ez)+list(self.ex)
+        rid = self.setBlankIfDefault(self.Rid(),0)
+        fields = ['CORD2R',self.cid,rid] +list(self.eo)+list(self.ez)+list(self.ex)
 
         #print "z1=%s z2=%s z3=%s" %(self.z1,self.z2,self.z3)
         #print "fields = ",fields
@@ -386,7 +387,7 @@ class CORD2C(Cord2x):  # not done...
             self.ex = array( card.fields(9,12,[0.,0.,0.]) )
         else:
             self.cid = data[0]
-            self.rid = data[0]
+            self.rid = data[1]
             self.eo  = array(data[2:5])
             self.ez  = array(data[5:8])
             self.ex  = array(data[8:11])
@@ -478,9 +479,11 @@ class CORD2C(Cord2x):  # not done...
         eo = self.eo
         ez = self.ez
         ex = self.ex
-        fields = ['CORD2C',self.cid,self.Rid()] +list(eo)+list(ez) +list(ex)
-        print "fields = ",fields
-        raise Exception('not coded...')
+        rid = self.setBlankIfDefault(self.Rid(),0)
+        fields = ['CORD2C',self.cid,rid] +list(eo)+list(ez) +list(ex)
+        #print "fields = ",fields
+        return self.printCard(fields)
+        #raise Exception('not coded...')
 
         #print "z1=%s z2=%s z3=%s" %(self.z1,self.z2,self.z3)
         return self.printCard(fields)
