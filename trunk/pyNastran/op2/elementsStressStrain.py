@@ -3,6 +3,10 @@ from struct import unpack
 
 class ElementsStressStrain(object):
 
+    def skipOES_Element(self,stress): # works???
+        self.data = ''
+        self.handleResultsBuffer(self.skipOES_Element,stress)
+
     def CROD_1(self,stress): # works
         if self.makeOp2Debug:
             self.op2Debug.write('---CROD_1---\n')
@@ -28,6 +32,7 @@ class ElementsStressStrain(object):
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CROD-1"
+        ###
 
     def CBEAM_2(self,stress): # not tested; CBEAM class not written
         if self.makeOp2Debug:

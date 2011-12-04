@@ -20,6 +20,10 @@ class EPT(object):
                          (2402, 24, 281): self.readPSolid,  # record 51
                          (2302,23,283):   self.readPShell,  # record 52
                          (1602,16,30):    self.readPTube,   # record 56
+                         #(5402, 54, 262)
+                         
+
+
                          }
         self.readRecordTable('EPT')
 

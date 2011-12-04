@@ -333,7 +333,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         assert eigReal>=0.
         #self.eigReal = int(eigReal)
         self.eigReal = eigReal
-        print "eigReal = %s" %(eigReal)
+        print "eigReal = %s" %(str(eigReal))
         self.displacements[self.eigReal] = {}
         self.rotations[self.eigReal] = {}
 
@@ -342,12 +342,14 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         assert 0<nodeID<1000000000, msg
         assert nodeID not in self.displacements
 
-        if gridType==0:
-            Type = 'S'
-        elif gridType==1:
+        #if gridType==0:
+        #    Type = 'S'
+        if gridType==1:
             Type = 'G'
+        elif gridType==2:
+            Type = 'S'
         else:
-            raise Exception('invalid grid type,,,')
+            raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
         #print 'self.eigReal = %s' %(self.eigReal),type(self.eigReal)

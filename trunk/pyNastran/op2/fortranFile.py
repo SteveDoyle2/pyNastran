@@ -291,7 +291,7 @@ class FortranFile(object):
 
     def isTableDone(self,expectedMarkers):
         markers = self.getNMarkers(len(expectedMarkers),rewind=True)
-        print "getMarkers = ",markers
+        #print "getMarkers = ",markers
         
         if markers==[-1,7]:
             return True

@@ -186,7 +186,7 @@ class OQG1(object):
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         if self.formatCode==1:
-            self.readScalars(self.obj)
+            self.readScalars8(self.obj)
         elif self.formatCode==2:
             self.readFormat2(self.obj)
         else:
@@ -229,28 +229,3 @@ class OQG1(object):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars,scalarObject)
 
-    def readScalars(self,scalarObject):
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
-        while len(data)>=32:
-            #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
-            #self.printBlock(data[32:])
-            msg = 'len(data)=%s\n'%(len(data))
-            assert len(data)>=32,msg+self.printSection(120)
-            out = unpack('iiffffff',data[0:32])
-            (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            grid = (gridDevice-deviceCode)/10
-            #if grid<100:
-            #    print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
-            data = data[32:]
-        ###
-        self.data = data
-        #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars,scalarObject,debug=False)

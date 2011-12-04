@@ -126,8 +126,28 @@ class OUGV1(object):
 
         isBlockDone = not(bufferWords)
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+
+        self.readOUGV1_Data()
+        #print "-------finished OUGV1----------"
+        return (isTable4Done,isBlockDone)
+
+    def readOUGV1_Data(self):
+        fsCode = [self.formatCode,self.sortCode]
+        if fsCode==[1,0]:
+            self.readOUGV1_Data_format1_sort0()
+        elif fsCode==[1,1]:
+            self.readOUGV1_Data_format1_sort1()
+        elif fsCode==[2,1]:
+            self.readOUGV1_Data_format2_sort1()
+        else:
+            raise Exception('bad formatCode/sortCode')
+        ###
+
+    def readOUGV1_Data_format1_sort0(self):
+        assert self.formatCode==1 # Real
+        assert self.sortCode==0   # Real
         if self.thermal==0:
-            if self.approachCode==1 and self.sortCode==0: # displacement
+            if self.approachCode==1: # displacement
                 print "isDisplacement"
                 self.obj = displacementObject(self.iSubcase)
                 self.displacements[self.iSubcase] = self.obj
@@ -137,42 +157,49 @@ class OUGV1(object):
                 self.obj = spcForcesObject(self.iSubcase)
                 self.spcForces[self.iSubcase] = self.obj
                 
-            elif self.approachCode==2 and self.sortCode==0: # nonlinear static eigenvector
+            elif self.approachCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
                 self.eigenvectors[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
 
-            elif self.approachCode==6 and self.sortCode==0: # transient displacement
+            elif self.approachCode==6: # transient displacement
                 print "isTransientDisplacement"
-                self.createTransientObject(self.displacments,displacementObject,self.dt)
+                self.createTransientObject(self.displacements,displacementObject,self.dt)
                 self.displacements[self.iSubcase] = self.obj
 
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
+            elif self.approachCode==9 and self.sortCode==1 and self.formatCode==1: # nonlinear static eigenvector
+                print "isComplexEigenvalues"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.complexEigenvalues[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+
+            elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
                 self.createTransientObject(self.nonlinearDisplacements,displacementObject,self.lftsfq)
                 self.nonlinearDisplacements[self.iSubcase] = self.obj
 
             else:
-                raise Exception('unsupported OUGV1 solution...')
+                raise Exception('unsupported OUGV1 static solution...')
             ###
 
         elif self.thermal==1:
-            if self.approachCode==1 and self.sortCode==0: # temperature
+            if self.approachCode==1: # temperature
                 print "isTemperature"
                 self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
 
-            elif self.approachCode==1 and self.sortCode==1: # heat fluxes
-                print "isFluxes"
-                self.obj = fluxObject(self.iSubcase,dt=self.dt)
-                self.fluxes[self.iSubcase] = self.obj
-            elif self.approachCode==6 and self.sortCode==0: # transient temperature
+            #elif self.approachCode==1 and self.sortCode==1: # heat fluxes
+            #    print "isFluxes"
+            #    self.obj = fluxObject(self.iSubcase,dt=self.dt)
+            #    self.fluxes[self.iSubcase] = self.obj
+            elif self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
                 self.createTransientObject(self.temperatures,temperatureObject,self.dt)
                 self.temperatures[self.iSubcase] = self.obj
 
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
+            elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
                 self.nonlinearTemperatures[self.iSubcase] = self.obj
@@ -182,9 +209,48 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars(self.obj)
+        self.readScalars8(self.obj)
         #print self.obj
-        
-        print "-------finished OUGV1----------"
-        return (isTable4Done,isBlockDone)
+        #return
+
+    def readOUGV1_Data_format1_sort1(self):
+        assert self.formatCode==1 # Real
+        assert self.sortCode==1   # Real/Imaginary
+        if self.thermal==0:
+            if self.approachCode==9 and self.sortCode==1 and self.formatCode==1: # nonlinear static eigenvector
+                print "isComplexEigenvalues"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.complexEigenvalues[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            else:
+                raise Exception('unsupported OUGV1 static solution...')
+            ###
+        else:
+            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        self.readScalars14(self.obj)
+        #print self.obj
+        #return
+
+    def readOUGV1_Data_format2_sort1(self):
+        assert self.formatCode==2 # Real/Imaginary
+        assert self.sortCode==1   # Real/Imaginary
+        if self.thermal==0:
+            if self.approachCode==9 and self.sortCode==1 and self.formatCode==1: # nonlinear static eigenvector
+                print "isComplexEigenvalues"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.complexEigenvalues[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            else:
+                raise Exception('unsupported OUGV1 static solution...')
+            ###
+        else:
+            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        self.readScalars8(self.obj)
+        #print self.obj
+        #return
+
 

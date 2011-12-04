@@ -60,7 +60,7 @@ class Geometry1(object):
                             (2101,21,8):     self.readCord2R, # record 5
                             #(2201,22,10):   self.readCord2S, # record 6
                             (14301,143,651): self.readCord3G, # record 7
-                            #(4501,45,1):     self.readGrid,   # record 17 - slow
+                            (4501,45,1):     self.readGrid,   # record 17 - slow
                          }
         self.readRecordTable('GEOM1')
 
@@ -103,7 +103,7 @@ class Geometry1(object):
             (cid,three,one,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
             coord = CORD1S(None,dataIn)
-            self.addCoord(coord)
+            self.addCoord(coord,allowOverwrites=True)
         ###
 
     def readCord2C(self,data):
@@ -115,10 +115,10 @@ class Geometry1(object):
             eData = data[:52]
             data  = data[52:]
             (cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
-            #print "cid=%s two=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
+            #print "cid=%s two=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
             coord = CORD2C(None,dataIn)
-            self.addCoord(coord)
+            self.addCoord(coord,allowOverwrites=True)
         ###
 
     def readCord2R(self,data):
@@ -133,7 +133,7 @@ class Geometry1(object):
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
             #print "cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             coord = CORD2R(None,dataIn)
-            self.addCoord(coord)
+            self.addCoord(coord,allowOverwrites=True)
         ###
 
     def readCord2S(self,data):
@@ -148,7 +148,7 @@ class Geometry1(object):
             #print "cid=%s sixty5=%s eight=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
             coord = CORD2S(dataIn)
-            self.addCoord(coord)
+            self.addCoord(coord,allowOverwrites=True)
         ###
 
     def readCord3G(self,data):
@@ -163,7 +163,7 @@ class Geometry1(object):
             (cid,n1,n2,n3) = unpack('iiii',eData)
             dataIn = [cid,n1,n2,n3]
             coord = CORD3G(None,dataIn)
-            self.addCoord(coord)
+            self.addCoord(coord,allowOverwrites=True)
         ###
 
     def readGrid(self,data):
@@ -175,9 +175,12 @@ class Geometry1(object):
             out = unpack('iifffiii',eData)
 
             (nID,cp,x1,x2,x3,cd,ps,seid) = out
-            #print "nID=%s cp=%s x1=%s x2=%s x3=%s cd=%s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid)
-            node = GRID(None,out)
-            self.addNode(node)
+            if cd>=0:
+                node = GRID(None,out)
+                self.addNode(node)
+            else:
+                print "nID=%s cp=%s x1=%s x2=%s x3=%s cd=%s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid)
+            ###
             
             #print str(grid)[:-1]
         ###

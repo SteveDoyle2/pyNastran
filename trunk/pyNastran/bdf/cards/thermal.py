@@ -594,17 +594,23 @@ class TEMP(ThermalLoad):
     def __init__(self,card=None,data=None):
         ThermalLoad.__init__(self,card,data)
         
-        ## Load set identification number. (Integer > 0)
-        self.sid = card.field(1)
+        if card:
+            ## Load set identification number. (Integer > 0)
+            self.sid = card.field(1)
 
-        fields = card.fields(2)
-        nFields = len(fields)
-        assert nFields%2==0
-        
-        ## dictionary of temperatures where the key is the grid ID (Gi) and the value is the temperature (Ti)
-        self.temperatures={}
-        for i in range(0,nFields,2):
-            self.temperatures[fields[i]] = fields[i+1]
+            fields = card.fields(2)
+            nFields = len(fields)
+            assert nFields%2==0
+
+            ## dictionary of temperatures where the key is the grid ID (Gi) and the value is the temperature (Ti)
+            self.temperatures={}
+            for i in range(0,nFields,2):
+                self.temperatures[fields[i]] = fields[i+1]
+            ###
+        else:
+            print "TEMP data = ",data
+            self.sid = data[0]
+            self.temperatures = {data[1]: data[2]}
         ###
 
     def add(self,tempObj):
