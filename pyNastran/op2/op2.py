@@ -94,7 +94,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.nonlinearTemperatures  = {}  # aCode=6 tCode=1 fCode=1 sortCode=0 thermal=1
 
         self.eigenvectors = {}            # aCode=2 tCode=7 fCode=1 sortCode=1 thermal=0
-        postBucklingEigenvector = {}      # aCode=8 tCode=7 fCode=1 sortCode=1 thermal=0
+        self.postBucklingEigenvector = {} # aCode=8 tCode=7 fCode=1 sortCode=1 thermal=0
         self.complexEigenvalues = {}      # aCode=9 tCode=7 fCode=1 sortCode=1 thermal=0
 
         self.forces = {}
@@ -113,8 +113,10 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
 
 
-
         # OES
+        self.conrodStress   = {}
+        self.conrodStrain   = {}
+
         self.rodStress   = {}
         self.rodStrain   = {}
         self.barStress   = {}

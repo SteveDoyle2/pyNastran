@@ -190,6 +190,44 @@ class CELAS4(SpringElement):
         fields = ['CELAS4',self.eid,self.k,self.s1,self.s2]
         return self.printCard(fields)
 
+class DamperElement(Element):
+    def __init__(self,card,data):
+        Element.__init__(self,card,data)
+
+class CDAMP2(DamperElement):
+    type = 'CDAMP2'
+    def __init__(self,card=None,data=None):
+        DamperElement.__init__(self,card,data)
+        
+        if card:
+            self.eid = card.field(1)
+
+            ## Value of the scalar damper (Real)
+            self.b   = card.field(2)
+
+            nids = [card.field(3),card.field(5)]
+
+            ## component number
+            self.c1 = card.field(4)
+            self.c2 = card.field(6)
+        else:
+            self.eid = data[0]
+            self.b   = data[1]
+            nids     = [data[2],data[4]]
+            self.c1  = data[3]
+            self.c2  = data[5]
+        ###
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)==2
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        
+    def __repr__(self):
+        nodes = self.nodeIDs()
+        fields = ['CDAMP2',self.eid,self.b,nodes[0],self.c1,nodes[1],self.c2]
+        return self.printCard(fields)
+
 class CSHEAR(Element):
     type = 'CSHEAR'
     def __init__(self,card=None,data=None):

@@ -491,10 +491,10 @@ class FortranFile(object):
         #    pass
 
         self.op2.seek(self.n)
-        "self.op2.tell() = ",self.op2.tell()
+        print "self.op2.tell() = ",self.op2.tell()
         #self.printSection(200)
         marker = self.getMarker()
-        print "marker = ",marker
+        #print "marker = ",marker
         if marker==2:
             isAnotherTable = True
         else:# marker=0
@@ -516,7 +516,7 @@ class FortranFile(object):
             marker2 = self.getMarker('[4,0,4] or [4,2,4]')
 
             marker = [marker1,marker2]
-            print "marker = ",marker
+            #print "marker = ",marker
             if marker==[0,2]:
                 isAnotherTable = True
             else:# marker=0
