@@ -170,10 +170,11 @@ class OES(object):
         #    print "    found cbeam_2"
         #    stressStrainObj = self.instantiateBeamObject()
         #    self.CBEAM_2(stressStrainObj)
-        #elif self.elementType == 10:   # conrod
-        #    print "    found conrod_10"
-        #    stressStrainObj = self.instantiateConrodObject()
-        #    self.CONROD_10(stressStrainObj)
+        elif self.elementType == 10:   # conrod
+            print "    found conrod_10"
+            #stressStrainObj = self.instantiateConrodObject()
+            stressStrainObj = None
+            self.CONROD_10(stressStrainObj)
 
         elif self.elementType == 12:   # celas2
             #print "    found celas2_12"

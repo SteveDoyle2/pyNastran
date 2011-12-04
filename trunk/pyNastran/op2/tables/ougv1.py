@@ -151,7 +151,7 @@ class OUGV1(object):
                 print "isDisplacement"
                 self.obj = displacementObject(self.iSubcase)
                 self.displacements[self.iSubcase] = self.obj
-            elif self.approachCode==1 and self.sortCode==1: # spc forces
+            elif self.approachCode==1: # spc forces
                 print "isForces"
                 raise Exception('is this correct???')
                 self.obj = spcForcesObject(self.iSubcase)
@@ -169,7 +169,16 @@ class OUGV1(object):
                 self.createTransientObject(self.displacements,displacementObject,self.dt)
                 self.displacements[self.iSubcase] = self.obj
 
-            elif self.approachCode==9 and self.sortCode==1 and self.formatCode==1: # nonlinear static eigenvector
+            elif self.approachCode==8: # post-buckling eigenvector
+                print "isPostBucklingEigenvector"
+                #print "pbe = ",self.postBucklingEigenvector
+
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.postBucklingEigenvector,eigenVectorObject,self.eigr)
+                self.postBucklingEigenvector[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+
+            elif self.approachCode==9: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
@@ -217,7 +226,7 @@ class OUGV1(object):
         assert self.formatCode==1 # Real
         assert self.sortCode==1   # Real/Imaginary
         if self.thermal==0:
-            if self.approachCode==9 and self.sortCode==1 and self.formatCode==1: # nonlinear static eigenvector
+            if self.approachCode==9: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
@@ -237,7 +246,7 @@ class OUGV1(object):
         assert self.formatCode==2 # Real/Imaginary
         assert self.sortCode==1   # Real/Imaginary
         if self.thermal==0:
-            if self.approachCode==9 and self.sortCode==1 and self.formatCode==1: # nonlinear static eigenvector
+            if self.approachCode==9 and self.sortCode==1: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))

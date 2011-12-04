@@ -1,5 +1,5 @@
 #import sys
-#from struct import unpack
+from struct import unpack
 
 from pyNastran.op2.tables.ougv1 import OUGV1
 from pyNastran.op2.tables.oqg1  import OQG1

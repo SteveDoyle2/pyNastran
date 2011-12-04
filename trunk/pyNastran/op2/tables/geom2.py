@@ -4,7 +4,7 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CSHEAR,CONM2
+from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP2,CSHEAR,CONM2
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
@@ -464,7 +464,7 @@ class Geometry2(object):
             #print "out = ",out
 
             dataIn   = [eid,pid,n1,n2,n3,n4]
-            bigNodes = [g5,g6,g7,g8,g9,g10]
+            bigNodes = [n5,n6,n7,n8,n9,n10]
             if sum(bigNodes)>0:
                 elem = CTETRA10(None,dataIn+bigNodes)
             else:

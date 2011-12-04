@@ -70,9 +70,39 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with CBEAM-2"
 
-    def CELAS2_12(self,stress): # adding...
+    def CONROD_10(self,stress): # not done
         """
-        doesnt support results yet
+        @todo doesnt support results yet
+        """
+        if self.makeOp2Debug:
+            self.op2Debug.write('---CONROD_10---\n')
+        deviceCode = self.deviceCode
+        assert self.numWide==5,'invalid numWide...numWide=%s' %(self.numWide)
+        while len(self.data)>=44:
+            #self.printSection(40)
+            eData     = self.data[0:44]
+            self.data = self.data[44: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack('iifffffffff',eData)
+            (eid,grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            eid = (eid - deviceCode) / 10
+            #stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+
+            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.CONROD_10,stress)
+        #print self.rodStress[self.iSubcase]
+        if self.makeOp2Debug:
+            print "done with CONROD_10"
+        ###
+
+    def CELAS2_12(self,stress): # not done
+        """
+        @todo doesnt support results yet
         """
         print '---CELAS2_12---\n'
         if self.makeOp2Debug:
