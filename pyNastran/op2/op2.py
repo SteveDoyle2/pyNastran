@@ -75,30 +75,44 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         #self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','EPT','MPTS','DYNAMICS',
                              'DESTAB',
-                             'OQG1','OUGV1','OEF1X',
-                             'OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1','OESNLXR'] # DIT
+                             'OQG1',
+                             'OUGV1',
+                             'OEF1X',
+                             'OPG1','OGPFB1',
+                             'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR'] # DIT
                              
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
         self.iSubcaseNameMap = {}
 
-        # OUG
-        self.displacements = {}
-        self.temperatures  = {}
-        
-        self.eigenvectors = {}
 
-        self.nonlinearTemperatures  = {}
-        self.nonlinearDisplacements = {}
+        # OUG
+        self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
+        self.temperatures  = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=1
+
+        self.nonlinearDisplacements = {}  # aCode=6 tCode=1 fCode=1 sortCode=0 thermal=0
+        self.nonlinearTemperatures  = {}  # aCode=6 tCode=1 fCode=1 sortCode=0 thermal=1
+
+        self.eigenvectors = {}            # aCode=2 tCode=7 fCode=1 sortCode=1 thermal=0
+        postBucklingEigenvector = {}      # aCode=8 tCode=7 fCode=1 sortCode=1 thermal=0
+        self.complexEigenvalues = {}      # aCode=9 tCode=7 fCode=1 sortCode=1 thermal=0
 
         self.forces = {}
         self.fluxes = {}
 
         # OEF
-        self.temperatureForces = {}
-        self.nonlinearForces = {}
-        self.nonlinearFluxes = {}
-        nonlinearForces = {}
+        ## rename to staticLoads/thermalLoads
+        self.displacementForces = {}      # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=0
+        self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
+
+        ## rename to complexEigenvalueLoads ???
+        self.complexEigenvalueForces = {} # aCode=9  tCode=4 fCode=2 sortCode=1 thermal=0
+        
+        ## rename to nonlinearStaticLoads/nonlinearThermalLoads ???
+        self.nonlinearForces = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=0
+        self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
+
+
 
         # OES
         self.rodStress   = {}
@@ -112,12 +126,13 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.compositePlateStress = {}
         self.compositePlateStrain = {}
 
+
         # OQG
-        self.spcForces           = {} # approachCode=1,  sortCode=0 formatCode=0
-        self.realImagConstraints = {} # approachCode=10, sortCode=1 formatCode=1
+        self.spcForces           = {} # aCode=1  tCode=3 fCode=1 sortCode=0 thermal=0
+        self.realImagConstraints = {} # aCode=10 tCode=? fCode=1 sortCode=1 thermal=?
         
-        # OGP
-        self.appliedLoads = {}
+        # OPG
+        self.appliedLoads = {}  # aCode=1 tCode=2 fCode=1 sortCode=0 thermal=0
 
     def printResults(self):
         results = [
@@ -227,17 +242,17 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 elif tableName=='DESTAB':  # design variable table
                     self.readTable_DesTab()
 
-                elif tableName in ['OGPFB1']: # displacements/velocity/acceleration
+                elif tableName in ['OPG1','OGPFB1']: # table of applied loads
                     self.readTable_OGP1()
 
-
+                
                 elif tableName=='OEF1X':  # applied loads
                     self.readTable_OEF1()
                 elif tableName=='OQG1':  # spc forces
                     self.readTable_OQG1()
                 elif tableName=='OUGV1': # displacements/velocity/acceleration
                     self.readTable_OUG1()
-                elif tableName in ['OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR']: # stress/strain
+                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR']: # stress/strain
                     self.readTable_OES1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))

@@ -317,17 +317,29 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     type = 'MAT5'
     def __init__(self,card=None,data=None):
         ThermalMaterial.__init__(self,card,data)
-
-        self.mid  = card.field(1)
-        self.kxx  = card.field(2)
-        self.kxy  = card.field(3)
-        self.kxz  = card.field(4)
-        self.kyy  = card.field(5)
-        self.kyz  = card.field(6)
-        self.kzz  = card.field(7)
-        self.cp   = card.field(3,0.0)
-        self.rho  = card.field(4,1.0)
-        self.hgen = card.field(7,1.0)
+        if card:
+            self.mid  = card.field(1)
+            self.kxx  = card.field(2)
+            self.kxy  = card.field(3)
+            self.kxz  = card.field(4)
+            self.kyy  = card.field(5)
+            self.kyz  = card.field(6)
+            self.kzz  = card.field(7)
+            self.cp   = card.field(3,0.0)
+            self.rho  = card.field(4,1.0)
+            self.hgen = card.field(7,1.0)
+        else:
+            self.mid  = data[0]
+            self.kxx  = data[1]
+            self.kxy  = data[2]
+            self.kxz  = data[3]
+            self.kyy  = data[4]
+            self.kyz  = data[5]
+            self.kzz  = data[6]
+            self.cp   = data[7]
+            self.rho  = data[8]
+            self.hgen = data[9]
+        ###
 
     def __repr__(self):
         rho  = self.setBlankIfDefault(self.rho, 1.0)

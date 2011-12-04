@@ -22,6 +22,7 @@ class MPT(object):
                          (503,5,90):    self.readMATS1, # record 12 - not done
                          (3003,30,286): self.readNLPARM, # record 27 - not done
                          (3103,31,337): self.readTSTEPNL, # record 29 - not done
+                         #(8802,88,413): 
                          }
 
         self.readRecordTable('MPTS')

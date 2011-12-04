@@ -128,50 +128,6 @@ class OGP(object):
                 print "isAppliedLoads"
                 self.obj = appliedLoadsObject(self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj
-            elif self.approachCode==1 and self.sortCode==1: # spc forces
-                print "isForces"
-                raise Exception('not implemented in OGP...')
-                self.obj = spcForcesObject(self.iSubcase)
-                self.spcForces[self.iSubcase] = self.obj
-            elif self.approachCode==6 and self.sortCode==0: # transient displacement
-                print "isTransientDisplacement"
-                raise Exception('not implemented in OGP...')
-                self.createTransientObject(self.displacments,displacementObject,self.time)
-                self.displacements[self.iSubcase] = self.obj
-
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
-                print "isNonlinearStaticDisplacement"
-                raise Exception('not implemented in OGP...')
-                self.createTransientObject(self.nonlinearDisplacments,displacementObject,self.dt)
-                self.nonlinearDisplacements[self.iSubcase] = self.obj
-            else:
-                raise Exception('not supported OGP solution...')
-            ###
-
-        elif self.thermal==1:
-            if self.approachCode==1 and self.sortCode==0: # temperature
-                print "isTemperature"
-                raise Exception('not implemented in OGP...')
-                self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
-
-            elif self.approachCode==1 and self.sortCode==1: # heat fluxes
-                print "isFluxes"
-                raise Exception('not implemented in OGP...')
-                self.obj = fluxObject(self.iSubcase,dt=self.dt)
-                self.fluxes[self.iSubcase] = self.obj
-            elif self.approachCode==6 and self.sortCode==0: # transient temperature
-                print "isTransientTemperature"
-                raise Exception('not implemented in OGP...')
-                self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
-                self.temperatureForces[self.iSubcase] = self.obj  ## @todo modify the name of this...
-                #self.readForces(data,self.obj)
-
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
-                print "isNonlinearStaticTemperatures"
-                raise Exception('not implemented in OGP...')
-                self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.lftsfq)
-                self.nonlinearFluxes[self.iSubcase] = self.obj
-                self.readForcesNonlinear(data,self.obj)
             else:
                 raise Exception('not supported OGP solution...')
             ###
@@ -190,7 +146,7 @@ class OGP(object):
         deviceCode = self.deviceCode
         #self.printBlock(data[0:self.numWide*4])
         dn = self.numWide*4
-        while data:
+        while len(data)>dn:
             #print "len(data) = ",len(data)
             eData = data[0:dn]
             #self.printBlock(data[:dn])

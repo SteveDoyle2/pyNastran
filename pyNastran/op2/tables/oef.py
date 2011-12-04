@@ -9,7 +9,8 @@ from struct import unpack
 #    fluxObject,nonlinearFluxObject)
 
 from pyNastran.op2.resultObjects.ougv1_Objects import (
-    displacementObject,temperatureObject)
+    displacementObject,temperatureObject,
+    eigenVectorObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
 
@@ -28,7 +29,7 @@ class OEF(object):
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
-        print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
         bufferSize, = unpack('i',data)
@@ -110,14 +111,14 @@ class OEF(object):
             self.markerStart = copy.deepcopy(self.n)
             #self.printSection(180)
             self.readMarkers([iTable,1,0])
-            print "starting OEF table 4..."
+            #print "starting OEF table 4..."
             isTable4Done,isBlockDone = table4Data(iTable)
             if isTable4Done:
-                print "done with OEF4"
+                #print "done with OEF4"
                 self.n = self.markerStart
                 self.op2.seek(self.n)
                 break
-            print "finished reading oef table..."
+            #print "finished reading oef table..."
             markerA = self.getMarker('A')
             self.n-=12
             self.op2.seek(self.n)
@@ -133,7 +134,7 @@ class OEF(object):
 
     def readTable_OEF_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
-        isBlockDone = False
+        isBlockDone  = False
 
         bufferWords = self.getMarker('OEF')
         #print len(bufferWords)
@@ -149,13 +150,35 @@ class OEF(object):
             isBlockDone = True
             return isTable4Done,isBlockDone
 
-
-        assert self.formatCode==1
-
         isBlockDone = not(bufferWords)
+        self.readOEF1_Data()
+        #print self.obj
+        del self.obj
+        #print self.printSection(120)
+
+        #print "-------finished OEF----------"
+        return (isTable4Done,isBlockDone)
+
+
+    def readOEF1_Data(self):
+        fsCode = [self.formatCode,self.sortCode]
+        if fsCode==[1,0]:
+            self.readOEF1_Data_format1_sort0()
+        #elif fsCode==[1,1]:
+        #    self.readOEF1_Data_format1_sort1()
+        elif fsCode==[2,1]:
+            self.readOEF1_Data_format2_sort1()
+        else:
+            raise Exception('bad formatCode/sortCode')
+        ###
+
+    def readOEF1_Data_format1_sort0(self):
+        assert self.formatCode==1
+        assert self.sortCode==0
+
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         if self.thermal==0:
-            if self.approachCode==1 and self.sortCode==0: # displacement
+            if self.approachCode==1: # displacement
                 print "isForces"
                 self.obj = displacementObject(self.iSubcase)
                 self.displacementForces[self.iSubcase] = self.obj
@@ -166,13 +189,13 @@ class OEF(object):
             #    raise Exception('is this correct???')
             #    self.obj = spcForcesObject(self.iSubcase)
             #    self.spcForces[self.iSubcase] = self.obj
-            elif self.approachCode==6 and self.sortCode==0: # transient displacement
+            elif self.approachCode==6: # transient displacement
                 print "isTransientForces"
                 self.createTransientObject(self.displacmentForces,displacementObject,self.time)
                 self.displacementForces[self.iSubcase] = self.obj
                 self.readForces(self.obj)
 
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
+            elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticForces"
                 self.createTransientObject(self.nonlinearForces,displacementObject,self.loadStep)
                 self.nonlinearForces[self.iSubcase] = self.obj
@@ -182,7 +205,7 @@ class OEF(object):
             ###
 
         elif self.thermal==1:
-            #if self.approachCode==1 and self.sortCode==0: # temperature
+            #if self.approachCode==1: # temperature
             #    print "isTemperature"
             #    raise Exception('verify...')
             #    self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
@@ -191,14 +214,14 @@ class OEF(object):
             #    raise Exception('verify...')
             #    self.obj = fluxObject(self.iSubcase,dt=self.dt)
             #    self.fluxes[self.iSubcase] = self.obj
-            if self.approachCode==6 and self.sortCode==0: # transient temperature
+            if self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
                 #raise Exception('verify...')
                 self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
                 self.temperatureForces[self.iSubcase] = self.obj  ## @todo modify the name of this...
                 self.readForces(self.obj)
 
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
+            elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.loadStep)
                 self.nonlinearFluxes[self.iSubcase] = self.obj
@@ -209,31 +232,87 @@ class OEF(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        
         #self.readForces(data,self.obj)
-        #print self.obj
-        del self.obj
+        #return
         
-        #print self.printSection(120)
 
-        print "-------finished OEF----------"
-        return (isTable4Done,isBlockDone)
+    def readOEF1_Data_format2_sort1(self):
+        assert self.formatCode==2
+        assert self.sortCode==1
+
+        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+        if self.thermal==0:
+            if self.approachCode==9: # complex eigenvalue forces
+                print "isComplexEigenvalues"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.complexEigenvalueForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            else:
+                raise Exception('not supported OEF solution...')
+            ###
+
+        else:
+            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        #self.readForces(data,self.obj)
+        #return
 
         
     def setupOEF(self,elementType,elementName,numWide,deviceCode):
         """length of result"""
         print "elementType=%s numWide=%s type=%s" %(elementType,numWide,elementName)
-        if numWide in [9,10]:
-            func = self.readOEF_2D_3D
-            isSkipped = False
-        elif numWide==8:
-            func = self.readOEF_CHBDY
-            isSkipped = True
+        
+        fCode = self.formatCode
+        eType = self.elementType
+        if self.thermal==0:
+            if eType==1: # Rod
+                if fCode in [0,2]:  recordLength = 12   # 3 fields
+                else:               recordLength = 20   # 4 fields
+            elif eType==2: # Beam
+                if fCode in [0,2]:  recordLength = 40   # 10 fields
+                else:               recordLength = 76   # 17 fields
+            elif eType==10: # Conrod
+                if fCode in [0,2]:  recordLength = 12   # 3 fields
+                else:               recordLength = 16   # 4 fields
+            elif eType==33: # CQUAD4
+                if fCode in [0,2]:  recordLength = 36   # 9  fields
+                else:               recordLength = 76   # 17 fields
+            elif eType==34: # BAR
+                if fCode in [0,2]:  recordLength = 36   # 9  fields
+                else:               recordLength = 76   # 17 fields
+            elif eType==74: # TRIA3
+                if fCode in [0,2]:  recordLength = 36   # 9  fields
+                else:               recordLength = 76   # 17 fields
+            elif eType==100: # Bars
+                if fCode in [0,2]:  recordLength = 24   # 8  fields
+                else:               recordLength = 56   # 14 fields
+                recordLength = 36     # 9 fields
+            else:
+                raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,elementName))
+            ###
         else:
-            raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,name))
+            raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,elementName))
+
+        isSkipped = True
+        func = self.skipMe
+        ###
+        #if numWide in [9,10]:
+        #    func = self.readOEF_2D_3D
+        #    isSkipped = False
+        #    recordLength = 40
+        #elif numWide==8:
+        #    func = self.readOEF_CHBDY
+        #    isSkipped = True
+        #    recordLength = 40
+        #else:
+        #    raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,elementName))
         ###
         self.deviceCode = deviceCode
-        return (40,func,isSkipped) # 8*4
+        return (recordLength,func,isSkipped) # 8*4
+
+    def skipMe(self,data):
+        pass
 
     def readOEF_2D_3D(self,data):
         print "read_2D_3D"
@@ -254,8 +333,8 @@ class OEF(object):
         return (grid,eType,fApplied,freeConv,forceConv,fRad,fTotal)
 
     def readForces(self,scalarObject):
-        print "readForces..."
-        print type(scalarObject)
+        #print "readForces..."
+        #print type(scalarObject)
         data = self.data
         #self.printBlock(data[0:self.numWide*4])
         
@@ -279,7 +358,6 @@ class OEF(object):
             data = data[reqLen:]
         ###
         #print self.obj
-        #sys.exit('check...')
         self.handleResultsBuffer(self.readForces,scalarObject,debug=False)
 
 
@@ -312,7 +390,7 @@ class OEF(object):
         data = self.data
 
         print 'thermal skipping elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType))
-        sys.stderr.write('thermal skipping elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType)))
+        sys.stderr.write('thermal skipping elementType=%s=%s\n' %(self.elementType,self.ElementType(self.elementType)))
         
         nWords = self.getOEF_nWords()
         reqLen = 4*nWords
@@ -362,6 +440,5 @@ class OEF(object):
             data = data[self.numWide*4:]
         ###
         #print self.obj
-        #sys.exit('check...')
         self.handleResultsBuffer(self.readForcesNonlinear,scalarObject,debug=False)
         

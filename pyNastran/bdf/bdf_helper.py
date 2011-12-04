@@ -248,8 +248,9 @@ class addMethods(object):
         assert material.mid>0
         self.materials[material.mid] = material
 
-    def addCoord(self,coord):
-        assert coord.cid not in self.coords
+    def addCoord(self,coord,allowOverwrites=False):
+        if not allowOverwrites:
+            assert coord.cid not in self.coords,'cid=%s\noldElement=\n%snewElement=\n%s' %(coord.cid,self.coords[coord.cid],coord)
         assert coord.cid>-1
         self.coords[coord.cid] = coord
 

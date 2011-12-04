@@ -24,6 +24,11 @@ class Geometry3(object):
                          (2109,21,414): self.readQBDY3, # record 26
                          (5641,65,98):  self.readTEMP,  # record 32
                          (5701,57,27):  self.readTEMPD, # record 33
+                         #(4801, 48, 19)
+                         #(4701, 47, 23)
+                         #(6909, 69, 198)
+                         #(8409, 84, 204)
+                         #(5408, 54, 261)
 
                          }
         self.readRecordTable('GEOM3')
@@ -51,9 +56,9 @@ class Geometry3(object):
         FORCE1(4001,40,20) - the marker for Record 4
         """
         print "reading FORCE1"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        while len(data)>=20: # 5*4
+            eData = data[:20]
+            data  = data[20:]
             (sid,g,f,n1,n2) = unpack('iifii',eData)
 
             load = FORCE1(None,[sid,g,f,n1,n2])

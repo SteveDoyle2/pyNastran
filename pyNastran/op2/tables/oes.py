@@ -138,7 +138,7 @@ class OES(object):
             isTable4Done = True
             return isTable4Done,isBlockDone
         elif bufferWords==0:
-            print "bufferWords 0 - done with Table4"
+            #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             isBlockDone = True
             return isTable4Done,isBlockDone
@@ -176,7 +176,7 @@ class OES(object):
         #    self.CONROD_10(stressStrainObj)
 
         elif self.elementType == 12:   # celas2
-            print "    found celas2_12"
+            #print "    found celas2_12"
             #stressStrainObj = self.instantiateCelasObject()
             stressStrainObj = None
             self.CELAS2_12(stressStrainObj)
@@ -213,8 +213,10 @@ class OES(object):
             self.CQUAD4_95(stressStrainObj)
         else:
             self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
-            raise RuntimeError(msg)
+            print msg
+            #raise RuntimeError(msg)
 
         #print stressStrainObj
 
@@ -312,12 +314,12 @@ class OES(object):
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
         """
-        print "starting a ROD stress/strain object"
-        print "    iSubcase = ",self.iSubcase
-        print "    sCode    = ",self.sCode
+        #print "starting a ROD stress/strain object"
+        #print "    iSubcase = ",self.iSubcase
+        #print "    sCode    = ",self.sCode
         #bits = self.parseStressCode()
-        if (self.iSubcase not in self.rodStress) and (self.iSubcase not in self.rodStrain):
-            print "making new subcase..."
+        #if (self.iSubcase not in self.rodStress) and (self.iSubcase not in self.rodStrain):
+        #    print "making new subcase..."
 
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
@@ -339,12 +341,12 @@ class OES(object):
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
         """
-        print "starting a BAR stress/strain object"
-        print "    iSubcase = %s" %(self.iSubcase)
-        print "    sCode    = %s" %(self.sCode)
+        #print "starting a BAR stress/strain object"
+        #print "    iSubcase = %s" %(self.iSubcase)
+        #print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
-        if (self.iSubcase not in self.barStress) and (self.iSubcase not in self.barStrain):
-            print "making new subcase..."
+        #if (self.iSubcase not in self.barStress) and (self.iSubcase not in self.barStrain):
+        #    print "making new subcase..."
 
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
@@ -366,12 +368,12 @@ class OES(object):
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
         """
-        print "starting a COMPOSITE PLATE stress/strain object"
-        print "    iSubcase = %s" %(self.iSubcase)
-        print "    sCode    = %s" %(self.sCode)
+        #print "starting a COMPOSITE PLATE stress/strain object"
+        #print "    iSubcase = %s" %(self.iSubcase)
+        #print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
-        if (self.iSubcase not in self.compositePlateStress) and (self.iSubcase not in self.compositePlateStrain):
-            print "making new subcase..."
+        #if (self.iSubcase not in self.compositePlateStress) and (self.iSubcase not in self.compositePlateStrain):
+        #    print "making new subcase..."
 
         if self.sCode in [0,1,16,17]: # stress
             #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
@@ -393,12 +395,12 @@ class OES(object):
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
         """
-        print "starting a PLATE stress/strain object"
-        print "    iSubcase = %s" %(self.iSubcase)
-        print "    sCode    = %s" %(self.sCode)
+        #print "starting a PLATE stress/strain object"
+        #print "    iSubcase = %s" %(self.iSubcase)
+        #print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
-        if (self.iSubcase not in self.plateStress) and (self.iSubcase not in self.plateStrain):
-            print "making new subcase..."
+        #if (self.iSubcase not in self.plateStress) and (self.iSubcase not in self.plateStrain):
+        #    print "making new subcase..."
 
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
@@ -420,12 +422,12 @@ class OES(object):
         Creates a stress/strain object if necessary
         @todo I dont like the double return blocks, but it'll work...
         """
-        print "starting a SOLID stress/strain object"
-        print "    iSubcase = %s" %(self.iSubcase)
-        print "    sCode    = %s" %(self.sCode)
+        #print "starting a SOLID stress/strain object"
+        #print "    iSubcase = %s" %(self.iSubcase)
+        #print "    sCode    = %s" %(self.sCode)
         #bits = self.parseStressCode()
-        if (self.iSubcase not in self.solidStress) and (self.iSubcase not in self.solidStrain):
-            print "making new subcase..."
+        #if (self.iSubcase not in self.solidStress) and (self.iSubcase not in self.solidStrain):
+        #    print "making new subcase..."
 
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)

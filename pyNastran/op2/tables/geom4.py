@@ -17,6 +17,11 @@ class Geometry4(object):
                          #(5481,  58, 12): self.readSPC1,    # record 45
                          #(5491,  59, 13): self.readSPCADD,  # record 46
                          #(10100,101,472): self.readSUPORT1, # record 60
+                         #(4901, 49, 420017)
+                         #(5110, 51, 256)
+                         #(5561, 76, 0)
+                         #(610, 6, 0)
+
                          }
         self.readRecordTable('GEOM4')
 

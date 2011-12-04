@@ -359,7 +359,7 @@ class Op2Codes(object):
         
         approach=''
         if(  self.approachCode== 1):  approach = "Statics"
-        elif(self.approachCode== 2):  approach = "Normal modes or buckling (real eignevalues)"
+        elif(self.approachCode== 2):  approach = "Normal modes or buckling (real eigenvalues)"
         elif(self.approachCode== 3):  approach = "Differential Stiffness 0 - obsolete"
         elif(self.approachCode== 4):  approach = "Differential Stiffness 1 - obsolete"
         elif(self.approachCode== 5):  approach = "Frequency"

@@ -109,12 +109,20 @@ class PTUBE(LineProperty):
     type = 'PTUBE'
     def __init__(self,card=None,data=None):
         LineProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.OD1 = card.field(3)
-        self.t   = card.field(4,self.outerDiameter/2.)
-        self.nsm = card.field(5,0.0)
-        self.OD2 = card.field(6,self.outerDiameter)
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.OD1 = card.field(3)
+            self.t   = card.field(4,self.outerDiameter/2.)
+            self.nsm = card.field(5,0.0)
+            self.OD2 = card.field(6,self.outerDiameter)
+        else:
+            self.pid = data[0]
+            self.mid = data[1]
+            self.OD1 = data[2]
+            self.t   = data[3]
+            self.nsm = data[4]
+            #self.OD2 = data[5]  ## @note quirk to this one...
 
     def __repr__(self):
         t   = self.setBlankIfDefault(self.t,self.OD1/2.)

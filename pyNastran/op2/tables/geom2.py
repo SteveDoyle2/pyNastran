@@ -13,29 +13,37 @@ from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
 class Geometry2(object):
     def readTable_Geom2(self):
         self.iTableMap = {
-                           (2408, 24, 180):  self.readCBAR,   # record 8
+                           (2408,24,180):    self.readCBAR,   # record 8
+                          #(4001,40,275):    self.readCBARAO, # record 9  - not done
                            (201,2,69):       self.readCDAMP1, # record 16 - not tested
                            (301,3,70):       self.readCDAMP2, # record 17 - not tested
                            (401,4,71):       self.readCDAMP3, # record 18 - not tested
                            (501,5,72):       self.readCDAMP4, # record 19 - not tested
                            (10608,106,404):  self.readCDAMP5, # record 20 - not tested
                            (601,6,73):       self.readCELAS1, # record 29
-                           #(701,7,74):      self.readCELAS2, # record 30
+                           (701,7,74):       self.readCELAS2, # record 30
                            (801,8,75):       self.readCELAS3, # record 31
                            (901,9,76):       self.readCELAS4, # record 32
+                           (10808,108,406):  self.readCHBDYG, # record 43
+                           #(10908,109,407): self.readCHBDYP, # record 44 - not done
+                           (7308,73,253):    self.readCHEXA,  # record 45
+                          #(2508,25,0):      self.readCMFREE, # record 55 - not done
                            (1501,15,64):     self.readCONM2,  # record 57
-                           #(2958,51,177):    self.readCQUAD4, # record 69
-                           #(13900,139,9989): self.readCQUAD4, # record 70
+                          #(1601,16,47):     self.readCONROD, # record 58 - not done
+                          #(12701,127,408):  self.readCONV,   # record 59 - not done
+                           (2958,51,177):    self.readCQUAD4, # record 69
+                           (4108,41,280):    self.readCPENTA, # record 62
+                           (13900,139,9989): self.readCQUAD4, # record 70
                            (3001,30,48):     self.readCROD,   # record 80
                            (12201,122,9013): self.readCTETP,  # record 86 - not done
-                           #(5508,55,217):   self.readCTETRA, # record 87
-                           #(5959,59,282):    self.readCTRIA3, # record 93
+                           (5508,55,217):    self.readCTETRA, # record 87
+                           (5959,59,282):    self.readCTRIA3, # record 93
                            (3701,37,49):     self.readCTUBE,  # record 103
                            (5551,49,105):    self.readSPOINT, # record 118 - not done
-                           (7308,73,253):    self.readCHEXA,  # record 45
-                           (4108,41,280):    self.readCPENTA, # record 62
-                           (10808,108,406):  self.readCHBDYG, # record 43
-                           #(10908,109,407):  self.readCHBDYP, # record 44 - not done
+                          ##(8515,85,209):  self.read
+                          ##(8615,86,210)
+                          ##(8715,87,211)
+                           #(5408,54,261)
                          }
         self.readRecordTable('GEOM2')
 
@@ -58,6 +66,9 @@ class Geometry2(object):
 # CBUSH
 # CBUSH1D
 # CCONE
+
+
+
 
     def readCBAR(self,data):
         """
@@ -87,6 +98,19 @@ class Geometry2(object):
             elem = CBAR(None,dataIn)
             self.addOp2Element(elem)
         ###
+
+    def readCBARAO(self,data):
+        """
+        CBARAO(4001,40,275) - the marker for Record 9
+        """
+        pass
+
+# CBEAM
+# CBEAMP
+# CBEND
+# CBUSH
+# CBUSH1D
+# CCONE
 
     def readCDAMP1(self,data):
         """
@@ -300,11 +324,28 @@ class Geometry2(object):
 # CMASS2
 # CMASS3
 # CMASS4
-# CMFREE
+
+    def readCMFREE(self,data):
+        """
+        CMFREE(2508,25,0) - the marker for Record 55
+        """
+        pass
+
 # CONM1
 # CONM2
-# CONROD
-# CONV
+
+    def readCONROD(self,data):
+        """
+        CONROD(1601,16,47) - the marker for Record 58
+        """
+        pass
+
+    def readCONV(self,data):
+        """
+        CONV(12701,127,408) - the marker for Record 59
+        """
+        pass
+
 # CONVM
 # CPENP
 

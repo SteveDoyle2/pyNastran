@@ -491,7 +491,7 @@ class PLOAD4(Load):
             self.NVector = card.fields(10,13,[0.,0.,0.])
             self.sorl    = card.field(13,'SURF')
         else:
-            print "PLOAD4 = ",data
+            #print "PLOAD4 = ",data
             self.lid     = data[0]
             self.eid     = data[1]
             self.p       = data[2]
