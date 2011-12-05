@@ -122,6 +122,7 @@ class PTUBE(LineProperty):
             self.OD1 = data[2]
             self.t   = data[3]
             self.nsm = data[4]
+            self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
 
     def __repr__(self):
@@ -274,28 +275,67 @@ class PBAR(LineProperty):
 
         return self.printCard(fields)
 
-class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
+class PBARL(LineProperty):
+    """
+    doesnt support user-defined types
+    """
     type = 'PBARL'
-    validTypes = ["ROD", "TUBE", "I", "CHAN", "T", "BOX", "BAR", "CROSS", "H",
-    "T1", "I1", "CHAN1", "Z", "CHAN2", "T2", "BOX1", "HEXA", "HAT",
-    "HAT1", "DBOX"] # for GROUP="MSCBML0"
+    validTypes = {
+        "ROD"   : 1, 
+        "TUBE"  : 2,
+        "I"     : 6,
+        "CHAN"  : 4,
+        "T"     : 4,
+        "BOX"   : 4,
+        "BAR"   : 2,
+        "CROSS" : 4,
+        "H"     : 4,
+        "T1"    : 4,
+        "I1"    : 4,
+        "CHAN1" : 4,
+        "Z"     : 4,
+        "CHAN2" : 4,
+        "T2"    : 4,
+        "BOX1"  : 6,
+        "HEXA"  : 3,
+        "HAT"   : 4,
+        "HAT1"  : 5,
+        "DBOX"  : 12,
+        } # for GROUP="MSCBML0"
 
     def __init__(self,card=None,data=None):
         LineProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.group = card.field(3,'MSCBMLO')
-        self.type = card.field(4)
-        assert type in self.validTypes
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.group = card.field(3,'MSCBMLO')
+            self.Type = card.field(4)
 
-        self.dim = fields(9) # confusing entry...
-        nDim = len(self.dim)-1
-        if nDim>0:
-            self.nsm = self.dim.pop()
+            #nDim = len(self.dim)-1
+            nDim = self.validTypes[self.Type]
+            self.dim = card.fields(9,9+nDim+1)
+            self.nsm = card.field(9+nDim+1,0.0)
+
+            self.dim = fields(9) # confusing entry...
+            if nDim>0:
+                self.nsm = self.dim.pop()
+            else:
+                self.nsm = 0.0
+            ###
         else:
-            self.nsm = 0.0
-        ###
-
+            self.pid   = data[0]
+            self.mid   = data[1]
+            self.group = data[2].strip()
+            self.Type  = data[3].strip()
+            self.dim   = data[4:-1]
+            self.nsm   = data[-1]
+            #print str(self)
+            #print "*PBARL = ",data
+            #raise Exception('not finished...')
+        assert self.Type in self.validTypes
+        assert len(self.dim)==self.validTypes[self.Type]
+        assert None not in self.dim
+            
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
@@ -303,7 +343,8 @@ class PBARL(LineProperty): # not done, what if all of dim is blank and no nsm...
         return self.nsm
 
     def __repr__(self):
-        fields = ['PBARL',self.pid,self.Mid(),group,type,None,None,None,None,
+        group = self.setBlankIfDefault(self.group,'MSCBMLO')
+        fields = ['PBARL',self.pid,self.Mid(),group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
         return self.printCard(fields)
 
@@ -799,7 +840,7 @@ class PCOMP(ShellProperty):
             ###
             #sys.exit()
         else:
-            print "len(data) = ",len(data)
+            #print "len(data) = ",len(data)
             self.pid  = data[0]
             self.z0   = data[1]
             self.nsm  = data[2]
@@ -818,6 +859,10 @@ class PCOMP(ShellProperty):
             self.plies = []
             #ply = [mid,t,theta,sout]
             for (mid,t,theta,sout) in zip(Mid,T,Theta,Sout):
+                if sout==1:
+                    sout='YES'
+                else:
+                    raise Exception('unsupported sout...needs debugging...')
                 self.plies.append([mid,t,theta,sout])
             ###
         ###

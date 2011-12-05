@@ -6,8 +6,9 @@ from pyNastran.op2.tables.oqg1  import OQG1
 from pyNastran.op2.tables.oes   import OES
 from pyNastran.op2.tables.oef   import OEF
 from pyNastran.op2.tables.ogp   import OGP
+from pyNastran.op2.tables.oee   import OEE
 
-class ResultTable(OQG1,OUGV1,OEF,OGP,OES):
+class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
 
     def readResultsTable(self,table3,table4Data):
         tableName = self.readTableName(rewind=False) # OEF

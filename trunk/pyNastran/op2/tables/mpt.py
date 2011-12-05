@@ -11,23 +11,35 @@ class MPT(object):
     def readTable_MPTS(self):
         self.bigMaterials = {}
         self.iTableMap = {
-                         (1003,10,245): self.readCreep, # record 1
-                         (103,1,77):    self.readMat1,  # record 2
-                         (203,2,78):    self.readMat2,  # record 3
-                         (1403,14,122): self.readMat3,  # record 4
-                         (2103,21,234): self.readMat4,  # record 5
-                         (2203,22,235): self.readMat5,  # record 6
-                         (2503,25,288): self.readMat8,  # record 7
-                         (2801,28,365): self.readMat10, # record 9
+                         (1003,10,245): self.readCREEP, # record 1
+                         (103,1,77):    self.readMAT1,  # record 2
+                         (203,2,78):    self.readMAT2,  # record 3
+                         (1403,14,122): self.readMAT3,  # record 4
+                         (2103,21,234): self.readMAT4,  # record 5
+                         (2203,22,235): self.readMAT5,  # record 6
+                         (2503,25,288): self.readMAT8,  # record 7
+                         (2603,26,300): self.readMAT9,  # record 8 - not tested
+                         (2801,28,365): self.readMAT10, # record 9
                          (503,5,90):    self.readMATS1, # record 12 - not done
+                         #(8802,88,413): self.readRADM, # record 25 - not done
                          (3003,30,286): self.readNLPARM, # record 27 - not done
                          (3103,31,337): self.readTSTEPNL, # record 29 - not done
-                         #(8802,88,413): 
+                         (703,  7, 91):  self.readFake,
+                         (803,  8,102):  self.readFake,
+                         (2303,23,237):  self.readFake,
+                         (2403,24,238):  self.readFake,
+                         (2703,27,301):  self.readFake,
+                         (8802,88,413):  self.readFake,
+                         (8802,88,413):  self.readFake,
+
                          }
 
         self.readRecordTable('MPTS')
 
-    def readCreep(self,data):
+    def addOp2Material(self,mat):
+        self.addMaterial(mat,allowOverwrites=True)
+
+    def readCREEP(self,data):
         """
         CREEP(1003,10,245) - record 1
         """
@@ -38,28 +50,28 @@ class MPT(object):
             out = unpack('iffiiiififffffff',eData)
             (mid,T0,exp,form,tidkp,tidcp,tidcs,thresh,Type,ag1,ag2,ag3,ag4,ag5,ag6,ag7) = out
             mat = CREEP(None,out)
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-    def readMat1(self,data):
+    def readMAT1(self,data):
         """
         MAT1(103,1,77) - record 2
         """
-        print "reading MAT1"
+        #print "reading MAT1"
         while len(data)>=48: # 12*4
             eData = data[:48]
             data  = data[48:]
             out = unpack('iffffffffffi',eData)
             (mid,E,G,nu,rho,A,TRef,ge,St,Sc,Ss,mcsid) = out
             mat = MAT1(None,out)
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-    def readMat2(self,data):
+    def readMAT2(self,data):
         """
         MAT2(203,2,78) - record 3
         """
-        print "reading MAT2"
+        #print "reading MAT2"
         while len(data)>=68: # 17*4
             eData = data[:68]
             data  = data[68:]
@@ -71,11 +83,11 @@ class MPT(object):
             if mid>1e8:
                 self.bigMaterials[mid] = mat
             else:
-                self.addMaterial(mat)
+                self.addOp2Material(mat)
             ###
         ###
 
-    def readMat3(self,data):
+    def readMAT3(self,data):
         """
         MAT3(1403,14,122) - record 4
         """
@@ -86,10 +98,10 @@ class MPT(object):
             out = unpack('iffffffffifffffi',eData)
             (mid,ex,eth,ez,nuxth,nuthz,nuzx,rho,gzx,blank,ax,ath,az,TRef,ge,blank) = out
             mat = MAT3(None,[mid,ex,eth,ez,nuxth,nuthz,nuzx,rho,gzx,ax,ath,az,TRef,ge])
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-    def readMat4(self,data):
+    def readMAT4(self,data):
         """
         MAT4(2103,21,234) - record 5
         """
@@ -100,10 +112,10 @@ class MPT(object):
             out = unpack('iffffffffff',eData)
             (mid,k,cp,rho,h,mu,hgen,refenth,tch,tdelta,qlat) = out
             mat = MAT4(None,out)
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-    def readMat5(self,data):
+    def readMAT5(self,data):
         """
         MAT5(2203,22,235) - record 6
         """
@@ -114,10 +126,10 @@ class MPT(object):
             out = unpack('ifffffffff',eData)
             (mid,k1,k2,k3,k4,k5,k6,cp,rho,hgen) = out
             mat = MAT5(None,out)
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-    def readMat8(self,data):
+    def readMAT8(self,data):
         """
         MAT8(2503,25,288) - record 7
         """
@@ -128,12 +140,31 @@ class MPT(object):
             out = unpack('iffffffffffffffffff',eData)
             (mid,E1,E2,nu12,G12,G1z,G2z,rho,a1,a2,TRef,Xt,Xc,Yt,Yc,S,ge,f12,strn) = out
             mat = MAT8(None,out)
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-# MAT9
+    def readMAT9(self,data):
+        """
+        MAT9(2603,26,300) - record 9
+        @todo buggy
+        """
+        print "reading MAT9"
+        while len(data)>=140: # 35*4
+            eData = data[:140]
+            data  = data[140:]
+            out = unpack('iiiiiiiiiiiiiiiiiiiiiifffffffffiiii',eData)
+            
+            (mid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12,g13,g14,g15,g16,g17,g18,g19,g20,g21,
+            rho,a1,a2,a3,a4,a5,a6,TRef,ge,blank1,blank2,blank3,blank4) = out
+            dataIn = [mid,[g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12,g13,g14,g15,g16,g17,g18,g19,g20,g21],
+                      rho,[a1,a2,a3,a4,a5,a6],
+                      TRef,ge]
+            print "dataIn = ",dataIn
+            #mat = MAT9(None,dataIn)
+            #self.addOp2Material(mat)
+        ###
 
-    def readMat10(self,data):
+    def readMAT10(self,data):
         """
         MAT10(2801,28,365) - record 9
         """
@@ -144,10 +175,10 @@ class MPT(object):
             out = unpack('iffff',eData)
             (mid,bulk,rho,c,ge) = out
             mat = MAT10(None,out)
-            self.addMaterial(mat)
+            self.addOp2Material(mat)
         ###
 
-# MAT11
+# MAT11 - unused
 # MATHP
 
     def readMATS1(self,data):
@@ -163,7 +194,7 @@ class MPT(object):
             (mid,tid,Type,h,yf,hr,limit1,limit2,a,b,c) = out
             dataIn = [mid,tid,Type,h,yf,hr,limit1,limit2]
             #mat = MATS1(None,dataIn)
-            #self.addMaterial(mat)
+            #self.addOp2Material(mat)
         ###
 
 # MATT1
@@ -178,7 +209,36 @@ class MPT(object):
 # MSTACK
 # NLAUTO
 # RADBND
-# RADM
+
+    def readRADM(self,data):
+        """
+        RADM(8802,88,413) - record 25
+        @todo add object
+        """
+        print "reading RADM"
+        while len(data)>=4: # 1*4
+            eData = data[:4]
+            data  = data[4:]
+            number, = unpack('i',eData)
+            
+            strings = 'if'+'f'*number
+            eDataLen = len(strings)*4
+            
+            eData = data[:eDataLen]
+            data = data[eDataLen:]
+            pack = list(unpack(strings,eData))
+            packs = []
+            
+            while data:
+                eData = data[:eDataLen]
+                data = data[eDataLen:]
+                pack = list(unpack(strings,eData))
+                packs.append(pack)
+
+            #mat = RADM(None,packs)
+            #self.addOp2Material(mat)
+        ###
+
 # RADMT
 
     def readNLPARM(self,data):
@@ -194,7 +254,7 @@ class MPT(object):
             (sid,ninc,dt,kmethod,kstep,maxiter,conv,intout,epsu,epsp,epsw,
              maxdiv,maxqn,maxls,fstress,lstol,maxbis,maxr,rtolb) = out
             #mat = NLPARM(None,out)
-            #self.addMaterial(mat)
+            #self.addOp2Material(mat)
         ###
 
 # NLPCI
@@ -212,5 +272,5 @@ class MPT(object):
             (sid,ndt,dt,no,kmethod,kstep,maxiter,conv,epsu,epsp,epsw,
              maxdiv,maxqn,maxls,fstress,lstol,maxbis,adjust,rb,maxr,utol,rtolb) = out
             #mat = TSTEPNL(None,out)
-            #self.addMaterial(mat)
+            #self.addOp2Material(mat)
         ###

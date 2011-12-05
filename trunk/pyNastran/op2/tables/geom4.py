@@ -10,17 +10,39 @@ class Geometry4(object):
 
     def readTable_Geom4(self):
         self.iTableMap = {
-                         #(4901, 49, 17):  self.readMPC,     # record 16
-                         #(4891, 60, 83):  self.readMPCADD,  # record 17
+                         #(4901,  49, 17): self.readMPC,     # record 16
+                         #(4891,  60, 83): self.readMPCADD,  # record 17
                          #(6901,  69,295): self.readRBE2,    # record 24
                          #(5501,  55, 16): self.readSPC,     # record 44
                          #(5481,  58, 12): self.readSPC1,    # record 45
                          #(5491,  59, 13): self.readSPCADD,  # record 46
                          #(10100,101,472): self.readSUPORT1, # record 60
-                         #(4901, 49, 420017)
-                         #(5110, 51, 256)
-                         #(5561, 76, 0)
-                         #(610, 6, 0)
+                         #(4901,49,420017)
+                         #(5110,51,256)
+                         #(5561,76,0)
+                         #(610,6,0)
+
+                         (4901,  49, 17): self.readFake,
+                         (4891,  60, 83): self.readFake,
+                         (6901,  69,295): self.readFake,
+                         (5501,  55, 16): self.readFake,
+                         (5481,  58, 12): self.readFake,
+                         (5491,  59, 13): self.readFake,
+                         (10100,101,472): self.readFake,
+                         (4901,49,420017):self.readFake,
+                         (5110,51,256):   self.readFake,
+                         (5561,76,0):     self.readFake,
+                         (610,6,0):       self.readFake,
+                         (5571,77,216):   self.readFake,
+                         (610, 6, 316):   self.readFake,
+                         (6601,66,292):   self.readFake,
+                         (5601,56, 14):   self.readFake,
+                         (1210,12,322):   self.readFake,
+                         (1510,15,328):   self.readFake,
+                         (5210,52,257):   self.readFake,
+                         (1710,17,330):   self.readFake,
+                         (5501,55,620016):self.readFake,
+                         (4951,63, 92):   self.readFake,
 
                          }
         self.readRecordTable('GEOM4')

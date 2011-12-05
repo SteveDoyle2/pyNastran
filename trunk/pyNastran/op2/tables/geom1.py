@@ -61,8 +61,14 @@ class Geometry1(object):
                             #(2201,22,10):   self.readCord2S, # record 6
                             (14301,143,651): self.readCord3G, # record 7
                             (4501,45,1):     self.readGrid,   # record 17 - slow
+                            (5301,53,4):     self.readSEQGP,  # record 27 - not done
+
+                            (2201,22,10):    self.readFake,
                          }
         self.readRecordTable('GEOM1')
+
+    def readSEQGP(self,data):
+        pass
 
     def readCord1C(self,data):
         """
@@ -184,6 +190,7 @@ class Geometry1(object):
             
             #print str(grid)[:-1]
         ###
+        #assert len(data)==0,'len(data)!=0   len(data)=%s' %(len(data))
         #print "len(data) = ",len(data)
 
 # integrated into readGeom1 function

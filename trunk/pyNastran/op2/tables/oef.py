@@ -153,7 +153,7 @@ class OEF(object):
         isBlockDone = not(bufferWords)
         self.readOEF1_Data()
         #print self.obj
-        del self.obj
+        #del self.obj
         #print self.printSection(120)
 
         #print "-------finished OEF----------"
@@ -162,21 +162,25 @@ class OEF(object):
 
     def readOEF1_Data(self):
         fsCode = [self.formatCode,self.sortCode]
-        if fsCode==[1,0]:
-            self.readOEF1_Data_format1_sort0()
-        #elif fsCode==[1,1]:
-        #    self.readOEF1_Data_format1_sort1()
-        elif fsCode==[2,1]:
-            self.readOEF1_Data_format2_sort1()
-        else:
-            raise Exception('bad formatCode/sortCode')
-        ###
+        if self.thermal==2:
+            self.skipOES_Element(None)
 
+        else: # thermal=0,1
+            if fsCode==[1,0]:
+                self.readOEF1_Data_format1_sort0()
+            #elif fsCode==[1,1]:
+            #    self.readOEF1_Data_format1_sort1()
+            elif fsCode==[2,1]:
+                self.readOEF1_Data_format2_sort1()
+            else:
+                raise Exception('bad formatCode/sortCode')
+            ###
+        ###
     def readOEF1_Data_format1_sort0(self):
         assert self.formatCode==1
         assert self.sortCode==0
 
-        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+        print "self.approachCode=%s tableCode(1)=%s sortCode=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.sortCode,self.thermal)
         if self.thermal==0:
             if self.approachCode==1: # displacement
                 print "isForces"
@@ -184,11 +188,11 @@ class OEF(object):
                 self.displacementForces[self.iSubcase] = self.obj
                 self.readForces(self.obj)
 
-            #elif self.approachCode==1 and self.sortCode==1: # spc forces
-            #    print "isForces"
-            #    raise Exception('is this correct???')
-            #    self.obj = spcForcesObject(self.iSubcase)
-            #    self.spcForces[self.iSubcase] = self.obj
+            elif self.approachCode==2 and self.sortCode==1: # buckling forces
+                print "isBucklingForces"
+                #self.obj = spcForcesObject(self.iSubcase)
+                self.createTransientObject(self.bucklingForces,displacementObject,self.eigr)
+                self.bucklingForces[self.iSubcase] = self.obj
             elif self.approachCode==6: # transient displacement
                 print "isTransientForces"
                 self.createTransientObject(self.displacmentForces,displacementObject,self.time)
@@ -201,7 +205,8 @@ class OEF(object):
                 self.nonlinearForces[self.iSubcase] = self.obj
                 self.readForcesNonlinear(self.obj)
             else:
-                raise Exception('not supported OEF solution...')
+                self.skipOES_Element(None)
+                #raise Exception('not supported OEF static solution...')
             ###
 
         elif self.thermal==1:
@@ -227,10 +232,13 @@ class OEF(object):
                 self.nonlinearFluxes[self.iSubcase] = self.obj
                 self.readForcesNonlinear(self.obj)
             else:
-                raise Exception('not supported OEF solution...')
+                raise Exception('not supported OEF thermal solution...')
             ###
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            msg = 'invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal)
+            self.obj = None
+            sys.stderr.write(msg+'\n')
+            #raise Exception(msg)
         ###
         #self.readForces(data,self.obj)
         #return
@@ -249,7 +257,7 @@ class OEF(object):
                 self.complexEigenvalueForces[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
             else:
-                raise Exception('not supported OEF solution...')
+                raise Exception('not supported OEF static solution...')
             ###
 
         else:
@@ -287,12 +295,13 @@ class OEF(object):
             elif eType==100: # Bars
                 if fCode in [0,2]:  recordLength = 24   # 8  fields
                 else:               recordLength = 56   # 14 fields
-                recordLength = 36     # 9 fields
             else:
-                raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,elementName))
+                recordLength = None
+                #raise Exception('need to define the word size for static elementType=%s=%s' %(self.elementType,elementName))
             ###
         else:
-            raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,elementName))
+            recordLength = None
+            raise Exception('need to define the word size for thermal elementType=%s=%s' %(self.elementType,elementName))
 
         isSkipped = True
         func = self.skipMe
@@ -339,6 +348,10 @@ class OEF(object):
         #self.printBlock(data[0:self.numWide*4])
         
         (reqLen,func,isSkipped) = self.setupOEF(self.elementType,self.ElementType(self.elementType),self.numWide,self.deviceCode)
+        if reqLen==None:
+            reqLen = 1
+            data = ''
+
         while len(data)>=reqLen:
             eData = data[:reqLen]
             #print "len(data) = ",len(data)

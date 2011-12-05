@@ -133,15 +133,39 @@ class OUGV1(object):
 
     def readOUGV1_Data(self):
         fsCode = [self.formatCode,self.sortCode]
-        if fsCode==[1,0]:
-            self.readOUGV1_Data_format1_sort0()
-        elif fsCode==[1,1]:
-            self.readOUGV1_Data_format1_sort1()
-        elif fsCode==[2,1]:
-            self.readOUGV1_Data_format2_sort1()
+        if self.thermal==2:
+            self.skipOES_Element(None)
         else:
-            raise Exception('bad formatCode/sortCode')
+            if fsCode==[1,0]:
+                self.readOUGV1_Data_format1_sort0()
+            elif fsCode==[1,1]:
+                self.readOUGV1_Data_format1_sort1()
+            elif fsCode==[2,1]:
+                self.readOUGV1_Data_format2_sort1()
+            elif fsCode==[3,1]:
+                self.readOUGV1_Data_format3_sort1()
+            else:
+                raise Exception('bad formatCode/sortCode')
+            ###
         ###
+
+    def readOUGV1_Data_format3_sort1(self):
+        assert self.formatCode==3 # Magnitude/Phase
+        assert self.sortCode==1   # Imaginary
+        if self.thermal==0:
+            if self.approachCode==5: # frequency displacement
+                print "isFreqDisplacement"
+                self.createTransientObject(self.freqDisplacements,displacementObject,self.freq)
+                self.freqDisplacements[self.iSubcase] = self.obj
+            else:
+                raise Exception('unsupported OUGV1 static solution...')
+            ###
+        elif self.thermal==1:
+            raise Exception('unsupported OUGV1 thermal solution...')            
+        else:
+            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        self.readScalars8(self.obj)
 
     def readOUGV1_Data_format1_sort0(self):
         assert self.formatCode==1 # Real
@@ -168,6 +192,11 @@ class OUGV1(object):
                 print "isTransientDisplacement"
                 self.createTransientObject(self.displacements,displacementObject,self.dt)
                 self.displacements[self.iSubcase] = self.obj
+
+            elif self.approachCode==7: # pre-buckling displacement
+                print "isPreBucklingDisplacement"
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject,self.lsdvmn)
+                self.preBucklingDisplacements[self.iSubcase] = self.obj
 
             elif self.approachCode==8: # post-buckling eigenvector
                 print "isPostBucklingEigenvector"

@@ -140,10 +140,9 @@ class OQG1(object):
                 
             elif self.approachCode==2 and self.sortCode==0: # nonlinear static eigenvector
                 print "isEigenvector"
-                raise Exception('is this correct???')
                 #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
-                self.eigenvectors[self.iSubcase] = self.obj
+                self.createTransientObject(self.spcBucklingForces,eigenVectorObject,self.eigr)
+                self.spcBucklingForces[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
 
             elif self.approachCode==6 and self.sortCode==0: # transient displacement

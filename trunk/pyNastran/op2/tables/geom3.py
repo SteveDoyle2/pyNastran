@@ -18,17 +18,24 @@ class Geometry3(object):
                          (4401,44,26): self.readGRAV,   # record 7
                          (4551,61,84): self.readLOAD,   # record 8
 
-                         (7209,72,299): self.readPLOAD4,# record 20
+                         #(7209,72,299): self.readPLOAD4,# record 20 - buggy
                          (4509,45,239): self.readQBDY1, # record 24
                          (4909,49,240): self.readQBDY2, # record 25
                          (2109,21,414): self.readQBDY3, # record 26
-                         (5641,65,98):  self.readTEMP,  # record 32
+                         #(5641,65,98):  self.readTEMP,  # record 32 - buggy
                          (5701,57,27):  self.readTEMPD, # record 33
-                         #(4801, 48, 19)
-                         #(4701, 47, 23)
-                         #(6909, 69, 198)
-                         #(8409, 84, 204)
-                         #(5408, 54, 261)
+                         (4801,48,19):  self.readFake,
+                         (4701,47,23):  self.readFake,
+                         (6909,69,198): self.readFake,
+                         (8409,84,204): self.readFake,
+                         (8109,81,201): self.readFake,
+                         (6802,68,199): self.readFake,
+                         (3709,37,331): self.readFake,
+                         (5401,54,25):  self.readFake,
+                         (7309,73,351): self.readFake,
+                         (3609,36,188): self.readFake,
+                         (5101,51,24):  self.readFake,
+                         #(5408,54,261)
 
                          }
         self.readRecordTable('GEOM3')
