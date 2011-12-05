@@ -185,7 +185,7 @@ class Geometry1(object):
                 node = GRID(None,out)
                 self.addNode(node)
             else:
-                print "nID=%s cp=%s x1=%s x2=%s x3=%s cd=%s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid)
+                print "*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid)
             ###
             
             #print str(grid)[:-1]

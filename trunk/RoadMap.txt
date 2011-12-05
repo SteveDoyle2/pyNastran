@@ -7,7 +7,7 @@ For the Result Tables:
     directional cosines and Margins of Safety (usually blank anyways)
     arent needed.
 
-For the BDF Tables:
+For the BDF Tables (GEOM1/GEOM2/GEOM3/GEOM4/DIT/DYNAMICS/EPT/MPT):
     The restrictions are a bit looser on this (for now).  It needs to look like
     the BDF that was input.  These were going to get pushed off until
     later, but found out that it was a good way to learn defaults for
@@ -76,6 +76,9 @@ OP2 Reader
      - SPCADD
      - USET1   (63)
    
+   - DIT
+     - TABRNDG (15)
+
    - EPT
      - NSM     (2, needs integration)
      - PCOMP   (22,done)
@@ -86,7 +89,7 @@ OP2 Reader
      - PTUBE   (56,done)
      - VIEW3D  (63)
 
-   - MPT
+   - MPT / MPTS
      - CREEP   (1,done)
      - MAT1    (2,done)
      - MAT2    (3,done)
@@ -94,20 +97,21 @@ OP2 Reader
      - MAT4    (5,done)
      - MAT5    (6,done)
      - MAT8    (7,done)
+     - MAT9    (8,done)
      - MAT10   (9,done)
      - MATS1
      - NLPARM
      - TSTEPNL (29)
 
-   - DYNAMIC
-     - None
+   - DYNAMIC / DYNAMICS
      - UNBALNC (40)
 
    - OES
+   OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
          - CROD    (1,done)
-         - CBEAM   (2)
-         - CONROD  (10)
+         - CBEAM   (2, not integrated)
+         - CONROD  (10,not integrated)
          - CBAR    (34,done)
          
          - CTETRA  (39, done)
@@ -124,8 +128,9 @@ OP2 Reader
          - CELAS3 (13,done)
          - CELAS4 (14,done)
 
+       - OESNLXR
          # nonlinear
-         - CTETRA (85 - in progress)
+         - CTETRA (85,done)
          - CTRIA3 (88)
          - CROD   (89)
          - CQUAD4 (90)
@@ -133,6 +138,8 @@ OP2 Reader
          - CONROD (92)
          - CHEXA  (93)
          - CBEAM  (94)
+
+       - OESNLXD
 
       - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
          - CQUAD4 (95,done)
@@ -147,20 +154,24 @@ OP2 Reader
       - transient displacement / transient temperature (approachCode=6, sortCode=0, done)
       - nonlinear displacement / nonlinear temperature (approachCode=10,sortCode=0, done)
 
-   - OGP1 Table (grid point forces)
-      - OGPFB1
-        - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
-      
+
    - OQGV1 Table (single/multipoint constraint forces)
       - spc forces (needs cleanup) # verify
 
+   - OGP1 Table (grid point forces)
+      - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
+      
    - OEF1X Table (element forces)
+      - OGPFB1
         temperatureForces (approachCode=6, sortCode=0,done)
         nonlinearFluxes   (approachCode=10,sortCode=0,done) - long table...
          - CHBDY
 
    - OEE Table (element energy strain/kinetic/loss)
+      - 
+
    - KDICT Table (element stiffness table)
+      - None
 
 ----OES LONG VERSION----
 

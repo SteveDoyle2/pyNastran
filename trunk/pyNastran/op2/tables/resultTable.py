@@ -96,6 +96,32 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
             func(stress)
         ###
 
+    def readScalars4(self,scalarObject):
+        data = self.data
+        deviceCode = self.deviceCode
+        #print type(scalarObject)
+        while len(data)>=16:
+            #print "self.numWide = ",self.numWide
+            #print "len(data) = ",len(data)
+            #self.printBlock(data[16:])
+            msg = 'len(data)=%s\n'%(len(data))
+            assert len(data)>=16,msg+self.printSection(120)
+            out = unpack('ifff',data[0:16])
+            (gridDevice,dx,dy,dz) = out
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            #print "gridDevice = ",gridDevice
+            #print "deviceCode = ",deviceCode
+            grid = (gridDevice-deviceCode)/10
+            #if grid<100:
+            #print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
+            scalarObject.add(grid,dx,dy,dz)
+            data = data[32:]
+        ###
+        self.data = data
+        #print self.printSection(200)
+        self.handleResultsBuffer(self.readScalars4,scalarObject,debug=False)
+
     def readScalars8(self,scalarObject):
         data = self.data
         deviceCode = self.deviceCode

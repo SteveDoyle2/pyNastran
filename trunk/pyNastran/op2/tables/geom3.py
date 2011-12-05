@@ -35,6 +35,9 @@ class Geometry3(object):
                          (7309,73,351): self.readFake,
                          (3609,36,188): self.readFake,
                          (5101,51,24):  self.readFake,
+
+                         (7209,72,299): self.readFake, # PLOAD4
+                         (5641,65,98):  self.readFake, # TEMP
                          #(5408,54,261)
 
                          }

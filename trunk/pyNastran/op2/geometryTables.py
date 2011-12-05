@@ -153,6 +153,15 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         #print "exiting the geom sub table"
         return (tableName,isNextTable,isNextSubTable,isFileDone)
 
+    def readTable_DIT(self):
+        self.iTableMap = {
+                            (1105,11,133): self.readFake,
+                            (105,  1, 93): self.readFake,
+                            (15, 21, 162): self.readFake,
+            
+                         }
+        self.readRecordTable('DIT')
+
     def readTable_DYNAMICS(self):
         self.iTableMap = {
                             (37, 18, 183): self.readFake,

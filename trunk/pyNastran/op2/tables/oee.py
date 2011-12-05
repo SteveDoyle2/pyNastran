@@ -14,13 +14,16 @@ class OEE(object):
     """Table of energy"""
 
     def readTable_OEE1(self):
+        #self.staticEnergy = {} # aCode=1 tCode=18 fCode=1 sortCode=0
+
         table3 = self.readTable_OEE1_3
         table4Data = self.readTable_OEE1_4_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEE()
+        #sys.exit('end of oee')
 
     def deleteAttributes_OEE(self):
-        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag','thermal']
+        params = ['lsdvm','mode','eigr','freq','dt','lftsfq','formatCode','numWide']
         self.deleteAttributes(params)
     
     def readTable_OEE1_3(self,iTable): # iTable=-3
@@ -37,74 +40,70 @@ class OEE(object):
         
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
-        (three) = self.parseApproachCode(data)
-        #iSubcase = self.getValues(data,'i',4)
+        self.parseApproachCode(data)
 
-        self.rCode        = self.getValues(data,'i',8)  ## random code
+        self.eTotal       = self.getValues(data,'f',3)  ## total energy of all elements in iSubcase/mode
+        self.elementName  = ''.join(unpack('cccccccc',data[24:32])) ## element name
+        #elementName1      = self.getValues(data,'cccc',6)  
+        #elementName2      = self.getValues(data,'cccc',7)  ## element name
+        #self.elementName  = elementName1+elementName2
+
+        self.loadSet      = self.getValues(data,'i',8)  ## Load set or zero
         self.formatCode   = self.getValues(data,'i',9)  ## format code
-        self.numWide      = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
-        self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
-        self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
+        self.numWide      = self.getValues(data,'i',10) ## number of words per entry in record
+
+        self.cvalres      = self.getValues(data,'i',11) ## C
+        self.esubt        = self.getValues(data,'i',12) ## Subtotal of Strain Energy in the Set identification number
+        self.setID        = self.getValues(data,'i',13) ## Set identification number Number
+        self.eigenReal    = self.getValues(data,'f',14) ## Natural eigenvalue - real part
+        self.eigenImag    = self.getValues(data,'f',15) ## Natural eigenvalue - imaginary part
+
+        self.freq         = self.getValues(data,'f',16) ## Natural frequency
+        self.etotpos      = self.getValues(data,'f',18) ## Total positive energy
+        self.etotneg      = self.getValues(data,'f',19) ## Total negative energy
         
         #self.printBlock(data) # on
-        ## assuming tCode=1
         if self.approachCode==1:   # statics / displacement / heat flux
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            pass
         elif self.approachCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
-            self.eigr      = self.getValues(data,'f',6) ## real eigenvalue
-            self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type - F1???
-            print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
+            print "mode(5)=%s" %(self.mode)
         elif self.approachCode==3: # differential stiffness
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            pass
         elif self.approachCode==4: # differential stiffness
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            pass
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
 
         elif self.approachCode==6: # transient
-            self.dt = self.getValues(data,'f',5) ## time step
-            print "DT(5)=%s" %(self.dt)
+            self.time = self.getValues(data,'f',5) ## time step
+            print "time(5)=%s" %(self.time)
         elif self.approachCode==7: # pre-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## load set
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            pass
         elif self.approachCode==8: # post-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## mode number
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
+            self.mode = self.getValues(data,'i',5) ## mode number
+            print "mode(5)=%s" %(self.mode)
         elif self.approachCode==9: # complex eigenvalues
-            self.mode   = self.getValues(data,'i',5) ## mode
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
-            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            self.mode   = self.getValues(data,'i',5) ## mode number
+            print "mode(5)=%s" %(self.mode)
         elif self.approachCode==10: # nonlinear statics
-            self.lftsfq = self.getValues(data,'f',5) ## load step
-            print "LFTSFQ(5) = %s" %(self.lftsfq)
+            self.loadFactor = self.getValues(data,'f',5) ## load factor
+            print "loadFactor(5) = %s" %(self.loadFactor)
         elif self.approachCode==11: # old geometric nonlinear statics
-            self.lsdvmn = self.getValues(data,'i',5)
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            pass
         elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.lsdvmn = self.getValues(data,'i',5)
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.time = self.getValues(data,'f',5) ## time step
+            print "time(5)=%s" %(self.time)
         else:
             raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
-        # tCode=2
-        #if self.analysisCode==2: # sort2
-        #    self.lsdvmn = self.getValues(data,'i',5)
+        ###
         
-        print "*iSubcase=%s"%(self.iSubcase)
-        print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
+        print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
+        print "approachCode=%s tableCode=%s" %(self.approachCode,self.tableCode)
         print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
-
-        #return (analysisCode,tableCode,thermal)
-
-        #if self.j==3:
-        #    #print str(self.obj)
-        #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
-        ###
 
     def readTable_OEE1_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
@@ -125,16 +124,23 @@ class OEE(object):
             return isTable4Done,isBlockDone
 
         isBlockDone = not(bufferWords)
-        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+        print "self.approachCode=%s tableCode(1)=%s" %(self.approachCode,self.tableCode)
 
         self.readOEE1_Data()
         #print "-------finished OEE1----------"
         return (isTable4Done,isBlockDone)
 
     def readOEE1_Data(self):
-        fsCode = [self.formatCode,self.sortCode]
-        self.skipOES_Element(None)
-        #raise Exception('oee table..')
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        
+        if tfsCode==[18,1,0]:
+            self.readStrainEnergy_format1_sort0()
+        else:
+            self.skipOES_Element(None)
+            raise Exception('unsupported OEE1 static solution...')
+        ###
+        print str(self.obj)
+        
         #if fsCode==[1,0]:
         #    self.readOEE1_Data_format1_sort0()
         #elif fsCode==[1,1]:
@@ -145,123 +151,42 @@ class OEE(object):
         #    raise Exception('bad formatCode/sortCode')
         ###
 
-    def readOEE1_Data_format1_sort0(self):
+    def readStrainEnergy_format1_sort0(self):
+        assert self.tableCode==18 # Strain Energy
         assert self.formatCode==1 # Real
         assert self.sortCode==0   # Real
-        if self.thermal==0:
-            if self.approachCode==1: # displacement
-                print "isDisplacement"
-                self.obj = displacementObject(self.iSubcase)
-                self.displacements[self.iSubcase] = self.obj
-            elif self.approachCode==1: # spc forces
-                print "isForces"
-                raise Exception('is this correct???')
-                self.obj = spcForcesObject(self.iSubcase)
-                self.spcForces[self.iSubcase] = self.obj
-                
-            elif self.approachCode==2: # nonlinear static eigenvector
-                print "isEigenvector"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
-                self.eigenvectors[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
 
-            elif self.approachCode==6: # transient displacement
-                print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject,self.dt)
-                self.displacements[self.iSubcase] = self.obj
-
-            elif self.approachCode==8: # post-buckling eigenvector
-                print "isPostBucklingEigenvector"
-                #print "pbe = ",self.postBucklingEigenvector
-
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.postBucklingEigenvector,eigenVectorObject,self.eigr)
-                self.postBucklingEigenvector[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
-
-            elif self.approachCode==9: # nonlinear static eigenvector
-                print "isComplexEigenvalues"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
-                self.complexEigenvalues[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
-
-            elif self.approachCode==10: # nonlinear static displacement
-                print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.nonlinearDisplacements,displacementObject,self.lftsfq)
-                self.nonlinearDisplacements[self.iSubcase] = self.obj
-
-            else:
-                raise Exception('unsupported OEE1 static solution...')
-            ###
-
-        elif self.thermal==1:
-            if self.approachCode==1: # temperature
-                print "isTemperature"
-                self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
-
-            #elif self.approachCode==1 and self.sortCode==1: # heat fluxes
-            #    print "isFluxes"
-            #    self.obj = fluxObject(self.iSubcase,dt=self.dt)
-            #    self.fluxes[self.iSubcase] = self.obj
-            elif self.approachCode==6: # transient temperature
-                print "isTransientTemperature"
-                self.createTransientObject(self.temperatures,temperatureObject,self.dt)
-                self.temperatures[self.iSubcase] = self.obj
-
-            elif self.approachCode==10: # nonlinear static displacement
-                print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
-                self.nonlinearTemperatures[self.iSubcase] = self.obj
-            else:
-                raise Exception('unsupported OEE1 thermal solution...')
-            ###
+        if self.approachCode==1: # displacement
+            print "isStrainEnergy"
+            self.obj = StrainEnergyObject(self.iSubcase)
+            self.strainEnergy[self.iSubcase] = self.obj
+        elif self.approachCode==2: # buckling modes
+            print "isBucklingStrainEnergy"
+            self.obj = StrainEnergyObject(self.iSubcase)
+            self.modesStrainEnergy[self.iSubcase] = self.obj
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise Exception('unsupported OEE1 strain energy solution...')
         ###
-        self.readScalars8(self.obj)
-        #print self.obj
-        #return
+        self.readScalars4(self.obj)
 
-    def readOEE1_Data_format1_sort1(self):
-        assert self.formatCode==1 # Real
-        assert self.sortCode==1   # Real/Imaginary
-        if self.thermal==0:
-            if self.approachCode==9: # nonlinear static eigenvector
-                print "isComplexEigenvalues"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
-                self.complexEigenvalues[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
-            else:
-                raise Exception('unsupported OEE1 static solution...')
-            ###
-        else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-        ###
-        self.readScalars14(self.obj)
-        #print self.obj
-        #return
-
-    def readOEE1_Data_format2_sort1(self):
-        assert self.formatCode==2 # Real/Imaginary
-        assert self.sortCode==1   # Real/Imaginary
-        if self.thermal==0:
-            if self.approachCode==9 and self.sortCode==1: # nonlinear static eigenvector
-                print "isComplexEigenvalues"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
-                self.complexEigenvalues[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
-            else:
-                raise Exception('unsupported OEE1 static solution...')
-            ###
-        else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-        ###
-        self.readScalars8(self.obj)
-        #print self.obj
-        #return
-
-
+class StrainEnergyObject(object):
+    def __init__(self,iSubcase):
+        self.energy = {}
+        self.percent = {}
+        self.density = {}
+        
+    def add(self,grid,energy,percent,density):
+        assert grid not in self.energy
+        self.energy[grid]  = energy
+        self.percent[grid] = percent
+        self.density[grid] = density
+    
+    def __repr__(self):
+        msg  = '---Strain Energy Object---\n'
+        msg += "%-14s "*4 %('EID','Energy','PercentTotal','density')+'\n'
+        for eid,energy in sorted(self.energy.items()):
+            percent = self.percent[eid]
+            density = self.density[eid]
+            msg += "%-14g"*4 %(eid,energy,percent,density)+'\n'
+            
+        return msg

@@ -37,7 +37,7 @@ class OUGV1(object):
         
         aCode = self.getBlockIntEntry(data,1)
         print "aCode = ",aCode
-        (three) = self.parseApproachCode(data)
+        self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
         self.rCode        = self.getValues(data,'i',8)  ## random code
