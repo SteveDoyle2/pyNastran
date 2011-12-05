@@ -330,7 +330,8 @@ class Op2Codes(object):
         elif(sCode==27): sWord += 'Coordinate Material - Strain Curvature von Mises'
         elif(sCode==31): sWord += 'Coordinate Material - Strain Fiber von Mises'
         else:
-            sWord = "Stress or Strain - UNDEFINED"
+            sWord = 'Stress or Strain - UNDEFINED'
+            sWord = ''
 
         formatWord = ''
         if(  formatCode==1):  formatWord = "Real"
@@ -426,7 +427,9 @@ class Op2Codes(object):
         msg += "  tableCode    = %-2s %s\n" %(self.tableCode,table)
         msg += "  formatCode   = %-2s %s\n" %(formatCode,formatWord)
         msg += "  sortCode     = %-2s %s\n" %(self.sortCode,sortWord)
-        msg += "  sCode        = %-2s %s\n" %(sCode,sWord)
+        if sWord:
+            msg += "  sCode        = %-2s %s\n" %(sCode,sWord)
+        #if thermalWord:
         msg += "  thermal      = %-2s %s\n" %(thermal,thermalWord)
         #print msg
         return msg

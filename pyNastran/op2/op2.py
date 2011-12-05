@@ -73,7 +73,11 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
         #self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','EPT','MPTS','DYNAMICS',
+        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4',
+                             'EPT','MPT','MPTS',
+                             'DYNAMIC','DYNAMICS',
+                             'DIT',
+
                              'DESTAB',
                              'OQG1',
                              'OUGV1','OUPV1',
@@ -81,7 +85,6 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              'OPG1','OGPFB1',
                              'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD',
                              'ONRGY1',
-                             #'DIT',
                              
                              #what is OUPV1
                              ]
@@ -148,7 +151,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.appliedLoads = {}  # aCode=1 tCode=2 fCode=1 sortCode=0 thermal=0
         
         # OEE
-        self.staticEnergy = {} # aCode=1 tCode=18 fCode=1 sortCode=0
+        self.strainEnergy      = {} # aCode=1 tCode=18 fCode=1 sortCode=0
+        self.modesStrainEnergy = {} # aCode=2 tCode=18 fCode=1 sortCode=0
 
     def printResults(self):
         results = [
@@ -250,10 +254,12 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
                 elif tableName=='EPT':   # element properties
                     self.readTable_EPT()
-                elif tableName=='MPTS':  # material properties
+                elif tableName in ['MPT','MPTS']:  # material properties
                     self.readTable_MPTS()
-                elif tableName=='DYNAMICS':  # dyanmic info
+                elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
                     self.readTable_DYNAMICS()
+                elif  tableName=='DIT':  # tables...TABLED1/TABLEM1/TABLES1/GUST
+                    self.readTable_DIT()
 
                 elif tableName=='DESTAB':  # design variable table
                     self.readTable_DesTab()
