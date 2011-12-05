@@ -60,7 +60,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'GRID','GRDSET', #'RINGAX',
 
         'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
-        'CELAS1','CELAS2','CELAS3','CELAS4',
+        'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
+        'CDAMP2',#'CDAMP1','CDAMP3','CDAMP4','CDAMP5',
+        
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
         'CTRIA3','CTRIA6','CTRIAX6',
         'CQUAD4','CQUAD8','CQUADR','CQUADX',
@@ -70,7 +72,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         'PMASS',
         'PELAS',
-        'PROD','PBAR','PBEAM',#'PBEAM3','PBEAML'
+        'PROD','PBAR','PBARL','PBEAM',#'PBEAM3','PBEAML'
         'PSHELL','PCOMP', # 'PCOMPG',
         'PSOLID','PLSOLID',
         'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9','MAT10',
@@ -525,7 +527,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             if 'BEGIN BULK' in line:
                 #print "breaking"
                 break
-            if i>200:
+            if i>600:
                 raise RuntimeError('there are too many lines in the Case Control Deck < 200')
             i+=1
         #self.log().info("finished with Case Control Deck..")
@@ -860,6 +862,23 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='CELAS4':
                 (elem) = CELAS4(cardObj)
                 self.addElement(elem)
+
+            #elif cardName=='CDAMP1':
+            #    (elem) = CDAMP1(cardObj)
+            #    self.addElement(elem)
+            elif cardName=='CDAMP2':
+                (elem) = CDAMP2(cardObj)
+                self.addElement(elem)
+            #elif cardName=='CDAMP3':
+            #    (elem) = CDAMP3(cardObj)
+            #    self.addElement(elem)
+            #elif cardName=='CDAMP4':
+            #    (elem) = CDAMP4(cardObj)
+            #    self.addElement(elem)
+            #elif cardName=='CDAMP5':
+            #    (elem) = CDAMP5(cardObj)
+            #    self.addElement(elem)
+
             elif cardName=='CONM2': # not done...
                 elem = CONM2(cardObj)
                 self.addElement(elem)
@@ -904,9 +923,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='PBAR':
                 prop = PBAR(cardObj)
                 self.addProperty(prop)
-            #elif cardName=='PBARL':
-            #    prop = PBARL(cardObj)
-            #    self.addProperty(prop)
+            elif cardName=='PBARL':
+                prop = PBARL(cardObj)
+                self.addProperty(prop)
             elif cardName=='PBEAM':
                 prop = PBEAM(cardObj)
                 self.addProperty(prop)

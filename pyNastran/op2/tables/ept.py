@@ -4,7 +4,7 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.properties import PROD,PBAR,PBEAM,PSHELL,PSOLID,PCOMP,PTUBE
+from pyNastran.bdf.cards.properties import PROD,PBAR,PBARL,PBEAM,PSHELL,PSOLID,PCOMP,PTUBE
 
 class EPT(object):
 
@@ -12,17 +12,23 @@ class EPT(object):
         self.bigProperties = {}
         self.iTableMap = {
                          (3201,32,55):    self.readNSM,     # record 2
-                         (52,20,181):     self.readPBar,    # record 11 - buggy
-                         (9102,91,52):    self.readPBarL,   # record 12 - no PBARL object
-                         (2706,27,287):   self.readPComp,   # record 22 - buggy
-                         (902,9,29):      self.readPRod,    # record 49
-                         #(1002,10,42):    self.readPShear, # record 50 - no PSHEAR object
-                         (2402, 24, 281): self.readPSolid,  # record 51
-                         (2302,23,283):   self.readPShell,  # record 52
-                         (1602,16,30):    self.readPTube,   # record 56
-                         #(5402, 54, 262)
+                         (52,20,181):     self.readPBAR,    # record 11 - buggy
+                         (9102,91,52):    self.readPBARL,   # record 12 - no PBARL object
+                         #(5402,54,262):  self.readPBEAM,   # record 14 - not done
+                         (2706,27,287):   self.readPCOMP,   # record 22 - buggy
+                         (902,9,29):      self.readPROD,    # record 49
+                         #(1002,10,42):    self.readPSHEAR, # record 50 - no PSHEAR object
+                         (2402,24,281):   self.readPSOLID,  # record 51
+                         (2302,23,283):   self.readPSHELL,  # record 52
+                         (1602,16,30):    self.readPTUBE,   # record 56
                          
-
+                         (5402, 54, 262): self.readFake,
+                         (11001,110,411): self.readFake,
+                         (2802, 28, 236): self.readFake,
+                         (2606, 26, 289): self.readFake,
+                         (152,  19, 147): self.readFake,
+                         (2102, 21, 121): self.readFake,
+                         
 
                          }
         self.readRecordTable('EPT')
@@ -58,7 +64,7 @@ class EPT(object):
 # PACABS
 # PACBAR
 
-    def readPBar(self,data):
+    def readPBAR(self,data):
         """
         PBAR(52,20,181) - the marker for Record 11
         @warning this makes a funny property...
@@ -73,11 +79,10 @@ class EPT(object):
             (pid,mid,a,I1,I2,J,nsm,fe,c1,c2,d1,d2,e1,e2,f1,f2,k1,k2,I12) = out
             prop = PBAR(None,out)
             self.addOp2Property(prop)
-            #sys.exit()
         ###
 
 
-    def readPBarL(self,data):
+    def readPBARL(self,data):
         """
         PBARL(9102,91,52) - the marker for Record 12
         @todo create object
@@ -93,24 +98,60 @@ class EPT(object):
             group2 = e+f+g+h
             type1  = i+j+k+l
             type2  = m+n+o+p
+            dataIn = [pid,mid,group1+group2,type1+type2,value]
             print "pid=%s mid=%s group1=%s group2=%s type1=%s type2=%s value=%s" %(pid,mid,group1,group2,type1,type2,value)
             
             while len(data)>4:
-                value = unpack('f',data[:4])
-                print "valueNew = %s" %(value)
+                value, = unpack('f',data[:4])
+                #print "valueNew = %s" %(value)
                 data = data[4:]
+                dataIn.append(value)
+            
             #print "len(out) = ",len(out)
-            #print out
-            #prop = PBARL(None,out)
-            #self.addProperty(prop)
+            #print "PBARL = ",dataIn
+            prop = PBARL(None,dataIn)
+            self.addProperty(prop)
             #print self.printSection(20)
             #sys.exit()
         ###
 
 
-# PBARL
 # PBCOMP
-# PBEAM
+
+    def readPBEAM(self,data):
+        """
+        PBEAM(5402,54,262) - the marker for Record 14
+        @todo add object
+        """
+        print "reading PBEAM"
+        while len(data)>=1072: # 44+12*84+20
+            eData = data[:20]
+            data  = data[20:]
+            dataIn = list(unpack('iiiif',eData))
+            #print "len(out) = ",len(out)
+            #print out
+            (pid,mid,nsegs,ccf,x) = dataIn
+
+            for i in range(12):
+                eData = data[84:]
+                data  = data[:84]
+                pack = unpack('ffffffffffffffff',eData)
+                (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) = pack
+                dataIn.append(pack)
+            
+            eData = data[:44]
+            data  = data[44:]
+
+            dataIn = list(unpack('fffffffffff',eData))
+            (k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
+            
+                
+            prop = PBEAM(None,out)
+            self.addOp2Property(prop)
+            sys.exit('ept-PBEAM')
+        ###
+
+
 # PBEAML
 # PBEND
 # PBMSECT
@@ -119,7 +160,7 @@ class EPT(object):
 # PBUSH1D
 # PBUSHT
 
-    def readPComp(self,data):
+    def readPCOMP(self,data):
         """
         PCOMP(2706,27,287) - the marker for Record 22
         """
@@ -177,7 +218,7 @@ class EPT(object):
 # PLSOLID
 # PMASS
 
-    def readPRod(self,data):
+    def readPROD(self,data):
         """
         PROD(902,9,29) - the marker for Record 49
         """
@@ -191,7 +232,7 @@ class EPT(object):
             self.addOp2Property(prop)
         ###
 
-    def readPShear(self,data):
+    def readPSHEAR(self,data):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
@@ -205,7 +246,7 @@ class EPT(object):
             self.addOp2Property(prop)
         ###
 
-    def readPShell(self,data):
+    def readPSHELL(self,data):
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
@@ -226,7 +267,7 @@ class EPT(object):
         ###
 
 
-    def readPSolid(self,data):
+    def readPSOLID(self,data):
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
@@ -245,7 +286,7 @@ class EPT(object):
 # PTRIA6
 # PTSHELL
 
-    def readPTube(self,data):
+    def readPTUBE(self,data):
         """
         PTUBE(1602,16,30) - the marker for Record 56
         @todo OD2 only exists for heat transfer...how do i know if there's heat transfer...

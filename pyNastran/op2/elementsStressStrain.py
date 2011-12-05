@@ -51,7 +51,7 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             eid = (eid - deviceCode) / 10
-            stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+            #stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
             
             for iNode in range(nNodes):
                 eData     = self.data[0:40]
@@ -60,7 +60,7 @@ class ElementsStressStrain(object):
                 (nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
-                stress.add(eid,axial,axialMS,torsion,torsionMS)
+                #stress.add(eid,axial,axialMS,torsion,torsionMS)
 
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)

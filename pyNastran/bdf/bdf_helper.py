@@ -243,8 +243,9 @@ class addMethods(object):
         assert prop.pid>0
         self.properties[prop.pid] = prop
 
-    def addMaterial(self,material):
-        assert material.mid not in self.materials
+    def addMaterial(self,material,allowOverwrites=False):
+        if not allowOverwrites:
+            assert material.mid not in self.materials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(material.mid,self.materials[material.mid],material)
         assert material.mid>0
         self.materials[material.mid] = material
 

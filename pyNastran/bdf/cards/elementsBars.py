@@ -225,8 +225,7 @@ class CONROD(CROD):
         LineElement.__init__(self,card,data)
         if card:
             self.eid  = int(card.field(1))
-            print "self.eid = ",self.eid
-
+            #print "self.eid = ",self.eid
             nids = card.fields(2,4)
 
             self.mid = int(card.field(4))
@@ -241,7 +240,7 @@ class CONROD(CROD):
             self.A   = data[4]
             self.J   = data[5]
             self.c   = data[6]
-            NSM      = data[7]
+            self.NSM = data[7]
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2

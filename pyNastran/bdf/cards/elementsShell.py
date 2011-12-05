@@ -115,21 +115,31 @@ class CTRIA6(CTRIA3):
     type = 'CTRIA6'
     def __init__(self,card=None,data=None):
         ShellElement.__init__(self,card,data)
-        ## element ID number
-        self.eid = int(card.field(1))
-        self.pid = card.field(2)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
 
-        nids = card.fields(3,9)
+            nids = card.fields(3,9)
+            self.thetaMcid = card.field(9 ,0.0)
+            self.zOffset   = card.field(10,0.0)
+
+            self.T1 = card.field(11,1.0)
+            self.T2 = card.field(12,1.0)
+            self.T3 = card.field(13,1.0)
+            self.TFlag = card.field(14,0)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = data[2:8]
+            self.thetaMcid = data[8]
+            self.zOffset   = data[9]
+            self.T1    = data[10]
+            self.T2    = data[11]
+            self.T3    = data[12]
+            self.TFlag = data[13]
         self.prepareNodeIDs(nids)
         assert len(nids)==6,'error on CTRIA6'
-
-        self.thetaMcid = card.field(9 ,0.0)
-        self.zOffset   = card.field(10,0.0)
-
-        self.T1 = card.field(11,1.0)
-        self.T2 = card.field(12,1.0)
-        self.T3 = card.field(13,1.0)
-        self.TFlag = card.field(14,0)
 
         #print self.thetaMcid
         #print card

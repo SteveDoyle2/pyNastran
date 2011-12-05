@@ -441,34 +441,63 @@ class MAT9(AnisotropicMaterial):
     type = 'MAT9'
     def __init__(self,card=None,data=None):
         AnisotropicMaterial.__init__(self,card,data)
-        self.mid = card.field(1)
-        self.G11 = card.field(2, 0.0)
-        self.G12 = card.field(3, 0.0)
-        self.G13 = card.field(4, 0.0)
-        self.G14 = card.field(5, 0.0)
-        self.G15 = card.field(6, 0.0)
-        self.G16 = card.field(7, 0.0)
-        self.G22 = card.field(8, 0.0)
-        self.G23 = card.field(9, 0.0)
-        self.G24 = card.field(10,0.0)
-        self.G25 = card.field(11,0.0)
-        self.G26 = card.field(12,0.0)
-        self.G33 = card.field(13,0.0)
-        self.G34 = card.field(14,0.0)
-        self.G35 = card.field(15,0.0)
-        self.G36 = card.field(16,0.0)
-        self.G44 = card.field(17,0.0)
-        self.G45 = card.field(18,0.0)
-        self.G46 = card.field(19,0.0)
-        self.G55 = card.field(20,0.0)
-        self.G56 = card.field(21,0.0)
-        self.G66 = card.field(22,0.0)
-        self.rho = card.field(23,0.0)
-        self.A = card.fields(24,30,[0.]*6)
+        if card:
+            self.mid = card.field(1)
+            self.G11 = card.field(2, 0.0)
+            self.G12 = card.field(3, 0.0)
+            self.G13 = card.field(4, 0.0)
+            self.G14 = card.field(5, 0.0)
+            self.G15 = card.field(6, 0.0)
+            self.G16 = card.field(7, 0.0)
+            self.G22 = card.field(8, 0.0)
+            self.G23 = card.field(9, 0.0)
+            self.G24 = card.field(10,0.0)
+            self.G25 = card.field(11,0.0)
+            self.G26 = card.field(12,0.0)
+            self.G33 = card.field(13,0.0)
+            self.G34 = card.field(14,0.0)
+            self.G35 = card.field(15,0.0)
+            self.G36 = card.field(16,0.0)
+            self.G44 = card.field(17,0.0)
+            self.G45 = card.field(18,0.0)
+            self.G46 = card.field(19,0.0)
+            self.G55 = card.field(20,0.0)
+            self.G56 = card.field(21,0.0)
+            self.G66 = card.field(22,0.0)
+            self.rho = card.field(23,0.0)
+            self.A   = card.fields(24,30,[0.]*6)
+            self.TRef = card.field(30,0.0)
+            self.ge   = card.field(31)
+        else:
+            self.mid = data[0]
+            self.G11 = data[1][0]
+            self.G12 = data[1][1]
+            self.G13 = data[1][2]
+            self.G14 = data[1][3]
+            self.G15 = data[1][4]
+            self.G16 = data[1][5]
+            self.G22 = data[1][6]
+            self.G23 = data[1][7]
+            self.G24 = data[1][8]
+            self.G25 = data[1][9]
+            self.G26 = data[1][10]
+            self.G33 = data[1][11]
+            self.G34 = data[1][12]
+            self.G35 = data[1][13]
+            self.G36 = data[1][14]
+            self.G44 = data[1][15]
+            self.G45 = data[1][16]
+            self.G46 = data[1][17]
+            self.G55 = data[1][18]
+            self.G56 = data[1][19]
+            self.G66 = data[1][20]
+            self.rho = data[2]
+            self.A   = data[3]
+            self.TRef =data[4]
+            self.ge   =data[5]
+        ###
         assert len(self.A)==6
-        self.TRef = card.field(30,0.0)
-        self.ge   = card.field(31)
-
+            
     def __repr__(self):
         A = []
         for a in self.A:

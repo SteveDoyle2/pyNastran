@@ -131,6 +131,8 @@ class OGP(object):
             else:
                 raise Exception('not supported OGP solution...')
             ###
+        elif self.thermal==1:
+            self.skipOES_Element(None)
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###

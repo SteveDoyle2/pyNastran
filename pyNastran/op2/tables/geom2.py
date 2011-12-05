@@ -5,8 +5,8 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP2,CSHEAR,CONM2
-from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4
-from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE
+from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6
+from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE,CONROD
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
 from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
 
@@ -14,7 +14,7 @@ class Geometry2(object):
     def readTable_Geom2(self):
         self.iTableMap = {
                            (2408,24,180):    self.readCBAR,   # record 8
-                          #(4001,40,275):    self.readCBARAO, # record 9  - not done
+                           (4001,40,275):    self.readCBARAO, # record 9  - not done
                            (201,2,69):       self.readCDAMP1, # record 16 - not tested
                            (301,3,70):       self.readCDAMP2, # record 17 - not tested
                            (401,4,71):       self.readCDAMP3, # record 18 - not tested
@@ -25,31 +25,43 @@ class Geometry2(object):
                            (801,8,75):       self.readCELAS3, # record 31
                            (901,9,76):       self.readCELAS4, # record 32
                            (10808,108,406):  self.readCHBDYG, # record 43
-                           #(10908,109,407): self.readCHBDYP, # record 44 - not done
+                            (10908,109,407): self.readCHBDYP, # record 44 - not done
                            (7308,73,253):    self.readCHEXA,  # record 45
-                          #(2508,25,0):      self.readCMFREE, # record 55 - not done
+                           (2508,25,0):      self.readCMFREE, # record 55 - not done
                            (1501,15,64):     self.readCONM2,  # record 57
-                          #(1601,16,47):     self.readCONROD, # record 58 - not done
-                          #(12701,127,408):  self.readCONV,   # record 59 - not done
+                           (1601,16,47):     self.readCONROD, # record 58
+                           (12701,127,408):   self.readCONV,  # record 59 - not tested
+                           (8908,89,422):    self.readCONVM,  # record 60 - not tested
                            (2958,51,177):    self.readCQUAD4, # record 69
                            (4108,41,280):    self.readCPENTA, # record 62
                            (13900,139,9989): self.readCQUAD4, # record 70
                            (3001,30,48):     self.readCROD,   # record 80
-                           (12201,122,9013): self.readCTETP,  # record 86 - not done
+                          #(12201,122,9013): self.readCTETP,  # record 86 - not done
                            (5508,55,217):    self.readCTETRA, # record 87
-                           (5959,59,282):    self.readCTRIA3, # record 93
+                           (5959,59,282):    self.readCTRIA3, # record 93 - maybe buggy on theta/Mcsid field
+                           (4801,48,327):    self.readCTRIA6, # record 95 - not tested
                            (3701,37,49):     self.readCTUBE,  # record 103
                            (5551,49,105):    self.readSPOINT, # record 118 - not done
-                          ##(8515,85,209):  self.read
-                          ##(8615,86,210)
-                          ##(8715,87,211)
-                           #(5408,54,261)
+
+                           (8515,85,209):     self.readFake,
+                           (8615,86,210):     self.readFake,
+                           (8715,87,211):     self.readFake,
+                           (5408,54,261):     self.readFake,
+                           (1101,11,66):      self.readFake,
+                           (5201,52,11):      self.readFake,
+                           (6108,61,107):     self.readFake,
+                           (2315,23,146):     self.readFake,
+                           (1908,19,104):     self.readFake,
+                           (1401,14, 63):     self.readFake,
+                           
                          }
         self.readRecordTable('GEOM2')
 
+    def readFake(self,data):
+        pass
+
     def addOp2Element(self,elem):
         self.addElement(elem,allowOverwrites=True)
-
 
 # 1-AEROQ4
 # AEROT3
@@ -277,6 +289,7 @@ class Geometry2(object):
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
+        return
         print "reading CHBDYG"
         while len(data)>=64: # 16*4
             eData = data[:64]
@@ -289,10 +302,8 @@ class Geometry2(object):
             self.addOp2Element(elem)
         ###
 
-# CHBDYP
-
-    #def readCHBDYP(self,data):
-    #    pass
+    def readCHBDYP(self,data):
+        pass
 
     def readCHEXA(self,data):
         """
@@ -338,15 +349,54 @@ class Geometry2(object):
         """
         CONROD(1601,16,47) - the marker for Record 58
         """
-        pass
+        #print "reading CONROD"
+        while len(data)>=32: # 8*4
+            eData = data[:32]
+            data  = data[32:]
+            out = unpack('iiiiffff',eData)
+            (eid,n1,n2,mid,a,j,c,nsm) = out
+            elem = CONROD(None,out)
+            self.addOp2Element(elem)
+        ###
 
     def readCONV(self,data):
         """
         CONV(12701,127,408) - the marker for Record 59
         """
-        pass
+        #print "reading CONV"
+        return
+        while len(data)>=80: # 20*4
+            eData = data[:80]
+            data  = data[80:]
+            out = unpack('iiiiiiiiiiiiffffffff',eData)
+            (eid,pconID,flmnd,cntrlnd,
+             ta1,ta2,ta3,ta5,ta6,ta7,ta8,
+             wt1,wt2,wt3,wt5,wt6,wt7,wt8) = out
+            dataIn = [eid,pconID,flmnd,cntrlnd,
+                      [ta1,ta2,ta3,ta5,ta6,ta7,ta8],
+                      [wt1,wt2,wt3,wt5,wt6,wt7,wt8]]
+            elem = CONV(None,dataIn)
+            self.addOp2Element(elem)
+        ###
 
-# CONVM
+    def readCONVM(self,data):
+        """
+        CONVM(8908,89,422) - the marker for Record 60
+        """
+        #print "reading CONVM"
+        return
+        while len(data)>=28: # 7*4
+            eData = data[:28]
+            data  = data[28:]
+            out = unpack('iiiiiii',eData)
+            (eid,pconID,flmnd,cntrlnd,
+             [ta1,ta2,ta3]) = out
+            dataIn = [eid,pconID,flmnd,cntrlnd,
+                      [ta1,ta2,ta3]]
+            elem = CONVM(None,dataIn)
+            self.addOp2Element(elem)
+        ###
+
 # CPENP
 
     def readCPENTA(self,data):
@@ -480,7 +530,7 @@ class Geometry2(object):
 
     def readCTRIA3(self,data):
         """
-        (5959,59,282)    - the marker for Record 93
+        CTRIA3(5959,59,282)    - the marker for Record 93
         """
         #print "reading CTRIA3"
         while len(data)>=52: # 13*4
@@ -495,7 +545,22 @@ class Geometry2(object):
         ###
 
 # CTRIAFD
-# CTRIA6
+
+    def readCTRIA6(self,data):
+        """
+        CTRIA6(4801,48,327)    - the marker for Record 95
+        """
+        #print "reading CTRIA3"
+        while len(data)>=52: # 13*4
+            eData = data[:52]
+            data  = data[52:]
+            out = unpack('iiiiiffiiifff',eData)
+            #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
+            (eid,pid,n1,n2,n3,n4,n5,n6,theta,zoffs,t1,t2,t3,tflag) = out
+            elem = CTRIA6(None,out)
+            self.addOp2Element(elem)
+        ###
+
 # CTRIA6FD
 # CTRIAP
 # CTRIAR

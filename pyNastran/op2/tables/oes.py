@@ -93,7 +93,6 @@ class OES(object):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
 
-        print self.codeInformation()
         self.readTitle()
         #print "n4 = ",self.n
 
@@ -168,9 +167,10 @@ class OES(object):
             self.CROD_1(stressStrainObj)
         #elif self.elementType == 2:   # cbeam
         #    print "    found cbeam_2"
-        #    stressStrainObj = self.instantiateBeamObject()
+        #    #stressStrainObj = self.instantiateBeamObject()
+        #    stressStrainObj = None
         #    self.CBEAM_2(stressStrainObj)
-        elif self.elementType == 10:   # conrod
+        #elif self.elementType == 10:   # conrod
             print "    found conrod_10"
             #stressStrainObj = self.instantiateConrodObject()
             stressStrainObj = None
@@ -214,6 +214,7 @@ class OES(object):
             self.CQUAD4_95(stressStrainObj)
         else:
             self.printBlock(self.data[0:100])
+            print self.codeInformation()
             self.skipOES_Element(None)
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             print msg
@@ -326,6 +327,7 @@ class OES(object):
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.rodStress:
                 self.rodStress[self.iSubcase] = rodStressObject(self.iSubcase)
+                print self.codeInformation()
             return self.rodStress[self.iSubcase]
 
         elif self.sCode in [10,11]:
@@ -352,12 +354,14 @@ class OES(object):
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.barStress:
+                print self.codeInformation()
                 self.barStress[self.iSubcase] = barStressObject(self.iSubcase)
             return self.barStress[self.iSubcase]
 
         elif self.sCode in [10,11]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.barStrain:
+                print self.codeInformation()
                 self.barStrain[self.iSubcase] = barStrainObject(self.iSubcase)
             return self.barStrain[self.iSubcase]
         else:
@@ -379,12 +383,14 @@ class OES(object):
         if self.sCode in [0,1,16,17]: # stress
             #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.compositePlateStress:
+                print self.codeInformation()
                 self.compositePlateStress[self.iSubcase] = compositePlateStressObject(self.iSubcase)
             return self.compositePlateStress[self.iSubcase]
 
         elif self.sCode in [10,11,13,14,15,26,27,30,31]: # strain
             #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.plateStrain:
+                print self.codeInformation()
                 self.compositePlateStrain[self.iSubcase] = compositePlateStrainObject(self.iSubcase)
             return self.compositePlateStrain[self.iSubcase]
         else:
@@ -406,12 +412,14 @@ class OES(object):
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.plateStress:
+                print self.codeInformation()
                 self.plateStress[self.iSubcase] = plateStressObject(self.iSubcase)
             return self.plateStress[self.iSubcase]
 
         elif self.sCode in [10,11,15]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.plateStrain:
+                print self.codeInformation()
                 self.plateStrain[self.iSubcase] = plateStrainObject(self.iSubcase)
             return self.plateStrain[self.iSubcase]
         else:
@@ -433,13 +441,15 @@ class OES(object):
         if self.sCode in [0,1]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.solidStress:
-                print "created new solidObject for iSubcase=%s" %(self.iSubcase)
+                print self.codeInformation()
+                #print "created new solidObject for iSubcase=%s" %(self.iSubcase)
                 self.solidStress[self.iSubcase] = solidStressObject(self.iSubcase)
             return self.solidStress[self.iSubcase]
 
         elif self.sCode in [10,11]:
             #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
             if self.iSubcase not in self.solidStrain:
+                print self.codeInformation()
                 self.solidStrain[self.iSubcase] = solidStrainObject(self.iSubcase)
             return self.solidStrain[self.iSubcase]
         else:
