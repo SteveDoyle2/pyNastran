@@ -18,7 +18,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             self.rotations     = {dt: {}}
             self.add = self.addTransient
             self.addBinary = self.addBinaryTransient
-            self.__repr__ = self.__reprTransient__  # why cant i do this...
+            #self.__repr__ = self.__reprTransient__  # why cant i do this...
             #self.writeOp2 = self.writeOp2Transient
         ###
 

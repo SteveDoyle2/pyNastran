@@ -1,6 +1,7 @@
 #import sys
 from struct import unpack
 
+from pyNastran.op2.op2Errors    import *
 from pyNastran.op2.tables.ougv1 import OUGV1
 from pyNastran.op2.tables.oqg1  import OQG1
 from pyNastran.op2.tables.oes   import OES
@@ -53,10 +54,18 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
    
         ###
         nOld = self.op2.tell()
-        try:
-            self.readMarkers([iTable,1,0],tableName)
-        except SyntaxError:  # wrong error, but we'll fix it when the correct error is found...
-            self.goto(nOld)
+        #try:
+        self.readMarkers([iTable,1,0],tableName)
+        #except InvalidMarkersError:  # wrong error, but we'll fix it when the correct error is found...
+        #    self.goto(nOld)
+            #print self.printBlock(self.data)
+            #print self.printSection(100)
+            #markerZero = self.getMarker()
+            #assert markerZero==0
+            #self.goto(nOld)
+            #print "finished markerZero"
+            #return
+            
         
         #print str(self.obj)
         if self.makeOp2Debug:
@@ -86,9 +95,15 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
 
         #if debug:
         #    print self.printSection(120)
-
+        
         nOld = self.n
+        #try:
         markers = self.readHeader()
+        #except AssertionError:  # end of table - poor catch
+        #    self.goto(nOld)
+        #    print self.printSection(120)
+        #    return
+
         #print "markers = ",markers
         if markers<0:
             self.goto(nOld)

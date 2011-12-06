@@ -17,7 +17,7 @@ class spcForcesObject(scalarObject):
             self.forces  = {dt: {}}
             self.moments = {dt: {}}
             self.add = self.addTransient
-            self.__repr__ = self.__reprTransient__  # why cant i do this...
+            #self.__repr__ = self.__reprTransient__  # why cant i do this...
         ###
 
     def updateDt(self,dt=None):
@@ -27,8 +27,8 @@ class spcForcesObject(scalarObject):
         """
         assert dt>=0.
         self.dt = dt
-        self.forces[dt]    = {}
-        self.momenents[dt] = {}
+        self.forces[dt]  = {}
+        self.moments[dt] = {}
 
     #def addBinary(self,deviceCode,data):
     #    print "*******add********"
@@ -44,7 +44,7 @@ class spcForcesObject(scalarObject):
     def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = 'nodeID=%s' %(nodeID)
         assert 0<nodeID<1000000000,msg
-        assert nodeID not in self.forces
+        assert nodeID not in self.forces[self.dt]
         self.forces[ self.dt][nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
         self.moments[self.dt][nodeID] = array([v4,v5,v6]) # Mx,My,Mz
 

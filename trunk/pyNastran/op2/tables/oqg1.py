@@ -108,20 +108,20 @@ class OQG1(object):
         ###
 
     def readOQG1_Data(self):
-        fsCode = [self.formatCode,self.sortCode]
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1]
 
-        if fsCode==[1,0]:
+        if   tfsCode==[3,1,0]:
             self.readOQG1_Data_format1_sort0()
-        elif fsCode==[1,1]:
+        elif tfsCode==[3,1,1]:
             self.readOQG1_Data_format1_sort1()
-        elif fsCode==[2,1]:
+        elif tfsCode==[3,2,1]:
             self.readOQG1_Data_format2_sort1()
-        elif fsCode==[3,1]:
+        elif tfsCode==[3,3,1]:
             self.readOQG1_Data_format3_sort1()
         else:
-            raise Exception('bad formatCode/sortCode')
+            raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
         ###
 
 
@@ -153,11 +153,10 @@ class OQG1(object):
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
                 self.freqForces[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
-            #elif self.approachCode==6: # transient displacement
-            #    print "isTransientDisplacement"
-            #    raise Exception('is this correct???')
-            #    self.createTransientObject(self.displacments,displacementObject,self.dt)
-            #    self.displacements[self.iSubcase] = self.obj
+            elif self.approachCode==6: # transient forces
+                print "isTransientForces"
+                self.createTransientObject(self.spcForces,spcForcesObject,self.dt)
+                self.spcForces[self.iSubcase] = self.obj
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
                 self.createTransientObject(self.realImagConstraints,displacementObject,self.lftsfq)
@@ -187,6 +186,15 @@ class OQG1(object):
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
                 self.freqForces[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
+            elif self.approachCode==9: # frequency
+                print "isComplexEigenvalueForces"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,self.mode)
+                self.complexEigenvalueForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            ###
+            else:
+                raise Exception('unsupported OQG1 formatCode=1 sortCode=1 static solution...')
             ###
         else: #thermal=1
             raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
