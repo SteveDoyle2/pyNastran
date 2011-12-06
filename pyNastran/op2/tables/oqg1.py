@@ -107,6 +107,128 @@ class OQG1(object):
         #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
         ###
 
+    def readOQG1_Data(self):
+        fsCode = [self.formatCode,self.sortCode]
+        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+        assert self.thermal in [0,1]
+
+        if fsCode==[1,0]:
+            self.readOQG1_Data_format1_sort0()
+        elif fsCode==[1,1]:
+            self.readOQG1_Data_format1_sort1()
+        elif fsCode==[2,1]:
+            self.readOQG1_Data_format2_sort1()
+        elif fsCode==[3,1]:
+            self.readOQG1_Data_format3_sort1()
+        else:
+            raise Exception('bad formatCode/sortCode')
+        ###
+
+
+        #if self.formatCode==1:
+        #    self.readScalars8(self.obj)
+        #elif self.formatCode==2:
+        #    self.readFormat2(self.obj)
+        #else:
+        #    raise Exception('only formatCode=1...formatCode=|%s|' %(self.formatCode))
+        #print self.obj
+
+
+
+    def readOQG1_Data_format1_sort0(self):
+        if self.thermal==0:
+            if self.approachCode==1: # displacement
+                print "isSPCForces"
+                self.obj = spcForcesObject(self.iSubcase)
+                self.spcForces[self.iSubcase] = self.obj
+            elif self.approachCode==2: # nonlinear static eigenvector
+                print "isEigenvector"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.spcBucklingForces,eigenVectorObject,self.eigr)
+                self.spcBucklingForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            elif self.approachCode==5: # frequency
+                print "isFrequencyForces"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.freqForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            #elif self.approachCode==6: # transient displacement
+            #    print "isTransientDisplacement"
+            #    raise Exception('is this correct???')
+            #    self.createTransientObject(self.displacments,displacementObject,self.dt)
+            #    self.displacements[self.iSubcase] = self.obj
+            elif self.approachCode==10: # nonlinear static displacement
+                print "isNonlinearStaticDisplacement"
+                self.createTransientObject(self.realImagConstraints,displacementObject,self.lftsfq)
+                self.realImagConstraints[self.iSubcase] = self.obj
+            else:
+                raise Exception('unsupported OQG1 formatCode=1 sortCode=0 static solution...')
+            ###
+        else: # thermal = 1
+            if self.approachCode==1: # temperature
+                print "isTemperature"
+                self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
+            elif self.approachCode==10: # nonlinear static displacement
+                print "isNonlinearStaticTemperatures"
+                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
+                self.nonlinearTemperatures[self.iSubcase] = self.obj
+            else:
+                raise Exception('unsupported OQG1 formatCode=1 sortCode=0 thermal solution...')
+            ###
+        ###
+        self.readScalars8(self.obj)
+
+    def readOQG1_Data_format1_sort1(self):
+        if self.thermal==0:
+            if self.approachCode==5: # frequency
+                print "isFrequencyForces"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.freqForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            ###
+        else: #thermal=1
+            raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
+            ###
+        ###
+        print self.printSection(120)
+        self.readScalars14(self.obj)
+
+    def readOQG1_Data_format2_sort1(self):
+        if self.thermal==0:
+            if self.approachCode==5: # frequency
+                print "isFrequencyForces"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.freqForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            else:
+                raise Exception('unsupported OQG1 formatCode=1 sortCode=1 static solution...')
+            ###
+        else: #thermal=1
+            raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
+            ###
+        ###
+        self.readFormat2(self.obj) # readImaginary
+
+    def readOQG1_Data_format3_sort1(self):
+        if self.thermal==0:
+            if self.approachCode==5: # frequency
+                print "isFrequencyForces"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.freqForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
+            else:
+                raise Exception('unsupported OQG1 formatCode=1 sortCode=1 static solution...')
+            ###
+        else: #thermal=1
+            raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
+            ###
+        ###
+        self.readFormat2(self.obj) # readImaginary
+
     def readTable_OQG1_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
         isBlockDone  = False
@@ -126,71 +248,7 @@ class OQG1(object):
             return isTable4Done,isBlockDone
 
         isBlockDone = not(bufferWords)
-        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
-        if self.thermal==0:
-            if self.approachCode==1 and self.sortCode==0: # displacement
-                print "isSPCForces"
-                self.obj = spcForcesObject(self.iSubcase)
-                self.spcForces[self.iSubcase] = self.obj
-            elif self.approachCode==1 and self.sortCode==1: # spc forces
-                print "isForces"
-                raise Exception('is this correct???')
-                self.obj = spcForcesObject(self.iSubcase)
-                self.spcForces[self.iSubcase] = self.obj
-                
-            elif self.approachCode==2 and self.sortCode==0: # nonlinear static eigenvector
-                print "isEigenvector"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
-                self.createTransientObject(self.spcBucklingForces,eigenVectorObject,self.eigr)
-                self.spcBucklingForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
-
-            elif self.approachCode==6 and self.sortCode==0: # transient displacement
-                print "isTransientDisplacement"
-                raise Exception('is this correct???')
-                self.createTransientObject(self.displacments,displacementObject,self.dt)
-                self.displacements[self.iSubcase] = self.obj
-
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
-                print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.realImagConstraints,displacementObject,self.lftsfq)
-                self.realImagConstraints[self.iSubcase] = self.obj
-
-            else:
-                raise Exception('unsupported OQG1 static solution...')
-            ###
-
-        elif self.thermal==1:
-            if self.approachCode==1 and self.sortCode==0: # temperature
-                print "isTemperature"
-                self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
-
-            elif self.approachCode==1 and self.sortCode==1: # heat fluxes
-                print "isFluxes"
-                self.obj = fluxObject(self.iSubcase,dt=self.dt)
-                self.fluxes[self.iSubcase] = self.obj
-            elif self.approachCode==6 and self.sortCode==0: # transient temperature
-                print "isTransientTemperature"
-                self.createTransientObject(self.temperatures,temperatureObject,self.dt)
-                self.temperatures[self.iSubcase] = self.obj
-
-            elif self.approachCode==10 and self.sortCode==0: # nonlinear static displacement
-                print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
-                self.nonlinearTemperatures[self.iSubcase] = self.obj
-            else:
-                raise Exception('unsupported OQG1 thermal solution...')
-            ###
-        else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-        ###
-        if self.formatCode==1:
-            self.readScalars8(self.obj)
-        elif self.formatCode==2:
-            self.readFormat2(self.obj)
-        else:
-            raise Exception('only formatCode=1...formatCode=|%s|' %(self.formatCode))
-        #print self.obj
+        self.readOQG1_Data()
         
         print "-------finished OQG1----------"
         return (isTable4Done,isBlockDone)
@@ -221,10 +279,9 @@ class OQG1(object):
             print "           dxi=%g dyi=%g dzi=%g rxi=%g ryi=%g rzi=%g" %(     dxi,dyi,dzi,rxi,ryi,rzi)
             #scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             
-            sys.exit('checkASDF')
             data = data[56:]
         ###
         self.data = data
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars,scalarObject)
+        self.handleResultsBuffer(self.readFormat2,scalarObject)
 

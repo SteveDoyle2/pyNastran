@@ -320,7 +320,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         self.updateDt = self.updateEigReal
         #print "eigReal = %s" %(eigReal)
         
-        assert eigReal>=0.
+        #assert eigReal>=0.
         self.gridTypes = {}
         self.displacements = {self.eigReal: {}}
         self.rotations     = {self.eigReal: {}}
@@ -330,7 +330,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         this method is called if the object
         already exits and a new time step is found
         """
-        assert eigReal>=0.
+        #assert eigReal>=0.
         #self.eigReal = int(eigReal)
         self.eigReal = eigReal
         print "eigReal = %s" %(str(eigReal))

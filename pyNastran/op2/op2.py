@@ -78,15 +78,15 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              'DYNAMIC','DYNAMICS',
                              'DIT',
 
-                             'DESTAB',
+                             #'DESTAB',
                              'OQG1',
                              'OUGV1','OUPV1',
                              'OEF1X','DOEF1',
                              'OPG1','OGPFB1',
                              'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD',
                              'ONRGY1',
-                             
-                             #what is OUPV1
+                             'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
+                             #what is OFMPF2M
                              ]
                              
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
@@ -116,8 +116,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         ## rename to staticLoads/thermalLoads
         self.displacementForces = {}      # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=0
         self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
-
         self.bucklingForces = {}          # aCode=2  tCode=4 fCode=1 sortCode=0 thermal=0
+        self.freqForces   = {}            # aCode=5  tCode=4 fCode=2 sortCode=1 thermal=0
 
         ## rename to complexEigenvalueLoads ???
         self.complexEigenvalueForces = {} # aCode=9  tCode=4 fCode=2 sortCode=1 thermal=0
@@ -266,7 +266,9 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
                 elif tableName in ['OPG1','OGPFB1']: # table of applied loads
                     self.readTable_OGP1()
-
+                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
+                    self.readTable_OGP1()
+                    
                 
                 elif tableName in ['OEF1X','DOEF1']:  # applied loads
                     self.readTable_OEF1()

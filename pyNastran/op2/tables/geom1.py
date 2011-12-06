@@ -63,7 +63,8 @@ class Geometry1(object):
                             (4501,45,1):     self.readGrid,   # record 17 - slow
                             (5301,53,4):     self.readSEQGP,  # record 27 - not done
 
-                            (2201,22,10):    self.readFake,
+                            (2201,22, 10):    self.readFake,
+                            (6101,61,388):    self.readFake,
                          }
         self.readRecordTable('GEOM1')
 
@@ -179,7 +180,7 @@ class Geometry1(object):
         
         n=0
         nEntries = len(data)/32
-        for i in range(0,nEntries):
+        for i in range(nEntries):
             eData = data[n:n+32]
             out = unpack('iifffiii',eData)
 
