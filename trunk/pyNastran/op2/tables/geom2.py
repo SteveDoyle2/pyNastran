@@ -4,7 +4,7 @@ import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP2,CSHEAR,CONM2
+from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CSHEAR,CONM2
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE,CONROD
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
@@ -15,8 +15,8 @@ class Geometry2(object):
         self.iTableMap = {
                            (2408,24,180):    self.readCBAR,   # record 8
                            (4001,40,275):    self.readCBARAO, # record 9  - not done
-                           (201,2,69):       self.readCDAMP1, # record 16 - not tested
-                           (301,3,70):       self.readCDAMP2, # record 17 - not tested
+                           (201,2,69):       self.readCDAMP1, # record 16
+                           (301,3,70):       self.readCDAMP2, # record 17
                            (401,4,71):       self.readCDAMP3, # record 18 - not tested
                            (501,5,72):       self.readCDAMP4, # record 19 - not tested
                            (10608,106,404):  self.readCDAMP5, # record 20 - not tested
@@ -53,6 +53,17 @@ class Geometry2(object):
                            (2315,23,146):     self.readFake,
                            (1908,19,104):     self.readFake,
                            (1401,14, 63):     self.readFake,
+
+                           (4601,46,298):     self.readFake,
+                           (4701,47,326):     self.readFake,
+                           (8009,80,367):     self.readFake,
+                           (9200,92,385):     self.readFake,
+                           (4601,46,298):     self.readFake,
+                           (9200,92,385):     self.readFake,
+                           (5608,56,218):     self.readFake,
+                           (3901,39, 50):     self.readFake,
+                           (11601,116,9942):  self.readFake,
+                           
                            
                          }
         self.readRecordTable('GEOM2')
@@ -435,7 +446,7 @@ class Geometry2(object):
         print "reading CQUAD4"
         n=0
         nEntries = len(data)/56
-        for i in range(0,nEntries):
+        for i in range(nEntries):
             eData = data[n:n+56] # 14*4
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
@@ -511,7 +522,7 @@ class Geometry2(object):
         print "reading CTETRA"
         n=0
         nEntries = len(data)/48
-        for i in range(0,nEntries):
+        for i in range(nEntries):
             eData = data[n:n+48] # 12*4
             out = unpack('iiiiiiiiiiii',eData)
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = out
@@ -558,15 +569,15 @@ class Geometry2(object):
         """
         #print "reading CTRIA3"
         n=0
-        nEntries = len(data)/52
-        for i in range(0,nEntries):
-            eData = data[n:n+52] # 13*4
-            out = unpack('iiiiiffiiifff',eData)
+        nEntries = len(data)/56
+        for i in range(nEntries):
+            eData = data[n:n+56] # 14*4
+            out = unpack('iiiiiiiifffffi',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
             (eid,pid,n1,n2,n3,n4,n5,n6,theta,zoffs,t1,t2,t3,tflag) = out
             elem = CTRIA6(None,out)
             self.addOp2Element(elem)
-            n+=52
+            n+=56
         ###
         data = data[n:]
 

@@ -158,7 +158,10 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                             (1105,11,133): self.readFake,
                             (105,  1, 93): self.readFake,
                             (15, 21, 162): self.readFake,
-            
+                            (56, 26, 303): self.readFake,
+                            (3105,31, 97): self.readFake,
+                            
+                            
                          }
         self.readRecordTable('DIT')
 
@@ -181,6 +184,10 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                             (7107,71,138): self.readFake,
                             (7207,72,139): self.readFake,
                             (8307,83,142): self.readFake,
+                            (2107,21,195): self.readFake,
+                            (2207,22,196): self.readFake,
+                            
+                            
                          }
 
 

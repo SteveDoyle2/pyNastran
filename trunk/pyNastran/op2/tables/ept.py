@@ -28,7 +28,14 @@ class EPT(object):
                          (2606, 26, 289): self.readFake,
                          (152,  19, 147): self.readFake,
                          (2102, 21, 121): self.readFake,
-                         
+                         (2502, 25, 248): self.readFake,
+                         (9202, 92,  53): self.readFake,
+                         (3101, 31, 219): self.readFake,
+                         (302,   3,  46): self.readFake,
+                         (1802, 18,  31): self.readFake,
+                         (202,   2,  45): self.readFake,
+                         (10201,102,400): self.readFake,
+
 
                          }
         self.readRecordTable('EPT')

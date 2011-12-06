@@ -31,10 +31,15 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
         iTable=-3
         self.readMarkers([iTable,1,0],tableName)
         while [markerA,markerB]!=[0,2]:
+            self.firstPass = True
             table3(iTable)
+            #print "self.tellA = ",self.op2.tell()
             isBlockDone = self.readTable4(table4Data,iTable-1)
-            iTable -= 2
+            self.firstPass = False
 
+            #print "self.tellB = ",self.op2.tell()
+            iTable -= 2
+            #print "isBlockDone = ",isBlockDone
             if isBlockDone:
                 #print "iTable = ",iTable
                 #self.n = self.markerStart
@@ -42,11 +47,17 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
                 break
             ###
             n = self.n
+            #print self.printSection(100)
             self.readMarkers([iTable,1,0],tableName)
             #print "i read the markers!!!"
    
         ###
-        self.readMarkers([iTable,1,0],tableName)
+        nOld = self.op2.tell()
+        try:
+            self.readMarkers([iTable,1,0],tableName)
+        except SyntaxError:  # wrong error, but we'll fix it when the correct error is found...
+            self.goto(nOld)
+        
         #print str(self.obj)
         if self.makeOp2Debug:
             self.op2Debug.write("***end of %s table***\n" %(tableName))
@@ -73,8 +84,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
         #if marker[0]==4:
         #    print "found a 4 - end of unbuffered table"
 
-        if debug:
-            print self.printSection(120)
+        #if debug:
+        #    print self.printSection(120)
 
         nOld = self.n
         markers = self.readHeader()
@@ -126,13 +137,16 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-        while len(data)>=32:
+        
+        n = 0
+        nEntries = len(data)/32
+        for i in range(nEntries):
+            #print self.printBlock(self.data[n:n+64])
+            eData = data[n:n+32]
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
             #self.printBlock(data[32:])
-            msg = 'len(data)=%s\n'%(len(data))
-            assert len(data)>=32,msg+self.printSection(120)
-            out = unpack('iiffffff',data[0:32])
+            out = unpack('iiffffff',eData)
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
@@ -140,11 +154,11 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
-            #print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
-            data = data[32:]
+            n+=32
         ###
-        self.data = data
+        self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
 

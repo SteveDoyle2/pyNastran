@@ -285,6 +285,11 @@ class Op2Codes(object):
             38 : 'OMM - MaxMin summary',
             39 : 'OQG - MPC forces',
             40 : 'OGPKE - Grip point kinetic energy',
+            51 : 'OFMPF2M - ???',
+            52 : 'OSMPF2M - ???',
+            53 : 'OPMPF2M - ???',
+            54 : 'OLMPF2M - ???',
+            55 : 'OGMPF2M - ???',
         }
         msg += 'table = %s' %(tableContent[tableCodeContent])
         return msg
@@ -347,9 +352,10 @@ class Op2Codes(object):
         elif(self.sortCode==1): sortWord = 'Real/Imaginary'
         elif(self.sortCode==2): sortWord = 'Random Responses'
         else:
-            sortWord = ''
-            msg = 'unsupported tCode:  tCode=%s\n' %(tCode)
-            raise Exception(msg)
+            sortWord = '???'
+            msg = 'unsupported sortCode:  sortCode=%s\n' %(sortCode)
+            print msg
+            #raise Exception(msg)
 
         if(  thermal==0): thermalWord = 'isHeatTransfer = False'
         elif(thermal==1): thermalWord = 'isHeatTransfer = True'

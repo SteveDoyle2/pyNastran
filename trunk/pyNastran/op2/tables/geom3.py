@@ -38,6 +38,10 @@ class Geometry3(object):
 
                          (7209,72,299): self.readFake, # PLOAD4
                          (5641,65,98):  self.readFake, # TEMP
+                         (5509,55,190): self.readFake,
+
+
+
                          #(5408,54,261)
 
                          }
@@ -68,7 +72,7 @@ class Geometry3(object):
         print "reading FORCE1"
         n=0
         nEntries = len(data)/20
-        for i in range(0,nEntries):
+        for i in range(nEntries):
             eData = data[n:n+20]  # 5*4
             (sid,g,f,n1,n2) = unpack('iifii',eData)
 
@@ -85,7 +89,7 @@ class Geometry3(object):
         print "reading FORCE2"
         n=0
         nEntries = len(data)/28
-        for i in range(0,nEntries):
+        for i in range(nEntries):
             eData = data[n:n+28]  # 7*4
             (sid,g,f,n1,n2,n3,n4) = unpack('iifiiii',eData)
 

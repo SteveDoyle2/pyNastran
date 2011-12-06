@@ -7,6 +7,11 @@ class ElementsStressStrain(object):
         self.data = ''
         self.handleResultsBuffer(self.skipOES_Element,stress)
 
+    def CHEXANL_93(self,stress): # not implemented
+        while len(self.data)>=1456: # 2+18*10 = 182 -> 182*4 = 1456
+            self.data = self.data[1456:]
+        self.handleResultsBuffer(self.CHEXANL_93,stress,debug=True)
+
     def CROD_1(self,stress): # works
         if self.makeOp2Debug:
             self.op2Debug.write('---CROD_1---\n')
@@ -108,7 +113,7 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             self.op2Debug.write('---CELAS2_12---\n')
         deviceCode = self.deviceCode
-        assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
+        #assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
 
         if self.tableCode in [0,2]:
             minBuffer = 8
@@ -116,7 +121,7 @@ class ElementsStressStrain(object):
                 (eid,force) = unpack('if',eData)
                 eid = (eid - deviceCode) / 10
                 #if force>1.:
-                #    print "eid=%s force=%s" %(eid,force)
+                #print "eid=%s force=%s" %(eid,force)
                 return (eid,force)
                 ###
             ###
@@ -126,7 +131,7 @@ class ElementsStressStrain(object):
                 (eid,sReal,sImag) = unpack('iff',eData)
                 eid = (eid - deviceCode) / 10
                 #if sReal>1e-5:
-                #    print "eid=%s force=%s imag=%s" %(eid,sReal,sImag)
+                #print "eid=%s force=%s imag=%s" %(eid,sReal,sImag)
                 return (eid,sReal,sImag)
             ###
         ###

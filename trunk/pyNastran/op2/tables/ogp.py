@@ -128,8 +128,11 @@ class OGP(object):
                 print "isAppliedLoads"
                 self.obj = appliedLoadsObject(self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj
+                self.readOGPForces(data,self.obj)
             else:
-                raise Exception('not supported OGP solution...')
+                self.skipOES_Element(None)
+                print 'not supported OGP solution...'
+                #raise Exception('not supported OGP solution...')
             ###
         elif self.thermal==1:
             self.skipOES_Element(None)
@@ -137,7 +140,6 @@ class OGP(object):
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         
-        self.readOGPForces(data,self.obj)
         #print self.obj
         
         print "-------finished OGP----------"
