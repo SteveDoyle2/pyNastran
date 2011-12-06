@@ -4,7 +4,7 @@ from numpy import array
 #from numpy.linalg import norm
 
 # my code
-from AirQuick.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
+from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
 from baseCard import Element
 
 from elementsBars  import *
