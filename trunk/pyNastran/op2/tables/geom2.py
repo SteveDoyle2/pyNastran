@@ -432,16 +432,19 @@ class Geometry2(object):
         CQUAD4(2958,51,177)    - the marker for Record 69
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
-        #print "reading CQUAD4"
-        while len(data)>=56: # 14*4
-            eData = data[:56]
-            data  = data[56:]
+        print "reading CQUAD4"
+        n=0
+        nEntries = len(data)/56
+        for i in range(0,nEntries):
+            eData = data[n:n+56] # 14*4
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
             dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD4(None,dataInit)
             self.addOp2Element(elem)
+            n+=56
         ###
+        data  = data[n:]
 
 # CQUAD4FD
 # CQUAD8
@@ -506,9 +509,10 @@ class Geometry2(object):
         CTETRA(5508,55,217)    - the marker for Record 87
         """
         print "reading CTETRA"
-        while len(data)>=48: # 12*4
-            eData = data[:48]
-            data  = data[48:]
+        n=0
+        nEntries = len(data)/48
+        for i in range(0,nEntries):
+            eData = data[n:n+48] # 12*4
             out = unpack('iiiiiiiiiiii',eData)
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = out
             #print "out = ",out
@@ -520,7 +524,9 @@ class Geometry2(object):
             else:
                 elem = CTETRA4(None,dataIn)
             self.addOp2Element(elem)
+            n+=48
         ###
+        data = data[n:]
 
 # CTETPR
 # CTETR10F
@@ -551,15 +557,18 @@ class Geometry2(object):
         CTRIA6(4801,48,327)    - the marker for Record 95
         """
         #print "reading CTRIA3"
-        while len(data)>=52: # 13*4
-            eData = data[:52]
-            data  = data[52:]
+        n=0
+        nEntries = len(data)/52
+        for i in range(0,nEntries):
+            eData = data[n:n+52] # 13*4
             out = unpack('iiiiiffiiifff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
             (eid,pid,n1,n2,n3,n4,n5,n6,theta,zoffs,t1,t2,t3,tflag) = out
             elem = CTRIA6(None,out)
             self.addOp2Element(elem)
+            n+=52
         ###
+        data = data[n:]
 
 # CTRIA6FD
 # CTRIAP

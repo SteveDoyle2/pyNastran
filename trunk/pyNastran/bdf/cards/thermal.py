@@ -534,7 +534,7 @@ class QBDY3(ThermalLoad):
             self.sid     = data[0]
             self.Q0      = data[1]
             self.cntrlnd = data[2]
-            self.eids    = data[3:]
+            self.eids    = list(data[3:])
         ###
 
     #def crossReference(self,model):
@@ -608,7 +608,7 @@ class TEMP(ThermalLoad):
                 self.temperatures[fields[i]] = fields[i+1]
             ###
         else:
-            print "TEMP data = ",data
+            #print "TEMP data = ",data
             self.sid = data[0]
             self.temperatures = {data[1]: data[2]}
         ###

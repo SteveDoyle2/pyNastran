@@ -40,21 +40,39 @@ class CREEP(Material):
     type = 'CREEP'
     def __init__(self,card=None,data=None):
         Material.__init__(self,card,data)
-        self.mid  = card.field(2) # mid
-        self.T0   = card.field(3,0.0)
-        self.exp  = card.field(4,1e-9)
-        self.form = card.field(5)
-        self.tidkp  = card.field(6)
-        self.tidcp  = card.field(7)
-        self.tidcs  = card.field(8)
-        self.thresh = card.field(9,1e-5)
-        self.Type = card.field(10)
-        self.a = card.field(11)
-        self.b = card.field(12)
-        self.c = card.field(13)
-        self.d = card.field(14)
-        self.e = card.field(15)
-        self.f = card.field(16)
+        if card:
+            self.mid    = card.field(1)
+            self.T0     = card.field(2,0.0)
+            self.exp    = card.field(3,1e-9)
+            self.form   = card.field(4)
+            self.tidkp  = card.field(5)
+            self.tidcp  = card.field(6)
+            self.tidcs  = card.field(7)
+            self.thresh = card.field(8,1e-5)
+            self.Type = card.field(9)
+            self.a = card.field(10)
+            self.b = card.field(11)
+            self.c = card.field(12)
+            self.d = card.field(13)
+            self.e = card.field(14)
+            self.f = card.field(15)
+        else:
+            self.mid    = data[0]
+            self.T0     = data[1]
+            self.exp    = data[2]
+            self.form   = data[3]
+            self.tidkp  = data[4]
+            self.tidcp  = data[5]
+            self.tidcs  = data[6]
+            self.thresh = data[7]
+            self.Type   = data[8]
+            self.a = data[9]
+            self.b = data[10]
+            self.c = data[11]
+            self.d = data[12]
+            self.e = data[13]
+            self.f = data[14]
+        ###
 
     def __repr__(self):
         thresh = self.setBlankIfDefault(self.thresh,1e-5)
@@ -519,9 +537,17 @@ class MAT10(Material):
     type = 'MAT10'
     def __init__(self,card=None,data=None):
         Material.__init__(self,card,data)
-        self.mid  = card.field(1)
-        (self.bulk,self.rho,self.c) = self.getBulkRhoC(card)
-        self.ge = card.field(5)
+        if card:
+            self.mid  = card.field(1)
+            (self.bulk,self.rho,self.c) = self.getBulkRhoC(card)
+            self.ge = card.field(5)
+        else:
+            self.mid  = data[0]
+            self.bulk = data[1]
+            self.rho  = data[2]
+            self.c    = data[3]
+            self.ge   = data[4]
+        ###
 
     def getBulkRhoC(self,card):
         """

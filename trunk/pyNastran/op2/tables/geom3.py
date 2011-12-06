@@ -66,28 +66,34 @@ class Geometry3(object):
         FORCE1(4001,40,20) - the marker for Record 4
         """
         print "reading FORCE1"
-        while len(data)>=20: # 5*4
-            eData = data[:20]
-            data  = data[20:]
+        n=0
+        nEntries = len(data)/20
+        for i in range(0,nEntries):
+            eData = data[n:n+20]  # 5*4
             (sid,g,f,n1,n2) = unpack('iifii',eData)
 
             load = FORCE1(None,[sid,g,f,n1,n2])
             self.addLoad(load)
+            n+=20
         ###
+        data = data[n:]
 
     def readFORCE2(self,data):
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
         print "reading FORCE2"
-        while len(data)>=28: # 7*4
-            eData = data[:28]
-            data  = data[28:]
+        n=0
+        nEntries = len(data)/28
+        for i in range(0,nEntries):
+            eData = data[n:n+28]  # 7*4
             (sid,g,f,n1,n2,n3,n4) = unpack('iifiiii',eData)
 
             load = FORCE2(None,[sid,g,f,n1,n2,n3,n4])
             self.addLoad(load)
+            n+=28
         ###
+        data = data[n:]
 
 # GMLOAD
 
