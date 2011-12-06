@@ -161,19 +161,19 @@ class OEF(object):
 
 
     def readOEF1_Data(self):
-        fsCode = [self.formatCode,self.sortCode]
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         if self.thermal==2:
             self.skipOES_Element(None)
 
         else: # thermal=0,1
-            if fsCode==[1,0]:
+            if   tfsCode==[4,1,0]:
                 self.readOEF1_Data_format1_sort0()
-            elif fsCode==[1,1]:
+            elif tfsCode==[4,1,1]:
                 self.readOEF1_Data_format1_sort1()
-            elif fsCode==[2,1]:
+            elif tfsCode==[4,2,1]:
                 self.readOEF1_Data_format2_sort1()
             else:
-                raise Exception('bad formatCode/sortCode')
+                raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
             ###
         ###
     def readOEF1_Data_format1_sort0(self):
