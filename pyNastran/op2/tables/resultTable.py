@@ -140,7 +140,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
-            #    print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            #print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             data = data[32:]
         ###

@@ -85,11 +85,32 @@ class EPT(object):
     def readPBARL(self,data):
         """
         PBARL(9102,91,52) - the marker for Record 12
-        @todo create object
         """
+        validTypes = {
+            "ROD"   : 1, 
+            "TUBE"  : 2,
+            "I"     : 6,
+            "CHAN"  : 4,
+            "T"     : 4,
+            "BOX"   : 4,
+            "BAR"   : 2,
+            "CROSS" : 4,
+            "H"     : 4,
+            "T1"    : 4,
+            "I1"    : 4,
+            "CHAN1" : 4,
+            "Z"     : 4,
+            "CHAN2" : 4,
+            "T2"    : 4,
+            "BOX1"  : 6,
+            "HEXA"  : 3,
+            "HAT"   : 4,
+            "HAT1"  : 5,
+            "DBOX"  : 12,
+            } # for GROUP="MSCBML0"
+
         print "reading PBARL"
-        #while len(data)>=28: # 7*4
-        if 1:
+        while len(data)>=28: # 7*4 - ROD - shortest entry...could be buggy... ## @todo fix this
             eData = data[:28]
             data  = data[28:]
             out = unpack('iiccccccccccccccccf',eData)
@@ -98,23 +119,21 @@ class EPT(object):
             group2 = e+f+g+h
             type1  = i+j+k+l
             type2  = m+n+o+p
-            dataIn = [pid,mid,group1+group2,type1+type2,value]
-            print "pid=%s mid=%s group1=%s group2=%s type1=%s type2=%s value=%s" %(pid,mid,group1,group2,type1,type2,value)
+            Type = (type1+type2).strip()
+            dataIn = [pid,mid,group1+group2,Type,value]
+            #print "pid=%s mid=%s group1=|%s| group2=|%s| type1=|%s| type2=|%s| value=%s" %(pid,mid,group1,group2,type1,type2,value)
+            expectedLength = validTypes[Type]
             
-            while len(data)>4:
-                value, = unpack('f',data[:4])
-                #print "valueNew = %s" %(value)
-                data = data[4:]
-                dataIn.append(value)
+            dataIn += list(unpack('f'*expectedLength,data[:expectedLength*4]))
+            
+            data = data[expectedLength*4+4:]  ## @todo why do i need the +4???
             
             #print "len(out) = ",len(out)
             #print "PBARL = ",dataIn
             prop = PBARL(None,dataIn)
             self.addProperty(prop)
             #print self.printSection(20)
-            #sys.exit()
         ###
-
 
 # PBCOMP
 

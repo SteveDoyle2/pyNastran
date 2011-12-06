@@ -316,7 +316,7 @@ class PBARL(LineProperty):
             self.dim = card.fields(9,9+nDim+1)
             self.nsm = card.field(9+nDim+1,0.0)
 
-            self.dim = fields(9) # confusing entry...
+            #self.dim = fields(9)
             if nDim>0:
                 self.nsm = self.dim.pop()
             else:
@@ -327,13 +327,16 @@ class PBARL(LineProperty):
             self.mid   = data[1]
             self.group = data[2].strip()
             self.Type  = data[3].strip()
-            self.dim   = data[4:-1]
+            self.dim   = list(data[4:-1])
             self.nsm   = data[-1]
+            print "group = |%s|" %(self.group)
+            print "Type  = |%s|" %(self.Type)
+            print "dim = ",self.dim
             #print str(self)
             #print "*PBARL = ",data
             #raise Exception('not finished...')
-        assert self.Type in self.validTypes
-        assert len(self.dim)==self.validTypes[self.Type]
+        assert self.Type in self.validTypes,'Invalid PBARL Type, Type=%s validTypes=%s' %(self.Type,self.validTypes.keys())
+        assert len(self.dim)==self.validTypes[self.Type],'dim=%s len(dim)=%s Type=%s len(dimType)=%s' %(self.dim,len(self.dim),self.Type,self.validTypes[self.Type])
         assert None not in self.dim
             
     def crossReference(self,model):

@@ -301,7 +301,7 @@ class OEF(object):
             ###
         else:
             recordLength = None
-            raise Exception('need to define the word size for thermal elementType=%s=%s' %(self.elementType,elementName))
+            #raise Exception('need to define the word size for thermal elementType=%s=%s' %(self.elementType,elementName))
 
         isSkipped = True
         func = self.skipMe

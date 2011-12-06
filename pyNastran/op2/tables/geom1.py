@@ -172,12 +172,15 @@ class Geometry1(object):
             self.addCoord(coord,allowOverwrites=True)
         ###
 
-    def readGrid(self,data):
+    def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         print "reading GRID"
-        while len(data)>=32: # 8*4
-            eData = data[:32]
-            data  = data[32:]
+        #return
+        
+        n=0
+        nEntries = len(data)/32
+        for i in range(0,nEntries):
+            eData = data[n:n+32]
             out = unpack('iifffiii',eData)
 
             (nID,cp,x1,x2,x3,cd,ps,seid) = out
@@ -187,9 +190,10 @@ class Geometry1(object):
             else:
                 print "*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid)
             ###
-            
             #print str(grid)[:-1]
+            n+=32
         ###
+        data = data[n:]
         #assert len(data)==0,'len(data)!=0   len(data)=%s' %(len(data))
         #print "len(data) = ",len(data)
 
