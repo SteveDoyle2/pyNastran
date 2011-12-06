@@ -132,22 +132,22 @@ class OUGV1(object):
         return (isTable4Done,isBlockDone)
 
     def readOUGV1_Data(self):
-        fsCode = [self.formatCode,self.sortCode]
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         #if self.thermal==2:
         #    self.skipOES_Element(None)
         if 0:
             pass
         else:
-            if fsCode==[1,0]:
+            if   tfsCode in [[1,1,0],[7,1,0]]:
                 self.readOUGV1_Data_format1_sort0()
-            elif fsCode==[1,1]:
-                self.readOUGV1_Data_format1_sort1()
-            elif fsCode==[2,1]:
-                self.readOUGV1_Data_format2_sort1()
-            elif fsCode==[3,1]:
-                self.readOUGV1_Data_format3_sort1()
+            #elif tfsCode==[1,1,1]:
+            #    self.readOUGV1_Data_format1_sort1()
+            #elif tfsCode==[1,2,1]:
+            #    self.readOUGV1_Data_format2_sort1()
+            #elif tfsCode==[1,3,1]:
+            #    self.readOUGV1_Data_format3_sort1()
             else:
-                raise Exception('bad formatCode/sortCode')
+                raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
             ###
         ###
 

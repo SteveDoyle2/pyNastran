@@ -115,6 +115,7 @@ class OES(object):
         return bits
 
     def readTable_OES_4_Data(self,iTable):
+        print "-------------"
         isTable4Done = False
         isBlockDone  = False
         #print self.printSection(100)
@@ -134,26 +135,28 @@ class OES(object):
         #self.verifyBufferSize(bufferWords)
         
         isBlockDone = not(bufferWords)
-        #print "self.firstPass = ",self.firstPass
-        if bufferWords==146 and self.firstPass==False:  # table -4 is done, restarting table -3
+        print "self.firstPass = ",self.firstPass
+        
+        ## table -4 is done, restarting table -3
+        if bufferWords==146: # breaks some/fixes others -  and self.firstPass==False:
             isTable4Done = True
-            #print "exitA"
+            print "exitA"
             return isTable4Done,isBlockDone
         elif bufferWords==0:
             #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             isBlockDone  = True
-            #print "exitB"
+            print "exitB"
             return isTable4Done,isBlockDone
 
-        #print "*elementType = ",self.elementType
+        print "*elementType = ",self.elementType
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
         self.rewind(4)
         self.data = self.readBlock()  # 348
         #print "len(self.data) = ",len(self.data)
 
-        #print "bufferWords = ",bufferWords
+        print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('reading big data block\n')
         #print "self.n = ",self.n

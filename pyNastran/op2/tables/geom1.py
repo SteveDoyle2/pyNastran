@@ -185,7 +185,7 @@ class Geometry1(object):
             out = unpack('iifffiii',eData)
 
             (nID,cp,x1,x2,x3,cd,ps,seid) = out
-            if cd>=0:
+            if cd>=0 and nID<10000000:
                 node = GRID(None,out)
                 self.addNode(node)
             else:
