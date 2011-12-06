@@ -138,7 +138,7 @@ class OUGV1(object):
         if 0:
             pass
         else:
-            if   tfsCode in [[1,1,0],[7,1,0]]:
+            if   tfsCode in [[1,1,0],[7,1,0]]: # displacement/modes
                 self.readOUGV1_Data_format1_sort0()
             #elif tfsCode==[1,1,1]:
             #    self.readOUGV1_Data_format1_sort1()

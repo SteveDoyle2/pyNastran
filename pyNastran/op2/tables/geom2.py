@@ -140,70 +140,85 @@ class Geometry2(object):
         CDAMP1(201,2,69) - the marker for Record 16
         """
         print "reading CDAMP1"
-        while len(data)>=24: # 6*4
-            eData = data[:24]
-            data  = data[24:]
+        n=0
+        nEntries = len(data)/24
+        for i in range(nEntries):
+            eData = data[n:n+24] # 6*4
             out = unpack('iiiiii',eData)
             (eid,pid,g1,g2,c1,c2) = out
             elem = CDAMP1(None,out)
             self.addOp2Element(elem)
+            n+=24
         ###
+        data = data[n:]
 
     def readCDAMP2(self,data):
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
         print "reading CDAMP2"
-        while len(data)>=24: # 6*4
-            eData = data[:24]
-            data  = data[24:]
+        n=0
+        nEntries = len(data)/24
+        for i in range(nEntries):
+            eData = data[n:n+24] # 6*4
             out = unpack('ifiiii',eData)
             (eid,b,g1,g2,c1,c2) = out
             elem = CDAMP2(None,out)
             self.addOp2Element(elem)
+            n+=24
         ###
+        data = data[n:]
 
     def readCDAMP3(self,data):
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
         print "reading CDAMP3"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)
             (eid,pid,s1,s2) = out
             elem = CDAMP3(None,out)
             self.addOp2Element(elem)
+            n+=16
         ###
+        data = data[n:]
 
     def readCDAMP4(self,data):
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
         print "reading CDAMP4"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
             out = unpack('ifii',eData)
             (eid,b,s1,s2) = out
             elem = CDAMP4(None,out)
             self.addOp2Element(elem)
+            n+=16
         ###
+        data = data[n:]
 
     def readCDAMP5(self,data):
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
         print "reading CDAMP5"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)
             (eid,pid,s1,s2) = out
             elem = CDAMP5(None,out)
             self.addOp2Element(elem)
+            n+=16
         ###
+        data = data[n:]
 
 # CDUM2
 # CDUM3
@@ -261,14 +276,17 @@ class Geometry2(object):
         CELAS4(901,9,76) - the marker for Record 32
         """
         print "reading CELAS4"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
             out = unpack('ifii',eData)
             (eid,k,s1,s2) = out
             elem = CELAS4(None,out)
             self.addOp2Element(elem)
+            n+=16
         ###
+        data = data[n:]
 
     def readCONM2(self,data):
         """
@@ -415,9 +433,10 @@ class Geometry2(object):
         CPENTA(4108,41,280) - the marker for Record 62
         """
         print "reading CPENTA"
-        while len(data)>=68: # 17*4
-            eData = data[:68]
-            data  = data[68:]
+        n=0
+        nEntries = len(data)/68
+        for i in range(nEntries):
+            eData = data[n:n+68] # 17*4
             out = unpack('iiiiiiiiiiiiiiiii',eData)
             (eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,
              g11,g12,g13,g14,g15) = out
@@ -429,7 +448,9 @@ class Geometry2(object):
             else:
                 elem = CPENTA6(None,dataIn)
             self.addOp2Element(elem)
+            n+=68
         ###
+        data  = data[n:]
 
 # CPENPR
 # CPENT15F
@@ -473,14 +494,17 @@ class Geometry2(object):
         CROD(3001,30,48)    - the marker for Record 80
         """
         #print "reading CROD"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)
             (eid,pid,n1,n2) = out
             elem = CROD(None,out)
             self.addOp2Element(elem)
+            n+=16
         ###
+        data = data[n:]
 
 # CRROD
 # CSEAM
@@ -594,14 +618,17 @@ class Geometry2(object):
         CTUBE(3701,37,49)    - the marker for Record 103
         """
         print "reading CTUBE"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)
             (eid,pid,n1,n2) = out
             elem = CTUBE(None,out)
             self.addOp2Element(elem)
+            n+=16
         ###
+        data = data[n:]
 
 # CVISC
 # CWELD
