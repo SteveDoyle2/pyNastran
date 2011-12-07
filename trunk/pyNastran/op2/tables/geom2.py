@@ -13,56 +13,61 @@ from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
 class Geometry2(object):
     def readTable_Geom2(self):
         self.iTableMap = {
-                           (2408,24,180):    self.readCBAR,   # record 8
-                           (4001,40,275):    self.readCBARAO, # record 9  - not done
-                           (201,2,69):       self.readCDAMP1, # record 16
-                           (301,3,70):       self.readCDAMP2, # record 17
-                           (401,4,71):       self.readCDAMP3, # record 18 - not tested
-                           (501,5,72):       self.readCDAMP4, # record 19 - not tested
-                           (10608,106,404):  self.readCDAMP5, # record 20 - not tested
-                           (601,6,73):       self.readCELAS1, # record 29
-                           (701,7,74):       self.readCELAS2, # record 30
-                           (801,8,75):       self.readCELAS3, # record 31
-                           (901,9,76):       self.readCELAS4, # record 32
-                           (10808,108,406):  self.readCHBDYG, # record 43
-                            (10908,109,407): self.readCHBDYP, # record 44 - not done
-                           (7308,73,253):    self.readCHEXA,  # record 45
-                           (2508,25,0):      self.readCMFREE, # record 55 - not done
-                           (1501,15,64):     self.readCONM2,  # record 57
-                           (1601,16,47):     self.readCONROD, # record 58
-                           (12701,127,408):   self.readCONV,  # record 59 - not tested
-                           (8908,89,422):    self.readCONVM,  # record 60 - not tested
-                           (2958,51,177):    self.readCQUAD4, # record 69
-                           (4108,41,280):    self.readCPENTA, # record 62
-                           (13900,139,9989): self.readCQUAD4, # record 70
-                           (3001,30,48):     self.readCROD,   # record 80
-                          #(12201,122,9013): self.readCTETP,  # record 86 - not done
-                           (5508,55,217):    self.readCTETRA, # record 87
-                           (5959,59,282):    self.readCTRIA3, # record 93 - maybe buggy on theta/Mcsid field
-                           (4801,48,327):    self.readCTRIA6, # record 95 - not tested
-                           (3701,37,49):     self.readCTUBE,  # record 103
-                           (5551,49,105):    self.readSPOINT, # record 118 - not done
+                           (2408,24,180):    self.readCBAR,    # record 8
+                           (4001,40,275):    self.readCBARAO,  # record 9  - not done
+                          #(5408,54,261):     self.readCBEAM,   # record 10 - not done
+                          #(11401,114,9016):  self.readCBEAMP,  # record 11 - not done
+                          #(4601,46,298):     self.readCBEND,   # record 12 - not done
+                          #(5608,56,218):     self.readCBUSH1D, # record 14 - not done
+                          #(2315,23,146):     self.readCCONE,  # record 15 - not done
+                           (201,2,69):       self.readCDAMP1,  # record 16
+                           (301,3,70):       self.readCDAMP2,  # record 17
+                           (401,4,71):       self.readCDAMP3,  # record 18 - not tested
+                           (501,5,72):       self.readCDAMP4,  # record 19 - not tested
+                           (10608,106,404):  self.readCDAMP5,  # record 20 - not tested
+                           (601,6,73):       self.readCELAS1,  # record 29
+                           (701,7,74):       self.readCELAS2,  # record 30
+                           (801,8,75):       self.readCELAS3,  # record 31
+                           (901,9,76):       self.readCELAS4,  # record 32
+                          #(8515,85,209):     self.readCFLUID2, # record 35 - not done
+                          #(8615,86,210):     self.readCFLUID3, # record 36 - not done
+                          #(8715,87,211):     self.readCFLUID4, # record 37 - not done
+                          #(1908,19,104):     self.readCGAP,    # record 39 - not done
 
-                           (8515,85,209):     self.readFake,
-                           (8615,86,210):     self.readFake,
-                           (8715,87,211):     self.readFake,
-                           (5408,54,261):     self.readFake,
-                           (1101,11,66):      self.readFake,
-                           (5201,52,11):      self.readFake,
-                           (6108,61,107):     self.readFake,
-                           (2315,23,146):     self.readFake,
-                           (1908,19,104):     self.readFake,
-                           (1401,14, 63):     self.readFake,
+                           (10808,108,406):  self.readCHBDYG,   # record 43
+                           (10908,109,407):  self.readCHBDYP,   # record 44 - not done
+                           (7308,73,253):    self.readCHEXA,    # record 45
+                          #(1001,10,65):      self.readCMASS1,  # record 51 - not done
+                          #(1101,11,66):      self.readCMASS2,  # record 52 - not done
+                          #(1201,12,67):      self.readCMASS3,  # record 53 - not done
+                          #(1301,13,68):      self.readCMASS4,  # record 54 - not done
+                          #(2508,25,0):       self.readCMFREE,  # record 55 - not done
+                          #(1401,14,63):      self.readCONM1,   # record 56 - not done
+                           (1501,15,64):     self.readCONM2,    # record 57
+                           (1601,16,47):     self.readCONROD,   # record 58
+                           (12701,127,408):  self.readCONV,     # record 59 - not tested
+                           (8908,89,422):    self.readCONVM,    # record 60 - not tested
+                           (4108,41,280):    self.readCPENTA,   # record 62
 
-                           (4601,46,298):     self.readFake,
-                           (4701,47,326):     self.readFake,
-                           (8009,80,367):     self.readFake,
-                           (9200,92,385):     self.readFake,
-                           (4601,46,298):     self.readFake,
-                           (9200,92,385):     self.readFake,
-                           (5608,56,218):     self.readFake,
-                           (3901,39, 50):     self.readFake,
-                           (11601,116,9942):  self.readFake,
+                           (9108,91,507):    self.readCQUAD,    # record 68 - not tested
+                           (2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
+                           (13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
+                           (4701,47,326):    self.readCQUAD8,   # record 71 - not tested
+                           (8009,80,367):    self.readCQUADR,   # record 74 - not tested
+                           (9008,90,508):    self.readCQUADX,   # record 75 - not tested
+        
+                           (3001,30,48):     self.readCROD,     # record 80
+                          #(12201,122,9013): self.readCTETP,    # record 86 - not done
+                           (5508,55,217):    self.readCTETRA,   # record 87
+                           (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
+                           (4801,48,327):    self.readCTRIA6,   # record 95 - not tested
+                           (9200,92,385):     self.readCTRIAR,  # record 98 - not done
+                           (6108,61,107):     self.readCTRIAX6, # record 100 - not done
+                           (3701,37,49):     self.readCTUBE,    # record 103
+                          #(3901,39, 50):     self.readCVISC,   # record 104 - not done
+                          #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
+                           (5551,49,105):    self.readSPOINT,   # record 118 - not done
+                          #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
                            
                            
                          }
@@ -457,7 +462,29 @@ class Geometry2(object):
 # CPENT6FD
 # CQDX4FD
 # CQDX9FD
-# CQUAD
+
+
+    def readCQUAD(self,data):
+        """
+        CQUAD(9108,91,507)  - the marker for Record 68
+        """
+        print "reading CQUAD"
+        self.runCQUAD(data,CQUAD)
+        
+    def runCQUAD(self,data,Element):
+        """common method for CQUAD, CQUADX"""
+        n=0
+        nEntries = len(data)/44 # 11*4
+        for i in range(nEntries):
+            eData = data[n:n+44]
+            (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9) = unpack('iiiiiiiiiii',eData)
+            #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
+            #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+            elem = Element(None,out)
+            self.addOp2Element(elem)
+            n+=44
+        ###
+        data  = data[n:]
 
     def readCQUAD4(self,data):
         """
@@ -465,6 +492,12 @@ class Geometry2(object):
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
         print "reading CQUAD4"
+        self.runCQUAD4(data,CQUAD4)
+
+    def runCQUAD4(self,data,Element):
+        """
+        common method for CQUAD4, CQUADR
+        """
         n=0
         nEntries = len(data)/56
         for i in range(nEntries):
@@ -472,18 +505,50 @@ class Geometry2(object):
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
             dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
-            elem = CQUAD4(None,dataInit)
+            elem = Element(None,dataInit)
             self.addOp2Element(elem)
             n+=56
         ###
         data  = data[n:]
 
 # CQUAD4FD
-# CQUAD8
+
+    def readCQUAD8(self,data):
+        """
+        CQUAD8(4701,47,326)  - the marker for Record 71
+        """
+        print "reading CQUAD8"
+        n=0
+        nEntries = len(data)/68 # 17*4
+        for i in range(nEntries):
+            eData = data[n:n+68]
+            (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,t1,t2,t3,t4,theta,zoffs,tflag) = unpack('iiiiiiiiiiffffffi',eData)
+            #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
+            #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+            elem = CQUAD8(None,out)
+            self.addOp2Element(elem)
+            n+=68
+        ###
+        data  = data[n:]
+
+
 # CQUAD9FD
 # CQUADP
-# CQUADR
-# CQUADX
+
+    def readCQUADR(self,data):
+        """
+        CQUADR(8009,80,367)  - the marker for Record 74
+        """
+        print "reading CQUADR"
+        self.runCQUAD4(data,CQUADR)
+
+    def readCQUADX(self,data):
+        """
+        CQUADX(9008,90,508)  - the marker for Record 75
+        """
+        print "reading CQUADX"
+        self.runCQUAD4(data,CQUADX)
+
 # CRBAR
 # CRBE1
 # CRBE3
@@ -495,9 +560,9 @@ class Geometry2(object):
         """
         #print "reading CROD"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)/16 # 4*4
         for i in range(nEntries):
-            eData = data[n:n+16] # 4*4
+            eData = data[n:n+16]
             out = unpack('iiii',eData)
             (eid,pid,n1,n2) = out
             elem = CROD(None,out)
@@ -545,9 +610,9 @@ class Geometry2(object):
         """
         print "reading CTETRA"
         n=0
-        nEntries = len(data)/48
+        nEntries = len(data)/48 # 12*4
         for i in range(nEntries):
-            eData = data[n:n+48] # 12*4
+            eData = data[n:n+48]
             out = unpack('iiiiiiiiiiii',eData)
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = out
             #print "out = ",out
@@ -593,9 +658,9 @@ class Geometry2(object):
         """
         #print "reading CTRIA3"
         n=0
-        nEntries = len(data)/56
+        nEntries = len(data)/56 # 14*4
         for i in range(nEntries):
-            eData = data[n:n+56] # 14*4
+            eData = data[n:n+56]
             out = unpack('iiiiiiiifffffi',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
             (eid,pid,n1,n2,n3,n4,n5,n6,theta,zoffs,t1,t2,t3,tflag) = out
@@ -607,9 +672,15 @@ class Geometry2(object):
 
 # CTRIA6FD
 # CTRIAP
-# CTRIAR
+
+    def readCTRIAR(self,data): # 98
+        pass
+
 # CTRIAX
-# CTRIAX6
+
+    def readCTRIAX6(self,data): # 100
+        pass
+
 # CTRIX3FD
 # CTRIX6FD
 
