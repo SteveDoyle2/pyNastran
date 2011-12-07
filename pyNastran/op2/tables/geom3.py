@@ -12,37 +12,36 @@ class Geometry3(object):
 
     def readTable_Geom3(self):
         self.iTableMap = {
-                         (4201,42,18): self.readFORCE,  # record 3
-                         (4001,40,20): self.readFORCE1, # record 4
-                         (4101,41,22): self.readFORCE2, # record 5
-                         (4401,44,26): self.readGRAV,   # record 7
-                         (4551,61,84): self.readLOAD,   # record 8
+                         (4201,42,18): self.readFORCE,    # record 3
+                         (4001,40,20): self.readFORCE1,   # record 4
+                         (4101,41,22): self.readFORCE2,   # record 5
+                         (4401,44,26): self.readGRAV,     # record 7
+                         (4551,61,84): self.readLOAD,     # record 8
+                         (3709,37,331): self.readLOADCYH, # record 9
 
-                         #(7209,72,299): self.readPLOAD4,# record 20 - buggy
-                         (4509,45,239): self.readQBDY1, # record 24
-                         (4909,49,240): self.readQBDY2, # record 25
-                         (2109,21,414): self.readQBDY3, # record 26
-                         #(5641,65,98):  self.readTEMP,  # record 32 - buggy
-                         (5701,57,27):  self.readTEMPD, # record 33
-                         (4801,48,19):  self.readFake,
-                         (4701,47,23):  self.readFake,
-                         (6909,69,198): self.readFake,
-                         (8409,84,204): self.readFake,
-                         (8109,81,201): self.readFake,
-                         (6802,68,199): self.readFake,
-                         (3709,37,331): self.readFake,
-                         (5401,54,25):  self.readFake,
-                         (7309,73,351): self.readFake,
-                         (3609,36,188): self.readFake,
-                         (5101,51,24):  self.readFake,
-
-                         (7209,72,299): self.readFake, # PLOAD4
-                         (5641,65,98):  self.readFake, # TEMP
-                         (5509,55,190): self.readFake,
-
-
-
-                         #(5408,54,261)
+                         
+                         (3609,36,188): self.readLSEQ,    # record 12 - not done
+                         (4801,48,19):  self.readMOMEMNT, # record 13 - not done
+                         (4601,46,21):  self.readMOMENT1, # record 14 - not done
+                         (4701,47,23):  self.readMOMENT2, # record 15 - not done
+                         (5101,51,24):  self.readPLOAD5,  # record 16 - not done
+                         (6909,69,198): self.readPLOAD1,  # record 17 - not done
+                         (6802,68,199): self.readPLOAD2,  # record 18 - not done
+                         (7109,81,255): self.readPLOAD3,  # record 19 - not done
+                         (7209,72,299): self.readPLOAD4,  # record 20 - buggy
+                         (7309,73,351): self.readPLOADX1, # record 22
+                         (4509,45,239): self.readQBDY1,   # record 24
+                         (4909,49,240): self.readQBDY2,   # record 25
+                         (2109,21,414): self.readQBDY3,   # record 26
+                         (5509,55,190): self.readRFORCE,  # record 30 - not done
+                         (5401,54,25):  self.readSLOAD,   # record 31 - not done
+                         (5641,65,98):  self.readTEMP,    # record 32 - buggy
+                         (5701,57,27):  self.readTEMPD,   # record 33
+                         (8409,84,204): self.readTEMPRB,  # record 40 - not done
+                         (8109,81,201): self.readTEMPP1,  # record 37 - not done
+                         (8209,82,202): self.readTEMPP2,  # record 38 - not done
+                         (8309,83,203): self.readTEMPP3,  # record 39 - not done
+                         (8409,84,204): self.readTEMPP4,  # record 40 - not done
 
                          }
         self.readRecordTable('GEOM3')
