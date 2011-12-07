@@ -390,18 +390,12 @@ class CQUAD4(ShellElement):
 class CQUADR(CQUAD4):
     type = 'CQUADR'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
-
-        ## element ID number
-        self.eid = int(card.field(1))
-        nids = card.fields(3,12)
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==4
+        CQUAD4.__init__(self,card,data)
 
     def __repr__(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[
-                  T1,T2,T3,T4,thetaMcid,zOffset,
-                  TFlag]
+                  self.T1,self.T2,self.T3,self.T4,self.thetaMcid,self.zOffset,
+                  self.TFlag]
         return self.printCard(fields)
 
 class CQUAD(CQUAD4):

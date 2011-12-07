@@ -1,6 +1,5 @@
 import os
 import sys
-import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
@@ -21,16 +20,17 @@ class MPT(object):
                          (2603,26,300): self.readMAT9,  # record 8 - not tested
                          (2801,28,365): self.readMAT10, # record 9
                          (503,5,90):    self.readMATS1, # record 12 - not done
-                         #(8802,88,413): self.readRADM, # record 25 - not done
-                         (3003,30,286): self.readNLPARM, # record 27 - not done
+
+                         (3003,30,286): self.readNLPARM,  # record 27 - not done
                          (3103,31,337): self.readTSTEPNL, # record 29 - not done
-                         (703,  7, 91):  self.readFake,
-                         (803,  8,102):  self.readFake,
-                         (2303,23,237):  self.readFake,
-                         (2403,24,238):  self.readFake,
-                         (2703,27,301):  self.readFake,
-                         (8802,88,413):  self.readFake,
-                         (8802,88,413):  self.readFake,
+                         (503,  5, 90):  self.readMATS1,  # record 12 - not done
+                         (703,  7, 91):  self.readMATT1,  # record 13 - not done
+                         (803,  8,102):  self.readMATT2,  # record 14 - not done
+                         (1503,14,189):  self.readMATT3,  # record 15 - not done
+                         (2303,23,237):  self.readMATT4,  # record 16 - not done
+                         (2403,24,238):  self.readMATT5,  # record 17 - not done
+                         (2703,27,301):  self.readMATT9,  # record 19 - not done
+                         (8802,88,413):  self.readRADM,   # record 25 - not done
 
                          }
 
@@ -197,13 +197,26 @@ class MPT(object):
             #self.addOp2Material(mat)
         ###
 
-# MATT1
-# MATT2
-# MATT3
-# MATT4
-# MATT5
-# MATT8
-# MATT9
+    def readMATT1(self,data):
+        pass
+
+    def readMATT2(self,data):
+        pass
+
+    def readMATT3(self,data):
+        pass
+
+    def readMATT4(self,data):
+        pass
+
+    def readMATT5(self,data):
+        pass
+
+# MATT8 - unused
+
+    def readMATT9(self,data):
+        pass
+
 # MBOLT
 # MBOLTUS
 # MSTACK

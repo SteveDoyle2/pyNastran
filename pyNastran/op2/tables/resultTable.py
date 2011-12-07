@@ -1,15 +1,19 @@
 #import sys
 from struct import unpack
 
-from pyNastran.op2.op2Errors    import *
-from pyNastran.op2.tables.ougv1 import OUGV1
-from pyNastran.op2.tables.oqg1  import OQG1
-from pyNastran.op2.tables.oes   import OES
-from pyNastran.op2.tables.oef   import OEF
-from pyNastran.op2.tables.ogp   import OGP
-from pyNastran.op2.tables.oee   import OEE
+from pyNastran.op2.op2Errors     import *
+from pyNastran.op2.tables.ougv1  import OUGV1
+from pyNastran.op2.tables.oqg1   import OQG1
+from pyNastran.op2.tables.oes    import OES
+from pyNastran.op2.tables.oef    import OEF
+from pyNastran.op2.tables.ogp    import OGP
+from pyNastran.op2.tables.oee    import OEE
+#from pyNastran.op2.tables.hisadd import HISADD - combined with R1TAB for now
+from pyNastran.op2.tables.r1tab  import R1TAB
+from pyNastran.op2.tables.destab import DESTAB
 
-class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
+
+class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
     def readResultsTable(self,table3,table4Data):
         tableName = self.readTableName(rewind=False) # OEF
@@ -143,8 +147,10 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
             #print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
             scalarObject.add(grid,dx,dy,dz)
             data = data[32:]
+            #n+=32
         ###
         self.data = data
+        #self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,scalarObject,debug=False)
 
@@ -169,7 +175,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
-            print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            #print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
@@ -181,13 +187,18 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-        while len(data)>=56:
+
+        n = 0
+        nEntries = len(data)/56
+        for i in range(nEntries):
+            eData = data[n:n+56]
+            #print self.printBlock(self.data[n:n+64])
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
             #self.printBlock(data[56:])
             msg = 'len(data)=%s\n'%(len(data))
             assert len(data)>=56,msg+self.printSection(120)
-            out = unpack('iiffffffffffff',data[0:56])
+            out = unpack('iiffffffffffff',eData)
             (gridDevice,gridType,dx, dy, dz, rx, ry, rz,
                                  dxi,dyi,dzi,rxi,ryi,rzi) = out
             if self.makeOp2Debug:
@@ -199,9 +210,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE):
             #   print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             #scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
             #                               dxi,dyi,dzi,rxi,ryi,rzi)
-            data = data[56:]
+            n+=56
         ###
-        self.data = data
+        self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars14,scalarObject,debug=False)
     

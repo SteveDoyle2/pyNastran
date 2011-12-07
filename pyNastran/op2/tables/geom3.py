@@ -1,6 +1,5 @@
 import os
 import sys
-import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
@@ -17,14 +16,14 @@ class Geometry3(object):
                          (4101,41,22): self.readFORCE2,   # record 5
                          (4401,44,26): self.readGRAV,     # record 7
                          (4551,61,84): self.readLOAD,     # record 8
-                         (3709,37,331): self.readLOADCYH, # record 9
+                         (3709,37,331): self.readLOADCYH, # record 9 - not done
 
                          
                          (3609,36,188): self.readLSEQ,    # record 12 - not done
-                         (4801,48,19):  self.readMOMEMNT, # record 13 - not done
-                         (4601,46,21):  self.readMOMENT1, # record 14 - not done
-                         (4701,47,23):  self.readMOMENT2, # record 15 - not done
-                         (5101,51,24):  self.readPLOAD5,  # record 16 - not done
+                         (4801,48,19):  self.readMOMENT,  # record 13 - not tested
+                         (4601,46,21):  self.readMOMENT1, # record 14 - not tested
+                         (4701,47,23):  self.readMOMENT2, # record 15 - not tested
+                         (5101,51,24):  self.readPLOAD,   # record 16 - not done
                          (6909,69,198): self.readPLOAD1,  # record 17 - not done
                          (6802,68,199): self.readPLOAD2,  # record 18 - not done
                          (7109,81,255): self.readPLOAD3,  # record 19 - not done
@@ -41,7 +40,7 @@ class Geometry3(object):
                          (8109,81,201): self.readTEMPP1,  # record 37 - not done
                          (8209,82,202): self.readTEMPP2,  # record 38 - not done
                          (8309,83,203): self.readTEMPP3,  # record 39 - not done
-                         (8409,84,204): self.readTEMPP4,  # record 40 - not done
+                        #(8409,84,204): self.readTEMPP4,  # record 40 - not done
 
                          }
         self.readRecordTable('GEOM3')
@@ -54,15 +53,18 @@ class Geometry3(object):
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
+        return
         print "reading FORCE"
-        while len(data)>=28: # 7*4
-            eData = data[:28]
-            data  = data[28:]
+        n=0
+        nEntries = len(data)/28  # 7*4
+        for i in range(nEntries):
+            eData = data[n:n+28]
             (sid,g,cid,f,n1,n2,n3) = unpack('iiiffff',eData)
-
             load = FORCE(None,[sid,g,cid,f,n1,n2,n3])
             self.addLoad(load)
+            n+=28
         ###
+        data = data[n:]
 
     def readFORCE1(self,data):
         """
@@ -70,9 +72,9 @@ class Geometry3(object):
         """
         print "reading FORCE1"
         n=0
-        nEntries = len(data)/20
+        nEntries = len(data)/20  # 5*4
         for i in range(nEntries):
-            eData = data[n:n+20]  # 5*4
+            eData = data[n:n+20]
             (sid,g,f,n1,n2) = unpack('iifii',eData)
 
             load = FORCE1(None,[sid,g,f,n1,n2])
@@ -87,9 +89,9 @@ class Geometry3(object):
         """
         print "reading FORCE2"
         n=0
-        nEntries = len(data)/28
+        nEntries = len(data)/28  # 7*4
         for i in range(nEntries):
-            eData = data[n:n+28]  # 7*4
+            eData = data[n:n+28]
             (sid,g,f,n1,n2,n3,n4) = unpack('iifiiii',eData)
 
             load = FORCE2(None,[sid,g,f,n1,n2,n3,n4])
@@ -103,17 +105,19 @@ class Geometry3(object):
     def readGRAV(self,data):
         """
         GRAV(4401,44,26) - the marker for Record 7
-        @todo add object
         """
         print "reading GRAV"
-        while len(data)>=42: # 7*4
-            eData = data[:42]
-            data  = data[42:]
+        n=0
+        nEntries = len(data)/28  # 7*4
+        for i in range(nEntries):
+            eData = data[n:n+28]
             out = unpack('iiffffi',eData)
             (sid,cid,a,n1,n2,n3,mb) = out
             grav = GRAV(None,out)
             self.addGrav(grav)
+            n+=28
         ###
+        data = data[n:]
 
     def readLOAD(self,data):
         """
@@ -146,27 +150,131 @@ class Geometry3(object):
             self.addLoad(load)
         ###
 
+    def readLOADCYH(self,data):
+        pass
 
-# LOADCYH
 # LOADCYN
 # LOADCYT
-# LSEQ
-# MOMENT
-# MOMENT1
-# MOMENT2
-# PLOAD
-# PLOAD1
-# PLOAD2
-# PLOAD3
+
+    def readLSEQ(self,data):
+        pass
+
+    def readMOMENT(self,data):
+        """
+        MOMENT(4801,48,19) - the marker for Record 13
+        """
+        print "reading MOMENT"
+        n=0
+        nEntries = len(data)/24  # 7*4
+        for i in range(nEntries):
+            eData = data[n:n+24]
+            out = unpack('iiiffff',eData)
+            (sid,g,cid,m,n1,n2,n3) = out
+
+            load = FORCE1(None,out)
+            self.addLoad(load)
+            n+=24
+        ###
+        data = data[n:]
+
+    def readMOMENT1(self,data):
+        """
+        MOMENT1(4601,46,21) - the marker for Record 14
+        """
+        print "reading MOMENT1"
+        n=0
+        nEntries = len(data)/20  # 5*4
+        for i in range(nEntries):
+            eData = data[n:n+20]
+            out = unpack('iifii',eData)
+            (sid,g,m,n1,n2) = out
+            load = FORCE1(None,out)
+            self.addLoad(load)
+            n+=20
+        ###
+        data = data[n:]
+
+    def readMOMENT2(self,data):
+        """
+        MOMENT2(4701,47,23) - the marker for Record 15
+        """
+        print "reading MOMENT2"
+        n=0
+        nEntries = len(data)/28  # 7*4
+        for i in range(nEntries):
+            eData = data[n:n+28]
+            out = unpack('iifiiii',eData)
+            (sid,g,m,n1,n2,n3,n4) = out
+
+            load = FORCE1(None,out)
+            self.addLoad(load)
+            n+=28
+        ###
+        data = data[n:]
+
+    def readPLOAD(self,data):
+        pass
+
+    def readPLOAD1(self,data):
+        """
+        PLOAD2(6802,68,199) - the marker for Record 17
+        """
+        print "reading PLOAD2"
+        n=0
+        nEntries = len(data)/32  # 8*4
+        for i in range(nEntries):
+            eData = data[n:n+32]
+            out = unpack('iiiiffff',eData)
+            (sid,eid,Type,scale,x1,p1,x2,p2) = out
+            load = PLOAD1(None,out)
+            self.addLoad(load)
+            n+=32
+        ###
+        data = data[n:]
+
+    def readPLOAD2(self,data):
+        """
+        PLOAD2(6802,68,199) - the marker for Record 18
+        """
+        print "reading PLOAD2"
+        n=0
+        nEntries = len(data)/12  # 3*4
+        for i in range(nEntries):
+            eData = data[n:n+12]
+            out = unpack('ifi',eData)
+            (sid,p,eid) = out
+            load = PLOAD2(None,out)
+            self.addLoad(load)
+            n+=12
+        ###
+        data = data[n:]
+
+    def readPLOAD3(self,data):
+        """
+        PLOAD3(7109,71,255) - the marker for Record 19
+        """
+        print "reading PLOAD3"
+        n=0
+        nEntries = len(data)/20  # 5*4
+        for i in range(nEntries):
+            eData = data[n:n+20]
+            out = unpack('ifiii',eData)
+            (sid,p,eid,n1,n2) = out
+            load = PLOAD3(None,out)
+            self.addLoad(load)
+            n+=20
+        ###
+        data = data[n:]
 
     def readPLOAD4(self,data): ## inconsistent with DMAP
         """
         PLOAD4(7209,72,299) - the marker for Record 20
         """
         print "reading PLOAD4"
-        while len(data)>=48: # 13*4
-            eData = data[:48]
-            data  = data[48:]
+        n=0
+        nEntries = len(data)/48  # 13*4
+        for i in range(nEntries):
+            eData = data[n:n+48]
                          #iiffffiiifffi   ssssssssssssssss
             out = unpack('iiffffiiifff',eData)
             (sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3) = out
@@ -181,10 +289,16 @@ class Geometry3(object):
             ldirB = None
             load = PLOAD4(None,[sid,eid,[p1,p2,p3,p4],g1,g34,cid,[n1,n2,n3],sdrlA,sdrlB,ldirA,ldirB])
             self.addLoad(load)
+            n+=48
         ###
+        data = data[n:]
 
-# PLOADX
-# PLOADX1
+
+# PLOADX - obsolete
+
+    def readPLOADX1(self,data):
+        pass
+
 # PRESAX
 # QBDY1
 # QBDY2
@@ -195,56 +309,72 @@ class Geometry3(object):
         QBDY1(4509,45,239) - the marker for Record 24
         """
         print "reading QBDY1"
-        while len(data)>=12: # 3*4
-            eData = data[:12]
-            data  = data[12:]
+        n=0
+        nEntries = len(data)/12  # 3*4
+        for i in range(nEntries):
+            eData = data[n:n+12]
             out = unpack('ifi',eData)
             (sid,q0,eid) = out
             load = QBDY1(None,out)
             self.addThermalLoad(load)
+            n+=12
         ###
+        data = data[n:]
 
     def readQBDY2(self,data):
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
         print "reading QBDY2"
-        while len(data)>=40: # 10*4
-            eData = data[:40]
-            data  = data[40:]
+        n=0
+        nEntries = len(data)/40  # 10*4
+        for i in range(nEntries):
+            eData = data[n:n+40]
             out = unpack('iiffffffff',eData)
             (sid,eid,q1,q2,q3,q4,q5,q6,q7,q8) = out
             load = QBDY2(None,out)
             self.addThermalLoad(load)
+            n+=40
         ###
+        data = data[n:]
 
     def readQBDY3(self,data):
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
         print "reading QBDY3"
-        while len(data)>=16: # 4*4
-            eData = data[:16]
-            data  = data[16:]
+        n=0
+        nEntries = len(data)/16  # 4*4
+        for i in range(nEntries):
+            eData = data[n:n+16]
             out = unpack('ifii',eData)
             (sid,q0,cntrlnd,eid) = out
             load = QBDY3(None,out)
             self.addThermalLoad(load)
+            n+=16
         ###
+        data = data[n:]
 
     def readTEMP(self,data):
         """
         TEMP(5701,57,27) - the marker for Record 32
+        @warning buggy
         """
         print "reading TEMP"
-        while len(data)>=12: # 3*4
-            eData = data[:12]
-            data  = data[12:]
+        n=0
+        nEntries = len(data)/12  # 3*4
+        for i in range(nEntries):
+            eData = data[n:n+12]
             out = unpack('iif',eData)
             (sid,g,T) = out
-            load = TEMP(None,out)
-            self.addThermalLoad(load)
+            if g<10000000:
+                load = TEMP(None,out)
+                self.addThermalLoad(load)
+            else:
+                print 'TEMP = ',out
+            n+=12
         ###
+        data = data[n:]
 
     def readTEMPD(self,data):
         """
@@ -252,30 +382,46 @@ class Geometry3(object):
         @todo add object
         """
         print "reading TEMPD"
-        while len(data)>=8: # 4*4
-            eData = data[:8]
-            data  = data[8:]
+        n=0
+        nEntries = len(data)/8  # 2*4
+        for i in range(nEntries):
+            eData = data[n:n+8]
             out = unpack('if',eData)
             (sid,T) = out
             load = TEMPD(None,out)
             #self.addThermalLoad(load)
+            n+=8
         ###
+        data = data[n:]
 
 # QHBDY
 # QVECT
 # QVOL
-# RFORCE
-# SLOAD
+
+    def readRFORCE(self,data):
+        pass
+
+    def readSLOAD(self,data):
+        pass
+ 
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33
 # TEMPEST
 # TEMPF
 # TEMP1C
-# TEMPP1
-# TEMPP2
-# TEMPP3
-# TEMPRB
+
+    def readTEMPP1(self,data):
+        pass
+
+    def readTEMPP2(self,data):
+        pass
+
+    def readTEMPP3(self,data):
+        pass
+
+    def readTEMPRB(self,data):
+        pass
+
 # PFACE
 # PEDGE
 
-#geom3

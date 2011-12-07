@@ -1,11 +1,10 @@
 import os
 import sys
-import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CSHEAR,CONM2
-from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6
+from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE,CONROD
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
 from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
@@ -50,8 +49,8 @@ class Geometry2(object):
                            (4108,41,280):    self.readCPENTA,   # record 62
 
                            (9108,91,507):    self.readCQUAD,    # record 68 - not tested
-                           (2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
-                           (13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
+                           #(2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
+                           #(13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
                            (4701,47,326):    self.readCQUAD8,   # record 71 - not tested
                            (8009,80,367):    self.readCQUADR,   # record 74 - not tested
                            (9008,90,508):    self.readCQUADX,   # record 75 - not tested
