@@ -3,7 +3,7 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.properties import PROD,PBAR,PBARL,PBEAM,PSHELL,PSOLID,PCOMP,PTUBE
+from pyNastran.bdf.cards.properties import PROD,PBAR,PBARL,PBEAM,PSHELL,PSOLID,PCOMP,PTUBE,PELAS,PDAMP
 
 class EPT(object):
 
@@ -13,27 +13,27 @@ class EPT(object):
                          (3201,32,55):    self.readNSM,     # record 2
                          (52,20,181):     self.readPBAR,    # record 11 - buggy
                          (9102,91,52):    self.readPBARL,   # record 12 - no PBARL object
-                         #(5402,54,262):  self.readPBEAM,   # record 14 - not done
+                        #(5402,54,262):   self.readPBEAM,   # record 14 - not done
                          (2706,27,287):   self.readPCOMP,   # record 22 - buggy
                          (902,9,29):      self.readPROD,    # record 49
-                         #(1002,10,42):    self.readPSHEAR, # record 50 - no PSHEAR object
+                        #(1002,10,42):    self.readPSHEAR,  # record 50 - no PSHEAR object
                          (2402,24,281):   self.readPSOLID,  # record 51
                          (2302,23,283):   self.readPSHELL,  # record 52
                          (1602,16,30):    self.readPTUBE,   # record 56
                          
-                         #(5402, 54, 262): self.readPBEAM,   # record 14 - not done
-                         #(9202, 92,  53): self.readPBEAML,  # record 15
-                         #(2502, 25, 248): self.readPBEND,   # record 16
-                         #(3101, 31, 219): self.readPBUSH1D, # record 20
-                         #(152,  19, 147): self.readPCONEAX, # record 24
-                         #(11001,110,411): self.readPCONV,   # record 25
-                         #(202,   2,  45): self.readPDAMP,   # record 27
-                         #(302,   3,  46): self.readPELAS,   # record 39
-                         #(2802, 28, 236): self.readPHBDY,   # record 43
-                         #(1802, 18,  31): self.readPVISC,   # record 59
-                         #(10201,102,400): self.readPVAL,    # record 58
-                         #(2606, 26, 289): self.readVIEW,    # record 62
-
+                        #(5402, 54, 262): self.readPBEAM,   # record 14 - not done
+                        #(9202, 92,  53): self.readPBEAML,  # record 15 - not done
+                         (2502, 25, 248): self.readPBEND,   # record 16 - not done
+                        #(3101, 31, 219): self.readPBUSH1D, # record 20 - not done
+                        #(152,  19, 147): self.readPCONEAX, # record 24 - not done
+                        #(11001,110,411): self.readPCONV,   # record 25 - not done
+                         (202,   2,  45): self.readPDAMP,   # record 27 - not done
+                         (302,   3,  46): self.readPELAS,   # record 39 - not done
+                        #(2802, 28, 236): self.readPHBDY,   # record 43 - not done
+                         (1802, 18,  31): self.readPVISC,   # record 59 - not done
+                        #(10201,102,400): self.readPVAL,    # record 58 - not done
+                        #(2606, 26, 289): self.readVIEW,    # record 62 - not done
+                        (1402, 14, 37):   self.readFake,    # record 
 
                          }
         self.readRecordTable('EPT')
@@ -157,8 +157,8 @@ class EPT(object):
             (pid,mid,nsegs,ccf,x) = dataIn
 
             for i in range(12):
-                eData = data[84:]
-                data  = data[:84]
+                eData = data[64:]
+                data  = data[:64]
                 pack = unpack('ffffffffffffffff',eData)
                 (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) = pack
                 dataIn.append(pack)
@@ -177,7 +177,10 @@ class EPT(object):
 
 
 # PBEAML
-# PBEND
+
+    def readPBEND(self,data):
+        pass
+
 # PBMSECT
 # PBRSECT
 # PBUSH
@@ -219,7 +222,10 @@ class EPT(object):
 # PCONEAX
 # PCONV
 # PCONVM
-# PDAMP
+
+    def readPDAMP(self,data):
+        pass
+
 # PDAMPT
 # PDAMP5
 # PDUM1
@@ -231,7 +237,10 @@ class EPT(object):
 # PDUM7
 # PDUM8
 # PDUM9
-# PELAS
+
+    def readPELAS(self,data):
+        pass
+
 # PFAST
 # PELAST
 # PGAP
@@ -328,7 +337,10 @@ class EPT(object):
 
 # PSET
 # PVAL
-# PVISC
+
+    def readPVISC(self,prop):
+        pass
+
 # PWELD
 # PWSEAM
 # PVIEW

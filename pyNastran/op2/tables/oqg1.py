@@ -112,7 +112,7 @@ class OQG1(object):
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1]
 
-        if   tfsCode==[3,1,0]:
+        if   tfsCode==[3,1,0]:  # SPC Force vector
             self.readOQG1_Data_format1_sort0()
         elif tfsCode==[3,1,1]:
             self.readOQG1_Data_format1_sort1()
@@ -120,6 +120,8 @@ class OQG1(object):
             self.readOQG1_Data_format2_sort1()
         elif tfsCode==[3,3,1]:
             self.readOQG1_Data_format3_sort1()
+        elif tfsCode==[39,1,1]: # MPC Forces
+            self.skipOES_Element(None)
         else:
             raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
         ###

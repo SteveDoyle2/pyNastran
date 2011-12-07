@@ -314,15 +314,26 @@ class MOMENT1(Moment):
         MOMENT1 SID G M G1 G2
         """
         Moment.__init__(self,card,data)
-        self.lid  = card.field(1)
-        self.node = card.field(2)
-        self.mag  = card.field(3)
-        self.g1   = card.field(4)
-        self.g2   = card.field(5)
-        self.g3   = card.field(6)
-        self.g4   = card.field(7)
+        if card:
+            self.lid  = card.field(1)
+            self.node = card.field(2)
+            self.mag  = card.field(3)
+            self.g1   = card.field(4)
+            self.g2   = card.field(5)
+            self.g3   = card.field(6)
+            self.g4   = card.field(7)
+            xyz = card.fields(5,8,[0.,0.,0.])
+        else:
+            self.lid  = data[0]
+            self.node = data[1]
+            self.mag  = data[2]
+            self.g1   = data[3]
+            self.g2   = data[4]
+            self.g3   = data[5]
+            self.g4   = data[6]
+            xyz       = data[7:10]
+        ###
 
-        xyz = card.fields(5,8,[0.,0.,0.])
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
 
@@ -348,15 +359,25 @@ class MOMENT2(Moment):
         MOMENT2 SID G M G1 G2 G3 G4
         """
         Moment.__init__(self,card,data)
-        self.lid  = card.field(1)
-        self.node = card.field(2)
-        self.mag  = card.field(3)
-        self.g1   = card.field(4)
-        self.g2   = card.field(5)
-        self.g3   = card.field(6)
-        self.g4   = card.field(7)
-
-        xyz = card.fields(5,8,[0.,0.,0.])
+        if card:
+            self.lid  = card.field(1)
+            self.node = card.field(2)
+            self.mag  = card.field(3)
+            self.g1   = card.field(4)
+            self.g2   = card.field(5)
+            self.g3   = card.field(6)
+            self.g4   = card.field(7)
+            xyz = card.fields(5,8,[0.,0.,0.])
+        else:
+            self.lid  = data[0]
+            self.node = data[1]
+            self.mag  = data[2]
+            self.g1   = data[3]
+            self.g2   = data[4]
+            self.g3   = data[5]
+            self.g4   = data[6]
+            xyz       = data[7:10]
+        ###
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
 
@@ -378,13 +399,14 @@ class PLOAD(Load):
     type = 'PLOAD'
     def __init__(self,card=None,data=None):
         if card:
-            self.lid = card.field(1)
-            self.p   = card.field(2)
+            self.lid   = card.field(1)
+            self.p     = card.field(2)
             self.nodes = card.fields(3,8)
         else:
             self.lid   = data[0]
             self.p     = data[1]
             self.nodes = data[2:]
+            print "PLOAD2 = ",data
             raise Exception('not supported')
         assert len(self.nodes)==4
     
@@ -407,21 +429,21 @@ class PLOAD1(Load):
             self.eid   = card.field(2)
             self.Type  = card.field(3)
             self.scale = card.field(4)
-            self.x1 = card.field(5)
-            self.p1 = card.field(6)
-            self.x2 = card.field(7)
-            self.p2 = card.field(8)
+            self.x1    = card.field(5)
+            self.p1    = card.field(6)
+            self.x2    = card.field(7)
+            self.p2    = card.field(8)
         else:
             self.lid   = data[0]
             self.eid   = data[1]
             self.Type  = data[2]
             self.scale = data[3]
-            self.x1 = data[4]
-            self.p1 = data[5]
-            self.x2 = data[6]
-            self.p2 = data[7]
+            self.x1    = data[4]
+            self.p1    = data[5]
+            self.x2    = data[6]
+            self.p2    = data[7]
         ###
-        assert self.Type  in self.validTypes, '%s is an invalid type on the PLOAD1 card' %(self.type)
+        assert self.Type  in self.validTypes, '%s is an invalid type on the PLOAD1 card' %(self.Type)
         assert self.scale in self.validScales,'%s is an invalid scale on the PLOAD1 card' %(self.scale)
 
     def crossReference(self,model):
@@ -447,7 +469,8 @@ class PLOAD2(Load):  # todo:  support THRU
         else:
             self.lid   = data[0]
             self.p     = data[1]
-            self.nodes = data[2:]
+            self.nodes = list(data[2:])
+            print "PLOAD2 = ",data
         ###
         assert len(self.nodes)==6
         

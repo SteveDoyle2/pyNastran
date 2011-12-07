@@ -14,11 +14,11 @@ class Geometry2(object):
         self.iTableMap = {
                            (2408,24,180):    self.readCBAR,    # record 8
                            (4001,40,275):    self.readCBARAO,  # record 9  - not done
-                          #(5408,54,261):     self.readCBEAM,   # record 10 - not done
-                          #(11401,114,9016):  self.readCBEAMP,  # record 11 - not done
-                          #(4601,46,298):     self.readCBEND,   # record 12 - not done
-                          #(5608,56,218):     self.readCBUSH1D, # record 14 - not done
-                          #(2315,23,146):     self.readCCONE,  # record 15 - not done
+                          #(5408,54,261):    self.readCBEAM,   # record 10 - not done
+                          #(11401,114,9016): self.readCBEAMP,  # record 11 - not done
+                          #(4601,46,298):    self.readCBEND,   # record 12 - not done
+                          #(5608,56,218):    self.readCBUSH1D, # record 14 - not done
+                          #(2315,23,146):    self.readCCONE,   # record 15 - not done
                            (201,2,69):       self.readCDAMP1,  # record 16
                            (301,3,70):       self.readCDAMP2,  # record 17
                            (401,4,71):       self.readCDAMP3,  # record 18 - not tested
@@ -28,20 +28,20 @@ class Geometry2(object):
                            (701,7,74):       self.readCELAS2,  # record 30
                            (801,8,75):       self.readCELAS3,  # record 31
                            (901,9,76):       self.readCELAS4,  # record 32
-                          #(8515,85,209):     self.readCFLUID2, # record 35 - not done
-                          #(8615,86,210):     self.readCFLUID3, # record 36 - not done
-                          #(8715,87,211):     self.readCFLUID4, # record 37 - not done
-                          #(1908,19,104):     self.readCGAP,    # record 39 - not done
+                          #(8515,85,209):    self.readCFLUID2, # record 35 - not done
+                          #(8615,86,210):    self.readCFLUID3, # record 36 - not done
+                          #(8715,87,211):    self.readCFLUID4, # record 37 - not done
+                          #(1908,19,104):    self.readCGAP,    # record 39 - not done
 
                            (10808,108,406):  self.readCHBDYG,   # record 43
                            (10908,109,407):  self.readCHBDYP,   # record 44 - not done
                            (7308,73,253):    self.readCHEXA,    # record 45
-                          #(1001,10,65):      self.readCMASS1,  # record 51 - not done
-                          #(1101,11,66):      self.readCMASS2,  # record 52 - not done
-                          #(1201,12,67):      self.readCMASS3,  # record 53 - not done
-                          #(1301,13,68):      self.readCMASS4,  # record 54 - not done
-                          #(2508,25,0):       self.readCMFREE,  # record 55 - not done
-                          #(1401,14,63):      self.readCONM1,   # record 56 - not done
+                          #(1001,10,65):     self.readCMASS1,   # record 51 - not done
+                          #(1101,11,66):     self.readCMASS2,   # record 52 - not done
+                          #(1201,12,67):     self.readCMASS3,   # record 53 - not done
+                          #(1301,13,68):     self.readCMASS4,   # record 54 - not done
+                          #(2508,25,0):      self.readCMFREE,   # record 55 - not done
+                          #(1401,14,63):     self.readCONM1,    # record 56 - not done
                            (1501,15,64):     self.readCONM2,    # record 57
                            (1601,16,47):     self.readCONROD,   # record 58
                            (12701,127,408):  self.readCONV,     # record 59 - not tested
@@ -49,8 +49,8 @@ class Geometry2(object):
                            (4108,41,280):    self.readCPENTA,   # record 62
 
                            (9108,91,507):    self.readCQUAD,    # record 68 - not tested
-                           #(2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
-                           #(13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
+                           (2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
+                           (13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
                            (4701,47,326):    self.readCQUAD8,   # record 71 - not tested
                            (8009,80,367):    self.readCQUADR,   # record 74 - not tested
                            (9008,90,508):    self.readCQUADX,   # record 75 - not tested
@@ -67,6 +67,8 @@ class Geometry2(object):
                           #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
                            (5551,49,105):    self.readSPOINT,   # record 118 - not done
                           #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
+                          #(2608, 26, 60)
+
                            
                            
                          }
@@ -491,6 +493,7 @@ class Geometry2(object):
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
         print "reading CQUAD4"
+        return
         self.runCQUAD4(data,CQUAD4)
 
     def runCQUAD4(self,data,Element):
@@ -515,18 +518,20 @@ class Geometry2(object):
     def readCQUAD8(self,data):
         """
         CQUAD8(4701,47,326)  - the marker for Record 71
+        @warning inconsistent with dmap manual
         """
         print "reading CQUAD8"
         n=0
-        nEntries = len(data)/68 # 17*4
+        nEntries = len(data)/64 # 17*4
         for i in range(nEntries):
-            eData = data[n:n+68]
-            (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,t1,t2,t3,t4,theta,zoffs,tflag) = unpack('iiiiiiiiiiffffffi',eData)
+            eData = data[n:n+64]
+            out = unpack('iiiiiiiiiifffffi',eData)
+            (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,t1,t2,t3,t4,theta,tflag) = out
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8(None,out)
             self.addOp2Element(elem)
-            n+=68
+            n+=64
         ###
         data  = data[n:]
 
@@ -654,18 +659,19 @@ class Geometry2(object):
     def readCTRIA6(self,data):
         """
         CTRIA6(4801,48,327)    - the marker for Record 95
+        @warning inconsistent with dmap manual
         """
-        #print "reading CTRIA3"
+        #print "reading CTRIA6"
         n=0
-        nEntries = len(data)/56 # 14*4
+        nEntries = len(data)/52 # 13*4
         for i in range(nEntries):
-            eData = data[n:n+56]
-            out = unpack('iiiiiiiifffffi',eData)
+            eData = data[n:n+52]
+            out = unpack('iiiiiiiiffffi',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
-            (eid,pid,n1,n2,n3,n4,n5,n6,theta,zoffs,t1,t2,t3,tflag) = out
+            (eid,pid,n1,n2,n3,n4,n5,n6,theta,t1,t2,t3,tflag) = out
             elem = CTRIA6(None,out)
             self.addOp2Element(elem)
-            n+=56
+            n+=52
         ###
         data = data[n:]
 

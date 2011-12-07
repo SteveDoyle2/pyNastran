@@ -5,7 +5,7 @@ from pyNastran.op2.resultObjects.oes_Objects import (
     rodStressObject,rodStrainObject,
     barStressObject,barStrainObject,
     plateStressObject,plateStrainObject,
-    solidStressObject,
+    solidStressObject,solidStrainObject,
     compositePlateStressObject,compositePlateStrainObject)
 
 class OES(object):

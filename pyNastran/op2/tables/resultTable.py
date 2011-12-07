@@ -60,7 +60,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         nOld = self.op2.tell()
         #try:
         self.readMarkers([iTable,1,0],tableName)
-        #except InvalidMarkersError:  # wrong error, but we'll fix it when the correct error is found...
+        #except InvalidMarkersError:
         #    self.goto(nOld)
             #print self.printBlock(self.data)
             #print self.printSection(100)
@@ -130,13 +130,17 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-        while len(data)>=16:
+
+        n = 0
+        nEntries = len(data)/16
+        for i in range(nEntries):
+            eData = data[n:n+16]
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
             #self.printBlock(data[16:])
-            msg = 'len(data)=%s\n'%(len(data))
-            assert len(data)>=16,msg+self.printSection(120)
-            out = unpack('ifff',data[0:16])
+            #msg = 'len(data)=%s\n'%(len(data))
+            #assert len(data)>=16,msg+self.printSection(120)
+            out = unpack('ifff',eData)
             (gridDevice,dx,dy,dz) = out
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
@@ -146,11 +150,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             #print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
             scalarObject.add(grid,dx,dy,dz)
-            data = data[32:]
-            #n+=32
+            n+=16
         ###
-        self.data = data
-        #self.data = data[n:]
+        self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,scalarObject,debug=False)
 
@@ -196,8 +198,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
             #self.printBlock(data[56:])
-            msg = 'len(data)=%s\n'%(len(data))
-            assert len(data)>=56,msg+self.printSection(120)
+            #msg = 'len(data)=%s\n'%(len(data))
+            #assert len(data)>=56,msg+self.printSection(120)
             out = unpack('iiffffffffffff',eData)
             (gridDevice,gridType,dx, dy, dz, rx, ry, rz,
                                  dxi,dyi,dzi,rxi,ryi,rzi) = out

@@ -24,8 +24,8 @@ class Geometry3(object):
                          (4601,46,21):  self.readMOMENT1, # record 14 - not tested
                          (4701,47,23):  self.readMOMENT2, # record 15 - not tested
                          (5101,51,24):  self.readPLOAD,   # record 16 - not done
-                         (6909,69,198): self.readPLOAD1,  # record 17 - not done
-                         (6802,68,199): self.readPLOAD2,  # record 18 - not done
+                        #(6909,69,198): self.readPLOAD1,  # record 17 - buggy
+                        #(6802,68,199): self.readPLOAD2,  # record 18 - buggy
                          (7109,81,255): self.readPLOAD3,  # record 19 - not done
                          (7209,72,299): self.readPLOAD4,  # record 20 - buggy
                          (7309,73,351): self.readPLOADX1, # record 22
@@ -165,15 +165,15 @@ class Geometry3(object):
         """
         print "reading MOMENT"
         n=0
-        nEntries = len(data)/24  # 7*4
+        nEntries = len(data)/28  # 7*4
         for i in range(nEntries):
-            eData = data[n:n+24]
+            eData = data[n:n+28]
             out = unpack('iiiffff',eData)
             (sid,g,cid,m,n1,n2,n3) = out
 
             load = FORCE1(None,out)
             self.addLoad(load)
-            n+=24
+            n+=28
         ###
         data = data[n:]
 
@@ -219,13 +219,14 @@ class Geometry3(object):
         """
         PLOAD2(6802,68,199) - the marker for Record 17
         """
-        print "reading PLOAD2"
+        print "reading PLOAD1"
         n=0
         nEntries = len(data)/32  # 8*4
         for i in range(nEntries):
             eData = data[n:n+32]
             out = unpack('iiiiffff',eData)
             (sid,eid,Type,scale,x1,p1,x2,p2) = out
+            print "PLOAD1 = ",out
             load = PLOAD1(None,out)
             self.addLoad(load)
             n+=32
@@ -302,7 +303,6 @@ class Geometry3(object):
 # PRESAX
 # QBDY1
 # QBDY2
-
 
     def readQBDY1(self,data):
         """

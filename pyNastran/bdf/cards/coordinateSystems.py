@@ -107,7 +107,7 @@ class CORD3G(Coord):
     CORD3G 100 E313   EQN  110      111      112      0
     """
     type = 'CORD3G'
-    def __init__(self,card=['CORD3G',0,0,0,0,0,0,0]):
+    def __init__(self,card=[0,0,0,0,0,0,0],data=None):
         """
         Intilizes the CORD3G
         @param self   the object pointer
@@ -116,7 +116,7 @@ class CORD3G(Coord):
         if isinstance(card,list):
             assert len(card)==8
             card = BDF_Card(card)
-        Coord.__init__(self,card)
+        Coord.__init__(self,card,data)
 
         self.cid = card.field(1)
         method   = card.field(2)
@@ -171,15 +171,16 @@ class CORD3G(Coord):
                         [  0., 0., 1.]])
 
     def __repr__(self):
-        fields = ['CORD1R',self.g1,self.g2,self.g3]
-        self.printCard(fields)
+        fields = ['CORD3G',self.g1,self.g2,self.g3]
+        return self.printCard(fields)
 
 class CORD1R(Cord1x):
     type = 'CORD1R'
     """
     CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
-    def __init__(self,nCoord=0,card=['CORD1R',0,0,0,0]):
+    isResolved = True
+    def __init__(self,nCoord=0,card=[0,0,0,0],data=None):
         """
         Intilizes the CORD1R
         @param self   the object pointer
@@ -187,33 +188,37 @@ class CORD1R(Cord1x):
         @param card   a list version of the fields (1 CORD1R only)
         """
         if isinstance(card,list):
-            assert len(card)==5
+            assert len(card)==4,'data = %s' %(card)
             card = BDF_Card(card)
-        Cord1x.__init__(self,card)
-        
-        assert nCoord==0 or nChord==1
-        nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
+        Cord1x.__init__(self,card,data)
 
-        ## reference coordinate system ID
-        self.rid = card.field(2,0)
-        if self.rid==0:
-            self.isResolved = True
+        if nCoord is not None:
+            assert nCoord==0 or nChord==1
         
-        ## the coordinate ID
-        self.cid = card.field(1+nCoord)
-        ## a Node at the origin
-        self.g1  = card.field(2+nCoord)
-        ## a Node on the z-axis
-        self.g2  = card.field(3+nCoord)
-        ## a Node on the xz-plane
-        self.g3  = card.field(4+nCoord)
+            nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
+
+            ## the coordinate ID
+            self.cid = card.field(1+nCoord)
+            ## a Node at the origin
+            self.g1  = card.field(2+nCoord)
+            ## a Node on the z-axis
+            self.g2  = card.field(3+nCoord)
+            ## a Node on the xz-plane
+            self.g3  = card.field(4+nCoord)
+        else:
+            self.cid = data[0]
+            self.g1  = data[1]
+            self.g2  = data[2]
+            self.g3  = data[3]
+            assert len(data)==4,'data = %s' %(data)
+        ###
         assert self.g1 != self.g2
         assert self.g1 != self.g3
         assert self.g2 != self.g3
 
     def __repr__(self):
-        fields = ['CORD1R',self.g1,self.g2,self.g3]
-        self.printCard(fields)
+        fields = ['CORD1R',self.cid,self.g1,self.g2,self.g3]
+        return self.printCard(fields)
 
     def crossReference(self,model):
         """
@@ -266,6 +271,7 @@ class CORD2R(Cord2x):  # working for simple cases...
             self.eo  = array(data[2:5])
             self.ez  = array(data[5:8])
             self.ex  = array(data[8:11])
+            assert len(data)==11,'data = %s' %(data)
         ###
         assert len(self.eo)==3
         assert len(self.ez)==3
@@ -391,6 +397,7 @@ class CORD2C(Cord2x):  # not done...
             self.eo  = array(data[2:5])
             self.ez  = array(data[5:8])
             self.ex  = array(data[8:11])
+            assert len(data)==11,'data = %s' %(data)
         ###
         
         assert len(self.eo)==3,self.eo

@@ -18,7 +18,7 @@ class PMASS(PointProperty):
         PointProperty.__init__(self,card,nOffset=0)
         
         nOffset *= 2
-        self.pid = card.field(1+nOffset)
+        self.pid  = card.field(1+nOffset)
         self.mass = card.field(2+nOffset,0.)
 
     def Mass(self):
@@ -26,6 +26,33 @@ class PMASS(PointProperty):
 
     def __repr__(self):
         fields = ['PMASS',self.pid,self.Mass]
+
+class DamperProperty(Property):
+    type = 'DamperProperty'
+    def __init__(self,card,data):
+        Property.__init__(self,card,data)
+        pass
+
+class PDAMP(DamperProperty):
+    type = 'PDAMP'
+    def __init__(self,nPDamp=0,card=None,data=None):
+        DamperProperty.__init__(self,card,data)
+        if card:
+            nOffset = nPDamp * 2
+            ## Property ID
+            self.pid = card.field(1+nOffset)
+            ## Force per unit velocity (Real)
+            self.b   = card.field(2+nOffset)
+        else:
+            self.pid = data[0]
+            self.b   = data[1]
+            assert len(data)==2,'data = %s' %(data)
+        ###
+
+    def __repr__(self):
+        fields = ['PDAMP',self.pid,self.b]
+        return self.printCard(fields)
+
 
 class SpringProperty(Property):
     type = 'SpringProperty'

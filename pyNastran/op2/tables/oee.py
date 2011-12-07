@@ -164,8 +164,12 @@ class OEE(object):
             print "isBucklingStrainEnergy"
             self.obj = StrainEnergyObject(self.iSubcase)
             self.modesStrainEnergy[self.iSubcase] = self.obj
+        elif self.approachCode==9: # nonlinear static eigenvector
+            print "isComplexStrainEnergy"
+            self.obj = StrainEnergyObject(self.iSubcase)
+            self.complexStrainEnergy[self.iSubcase] = self.obj
         else:
-            raise Exception('unsupported OEE1 strain energy solution...')
+            raise Exception('bad tableCode/formatCode/sortCode=%s on OEE table' %(tfsCode))
         ###
         self.readScalars4(self.obj)
 
