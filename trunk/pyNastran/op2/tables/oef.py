@@ -173,7 +173,7 @@ class OEF(object):
             elif tfsCode==[4,2,1]:
                 self.readOEF1_Data_format2_sort1()
             else:
-                raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
+                raise Exception('bad tableCode/formatCode/sortCode=%s on OEF table' %(tfsCode))
             ###
         ###
     def readOEF1_Data_format1_sort0(self):
@@ -203,6 +203,12 @@ class OEF(object):
                 self.displacementForces[self.iSubcase] = self.obj
                 self.readForces(self.obj)
 
+            elif self.approachCode==9: # complex eigenvalue forces
+                print "isComplexEigenvalues"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.complexEigenvalueForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticForces"
                 self.createTransientObject(self.nonlinearForces,displacementObject,self.loadStep)
@@ -233,7 +239,6 @@ class OEF(object):
                 self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
                 self.temperatureForces[self.iSubcase] = self.obj  ## @todo modify the name of this...
                 self.readForces(self.obj)
-
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.loadStep)
@@ -261,6 +266,12 @@ class OEF(object):
                 print "isFrequencyForces"
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
                 self.freqForces[self.iSubcase] = self.obj
+            elif self.approachCode==9: # complex eigenvalue forces
+                print "isComplexEigenvalues"
+                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
+                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.complexEigenvalueForces[self.iSubcase] = self.obj
+                #print "****self", type(self.obj)
             else:
                 raise Exception('not supported OEF static solution...')
             ###

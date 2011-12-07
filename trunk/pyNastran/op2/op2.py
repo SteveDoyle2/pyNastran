@@ -79,13 +79,15 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              'R1TABRG','HISADD', ## @todo what do these do???
 
                              'DESTAB',
-                             'OQG1',
+                             'OQG1','OQMG1',
                              'OUGV1','OUPV1',
-                             'OEF1X','DOEF1',
-                             'OPG1','OGPFB1',
-                             'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD',
+                             'OEF1X','DOEF1','OEFIT',
+                             'OPG1','OGPFB1','OPNL1',
+                             'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD','OESTRCP','OESCP',
                              'ONRGY1',
                              
+                             
+                             'VIEWTB','ERRORN',
                              ## @todo what do these do???
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
                              ]
@@ -119,6 +121,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.freqForces   = {}            # aCode=5  tCode=4 fCode=2 sortCode=1 thermal=0
 
         ## rename to complexEigenvalueLoads ???
+        self.imagEigenvalueForces    = {} # aCode=9  tCode=4 fCode=1 sortCode=1 thermal=0
         self.complexEigenvalueForces = {} # aCode=9  tCode=4 fCode=2 sortCode=1 thermal=0
         
         ## rename to nonlinearStaticLoads/nonlinearThermalLoads ???
@@ -139,7 +142,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.solidStrain = {}
         self.compositePlateStress = {}
         self.compositePlateStrain = {}
-
+        
 
         # OQG
         self.spcForces           = {} # aCode=1  tCode=3 fCode=1 sortCode=0 thermal=0
@@ -150,8 +153,9 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.appliedLoads = {}  # aCode=1 tCode=2 fCode=1 sortCode=0 thermal=0
         
         # OEE
-        self.strainEnergy      = {} # aCode=1 tCode=18 fCode=1 sortCode=0
-        self.modesStrainEnergy = {} # aCode=2 tCode=18 fCode=1 sortCode=0
+        self.strainEnergy        = {} # aCode=1 tCode=18 fCode=1 sortCode=0
+        self.modesStrainEnergy   = {} # aCode=2 tCode=18 fCode=1 sortCode=0
+        self.complexStrainEnergy = {} # aCode=9 tCode=18 fCode=1 sortCode=0
 
     def printResults(self):
         results = [
@@ -262,23 +266,28 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
                 elif tableName in ['DESTAB']:  # design variable table
                     self.readTable_DesTab()
-
+                
                 elif tableName in ['R1TABRG']: # not done - response table
                     self.readTable_R1TAB()
                     self.isOptimization = True
+
                 elif tableName in ['HISADD']: # not done
                     self.readTable_R1TAB()
                     self.isOptimization = True
+                elif tableName in ['ERRORN']: # not done
+                    self.readTable_R1TAB()
+                elif tableName in ['VIEWTB']: # not done
+                    self.readTable_R1TAB()
 
-                elif tableName in ['OPG1','OGPFB1']: # table of applied loads
+                elif tableName in ['OPG1','OGPFB1','OPNL1']: # table of applied loads
                     self.readTable_OGP1()
                 elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
                     self.readTable_OGP1()
                     
                 
-                elif tableName in ['OEF1X','DOEF1']:  # applied loads
+                elif tableName in ['OEF1X','DOEF1','OEFIT']:  # applied loads
                     self.readTable_OEF1()
-                elif tableName=='OQG1':  # spc forces
+                elif tableName in ['OQG1','OQMG1']:  # spc forces
                     self.readTable_OQG1()
                 elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                     self.readTable_OUG1()

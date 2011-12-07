@@ -133,11 +133,11 @@ class CTRIA6(CTRIA3):
             self.pid = data[1]
             nids     = data[2:8]
             self.thetaMcid = data[8]
-            self.zOffset   = data[9]
-            self.T1    = data[10]
-            self.T2    = data[11]
-            self.T3    = data[12]
-            self.TFlag = data[13]
+            self.zOffset   = data[8]
+            self.T1    = data[9]
+            self.T2    = data[10]
+            self.T3    = data[11]
+            self.TFlag = data[12]
         self.prepareNodeIDs(nids)
         assert len(nids)==6,'error on CTRIA6'
 
@@ -429,21 +429,38 @@ class CQUAD8(CQUAD4):
     type = 'CQUAD8'
     def __init__(self,card=None,data=None):
         ShellElement.__init__(self,card,data)
-        ## element ID number
-        self.eid = int(card.field(1))
-        self.pid = card.field(2)
-
-        nids = card.fields(3,11)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
+            nids     = card.fields(3,11)
+            self.T1  = card.field(11,1.0)
+            self.T2  = card.field(12,1.0)
+            self.T3  = card.field(13,1.0)
+            self.T4  = card.field(14,1.0)
+            self.thetaMcid = card.field(15,0.0)
+            self.zOffset   = card.field(16,0.0)
+            self.TFlag     = card.field(17,0)
+        else:
+            print "CQUAD8 = ",data
+            #(6401, 
+            #6400, 
+            #6401, 6402, 6405, 6403, 0, 0, 6404, 0, 
+            #-1.0, -1.0, -1.0, -1.0, 
+            #0.0, 0)
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = data[2:10]
+            self.T1  = data[10]
+            self.T2  = data[11]
+            self.T3  = data[12]
+            self.T4  = data[13]
+            self.thetaMcid = data[14]
+            self.zOffset   = data[14]
+            self.TFlag     = data[15]
+        ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==8
-
-        self.T1 = card.field(11,1.0)
-        self.T2 = card.field(12,1.0)
-        self.T3 = card.field(13,1.0)
-        self.T4 = card.field(14,1.0)
-        self.thetaMcid = card.field(15,0.0)
-        self.zOffset   = card.field(16,0.0)
-        self.TFlag     = card.field(17,0)
 
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()

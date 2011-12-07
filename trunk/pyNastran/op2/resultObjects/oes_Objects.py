@@ -749,3 +749,104 @@ class solidStressObject(scalarObject):
         ###
         return msg
 
+class solidStrainObject(scalarObject):
+    """
+                          S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )
+                   CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   
+    ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES 
+            1           0GRID CS  8 GP
+                   CENTER  X   4.499200E+02  XY  -5.544791E+02   A   1.000000E+04  LX 0.00 0.69-0.72  -3.619779E+03    9.618462E+03
+                           Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
+                           Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
+
+    """
+    def __init__(self,iSubcase):
+        scalarObject.__init__(self,iSubcase)
+        self.eType = {}
+        self.cid = {}
+        self.exx = {}
+        self.eyy = {}
+        self.ezz = {}
+        self.exy = {}
+        self.eyz = {}
+        self.exz = {}
+        #self.aCos = {}
+        #self.bCos = {}
+        #self.cCos = {}
+        #self.pressure = {}
+        self.evm = {}
+
+    def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
+        #print "Solid Strain add..."
+        assert cid >= 0
+        assert eid >= 0
+        self.eType[eid] = eType
+        self.cid[eid]  = cid
+        self.exx[eid]  = {nodeID: exx}
+        self.eyy[eid]  = {nodeID: eyy}
+        self.ezz[eid]  = {nodeID: ezz}
+        self.exy[eid]  = {nodeID: exy}
+        self.eyz[eid]  = {nodeID: eyz}
+        self.exz[eid]  = {nodeID: exz}
+        #self.aCos[eid] = {nodeID: aCos}
+        #self.bCos[eid] = {nodeID: bCos}
+        #self.cCos[eid] = {nodeID: cCos}
+        #self.pressure[eid] = {nodeID: pressure}
+        self.evm[eid]      = {nodeID: evm}
+        msg = "*eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
+        #print msg
+        if nodeID==0: raise Exception(msg)
+
+    def add(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
+        #print "***add"
+        msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
+        #print msg
+        #print self.exx
+        #print self.fiberDistance
+        self.exx[eid][nodeID] = exx
+        self.eyy[eid][nodeID] = eyy
+        self.ezz[eid][nodeID] = ezz
+
+        self.exy[eid][nodeID] = exy
+        self.eyz[eid][nodeID] = eyz
+        self.exz[eid][nodeID] = exz
+
+        #self.aCos[eid][nodeID] = aCos
+        #self.bCos[eid][nodeID] = bCos
+        #self.cCos[eid][nodeID] = cCos
+        #self.pressure[eid][nodeID] = pressure
+        self.evm[eid][nodeID] = evm
+
+        if nodeID==0: raise Exception(msg)
+
+    def __repr__(self):
+        msg = '---SOLID STRAIN---\n'
+        headers = ['exx','eyy','ezz','exy','eyz','exz','evm']
+        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        for header in headers:
+            msg += '%9s ' %(header)
+        msg += '\n'
+        for eid,exxNodes in sorted(self.exx.items()):
+            eType = self.eType[eid]
+            for nid in sorted(exxNodes):
+                exx = self.exx[eid][nid]
+                eyy = self.eyy[eid][nid]
+                ezz = self.ezz[eid][nid]
+                exy = self.exy[eid][nid]
+                eyz = self.eyz[eid][nid]
+                exz = self.exz[eid][nid]
+                evm = self.evm[eid][nid]
+                msg += '%-6i %6s %8s ' %(eid,eType,nid)
+                vals = [exx,eyy,ezz,exy,eyz,exz,evm]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%9s ' %('0')
+                    else:
+                        msg += '%9e ' %(val)
+                    ###
+                msg += '\n'
+                #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
+            ###
+        ###
+        return msg
+

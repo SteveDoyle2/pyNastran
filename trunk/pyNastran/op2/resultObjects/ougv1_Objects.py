@@ -5,11 +5,11 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,iSubcase,dt=None):
         scalarObject.__init__(self,iSubcase)
         self.dt = dt
-        
+        print "displacementObject - self.dt=|%s|" %(self.dt)
         ## this could get very bad very quick, but it could be great!
         ## basically it's a way to handle transients without making
         ## a whole new class
-        if self.dt is None:
+        if dt is None:
             self.displacements = {}
             self.rotations     = {}
         else:
@@ -22,8 +22,8 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             #self.writeOp2 = self.writeOp2Transient
         ###
 
-    def setLoadID(self,loadID):
-        self.loadID = loadID
+    #def setLoadID(self,loadID):
+    #    self.loadID = loadID
 
     def updateDt(self,dt=None):
         """
@@ -33,6 +33,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         assert dt>=0.
         self.dt = dt
         self.displacements[dt] = {}
+        print "*displacementObject - self.dt=|%s|" %(self.dt)
 
     def addBinary(self,deviceCode,data):
         (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
@@ -58,7 +59,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements
+        assert nodeID not in self.displacements,'displacementObject - static failure'
 
         self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
@@ -67,7 +68,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements
+        assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
         
         self.displacements[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.dt][nodeID]     = array([v4,v5,v6]) # rx,ry,rz

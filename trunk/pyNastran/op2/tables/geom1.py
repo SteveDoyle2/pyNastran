@@ -21,8 +21,10 @@ class Geometry1(object):
                             (4501,45,1):     self.readGrid,   # record 17 - slow
                             (5301,53,4):     self.readSEQGP,  # record 27 - not done
 
-                            (2201,22, 10):    self.readFake,
-                            (6101,61,388):    self.readFake,
+                            (1101,11, 66):    self.readFake,  # record 
+                            (3901,39, 50):    self.readFake,  # record 
+                            (2201,22, 10):    self.readFake,  # record 
+                            (6101,61,388):    self.readFake,  # record 
                          }
         self.readRecordTable('GEOM1')
 
@@ -40,7 +42,7 @@ class Geometry1(object):
             eData = data[n:n+24] # 6*4
             (cid,one,two,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
-            coord = CORD1R(None,dataIn)
+            coord = CORD1R(None,None,dataIn)
             self.addCoord(coord)
             n+=24
         ###
@@ -57,7 +59,7 @@ class Geometry1(object):
             eData = data[n:n+24] # 6*4
             (cid,one,one,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
-            coord = CORD1R(None,dataIn)
+            coord = CORD1R(None,None,dataIn)
             self.addCoord(coord)
             n+=24
         ###
@@ -74,8 +76,8 @@ class Geometry1(object):
             eData = data[n:n+24] # 6*4
             (cid,three,one,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
-            coord = CORD1S(None,dataIn)
-            self.addCoord(coord,allowOverwrites=True)
+            #coord = CORD1S(None,dataIn)
+            #self.addCoord(coord,allowOverwrites=True)
             n+=24
         ###
         data = data[n:]
@@ -155,7 +157,7 @@ class Geometry1(object):
     def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         print "reading GRID"
-        #return
+        return
         
         n=0
         nEntries = len(data)/32

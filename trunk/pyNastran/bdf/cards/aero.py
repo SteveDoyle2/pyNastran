@@ -8,14 +8,22 @@ class DAREA(BaseCard):
     DAREA SID P1 C1 A1  P2 C2 A2
     DAREA 3   6   2 8.2 15 1  10.1
     """
-    type = 'DAERO1'
-    def __init__(self,card):
+    type = 'DAREA'
+    def __init__(self,card=None,data=None):
         #Material.__init__(self,card)
-        self.sid   =  card.field(1)
-        self.p     = [card.field(2),card.field(5)]
-        self.c     = [card.field(3),card.field(6)]
-        self.a     = [card.field(4),card.field(7)]
-        self.units = card.field(3)
+        if card:
+            self.sid   =  card.field(1)
+            self.p     = [card.field(2),card.field(5)]
+            self.c     = [card.field(3),card.field(6)]
+            self.a     = [card.field(4),card.field(7)]
+        else:
+            self.sid   =  data[0]
+            self.p     = [data[1],data[4]]
+            self.c     = [data[2],data[5]]
+            self.a     = [data[3],data[6]]
+            assert len(data)==7,'data = %s' %(data)
+            raise Exception('verify')
+        ###
 
     def __repr__(self):
         fields = ['DAREA',self.sid, self.p[0],self.c[0],self.a[0],  self.p[1],self.c[1],self.a[1] ]
@@ -32,18 +40,33 @@ class SPLINE1(BaseCard): # not integrated
     SPLINE1 3   111    115  122  14   0.
     """
     type = 'SPLINE1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #Material.__init__(self,card)
-        self.eid    = card.field(1)
-        self.caero  = card.field(2)
-        self.box1   = card.field(3)
-        self.box2   = card.field(4)
-        self.setg   = card.field(5)
-        self.dz     = card.field(6,0.0)
-        self.method = card.field(7,'IPS')
-        self.usage  = card.field(8,'BOTH')
-        self.nelements = card.field(9,10)
-        self.melements = card.field(10,10)
+        if card:
+            self.eid    = card.field(1)
+            self.caero  = card.field(2)
+            self.box1   = card.field(3)
+            self.box2   = card.field(4)
+            self.setg   = card.field(5)
+            self.dz     = card.field(6,0.0)
+            self.method = card.field(7,'IPS')
+            self.usage  = card.field(8,'BOTH')
+            self.nelements = card.field(9,10)
+            self.melements = card.field(10,10)
+        else:
+            self.eid       = data[0]
+            self.caero     = data[1]
+            self.box1      = data[2]
+            self.box2      = data[3]
+            self.setg      = data[4]
+            self.dz        = data[5]
+            self.method    = data[6]
+            self.usage     = data[7]
+            self.nelements = data[8]
+            self.melements = data[9]
+            assert len(data)==10,'data = %s' %(data)
+        ###
+
 
         assert self.box2>=self.box1
         assert self.method in ['IPS','TPS','FPS']
@@ -68,7 +91,7 @@ class CAERO1(BaseCard): # add helper functions
     X1 Y1 Z1 X12 X4 Y4 Z4 X43
     """
     type = 'CAERO1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         1 \
         |   \
@@ -119,11 +142,18 @@ class AEPARM(BaseCard): # not integrated
     AEPARM 5 THRUST LBS
     """
     type = 'AEPARM'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #Material.__init__(self,card)
-        self.id    = card.field(1)
-        self.label = card.field(2)
-        self.units = card.fiedl(3)
+        if card:
+            self.id    = card.field(1)
+            self.label = card.field(2)
+            self.units = card.fiedl(3)
+        else:
+            self.id    = data[0]
+            self.label = data[1]
+            self.units = data[2]
+            assert len(data)==3,'data = %s' %(data)
+        ###
 
     def __repr__(self):
         fields = ['AEPARM',self.id,self.label,self.units]
@@ -136,10 +166,16 @@ class AESTAT(BaseCard): # not integrated
     AESTAT 5001 ANGLEA
     """
     type = 'AESTAT'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #Material.__init__(self,card)
-        self.id    = card.field(1)
-        self.label = card.field(2)
+        if card:
+            self.id    = card.field(1)
+            self.label = card.field(2)
+        else:
+            self.id    = data[0]
+            self.label = data[1]
+            assert len(data)==2,'data = %s' %(data)
+        ###
 
     def __repr__(self):
         fields = ['AESTAT',self.id,self.label]
@@ -156,12 +192,20 @@ class AESURFS(BaseCard): # not integrated
     AESURFS 6001 ELEV  - 6002  - 6003
     """
     type = 'AESURFS'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #Material.__init__(self,card)
-        self.id    = card.field(1)
-        self.label = card.field(2)
-        self.list1 = card.field(4)
-        self.list2 = card.field(6)
+        if card:
+            self.id    = card.field(1)
+            self.label = card.field(2)
+            self.list1 = card.field(4)
+            self.list2 = card.field(6)
+        else:
+            self.id    = data[0]
+            self.label = data[1]
+            self.list1 = data[2]
+            self.list2 = data[3]
+            assert len(data)==4,'data = %s' %(data)
+        ###
 
     def __repr__(self):
         fields = ['AESURFS',self.id,self.label,None,self.list1,None,self.list2]
@@ -178,14 +222,20 @@ class FLFACT(BaseCard):
     FLFACT 201 .200 THRU .100 11 .133333
     """
     type = 'FLFACT'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #Material.__init__(self,card)
-        self.sid     = card.field(1)
-        self.factors = card.fields(2)
-        if self.factors[1]=='THRU':
-            raise Exception('embedded THRUs not supported yet on FLFACT card\n')
-            #(a,thru,b,n,dn) = factors
-            #for i in range(
+        if card:
+            self.sid     = card.field(1)
+            self.factors = card.fields(2)
+            if self.factors[1]=='THRU':
+                raise Exception('embedded THRUs not supported yet on FLFACT card\n')
+                #(a,thru,b,n,dn) = factors
+                #for i in range(
+            ###
+        else:
+            self.sid     = data[0]
+            self.factors = data[1:]
+        ###
 
     def __repr__(self):
         fields = ['FLFACT',self.sid]+self.factors
@@ -198,12 +248,21 @@ class GUST(BaseCard):
     GUST 133 61    1.0 0.   1.+4
     """
     type = 'GUST'
-    def __init__(self,card):
-        self.sid   = card.field(1)
-        self.dload = card.field(2)
-        self.wg    = card.field(3)
-        self.x0    = card.field(4)
-        self.V     = card.field(5)
+    def __init__(self,card=None,data=None):
+        if card:
+            self.sid   = card.field(1)
+            self.dload = card.field(2)
+            self.wg    = card.field(3)
+            self.x0    = card.field(4)
+            self.V     = card.field(5)
+        else:
+            self.sid   = data[0]
+            self.dload = data[1]
+            self.wg    = data[2]
+            self.x0    = data[3]
+            self.V     = data[4]
+            assert len(data)==5,'data = %s' %(data)
+        ###
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular function
 
     def __repr__(self):
@@ -213,7 +272,7 @@ class GUST(BaseCard):
 
 class Aero(BaseCard):
     """Base class for AERO and AEROS cards."""
-    def __init__(self,card):
+    def __init__(self,card,data):
         pass
 
     def isSymmetricalXY(self):
@@ -247,14 +306,24 @@ class AERO(Aero):
     AERO 3     1.3+4    100.  1.-5  1     -1
     """
     type = 'AERO'
-    def __init__(self,card):
-        Aero.__init__(self,card)
-        self.acsid    = card.field(1)
-        self.velocity = card.field(2)
-        self.cRef     = card.field(3)
-        self.rhoRef   = card.field(4)
-        self.symXZ    = card.field(5,0)
-        self.symXY    = card.field(6,0)
+    def __init__(self,card=None,data=None):
+        Aero.__init__(self,card,data)
+        if card:
+            self.acsid    = card.field(1)
+            self.velocity = card.field(2)
+            self.cRef     = card.field(3)
+            self.rhoRef   = card.field(4)
+            self.symXZ    = card.field(5,0)
+            self.symXY    = card.field(6,0)
+        else:
+            self.acsid    = data[0]
+            self.velocity = data[1]
+            self.cRef     = data[2]
+            self.rhoRef   = data[3]
+            self.symXZ    = data[4]
+            self.symXY    = data[5]
+            assert len(data)==6,'data = %s' %(data)
+        ###
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular function
 
     def __repr__(self):
@@ -270,15 +339,26 @@ class AEROS(Aero):
     AEROS 10   20     10.  100. 1000. 1
     """
     type = 'AEROS'
-    def __init__(self,card):
-        Aero.__init__(self,card)
-        self.acsid  = card.field(1)
-        self.rcsid  = card.field(2)
-        self.cRef   = card.field(3)
-        self.bRef   = card.field(4)
-        self.Sref   = card.field(4)
-        self.symXZ  = card.field(5,0)
-        self.symXY  = card.field(6,0)
+    def __init__(self,card=None,data=None):
+        Aero.__init__(self,card,data)
+        if card:
+            self.acsid  = card.field(1)
+            self.rcsid  = card.field(2)
+            self.cRef   = card.field(3)
+            self.bRef   = card.field(4)
+            self.Sref   = card.field(5)
+            self.symXZ  = card.field(6,0)
+            self.symXY  = card.field(7,0)
+        else:
+            self.acsid  = data[0]
+            self.rcsid  = data[1]
+            self.cRef   = data[2]
+            self.bRef   = data[3]
+            self.Sref   = data[4]
+            self.symXZ  = data[5]
+            self.symXY  = data[6]
+            assert len(data)==7,'data = %s' %(data)
+        ###
 
     def __repr__(self):
         symXZ = self.setBlankIfDefault(self.symXZ,0)
@@ -293,14 +373,23 @@ class GRAV(BaseCard):
     GRAV 1   3   32.2 0.0 0.0 -1.0
     """
     type = 'GRAV'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #BaseCard.__init__(self,card)
-        self.sid  = card.field(1)
-        self.cid  = card.field(2,0)
-        self.a    = card.field(3)
-        self.N    = card.fields(4,7,[0.,0.,0.]) # measured in cid
-        assert max(self.N) != min(self.N)
-        self.mb     = card.field(7,0)
+        if card:
+            self.sid = card.field(1)
+            self.cid = card.field(2,0)
+            self.a   = card.field(3)
+            self.N   = card.fields(4,7,[0.,0.,0.]) # measured in cid
+            self.mb  = card.field(7,0)
+        else:
+            self.sid = data[0]
+            self.cid = data[1]
+            self.a   = data[2]
+            self.N   = data[3:6]
+            self.mb  = data[6]
+            assert len(data)==7
+        ###            
+        assert max(self.N) != min(self.N),'N=%s max(N)=%s min(N)=%s' %(self.N,max(self.N),min(self.N))
 
     def __repr__(self):
         N = []
@@ -316,14 +405,28 @@ class FLUTTER(BaseCard):
     FLUTTER 19  K      119  219  319       S 5           1.-4
     """
     type = 'FLUTTER'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         #BaseCard.__init__(self,card)
-        self.sid      = card.field(1)
-        self.method   = card.field(2)
+        if card:
+            self.sid      = card.field(1)
+            self.method   = card.field(2)
+            self.density  = card.field(3)
+            self.mach     = card.field(4)
+            self.rfreqVel = card.field(5)
+        else:
+            assert len(data)==8,'FLUTTER = %s' %(data)
+            self.sid      = data[0]
+            self.method   = data[1]
+            self.density  = data[2]
+            self.mach     = data[3]
+            self.rfreqVel = data[4]
+            self.method   = data[5]
+            self.imethod  = data[6]
+            self.nValue   = data[7]
+            self.omax     = data[8]
+            raise Exception('verify...')
+        ###
         assert self.method in ['K','PK','PKNL','PKS','PKNLS','KE']
-        self.density  = card.field(3)
-        self.mach     = card.field(4)
-        self.rfreqVel = card.field(5)
 
         if self.method in ['K','KE']:
             self.imethod = card.field(6,'L')

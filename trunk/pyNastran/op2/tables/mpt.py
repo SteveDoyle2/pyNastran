@@ -23,14 +23,14 @@ class MPT(object):
 
                          (3003,30,286): self.readNLPARM,  # record 27 - not done
                          (3103,31,337): self.readTSTEPNL, # record 29 - not done
-                         (503,  5, 90):  self.readMATS1,  # record 12 - not done
-                         (703,  7, 91):  self.readMATT1,  # record 13 - not done
-                         (803,  8,102):  self.readMATT2,  # record 14 - not done
-                         (1503,14,189):  self.readMATT3,  # record 15 - not done
-                         (2303,23,237):  self.readMATT4,  # record 16 - not done
-                         (2403,24,238):  self.readMATT5,  # record 17 - not done
-                         (2703,27,301):  self.readMATT9,  # record 19 - not done
-                         (8802,88,413):  self.readRADM,   # record 25 - not done
+                         (503,  5, 90): self.readMATS1,   # record 12 - not done
+                         (703,  7, 91): self.readMATT1,   # record 13 - not done
+                         (803,  8,102): self.readMATT2,   # record 14 - not done
+                         (1503,14,189): self.readMATT3,   # record 15 - not done
+                         (2303,23,237): self.readMATT4,   # record 16 - not done
+                         (2403,24,238): self.readMATT5,   # record 17 - not done
+                         (2703,27,301): self.readMATT9,   # record 19 - not done
+                         (8802,88,413): self.readRADM,    # record 25 - not done
 
                          }
 
