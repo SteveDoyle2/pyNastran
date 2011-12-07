@@ -140,12 +140,12 @@ class OUGV1(object):
         else:
             if   tfsCode in [[1,1,0],[7,1,0]]: # displacement/modes
                 self.readOUGV1_Data_format1_sort0()
-            #elif tfsCode==[1,1,1]:
-            #    self.readOUGV1_Data_format1_sort1()
+            elif tfsCode in [[1,1,1],[7,1,1]]:
+                self.readOUGV1_Data_format1_sort1()
             #elif tfsCode==[1,2,1]:
             #    self.readOUGV1_Data_format2_sort1()
-            #elif tfsCode==[1,3,1]:
-            #    self.readOUGV1_Data_format3_sort1()
+            elif tfsCode==[1,3,1]:
+                self.readOUGV1_Data_format3_sort1()
             else:
                 raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
             ###

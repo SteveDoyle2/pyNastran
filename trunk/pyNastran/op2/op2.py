@@ -3,7 +3,6 @@ from op2Codes import Op2Codes
 from op2Errors import *
 import os
 import sys
-import struct
 from struct import unpack
 
 from geometryTables import GeometryTables
@@ -77,16 +76,18 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              'EPT','MPT','MPTS',
                              'DYNAMIC','DYNAMICS',
                              'DIT',
+                             'R1TABRG','HISADD', ## @todo what do these do???
 
-                             #'DESTAB',
+                             'DESTAB',
                              'OQG1',
                              'OUGV1','OUPV1',
                              'OEF1X','DOEF1',
                              'OPG1','OGPFB1',
                              'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD',
                              'ONRGY1',
+                             
+                             ## @todo what do these do???
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
-                             #what is OFMPF2M
                              ]
                              
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
@@ -96,17 +97,15 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
         # OUG
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
-        self.temperatures  = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=1
+        self.temperatures  = {}           # aCode=1 ------- ------- sortCode=0 thermal=1
+        self.freqDisplacements = {}       # aCode=5 ------- fCode=3 sortCode=1 thermal=0
+        self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
+        self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
+        self.preBucklingDisplacements= {} # aCode=7 ------- ------- ---------- thermal=0
 
-        self.freqDisplacements = {}       # aCode=5 tCode=1 fCode=3 sortCode=1 thermal=0
-
-        self.nonlinearDisplacements  = {} # aCode=6 tCode=1 fCode=1 sortCode=0 thermal=0
-        self.nonlinearTemperatures   = {} # aCode=6 tCode=1 fCode=1 sortCode=0 thermal=1
-        self.preBucklingDisplacements= {} # aCode=7 tCode=1 fCode=1 sortCode=0 thermal=0
-
-        self.eigenvectors = {}            # aCode=2 tCode=7 fCode=1 sortCode=1 thermal=0
-        self.postBucklingEigenvector = {} # aCode=8 tCode=7 fCode=1 sortCode=1 thermal=0
-        self.complexEigenvalues = {}      # aCode=9 tCode=7 fCode=1 sortCode=1 thermal=0
+        self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
+        self.postBucklingEigenvector = {} # aCode=8 ------- ------- ---------- thermal=0
+        self.complexEigenvalues = {}      # aCode=9 ------- ------- ---------- thermal=0
 
         #self.forces = {}
         #self.fluxes = {}
@@ -252,7 +251,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 elif tableName=='GEOM4': # constraints
                     self.readTable_Geom4()
 
-                elif tableName=='EPT':   # element properties
+                elif tableName in ['EPT','EPTS']:  # element properties
                     self.readTable_EPT()
                 elif tableName in ['MPT','MPTS']:  # material properties
                     self.readTable_MPTS()
@@ -261,8 +260,15 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 elif  tableName=='DIT':  # tables...TABLED1/TABLEM1/TABLES1/GUST
                     self.readTable_DIT()
 
-                elif tableName=='DESTAB':  # design variable table
+                elif tableName in ['DESTAB']:  # design variable table
                     self.readTable_DesTab()
+
+                elif tableName in ['R1TABRG']: # not done - response table
+                    self.readTable_R1TAB()
+                    self.isOptimization = True
+                elif tableName in ['HISADD']: # not done
+                    self.readTable_R1TAB()
+                    self.isOptimization = True
 
                 elif tableName in ['OPG1','OGPFB1']: # table of applied loads
                     self.readTable_OGP1()

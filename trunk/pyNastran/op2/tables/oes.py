@@ -126,6 +126,7 @@ class OES(object):
         #self.printBlock(data)
         #self.printBlock(data)
         bufferWords, = unpack('i',data[4:8])
+        #print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=|%s|\n' %(str(bufferWords)))
 
@@ -135,18 +136,18 @@ class OES(object):
         #self.verifyBufferSize(bufferWords)
         
         isBlockDone = not(bufferWords)
-        print "self.firstPass = ",self.firstPass
+        #print "self.firstPass = ",self.firstPass
         
         ## table -4 is done, restarting table -3
         if bufferWords==146: # breaks some/fixes others -  and self.firstPass==False:
             isTable4Done = True
-            print "exitA"
+            #print "exitA"
             return isTable4Done,isBlockDone
         elif bufferWords==0:
             #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             isBlockDone  = True
-            print "exitB"
+            #print "exitB"
             return isTable4Done,isBlockDone
 
         print "*elementType = ",self.elementType
@@ -156,7 +157,6 @@ class OES(object):
         self.data = self.readBlock()  # 348
         #print "len(self.data) = ",len(self.data)
 
-        print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('reading big data block\n')
         #print "self.n = ",self.n
@@ -221,8 +221,10 @@ class OES(object):
 
             elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
                 #print "    found a 95/96/97 or 98!"
+                self.eid2 = None # stores the previous elementID
                 stressStrainObj = self.instantiateCompositePlateObject()
                 self.CQUAD4_95(stressStrainObj)
+                del self.eid2
             else:
                 self.printBlock(self.data[0:100])
                 self.skipOES_Element(None)

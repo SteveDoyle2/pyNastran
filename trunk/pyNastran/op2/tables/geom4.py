@@ -1,6 +1,5 @@
 import os
 import sys
-import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *

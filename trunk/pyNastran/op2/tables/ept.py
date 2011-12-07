@@ -1,6 +1,5 @@
 import os
 import sys
-import struct
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
@@ -22,19 +21,18 @@ class EPT(object):
                          (2302,23,283):   self.readPSHELL,  # record 52
                          (1602,16,30):    self.readPTUBE,   # record 56
                          
-                         (5402, 54, 262): self.readFake,
-                         (11001,110,411): self.readFake,
-                         (2802, 28, 236): self.readFake,
-                         (2606, 26, 289): self.readFake,
-                         (152,  19, 147): self.readFake,
-                         (2102, 21, 121): self.readFake,
-                         (2502, 25, 248): self.readFake,
-                         (9202, 92,  53): self.readFake,
-                         (3101, 31, 219): self.readFake,
-                         (302,   3,  46): self.readFake,
-                         (1802, 18,  31): self.readFake,
-                         (202,   2,  45): self.readFake,
-                         (10201,102,400): self.readFake,
+                         #(5402, 54, 262): self.readPBEAM,   # record 14 - not done
+                         #(9202, 92,  53): self.readPBEAML,  # record 15
+                         #(2502, 25, 248): self.readPBEND,   # record 16
+                         #(3101, 31, 219): self.readPBUSH1D, # record 20
+                         #(152,  19, 147): self.readPCONEAX, # record 24
+                         #(11001,110,411): self.readPCONV,   # record 25
+                         #(202,   2,  45): self.readPDAMP,   # record 27
+                         #(302,   3,  46): self.readPELAS,   # record 39
+                         #(2802, 28, 236): self.readPHBDY,   # record 43
+                         #(1802, 18,  31): self.readPVISC,   # record 59
+                         #(10201,102,400): self.readPVAL,    # record 58
+                         #(2606, 26, 289): self.readVIEW,    # record 62
 
 
                          }

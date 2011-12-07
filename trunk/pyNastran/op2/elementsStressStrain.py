@@ -512,7 +512,8 @@ class ElementsStressStrain(object):
         #print "*****"
         #self.printBlock(self.data)
         assert self.numWide==11,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=40: # 2+17*5 = 87 -> 87*4 = 348
+
+        while len(self.data)>=44: # 2+17*5 = 87 -> 87*4 = 348
             eData     = self.data[0:4*11]
             self.data = self.data[4*11: ]
             out = unpack('iifffffffff',eData)
@@ -520,38 +521,16 @@ class ElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
             (eid,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
             eid = (eid - deviceCode) / 10  ## @todo adjust with deviceCode...
-            stress.addNewEid(eType,eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
-            #print "eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
             
-            nextLayer = unpack('i',self.data[0:4])
-            #print "nextLayer = ",nextLayer
-            #self.printBlock(self.data[:20])
-
-            while len(self.data)>=40:   #nodes pts
-                eData     = self.data[0:4*11]
-                self.data = self.data[4*11: ]
-                out = unpack('iifffffffff',eData)
-                
-                (eid2,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
-                if self.makeOp2Debug:
-                    self.op2Debug.write('%s\n' %(str(out)))
-                eid2 = (eid2 - deviceCode) / 10  ## @todo adjust with deviceCode...
-                if eid2!=eid:
-                    eid = eid2
-                    stress.addNewEid(eType,eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
-                else:
-                    stress.add(eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
-                ###
-                #print "eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
-
-                #eid3,nextLayer = unpack('ii',self.data[0:8])
-                    
-                #print "nextLayer = ",nextLayer
-
-                #print "len(data) = ",len(self.data)
-                #self.printBlock(self.data)
+            if eid!=self.eid2: # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+                stress.addNewEid(eType,eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
+            else:
+                #print "4 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+                stress.add(eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
             ###
-            #sys.exit('asdf')
+            self.eid2 = eid
+
             #print '--------------------'
             #print "len(data) = ",len(self.data)
             #print "tell = ",self.op2.tell()
@@ -560,6 +539,8 @@ class ElementsStressStrain(object):
             #sys.exit('asdf')
             #self.dn += 348
         ###
+        #print "5 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+        self.printSection(100)
         self.handleResultsBuffer(self.CQUAD4_95,stress)
 
     def CQUAD4_144(self,stress): # works
