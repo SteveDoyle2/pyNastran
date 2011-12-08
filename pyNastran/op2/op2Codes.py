@@ -2,6 +2,7 @@
 class Op2Codes(object):
     def ElementType(self,eCode):
         elements = {
+            None  : '',
             0  : 'GRID',
             1  : 'ROD',
             2  : 'BEAM',
@@ -245,6 +246,7 @@ class Op2Codes(object):
         msg = ''
         msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
         tableContent = {
+            0  : '',
             1  : 'OUG - Displacement vector',
             2  : 'OPG - Load vector',
             3  : 'OQG - SPC Force vector',
@@ -315,6 +317,10 @@ class Op2Codes(object):
         thermal = None
         if hasattr(self, 'thermal'):
             thermal = self.thermal 
+
+        elementType = None
+        if hasattr(self, 'elementType'):
+            elementType = self.elementType
 
         sWord = ''
         if(  sCode==0):  sWord += 'Coordinate Element - Stress Max Shear or Octahedral'
@@ -428,13 +434,15 @@ class Op2Codes(object):
         elif(self.tableCode==39):  table = "OQG - MPC Forces"
         elif(self.tableCode==40):  table = "OGPKE - Grip point kinetic energy"
 
-        msg  = "  approachCode = %-2s %s\n" %(self.approachCode,approach)
-        msg += "  deviceCode   = %-2s %s\n" %(self.deviceCode,device)
-        msg += "  tableCode    = %-2s %s\n" %(self.tableCode,table)
-        msg += "  formatCode   = %-2s %s\n" %(formatCode,formatWord)
-        msg += "  sortCode     = %-2s %s\n" %(self.sortCode,sortWord)
-        if sWord:
-            msg += "  sCode        = %-2s %s\n" %(sCode,sWord)
+        msg  = "  deviceCode   = %-3s %s\n" %(self.deviceCode,device)
+        msg += "  approachCode = %-3s %s\n" %(self.approachCode,approach)
+        msg += "  tableCode    = %-3s %s\n" %(self.tableCode,table)
+        msg += "  formatCode   = %-3s %s\n" %(formatCode,formatWord)
+        msg += "  sortCode     = %-3s %s\n" %(self.sortCode,sortWord)
+        
+        if elementType is not None:
+            msg += "  elementType  = %-3s %s\n" %(elementType,self.ElementType(elementType))
+        msg += "  sCode        = %-3s %s\n" %(sCode,sWord)
         #if thermalWord:
         msg += "  thermal      = %-2s %s\n" %(thermal,thermalWord)
         #print msg

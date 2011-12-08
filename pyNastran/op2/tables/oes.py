@@ -19,7 +19,7 @@ class OES(object):
 
     def deleteAttributes_OES(self):
         params = ['sCode','elementType','obj','markerStart','loadSet','formatCode','sCode','thermal',
-                  'lsdvmn','mode','eign','modeCycle','freq','mode','eigr','eigi','dt']
+                  'lsdvmn','mode','eign','modeCycle','freq','mode','eigr','eigi','dt','nonlinearFactor']
         self.deleteAttributes(params)
 
     def readTable_OES_3(self,iTable):
@@ -50,43 +50,53 @@ class OES(object):
         print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
 
         ## assuming tCode=1
+        self.nonlinearFactor = None
         if self.approachCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.approachCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
             self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
+            self.nonlinearFactor = self.mode
         elif self.approachCode==3: # differential stiffness
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.approachCode==4: # differential stiffness
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
+            self.nonlinearFactor = self.freq
 
         elif self.approachCode==6: # transient
             self.dt = self.getValues(data,'f',5) ## time step
             print "DT(5)=%s" %(self.dt)
+            self.nonlinearFactor = self.dt
         elif self.approachCode==7: # pre-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## load set
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==8: # post-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.approachCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
             print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            self.nonlinearFactor = self.mode
         elif self.approachCode==10: # nonlinear statics
             self.lftsfq = self.getValues(data,'f',5) ## load step
+            self.nonlinearFactor = self.lftsfq
             print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.approachCode==11: # old geometric nonlinear statics
             self.lsdvmn = self.getValues(data,'i',5)
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             #self.lsdvmn = self.getValues(data,'i',5)
             self.dt = self.getValues(data,'f',5)  ## Time step ??? --> straight from DMAP
+            self.nonlinearFactor = self.dt
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
@@ -116,6 +126,7 @@ class OES(object):
 
     def readTable_OES_4_Data(self,iTable):
         print "-------------"
+        print "**self.readTable_OES_4_Data"
         isTable4Done = False
         isBlockDone  = False
         #print self.printSection(100)
@@ -126,7 +137,7 @@ class OES(object):
         #self.printBlock(data)
         #self.printBlock(data)
         bufferWords, = unpack('i',data[4:8])
-        #print "bufferWords = ",bufferWords
+        print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=|%s|\n' %(str(bufferWords)))
 
@@ -139,17 +150,23 @@ class OES(object):
         #print "self.firstPass = ",self.firstPass
         
         ## table -4 is done, restarting table -3
-        if bufferWords==146: # breaks some/fixes others -  and self.firstPass==False:
+        if self.isBufferDone: # table is done when the buffer is done
             isTable4Done = True
             #print "exitA"
             return isTable4Done,isBlockDone
-        elif bufferWords==0:
+        if bufferWords==0:
             #print "bufferWords 0 - done with Table4"
             isTable4Done = True
-            isBlockDone  = True
+            #isBlockDone  = True
+            self.printSection(40)
             #print "exitB"
             return isTable4Done,isBlockDone
 
+        self.readElementTable()
+        return isTable4Done,isBlockDone
+
+    def readElementTable(self):
+        #print "**self.readElementTable"
         print "*elementType = ",self.elementType
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
@@ -163,10 +180,7 @@ class OES(object):
         #print 'reading big data block'
         #print self.printBlock(self.data)
 
-        self.readElementTable()
-        return isTable4Done,isBlockDone
 
-    def readElementTable(self):
         if self.formatCode==1 and self.sortCode==0:
             if self.elementType==1: # crod
                 #print "    found crod_1"
@@ -194,6 +208,7 @@ class OES(object):
                 self.CBAR_34(stressStrainObj)
 
             elif self.elementType==33: # cquad4_33
+                self.stopCode = True
                 #print "    found cquad_33"
                 stressStrainObj = self.instantiatePlateObject()
                 self.CQUAD4_33(stressStrainObj)
@@ -202,6 +217,7 @@ class OES(object):
                 stressStrainObj = self.instantiatePlateObject()
                 self.CTRIA3_74(stressStrainObj) # ctria3
             elif self.elementType==144: # cquad4
+                self.stopCode = True
                 #print "    found cquad_144"
                 stressStrainObj = self.instantiatePlateObject()
                 self.CQUAD4_144(stressStrainObj)
@@ -210,13 +226,14 @@ class OES(object):
                 #print "    found ctetra_39 / hexa_67 / cpenta_68"
                 stressStrainObj = self.instantiateSolidObject()
                 self.CSOLID_67(stressStrainObj)
+
             elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
                 #print "    found ctetra_85 / hexa_93 / cpenta_91"
                 stressStrainObj = self.instantiateSolidObject()
                 self.CSOLID_85(stressStrainObj)
-
             elif self.elementType in [93]: # CHEXANL
                 stressStrainObj = None
+                #print "hexa_93"
                 self.CHEXANL_93(stressStrainObj)
 
             elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
@@ -250,7 +267,7 @@ class OES(object):
         #elif self.elementType == 34:   # cbar      (done)
         #elif self.elementType == 35:   # cconeax
         #elif self.elementType == 38:   # cgap
-        #elif self.elementType == 39:   # ctetra    (done)
+        #elif self.elementType == 39:   # ctetra    (don5e)
         #elif self.elementType == 40:   # cbush1d
 
         #elif self.elementType == 47:   # caxif2
@@ -332,7 +349,6 @@ class OES(object):
     def instantiateRodObject(self): # 1 (CROD)
         """
         Creates a stress/strain object if necessary
-        @todo I dont like the double return blocks, but it'll work...
         """
         #print "starting a ROD stress/strain object"
         #print "    iSubcase = ",self.iSubcase
@@ -342,25 +358,17 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.rodStress:
-                self.rodStress[self.iSubcase] = rodStressObject(self.iSubcase)
-                #print self.codeInformation()
-            return self.rodStress[self.iSubcase]
-
+            self.createTransientObject(self.rodStress,rodStressObject,self.nonlinearFactor)
         elif self.sCode in [10,11]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.barStrain:
-                self.rodStrain[self.iSubcase] = rodStrainObject(self.iSubcase)
-            return self.rodStrain[self.iSubcase]
+            self.createTransientObject(self.rodStrain,rodStrainObject,self.nonlinearFactor)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
+        return self.obj
 
     def instantiateBarObject(self): # 34 (CBAR)
         """
         Creates a stress/strain object if necessary
-        @todo I dont like the double return blocks, but it'll work...
         """
         #print "starting a BAR stress/strain object"
         #print "    iSubcase = %s" %(self.iSubcase)
@@ -370,26 +378,17 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.barStress:
-                #print self.codeInformation()
-                self.barStress[self.iSubcase] = barStressObject(self.iSubcase)
-            return self.barStress[self.iSubcase]
-
+            self.createTransientObject(self.barStress,barStressObject,self.nonlinearFactor)
         elif self.sCode in [10,11]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.barStrain:
-                #print self.codeInformation()
-                self.barStrain[self.iSubcase] = barStrainObject(self.iSubcase)
-            return self.barStrain[self.iSubcase]
+            self.createTransientObject(self.barStrain,barStrainObject,self.nonlinearFactor)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
+        return self.obj
 
     def instantiateCompositePlateObject(self):  # 95,96,97,98 (CQUAD4, CQUAD8, CTRIA3, CTRIA6)
         """
         Creates a stress/strain object if necessary
-        @todo I dont like the double return blocks, but it'll work...
         """
         #print "starting a COMPOSITE PLATE stress/strain object"
         #print "    iSubcase = %s" %(self.iSubcase)
@@ -399,26 +398,17 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1,16,17]: # stress
-            #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.compositePlateStress:
-                #print self.codeInformation()
-                self.compositePlateStress[self.iSubcase] = compositePlateStressObject(self.iSubcase)
-            return self.compositePlateStress[self.iSubcase]
-
+            self.createTransientObject(self.compositePlateStress,compositePlateStressObject,self.nonlinearFactor)
         elif self.sCode in [10,11,13,14,15,26,27,30,31]: # strain
-            #assert self.sortCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.plateStrain:
-                #print self.codeInformation()
-                self.compositePlateStrain[self.iSubcase] = compositePlateStrainObject(self.iSubcase)
-            return self.compositePlateStrain[self.iSubcase]
+            self.createTransientObject(self.compositePlateStrain,compositePlateStrainObject,self.nonlinearFactor)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
+        return self.obj
 
-    def instantiatePlateObject(self): # 74, 144 (CTRIA3, CQUAD4)
+    def instantiatePlateObject(self): # 74, 39, 144 (CTRIA3, CQUAD4)
         """
         Creates a stress/strain object if necessary
-        @todo I dont like the double return blocks, but it'll work...
         """
         #print "starting a PLATE stress/strain object"
         #print "    iSubcase = %s" %(self.iSubcase)
@@ -428,26 +418,17 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.plateStress:
-                #print self.codeInformation()
-                self.plateStress[self.iSubcase] = plateStressObject(self.iSubcase)
-            return self.plateStress[self.iSubcase]
-
+            self.createTransientObject(self.plateStress,plateStressObject,self.nonlinearFactor)
         elif self.sCode in [10,11,15]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.plateStrain:
-                #print self.codeInformation()
-                self.plateStrain[self.iSubcase] = plateStrainObject(self.iSubcase)
-            return self.plateStrain[self.iSubcase]
+            self.createTransientObject(self.plateStrain,plateStrainObject,self.nonlinearFactor)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
+        return self.obj
 
     def instantiateSolidObject(self): # 39, 67, 68 (CTETRA, CPENTA, CHEXA)
         """
         Creates a stress/strain object if necessary
-        @todo I dont like the double return blocks, but it'll work...
         """
         #print "starting a SOLID stress/strain object"
         #print "    iSubcase = %s" %(self.iSubcase)
@@ -457,20 +438,11 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.solidStress:
-                #print self.codeInformation()
-                #print "created new solidObject for iSubcase=%s" %(self.iSubcase)
-                self.solidStress[self.iSubcase] = solidStressObject(self.iSubcase)
-            return self.solidStress[self.iSubcase]
-
+            self.createTransientObject(self.solidStress,solidStressObject,self.nonlinearFactor)
         elif self.sCode in [10,11]:
-            #assert self.tableCode==0,'only REAL stress/strain is supported...tableCode=%s' %(self.tableCode)
-            if self.iSubcase not in self.solidStrain:
-                #print self.codeInformation()
-                self.solidStrain[self.iSubcase] = solidStrainObject(self.iSubcase)
-            return self.solidStrain[self.iSubcase]
+            self.createTransientObject(self.solidStrain,solidStrainObject,self.nonlinearFactor)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
+        return self.obj
 

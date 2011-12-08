@@ -1,4 +1,5 @@
-#import sys
+import sys
+import copy
 from struct import unpack
 
 from pyNastran.op2.op2Errors     import *
@@ -35,16 +36,22 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
         iTable=-3
         self.readMarkers([iTable,1,0],tableName)
+
         while [markerA,markerB]!=[0,2]:
-            self.firstPass = True
+            self.isBufferDone = False
+            #print self.printSection(140)
+            #print "reading iTable3=%s" %(iTable)
             table3(iTable)
             #print "self.tellA = ",self.op2.tell()
+            
+            self.isMarker = False
             isBlockDone = self.readTable4(table4Data,iTable-1)
-            self.firstPass = False
+            #self.firstPass = False
 
             #print "self.tellB = ",self.op2.tell()
             iTable -= 2
-            #print "isBlockDone = ",isBlockDone
+            print "isBlockDone = ",isBlockDone
+            #sys.exit('stopping')
             if isBlockDone:
                 #print "iTable = ",iTable
                 #self.n = self.markerStart
@@ -74,6 +81,35 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print str(self.obj)
         if self.makeOp2Debug:
             self.op2Debug.write("***end of %s table***\n" %(tableName))
+
+    def readTable4(self,table4Data,iTable):
+        #self.readMarkers([iTable,1,0])
+        markerA = 4
+        
+        while markerA>None:
+            self.markerStart = copy.deepcopy(self.n)
+            #self.printSection(180)
+            self.readMarkers([iTable,1,0])
+            #print "starting OEF table 4..."
+            isTable4Done,isBlockDone = table4Data(iTable)
+            if isTable4Done:
+                #print "done with OEF4"
+                self.n = self.markerStart
+                self.op2.seek(self.n)
+                break
+            #print "finished reading oef table..."
+            markerA = self.getMarker('A')
+            self.n-=12
+            self.op2.seek(self.n)
+            
+            self.n = self.op2.tell()
+            #print "***markerA = ",markerA
+            
+            iTable-=1
+            #print "isBlockDone = ",isBlockDone
+        ###    
+        #print "isBlockDone = ",isBlockDone
+        return isBlockDone
 
     def handleResultsBuffer(self,func,stress,debug=False):
         """
@@ -109,8 +145,13 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #    return
 
         #print "markers = ",markers
+        #print self.printSection(160)
+        
         if markers<0:
             self.goto(nOld)
+            if markers%2==1:
+                self.isBufferDone = True
+
             #print self.printSection(120)
             #sys.exit('found a marker')
             #print 'found a marker'

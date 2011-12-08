@@ -529,7 +529,7 @@ class PLOAD4(Load):
             
             self.g3 = self.g1
             self.g4 = self.g34
-            self.eids = None
+            self.eids = []
         ###
 
     def crossReference(self,model):

@@ -7,11 +7,6 @@ class ElementsStressStrain(object):
         self.data = ''
         self.handleResultsBuffer(self.skipOES_Element,stress)
 
-    def CHEXANL_93(self,stress): # not implemented
-        while len(self.data)>=1456: # 2+18*10 = 182 -> 182*4 = 1456
-            self.data = self.data[1456:]
-        self.handleResultsBuffer(self.CHEXANL_93,stress,debug=True)
-
     def CROD_1(self,stress): # works
         if self.makeOp2Debug:
             self.op2Debug.write('---CROD_1---\n')
@@ -355,6 +350,41 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_67,stress)
         #print self.solidStress[self.iSubcase]
 
+    def CHEXANL_93(self,stress):
+        """
+        The DMAP manual says fields 3-18 repeat 9 times. but they dont.
+        They repeat 8 times.  Other DMAP cards are correct with
+        their repeat statements.
+        """
+        print "CHEXANL_93"
+        #print "len(self.data) = ",len(self.data)
+
+        while len(self.data)>=584: # 2+16*9 = 182 -> 146*4 = 584
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid,a,b,c,d) = unpack('icccc',eData)
+            #out = unpack("ii",eData)
+            #(eid,cType) = out
+            cType = a+b+c+d
+
+            for i in range(9):
+                print "len(self.data) = ",len(self.data)
+                eData = self.data[0:64]
+                self.data = self.data[64:]
+                out = unpack('ifffffffffffffff',eData)
+                assert len(out)==16
+                (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
+                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #print ""
+                assert a=='G'
+            
+            #self.data = self.data[1456:]
+            #sys.exit('hexa...')
+        #print "buffer time..."
+        #self.firstPass = True
+        self.handleResultsBuffer(self.CHEXANL_93,stress,debug=True)
+
     def CSOLID_85(self,stress):  # works
         """
         stress is extracted at the centroid
@@ -421,7 +451,7 @@ class ElementsStressStrain(object):
                     self.op2Debug.write('%s\n' %(str(out)))
 
                 (gridGauss,sxx,syy,szz,sxy,syz,sxz,se,
-                eps,ecs,exx,eyy,ezz,exy,eyz,exz) = out
+                   eps,ecs,exx,eyy,ezz,exy,eyz,exz) = out
 
                 if gridGauss==0:
                     gridGauss = 'C'

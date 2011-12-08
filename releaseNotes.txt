@@ -11,15 +11,60 @@ If you have a bug/want a new feature or card, leave some feedback on the
 Issues List:     http://code.google.com/p/pynastran/issues/list
 
 
----v0.2---
-Overall
-   - nothing done yet...
+---v0.2 released ??/??/????---
 
+Overall BDF
+   - a few more cards
+   - bug fixes to CELASx, PCOMP, CORDx cards
+   - added extra argument to all cards to set data straight
+     from the OP2 (no data type setting as the OP2 is binary).
+
+Overall OP2
+   - reading support ONLY
+   - static solutions (SOL 101) results will be very stable
+   - thermal solutions have significantly less support than
+     structural solutions.
+   - SORT2 is not supported...for example:
+         use   DISPLACEMENT(PLOT,SORT1)=ALL
+         not   DISPLACEMENT(PLOT,SORT2)=ALL
+   - Many examples outside of SOL 101 have been tested 
+     and dont crash.  This includes large SOL 200 models.  However,
+     make sure you verify the results make sense before you trust them.
+   - The user can modify the tablesToRead variable to adjust the tables
+     that are read.  NOTE: large tables are much more robust when read
+
+OP2 Tables
+   - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)
+     Cards that are not stable are not supported.  The
+     writeAsPatran method may be used, but there may still be a 
+     few bugs in some of the cards.  These tables are very stable.
+
+   - OUG  table (displacement/temperature,eigenvalues
+                 velocity,acceleration) is very robust
+   - OQG  table (spc/mpc forces) is spotty, but doesnt crash
+   - OGP  table (grid point forces) works for SOL 101
+   - OSTR table (strain) - see OES table
+   - OES  table (stress) - elements that arent supported are skipped
+       - Be careful about how you request the data from the object as
+         the variables are dynamic based on the Case Control Deck parameters
+         selected.  For example:
+             STRESS(PLOT,SORT1,FIBER,VONMISES)=ALL
+                - composite stress oxx is in the fiber direction (not the x axis)
+                - isotropic stress elements have von mises stress (ovm)
+             STRESS(PLOT,SORT1,FIBER,MAXSHEAR)=ALL
+                - composite stress oxx is in the fiber direction (not the x axis)
+                - isotropic stress elements have max shear stress (maxShear)
+       - Rod elements can have different outputs depending on the
+         solution and user requested output options.  For example, rods can
+         contain the margin of safety in tension and compression, but they don't
+         always have that data.
+
+   - OEE table (element energy) - stable, but results are questionable and difficult to verify.
 
 
 ---v0.1 released 2011/11/09 ---
 
-Overall
+Overall BDF
    - an executive control deck, case control deck, and bulk data deck
      are REQUIRED.
    - A ENDDATA card is strongly recommened!
@@ -83,7 +128,7 @@ Bulk Data Deck Cross-Referencing
    - When using constraints, all constraints (SPC,SPC1,SPCD,MPC) must be
      part of an SPCADD or MPCADD, unless there are no SPCADDs or MPCADDs.
      In other words, DONT mix and match!
-   - Structural elements have a mass/area/length depending on type.
+   - Structural elements have a Mass/Area/Length/Thickness depending on type.
    - Volume ONLY supported for TET4 and TET10
    - Lots of methods for PCOMPs
    - CBEAM elements do are not complete for their area/mass/etc calcuations.
