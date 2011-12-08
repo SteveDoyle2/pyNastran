@@ -267,7 +267,7 @@ class OES(object):
         #elif self.elementType == 34:   # cbar      (done)
         #elif self.elementType == 35:   # cconeax
         #elif self.elementType == 38:   # cgap
-        #elif self.elementType == 39:   # ctetra    (don5e)
+        #elif self.elementType == 39:   # ctetra    (done)
         #elif self.elementType == 40:   # cbush1d
 
         #elif self.elementType == 47:   # caxif2
