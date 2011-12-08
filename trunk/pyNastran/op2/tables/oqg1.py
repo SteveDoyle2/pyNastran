@@ -16,7 +16,7 @@ class OQG1(object):
 
     def readTable_OQG1(self):
         table3 = self.readTable_OQG1_3
-        table4Data = self.readTable_OQG1_4_Data
+        table4Data = self.readOQG1_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OQG()
 
@@ -118,14 +118,19 @@ class OQG1(object):
             self.readOQG1_Data_format1_sort1()
         elif tfsCode==[3,2,1]:
             self.readOQG1_Data_format2_sort1()
+        elif tfsCode==[3,3,0]:
+            self.readOQG1_Data_format3_sort0()
         elif tfsCode==[3,3,1]:
             self.readOQG1_Data_format3_sort1()
-        elif tfsCode==[39,1,1]: # MPC Forces
-            self.skipOES_Element(None)
+            
+        
+        elif tfsCode==[39,1,0]: # MPC Forces
+            self.readOQG1_Data_format1_sort0()
+        elif tfsCode==[39,1,1]:
+            self.readOQG1_Data_format1_sort1()
         else:
             raise Exception('bad tableCode/formatCode/sortCode=%s' %(tfsCode))
         ###
-
 
         #if self.formatCode==1:
         #    self.readScalars8(self.obj)
@@ -135,7 +140,9 @@ class OQG1(object):
         #    raise Exception('only formatCode=1...formatCode=|%s|' %(self.formatCode))
         #print self.obj
 
-
+    def readOQG1_Data_format3_sort0(self):
+        print 'not supported OQG solution...atfsCode=%s' %(self.atfsCode)
+        self.skipOES_Element(None)
 
     def readOQG1_Data_format1_sort0(self):
         if self.thermal==0:
@@ -164,9 +171,9 @@ class OQG1(object):
                 self.createTransientObject(self.realImagConstraints,displacementObject,self.lftsfq)
                 self.realImagConstraints[self.iSubcase] = self.obj
             else:
-                raise Exception('unsupported OQG1 formatCode=1 sortCode=0 static solution...')
+                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
-        else: # thermal = 1
+        elif self.thermal==1:
             if self.approachCode==1: # temperature
                 print "isTemperature"
                 self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
@@ -175,8 +182,11 @@ class OQG1(object):
                 self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
                 self.nonlinearTemperatures[self.iSubcase] = self.obj
             else:
-                raise Exception('unsupported OQG1 formatCode=1 sortCode=0 thermal solution...')
+                raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
+        ###
+        else:
+            raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readScalars8(self.obj)
 
@@ -196,13 +206,14 @@ class OQG1(object):
                 #print "****self", type(self.obj)
             ###
             else:
-                raise Exception('unsupported OQG1 formatCode=1 sortCode=1 static solution...')
+                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
-        else: #thermal=1
-            raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
-            ###
+        elif thermal==1:
+            raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
+        else:
+            raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        print self.printSection(120)
+        #print self.printSection(120)
         self.readScalars14(self.obj)
 
     def readOQG1_Data_format2_sort1(self):
@@ -214,11 +225,12 @@ class OQG1(object):
                 self.freqForces[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
             else:
-                raise Exception('unsupported OQG1 formatCode=1 sortCode=1 static solution...')
+                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
-        else: #thermal=1
-            raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
-            ###
+        elif thermal==1:
+            raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
+        else:
+            raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readFormat2(self.obj) # readImaginary
 
@@ -231,37 +243,15 @@ class OQG1(object):
                 self.freqForces[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
             else:
-                raise Exception('unsupported OQG1 formatCode=1 sortCode=1 static solution...')
+                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
-        else: #thermal=1
-            raise Exception('unsupported OQG1 formatCode=1 sortCode=1 thermal solution...')
-            ###
+        elif thermal==1:
+            raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
+        ###
+        else:
+            raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readFormat2(self.obj) # readImaginary
-
-    def readTable_OQG1_4_Data(self,iTable): # iTable=-4
-        isTable4Done = False
-        isBlockDone  = False
-
-        bufferWords = self.getMarker('OQG1')
-        #print len(bufferWords)
-        self.data = self.readBlock()
-        #self.printBlock(data)
-
-        if bufferWords==146:  # table -4 is done, restarting table -3
-            isTable4Done = True
-            return isTable4Done,isBlockDone
-        elif bufferWords==0:
-            #print "bufferWords 0 - done with Table4"
-            isTable4Done = True
-            isBlockDone = True
-            return isTable4Done,isBlockDone
-
-        isBlockDone = not(bufferWords)
-        self.readOQG1_Data()
-        
-        print "-------finished OQG1----------"
-        return (isTable4Done,isBlockDone)
 
     def readFormat2(self,scalarObject):
         data = self.data
@@ -285,8 +275,8 @@ class OQG1(object):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
-            print "grid=%-5s  dx=%g  dy=%g  dz=%g  rx=%g  ry=%g  rz=%g"  %(grid,dx, dy, dz, rx, ry, rz)
-            print "           dxi=%g dyi=%g dzi=%g rxi=%g ryi=%g rzi=%g" %(     dxi,dyi,dzi,rxi,ryi,rzi)
+            #print "grid=%-5s  dx=%g  dy=%g  dz=%g  rx=%g  ry=%g  rz=%g"  %(grid,dx, dy, dz, rx, ry, rz)
+            #print "           dxi=%g dyi=%g dzi=%g rxi=%g ryi=%g rzi=%g" %(     dxi,dyi,dzi,rxi,ryi,rzi)
             #scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             
             data = data[56:]

@@ -229,6 +229,7 @@ class MPT(object):
         @todo add object
         """
         print "reading RADM"
+        return
         while len(data)>=4: # 1*4
             eData = data[:4]
             data  = data[4:]

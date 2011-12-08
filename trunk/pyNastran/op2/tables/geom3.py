@@ -14,7 +14,7 @@ class Geometry3(object):
                          (4201,42,18): self.readFORCE,    # record 3
                          (4001,40,20): self.readFORCE1,   # record 4
                          (4101,41,22): self.readFORCE2,   # record 5
-                         (4401,44,26): self.readGRAV,     # record 7
+                        #(4401,44,26): self.readGRAV,     # record 7 - buggy
                          (4551,61,84): self.readLOAD,     # record 8
                          (3709,37,331): self.readLOADCYH, # record 9 - not done
 

@@ -15,12 +15,12 @@ class OUGV1(object):
 
     def readTable_OUG1(self):
         table3 = self.readTable_OUGV1_3
-        table4Data = self.readTable_OUGV1_4_Data
+        table4Data = self.readOUGV1_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):
-        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag','thermal']
+        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag']
         self.deleteAttributes(params)
     
     def readTable_OUGV1_3(self,iTable): # iTable=-3
@@ -34,9 +34,8 @@ class OUGV1(object):
         data = self.getData(4*50)
         #print self.printBlock(data)
         
-        
         aCode = self.getBlockIntEntry(data,1)
-        print "aCode = ",aCode
+        #print "aCode = ",aCode
         self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
@@ -99,42 +98,10 @@ class OUGV1(object):
         #self.printBlock(data)
         self.readTitle()
 
-        #return (analysisCode,tableCode,thermal)
-
-        #if self.j==3:
-        #    #print str(self.obj)
-        #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
-        ###
-
-    def readTable_OUGV1_4_Data(self,iTable): # iTable=-4
-        isTable4Done = False
-        isBlockDone  = False
-
-        bufferWords = self.getMarker('OUGV1')
-        #print "bufferWords = ",bufferWords
-        #print len(bufferWords)
-        self.data = self.readBlock()
-        #self.printBlock(data)
-
-        if bufferWords==146:  # table -4 is done, restarting table -3
-            isTable4Done = True
-            return isTable4Done,isBlockDone
-        elif bufferWords==0:
-            #print "bufferWords 0 - done with Table4"
-            isTable4Done = True
-            isBlockDone = True
-            return isTable4Done,isBlockDone
-
-        isBlockDone = not(bufferWords)
-
-        self.readOUGV1_Data()
-        #print "-------finished OUGV1----------"
-        return (isTable4Done,isBlockDone)
 
     def readOUGV1_Data(self):
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
         #if self.thermal==2:
         #    self.skipOES_Element(None)
         print "tfsCode=%s" %(tfsCode)
@@ -263,12 +230,13 @@ class OUGV1(object):
                 raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        if self.obj:
-            self.readScalars8(self.obj)
-        else:
-            self.skipOES_Element(None)
+        self.readScalars8(self.obj)
+        #if self.obj:
+        #    self.readScalars8(self.obj)
+        #else:
+        #    self.skipOES_Element(None)
         ###
         #print self.obj
         #return
@@ -333,10 +301,10 @@ class OUGV1(object):
                 self.createTransientObject(self.freqDisplacements,displacementObject,self.freq)
                 self.freqDisplacements[self.iSubcase] = self.obj
             elif self.approachCode==6: # transient displacement
-                #print "isTransientDisplacement"
-                #self.createTransientObject(self.displacements,displacementObject,self.dt)
-                #self.displacements[self.iSubcase] = self.obj
-                self.obj = None
+                print "isTransientDisplacement"
+                self.createTransientObject(self.displacements,displacementObject,self.dt)
+                self.displacements[self.iSubcase] = self.obj
+                #self.obj = None
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###

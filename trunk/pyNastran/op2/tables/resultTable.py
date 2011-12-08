@@ -16,7 +16,7 @@ from pyNastran.op2.tables.destab import DESTAB
 
 class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
-    def readResultsTable(self,table3,table4Data):
+    def readResultsTable(self,table3,table4Data,flag=0):
         tableName = self.readTableName(rewind=False) # OEF
         self.tableInit(tableName)
         #print "tableName = |%r|" %(tableName)
@@ -42,10 +42,11 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print self.printSection(140)
             #print "reading iTable3=%s" %(iTable)
             table3(iTable)
+            self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
             #print "self.tellA = ",self.op2.tell()
             
             self.isMarker = False
-            isBlockDone = self.readTable4(table4Data,iTable-1)
+            isBlockDone = self.readTable4(table4Data,flag,iTable-1)
             #self.firstPass = False
 
             #print "self.tellB = ",self.op2.tell()
@@ -82,7 +83,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         if self.makeOp2Debug:
             self.op2Debug.write("***end of %s table***\n" %(tableName))
 
-    def readTable4(self,table4Data,iTable):
+    def readTable4(self,table4Data,flag,iTable):
         #self.readMarkers([iTable,1,0])
         markerA = 4
         
@@ -91,7 +92,10 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #self.printSection(180)
             self.readMarkers([iTable,1,0])
             #print "starting OEF table 4..."
-            isTable4Done,isBlockDone = table4Data(iTable)
+            if flag:
+                isTable4Done,isBlockDone = table4Data(iTable)
+            else:
+                isTable4Done,isBlockDone = self.readTable4DataSetup(table4Data,iTable)
             if isTable4Done:
                 #print "done with OEF4"
                 self.n = self.markerStart
@@ -110,6 +114,31 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         ###    
         #print "isBlockDone = ",isBlockDone
         return isBlockDone
+
+    def readTable4DataSetup(self,table4Data,iTable): # iTable=-4
+        isTable4Done = False
+        isBlockDone  = False
+
+        bufferWords = self.getMarker('OUGV1') ## @todo replace with table name
+        #print "bufferWords = ",bufferWords
+        #print len(bufferWords)
+        self.data = self.readBlock()
+        #self.printBlock(data)
+
+        if bufferWords==146:  # table -4 is done, restarting table -3
+            isTable4Done = True
+            return isTable4Done,isBlockDone
+        elif bufferWords==0:
+            #print "bufferWords 0 - done with Table4"
+            isTable4Done = True
+            isBlockDone = True
+            return isTable4Done,isBlockDone
+
+        isBlockDone = not(bufferWords)
+
+        table4Data()
+        #print "-------finished OUGV1----------"
+        return (isTable4Done,isBlockDone)
 
     def handleResultsBuffer(self,func,stress,debug=False):
         """
@@ -149,7 +178,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         
         if markers<0:
             self.goto(nOld)
-            if markers%2==1:
+            if markers is not None and markers%2==1:
                 self.isBufferDone = True
 
             #print self.printSection(120)

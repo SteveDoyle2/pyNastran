@@ -70,27 +70,31 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.bdfInit()
 
         self.infilename = infileName
-        #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        #self.tablesToRead = ['GEOM1','GEOM2','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        #self.tablesToRead = ['GEOM1','GEOM2','GEOM3','OQG1','OUGV1','OES1X1']  # 'OUGV1','GEOM1','GEOM2'
-        #self.tablesToRead = ['OQG1','OUGV1','OEF1X','OES1X1','OSTR1X','OES1C','OSTR1C','OGPFB1']  # 'OUGV1','GEOM1','GEOM2'
-        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4',
-                             'EPT','MPT','MPTS',
+        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
+                             'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
-                             'DIT',
-                             'R1TABRG','HISADD', ## @todo what do these do???
+                             'DIT',  # some header table...
 
-                             'DESTAB',
-                             'OQG1','OQMG1',
-                             'OUGV1','OUPV1',
-                             'OEF1X','DOEF1','OEFIT',
-                             'OPG1','OGPFB1','OPNL1',
-                             'OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD','OESTRCP','OESCP',
-                             'ONRGY1',
+                             'DESTAB',                # design variables
+                             'OQG1','OQMG1',          # spc/mpc forces
+                             'OUGV1',                 # displacements
+                             'OEF1X','DOEF1','OEFIT', # applied forces
+                             'OGPFB1',                # grid point forces
                              
-                             
-                             'VIEWTB','ERRORN',
+                             'OES1X','OES1X1','OES1C',      # stress
+                             'OSTR1C','OSTR1X',             # strains
+                             'OESNLXR','OESNLXD','OESTRCP', # nonlinear stress
+                             'OESCP',                       # cylinder stress???
+                             'OESTRCP',                     # cylinder strain???
+
+                             'ONRGY1', # energy
+                             'R1TABRG','HISADD',  # SOL 200
+
                              ## @todo what do these do???
+                             'OPG1', # think this is an OUG table...
+                             'OPNL1',
+                             'OUPV1',
+                             'VIEWTB','ERRORN',
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
                              ]
                              
@@ -285,7 +289,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                     self.readTable_OGP1()
                 elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
                     self.readTable_OGP1()
-                    
+
                 
                 elif tableName in ['OEF1X','DOEF1','OEFIT']:  # applied loads
                     self.readTable_OEF1()
@@ -293,8 +297,12 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                     self.readTable_OQG1()
                 elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                     self.readTable_OUG1()
-                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OSTR1C','OESNLXR','OESNLXD']: # stress/strain
+
+                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXR','OESNLXD','OESCP']: # stress
                     self.readTable_OES1()
+                elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
+                    self.readTable_OES1()
+
                 elif tableName in ['ONRGY1']: # energy???
                     self.readTable_OEE1()
                 else:
@@ -361,7 +369,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         return unpack(sFormat,ds)
         
     def deleteAttributes(self,params):
-        params += ['deviceCode','approachCode','tableCode','iSubcase','data','numWide']
+        params += ['deviceCode','approachCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))
@@ -406,7 +414,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         #print "Subtitle |%s|" %(Subtitle)
         #print "Label    |%s|" %(Label)
 
-        self.readHollerith()
+        self.readHollerith() # not really a hollerith, just the end of the block (so bufferWords*4)
         
         self.Title = Title.strip()
         if self.iSubcase not in self.iSubcaseNameMap:

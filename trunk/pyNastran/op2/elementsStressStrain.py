@@ -359,16 +359,18 @@ class ElementsStressStrain(object):
         print "CHEXANL_93"
         #print "len(self.data) = ",len(self.data)
 
+        n = 0
         while len(self.data)>=584: # 2+16*9 = 182 -> 146*4 = 584
             eData = self.data[0:8]
             self.data = self.data[8:]
             (eid,a,b,c,d) = unpack('icccc',eData)
+            eid = (eid - self.deviceCode) / 10
             #out = unpack("ii",eData)
             #(eid,cType) = out
             cType = a+b+c+d
 
             for i in range(9):
-                print "len(self.data) = ",len(self.data)
+                #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
                 out = unpack('ifffffffffffffff',eData)
