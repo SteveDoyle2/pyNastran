@@ -1,5 +1,4 @@
 import sys
-import copy
 from struct import unpack
 
 # pyNastran
@@ -103,35 +102,6 @@ class OEF(object):
         #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
         ###
 
-    def readTable4(self,table4Data,iTable):
-        #self.readMarkers([iTable,1,0])
-        markerA = 4
-        
-        while markerA>None:
-            self.markerStart = copy.deepcopy(self.n)
-            #self.printSection(180)
-            self.readMarkers([iTable,1,0])
-            #print "starting OEF table 4..."
-            isTable4Done,isBlockDone = table4Data(iTable)
-            if isTable4Done:
-                #print "done with OEF4"
-                self.n = self.markerStart
-                self.op2.seek(self.n)
-                break
-            #print "finished reading oef table..."
-            markerA = self.getMarker('A')
-            self.n-=12
-            self.op2.seek(self.n)
-            
-            self.n = self.op2.tell()
-            #print "***markerA = ",markerA
-            
-            iTable-=1
-            #print "isBlockDone = ",isBlockDone
-        ###    
-        #print "isBlockDone = ",isBlockDone
-        return isBlockDone
-
     def readTable_OEF_4_Data(self,iTable): # iTable=-4
         isTable4Done = False
         isBlockDone  = False
@@ -213,7 +183,8 @@ class OEF(object):
                 print "isNonlinearStaticForces"
                 self.createTransientObject(self.nonlinearForces,displacementObject,self.loadStep)
                 self.nonlinearForces[self.iSubcase] = self.obj
-                self.readForcesNonlinear(self.obj)
+                ##self.readForcesNonlinear(self.obj)
+                self.skipOES_Element(None)
             else:
                 self.skipOES_Element(None)
                 #raise Exception('not supported OEF static solution...')

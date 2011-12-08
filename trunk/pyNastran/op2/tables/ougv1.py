@@ -111,6 +111,7 @@ class OUGV1(object):
         isBlockDone  = False
 
         bufferWords = self.getMarker('OUGV1')
+        #print "bufferWords = ",bufferWords
         #print len(bufferWords)
         self.data = self.readBlock()
         #self.printBlock(data)
@@ -125,17 +126,18 @@ class OUGV1(object):
             return isTable4Done,isBlockDone
 
         isBlockDone = not(bufferWords)
-        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
 
         self.readOUGV1_Data()
         #print "-------finished OUGV1----------"
         return (isTable4Done,isBlockDone)
 
     def readOUGV1_Data(self):
+        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
         #if self.thermal==2:
         #    self.skipOES_Element(None)
-
+        print "tfsCode=%s" %(tfsCode)
         # displacement
         if   tfsCode==[1,1,0]:
             self.readOUGV1_Data_format1_sort0()
@@ -159,7 +161,7 @@ class OUGV1(object):
             self.readOUGV1_Data_format1_sort0()
         elif tfsCode==[10,1,1]:
             self.readOUGV1_Data_format1_sort1()
-        elif tfsCode==[11,2,1]:
+        elif tfsCode==[10,2,1]:
             self.readOUGV1_Data_format2_sort1()
         elif tfsCode==[10,3,1]:
             self.readOUGV1_Data_format3_sort1()
@@ -203,10 +205,10 @@ class OUGV1(object):
                 self.createTransientObject(self.freqDisplacements,eigenVectorObject,self.freq)
                 self.freqDisplacements[self.iSubcase] = self.obj
 
-            #elif self.approachCode==6: # transient displacement
-                #print "isTransientDisplacement"
-                #self.createTransientObject(self.displacements,displacementObject,self.dt)
-                #self.displacements[self.iSubcase] = self.obj
+            elif self.approachCode==6: # transient displacement
+                print "isTransientDisplacement"
+                self.createTransientObject(self.displacements,displacementObject,self.dt)
+                self.displacements[self.iSubcase] = self.obj
                 #self.obj = None
 
             elif self.approachCode==7: # pre-buckling displacement
@@ -232,10 +234,11 @@ class OUGV1(object):
 
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
+                print "self.lftsfq = ",self.lftsfq
                 self.createTransientObject(self.nonlinearDisplacements,displacementObject,self.lftsfq)
                 self.nonlinearDisplacements[self.iSubcase] = self.obj
             else:
-                raise Exception('unsupported OUGV1 static solution...')
+                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
 
         elif self.thermal==1:
@@ -257,7 +260,7 @@ class OUGV1(object):
                 self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
                 self.nonlinearTemperatures[self.iSubcase] = self.obj
             else:
-                raise Exception('unsupported OUGV1 thermal solution...')
+                raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
@@ -285,7 +288,7 @@ class OUGV1(object):
                 self.complexEigenvalues[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
             else:
-                raise Exception('unsupported OUGV1 static format1_sort1 solution...')
+                raise Exception('unsupported OUGV1 static format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
@@ -309,8 +312,10 @@ class OUGV1(object):
                 self.complexEigenvalues[self.iSubcase] = self.obj
                 #print "****self", type(self.obj)
             else:
-                raise Exception('unsupported OUGV1 static solution...')
+                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
+        elif self.thermal==1:
+            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
@@ -333,10 +338,10 @@ class OUGV1(object):
                 #self.displacements[self.iSubcase] = self.obj
                 self.obj = None
             else:
-                raise Exception('unsupported OUGV1 static solution...')
+                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...')
+            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
@@ -351,10 +356,10 @@ class OUGV1(object):
                 self.createTransientObject(self.freqDisplacements,displacementObject,self.freq)
                 self.freqDisplacements[self.iSubcase] = self.obj
             else:
-                raise Exception('unsupported OUGV1 static solution...')
+                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...')            
+            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###

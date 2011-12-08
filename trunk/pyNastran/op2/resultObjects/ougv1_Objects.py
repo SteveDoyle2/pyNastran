@@ -17,7 +17,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             self.displacements = {dt: {}}
             self.rotations     = {dt: {}}
             self.add = self.addTransient
-            self.addBinary = self.addBinaryTransient
+            #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
             #self.writeOp2 = self.writeOp2Transient
         ###
@@ -31,22 +31,13 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         already exits and a new time step is found
         """
         assert dt>=0.
+        #print "updating dt...dt=%s" %(dt)
         self.dt = dt
-        self.displacements[dt] = {}
+        self.displacements[self.dt] = {}
+        self.rotations[self.dt] = {}
         print "*displacementObject - self.dt=|%s|" %(self.dt)
 
     def addBinary(self,deviceCode,data):
-        (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
-        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements
-
-        self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
-    ###
-
-    def addBinaryTransient(self,deviceCode,data):
-        raise Exception('not implemented...')
         (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
@@ -66,7 +57,8 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     ###
 
     def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
+        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
         assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
         

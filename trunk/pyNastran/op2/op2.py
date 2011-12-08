@@ -14,6 +14,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
           FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,ResultTable):
 
     def bdfInit(self,log=None):
+        self.stopCode = False
+
         if log is None:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
@@ -287,7 +289,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 
                 elif tableName in ['OEF1X','DOEF1','OEFIT']:  # applied loads
                     self.readTable_OEF1()
-                elif tableName in ['OQG1','OQMG1']:  # spc forces
+                elif tableName in ['OQG1','OQMG1']:  # spc/mpc forces
                     self.readTable_OQG1()
                 elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                     self.readTable_OUG1()
@@ -367,11 +369,16 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
 
     def createTransientObject(self,storageObj,classObj,dt):
         """@note dt can also be loadStep depending on the class"""
+        #print "create Transient Object"
         if self.iSubcase in storageObj:
+            #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
             self.obj.updateDt(dt)
         else:
             self.obj = classObj(self.iSubcase,dt)
+        ###
+        #if self.stopCode:
+        #    sys.exit('stopping in createTransientObject in op2.py')
         ###
 
     def getBufferWords(self):

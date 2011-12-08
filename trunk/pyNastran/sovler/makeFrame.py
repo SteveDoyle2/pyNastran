@@ -188,8 +188,8 @@ def buildGlobalStiffness(model):
     Dofs = {}
     nDOF=0
     for nodeID in nodeIDs:
-        Dofs[nodeID] = [nDOF,nDOF+1]
-        nDOF+=2
+        Dofs[nodeID] = [nDOF,nDOF+1,nDOF+2]
+        nDOF+=3
     
     nElements = model.nElements()
     Kg = matrix(zeros((nDOF,nDOF),'d') ) # K_global
@@ -273,7 +273,7 @@ def setCol(Kg,nid,value):
 
 
 def getForces(model,Dofs):
-    Fvector = zeros( model.nNodes()*2,'d')
+    Fvector = zeros( model.nNodes()*3,'d')
     print model.loads
     for loadSet,loads in model.loads.items():
         ## @todo if loadset in required loadsets...
@@ -287,6 +287,7 @@ def getForces(model,Dofs):
                     print "dof[%s] = %s" %(nodeID,dof)
                     Fvector[dof[0]] = F[0]
                     Fvector[dof[1]] = F[1]
+                    Fvector[dof[2]] = F[2]
                     print "FVector = ",Fvector
             ###
         ###
@@ -344,6 +345,13 @@ def solveKF(model,Kg,F,Dofs):
             freeDOFs[nid].append([dofs[1],i])
         ###
         i+=1
+
+        if '3' in BCs:
+            constrainedDOFs[nid].append([dofs[1],i])
+        else:
+            freeDOFs[nid].append([dofs[1],i])
+        ###
+        i+=1
     ###
     
     nC  = len(constrainedDOFs)
@@ -376,7 +384,7 @@ def solveKF(model,Kg,F,Dofs):
         ###
     ###
     qf = solve(Kff,Qf)
-    q = zeros(model.nNodes()*2,'d')
+    q = zeros(model.nNodes()*3,'d')
     
     print "Kff = \n%s" %(Kff)
     print "Qf  = %s" %(Qf)

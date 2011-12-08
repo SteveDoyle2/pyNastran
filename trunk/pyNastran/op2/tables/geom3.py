@@ -27,7 +27,7 @@ class Geometry3(object):
                         #(6909,69,198): self.readPLOAD1,  # record 17 - buggy
                         #(6802,68,199): self.readPLOAD2,  # record 18 - buggy
                          (7109,81,255): self.readPLOAD3,  # record 19 - not done
-                         (7209,72,299): self.readPLOAD4,  # record 20 - buggy
+                        #(7209,72,299): self.readPLOAD4,  # record 20 - buggy - g1/g3/g4
                          (7309,73,351): self.readPLOADX1, # record 22
                          (4509,45,239): self.readQBDY1,   # record 24
                          (4909,49,240): self.readQBDY2,   # record 25
