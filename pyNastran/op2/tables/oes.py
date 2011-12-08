@@ -14,7 +14,7 @@ class OES(object):
     def readTable_OES1(self):
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
-        self.readResultsTable(table3,table4Data)
+        self.readResultsTable(table3,table4Data,flag=1) # flag=1 defines old style
         self.deleteAttributes_OES()
 
     def deleteAttributes_OES(self):
@@ -44,7 +44,6 @@ class OES(object):
         self.numWide    = self.getValues(data,'i',10)
         self.sCode      = self.getValues(data,'i',11)
         self.thermal    = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
-        assert self.thermal==0
 
         print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
         print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
@@ -254,6 +253,7 @@ class OES(object):
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             print msg
             #raise RuntimeError(msg)
+        assert self.thermal==0,'thermal check is done after to get info about the case'
 
         #print stressStrainObj
 

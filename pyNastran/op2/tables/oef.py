@@ -17,7 +17,7 @@ class OEF(object):
     """Table of element forces"""
     def readTable_OEF1(self):
         table3     = self.readTable_OEF_3
-        table4Data = self.readTable_OEF_4_Data
+        table4Data = self.readOEF1_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEF()
 
@@ -95,57 +95,34 @@ class OEF(object):
         #self.printBlock(data)
         self.readTitle()
 
-        #return (analysisCode,tableCode,thermal)
-
         #if self.j==3:
         #    #print str(self.obj)
         #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
         ###
 
-    def readTable_OEF_4_Data(self,iTable): # iTable=-4
-        isTable4Done = False
-        isBlockDone  = False
-
-        bufferWords = self.getMarker('OEF')
-        #print len(bufferWords)
-        self.data = self.readBlock()
-        #self.printBlock(data)
-
-        if bufferWords==146:  # table -4 is done, restarting table -3
-            isTable4Done = True
-            return isTable4Done,isBlockDone
-        elif bufferWords==0:
-            #print "bufferWords 0 - done with Table4"
-            isTable4Done = True
-            isBlockDone = True
-            return isTable4Done,isBlockDone
-
-        isBlockDone = not(bufferWords)
-        self.readOEF1_Data()
-        #print self.obj
-        #del self.obj
-        #print self.printSection(120)
-
-        #print "-------finished OEF----------"
-        return (isTable4Done,isBlockDone)
-
-
     def readOEF1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        if self.thermal==2:
-            self.skipOES_Element(None)
+        
+        # element forces & moments / flux
+        if   tfsCode==[4,1,0]:
+            self.readOEF1_Data_format1_sort0()
+        elif tfsCode==[4,1,1]:
+            self.readOEF1_Data_format1_sort1()
+        elif tfsCode==[4,2,1]:
+            self.readOEF1_Data_format2_sort1()
+        elif tfsCode==[4, 3, 1]:
+            self.readOEF1_Data_format3_sort1()
 
-        else: # thermal=0,1
-            if   tfsCode==[4,1,0]:
-                self.readOEF1_Data_format1_sort0()
-            elif tfsCode==[4,1,1]:
-                self.readOEF1_Data_format1_sort1()
-            elif tfsCode==[4,2,1]:
-                self.readOEF1_Data_format2_sort1()
-            else:
-                raise Exception('bad tableCode/formatCode/sortCode=%s on OEF table' %(tfsCode))
-            ###
+        # composite failure indicies
+        elif tfsCode==[25,1,0]:
+            self.readOEF1_Data_format1_sort0()
+        else:
+            raise Exception('bad tableCode/formatCode/sortCode=%s on OEF table' %(tfsCode))
         ###
+
+    def readOEF1_Data_format3_sort1(self):
+        self.skipOES_Element(None)
+
     def readOEF1_Data_format1_sort0(self):
         assert self.formatCode==1
         assert self.sortCode==0
@@ -249,6 +226,7 @@ class OEF(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        self.skipOES_Element(None)
         #self.readForces(data,self.obj)
         #return
         
@@ -276,6 +254,7 @@ class OEF(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        self.skipOES_Element(None)
         #self.readForces(data,self.obj)
         #return
 

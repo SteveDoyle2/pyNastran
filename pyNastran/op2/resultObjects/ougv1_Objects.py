@@ -13,7 +13,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             self.displacements = {}
             self.rotations     = {}
         else:
-            assert dt>=0.
+            #assert dt>=0.
             self.displacements = {dt: {}}
             self.rotations     = {dt: {}}
             self.add = self.addTransient
@@ -30,7 +30,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         this method is called if the object
         already exits and a new time step is found
         """
-        assert dt>=0.
+        #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         self.dt = dt
         self.displacements[self.dt] = {}
@@ -81,7 +81,6 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             rotation = self.rotations[nodeID]
             (dx,dy,dz) = displacement
             (rx,ry,rz) = rotation
-            
             grid = nodeID*10+deviceCode
             msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
         ###
@@ -158,7 +157,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         this method is called if the object
         already exits and a new time step is found
         """
-        assert dt>=0.
+        #assert dt>=0.
         self.dt = dt
         self.temperatures[dt] = {}
 
@@ -182,7 +181,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
 
     def addTransient(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
-        assert nodeID not in self.temperatures
+        assert nodeID not in self.temperatures[self.dt]
         self.temperatures[self.dt][nodeID] = v1
 
     def __reprTransient__(self):

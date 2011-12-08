@@ -76,7 +76,7 @@ class CREEP(Material):
 
     def __repr__(self):
         thresh = self.setBlankIfDefault(self.thresh,1e-5)
-        exp    = self.setBlankIfDefault(self.G1z,4.1e-9)
+        exp    = self.setBlankIfDefault(self.exp,4.1e-9)
         T0     = self.setBlankIfDefault(self.T0,0.0)
         fields = ['CREEP',self.mid,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
         self.Type,self.a,self.b,self.c,self.d,self.e,self.f]

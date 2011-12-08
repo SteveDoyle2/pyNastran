@@ -51,7 +51,7 @@ class Geometry2(object):
                            (9108,91,507):    self.readCQUAD,    # record 68 - not tested
                            (2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
                            (13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
-                           (4701,47,326):    self.readCQUAD8,   # record 71 - not tested
+                          #(4701,47,326):    self.readCQUAD8,   # record 71 - buggy - need to remove the midside nodes that are 0
                            (8009,80,367):    self.readCQUADR,   # record 74 - not tested
                            (9008,90,508):    self.readCQUADX,   # record 75 - not tested
         
@@ -59,7 +59,7 @@ class Geometry2(object):
                           #(12201,122,9013): self.readCTETP,    # record 86 - not done
                            (5508,55,217):    self.readCTETRA,   # record 87
                            (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
-                           (4801,48,327):    self.readCTRIA6,   # record 95 - not tested
+                          #(4801,48,327):    self.readCTRIA6,   # record 95 - buggy
                            (9200,92,385):     self.readCTRIAR,  # record 98 - not done
                            (6108,61,107):     self.readCTRIAX6, # record 100 - not done
                            (3701,37,49):     self.readCTUBE,    # record 103

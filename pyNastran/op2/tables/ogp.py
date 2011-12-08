@@ -14,7 +14,7 @@ class OGP(object):
     """Table of element forces"""
     def readTable_OGP1(self):
         table3     = self.readTable_OGP_3
-        table4Data = self.readTable_OGP_4_Data
+        table4Data = self.readOGP1_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OGP()
 
@@ -122,16 +122,100 @@ class OGP(object):
 
 
         isBlockDone = not(bufferWords)
+        
+        self.readOGP1_Data()
+        return (isTable4Done,isBlockDone)
+
+        
+    def readOGP1_Data(self):
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
+        print "tfsCode=%s" %(tfsCode)
+
+        # grid point force balance
+        if   tfsCode==[19,1,0]:
+            self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[19,1,1]:
+        #    self.readOGP1_Data_format1_sort1()
+        #elif tfsCode==[19,2,1]:
+        #    self.readOGP1_Data_format2_sort1()
+        #elif tfsCode==[19,3,0]:
+        #    self.readOGP1_Data_format3_sort0()
+        #elif tfsCode==[19,3,1]:
+        #    self.readOGP1_Data_format3_sort1()
+        
+        # load vector
+        elif tfsCode==[2,1,0]:
+            self.readOGP1_Data_format1_sort0()
+        elif tfsCode==[2,1,1]:
+            self.readOGP1_Data_format1_sort1()
+        #elif tfsCode==[2,2,1]:
+        #    self.readOGP1_Data_format2_sort1()
+        #elif tfsCode==[2,3,0]:
+        #    self.readOGP1_Data_format3_sort0()
+        #elif tfsCode==[2,3,1]:
+        #    self.readOGP1_Data_format3_sort1()
+        
+        # Nonlinear force vector
+        elif tfsCode==[12,1,0]:
+            self.readOGP1_Data_format1_sort0()
+
+        # OFMPF2M - does this belong here?
+        elif tfsCode==[51,3,3]:
+            self.readOGP1_Data_format3_sort3()
+        
+        # OSMPF2M - does this belong here?
+        elif tfsCode==[52,3,3]:
+            self.readOGP1_Data_format3_sort3()
+        
+        # OPMPF2M - does this belong here?
+        elif tfsCode==[53,3,3]:
+            self.readOGP1_Data_format3_sort3()
+        
+        # OLMPF2M - does this belong here?
+        elif tfsCode==[54,3,3]:
+            self.readOGP1_Data_format3_sort3()
+
+        # OGMPF2M - does this belong here?
+        elif tfsCode==[55,3,3]:
+            self.readOGP1_Data_format3_sort3()
+        else:
+            raise Exception('bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode))
+        ###
+        #print self.obj
+        print "-------finished OGP----------"
+
+    def readOGP1_Data_format1_sort1(self):
+        print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
+        self.skipOES_Element(None)
+
+    def readOGP1_Data_format2_sort1(self):
+        print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
+        self.skipOES_Element(None)
+
+    def readOGP1_Data_format3_sort0(self):
+        print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
+        self.skipOES_Element(None)
+
+    def readOGP1_Data_format3_sort1(self):
+        print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
+        self.skipOES_Element(None)
+
+    def readOGP1_Data_format3_sort3(self):
+        print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
+        self.skipOES_Element(None)
+
+    def readOGP1_Data_format1_sort0(self):
         if self.thermal==0:
-            if self.approachCode==1 and self.sortCode==0: # displacement
+            if self.approachCode==1: # displacement
                 print "isAppliedLoads"
                 self.obj = appliedLoadsObject(self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj
-                self.readOGPForces(data,self.obj)
+                self.readOGPForces(self.data,self.obj)
             else:
                 self.skipOES_Element(None)
-                print 'not supported OGP solution...'
+                print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
                 #raise Exception('not supported OGP solution...')
             ###
         elif self.thermal==1:
@@ -139,13 +223,7 @@ class OGP(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        
-        #print self.obj
-        
-        print "-------finished OGP----------"
-        return (isTable4Done,isBlockDone)
 
-        
     def readOGPForces(self,data,scalarObject):
         deviceCode = self.deviceCode
         #self.printBlock(data[0:self.numWide*4])

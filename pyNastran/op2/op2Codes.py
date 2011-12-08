@@ -341,7 +341,7 @@ class Op2Codes(object):
         elif(sCode==27): sWord += 'Coordinate Material - Strain Curvature von Mises'
         elif(sCode==31): sWord += 'Coordinate Material - Strain Fiber von Mises'
         else:
-            sWord = 'Stress or Strain - UNDEFINED'
+            #sWord = 'Stress or Strain - UNDEFINED'
             sWord = ''
 
         formatWord = ''
@@ -363,10 +363,11 @@ class Op2Codes(object):
             print msg
             #raise Exception(msg)
 
-        if(  thermal==0): thermalWord = 'isHeatTransfer = False'
+        if(  thermal is None): thermalWord = ''
+        elif(thermal==0): thermalWord = 'isHeatTransfer = False'
         elif(thermal==1): thermalWord = 'isHeatTransfer = True'
         else:
-            thermalWord = ''
+            thermalWord = '???'
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
             #raise Exception(msg)
         
@@ -442,8 +443,9 @@ class Op2Codes(object):
         
         if elementType is not None:
             msg += "  elementType  = %-3s %s\n" %(elementType,self.ElementType(elementType))
-        msg += "  sCode        = %-3s %s\n" %(sCode,sWord)
-        #if thermalWord:
-        msg += "  thermal      = %-2s %s\n" %(thermal,thermalWord)
+        if sWord: # stress code
+            msg += "  sCode        = %-3s %s\n" %(sCode,sWord)
+        if thermalWord:
+            msg += "  thermal      = %-3s %s\n" %(thermal,thermalWord)
         #print msg
         return msg
