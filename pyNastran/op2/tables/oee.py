@@ -69,7 +69,6 @@ class OEE(object):
                          'esubt': self.esubt,'setID':self.setID,'eigenReal':self.eigenReal,'eigenImag':self.eigenImag,
                          'freq':self.freq,'etotpos':self.etotpos,'etotneg':self.etotneg}
 
-        
         #self.printBlock(data) # on
         if self.approachCode==1:   # statics / displacement / heat flux
             pass
@@ -144,19 +143,23 @@ class OEE(object):
 
         if self.approachCode==1: # displacement
             print "isStrainEnergy"
-            self.obj = StrainEnergyObject(self.iSubcase,self.nonlinearFactor)
+            self.obj = StrainEnergyObject(self.dataCode,self.iSubcase,self.nonlinearFactor)
             self.strainEnergy[self.iSubcase] = self.obj
         elif self.approachCode==2: # buckling modes
             print "isBucklingStrainEnergy"
-            self.obj = StrainEnergyObject(self.iSubcase,self.nonlinearFactor)
-            self.modesStrainEnergy[self.iSubcase] = self.obj
+            self.createTransientObject(self.modesStrainEnergy,StrainEnergyObject,self.nonlinearFactor)
+        elif self.approachCode==5: # freq
+            print "isFreqStrainEnergy"
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.nonlinearFactor)
         elif self.approachCode==6: # transient
             print "isTransientStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.time)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.nonlinearFactor)
         elif self.approachCode==9: # nonlinear static eigenvector
             print "isComplexStrainEnergy"
-            self.obj = StrainEnergyObject(self.iSubcase,self.nonlinearFactor)
-            self.complexStrainEnergy[self.iSubcase] = self.obj
+            self.createTransientObject(self.complexStrainEnergy,StrainEnergyObject,self.nonlinearFactor)
+        elif self.approachCode==10: # nonlinear statics
+            print "isNonlinearStrainEnergy"
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.nonlinearFactor)
         else:
             raise Exception('bad approach/table/format/sortCode=%s on OEE table' %(self.atfsCode))
         ###

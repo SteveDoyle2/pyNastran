@@ -327,7 +327,7 @@ class PBARL(LineProperty):
         "HEXA"  : 3,
         "HAT"   : 4,
         "HAT1"  : 5,
-        "DBOX"  : 12,
+        "DBOX"  : 10, # was 12
         } # for GROUP="MSCBML0"
 
     def __init__(self,card=None,data=None):
@@ -889,10 +889,12 @@ class PCOMP(ShellProperty):
             self.plies = []
             #ply = [mid,t,theta,sout]
             for (mid,t,theta,sout) in zip(Mid,T,Theta,Sout):
-                if sout==1:
+                if sout==1:  ## @todo not sure  0=NO,1=YES (most likely)
                     sout='YES'
+                elif sout==0:
+                    sout= 'NO'
                 else:
-                    raise Exception('unsupported sout...needs debugging...')
+                    raise Exception('unsupported sout...needs debugging...\nPCOMP = %s' %(data))
                 self.plies.append([mid,t,theta,sout])
             ###
         ###

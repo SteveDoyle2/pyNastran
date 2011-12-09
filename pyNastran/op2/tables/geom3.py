@@ -34,7 +34,7 @@ class Geometry3(object):
                          (2109,21,414): self.readQBDY3,   # record 26
                          (5509,55,190): self.readRFORCE,  # record 30 - not done
                          (5401,54,25):  self.readSLOAD,   # record 31 - not done
-                         (5641,65,98):  self.readTEMP,    # record 32 - buggy
+                        #(5641,65,98):  self.readTEMP,    # record 32 - buggy
                          (5701,57,27):  self.readTEMPD,   # record 33
                          (8409,84,204): self.readTEMPRB,  # record 40 - not done
                          (8109,81,201): self.readTEMPP1,  # record 37 - not done

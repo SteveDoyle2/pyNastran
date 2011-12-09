@@ -460,14 +460,14 @@ class QBDY1(ThermalLoad):
             self.sid = card.field(1)
 
             ## Heat flux into element (FLOAT)
-            self.Q0 = card.field(2)
-            eids    = card.fields(3)
+            self.qFlux = card.field(2)
+            eids       = card.fields(3)
             ## CHBDYj element identification numbers (Integer)
             self.eids = self.expandThru(eids)  # @warning should this use expandThruBy ???
         else:
-            self.sid  = data[0]
-            self.Q0   = data[1]
-            self.eids = data[2:]
+            self.sid   = data[0]
+            self.qFlux = data[1]
+            self.eids  = data[2:]
         ###
 
     #def crossReference(self,model):
@@ -478,7 +478,8 @@ class QBDY1(ThermalLoad):
 
     def __repr__(self):
         eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY1',self.sid,self.eid]+self.qFlux
+        fields = ['QBDY1',self.sid]+list(eids)+[self.qFlux]
+        print "FIELDS = ",fields
         return self.printCard(fields)
 
 class QBDY2(ThermalLoad): # not tested
@@ -508,8 +509,7 @@ class QBDY2(ThermalLoad): # not tested
         return len(self.qFlux)
 
     def __repr__(self):
-        eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY2',self.sid,self.eid]+self.qFlux
+        fields = ['QBDY2',self.sid,self.eid,self.qFlux]
         return self.printCard(fields)
 
 class QBDY3(ThermalLoad):
@@ -543,7 +543,7 @@ class QBDY3(ThermalLoad):
     def __repr__(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
         eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY3',self.sid,cntrlnd]+eids
+        fields = ['QBDY3',self.sid,cntrlnd]+self.eids
         return self.printCard(fields)
 
 class QHBDY(ThermalLoad):

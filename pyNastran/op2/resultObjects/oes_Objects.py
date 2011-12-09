@@ -47,7 +47,7 @@ class plateStrainObject(scalarObject):
             self.isFiberDistance = True
             self.isBilinear = False
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
         if dt:
             self.dt = dt
@@ -62,12 +62,12 @@ class plateStrainObject(scalarObject):
         @note make sure you set self.dt first
         """
         self.fiberCurvature[self.dt] = {}
-        self.ecc[self.dt]   = {}
+        self.exx[self.dt]   = {}
         self.eyy[self.dt]   = {}
         self.exy[self.dt]   = {}
         self.angle[self.dt] = {}
-        self.major[self.dt] = {}
-        self.minor[self.dt] = {}
+        self.majorP[self.dt] = {}
+        self.minorP[self.dt] = {}
         self.evm[self.dt]   = {}
 
     def addNewEid(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
@@ -89,6 +89,25 @@ class plateStrainObject(scalarObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
+    def addNewEidTransient(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+        #print "Plate add..."
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        dt = self.dt
+        if nodeID is not 'C': # centroid
+            assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
+        assert eid not in self.exx[dt]
+        self.eType[eid] = eType
+        self.fiberCurvature[dt][eid] = {nodeID: [curvature]}
+        self.exx[dt][eid]    = {nodeID: [exx]}
+        self.eyy[dt][eid]    = {nodeID: [eyy]}
+        self.exy[dt][eid]    = {nodeID: [exy]}
+        self.angle[dt][eid]  = {nodeID: [angle]}
+        self.majorP[dt][eid] = {nodeID: [majorP]}
+        self.minorP[dt][eid] = {nodeID: [minorP]}
+        self.evm[dt][eid]    = {nodeID: [evm]}
+        #print msg
+        if nodeID==0: raise Exception(msg)
+
     def add(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
@@ -107,6 +126,25 @@ class plateStrainObject(scalarObject):
         self.evm[eid][nodeID].append(evm)
         if nodeID==0: raise Exception(msg)
 
+    def addTransient(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+        #print "***add"
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        #print msg
+        #print self.oxx
+        #print self.fiberDistance
+        if nodeID is not 'C': # centroid
+            assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
+        dt = self.dt
+        self.fiberCurvature[dt][eid][nodeID].append(curvature)
+        self.exx[dt][eid][nodeID].append(exx)
+        self.eyy[dt][eid][nodeID].append(eyy)
+        self.exy[dt][eid][nodeID].append(exy)
+        self.angle[dt][eid][nodeID].append(angle)
+        self.majorP[dt][eid][nodeID].append(majorP)
+        self.minorP[dt][eid][nodeID].append(minorP)
+        self.evm[dt][eid][nodeID].append(evm)
+        if nodeID==0: raise Exception(msg)
+
     def addNewNode(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "***addNewNode"
         #print self.oxx
@@ -122,6 +160,46 @@ class plateStrainObject(scalarObject):
         self.evm[eid][nodeID]    = [evm]
         #print msg
         if nodeID==0: raise Exception(msg)
+
+    def __reprTransient__(self):
+        msg = '---ISOTROPIC PLATE STRAIN---\n'
+        headers = ['exx','eyy','exy','eMajor','eMinor','evm']
+        msg += '%-6s %6s %8s %7s ' %('EID','eType','nodeID','iLayer')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,exx in sorted(self.exx.items()):
+            msg += 'dt = %s\n' %(dt)
+            for eid,exxNodes in sorted(exx.items()):
+                eType = self.eType[eid]
+                for nid in sorted(exxNodes):
+                    for iLayer in range(len(self.exx[dt][eid][nid])):
+                        fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                        exx   = self.exx[   dt][eid][nid][iLayer]
+                        eyy   = self.eyy[   dt][eid][nid][iLayer]
+                        exy   = self.exy[   dt][eid][nid][iLayer]
+                        angle = self.angle[ dt][eid][nid][iLayer]
+                        major = self.majorP[dt][eid][nid][iLayer]
+                        minor = self.minorP[dt][eid][nid][iLayer]
+                        evm   = self.evm[   dt][eid][nid][iLayer]
+
+                        msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
+                        vals = [exx,eyy,exy,major,minor,evm]
+                        for val in vals:
+                            if abs(val)<1e-6:
+                                msg += '%10s ' %('0.')
+                            else:
+                                msg += '%10.3g ' %(val)
+                            ###
+                        msg += '\n'
+
+                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                    ###
+                ###
+            ###
+        ###
+        return msg
 
     def __repr__(self):
         if self.isTransient:
@@ -186,7 +264,7 @@ class plateStressObject(scalarObject):
             self.minorP = {}
             self.ovm    = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
 
 
@@ -217,7 +295,7 @@ class plateStressObject(scalarObject):
 
     def addNewEid(self,eType,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "Plate Stress add..."
-        assert eid not in self.oxx
+        #assert eid not in self.oxx
         #print self.oxx
 
         self.eType[eid] = eType
@@ -322,13 +400,13 @@ class plateStressObject(scalarObject):
                 for nid in sorted(oxxNodes):
                     for iLayer in range(len(self.oxx[dt][eid][nid])):
                         fd    = self.fiberDistance[dt][eid][nid][iLayer]
-                        oxx   = self.oxx[dt][eid][nid][iLayer]
-                        oyy   = self.oyy[dt][eid][nid][iLayer]
-                        txy   = self.txy[dt][eid][nid][iLayer]
-                        angle = self.angle[dt][eid][nid][iLayer]
+                        oxx   = self.oxx[   dt][eid][nid][iLayer]
+                        oyy   = self.oyy[   dt][eid][nid][iLayer]
+                        txy   = self.txy[   dt][eid][nid][iLayer]
+                        angle = self.angle[ dt][eid][nid][iLayer]
                         major = self.majorP[dt][eid][nid][iLayer]
                         minor = self.minorP[dt][eid][nid][iLayer]
-                        ovm   = self.ovm[dt][eid][nid][iLayer]
+                        ovm   = self.ovm[   dt][eid][nid][iLayer]
 
                         msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
                         vals = [oxx,oyy,txy,ovm]
@@ -411,7 +489,7 @@ class compositePlateStressObject(scalarObject):
             self.minorP = {}
             self.ovm    = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
 
         if dt is not None:
@@ -460,7 +538,7 @@ class compositePlateStressObject(scalarObject):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         dt = self.dt
-        assert eid not in self.o11[dt]
+        #assert eid not in self.o11[dt]
         self.eType[eid]  = eType
         self.o11[dt][eid]    = [o11]
         self.o22[dt][eid]    = [o22]
@@ -507,6 +585,43 @@ class compositePlateStressObject(scalarObject):
         self.minorP[dt][eid].append(minorP)
         self.ovm[dt][eid].append(ovm)
         #if nodeID==0: raise Exception(msg)
+
+    def __reprTransient__(self):
+        msg = '---COMPOSITE PLATE STRESS---\n'
+        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
+        headers = ['o11','o22','t12','t1z','t2z','ovm']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,O11s in sorted(self.o11.items()):
+            msg += "dt = %s\n" %(dt)
+            for eid,o11s in sorted(O11s.items()):
+                eType = self.eType[eid]
+                for iLayer in range(len(o11s)):
+                    o11 = self.o11[dt][eid][iLayer]
+                    o22 = self.o22[dt][eid][iLayer]
+                    t12 = self.t12[dt][eid][iLayer]
+                    t1z = self.t1z[dt][eid][iLayer]
+                    t2z = self.t2z[dt][eid][iLayer]
+
+                    angle = self.angle[dt][eid][iLayer]
+                    major = self.majorP[dt][eid][iLayer]
+                    minor = self.minorP[dt][eid][iLayer]
+                    ovm   = self.ovm[dt][eid][iLayer]
+
+                    msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
+                    vals = [o11,o22,t12,t1z,t2z,ovm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10i ' %(val)
+                        ###
+                    msg += '\n'
+                ###
+        ###
+        return msg
 
     def __repr__(self):
         if self.isTransient:
@@ -568,7 +683,7 @@ class compositePlateStrainObject(scalarObject):
             self.minorP = {}
             self.evm    = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
 
         if dt is not None:
@@ -584,7 +699,7 @@ class compositePlateStrainObject(scalarObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.fiberDistance[self.dt] = {}
+        #self.fiberDistance[self.dt] = {}
         self.e11[self.dt]    = {}
         self.e22[self.dt]    = {}
         self.e12[self.dt]    = {}
@@ -665,6 +780,43 @@ class compositePlateStrainObject(scalarObject):
         self.evm[dt][eid].append(evm)
         #if nodeID==0: raise Exception(msg)
 
+    def __reprTransient__(self):
+        msg = '---COMPOSITE PLATE STAIN---\n'
+        headers = ['e11','e22','e12','e1z','e2z','evm']
+        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,E11s in sorted(self.e11.items()):
+            msg += 'dt = %s\n' %(dt)
+            for eid,e11s in sorted(E11s.items()):
+                eType = self.eType[eid]
+                for iLayer in range(len(e11s)):
+                    e11 = self.e11[dt][eid][iLayer]
+                    e22 = self.e22[dt][eid][iLayer]
+                    e12 = self.e12[dt][eid][iLayer]
+                    e1z = self.e1z[dt][eid][iLayer]
+                    e2z = self.e2z[dt][eid][iLayer]
+
+                    angle = self.angle[dt][eid][iLayer]
+                    major = self.majorP[dt][eid][iLayer]
+                    minor = self.minorP[dt][eid][iLayer]
+                    evm   = self.evm[dt][eid][iLayer]
+
+                    msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
+                    vals = [e11,e22,e12,e1z,e2z,evm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10.3g ' %(val)
+                        ###
+                    msg += '\n'
+                ###
+        ###
+        return msg
+
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
@@ -721,7 +873,7 @@ class rodStressObject(scalarObject):
             self.torsion    = {}
             self.MS_torsion = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
         if dt is not None:
             self.dt = dt
@@ -755,6 +907,34 @@ class rodStressObject(scalarObject):
         self.torsion[dt][eid]    = torsion
         self.MS_torsion[dt][eid] = SMt
 
+    def __reprTransient__(self):
+        msg = '---ROD STRESSES---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['axial','torsion','MS_axial','MS_torsion']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,axial in sorted(self.axial.items()):
+            msg += 'dt = %s' %(dt)
+            for eid in sorted(axial):
+                axial   = self.axial[dt][eid]
+                torsion = self.torsion[dt][eid]
+                SMa     = self.MS_axial[dt][eid]
+                SMt     = self.MS_torsion[dt][eid]
+                msg += '%-6i %6s ' %(eid,self.eType)
+                vals = [axial,torsion,SMa,SMt]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10i ' %(val)
+                    ###
+                msg += '\n'
+                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
+            ###
+        return msg
+
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
@@ -785,23 +965,29 @@ class rodStressObject(scalarObject):
 
 class rodStrainObject(scalarObject):
     """
+    # sCode=1???
                                      S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
     ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
       ID.        STRAIN       MARGIN        STRAIN      MARGIN
+
+    # sCode=10
+                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )
+    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+      ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
+       1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
-        self.eType = 'CROD'
+        self.eType = 'CROD/CONROD'
         print "self.sCode = ",self.sCode
-        if self.sCode in [1]:
+        if self.sCode in [10]:
             self.axial      = {}
             self.MS_axial   = {}
             self.torsion    = {}
             self.MS_torsion = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
-        raise Exception('get the sCode')
         if dt is not None:
             self.dt = dt
             self.isTransient = True
@@ -819,18 +1005,20 @@ class rodStrainObject(scalarObject):
         self.torsion[self.dt]    = {}
         self.MS_torsion[self.dt] = {}
 
-    def addNewEid(self,axial,SMa,torsion,SMt):
+    def addNewEid(self,eid,axial,SMa,torsion,SMt):
         #print "Rod Strain add..."
-        self.eType[eid] = self.eType
+        assert eid >= 0
+        #self.eType = self.eType
         self.axial[eid]      = axial
         self.MS_axial[eid]   = SMa
         self.torsion[eid]    = torsion
         self.MS_torsion[eid] = SMt
 
-    def addNewEidTransient(self,axial,SMa,torsion,SMt):
+    def addNewEidTransient(self,eid,axial,SMa,torsion,SMt):
         #print "Rod Strain add..."
+        assert eid >= 0
         dt = self.dt
-        self.eType[dt][eid] = self.eType
+        self.eType[eid] = self.eType
         self.axial[dt][eid]      = axial
         self.MS_axial[dt][eid]   = SMa
         self.torsion[dt][eid]    = torsion
@@ -851,7 +1039,7 @@ class rodStrainObject(scalarObject):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
             SMa     = self.MS_axial[eid]
-            SMt     = self.MS_tension[eid]
+            SMt     = self.MS_torsion[eid]
             msg += '%-6i %6s ' %(eid,self.eType)
             vals = [axial,torsion,SMa,SMt]
             for val in vals:
@@ -885,7 +1073,7 @@ class barStressObject(scalarObject):
             self.MS_tension = {}
             self.MS_compression = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
         if dt is not None:
             self.dt = dt
@@ -1083,7 +1271,7 @@ class barStrainObject(scalarObject):
             self.MS_tension = {}
             self.MS_compression = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
         ###
         if dt is not None:
             self.dt = dt
@@ -1198,26 +1386,43 @@ class barStrainObject(scalarObject):
 
 class solidStressObject(scalarObject):
     """
+    # sCode=0
+            N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )
+    ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP
+       ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN
+        3    GRID   CENTER  6.6667E+02  2.6667E+03  2.6667E+03 -1.3333E+03  2.6667E+03 -1.3333E+03  6.0000E+03  1.5000E-04   0.0
+                            1.6667E-05  6.6667E-05  6.6667E-05 -6.6667E-05  1.3333E-04 -6.6667E-05
+
+    # sCode=1
                           S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )
                    CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   
     ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES 
-            1           0GRID CS  8 GP
+        1               0GRID CS  8 GP
                    CENTER  X   4.499200E+02  XY  -5.544791E+02   A   1.000000E+04  LX 0.00 0.69-0.72  -3.619779E+03    9.618462E+03
                            Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                            Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
-
-    # sCode=1
-                     S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )
-                   CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   
-    ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES 
-
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
 
         self.eType = {}
         print "self.sCode = ",self.sCode
-        if self.sCode in [1]:
+        if self.sCode in [0]:  # not done...
+            self.cid = {} # gridGauss
+            self.oxx = {}
+            self.oyy = {}
+            self.ozz = {}
+            self.txy = {}
+            self.tyz = {}
+            self.txz = {}
+
+            #EQUIVALENT EFF. STRAIN  EFF. CREEP
+            #  STRESS   PLAS/NLELAS   STRAIN
+            #self.eqStress       = {}
+            #self.effStrain      = {}
+            #self.effCreepStrain = {}
+            self.ovm = {}
+        elif self.sCode in [1]:
             self.cid = {}
             self.oxx = {}
             self.oyy = {}
@@ -1231,7 +1436,7 @@ class solidStressObject(scalarObject):
             #self.pressure = {}
             self.ovm = {}
         else:
-            raise Exception('get the sCode')
+            raise Exception('get the sCode=%s' %(self.sCode))
 
         if dt is not None:
             self.dt = dt
@@ -1428,20 +1633,23 @@ class solidStrainObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
-        self.cid = {}
-        self.exx = {}
-        self.eyy = {}
-        self.ezz = {}
-        self.exy = {}
-        self.eyz = {}
-        self.exz = {}
-        #self.aCos = {}
-        #self.bCos = {}
-        #self.cCos = {}
-        #self.pressure = {}
-        self.evm = {}
         print "self.sCode = ",self.sCode
-        raise Exception('get the sCode')
+        if self.sCode in [11]:
+            self.cid = {}
+            self.exx = {}
+            self.eyy = {}
+            self.ezz = {}
+            self.exy = {}
+            self.eyz = {}
+            self.exz = {}
+            #self.aCos = {}
+            #self.bCos = {}
+            #self.cCos = {}
+            #self.pressure = {}
+            self.evm = {}
+        else:
+            raise Exception('get the sCode=%s' %(self.sCode))
+        ###
         if dt is not None:
             self.dt = dt
             self.addNewTransient()

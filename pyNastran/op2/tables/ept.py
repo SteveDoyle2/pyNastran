@@ -111,7 +111,7 @@ class EPT(object):
             "HEXA"  : 3,
             "HAT"   : 4,
             "HAT1"  : 5,
-            "DBOX"  : 12,
+            "DBOX"  : 10,  # was 12
             } # for GROUP="MSCBML0"
 
         print "reading PBARL"

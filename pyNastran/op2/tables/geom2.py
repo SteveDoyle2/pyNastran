@@ -3,7 +3,7 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CSHEAR,CONM2
+from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE,CONROD
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
