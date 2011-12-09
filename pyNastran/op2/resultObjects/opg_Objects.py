@@ -1,19 +1,18 @@
 from op2_Objects import scalarObject,array
 
 class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
-    def __init__(self,iSubcase,dt=None):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,dt=None):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         
         ## this could get very bad very quick, but it could be great!
         ## basically it's a way to handle transients without making
         ## a whole new class
-        if self.dt is None:
-            self.eids    = {}
-            self.sources = {}
-            self.forces  = {}
-            self.moments = {}
-        else:
+        self.eids    = {}
+        self.sources = {}
+        self.forces  = {}
+        self.moments = {}
+        if self.dt is not None:
             assert dt>=0.
             raise Exception('not implemented...')
             self.eids    = {dt: []}

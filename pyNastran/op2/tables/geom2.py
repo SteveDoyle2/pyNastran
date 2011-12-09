@@ -3,7 +3,7 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CSHEAR,CONM2
+from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CSHEAR,CONM2
 from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
 from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE,CONROD
 from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
@@ -21,8 +21,8 @@ class Geometry2(object):
                           #(2315,23,146):    self.readCCONE,   # record 15 - not done
                            (201,2,69):       self.readCDAMP1,  # record 16
                            (301,3,70):       self.readCDAMP2,  # record 17
-                           (401,4,71):       self.readCDAMP3,  # record 18 - not tested
-                           (501,5,72):       self.readCDAMP4,  # record 19 - not tested
+                           (401,4,71):       self.readCDAMP3,  # record 18
+                           (501,5,72):       self.readCDAMP4,  # record 19
                            (10608,106,404):  self.readCDAMP5,  # record 20 - not tested
                            (601,6,73):       self.readCELAS1,  # record 29
                            (701,7,74):       self.readCELAS2,  # record 30

@@ -37,13 +37,18 @@ class OES(object):
             self.op2Debug.write('block3header\n')
 
         self.parseApproachCode(data)
-        
+
         self.elementType = self.getValues(data,'i',3)
         self.loadSet    = self.getValues(data,'i',8)
         self.formatCode = self.getValues(data,'i',9)
         self.numWide    = self.getValues(data,'i',10)
         self.sCode      = self.getValues(data,'i',11)
         self.thermal    = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
+
+        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+                         'loadSet':self.loadSet,'formatCode':self.formatCode,
+                         'numWide': self.numWide,'sCode':self.sCode,
+                         'thermal': self.thermal}
 
         print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
         print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
@@ -424,6 +429,7 @@ class OES(object):
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
+        print type(self.obj)
         return self.obj
 
     def instantiateSolidObject(self): # 39, 67, 68 (CTETRA, CPENTA, CHEXA)

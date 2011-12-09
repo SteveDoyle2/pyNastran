@@ -62,6 +62,13 @@ class OEE(object):
         self.etotpos      = self.getValues(data,'f',18) ## Total positive energy
         self.etotneg      = self.getValues(data,'f',19) ## Total negative energy
         self.nonlinearFactor = None
+
+        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+                         'loadSet':self.loadSet,'formatCode':self.formatCode,
+                         'numWide': self.numWide,'cvalres':self.cvalres,
+                         'esubt': self.esubt,'setID':self.setID,'eigenReal':self.eigenReal,'eigenImag':self.eigenImag,
+                         'freq':self.freq,'etotpos':self.etotpos,'etotneg':self.etotneg}
+
         
         #self.printBlock(data) # on
         if self.approachCode==1:   # statics / displacement / heat flux
@@ -143,10 +150,9 @@ class OEE(object):
             print "isBucklingStrainEnergy"
             self.obj = StrainEnergyObject(self.iSubcase,self.nonlinearFactor)
             self.modesStrainEnergy[self.iSubcase] = self.obj
-        #elif self.approachCode==6: # transient???
-            #print "isBucklingStrainEnergy"
-            #self.obj = StrainEnergyObject(self.iSubcase,self.nonlinearFactor)
-            #self.modesStrainEnergy[self.iSubcase] = self.obj
+        elif self.approachCode==6: # transient
+            print "isTransientStrainEnergy"
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.time)
         elif self.approachCode==9: # nonlinear static eigenvector
             print "isComplexStrainEnergy"
             self.obj = StrainEnergyObject(self.iSubcase,self.nonlinearFactor)
@@ -156,18 +162,20 @@ class OEE(object):
         ###
         self.readScalars4(self.obj)
 
-class StrainEnergyObject(object):
-    def __init__(self,iSubcase,dt=None):
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+
+class StrainEnergyObject(scalarObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.energy  = {}
         self.percent = {}
         self.density = {}
-        if dt:
+
+        if dt is not None:
             self.dt = dt
             self.addNewTransient()
             self.isTransient = True
             self.add       = self.addTransient
-        else:
-            self.isTransient = False
         ###
 
     def addNewTransient(self):

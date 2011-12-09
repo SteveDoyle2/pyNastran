@@ -43,6 +43,11 @@ class OGP(object):
         self.numWide    = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
         self.oCode      = self.getValues(data,'i',11) ## undefined in DMAP...
         self.thermal    = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
+
+        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+                         'dLoadID':self.dLoadID,'formatCode':self.formatCode,
+                         'numWide': self.numWide,'oCode':self.oCode,
+                         'thermal': self.thermal}
         print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
@@ -210,7 +215,7 @@ class OGP(object):
         if self.thermal==0:
             if self.approachCode==1: # displacement
                 print "isAppliedLoads"
-                self.obj = appliedLoadsObject(self.iSubcase)
+                self.obj = appliedLoadsObject(self.dataCode,self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj
                 self.readOGPForces(self.data,self.obj)
             else:

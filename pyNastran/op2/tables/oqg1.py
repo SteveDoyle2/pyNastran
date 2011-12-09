@@ -47,6 +47,11 @@ class OQG1(object):
         self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
         self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
         
+        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+                         'randomCode':self.rCode,'formatCode':self.formatCode,
+                         'numWide': self.numWide,'acousticFlag':self.acousticFlag,
+                         'thermal': self.thermal}
+
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.approachCode==1:   # statics / displacement / heat flux
@@ -148,39 +153,30 @@ class OQG1(object):
         if self.thermal==0:
             if self.approachCode==1: # displacement
                 print "isSPCForces"
-                self.obj = spcForcesObject(self.iSubcase)
+                self.obj = spcForcesObject(self.dataCode,self.iSubcase)
                 self.spcForces[self.iSubcase] = self.obj
             elif self.approachCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.spcBucklingForces,eigenVectorObject,self.eigr)
-                self.spcBucklingForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
             elif self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
-                self.freqForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
             elif self.approachCode==6: # transient forces
                 print "isTransientForces"
                 self.createTransientObject(self.spcForces,spcForcesObject,self.dt)
-                self.spcForces[self.iSubcase] = self.obj
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
                 self.createTransientObject(self.realImagConstraints,displacementObject,self.lftsfq)
-                self.realImagConstraints[self.iSubcase] = self.obj
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             if self.approachCode==1: # temperature
                 print "isTemperature"
-                self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
+                self.temperatures[self.iSubcase] = temperatureObject(self.dataCode,self.iSubcase)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
-                self.nonlinearTemperatures[self.iSubcase] = self.obj
             else:
                 raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -194,16 +190,10 @@ class OQG1(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
-                self.freqForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
             elif self.approachCode==9: # frequency
                 print "isComplexEigenvalueForces"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,self.mode)
-                self.complexEigenvalueForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
             ###
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
@@ -220,10 +210,7 @@ class OQG1(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
-                self.freqForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -238,10 +225,7 @@ class OQG1(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                #self.obj = eigenVectorObject(self.iSubcase,self.eigr)
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
-                self.freqForces[self.iSubcase] = self.obj
-                #print "****self", type(self.obj)
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
