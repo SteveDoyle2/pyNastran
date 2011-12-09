@@ -154,7 +154,7 @@ class CELAS3(SpringElement):
         #self.nodes = model.Nodes(self.nodes)
         
     def __repr__(self):
-        nodes = self.nodeIDs()
+        #nodes = self.nodeIDs()
         fields = ['CELAS3',self.eid,self.pid,self.s1,self.s2]
         return self.printCard(fields)
 
@@ -310,6 +310,32 @@ class CDAMP4(DamperElement):
     def __repr__(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP4',self.eid,self.b,nodes[0],nodes[1]]
+        return self.printCard(fields)
+
+class CDAMP5(DamperElement):
+    type = 'CDAMP5'
+    def __init__(self,card=None,data=None):
+        DamperElement.__init__(self,card,data)
+        
+        if card:
+            self.eid = card.field(1)
+            ## Property ID
+            self.pid = card.field(2)
+            nids = [card.field(3),card.field(4)]
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = [data[2],data[3]]
+        ###
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)==2
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        
+    def __repr__(self):
+        nodes = self.nodeIDs()
+        fields = ['CDAMP5',self.eid,self.pid,nodes[0],nodes[1]]
         return self.printCard(fields)
 
 class CSHEAR(Element):

@@ -41,6 +41,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             self.isBufferDone = False
             #print self.printSection(140)
             #print "reading iTable3=%s" %(iTable)
+            #self.obj = None
             table3(iTable)
             self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
             #print "self.tellA = ",self.op2.tell()

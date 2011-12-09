@@ -44,7 +44,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements,'displacementObject - static failure'
+        #assert nodeID not in self.displacements,'displacementObject - static failure'
 
         self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
@@ -366,7 +366,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements
+        #assert nodeID not in self.displacements
 
         #if gridType==0:
         #    Type = 'S'
@@ -459,7 +459,7 @@ class eigenVector14Object(scalarObject): # approachCode=2, sortCode=0, thermal=0
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
         #assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements
+        #assert nodeID not in self.displacements
 
         #if gridType==0:
         #    Type = 'S??'

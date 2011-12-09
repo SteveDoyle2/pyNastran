@@ -256,22 +256,38 @@ class MAT3(AnisotropicMaterial):
     type = 'MAT3'
     def __init__(self,card=None,data=None):
         AnisotropicMaterial.__init__(self,card,data)
-        
-        self.mid  = card.field(1)
-        self.ex    = card.field(2)
-        self.eth   = card.field(3)
-        self.ez    = card.field(4)
-        self.nuxth = card.field(5)
-        self.nuthz = card.field(6)
-        self.nuzx  = card.field(7)
+        if card:
+            self.mid   = card.field(1)
+            self.ex    = card.field(2)
+            self.eth   = card.field(3)
+            self.ez    = card.field(4)
+            self.nuxth = card.field(5)
+            self.nuthz = card.field(6)
+            self.nuzx  = card.field(7)
 
-        self.rho  = card.field(8)
-        self.gzx  = card.field(9)
-        self.ax   = card.field(10)
-        self.ath  = card.field(11)
-        self.az   = card.field(12)
-        self.TRef = card.field(13,0.0)
-        self.ge   = card.field(14)
+            self.rho  = card.field(8)
+            self.gzx  = card.field(9)
+            self.ax   = card.field(10)
+            self.ath  = card.field(11)
+            self.az   = card.field(12)
+            self.TRef = card.field(13,0.0)
+            self.ge   = card.field(14)
+        else:
+            self.mid   = data[0]
+            self.ex    = data[1]
+            self.eth   = data[2]
+            self.ez    = data[3]
+            self.nuxth = data[4]
+            self.nuthz = data[5]
+            self.nuzx  = data[6]
+
+            self.rho  = data[7]
+            self.gzx  = data[8]
+            self.ax   = data[9]
+            self.ath  = data[10]
+            self.az   = data[11]
+            self.TRef = data[12]
+            self.ge   = data[13]
 
     def __repr__(self):
         Tref = self.setBlankIfDefault(self.TRef,0.0)

@@ -155,16 +155,34 @@ class OGP(object):
             self.readOGP1_Data_format1_sort0()
         elif tfsCode==[2,1,1]:
             self.readOGP1_Data_format1_sort1()
-        #elif tfsCode==[2,2,1]:
-        #    self.readOGP1_Data_format2_sort1()
+        elif tfsCode==[2,2,1]:
+            self.readOGP1_Data_format2_sort1()
         #elif tfsCode==[2,3,0]:
         #    self.readOGP1_Data_format3_sort0()
         #elif tfsCode==[2,3,1]:
         #    self.readOGP1_Data_format3_sort1()
         
+
         # Nonlinear force vector
         elif tfsCode==[12,1,0]:
             self.readOGP1_Data_format1_sort0()
+
+        # OGS1- grid point stresses - surface
+        elif tfsCode==[26,1,0]:
+            self.readOGP1_Data_format1_sort0()
+
+        # OGS1- grid point stresses - volume direct
+        elif tfsCode==[27,1,0]:
+            self.readOGP1_Data_format1_sort0()
+
+        # OGS1- grid point stresses - principal
+        elif tfsCode==[28,1,0]:
+            self.readOGP1_Data_format1_sort0()
+
+        # OGS - Grid point stress discontinuities (plane strain)
+        elif tfsCode==[35,1,0]:
+            self.readOGP1_Data_format1_sort0()
+        
 
         # OFMPF2M - does this belong here?
         elif tfsCode==[51,3,3]:

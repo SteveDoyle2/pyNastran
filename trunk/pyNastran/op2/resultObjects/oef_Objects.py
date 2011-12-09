@@ -11,10 +11,18 @@ class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
         self.fluxes = {}
         self.gradients = {}
         if loadStep is not None:
-            self.fluxes    = {loadStep: {}}
-            self.gradients = {loadStep: {}}
+            self.addNewTransient()
+            #self.isTransient = True
             #raise Exception('transient not supported for flux yet...')
         ###
+
+    def addNewTransient(self):
+        """
+        initializes the transient variables
+        @note make sure you set self.dt first
+        """
+        self.fluxes[self.loadStep] = {}
+        self.gradients[self.loadStep]   = {}
 
     def add(self,nodeID,eType,v1,v2,v3,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
@@ -31,7 +39,7 @@ class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
         """
         assert loadStep>=0.
         self.loadStep = loadStep
-        self.temperatures[loadStep] = {}
+        self.addNewTransient()
 
     def __repr__(self):
         msg = '---NONLINEAR GRADIENTS & HEAT FLUX---\n'

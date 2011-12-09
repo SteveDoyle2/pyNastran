@@ -79,7 +79,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              'OQG1','OQMG1',          # spc/mpc forces
                              'OUGV1',                 # displacements
                              'OEF1X','DOEF1','OEFIT', # applied forces
-                             'OGPFB1',                # grid point forces
+                             'OGPFB1','OGS1',         # grid point forces/stresses
                              
                              'OES1X','OES1X1','OES1C',      # stress
                              'OSTR1C','OSTR1X',             # strains
@@ -103,7 +103,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.iSubcaseNameMap = {}
 
 
-        # OUG
+        # OUG - displacement
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
         self.temperatures  = {}           # aCode=1 ------- ------- sortCode=0 thermal=1
         self.freqDisplacements = {}       # aCode=5 ------- fCode=3 sortCode=1 thermal=0
@@ -115,8 +115,10 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.postBucklingEigenvector = {} # aCode=8 ------- ------- ---------- thermal=0
         self.complexEigenvalues = {}      # aCode=9 ------- ------- ---------- thermal=0
 
-        #self.forces = {}
-        #self.fluxes = {}
+        # OUG - velocity
+        self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
+
+        # OUG - acceleration
 
         # OEF
         
@@ -287,7 +289,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 elif tableName in ['VIEWTB']: # not done
                     self.readTable_R1TAB()
 
-                elif tableName in ['OPG1','OGPFB1','OPNL1']: # table of applied loads
+                elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1']: # table of applied loads
                     self.readTable_OGP1()
                 elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
                     self.readTable_OGP1()
