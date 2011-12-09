@@ -255,6 +255,34 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
 
+    def readScalarsF8(self,scalarObject):
+        data = self.data
+        deviceCode = self.deviceCode
+        #print type(scalarObject)
+        
+        n = 0
+        nEntries = len(data)/32
+        for i in range(nEntries):
+            #print self.printBlock(self.data[n:n+64])
+            eData = data[n:n+32]
+            #print "self.numWide = ",self.numWide
+            #print "len(data) = ",len(data)
+            #self.printBlock(data[32:])
+            out = unpack('fiffffff',eData)
+            (freq,gridType,dx,dy,dz,rx,ry,rz) = out
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            #print "gridDevice = ",gridDevice
+            #print "deviceCode = ",deviceCode
+            #if grid<100:
+            print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
+            scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
+            n+=32
+        ###
+        self.data = data[n:]
+        #print self.printSection(200)
+        self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
+
     def readScalars14(self,scalarObject):
         data = self.data
         deviceCode = self.deviceCode
@@ -280,6 +308,38 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
             #   print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            #scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
+            #                               dxi,dyi,dzi,rxi,ryi,rzi)
+            n+=56
+        ###
+        self.data = data[n:]
+        #print self.printSection(200)
+        self.handleResultsBuffer(self.readScalars14,scalarObject,debug=False)
+
+    def readScalarsF14(self,scalarObject):
+        data = self.data
+        deviceCode = self.deviceCode
+        #print type(scalarObject)
+
+        n = 0
+        nEntries = len(data)/56
+        for i in range(nEntries):
+            eData = data[n:n+56]
+            #print self.printBlock(self.data[n:n+64])
+            #print "self.numWide = ",self.numWide
+            #print "len(data) = ",len(data)
+            #self.printBlock(data[56:])
+            #msg = 'len(data)=%s\n'%(len(data))
+            #assert len(data)>=56,msg+self.printSection(120)
+            out = unpack('fiffffffffffff',eData)
+            (freq,gridType,dx, dy, dz, rx, ry, rz,
+                           dxi,dyi,dzi,rxi,ryi,rzi) = out
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            #print "gridDevice = ",gridDevice
+            #print "deviceCode = ",deviceCode
+            #if grid<100:
+            print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
             #scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
             #                               dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56

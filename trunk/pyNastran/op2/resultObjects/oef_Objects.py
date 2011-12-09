@@ -3,15 +3,14 @@ from struct import pack,unpack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
-    def __init__(self,iSubcase,loadStep):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,loadStep):
+        scalarObject.__init__(self,dataCode,iSubcase)
 
         self.loadStep = loadStep
         self.eTypes = {}
-        if loadStep is None:
-            self.fluxes = {}
-            self.gradients = {}
-        else:
+        self.fluxes = {}
+        self.gradients = {}
+        if loadStep is not None:
             self.fluxes    = {loadStep: {}}
             self.gradients = {loadStep: {}}
             #raise Exception('transient not supported for flux yet...')

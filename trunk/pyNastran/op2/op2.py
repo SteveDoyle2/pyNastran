@@ -170,7 +170,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                    self.displacements,self.temperatures,
                    self.eigenvectors,
                    self.nonlinearTemperatures,self.nonlinearDisplacements,
-                   self.forces,self.fluxes,
+                   #self.forces,self.fluxes,
                    
                    # OEF - Applied Forces/Temperatures
                    self.nonlinearForces,self.nonlinearFluxes,
@@ -254,6 +254,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
             if tableName in self.tablesToRead:
                 if tableName=='GEOM1': # nodes,coords,etc.
                     self.readTable_Geom1()
+                elif tableName=='GEOM1N':
+                    self.readTable_Geom1N()
                 elif tableName=='GEOM2': # elements
                     self.readTable_Geom2()
                 elif tableName=='GEOM3': # static/thermal loads
@@ -369,7 +371,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         return unpack(sFormat,ds)
         
     def deleteAttributes(self,params):
-        params += ['deviceCode','approachCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
+        params += ['dataCode','deviceCode','approachCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))
@@ -383,7 +385,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
             self.obj = storageObj[self.iSubcase]
             self.obj.updateDt(dt)
         else:
-            self.obj = classObj(self.iSubcase,dt)
+            self.obj = classObj(self.dataCode,self.iSubcase,dt)
+        storageObj[self.iSubcase] = self.obj
         ###
         #if self.stopCode:
         #    sys.exit('stopping in createTransientObject in op2.py')

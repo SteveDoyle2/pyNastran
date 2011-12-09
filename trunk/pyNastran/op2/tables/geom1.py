@@ -28,6 +28,11 @@ class Geometry1(object):
                          }
         self.readRecordTable('GEOM1')
 
+    def readTable_Geom1N(self):
+        self.iTableMap = {
+                         }
+        self.readRecordTable('GEOM1N')
+
     def readSEQGP(self,data):
         pass
 

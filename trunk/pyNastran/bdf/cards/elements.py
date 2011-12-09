@@ -136,6 +136,7 @@ class CELAS3(SpringElement):
             #assert len(self.nodes)==2
 
             self.eid = card.field(1)
+            ## property ID
             self.pid = card.field(2,self.eid)
 
             ## Scalar point identification numbers
@@ -258,6 +259,57 @@ class CDAMP2(DamperElement):
     def __repr__(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP2',self.eid,self.b,nodes[0],self.c1,nodes[1],self.c2]
+        return self.printCard(fields)
+
+class CDAMP3(DamperElement):
+    type = 'CDAMP3'
+    def __init__(self,card=None,data=None):
+        DamperElement.__init__(self,card,data)
+        
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            nids = [card.field(3),card.field(4)]
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids     = [data[2],data[3]]
+        ###
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)==2
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        
+    def __repr__(self):
+        nodes = self.nodeIDs()
+        fields = ['CDAMP3',self.eid,self.pid,nodes[0],nodes[1]]
+        return self.printCard(fields)
+
+class CDAMP4(DamperElement):
+    type = 'CDAMP4'
+    def __init__(self,card=None,data=None):
+        DamperElement.__init__(self,card,data)
+        
+        if card:
+            self.eid = card.field(1)
+            ## Value of the scalar damper (Real)
+            self.b   = card.field(2)
+            nids = [card.field(3),card.field(4)]
+        else:
+            self.eid = data[0]
+            self.b   = data[1]
+            nids     = [data[2],data[3]]
+        ###
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)==2
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        
+    def __repr__(self):
+        nodes = self.nodeIDs()
+        fields = ['CDAMP4',self.eid,self.b,nodes[0],nodes[1]]
         return self.printCard(fields)
 
 class CSHEAR(Element):

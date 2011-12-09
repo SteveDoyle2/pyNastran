@@ -2,20 +2,18 @@ from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
-    def __init__(self,iSubcase,dt=None):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,dt=None):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         print "displacementObject - self.dt=|%s|" %(self.dt)
         ## this could get very bad very quick, but it could be great!
         ## basically it's a way to handle transients without making
         ## a whole new class
-        if dt is None:
-            self.displacements = {}
-            self.rotations     = {}
-        else:
+        self.displacements = {}
+        self.rotations     = {}
+        if dt is not None:
             #assert dt>=0.
-            self.displacements = {dt: {}}
-            self.rotations     = {dt: {}}
+            self.addNewTransient()
             self.add = self.addTransient
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
@@ -25,17 +23,13 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     #def setLoadID(self,loadID):
     #    self.loadID = loadID
 
-    def updateDt(self,dt=None):
+    def addNewTransient(self):
         """
-        this method is called if the object
-        already exits and a new time step is found
+        initializes the transient variables
+        @note make sure you set self.dt first
         """
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        self.dt = dt
         self.displacements[self.dt] = {}
-        self.rotations[self.dt] = {}
-        print "*displacementObject - self.dt=|%s|" %(self.dt)
+        self.rotations[self.dt]     = {}
 
     def addBinary(self,deviceCode,data):
         (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
@@ -109,7 +103,39 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     #    ###
     #    return msg
 
+    def __reprTransient__(self):
+        msg = '---DISPLACEMENTS---\n'
+        #if self.dt is not None:
+        #    msg += 'dt = %g\n' %(self.dt)
+        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+        msg += '%-8s ' %('nodeID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,displacements in sorted(self.displacements.items()):
+            msg += 'dt = %g\n' %(dt)
+            for nodeID,displacement in sorted(displacements.items()):
+                rotation = self.rotations[dt][nodeID]
+                (dx,dy,dz) = displacement
+                (rx,ry,rz) = rotation
+
+                msg += '%-8i ' %(nodeID)
+                vals = [dx,dy,dz,rx,ry,rz]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %(0)
+                    else:
+                        msg += '%10.3e ' %(val)
+                    ###
+                msg += '\n'
+            ###
+        return msg
+
     def __repr__(self):
+        if self.dt is not None:
+            return self.__reprTransient__()
+
         msg = '---DISPLACEMENTS---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
@@ -135,31 +161,30 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             msg += '\n'
         return msg
 
-
 class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
-    def __init__(self,iSubcase,dt=None):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,dt=None):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         self.temperatures = {}
         
-        print "dt = ",self.dt
-        if self.dt is None:
-            self.temperatures = {}
-        else:
+        #print "dt = ",self.dt
+        self.temperatures = {}
+        if dt is not None:
+            #assert dt>=0.
+            self.addNewTransient()
+            self.isTransient = True
             self.temperatures = {self.dt:{}}
             self.add = self.addTransient
             self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...            
         ###
 
-    def updateDt(self,dt):
+    def addNewTransient(self):
         """
-        this method is called if the object
-        already exits and a new time step is found
+        initializes the transient variables
+        @note make sure you set self.dt first
         """
-        #assert dt>=0.
-        self.dt = dt
-        self.temperatures[dt] = {}
+        self.temperatures[self.dt] = {}
 
     def addBinary(self,deviceCode,data):
         (nodeID,v1) = unpack('if',data[0:8])
@@ -233,11 +258,13 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         return msg
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.isTransient:
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'
         msg += '%-8s %-8s\n' %('GRID','TEMPERATURE')
+        #print "self.dataCode=",self.dataCode
+        #print "self.temperatures=",self.temperatures
         for nodeID,T in sorted(self.temperatures.items()):
             msg += '%9i ' %(nodeID)
 
@@ -252,15 +279,15 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
 #class staticFluxObj(scalarObject): # approachCode=1, tableCode=3 - whatever the static version of this is...
 
 class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
-    def __init__(self,iSubcase,dt=None):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,dt=None):
+        scalarObject.__init__(self,dataCode,iSubcase)
 
         self.dt = dt
+        self.fluxes = {}
         if dt is not None:
             self.fluxes = {}
-        else:
-            raise Exception('transient not supported for flux yet...')
-        
+            self.isTransient = True
+            raise Exception('transient is supported yet...')
 
     def add(self,nodeID,gridType,v1,v2,v3,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
@@ -280,6 +307,9 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
         return msg
 
     def __repr__(self):
+        if self.isTransient:
+            return self.__reprTransient__()
+
         msg = '---HEAT FLUX---\n'
         msg += '%-8s %-8s %-8s %-8s\n' %('GRID','xFlux','yFlux','zFlux')
         for nodeID,flux in sorted(self.fluxes.items()):
@@ -305,8 +335,8 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
         2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
-    def __init__(self,iSubcase,eigReal):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,eigReal):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eigReal = int(eigReal)
         self.eigReal = eigReal
         self.updateDt = self.updateEigReal
@@ -328,6 +358,10 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         print "eigReal = %s" %(str(eigReal))
         self.displacements[self.eigReal] = {}
         self.rotations[self.eigReal] = {}
+
+        self.appendDataMember('modes','mode')
+        self.appendDataMember('eigrs','eigr')
+        self.appendDataMember('eigis','eigi')
 
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
@@ -390,11 +424,104 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             msg += '\n'
         return msg
 
+class eigenVector14Object(scalarObject): # approachCode=2, sortCode=0, thermal=0
+    """
+    @todo add table data
+    """
+    def __init__(self,dataCode,iSubcase,eigReal):
+        scalarObject.__init__(self,dataCode,iSubcase)
+        #self.eigReal = int(eigReal)
+        self.eigReal = eigReal
+        self.updateDt = self.updateEigReal
+        #print "eigReal = %s" %(eigReal)
+        
+        #assert eigReal>=0.
+        self.gridTypes = {}
+        self.displacements = {self.eigReal: {}}
+        self.rotations     = {self.eigReal: {}}
+
+    def updateEigReal(self,eigReal):
+        """
+        this method is called if the object
+        already exits and a new time step is found
+        """
+        #assert eigReal>=0.
+        #self.eigReal = int(eigReal)
+        self.eigReal = eigReal
+        print "eigReal = %s" %(str(eigReal))
+        self.displacements[self.eigReal] = {}
+        self.rotations[self.eigReal] = {}
+
+        self.appendDataMember('modes','mode')
+        self.appendDataMember('eigrs','eigr')
+        self.appendDataMember('eigis','eigi')
+
+    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
+        msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
+        #assert 0<nodeID<1000000000, msg
+        assert nodeID not in self.displacements
+
+        #if gridType==0:
+        #    Type = 'S??'
+        if gridType==1:
+            Type = 'G'
+        elif gridType==2:
+            Type = 'S'
+        else:
+            raise Exception('invalid grid type...gridType=%s' %(gridType))
+
+        self.gridTypes[nodeID] = Type
+        #print 'self.eigReal = %s' %(self.eigReal),type(self.eigReal)
+        #print "d = ",self.displacements
+        self.displacements[self.eigReal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[self.eigReal][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
+    def eigenvalues(self):
+        return sorted(self.displacements.keys())
+
+    def __repr__(self):
+        msg = '---EIGENVECTORS---\n'
+        msg += '-eigenvalues-\n'
+        for i,eigenvalue in enumerate(self.eigenvalues()):
+            msg += '%-2s %f\n' %(i,eigenvalue)
+        msg += '\n'
+
+        #if self.eigReal is not None:
+        #    msg += 'eigReal = %g\n' %(self.eigReal)
+        headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
+        headerLine = '%-8s %8s ' %('nodeID','GridType',)
+        for header in headers:
+            headerLine += '%10s ' %(header)
+        headerLine += '\n'
+
+        for freq,eigVals in sorted(self.displacements.items()):
+            msg += 'eigenvalueReal = %f\n' %(freq)
+            msg += headerLine
+            for nodeID,displacement in sorted(eigVals.items()):
+                rotation = self.rotations[freq][nodeID]
+                Type = self.gridTypes[nodeID]
+                (dx,dy,dz) = displacement
+                (rx,ry,rz) = rotation
+
+                msg += '%-8i %8s ' %(nodeID,Type)
+                vals = [dx,dy,dz,rx,ry,rz]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %(0)
+                    else:
+                        msg += '%10.3g ' %(val)
+                    ###
+                msg += '\n'
+            ###
+            msg += '\n'
+        return msg
+
 #---------------------------------------------------------------------------------
 
 class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
-    def __init__(self,iSubcase,loadStep):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,loadStep):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.loadStep = loadStep
         
         assert loadStep>=0.
@@ -402,8 +529,8 @@ class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, 
         raise Exception('not implemented')
 
 class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, thermal=1
-    def __init__(self,iSubcase,loadStep):
-        scalarObject.__init__(self,iSubcase)
+    def __init__(self,dataCode,iSubcase,loadStep):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.loadStep = loadStep
         
         assert loadStep>=0.
