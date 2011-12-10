@@ -1,11 +1,148 @@
 import sys
 class Subcase(object):
+    solCodeMap = {
+                144:  101,
+             }
+
     def __init__(self,id=0):
         self.id = id
         self.params = {}
         self.sol = None
         #print "\n***adding subcase %s***" %(self.id)
 
+    def getStressCode(self,key,options,value):
+        """@note the individual element must take
+        the stressCode and reduce it to what the element can
+        return.  For example, for an isotropic CQUAD4
+        the fiber field doesnt mean anything.
+        
+        BAR       - no von mises/fiber
+        ISOTROPIC - no fiber
+        
+        @todo how does the MATERIAL bit get turned on?  I'm assuming it's element dependent...
+        """
+        stressCode = 0
+        if 'VONMISES'  in options:  stressCode += 1
+        if key=='STRAIN':           stressCode += 10 # 2+8=10 - fields 2 and 4
+        if 'FIBER'     in options:  stressCode += 4
+        #if 'MATERIAL' in options:  stressCode += 16  material coord (1) vs element (0)
+        return stressCode
+
+    def getFormatCode(self,options,value):
+        """@todo not done..."""
+        formatCode = 0
+        if 'REAL'  in options:  formatCode += 1
+        if 'IMAG'  in options:  formatCode += 2
+        if 'PHASE' in options:  formatCode += 4
+        formatCode = max(formatCode,1)
+        return formatCode
+
+    def getSortCode(self,options,value):
+        sortCode = 0
+        if 'COMPLEX' in options:  sortCode += 1
+        if 'SORT2'   in options:  sortCode += 2
+        if 'RANDOM'  in options:  sortCode += 4
+        return sortCode
+
+    def getDeviceCode(self,options,value):
+        deviceCode = 0
+        if 'PRINT' in options:  deviceCode += 1
+        if 'PLOT' in options:   deviceCode += 2
+        if 'PUNCH' in options:  deviceCode += 4
+        deviceCode = max(deviceCode,1)
+        #if deviceCode==0:
+        #    deviceCode=1  # PRINT
+        return deviceCode
+        
+    def getAnalysisCode(self,sol):
+        """
+        8 - post-buckling (maybe 7 depending on NLPARM???)
+
+        # not important
+        3/4 - differential stiffness (obsolete)
+        11  - old geometric nonlinear statics
+        12  - contran (???)
+        @todo verify
+        """
+        codes = {
+                 101: 1,  # staics
+                 103: 2,  # modes
+                 105: 7,  # pre-buckling
+                 106: 10, # nonlinear statics
+                 107: 9,  # complex eigenvalues
+                 108: 5,  # frequency
+                 111: 5,
+                 112: 6,
+                 114: 1,
+                 115: 2,
+                 116: 7,
+                 118: 5,
+                 129: 6,
+                 144: 1,
+                 145: 1,
+                 146: 1,
+                 153: 10,
+                 159: 6,  # transient
+                 }
+        print "sol=%s" %(sol)
+        approachCode = codes[sol]
+        print 'approachCode = ',approachCode
+        return approachCode
+        
+    def getTableCode(self,sol,tableName,options):
+        if tableName in ['VECTOR','PRESSURE']:
+            tableName = 'DISPLACEMENT' # equivalent tables...
+
+        key = (sol,tableName)
+        tables = { #SOL, tableName      tableCode
+                  (101,'DISPLACEMENT'): 1,
+                  (103,'DISPLACEMENT'): 7, # VECTOR
+                 #(144,'DISPLACEMENT'): 1,
+                  (145,'DISPLACEMENT'): 1,
+                  (146,'DISPLACEMENT'): 1,
+
+                  (101,'FORCE'):        3, # ???
+                  (145,'FORCE'):        3, # ???
+                  (146,'FORCE'):        3, # ???
+
+                  (101,'STRESS'):       5,# 5/20/21 ???
+                  (145,'STRESS'):       5,# 5/20/21 ???
+                  (146,'STRESS'):       5,# 5/20/21 ???
+
+                  (101,'STRAIN'):       5,# 5/20/21 ???
+                  (145,'STRAIN'):       5,# 5/20/21 ??? flutter
+                  (146,'STRAIN'):       5,# 5/20/21 ??? saero
+
+                  (101,'SPCFORCES'):    3,
+                  (103,'SPCFORCES'):    3,
+                 #(144,'SPCFORCES'):    3,
+                  (145,'SPCFORCES'):    3,
+                  (146,'SPCFORCES'):    3,
+
+                  (101,'MPCFORCES'):    3,
+                  (103,'MPCFORCES'):    3,
+                 #(144,'MPCFORCES'):    3,
+                  (145,'MPCFORCES'):    3,
+                  (146,'MPCFORCES'):    3,
+
+                  (145,'SVECTOR'): 14,
+
+                  (101,'FLUX'):         4,
+                  (103,'FLUX'):         4,
+                  (159,'FLUX'):         4,
+                  (159,'THERMAL'):      3, # 3/4 ???
+
+
+#STRESS(PLOT) = ALL
+#FORCE(PLOT) = ALL
+#DISPLACEMENT(PLOT) = ALL
+#DESOBJ(MIN) = 200
+
+                 }
+        print "key=%s" %(str(key))
+        tableCode = tables[key]
+        return tableCode
+        
     def hasParameter(self,paramName):
         if paramName in self.params:
             return True
@@ -30,6 +167,7 @@ class Subcase(object):
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
         elif paramName.startswith('PRES'):  paramName = 'PRESSURE'
         elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
+        elif paramName.startswith('SVEC'):  paramName = 'SVECTOR'
         #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
         #print '*paramName = ',paramName
         return  paramName
@@ -83,6 +221,98 @@ class Subcase(object):
                 value = value
             #else: pass
         return (key,value,options)
+
+    def getOp2Data(self,sol,solmap_toValue):
+        self.sol = sol
+        label = 'SUBCASE %s' %(self.id)
+        op2Params = {'iSubcase':None,'tables':[],'analysisCodes':[],'deviceCodes':[],
+                     'sortCodes':[],'tableCodes':[],'label':label,'subtitle':None,
+                     'title':None,'formatCodes':[],
+                     
+                     'stressCodes':[],'thermal':None}
+        
+        results = ['DISPLACEMENT','EKE','EDE','ELSDCON','ENTHALPY','EQUILIBRIUM','ESE',
+                  'FLUX','FORCE','GPFORCE','GPKE','GPSDCON','GPSTRAIN','GPSTRESS',
+                   'HOUTPUT','MODALKE','MODALSE','MPCFORCES','NLSTRESS','NOUTPUT',
+                   'OLOAD','PFGRID','PFMODE','PFPANEL','RCROSS','RESVEC','SACCELERATION',
+                   'SDISPACEMENT','SPCFORCES','STRAIN','STRESS','SVECTOR','SVELOCITY',
+                   'THERMAL','VECTOR','VELOCITY','VUGRID','WEIGHTCHECK']
+                   
+#   SPC = 2
+#   LOAD = 123458
+#   DISPLACEMENT(SORT1,REAL)=ALL
+#   SPCFORCES(SORT1,REAL)=ALL
+#   STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
+        
+        if self.sol==200: # converts from solution 200 to solution 144
+            param = self.params['ANALYSIS']
+            (value,options,paramType) = param
+            
+            sol = solmap_toValue[value.upper()]
+            print "***value=%s sol=%s" %(value,sol)
+        else:  # leaves SOL the same
+            sol  = self.sol
+        ###
+        if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
+            sol = self.solCodeMap[sol]
+
+        thermal = 0
+        for key,param in self.params.items():
+            key = key.upper()
+            (value,options,paramType) = param
+            msg = "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
+            print msg
+            #msg += self.printParam(key,param,printBeginBulk=False)
+            if paramType=='SUBCASE-type':
+                op2Params['iSubcase'].append(value)
+            elif key in ['BEGIN','ECHO','ANALYSIS'] or 'SET' in key:
+                pass
+            elif key=='TEMPERATURE':
+                thermal = 1
+            elif key in results:
+                sortCode   = self.getSortCode(options,value)
+                deviceCode = self.getDeviceCode(options,value)
+                
+                if key in ['STRESS','STRAIN']:
+                    stressCode = self.getStressCode(key,options,value)
+                    op2Params['stressCodes'].append(stressCode)
+                else:
+                    op2Params['stressCodes'].append(0)
+                ###
+                
+                formatCode   = self.getFormatCode(options,value)
+                tableCode    = self.getTableCode(sol,key,options)
+                analysisCode = self.getAnalysisCode(sol)
+                
+                approachCode = analysisCode*10    + deviceCode
+                tCode        = tableCode*1000 + sortCode
+                op2Params['tables'].append(key)
+                                
+                op2Params['analysisCodes'].append(analysisCode)
+                #op2Params['approachCodes'].append(approachCode)
+                op2Params['deviceCodes'].append(deviceCode)
+                op2Params['formatCodes'].append(formatCode)
+                op2Params['sortCodes'].append(sortCode)
+                op2Params['tableCodes'].append(tableCode)
+                #analysisMethod = value
+
+            elif key in ['TITLE','SUBTITLE','LABEL',
+                        'LOAD','SUPORT','SUPORT1','MPC','SPC',
+                        'TSTEPNL','NLPARM','TRIM','GUST','METHOD','DESOBJ',
+                        'DESSUB','FMETHOD',]:
+                op2Params[key.lower()] = value
+            ###
+            else:
+                raise Exception('unsupported entry...\n%s' %(msg))
+        ###
+        op2Params['thermal'] = thermal
+        
+        print "\nThe estimated results..."
+        for key,value in sorted(op2Params.items()):
+            if value is not None:
+                print "   key=|%s| value=|%s|" %(key,value)
+        #sys.exit('exit subcase.py in bdf/subcase.py')
+        
 
     def printParam(self,key,param,printBeginBulk=True):
         """

@@ -27,6 +27,22 @@ see a gap in the numbers, that means there are missing cards.
 For convenience, the last card is listed as well.
 
 OP2 Reader
+   - Dont know what these are
+     - OFMPF2M
+     - OSMPF2M
+     - OPMPF2M
+     - OGPMPF2M
+     - OLMPF2M
+
+   - other
+     - HISADD
+     - DESTAB
+     - ERRORN
+     - VIEWTB
+     - R1TABRG
+     - OUPV1
+     - OPNL1
+
    - GEOM1
      - CORD1C  (1, needs integration)
      - CORD1R  (2, needs integration)
@@ -38,34 +54,45 @@ OP2 Reader
      - GRID    (17,done)
      - SWLDPRM (34)
    
+   - GEOM1N
+     - None
+
    - GEOM2
      - CBAR    (8,  done)
-     - CDAMP1  (16, needs integration)
-     - CDAMP2  (17, needs integration)
-     - CDAMP3  (18, needs integration)
-     - CDAMP4  (19, needs integration)
-     - CDAMP5  (20, needs integration)
-     - CELAS1  (29, needs integration)
-     - CELAS2  (30, needs integration)
-     - CELAS3  (31, needs integration)
-     - CELAS4  (32, needs integration)
-     - CQUAD4  (69, done)
-     - CQUAD4  (70, done)
+     - CDAMP1  (16)
+     - CDAMP2  (17)
+     - CDAMP3  (18)
+     - CDAMP4  (19)
+     - CDAMP5  (20, needs testing)
+     - CELAS1  (29)
+     - CELAS2  (30)
+     - CELAS3  (31)
+     - CELAS4  (32)
+     - CHEXA   (45, done)
+     - CPENTA  (62, done)
+     - CQUAD   (68)
+     - CQUAD4  (69, buggy - zOffset/mcsid)
+     - CQUAD4  (70, buggy - zOffset/mcsid)
+     - CQUAD8  (70, buggy - zOffset/mcsid)
      - CROD    (80, done)
-     - CTETP   (86, needs integration)
+     - CTETP   (86)
      - CTETRA  (87, done)
-     - CTRIA3  (93, done)
+     - CTRIA3  (93, buggy - zOffset/mcsid)
+     - CTRIA6  (95, buggy - zOffset/mcsid)
      - CTUBE   (103,done)
-     - SPOINT  (118,needs integration)
+     - SPOINT  (118)
      - WELDP   (125)
 
    - GEOM3
      - FORCE   (3,done)
      - FORCE1  (4,done)
      - FORCE2  (5,done)
-     - GRAV    (7,done)
+     - GRAV    (7,buggy)
      - LOAD    (8,done)
-     - PLOAD4  (20)
+     - MOMENT  (13,done)
+     - MOMENT1 (14,done)
+     - MOMENT2 (15,done)
+     - PLOAD4  (20, buggy)
      - QBDY1   (24,done)
      - QBDY2   (25,done)
      - QBDY3   (26,done)
@@ -80,10 +107,13 @@ OP2 Reader
      - TABRNDG (15)
 
    - EPT
-     - NSM     (2, needs integration)
+     - NSM     (2, done)
+     - PBAR    (11,buggy)
+     - PBARL   (12,close)
+     - PBEAM   (13)
      - PCOMP   (22,done)
      - PROD    (49,done)
-     - PSHEAR  (50,needs integration)
+     - PSHEAR  (50,needs object)
      - PSOLID  (51,done)
      - PSHELL  (52,done)
      - PTUBE   (56,done)
@@ -108,10 +138,12 @@ OP2 Reader
 
    - OES
    OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
+      - all midside nodes must be included on elements (for example CQUAD8 have 6 nodes)
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
          - CROD    (1,done)
          - CBEAM   (2, not integrated)
-         - CONROD  (10,not integrated)
+         - CONROD  (10, no object)
+         - CELAS2  (12, no object)
          - CBAR    (34,done)
          
          - CTETRA  (39, done)
@@ -136,7 +168,7 @@ OP2 Reader
          - CQUAD4 (90)
          - CPENTA (91)
          - CONROD (92)
-         - CHEXA  (93)
+         - CHEXA  (93,done)
          - CBEAM  (94)
 
        - OESNLXD

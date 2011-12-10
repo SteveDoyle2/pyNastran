@@ -113,10 +113,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.cardsToWrite = self.cardsToRead
 
     def _initSolution(self):
-        self.infilename = None
+        self.bdfFileName = None
         self.autoReject = False
         self.solmap_toValue = {
-                        'SESTSTATIC': 101,
+                        'SESTATIC'  : 101,
                         'SEMODES'   : 103,
                         'BUCKLING'  : 105,
                         'SEBUCKL'   : 105,
@@ -139,6 +139,15 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                         'NLTCSH'    : 159,
                         'DBTRANS'   : 190,
                         'DESOPT'    : 200,
+                        
+                        # unofficial names
+                        'STATICS'  : 101,
+                        'MODES'    : 103,
+                        'FLUTTER'  : 145,
+                        'SAERO'    : 146,
+
+                        'STATIC'   : 101, #???
+                        'MODE'     : 103, #???
                        }
 
 
@@ -214,8 +223,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## stores CAERO1
         self.caeros   = {}  # can this be combined with self.elements???
         ## stores AERO & AEROS
-        ## @warning possible bug
-        self.aeros    = {}
+        self.aero  = {}
+        self.aeros = {}
         ## stores GUST cards
         self.gusts    = {}  # can this be simplified ???
         ## stores FLFACT
@@ -248,7 +257,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## stores convection properties - PCONV, PCONVM ???
         self.convectionProperties = {}
 
-    def _setInfile(self,infilename,includeDir=None):
+    def _setInfile(self,bdfFileName,includeDir=None):
         """
         sets up the basic file/lines/cardCounting operations
         """
@@ -260,9 +269,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.foundEndData = False
 
         if includeDir is None:
-            includeDir = os.path.dirname(infilename)
+            includeDir = os.path.dirname(bdfFileName)
         ## the active filename (string)
-        self.infilename = infilename
+        self.bdfFileName = bdfFileName
         ## the directory of the 1st BDF (include BDFs are relative to this one)
         self.includeDir = includeDir
         ## list of infile objects (needed for INCLUDE files)
@@ -274,8 +283,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## stores the line number of self.activefilename that the parser is on
         ## very helpful when debugging
         self.lineNumbers     = []
-        ## dictionary that says whether self.infilename is open/close (boolean0
-        self.isOpened = {self.infilename: False}
+        ## dictionary that says whether self.bdfFileName is open/close (boolean0
+        self.isOpened = {self.bdfFileName: False}
         ## list of all read in cards - useful in determining if
         ## entire BDF was read & really useful in debugging
         self.cardCount = {}
@@ -357,10 +366,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## determines if self.activefilename should be closed at the next opportunity
         self.doneReading = False
         if debug:
-            print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.infilename),nlines)
+            print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.bdfFileName),nlines)
         #print "\n\n"
 
-    def read(self,infilename,includeDir=None,xref=True):
+    def readBDF(self,infilename,includeDir=None,xref=True):
         """
         main read method for the bdf
         @param infilename the input bdf
@@ -370,20 +379,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         self._setInfile(infilename,includeDir)
 
-        self.log().info('---starting BDF.read of %s---' %(os.path.relpath(self.infilename)))
+        self.log().info('---starting BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
         sys.stdout.flush()
 
         #self.debug = True
         if self.debug:
             self.log().info("*BDF.read")
         self.readExecutiveControlDeck()
-        self.readCaseControlDeck(self.infilename)
+        self.readCaseControlDeck(self.bdfFileName)
         self.readBulkDataDeck()
         #self.closeFile()
         self.crossReference(xref=xref)
         if self.debug:
             self.log().debug("***BDF.read")
-        self.log().info('---finished BDF.read of %s---' %(os.path.relpath(self.infilename)))
+        self.log().info('---finished BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
         sys.stdout.flush()
 
         isDone = self.foundEndData
@@ -397,7 +406,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         reads the executive control deck
         """
-        self.openFile(self.infilename)
+        self.openFile(self.bdfFileName)
         line = ''
         #self.executiveControlLines = []
         while len(self.activeFileNames)>0: # keep going until finished
@@ -537,6 +546,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #    print "** line=|%r|" %(line)
 
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
+        self.caseControlDeck.solmap_toValue = self.solmap_toValue
+        self.caseControlDeck.rsolmap_toStr  = self.rsolmap_toStr
+
+
         #print "done w/ case control..."
         #print '***********************'
         return self.caseControlLines
@@ -625,7 +638,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         
         if self.debug:
             self.log().debug("*readBulkDataDeck")
-        self.openFile(self.infilename)
+        self.openFile(self.bdfFileName)
         #self.nodes = {}
         #self.elements = {}
         #self.rejects = []
@@ -744,9 +757,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #    print cardName
         #print "card = ",card
         cardObj = BDF_Card(card,oldCardObj=None)
-        if self.debug:
-            self.log().debug("*oldCardObj = \n%s" %(oldCardObj))
-            self.log().debug("*cardObj = \n%s" %(cardObj))
+        #if self.debug:
+        #    self.log().debug("*oldCardObj = \n%s" %(oldCardObj))
+        #    self.log().debug("*cardObj = \n%s" %(cardObj))
         #cardObj.applyOldFields(iCard)
 
         try:
@@ -1169,7 +1182,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addAero(aero)
             elif cardName=='AEROS':
                 aeros = AEROS(cardObj)
-                self.addAero(aeros)
+                self.addAeros(aeros)
             elif cardName=='FLFACT':
                 flfact = FLFACT(cardObj)
                 self.addFLFACT(flfact)
@@ -1242,7 +1255,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         except:
             print "cardName = |%r|" %(cardName)
             print "failed! Unreduced Card=%s\n" %(ListPrint(card))
-            print "filename = %s\n" %(self.infilename)
+            print "filename = %s\n" %(self.bdfFileName)
             raise
         ### try-except block
 

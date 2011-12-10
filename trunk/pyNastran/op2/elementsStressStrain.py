@@ -7,6 +7,35 @@ class ElementsStressStrain(object):
         self.data = ''
         self.handleResultsBuffer(self.skipOES_Element,stress)
 
+    def OES_Thermal(self,stress): # works
+        if self.makeOp2Debug:
+            self.op2Debug.write('---OES_Thermal---\n')
+        deviceCode = self.deviceCode
+        #assert self.numWide==5,'invalid numWide...numWide=%s' %(self.numWide)
+        
+        while len(self.data)>=32:
+            #print self.printSection(40)
+            eData     = self.data[0:32]
+            self.data = self.data[32: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack('iiifffff',eData)
+            (eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal) = out
+            eid = (eid - deviceCode) / 10
+            print "eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s fRad=%s fTotal=%s" %(eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal)
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            #stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+
+            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OES_Thermal,stress)
+        #print self.rodStress[self.iSubcase]
+        if self.makeOp2Debug:
+            print "done with OES_Thermal"
+        ###
+
     def CROD_1(self,stress): # works
         if self.makeOp2Debug:
             self.op2Debug.write('---CROD_1---\n')

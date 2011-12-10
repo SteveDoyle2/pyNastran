@@ -7,69 +7,27 @@ from struct import unpack
 
 from geometryTables import GeometryTables
 from elementsStressStrain import ElementsStressStrain
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
 from pyNastran.op2.tables.resultTable import ResultTable
 
-class Op2(getMethods,addMethods,writeMesh, # BDF methods
+class Op2(BDF,
+#class Op2(getMethods,addMethods,writeMesh, # BDF methods
           FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,ResultTable):
 
-    def bdfInit(self,log=None):
+    def __init__(self,op2FileName):
+        BDF.__init__(self,debug=True,log=None)
+        bdfExtension = '.bdf'
+        (fname,extension) = os.path.splitext(op2FileName)
+        
+        print "fname=%s ext=%s" %(fname,extension)
+        
+        self.op2FileName = op2FileName
+        self.bdfFileName = fname+bdfExtension
+        print "bdfFileName = ",self.bdfFileName
         self.stopCode = False
-
-        if log is None:
-            from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
-            log = loggerObj.startLog('debug') # or info
-        self.log = log
-
         self.makeOp2Debug = False
 
-        self.sol = None
-        self.iSolLine = None
-        self.executiveControlLines = []
-        self.caseControlDeck = None
-        
-        self.params  = {}
-        self.nodes   = {}
-        self.gridSet = None
-
-        self.elements   = {}
-        self.properties = {}
-        self.materials  = {}
-
-        self.coords = {}
-
-
-        self.loads   = {}
-        self.dareas  = {}
-        self.nlparms = {}
-
-        self.flfacts  = {}
-        self.aeros    = {}
-        self.gusts    = {}
-        self.flutters = {}
-        self.splines  = {}
-        self.caeros   = {}
-        self.gravs    = {}
-
-        self.phbdys = {}
-        self.convectionProperties = {}
-        self.bcs = {}
-        self.constraints = {}
-        self.suports = {}
-        self.spcObject = None
-        self.mpcObject = None
-        self.dconstrs = {}
-        self.desvars = {}
-        self.ddvals = {}
-        self.rejectCards = []
-        self.rejects = []
-
-
-    def __init__(self,infileName):
-        self.bdfInit()
-
-        self.infilename = infileName
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
@@ -83,7 +41,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              
                              'OES1X','OES1X1','OES1C',      # stress
                              'OSTR1C','OSTR1X',             # strains
-                             'OESNLXR','OESNLXD','OESTRCP', # nonlinear stress
+                             'OESNLXR','OESNLXD','OESNL1X','OESTRCP', # nonlinear stress
                              'OESCP',                       # cylinder stress???
                              'OESTRCP',                     # cylinder strain???
 
@@ -96,6 +54,11 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                              'OUPV1',
                              'VIEWTB','ERRORN',
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
+                             
+                             # new
+                             # PCOMPTS,
+                             #'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2''OMM2','AGRF','AFRF','AEMONPT','PERF','PMRF','MONITOR','SDF','FOL','STDISP'
+                             #'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2'
                              ]
                              
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
@@ -119,9 +82,9 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
 
         # OUG - acceleration
+        self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
 
         # OEF
-        
         ## rename to staticLoads/thermalLoads
         self.displacementForces = {}      # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=0
         self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
@@ -153,17 +116,18 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         
 
         # OQG
-        self.spcForces           = {} # aCode=1  tCode=3 fCode=1 sortCode=0 thermal=0
-        self.spcBucklingForces   = {} # aCode=2  tCode=3 fCode=1 sortCode=0 thermal=0
-        self.realImagConstraints = {} # aCode=10 tCode=? fCode=1 sortCode=1 thermal=?
+        self.spcForces           = {} # aCode=1  tCode=3  fCode=1 sortCode=0 thermal=0
+        self.spcBucklingForces   = {} # aCode=2  tCode=3  fCode=1 sortCode=0 thermal=0
+        self.realImagConstraints = {} # aCode=10 tCode=?  fCode=1 sortCode=1 thermal=?
+        self.mpcForces           = {} # aCode=1  tCode=39 fCode=1 sortCode=0 thermal=0
         
         # OPG
-        self.appliedLoads = {}  # aCode=1 tCode=2 fCode=1 sortCode=0 thermal=0
+        self.appliedLoads        = {} # aCode=1  tCode=2  fCode=1 sortCode=0 thermal=0
         
         # OEE
-        self.strainEnergy        = {} # aCode=1 tCode=18 fCode=1 sortCode=0
-        self.modesStrainEnergy   = {} # aCode=2 tCode=18 fCode=1 sortCode=0
-        self.complexStrainEnergy = {} # aCode=9 tCode=18 fCode=1 sortCode=0
+        self.strainEnergy        = {} # aCode=1  tCode=18 fCode=1 sortCode=0
+        self.modesStrainEnergy   = {} # aCode=2  tCode=18 fCode=1 sortCode=0
+        self.complexStrainEnergy = {} # aCode=9  tCode=18 fCode=1 sortCode=0
 
     def printResults(self):
         results = [
@@ -178,8 +142,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                    self.nonlinearForces,self.nonlinearFluxes,
                    self.temperatureForces,
                    
-                   # OQG1 - 
-                   self.spcForces,
+                   # OQG1 - Forces
+                   self.spcForces,self.mpcForces,
                    
                    # OES - Stress/Strain
                    self.rodStress,self.rodStrain,
@@ -224,8 +188,8 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         #data = self.getData(60)
         #self.printBlock(data)
 
-    def read(self):
-        self.op2 = open(self.infilename,'rb')
+    def readOp2(self):
+        self.op2 = open(self.op2FileName,'rb')
         
         if self.makeOp2Debug:
             self.op2Debug = open('debug.out','wb')
@@ -254,6 +218,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
             print "tableName = |%r|" %(tableName)
  
             if tableName in self.tablesToRead:
+                #print "startTell = ",self.op2.tell()
                 if tableName=='GEOM1': # nodes,coords,etc.
                     self.readTable_Geom1()
                 elif tableName=='GEOM1N':
@@ -302,7 +267,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                 elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                     self.readTable_OUG1()
 
-                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXR','OESNLXD','OESCP']: # stress
+                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXR','OESNLXD','OESNL1X','OESCP']: # stress
                     self.readTable_OES1()
                 elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
                     self.readTable_OES1()
@@ -311,6 +276,7 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
                     self.readTable_OEE1()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
+                #print "endTell   = ",self.op2.tell()
                 #print "---isAnotherTable---"
                 (isAnotherTable) = self.hasMoreTables()
                 #isAnotherTable = True
@@ -334,16 +300,20 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         #self.printSection(4*51+12)
         
     def parseApproachCode(self,data):
+        """
+        int3 is the 3rd word in table=-3 and may be 
+        elementType or something else depending on the table
+        """
         #self.printBlock(data)
-        (aCode,tCode,elementType,iSubcase) = unpack('iiii',data[:16])
+        (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
         self.iSubcase = iSubcase
         self.tableCode = tCode%1000
-        self.sortCode = tCode/1000
+        self.sortCode  = tCode/1000
         self.deviceCode   = aCode%10
         self.approachCode = (aCode-self.deviceCode)/10
-        print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
+        #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
         print self.printTableCode(self.tableCode)
-        return (elementType)
+        return (int3)
 
     def getValues(self,data,sFormat,iWordStart,iWordStop=None):
         """
@@ -362,37 +332,12 @@ class Op2(getMethods,addMethods,writeMesh, # BDF methods
         ds = data[(iWordStart-1)*4:(iWordStop-1)*4]
         return unpack(sFormat,ds)
         
-    def getValues8(self,data,sFormat,iWordStart,iWordStop=None):
-        raise Exception('is this used...')
-        if iWordStop==None:
-            ds = data[iWordStart*8:(iWordStart+1)*8]
-            return unpack(sFormat,ds)[0]
-            
-        #print "type(data) = ",type(data)
-        ds = data[iWordStart*8:iWordStop*8]
-        return unpack(sFormat,ds)
-        
     def deleteAttributes(self,params):
         params += ['dataCode','deviceCode','approachCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))
                 delattr(self,param)
-
-    def createTransientObject(self,storageObj,classObj,dt):
-        """@note dt can also be loadStep depending on the class"""
-        #print "create Transient Object"
-        if self.iSubcase in storageObj:
-            #print "updating dt..."
-            self.obj = storageObj[self.iSubcase]
-            self.obj.updateDt(dt)
-        else:
-            self.obj = classObj(self.dataCode,self.iSubcase,dt)
-        storageObj[self.iSubcase] = self.obj
-        ###
-        #if self.stopCode:
-        #    sys.exit('stopping in createTransientObject in op2.py')
-        ###
 
     def getBufferWords(self):
         bufferWords = self.getMarker()

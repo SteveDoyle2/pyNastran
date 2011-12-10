@@ -6,19 +6,28 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-    def __init__(self,card):
-        self.oid = card.field(1)
-        self.rid = card.field(2)
-        self.lid = card.field(3,-1e20)
-        self.uid = card.field(4, 1e20)
-        self.lowfq = card.field(5,0.0)
-        self.highfq = card.field(6,1e20)
-    
+    def __init__(self,card=None,data=None):
+        if card:
+            self.oid    = card.field(1)
+            self.rid    = card.field(2)
+            self.lid    = card.field(3,-1e20)
+            self.uid    = card.field(4, 1e20)
+            self.lowfq  = card.field(5,0.0)
+            self.highfq = card.field(6,1e20)
+        else:
+            self.oid    = data[0]
+            self.rid    = data[1]
+            self.lid    = data[2]
+            self.uid    = data[3]
+            self.lowfq  = data[4]
+            self.highfq = data[5]
+        ###
+
     def __repr__(self):
-        #lid = 
-        #uid = 
-        #lowfq = 
-        #highfq = 
+        lid    = self.setBlankIfDefault(self.lid,-1e20)
+        uid    = self.setBlankIfDefault(self.uid, 1e20)
+        lowfq  = self.setBlankIfDefault(self.lowfq,0.0)
+        highfq = self.setBlankIfDefault(self.highfq,1e20)
         fields = ['DCONSTR',self.oid,self.rid,lid,uid,lowfq,highfq]
         return self.printCard(fields)
 

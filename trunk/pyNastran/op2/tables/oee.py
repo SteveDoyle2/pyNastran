@@ -147,19 +147,19 @@ class OEE(object):
             self.strainEnergy[self.iSubcase] = self.obj
         elif self.approachCode==2: # buckling modes
             print "isBucklingStrainEnergy"
-            self.createTransientObject(self.modesStrainEnergy,StrainEnergyObject,self.nonlinearFactor)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.approachCode==5: # freq
             print "isFreqStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.nonlinearFactor)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.approachCode==6: # transient
             print "isTransientStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.nonlinearFactor)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.approachCode==9: # nonlinear static eigenvector
             print "isComplexStrainEnergy"
-            self.createTransientObject(self.complexStrainEnergy,StrainEnergyObject,self.nonlinearFactor)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.approachCode==10: # nonlinear statics
             print "isNonlinearStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject,self.nonlinearFactor)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         else:
             raise Exception('bad approach/table/format/sortCode=%s on OEE table' %(self.atfsCode))
         ###

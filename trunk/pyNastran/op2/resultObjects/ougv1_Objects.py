@@ -355,7 +355,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         #assert eigReal>=0.
         #self.eigReal = int(eigReal)
         self.eigReal = eigReal
-        print "eigReal = %s" %(str(eigReal))
+        #print "eigReal = %s" %(str(eigReal))
         self.displacements[self.eigReal] = {}
         self.rotations[self.eigReal] = {}
 
@@ -448,7 +448,7 @@ class eigenVector14Object(scalarObject): # approachCode=2, sortCode=0, thermal=0
         #assert eigReal>=0.
         #self.eigReal = int(eigReal)
         self.eigReal = eigReal
-        print "eigReal = %s" %(str(eigReal))
+        #print "eigReal = %s" %(str(eigReal))
         self.displacements[self.eigReal] = {}
         self.rotations[self.eigReal] = {}
 

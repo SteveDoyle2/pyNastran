@@ -53,40 +53,52 @@ class OGP(object):
         ## assuming tCode=1
         if self.approachCode==1:   # statics
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            self.nonlinearFactor = self.lsdvmn
         elif self.approachCode==2: # normal modes/buckling (real eigenvalues)
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
             self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
+            self.nonlinearFactor = self.mode
         elif self.approachCode==3: # differential stiffness 0
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            self.nonlinearFactor = self.lsdvmn
         elif self.approachCode==4: # differential stiffness 1
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            self.nonlinearFactor = self.lsdvmn
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
+            self.nonlinearFactor = self.freq
 
         elif self.approachCode==6: # transient
             self.time = self.getValues(data,'f',5) ## time step
+            self.nonlinearFactor = self.time
             print "TIME(5)=%s" %(self.time)
         elif self.approachCode==7: # pre-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## load set
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==8: # post-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.approachCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
+            self.nonlinearFactor = self.mode
             print "LFTSFQ(5)=%s  EIGR(6)=%s  EIGI(7)=%s" %(self.lftsfq,self.eigr,self.eigi)
         elif self.approachCode==10: # nonlinear statics
             self.lftsfq = self.getValues(data,'f',5) ## load step
+            self.nonlinearFactor = self.lftsfq
             print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.approachCode==11: # old geometric nonlinear statics
             self.lsdvmn = self.getValues(data,'i',5)
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.lsdvmn = self.getValues(data,'i',5)
+            self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))

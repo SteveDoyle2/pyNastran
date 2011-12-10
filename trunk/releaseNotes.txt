@@ -11,27 +11,47 @@ If you have a bug/want a new feature or card, leave some feedback on the
 Issues List:     http://code.google.com/p/pynastran/issues/list
 
 
----v0.2 released ??/??/????---
+-----------------------v0.2 released ??/??/????-----------------------
+
+BDF Bug Fixes
+   - DCONSTR weren't processed properly
+   - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
+   - FLFACT reading when the card is short works
+   - PCOMP Thickness method doesnt crash when you want the total thickness.
+     Better defaults on PCOMP
+   - fixed some fields on disabled CORDxx cards
+   - CELASx cards had issues with proper order of entries
 
 Overall BDF
+   - renamed read method  to readBDF (it got confusing when the op2 object can 
+     read the bdf b/c it needs to initialize the bdf cards for the geomX tables)
    - a few more cards
-   - bug fixes to CELASx, PCOMP, CORDx cards
-   - added extra argument to all cards to set data straight
-     from the OP2 (no data type setting as the OP2 is binary).
+   - added extra argument to all cards to set data directly from the 
+     OP2 (no data type setting as the OP2 is binary).
+
+Added BDF
+   - PBARL
+   - CDAMP1/2/3/4/5
 
 Overall OP2
    - reading support ONLY
+   - preliminary bdf writing support based on the OP2 file
+     using BDF class write methods
    - static solutions (SOL 101) results will be very stable
    - thermal solutions have significantly less support than
      structural solutions.
-   - SORT2 is not supported...for example:
+   - SORT2 is not generally, supported...for example:
          use   DISPLACEMENT(PLOT,SORT1)=ALL
          not   DISPLACEMENT(PLOT,SORT2)=ALL
    - Many examples outside of SOL 101 have been tested 
      and dont crash.  This includes large SOL 200 models.  However,
      make sure you verify the results make sense before you trust them.
+     The biggest "error" will be in the names of outputs.  For example,
+     you might find frequencies in a transient displacement table or max shear
+     stress might be labeled von mises stress.
    - The user can modify the tablesToRead variable to adjust the tables
-     that are read.  NOTE: large tables are much more robust when read
+     that are read.  NOTE: large tables are much more robust when read and
+     is not recommended (unlike the BDF).
 
 OP2 Tables
    - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)
@@ -41,6 +61,8 @@ OP2 Tables
 
    - OUG  table (displacement/temperature,eigenvalues
                  velocity,acceleration) is very robust
+       - just verify you're getting the result you want, there are
+         a lot of results in this table
    - OQG  table (spc/mpc forces) is spotty, but doesnt crash
    - OGP  table (grid point forces) works for SOL 101
    - OSTR table (strain) - see OES table
@@ -49,20 +71,32 @@ OP2 Tables
          the variables are dynamic based on the Case Control Deck parameters
          selected.  For example:
              STRESS(PLOT,SORT1,FIBER,VONMISES)=ALL
-                - composite stress oxx is in the fiber direction (not the x axis)
+                - composite stress oxx is in the fiber direction (not the
+                  x axis)
                 - isotropic stress elements have von mises stress (ovm)
              STRESS(PLOT,SORT1,FIBER,MAXSHEAR)=ALL
-                - composite stress oxx is in the fiber direction (not the x axis)
+                - composite stress oxx is in the fiber direction (not the
+                  x axis)
                 - isotropic stress elements have max shear stress (maxShear)
+       - All this information is contained within boolean variables such as 
+         isVonMises
+         and isFiber which are located on the result objects.
        - Rod elements can have different outputs depending on the
          solution and user requested output options.  For example, rods can
-         contain the margin of safety in tension and compression, but they don't
-         always have that data.
+         contain the margin of safety in tension and compression, but they
+         don't always have that data.  You can check this by using the
+         boolean isMargins.
 
-   - OEE table (element energy) - stable, but results are questionable and difficult to verify.
+   - OEE table (element energy) - stable, but results are questionable
+         and difficult to verify.
 
 
----v0.1 released 2011/11/09 ---
+-----------------------v0.1.1 released 2011/12/06 -----------------------
+
+BDF Bug Fixes
+- bug fix to elements.py to fix import error
+
+-----------------------v0.1   released 2011/11/09 -----------------------
 
 Overall BDF
    - an executive control deck, case control deck, and bulk data deck

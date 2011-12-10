@@ -37,8 +37,7 @@ class OUGV1(object):
         
         aCode = self.getBlockIntEntry(data,1)
         #print "aCode = ",aCode
-        self.parseApproachCode(data)
-        #iSubcase = self.getValues(data,'i',4)
+        three = self.parseApproachCode(data) # 3
 
         self.rCode        = self.getValues(data,'i',8)  ## random code
         self.formatCode   = self.getValues(data,'i',9)  ## format code
@@ -65,14 +64,14 @@ class OUGV1(object):
             self.dataCode['modeCycle'] = self.modeCycle
             self.nonlinearFactor = self.mode
             print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
-        elif self.approachCode==3: # differential stiffness
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.dataCode['lsdvmn'] = self.lsdvmn
-            self.nonlinearFactor = self.lsdvmn
-        elif self.approachCode==4: # differential stiffness
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.dataCode['lsdvmn'] = self.lsdvmn
-            self.nonlinearFactor = self.lsdvmn
+        #elif self.approachCode==3: # differential stiffness
+        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #    self.dataCode['lsdvmn'] = self.lsdvmn
+        #    self.nonlinearFactor = self.lsdvmn
+        #elif self.approachCode==4: # differential stiffness
+        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #    self.dataCode['lsdvmn'] = self.lsdvmn
+        #    self.nonlinearFactor = self.lsdvmn
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
             self.dataCode['freq'] = self.freq
@@ -125,8 +124,8 @@ class OUGV1(object):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
         
-        print "*iSubcase=%s"%(self.iSubcase)
-        print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
+        #print "*iSubcase=%s"%(self.iSubcase)
+        #print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
         print self.codeInformation()
 
         #self.printBlock(data)
@@ -158,8 +157,14 @@ class OUGV1(object):
             self.readOUGV1_Data_format1_sort0()
         elif tfsCode==[7,1,1]:
             self.readOUGV1_Data_format1_sort1()
+        elif tfsCode==[7,2,0]:
+            self.readOUGV1_Data_format2_sort0()
+        elif tfsCode==[7,2,1]:
+            self.readOUGV1_Data_format2_sort1()
         elif tfsCode==[7,3,0]:
             self.readOUGV1_Data_format3_sort0()
+        elif tfsCode==[7,3,1]:
+            self.readOUGV1_Data_format3_sort1()
 
         # velocity
         elif tfsCode==[10,1,0]:
@@ -175,7 +180,8 @@ class OUGV1(object):
         elif tfsCode==[10,3,1]:
             self.readOUGV1_Data_format3_sort1()
 
-        elif tfsCode==[11,1,0]:  # Acceleration vector
+        # Acceleration vector
+        elif tfsCode==[11,1,0]:
             self.readOUGV1_Data_format1_sort0()
         elif tfsCode==[11,1,1]:
             self.readOUGV1_Data_format1_sort1()
@@ -208,36 +214,36 @@ class OUGV1(object):
 
             elif self.approachCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
-                self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
+                self.createTransientObject(self.eigenvectors,eigenVectorObject)
 
             elif self.approachCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
-                self.createTransientObject(self.freqDisplacements,eigenVectorObject,self.freq)
+                self.createTransientObject(self.freqDisplacements,eigenVectorObject)
 
             elif self.approachCode==6: # transient displacement
                 print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.displacements,displacementObject)
 
             elif self.approachCode==7: # pre-buckling displacement
                 print "isPreBucklingDisplacement"
-                self.createTransientObject(self.preBucklingDisplacements,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
 
             elif self.approachCode==8: # post-buckling eigenvector
                 print "isPostBucklingEigenvector"
-                self.createTransientObject(self.postBucklingEigenvector,eigenVectorObject,self.nonlinearFactor)
+                self.createTransientObject(self.postBucklingEigenvector,eigenVectorObject)
 
             elif self.approachCode==9: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
 
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
                 #print "self.lftsfq = ",self.lftsfq
-                self.createTransientObject(self.nonlinearDisplacements,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.nonlinearDisplacements,displacementObject)
             elif self.approachCode==11: # nonlinear geometric static displacement
                 print "isNonlinearStaticDisplacement"
                 #print "self.lftsfq = ",self.lftsfq
-                self.createTransientObject(self.nonlinearDisplacements,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.nonlinearDisplacements,displacementObject)
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -245,7 +251,8 @@ class OUGV1(object):
         elif self.thermal==1:
             if self.approachCode==1: # temperature
                 print "isTemperature"
-                self.temperatures[self.iSubcase] = temperatureObject(self.dataCode,self.iSubcase)
+                self.obj = temperatureObject(self.dataCode,self.iSubcase)
+                self.temperatures[self.iSubcase] = self.obj
 
             #elif self.approachCode==1 and self.sortCode==1: # heat fluxes
             #    print "isFluxes"
@@ -253,11 +260,11 @@ class OUGV1(object):
             #    self.fluxes[self.iSubcase] = self.obj
             elif self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
-                self.createTransientObject(self.temperatures,temperatureObject,self.dt)
+                self.createTransientObject(self.temperatures,temperatureObject)
 
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.lftsfq)
+                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
             else:
                 raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -279,13 +286,16 @@ class OUGV1(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
-                self.createTransientObject(self.freqDisplacements,eigenVectorObject,self.nonlinearFactor)
+                self.createTransientObject(self.freqDisplacements,eigenVectorObject)
+            elif self.approachCode==7: # pre-buckling displacement
+                print "isPreBucklingDisplacement"
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
             elif self.approachCode==9: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
             elif self.approachCode==11: # Geometric nonlinear statics
                 print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.freqDisplacements,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.freqDisplacements,displacementObject)
             else:
                 raise Exception('unsupported OUGV1 static format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -300,7 +310,7 @@ class OUGV1(object):
         if self.thermal==0:
             if self.approachCode==6: # transient displacement
                 print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject,self.dt)
+                self.createTransientObject(self.displacements,displacementObject)
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -317,11 +327,14 @@ class OUGV1(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
-                self.createTransientObject(self.freqDisplacements,eigenVector14Object,self.freq)
+                self.createTransientObject(self.freqDisplacements,eigenVector14Object)
                 self.readScalarsF14(self.obj)
+            elif self.approachCode==7: # pre-buckling displacement
+                print "isPreBucklingDisplacement"
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
             elif self.approachCode==9 and self.sortCode==1: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
                 self.readScalars8(self.obj)
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
@@ -344,13 +357,16 @@ class OUGV1(object):
                 self.obj = displacementObject(self.dataCode,self.iSubcase)
             elif self.approachCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
-                self.createTransientObject(self.eigenvectors,eigenVectorObject,self.eigr)
+                self.createTransientObject(self.eigenvectors,eigenVectorObject)
             elif self.approachCode==5: # frequency displacement
                 print "isFreqDisplacement"
-                self.createTransientObject(self.freqDisplacements,displacementObject,self.freq)
+                self.createTransientObject(self.freqDisplacements,displacementObject)
             elif self.approachCode==6: # transient displacement
                 print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject,self.dt)
+                self.createTransientObject(self.displacements,displacementObject)
+            elif self.approachCode==7: # pre-buckling displacement
+                print "isPreBucklingDisplacement"
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
             elif self.approachCode==10: # transient velocity
                 print "isTransientVelocity"
                 self.createTransientObject(self.velocities,displacementObject,self.dt)
@@ -370,7 +386,13 @@ class OUGV1(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency displacement
                 print "isFreqDisplacement"
-                self.createTransientObject(self.freqDisplacements,displacementObject,self.freq)
+                self.createTransientObject(self.freqDisplacements,displacementObject)
+            elif self.approachCode==7: # pre-buckling displacement
+                print "isPreBucklingDisplacement"
+                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
+            elif self.approachCode==9: # nonlinear static eigenvector
+                print "isComplexEigenvalues"
+                self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###

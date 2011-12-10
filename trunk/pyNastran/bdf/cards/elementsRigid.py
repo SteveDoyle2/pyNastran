@@ -9,20 +9,31 @@ class RigidElement(Element):
 
 class RBAR(RigidElement):
     type = 'RBAR'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         RBAR EID GA GB CNA    CNB CMA CMB ALPHA
         RBAR 5   1   2 123456             6.5-6
         """
-        RigidElement.__init__(self,card)
-        self.eid   = card.field(1)
-        self.ga    = card.field(2)
-        self.gb    = card.field(3)
-        self.cna   = card.field(4)
-        self.cnb   = card.field(5)
-        self.cma   = card.field(6)
-        self.cmb   = card.field(7)
-        self.alpha = card.field(8)
+        RigidElement.__init__(self,card,data)
+        if card:
+            self.eid   = card.field(1)
+            self.ga    = card.field(2)
+            self.gb    = card.field(3)
+            self.cna   = card.field(4)
+            self.cnb   = card.field(5)
+            self.cma   = card.field(6)
+            self.cmb   = card.field(7)
+            self.alpha = card.field(8)
+        else:
+            self.eid   = data[0]
+            self.ga    = data[1]
+            self.gb    = data[2]
+            self.cna   = data[3]
+            self.cnb   = data[4]
+            self.cma   = data[5]
+            self.cmb   = data[6]
+            self.alpha = data[7]
+        ###
 
     def __repr__(self):
         alpha = self.setDefaultIfBlank(self.alpha,0.0)
@@ -31,16 +42,23 @@ class RBAR(RigidElement):
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         RBAR1 EID GA GB CB  ALPHA
         RBAR1 5    1  2 123 6.5-6
         """
-        RigidElement.__init__(self,card)
-        self.eid   = card.field(1)
-        self.ga    = card.field(2)
-        self.gb    = card.field(3)
-        self.alpha = card.field(4)
+        RigidElement.__init__(self,card,data)
+        if card:
+            self.eid   = card.field(1)
+            self.ga    = card.field(2)
+            self.gb    = card.field(3)
+            self.alpha = card.field(4)
+        else:
+            self.eid   = data[0]
+            self.ga    = data[1]
+            self.gb    = data[2]
+            self.alpha = data[3]
+        ###
 
     def __repr__(self):
         alpha = self.setDefaultIfBlank(self.alpha,0.0)
@@ -49,8 +67,8 @@ class RBAR1(RigidElement):
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
-    def __init__(self,card):
-        RigidElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        RigidElement.__init__(self,card,data)
         self.eid = card.field(1)
         self.Gni = []
         self.Cni = []
@@ -97,12 +115,12 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     type = 'RBE2'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
         GM6 GM7 GM8 -etc.- ALPHA
         """
-        RigidElement.__init__(self,card)
+        RigidElement.__init__(self,card,data)
         self.eid = card.field(1)
         self.gn  = card.field(2)
         self.cm  = card.field(3)
@@ -115,8 +133,8 @@ class RBE2(RigidElement):
 
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
-    def __init__(self,card):
-        RigidElement.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        RigidElement.__init__(self,card,data)
         self.eid     = card.field(1)
         self.refgrid = card.field(3)
         self.refc    = card.field(4)
