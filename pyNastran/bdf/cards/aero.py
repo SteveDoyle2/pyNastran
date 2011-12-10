@@ -227,7 +227,8 @@ class FLFACT(BaseCard):
         if card:
             self.sid     = card.field(1)
             self.factors = card.fields(2)
-            if self.factors[1]=='THRU':
+            
+            if len(self.factors)>1 and self.factors[1]=='THRU':
                 raise Exception('embedded THRUs not supported yet on FLFACT card\n')
                 #(a,thru,b,n,dn) = factors
                 #for i in range(

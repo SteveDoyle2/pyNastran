@@ -57,36 +57,47 @@ class OEF(object):
         ## assuming tCode=1
         if self.approachCode==1:   # statics
             self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.nonlinearFactor = self.loadID
         elif self.approachCode==2: # normal modes/buckling (real eigenvalues)
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## eigenvalue
+            self.nonlinearFactor = self.mode
         elif self.approachCode==3: # differential stiffness 0
             self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.nonlinearFactor = self.loadID
         elif self.approachCode==4: # differential stiffness 1
             self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.nonlinearFactor = self.loadID
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
+            self.nonlinearFactor = self.freq
 
         elif self.approachCode==6: # transient
             self.time = self.getValues(data,'f',5) ## time step
+            self.nonlinearFactor = self.time
             print "time(5)=%s" %(self.time)
         elif self.approachCode==7: # pre-buckling
             self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.nonlinearFactor = self.loadID
             print "loadID(5)=%s" %(self.loadID)
         elif self.approachCode==8: # post-buckling
             self.loadID = self.getValues(data,'i',5) ## load set ID number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
+            self.nonlinearFactor = self.loadID
             print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
         elif self.approachCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
+            self.nonlinearFactor = self.mode
             print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.approachCode==10: # nonlinear statics
             self.loadStep = self.getValues(data,'f',5) ## load step
+            self.nonlinearFactor = self.loadStep
             print "loadStep(5) = %s" %(self.loadStep)
         elif self.approachCode==11: # geometric nonlinear statics
             self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.nonlinearFactor = self.loadID
             print "loadID(5)=%s" %(self.loadID)
         else:
             raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
@@ -144,23 +155,23 @@ class OEF(object):
 
             elif self.approachCode==2 and self.sortCode==1: # buckling forces
                 print "isBucklingForces"
-                self.createTransientObject(self.bucklingForces,displacementObject,self.eigr)
+                self.createTransientObject(self.bucklingForces,displacementObject)
                 self.readForces(self.obj)
             elif self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.freqForces,eigenVectorObject)
                 self.readForces(self.obj)
             elif self.approachCode==6: # transient displacement
                 print "isTransientForces"
-                self.createTransientObject(self.displacementForces,displacementObject,self.time)
+                self.createTransientObject(self.displacementForces,displacementObject)
                 self.readForces(self.obj)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject)
                 self.readForces(self.obj)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticForces"
-                self.createTransientObject(self.nonlinearForces,displacementObject,self.loadStep)
+                self.createTransientObject(self.nonlinearForces,displacementObject)
                 ##self.readForcesNonlinear(self.obj)
                 self.skipOES_Element(None)
             else:
@@ -180,15 +191,15 @@ class OEF(object):
             #    self.fluxes[self.iSubcase] = self.obj
             if self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.freqForces,eigenVectorObject)
                 self.readForces(self.obj)
             elif self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
-                self.createTransientObject(self.temperatureForces,temperatureObject,self.time)
+                self.createTransientObject(self.temperatureForces,temperatureObject)
                 self.readForces(self.obj)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject,self.loadStep)
+                self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject)
                 self.readForcesNonlinear(self.obj)
             else:
                 raise Exception('not supported OEF thermal solution...')
@@ -210,7 +221,7 @@ class OEF(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.freqForces,eigenVectorObject)
                 #self.readForces(self.obj)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
@@ -237,7 +248,7 @@ class OEF(object):
                 self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject)
             else:
                 raise Exception('not supported OEF static solution...')
             ###

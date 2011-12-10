@@ -245,6 +245,7 @@ class Op2Codes(object):
         dataFormat = tableCode/1000
         msg = ''
         msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
+
         tableContent = {
             0  : '',
             1  : 'OUG - Displacement vector',
@@ -265,7 +266,7 @@ class Op2Codes(object):
             16 : 'OUG - Velocity vector (solution set)',
             17 : 'OUG - Acceleration vector (solutin set)',
             18 : 'OEE - Element strain energy',
-            19 : 'OGF - Grid point force balanc',
+            19 : 'OGF - Grid point force balance',
             20 : 'OES - Stresses at grid points',
             21 : 'OES - Strain/curvature at grid points',
             22 : 'OELOF1 - Element internal forces/moments',
@@ -436,7 +437,7 @@ class Op2Codes(object):
         elif(self.tableCode==40):  table = "OGPKE - Grip point kinetic energy"
 
         msg  = "  deviceCode   = %-3s %s\n" %(self.deviceCode,device)
-        msg += "  approachCode = %-3s %s\n" %(self.approachCode,approach)
+        msg += "  analysisCode = %-3s %s\n" %(self.approachCode,approach)
         msg += "  tableCode    = %-3s %s\n" %(self.tableCode,table)
         msg += "  formatCode   = %-3s %s\n" %(formatCode,formatWord)
         msg += "  sortCode     = %-3s %s\n" %(self.sortCode,sortWord)

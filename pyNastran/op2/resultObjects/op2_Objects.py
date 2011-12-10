@@ -27,10 +27,10 @@ class scalarObject(object):
         
     def appendDataMember(self,varName,valueName):
         """this appends a data member to a variable that may or may not exist"""
-        print "append..."
+        #print "append..."
         hasList = self.startDataMember(varName,valueName)
         if hasList:
-            print "has %s" %(varName)
+            #print "has %s" %(varName)
             listA = self.getVar(varName)
             value = self.getVar(valueName)
             n = len(listA)

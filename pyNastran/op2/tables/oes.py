@@ -36,9 +36,7 @@ class OES(object):
         if self.makeOp2Debug:
             self.op2Debug.write('block3header\n')
 
-        self.parseApproachCode(data)
-
-        self.elementType = self.getValues(data,'i',3)
+        self.elementType = self.parseApproachCode(data) # 3
         self.loadSet    = self.getValues(data,'i',8)
         self.formatCode = self.getValues(data,'i',9)
         self.numWide    = self.getValues(data,'i',10)
@@ -62,14 +60,16 @@ class OES(object):
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
             self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
             self.nonlinearFactor = self.mode
-        elif self.approachCode==3: # differential stiffness
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        elif self.approachCode==4: # differential stiffness
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #elif self.approachCode==3: # differential stiffness
+        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #    self.nonlinearFactor = self.lsdvmn
+        #elif self.approachCode==4: # differential stiffness
+        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #    self.nonlinearFactor = self.lsdvmn
+
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
             self.nonlinearFactor = self.freq
-
         elif self.approachCode==6: # transient
             self.dt = self.getValues(data,'f',5) ## time step
             print "DT(5)=%s" %(self.dt)
@@ -184,89 +184,96 @@ class OES(object):
         #print 'reading big data block'
         #print self.printBlock(self.data)
 
-
-        if self.formatCode==1 and self.sortCode==0:
-            if self.elementType==1: # crod
-                #print "    found crod_1"
-                stressStrainObj = self.instantiateRodObject()
-                self.CROD_1(stressStrainObj)
-            #elif self.elementType == 2:   # cbeam
-            #    print "    found cbeam_2"
-            #    #stressStrainObj = self.instantiateBeamObject()
-            #    stressStrainObj = None
-            #    self.CBEAM_2(stressStrainObj)
-            #elif self.elementType == 10:   # conrod
-                print "    found conrod_10"
-                #stressStrainObj = self.instantiateConrodObject()
-                stressStrainObj = None
-                self.CONROD_10(stressStrainObj)
-
-            elif self.elementType == 12:   # celas2
-                #print "    found celas2_12"
-                #stressStrainObj = self.instantiateCelasObject()
-                stressStrainObj = None
-                self.CELAS2_12(stressStrainObj)
-            elif self.elementType == 34:   # cbar
-                #print "    found cbar_34"
-                stressStrainObj = self.instantiateBarObject()
-                self.CBAR_34(stressStrainObj)
-
-            elif self.elementType==33: # cquad4_33
-                self.stopCode = True
-                #print "    found cquad_33"
-                stressStrainObj = self.instantiatePlateObject()
-                self.CQUAD4_33(stressStrainObj)
-            elif self.elementType==74:  # ctria
-                #print "    found ctria_74"
-                stressStrainObj = self.instantiatePlateObject()
-                self.CTRIA3_74(stressStrainObj) # ctria3
-            elif self.elementType==144: # cquad4
-                self.stopCode = True
-                #print "    found cquad_144"
-                stressStrainObj = self.instantiatePlateObject()
-                self.CQUAD4_144(stressStrainObj)
-
-            elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
-                #print "    found ctetra_39 / hexa_67 / cpenta_68"
-                stressStrainObj = self.instantiateSolidObject()
-                self.CSOLID_67(stressStrainObj)
-
-            elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
-                #print "    found ctetra_85 / hexa_93 / cpenta_91"
-                stressStrainObj = self.instantiateSolidObject()
-                self.CSOLID_85(stressStrainObj)
-            elif self.elementType in [93]: # CHEXANL
-                stressStrainObj = None
-                #print "hexa_93"
-                self.CHEXANL_93(stressStrainObj)
-
-            elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
-                #print "    found a 95/96/97 or 98!"
-                self.eid2 = None # stores the previous elementID
-                stressStrainObj = self.instantiateCompositePlateObject()
-                self.CQUAD4_95(stressStrainObj)
-                del self.eid2
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        if self.thermal==0:
+            if tfsCode==[5,1,0]:  # Stress
+                self.readOES1_Data_format1_sort0()
             else:
-                self.printBlock(self.data[0:100])
-                self.skipOES_Element(None)
-                msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
-                print msg
-                #raise RuntimeError(msg)
+                raise Exception('invalid atfsCode=%s' %(self.atfsCode))
+            ###
+        elif self.thermal==1:
+            self.OES_Thermal(None)
+            #raise Exception('thermal stress')
+        else:
+            raise Exception('invalid thermal option...')
+        ###
+        #print stressStrainObj
+
+
+    def readOES1_Data_format1_sort0(self):
+        if self.elementType==1: # crod
+            #print "    found crod_1"
+            stressStrainObj = self.instantiateRodObject()
+            self.CROD_1(stressStrainObj)
+        #elif self.elementType == 2:   # cbeam
+        #    print "    found cbeam_2"
+        #    #stressStrainObj = self.instantiateBeamObject()
+        #    stressStrainObj = None
+        #    self.CBEAM_2(stressStrainObj)
+        #elif self.elementType == 10:   # conrod
+            print "    found conrod_10"
+            #stressStrainObj = self.instantiateConrodObject()
+            stressStrainObj = None
+            self.CONROD_10(stressStrainObj)
+
+        elif self.elementType == 12:   # celas2
+            #print "    found celas2_12"
+            #stressStrainObj = self.instantiateCelasObject()
+            stressStrainObj = None
+            self.CELAS2_12(stressStrainObj)
+        elif self.elementType == 34:   # cbar
+            #print "    found cbar_34"
+            stressStrainObj = self.instantiateBarObject()
+            self.CBAR_34(stressStrainObj)
+
+        elif self.elementType==33: # cquad4_33
+            self.stopCode = True
+            #print "    found cquad_33"
+            stressStrainObj = self.instantiatePlateObject()
+            self.CQUAD4_33(stressStrainObj)
+        elif self.elementType==74:  # ctria
+            #print "    found ctria_74"
+            stressStrainObj = self.instantiatePlateObject()
+            self.CTRIA3_74(stressStrainObj) # ctria3
+        elif self.elementType==144: # cquad4
+            self.stopCode = True
+            #print "    found cquad_144"
+            stressStrainObj = self.instantiatePlateObject()
+            self.CQUAD4_144(stressStrainObj)
+
+        elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
+            #print "    found ctetra_39 / hexa_67 / cpenta_68"
+            stressStrainObj = self.instantiateSolidObject()
+            self.CSOLID_67(stressStrainObj)
+
+        elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
+            #print "    found ctetra_85 / hexa_93 / cpenta_91"
+            stressStrainObj = self.instantiateSolidObject()
+            self.CSOLID_85(stressStrainObj)
+        elif self.elementType in [93]: # CHEXANL
+            stressStrainObj = None
+            #print "hexa_93"
+            self.CHEXANL_93(stressStrainObj)
+
+        elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
+            #print "    found a 95/96/97 or 98!"
+            self.eid2 = None # stores the previous elementID
+            stressStrainObj = self.instantiateCompositePlateObject()
+            self.CQUAD4_95(stressStrainObj)
+            del self.eid2
         else:
             self.printBlock(self.data[0:100])
             self.skipOES_Element(None)
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            self.developerFile.write(msg+'\n')
             print msg
             #raise RuntimeError(msg)
-        assert self.thermal==0,'thermal check is done after to get info about the case'
-
-        #print stressStrainObj
-
+        ###
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (untested)
         #elif self.elementType == 3:    # ctube
         #elif self.elementType == 4:    # cshear
-        #elif self.elementType == 10:   # conrod
+        #elif self.elementType == 10:   # conrod   (done)
 
         #elif self.elementType == 33:   # cquad4_33 (done)
         #elif self.elementType == 34:   # cbar      (done)
@@ -309,12 +316,12 @@ class OES(object):
         #elif self.elementType == 1:    # crod   (done)
         #elif self.elementType == 2:    # cbeam  (untested)
         #elif self.elementType == 3:    # ctube
-        #elif self.elementType == 10:   # conrod
+        #elif self.elementType == 10:   # conrod (done)
         #elif self.elementType == 34:   # cbar   (done)
 
         #springs
         #elif self.elementType == 11:   # celas1
-        #elif self.elementType == 12:   # celas2
+        #elif self.elementType == 12:   # celas2 (not integrated)
         #elif self.elementType == 13:   # celas3
         #elif self.elementType == 14:   # celas4
         
@@ -333,7 +340,7 @@ class OES(object):
         #elif self.elementType == 98: # CTRIA6 (done)
 
         # nonlinear
-        #elif self.elementType == 85:   # tetra  (nonlinear)
+        #elif self.elementType == 85:   # tetra  (nonlinear,done)
         #elif self.elementType == 86:   # gap    (nonlinear)
         #elif self.elementType == 87:   # ctube  (nonlinear)
         #elif self.elementType == 88:   # tria3  (nonlinear) - same as quad4
@@ -341,7 +348,7 @@ class OES(object):
         #elif self.elementType == 90:   # quad4  (nonlinear)
         #elif self.elementType == 91:   # cpenta (nonlinear)
         #elif self.elementType == 92:   # conrod (nonlinear)
-        #elif self.elementType == 93:   # chexa  (nonlinear)
+        #elif self.elementType == 93:   # chexa  (nonlinear,done)
         #elif self.elementType == 94:   # cbeam  (nonlinear)
         
         # acoustic
@@ -363,9 +370,9 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            self.createTransientObject(self.rodStress,rodStressObject,self.nonlinearFactor)
+            self.createTransientObject(self.rodStress,rodStressObject)
         elif self.sCode in [10,11]:
-            self.createTransientObject(self.rodStrain,rodStrainObject,self.nonlinearFactor)
+            self.createTransientObject(self.rodStrain,rodStrainObject)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
@@ -383,9 +390,9 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            self.createTransientObject(self.barStress,barStressObject,self.nonlinearFactor)
+            self.createTransientObject(self.barStress,barStressObject)
         elif self.sCode in [10,11]:
-            self.createTransientObject(self.barStrain,barStrainObject,self.nonlinearFactor)
+            self.createTransientObject(self.barStrain,barStrainObject)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
@@ -403,9 +410,9 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1,16,17]: # stress
-            self.createTransientObject(self.compositePlateStress,compositePlateStressObject,self.nonlinearFactor)
+            self.createTransientObject(self.compositePlateStress,compositePlateStressObject)
         elif self.sCode in [10,11,13,14,15,26,27,30,31]: # strain
-            self.createTransientObject(self.compositePlateStrain,compositePlateStrainObject,self.nonlinearFactor)
+            self.createTransientObject(self.compositePlateStrain,compositePlateStrainObject)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
@@ -423,9 +430,9 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            self.createTransientObject(self.plateStress,plateStressObject,self.nonlinearFactor)
+            self.createTransientObject(self.plateStress,plateStressObject)
         elif self.sCode in [10,11,15]:
-            self.createTransientObject(self.plateStrain,plateStrainObject,self.nonlinearFactor)
+            self.createTransientObject(self.plateStrain,plateStrainObject)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###
@@ -444,9 +451,9 @@ class OES(object):
         #    print "making new subcase..."
 
         if self.sCode in [0,1]:
-            self.createTransientObject(self.solidStress,solidStressObject,self.nonlinearFactor)
+            self.createTransientObject(self.solidStress,solidStressObject)
         elif self.sCode in [10,11]:
-            self.createTransientObject(self.solidStrain,solidStrainObject,self.nonlinearFactor)
+            self.createTransientObject(self.solidStrain,solidStrainObject)
         else:
             raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
         ###

@@ -228,6 +228,7 @@ class addMethods(object):
     def addElement(self,elem,allowOverwrites=False):
         if not allowOverwrites:
             assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
+            #pass
         assert elem.eid>0,'eid=%s elem=%s' %(elem.eid,elem)
         self.elements[elem.eid] = elem
 
@@ -322,17 +323,23 @@ class addMethods(object):
 
 
     def addDArea(self,darea):
-        assert darea.sid not in self.dareas,'eid=%s oldElement=\n%s' %(darea.sid,self.dareas[darea.sid])
+        assert darea.sid not in self.dareas,'\ndarea=%s oldDArea=\n%s' %(darea,self.dareas[darea.sid])
         assert darea.sid>0
         self.dareas[darea.sid] = darea
 
+
     def addAero(self,aero):
-        assert aero.acsid not in self.aeros
+        assert aero.acsid not in self.aero,'\naero=%s oldAERO=\n%s' %(aero,self.aero[aero.acsid])
+        assert aero.acsid>=0
+        self.aero[aero.acsid] = aero
+
+    def addAeros(self,aero):
+        assert aero.acsid not in self.aeros,'\naeros=%s oldAEROS=\n%s' %(aero,self.aeros[aero.acsid])
         assert aero.acsid>=0
         self.aeros[aero.acsid] = aero
 
     def addCAero(self,caero):
-        assert caero.eid not in self.caeros,'self.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
+        assert caero.eid not in self.caeros,'\nself.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
         assert caero.eid>0
         self.caeros[caero.eid] = caero
 
@@ -363,9 +370,11 @@ class addMethods(object):
 
 
     def addDConstr(self,dconstr):
-        assert dconstr.oid not in self.dconstrs
-        assert dconstrs.oid>0
-        self.dconstrss[dconstrs.oid] = dconstrs
+        key = (dconstr.oid,dconstr.rid)
+        assert key not in self.dconstrs
+        assert dconstr.oid>0
+        assert dconstr.rid>0
+        self.dconstrs[key] = dconstr
     def addDesvar(self,desvar):
         assert desvar.oid not in self.desvars
         assert desvar.oid>0

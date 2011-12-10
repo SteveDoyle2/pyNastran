@@ -16,6 +16,21 @@ from pyNastran.op2.tables.destab import DESTAB
 
 class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
+    def createTransientObject(self,storageObj,classObj,dt=None):
+        """@note dt can also be loadStep depending on the class"""
+        #print "create Transient Object"
+        if self.iSubcase in storageObj:
+            #print "updating dt..."
+            self.obj = storageObj[self.iSubcase]
+            self.obj.updateDt(self.nonlinearFactor)
+        else:
+            self.obj = classObj(self.dataCode,self.iSubcase,self.nonlinearFactor)
+        storageObj[self.iSubcase] = self.obj
+        ###
+        #if self.stopCode:
+        #    sys.exit('stopping in createTransientObject in op2.py')
+        ###
+
     def readResultsTable(self,table3,table4Data,flag=0):
         tableName = self.readTableName(rewind=False) # OEF
         self.tableInit(tableName)
@@ -52,7 +67,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
             #print "self.tellB = ",self.op2.tell()
             iTable -= 2
-            print "isBlockDone = ",isBlockDone
+            #print "isBlockDone = ",isBlockDone
             #sys.exit('stopping')
             if isBlockDone:
                 #print "iTable = ",iTable
@@ -276,7 +291,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             #if grid<100:
-            print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
+            #print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
@@ -340,7 +355,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             #if grid<100:
-            print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
+            #print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
             #scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
             #                               dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56

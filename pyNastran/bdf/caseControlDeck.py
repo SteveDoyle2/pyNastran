@@ -367,6 +367,18 @@ class CaseControlDeck(object):
         for (iSubcase,subcase) in sorted(self.subcases.items()):
             subcase.crossReference(mesh)
 
+    def getOp2Data(self):
+        """
+        returns the relevant op2 parameters required for a given subcase
+        """
+        cases = {}
+        for (iSubcase,subcase) in sorted(self.subcases.items()):
+            if iSubcase != 0:
+                cases[iSubcase] = subcase.getOp2Data(self.sol,self.solmap_toValue)
+            ###
+        ###
+        return cases
+
     def __repr__(self):
         msg = ''
         subcase0 = self.subcases[0]

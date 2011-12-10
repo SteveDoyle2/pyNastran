@@ -17,7 +17,7 @@ class MPT(object):
                          (2103,21,234): self.readMAT4,  # record 5
                          (2203,22,235): self.readMAT5,  # record 6
                          (2503,25,288): self.readMAT8,  # record 7
-                         (2603,26,300): self.readMAT9,  # record 8 - not tested
+                         (2603,26,300): self.readMAT9,  # record 8
                          (2801,28,365): self.readMAT10, # record 9
                          (503,5,90):    self.readMATS1, # record 12 - not done
 
