@@ -12,7 +12,7 @@ class EPT(object):
         self.iTableMap = {
                          (3201,32,55):    self.readNSM,     # record 2
                          (52,20,181):     self.readPBAR,    # record 11 - buggy
-                         (9102,91,52):    self.readPBARL,   # record 12 - no PBARL object
+                        #(9102,91,52):    self.readPBARL,   # record 12 - almost there...
                         #(5402,54,262):   self.readPBEAM,   # record 14 - not done
                          (2706,27,287):   self.readPCOMP,   # record 22 - buggy
                          (902,9,29):      self.readPROD,    # record 49
@@ -22,7 +22,7 @@ class EPT(object):
                          (1602,16,30):    self.readPTUBE,   # record 56
                          
                         #(5402, 54, 262): self.readPBEAM,   # record 14 - not done
-                        #(9202, 92,  53): self.readPBEAML,  # record 15 - not done
+                        #(9202, 92,  53): self.readPBEAML,  # record 15
                          (2502, 25, 248): self.readPBEND,   # record 16 - not done
                         #(3101, 31, 219): self.readPBUSH1D, # record 20 - not done
                         #(152,  19, 147): self.readPCONEAX, # record 24 - not done

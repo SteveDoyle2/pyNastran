@@ -1,4 +1,4 @@
-------------------------------v0.2------------------------------
+------------------------------OP2 Info------------------------------
 
 In order for an OP2 card to be supported, it somewhat depends on the table.
 
@@ -92,7 +92,7 @@ OP2 Reader
      - MOMENT  (13,done)
      - MOMENT1 (14,done)
      - MOMENT2 (15,done)
-     - PLOAD4  (20, buggy)
+     - PLOAD4  (20,buggy)
      - QBDY1   (24,done)
      - QBDY2   (25,done)
      - QBDY3   (26,done)
@@ -106,7 +106,8 @@ OP2 Reader
    - DIT
      - TABRNDG (15)
 
-   - EPT
+   - EPT (properties may be created that are too large >100000000.  this is how
+          properties created by the solution are identified)
      - NSM     (2, done)
      - PBAR    (11,buggy)
      - PBARL   (12,close)
@@ -119,7 +120,8 @@ OP2 Reader
      - PTUBE   (56,done)
      - VIEW3D  (63)
 
-   - MPT / MPTS
+   - MPT / MPTS (materials may be created that are too large >100000000.  this is how
+                 materials created by the solution are identified)
      - CREEP   (1,done)
      - MAT1    (2,done)
      - MAT2    (3,done)
@@ -373,11 +375,12 @@ CQUAD4_144 (2/6 done; 4/6 not integrated)
      numWide=11 (not integrated)
 
 
-------------------------------v0.1------------------------------
+------------------------------BDF Info------------------------------
 
-In order for a card to be supported, it must read AND write ALL fields.  Important calculated parameters are nice, but not required.
+In order for a card to be supported, it must read AND write ALL fields.
+Important calculated parameters are nice, but not required.
 
-BDF Cards Supported Reading/Writing (version 0.1 beta)
+BDF Cards Supported Reading/Writing
 
 ----Nodes----:
 GRID   (done)
@@ -385,6 +388,12 @@ GRDSET (done)
 
 ----Elements----:
 CONM2  (cid=0)
+
+CDAMP1 (done)
+CDAMP2 (done)
+CDAMP3 (done)
+CDAMP4 (done)
+CDAMP5 (done)
 
 CEALS1 (done)
 CELAS2 (done)
@@ -458,10 +467,12 @@ MAT10 (done)
 PMASS   (done)
 
 PELAS   (done)
+PDAMP   (done)
 
 PROD    (done)
 PBEAM   (done)
 PBAR    (done)
+PBARL   (done)
 PTUBE   (done)
 
 PSHEAR
@@ -600,21 +611,11 @@ CBUSH
 PBUSH
 PBUSHT
 
-CDAMP1
-CDAMP2
-CDAMP3
-PDAMP
-
 CGAP
 PGAP
 
 ----Patran Elements----:
 CONM1
-
-CDAMP1
-CDAMP2
-CDAMP3
-CDAMP4
 
 PLOTEL
 MBOLTUS
@@ -671,7 +672,6 @@ BAROR
 BEAMOR
 CBARAO
 CCONEAX
-CDAMP5
 NSM
 NSM1
 
@@ -722,7 +722,6 @@ PAERO3
 PAERO4
 PAERO5
 
-SPLINE1
 SPLINE2
 SPLINE3
 SPLINE4

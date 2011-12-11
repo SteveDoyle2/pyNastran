@@ -10,6 +10,16 @@ class ShellElement(Element):
     def Area(self):
         raise Exception('area undefined for %s' %(self.type))
 
+    def Thickness(self):
+        #raise Exception('area undefined for %s' %(self.type))
+        return self.pid.Thickness()
+
+    def Rho(self):
+        return self.pid.mid.rho
+
+    def Nsm(self):
+        return self.pid.Nsm()
+
     def Mass(self):
         """
         \f[ \large  mass = \frac{mass}{area} area  \f]
@@ -55,6 +65,9 @@ class CTRIA3(ShellElement):
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
+
+    def Thickness(self):
+        return self.pid.Thickness()
 
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
@@ -147,6 +160,9 @@ class CTRIA6(CTRIA3):
         #print "self.xi = ",self.xi
         #raise
 
+    def Thickness(self):
+        return self.pid.Thickness()
+
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None]+[
@@ -172,6 +188,9 @@ class CTRIAR(CTRIA3):
         self.T1 = card.field(11,1.0)
         self.T2 = card.field(12,1.0)
         self.T3 = card.field(13,1.0)
+
+    def Thickness(self):
+        return self.pid.Thickness()
 
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
@@ -206,6 +225,9 @@ class CTRIAX6(CTRIA3):
         assert len(nids)==6,'error on CTRIAX6'
 
         self.th = self.setDefaultIfBlank(card.fields(10),0.0)
+
+    def Thickness(self):
+        return self.pid.th
 
     def __repr__(self):
         th = self.th
@@ -265,6 +287,9 @@ class CQUAD4(ShellElement):
             #print str(self)
             #sys.exit()
         
+    def Thickness(self):
+        return self.pid.Thickness()
+
     def getReprDefaults(self,debug=False):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
         TFlag     = self.setBlankIfDefault(self.TFlag,0)
@@ -392,6 +417,9 @@ class CQUADR(CQUAD4):
     def __init__(self,card=None,data=None):
         CQUAD4.__init__(self,card,data)
 
+    def Thickness(self):
+        return self.pid.Thickness()
+
     def __repr__(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[
                   self.T1,self.T2,self.T3,self.T4,self.thetaMcid,self.zOffset,
@@ -418,6 +446,9 @@ class CQUAD(CQUAD4):
         self.T2 = card.field(12,1.0)
         self.T3 = card.field(13,1.0)
         self.T4 = card.field(14,1.0)
+
+    def Thickness(self):
+        return self.pid.Thickness()
 
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
@@ -462,6 +493,9 @@ class CQUAD8(CQUAD4):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==8
 
+    def Thickness(self):
+        return self.pid.Thickness()
+
     def __repr__(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[
@@ -480,6 +514,9 @@ class CQUADX(CQUAD4):
         nids = card.fields(3,12)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==9
+
+    def Thickness(self):
+        return self.pid.Thickness()
 
     def __repr__(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()

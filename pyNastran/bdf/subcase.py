@@ -1,6 +1,10 @@
 import sys
 class Subcase(object):
     solCodeMap = {
+                  1:  101,
+                 24:  101,
+                 66:  101,
+                 99:  101,
                 144:  101,
              }
 
@@ -84,9 +88,9 @@ class Subcase(object):
                  153: 10,
                  159: 6,  # transient
                  }
-        print "sol=%s" %(sol)
+        #print "sol=%s" %(sol)
         approachCode = codes[sol]
-        print 'approachCode = ',approachCode
+        #print 'approachCode = ',approachCode
         return approachCode
         
     def getTableCode(self,sol,tableName,options):
@@ -95,35 +99,57 @@ class Subcase(object):
 
         key = (sol,tableName)
         tables = { #SOL, tableName      tableCode
+
+
                   (101,'DISPLACEMENT'): 1,
                   (103,'DISPLACEMENT'): 7, # VECTOR
+                  (129,'DISPLACEMENT'): 7,
                  #(144,'DISPLACEMENT'): 1,
                   (145,'DISPLACEMENT'): 1,
                   (146,'DISPLACEMENT'): 1,
 
+
+                  (101,'ESE'):          18, # energy
+                  (103,'ESE'):          18, # energy
+                  (145,'ESE'):          18, # energy
+                  (146,'ESE'):          18, # energy
+
                   (101,'FORCE'):        3, # ???
+                  (103,'FORCE'):        3, # ???
+                  (129,'FORCE'):        3, # ???
                   (145,'FORCE'):        3, # ???
                   (146,'FORCE'):        3, # ???
 
-                  (101,'STRESS'):       5,# 5/20/21 ???
-                  (145,'STRESS'):       5,# 5/20/21 ???
-                  (146,'STRESS'):       5,# 5/20/21 ???
+                  (101,'MPCFORCES'):    3,
+                  (103,'MPCFORCES'):    3,
+                  (129,'MPCFORCES'):    3,
+                 #(144,'MPCFORCES'):    3,
+                  (145,'MPCFORCES'):    3,
+                  (146,'MPCFORCES'):    3,
 
-                  (101,'STRAIN'):       5,# 5/20/21 ???
-                  (145,'STRAIN'):       5,# 5/20/21 ??? flutter
-                  (146,'STRAIN'):       5,# 5/20/21 ??? saero
+                  (101,'OLOAD'):        2,
+                  (103,'OLOAD'):        2,
+                  (129,'OLOAD'):        2,
+                 #(144,'OLOAD'):        2,
+                  (145,'OLOAD'):        2,
+                  (146,'OLOAD'):        2,
 
                   (101,'SPCFORCES'):    3,
                   (103,'SPCFORCES'):    3,
+                  (129,'SPCFORCES'):    3,
                  #(144,'SPCFORCES'):    3,
                   (145,'SPCFORCES'):    3,
                   (146,'SPCFORCES'):    3,
 
-                  (101,'MPCFORCES'):    3,
-                  (103,'MPCFORCES'):    3,
-                 #(144,'MPCFORCES'):    3,
-                  (145,'MPCFORCES'):    3,
-                  (146,'MPCFORCES'):    3,
+                  (101,'STRAIN'):       5,# 5/20/21 ???
+                  (129,'STRAIN'):       5,# 5/20/21 ??? flutter
+                  (145,'STRAIN'):       5,# 5/20/21 ??? flutter
+                  (146,'STRAIN'):       5,# 5/20/21 ??? saero
+
+                  (101,'STRESS'):       5,# 5/20/21 ???
+                  (129,'STRESS'):       5,# 5/20/21 ???
+                  (145,'STRESS'):       5,# 5/20/21 ???
+                  (146,'STRESS'):       5,# 5/20/21 ???
 
                   (145,'SVECTOR'): 14,
 
@@ -131,6 +157,12 @@ class Subcase(object):
                   (103,'FLUX'):         4,
                   (159,'FLUX'):         4,
                   (159,'THERMAL'):      3, # 3/4 ???
+
+                  (101,'VELOCITY'):    10,
+                  (103,'VELOCITY'):    10,
+                 #(144,'VELOCITY'):    10,
+                  (145,'VELOCITY'):    10,
+                  (146,'VELOCITY'):    10,
 
 
 #STRESS(PLOT) = ALL
@@ -168,6 +200,9 @@ class Subcase(object):
         elif paramName.startswith('PRES'):  paramName = 'PRESSURE'
         elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
         elif paramName.startswith('SVEC'):  paramName = 'SVECTOR'
+        elif paramName.startswith('METH'):  paramName = 'METHOD'
+        #elif paramName.startswith('DFRE'):  paramName = 'D'
+#DFRE
         #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
         #print '*paramName = ',paramName
         return  paramName
@@ -238,12 +273,6 @@ class Subcase(object):
                    'SDISPACEMENT','SPCFORCES','STRAIN','STRESS','SVECTOR','SVELOCITY',
                    'THERMAL','VECTOR','VELOCITY','VUGRID','WEIGHTCHECK']
                    
-#   SPC = 2
-#   LOAD = 123458
-#   DISPLACEMENT(SORT1,REAL)=ALL
-#   SPCFORCES(SORT1,REAL)=ALL
-#   STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
-        
         if self.sol==200: # converts from solution 200 to solution 144
             param = self.params['ANALYSIS']
             (value,options,paramType) = param
@@ -296,14 +325,17 @@ class Subcase(object):
                 op2Params['tableCodes'].append(tableCode)
                 #analysisMethod = value
 
-            elif key in ['TITLE','SUBTITLE','LABEL',
-                        'LOAD','SUPORT','SUPORT1','MPC','SPC',
-                        'TSTEPNL','NLPARM','TRIM','GUST','METHOD','DESOBJ',
-                        'DESSUB','FMETHOD',]:
+            #elif key in ['ADACT','ADAPT','AERCONFIG',
+            #            'TITLE','SUBTITLE','LABEL',
+            #            'LOAD','SUPORT','SUPORT1','MPC','SPC',
+            #            'TSTEPNL','NLPARM','TRIM','GUST','METHOD','DESOBJ',
+            #            'DESSUB','FMETHOD','SEALL']:
+            else:
                 op2Params[key.lower()] = value
             ###
-            else:
-                raise Exception('unsupported entry...\n%s' %(msg))
+            #else:
+            #    raise Exception('unsupported entry...\n%s' %(msg))
+            ###
         ###
         op2Params['thermal'] = thermal
         

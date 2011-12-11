@@ -36,6 +36,9 @@ class SpringElement(Element):
         p = (self.nodes[1].Position()-self.nodes[0].Position())/2.
         return p
 
+    def K(self):
+        raise Exception('K not implemented in the %s class' %(self.type))
+
     def Length(self):
         """
         Returns the length of a bar/rod/beam element
@@ -73,6 +76,9 @@ class CELAS1(SpringElement):
         ###
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
+
+    def K(self):
+        return self.pid.k
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
@@ -117,6 +123,9 @@ class CELAS2(SpringElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
+    def K(self):
+        return self.k
+
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
         
@@ -149,13 +158,17 @@ class CELAS3(SpringElement):
             self.s2  = data[3]
         ###
 
+    def K(self):
+        return self.pid.k
+
     def crossReference(self,model):
         pass
         #self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
         
     def __repr__(self):
         #nodes = self.nodeIDs()
-        fields = ['CELAS3',self.eid,self.pid,self.s1,self.s2]
+        fields = ['CELAS3',self.eid,self.Pid(),self.s1,self.s2]
         return self.printCard(fields)
 
 class CELAS4(SpringElement):
@@ -182,6 +195,9 @@ class CELAS4(SpringElement):
             self.s1  = data[2]
             self.s2  = data[3]
         ###
+
+    def K(self):
+        return self.k
 
     def crossReference(self,model):
         pass
@@ -219,12 +235,16 @@ class CDAMP1(DamperElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
+    def B(self):
+        return self.pid.b
+
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
         
     def __repr__(self):
         nodes = self.nodeIDs()
-        fields = ['CDAMP1',self.eid,self.pid,nodes[0],self.c1,nodes[1],self.c2]
+        fields = ['CDAMP1',self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
         return self.printCard(fields)
 
 class CDAMP2(DamperElement):
@@ -253,6 +273,9 @@ class CDAMP2(DamperElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
+    def B(self):
+        return self.b
+
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
         
@@ -278,8 +301,12 @@ class CDAMP3(DamperElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
+    def B(self):
+        return self.pid.b
+
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
         
     def __repr__(self):
         nodes = self.nodeIDs()
@@ -303,6 +330,9 @@ class CDAMP4(DamperElement):
         ###
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
+
+    def B(self):
+        return self.b
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
@@ -332,10 +362,11 @@ class CDAMP5(DamperElement):
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
         
     def __repr__(self):
         nodes = self.nodeIDs()
-        fields = ['CDAMP5',self.eid,self.pid,nodes[0],nodes[1]]
+        fields = ['CDAMP5',self.eid,self.Pid(),nodes[0],nodes[1]]
         return self.printCard(fields)
 
 class CSHEAR(Element):
@@ -451,7 +482,7 @@ class CMASS1(PointElement):
         self.pid = mesh.Property(self.pid)
 
     def __repr__(self):
-        fields = ['CMASS1',self.eid,self.pid,self.g1,self.c1,self.g2,self.c2]
+        fields = ['CMASS1',self.eid,self.Pid(),self.g1,self.c1,self.g2,self.c2]
         return self.printCard(fields)
 
 class CMASS2(PointElement):
@@ -465,10 +496,10 @@ class CMASS2(PointElement):
         if card:
             self.eid  = card.field(1)
             self.mass = card.field(2,0.)
-            self.g1 = card.field(3)
-            self.c1 = card.field(4)
-            self.g2 = card.field(5)
-            self.c2 = card.field(6)
+            self.g1   = card.field(3)
+            self.c1   = card.field(4)
+            self.g2   = card.field(5)
+            self.c2   = card.field(6)
         else:
             self.eid  = data[0]
             self.mass = data[1]
@@ -477,6 +508,9 @@ class CMASS2(PointElement):
             self.g2   = data[4]
             self.c2   = data[5]
         ###
+
+    def Mass(self):
+        return self.mass
 
     def crossReference(self,mesh):
         """
@@ -502,14 +536,17 @@ class CMASS3(PointElement):
         if card:
             self.eid  = card.field(1)
             self.pid  = card.field(2,self.eid)
-            self.s1 = card.field(3)
-            self.s2 = card.field(4)
+            self.s1   = card.field(3)
+            self.s2   = card.field(4)
         else:
             self.eid = data[0]
             self.pid = data[1]
             self.s1  = data[2]
             self.s2  = data[3]
         ###
+
+    def Mass(self):
+        return self.pid.mass
 
     def crossReference(self,mesh):
         """
@@ -520,7 +557,7 @@ class CMASS3(PointElement):
         self.pid = mesh.Property(self.pid)
 
     def __repr__(self):
-        fields = ['CMASS3',self.eid,self.pid,self.s1,self.s2]
+        fields = ['CMASS3',self.eid,self.Pid(),self.s1,self.s2]
         return self.printCard(fields)
 
 class CMASS4(PointElement):
@@ -538,11 +575,14 @@ class CMASS4(PointElement):
             self.s1 = card.field(3)
             self.s2 = card.field(4)
         else:
-            self.eid = data[0]
-            self.pid = data[1]
-            self.s1  = data[2]
-            self.s2  = data[3]
+            self.eid  = data[0]
+            self.mass = data[1]
+            self.s1   = data[2]
+            self.s2   = data[3]
         ###
+
+    def Mass(self):
+        return self.mass
 
     def crossReference(self,mesh):
         """
@@ -583,6 +623,9 @@ class CONM2(PointElement): # v0.1 not done
             self.I    = data[7:]
         ###
             
+    def Mass(self):
+        return self.mass
+
     def crossReference(self,mesh):
         """
         @warning only supports cid=0

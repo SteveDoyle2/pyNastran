@@ -188,6 +188,8 @@ class OES(object):
         if self.thermal==0:
             if tfsCode==[5,1,0]:  # Stress
                 self.readOES1_Data_format1_sort0()
+            if tfsCode==[5,2,0]:  # Stress
+                self.readOES1_Data_format1_sort0()  # dummy
             else:
                 raise Exception('invalid atfsCode=%s' %(self.atfsCode))
             ###
@@ -201,6 +203,7 @@ class OES(object):
 
 
     def readOES1_Data_format1_sort0(self):
+        msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
         if self.elementType==1: # crod
             #print "    found crod_1"
             stressStrainObj = self.instantiateRodObject()
@@ -265,10 +268,10 @@ class OES(object):
             self.printBlock(self.data[0:100])
             self.skipOES_Element(None)
             msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
-            self.developerFile.write(msg+'\n')
             print msg
             #raise RuntimeError(msg)
         ###
+        self.skippedCardsFile.write(msg+'\n')
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (untested)
         #elif self.elementType == 3:    # ctube

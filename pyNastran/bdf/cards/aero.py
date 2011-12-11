@@ -9,27 +9,27 @@ class DAREA(BaseCard):
     DAREA 3   6   2 8.2 15 1  10.1
     """
     type = 'DAREA'
-    def __init__(self,card=None,data=None):
+    def __init__(self,card=None,nOffset=0,data=None):
         #Material.__init__(self,card)
         if card:
-            self.sid   =  card.field(1)
-            self.p     = [card.field(2),card.field(5)]
-            self.c     = [card.field(3),card.field(6)]
-            self.a     = [card.field(4),card.field(7)]
+            nOffset *= 3
+            self.sid   = card.field(1)
+            self.p     = card.field(2+nOffset)
+            self.c     = card.field(3+nOffset)
+            self.a     = card.field(4+nOffset)
         else:
-            self.sid   =  data[0]
-            self.p     = [data[1],data[4]]
-            self.c     = [data[2],data[5]]
-            self.a     = [data[3],data[6]]
-            assert len(data)==7,'data = %s' %(data)
-            raise Exception('verify')
+            self.sid   = data[0]
+            self.p     = data[1]
+            self.c     = data[2]
+            self.a     = data[3]
+            assert len(data)==4,'data = %s' %(data)
         ###
 
     def __repr__(self):
-        fields = ['DAREA',self.sid, self.p[0],self.c[0],self.a[0],  self.p[1],self.c[1],self.a[1] ]
+        fields = ['DAREA',self.sid, self.p,self.c,self.a]
         return self.printCard(fields)
 
-class SPLINE1(BaseCard): # not integrated
+class SPLINE1(BaseCard):
     """
     Defines a surface spline for interpolating motion and/or forces for aeroelastic
     problems on aerodynamic geometries defined by regular arrays of aerodynamic

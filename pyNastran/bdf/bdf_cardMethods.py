@@ -1,5 +1,6 @@
 import sys
 #from BDF_Card import collapse
+from pyNastran.bdf.errors import *
 
 class cardMethods(object):
     def __init__(self):
@@ -14,7 +15,7 @@ class cardMethods(object):
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0].rstrip('\n\r\t ')
             if '\t' in line:
-                raise SyntaxError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
+                raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)

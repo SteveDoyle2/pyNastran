@@ -309,8 +309,9 @@ class writeMesh(object):
         """writes the aero cards"""
         #print "output aero cards..."
         msg = ''
-        if self.flfacts or self.aeros or self.gusts or self.flutters:  msg = '$AERO\n'
-        flfactKeys = self.flfacts.keys()
+        if (self.flfacts or self.aero or self.aeros or self.aestats
+                        or self.gusts or self.flutters):  msg = '$AERO\n'
+        #flfactKeys = self.flfacts.keys()
         #self.log().info("flfactKeys = %s" %(flfactKeys))
         for ID,flfact in sorted(self.flfacts.items()):
             #if ID!=0:
@@ -319,8 +320,12 @@ class writeMesh(object):
             msg += str(spline)
         for ID,caero in sorted(self.caeros.items()):
             msg += str(caero)
+        for ID,aero in sorted(self.aero.items()):
+            msg += str(aero)
         for ID,aero in sorted(self.aeros.items()):
             msg += str(aero)
+        for ID,aestat in sorted(self.aestats.items()):
+            msg += str(aestat)
         for ID,gust in sorted(self.gusts.items()):
             msg += str(gust)
         for ID,grav in sorted(self.gravs.items()):

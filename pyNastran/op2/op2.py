@@ -27,6 +27,7 @@ class Op2(BDF,
         print "bdfFileName = ",self.bdfFileName
         self.stopCode = False
         self.makeOp2Debug = False
+        self.skippedCardsFile = open('skippedCards.out','a')
 
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
                              'EPT','MPT','MPTS', # properties/materials
@@ -296,6 +297,7 @@ class Op2(BDF,
         #self.readTable_OQG1()
         #self.readTable_OES1X1()
         print "---end of all tables---"
+        self.skippedCardsFile.close()
 
         #self.printSection(4*51+12)
         
