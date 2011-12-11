@@ -1,5 +1,5 @@
-See "RoadMap.txt" for a list of the BDF cards that are supported.
-It's nice and long :)
+See "RoadMap.txt" for a list of the BDF cards & OP2 features that
+are supported.  It's nice and long :)
 
 This document discusses the major features (and limitations) added in each
 version of the software.  See the HTML documentation for more information.
@@ -10,17 +10,21 @@ Dicussion Page:  http://groups.google.com/group/pynastran-discuss?pli=1
 If you have a bug/want a new feature or card, leave some feedback on the
 Issues List:     http://code.google.com/p/pynastran/issues/list
 
+This code was written entirely in Python and should install easily.
 
 -----------------------v0.2 released ??/??/????-----------------------
 
 BDF Bug Fixes
    - DCONSTR weren't processed properly
+   - DAREA   weren't processed properly
    - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
    - FLFACT reading when the card is short works
    - PCOMP Thickness method doesnt crash when you want the total thickness.
      Better defaults on PCOMP
    - fixed some fields on disabled CORDxx cards
    - CELASx cards had issues with proper order of entries
+   - PELAS cards werent processed properly
+   - files on remote drives dont cause crashes anymore
 
 Overall BDF
    - renamed read method  to readBDF (it got confusing when the op2 object can 
@@ -28,10 +32,13 @@ Overall BDF
    - a few more cards
    - added extra argument to all cards to set data directly from the 
      OP2 (no data type setting as the OP2 is binary).
+   - max lines in executive & case control decks is now 600
 
 Added BDF
    - PBARL
-   - CDAMP1/2/3/4/5
+   - CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
+   - PDAMP
+   - AESTAT
 
 Overall OP2
    - reading support ONLY
@@ -107,7 +114,6 @@ Overall BDF
    - loads need some TLC in v0.2, but there is minor support for them
    - see the HTML documenation for a list of object data and methods.
      The Nastran QRG (Quick Reference Guide) is another good reference.
-   - This code was written entirely in Python and should install easily.
 
 Executive Control Deck
    - Include files NOT supported
@@ -127,7 +133,7 @@ Case Control Deck
       4.  PARAM,FIXEDB,-1              #  name, options, value   (PARAM-type)
       5.  SET 1 = 1,2,3,4, etc.        #  name id = options      (SET-type)
    - Some forms not supported
-      1.  AUTOSPC (PRINT, PUNCH, SID=100, EPS=1.E-6, MPC)=YES      (AUTOSPC=YES is supported)
+      1.  AUTOSPC (PRINT, PUNCH, SID=100, EPS=1.E-6, MPC)=YES    (AUTOSPC=YES is supported)
       2.  MODALSE(ESORT=ASCEND,THRESH=.0001)= 100
       3.  MODESELECT (FLUID LMODES = 5)
       4.  OUTPUT(XYOUT)

@@ -140,6 +140,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                         'DBTRANS'   : 190,
                         'DESOPT'    : 200,
                         
+                        # guessing
+                        'DFREQ'     : 108,
+                        'MFREQ'     : 111,
+                        'MTRAN'     : 112,
+                        'CTRAN'     : 115,
+                        'CFREQ'     : 118,
+                        
                         # unofficial names
                         'STATICS'  : 101,
                         'MODES'    : 103,
@@ -222,9 +229,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         # aero cards
         ## stores CAERO1
         self.caeros   = {}  # can this be combined with self.elements???
-        ## stores AERO & AEROS
+        ## stores AERO
         self.aero  = {}
+        ## stores AEROS
         self.aeros = {}
+        
+        ## stores AESTAT
+        self.aestats = {}
         ## stores GUST cards
         self.gusts    = {}  # can this be simplified ???
         ## stores FLFACT
@@ -356,8 +367,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         infile = self.infilesPack.pop()
         infile.close()
 
-        if debug:
-            print [os.path.relpath(fname) for fname in self.activeFileNames]
+        #if debug:
+        #    print [os.path.relpath(fname) for fname in self.activeFileNames]
         lineNumbers = self.lineNumbers.pop()
         activeFileName = self.activeFileNames.pop()
         linesPack = self.linesPack.pop()
@@ -366,7 +377,14 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## determines if self.activefilename should be closed at the next opportunity
         self.doneReading = False
         if debug:
-            print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.bdfFileName),nlines)
+            uncpathA = os.path.splitunc(activeFileName)
+            uncpathB = os.path.splitunc(self.bdfFileName)
+            if not(uncpathA=='' and uncpathB):
+                print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(activeFileName,self.bdfFileName,nlines)
+            else:
+                print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.bdfFileName),nlines)
+            ###
+        ###
         #print "\n\n"
 
     def readBDF(self,infilename,includeDir=None,xref=True):
@@ -379,7 +397,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         self._setInfile(infilename,includeDir)
 
-        self.log().info('---starting BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
+        uncpath = os.path.splitunc(self.bdfFileName)
+        if uncpath=='':
+            self.log().info('---starting BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
+        else:
+            self.log().info('---starting BDF.read of %s---' %(self.bdfFileName))
         sys.stdout.flush()
 
         #self.debug = True
@@ -392,7 +414,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.crossReference(xref=xref)
         if self.debug:
             self.log().debug("***BDF.read")
-        self.log().info('---finished BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
+
+        if uncpath=='':
+            self.log().info('---finished BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
+        else:
+            self.log().info('---finished BDF.read of %s---' %(self.bdfFileName))
         sys.stdout.flush()
 
         isDone = self.foundEndData
@@ -537,7 +563,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 #print "breaking"
                 break
             if i>600:
-                raise RuntimeError('there are too many lines in the Case Control Deck < 200')
+                raise RuntimeError('there are too many lines in the Case Control Deck < 600')
             i+=1
         #self.log().info("finished with Case Control Deck..")
         #print "self.caseControlLines = ",self.caseControlLines
@@ -876,21 +902,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 (elem) = CELAS4(cardObj)
                 self.addElement(elem)
 
-            #elif cardName=='CDAMP1':
-            #    (elem) = CDAMP1(cardObj)
-            #    self.addElement(elem)
+            elif cardName=='CDAMP1':
+                (elem) = CDAMP1(cardObj)
+                self.addElement(elem)
             elif cardName=='CDAMP2':
                 (elem) = CDAMP2(cardObj)
                 self.addElement(elem)
-            #elif cardName=='CDAMP3':
-            #    (elem) = CDAMP3(cardObj)
-            #    self.addElement(elem)
-            #elif cardName=='CDAMP4':
-            #    (elem) = CDAMP4(cardObj)
-            #    self.addElement(elem)
-            #elif cardName=='CDAMP5':
-            #    (elem) = CDAMP5(cardObj)
-            #    self.addElement(elem)
+            elif cardName=='CDAMP3':
+                (elem) = CDAMP3(cardObj)
+                self.addElement(elem)
+            elif cardName=='CDAMP4':
+                (elem) = CDAMP4(cardObj)
+                self.addElement(elem)
+            elif cardName=='CDAMP5':
+                (elem) = CDAMP5(cardObj)
+                self.addElement(elem)
 
             elif cardName=='CONM2': # not done...
                 elem = CONM2(cardObj)
@@ -929,9 +955,19 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
             elif cardName=='PELAS':
                 prop = PELAS(cardObj)
+                self.addProperty(prop)
                 if cardObj.field(5):
                     prop = PELAS(cardObj,1) # makes 2nd PELAS card
+                    self.addProperty(prop)
+            elif cardName=='PDAMP':
+                prop = PDAMP(cardObj)
                 self.addProperty(prop)
+                if cardObj.field(3):
+                    prop = PDAMP(cardObj,1) # makes 2nd PDAMP card
+                    self.addProperty(prop)
+                if cardObj.field(5):
+                    prop = PDAMP(cardObj,1) # makes 3rd PDAMP card
+                    self.addProperty(prop)
 
             elif cardName=='PBAR':
                 prop = PBAR(cardObj)
@@ -1163,6 +1199,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='DAREA':
                 darea = DAREA(cardObj)
                 self.addDArea(darea)
+                if cardObj.field(5):
+                    darea = DAREA(cardObj,1)
+                    self.addDArea(darea)
             elif cardName=='NLPARM':
                 nlparmObj = NLPARM(cardObj)
                 self.addNLParm(nlparmObj)
@@ -1183,6 +1222,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='AEROS':
                 aeros = AEROS(cardObj)
                 self.addAeros(aeros)
+            elif cardName=='AESTAT':
+                aestat = AESTAT(cardObj)
+                self.addAEStat(aestat)
             elif cardName=='FLFACT':
                 flfact = FLFACT(cardObj)
                 self.addFLFACT(flfact)

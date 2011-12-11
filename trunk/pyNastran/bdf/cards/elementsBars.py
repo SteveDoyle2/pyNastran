@@ -605,6 +605,7 @@ class CBEAM(CBAR):
     def __init__(self,card=None,data=None):
         LineElement.__init__(self,card,data)
         if card:
+            self.eid = int(card.field(1))
             self.pid = int(card.field(2,self.eid))
             self.ga = int(card.field(3))
             self.gb = int(card.field(4))

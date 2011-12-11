@@ -27,33 +27,6 @@ class PMASS(PointProperty):
     def __repr__(self):
         fields = ['PMASS',self.pid,self.Mass]
 
-class DamperProperty(Property):
-    type = 'DamperProperty'
-    def __init__(self,card,data):
-        Property.__init__(self,card,data)
-        pass
-
-class PDAMP(DamperProperty):
-    type = 'PDAMP'
-    def __init__(self,nPDamp=0,card=None,data=None):
-        DamperProperty.__init__(self,card,data)
-        if card:
-            nOffset = nPDamp * 2
-            ## Property ID
-            self.pid = card.field(1+nOffset)
-            ## Force per unit velocity (Real)
-            self.b   = card.field(2+nOffset)
-        else:
-            self.pid = data[0]
-            self.b   = data[1]
-            assert len(data)==2,'data = %s' %(data)
-        ###
-
-    def __repr__(self):
-        fields = ['PDAMP',self.pid,self.b]
-        return self.printCard(fields)
-
-
 class SpringProperty(Property):
     type = 'SpringProperty'
     def __init__(self,card,data):
@@ -63,15 +36,49 @@ class SpringProperty(Property):
 class PELAS(SpringProperty):
     type = 'PELAS'
     def __init__(self,card=None,nPELAS=0,data=None):
-        SpringProperty.__init__(self,card)
-        self.pid = card.field(1+5*nPELAS) # 2 PELAS properties can be defined on 1 PELAS card
-        self.k   = card.field(2+5*nPELAS) # these are split into 2 separate cards
-        self.ge  = card.field(3+5*nPELAS)
-        self.s   = card.field(4+5*nPELAS)
+        SpringProperty.__init__(self,card,data)
+        nOffset = nPELAS*5
+        if card:
+            self.pid = card.field(1+nOffset) # 2 PELAS properties can be defined on 1 PELAS card
+            self.k   = card.field(2+nOffset) # these are split into 2 separate cards
+            self.ge  = card.field(3+nOffset)
+            self.s   = card.field(4+nOffset)
+        else:
+            self.pid = data[0]
+            self.k   = data[1]
+            self.ge  = data[2]
+            self.s   = data[3]
+        ###
 
     def __repr__(self):
         fields = ['PELAS',self.pid,self.k,self.ge,self.s]
         return self.printCard(fields)
+
+class DamperProperty(Property):
+    type = 'DamperProperty'
+    def __init__(self,card,data):
+        Property.__init__(self,card,data)
+        pass
+
+class PDAMP(DamperProperty):
+    type = 'PDAMP'
+    def __init__(self,card=None,nPDAMP=0,data=None):
+        DamperProperty.__init__(self,card,data)
+        nOffset = nPDAMP*2
+        if card:
+            ## Property ID
+            self.pid = card.field(1+nOffset) # 3 PDAMP properties can be defined on 1 PDAMP card
+            ## Force per unit velocity (Real)
+            self.b   = card.field(2+nOffset) # these are split into 2 separate cards
+        else:
+            self.pid = data[0]
+            self.b   = data[1]
+        ###
+
+    def __repr__(self):
+        fields = ['PDAMP',self.pid,self.b]
+        return self.printCard(fields)
+
 
 class LineProperty(Property):
     type = 'LineProperty'
@@ -487,7 +494,7 @@ class PBEAM(LineProperty):
             raise Exception('not supported')
         ###
 
-    def area(self):
+    def Area(self):
         """@warning area field not supported fully on PBEAM card"""
         #raise Exception(self.A[0])
         return self.A[0]
@@ -573,25 +580,30 @@ class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'
     def __init__(self,card=None,data=None):
         LineProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
 
-        self.A   = card.field(3)
-        self.Iz  = card.field(4)
-        self.Iy  = card.field(5)
-        self.Iyz = card.field(6,0.0)
-        self.J   = card.field(7,self.Iy+self.Iz)
-        self.nsm = card.field(8,0.0)
+            self.A   = card.field(3)
+            self.Iz  = card.field(4)
+            self.Iy  = card.field(5)
+            self.Iyz = card.field(6,0.0)
+            self.J   = card.field(7,self.Iy+self.Iz)
+            self.nsm = card.field(8,0.0)
 
-        self.cy = card.field(9)
-        self.cz = card.field(10)
-        self.dy = card.field(11)
-        self.dz = card.field(12)
-        self.ey = card.field(13)
-        self.dz = card.field(14)
-        self.fy = card.field(15)
-        self.fz = card.field(16)
-        # more...
+            self.cy = card.field(9)
+            self.cz = card.field(10)
+            self.dy = card.field(11)
+            self.dz = card.field(12)
+            self.ey = card.field(13)
+            self.dz = card.field(14)
+            self.fy = card.field(15)
+            self.fz = card.field(16)
+            # more...
+        ###
+        else:
+            raise Exception('not implemented...')
+        ###
 
     def Nsm(self):
         """@warning nsm field not supported fully on PBEAM3 card"""
@@ -1033,10 +1045,17 @@ class PLSOLID(SolidProperty):
     type = 'PLSOLID'
     def __init__(self,card=None,data=None):
         SolidProperty.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.ge  = card.field(3)
-        self.str = card.field(4,'GRID')
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.ge  = card.field(3)
+            self.str = card.field(4,'GRID')
+        else:
+            self.pid = data[0]
+            self.mid = data[1]
+            self.ge  = data[2]
+            self.str = data[3]
+        ###
         assert self.str in ['GRID','GAUS'],'card=%s doesnt have a valid stress/strain output value set\n'
 
     def crossReference(self,model):
@@ -1072,15 +1091,15 @@ class PSHELL(ShellProperty):
             self.z1    = card.field(9,-tOver2)
             self.z2    = card.field(10,tOver2)
             self.mid4  = card.field(11)
-            if self.mid2 is None:
-                assert self.mid3 is None
-            else: # mid2 is defined
-                #print "self.mid2 = ",self.mid2
-                assert self.mid2 >= -1
-                #assert self.mid3 >   0
+            #if self.mid2 is None:
+            #    assert self.mid3 is None
+            #else: # mid2 is defined
+            #    #print "self.mid2 = ",self.mid2
+            #    assert self.mid2 >= -1
+            #    #assert self.mid3 >   0
 
-            if self.mid is not None and self.mid2 is not None:
-                assert self.mid4==None
+            #if self.mid is not None and self.mid2 is not None:
+            #    assert self.mid4==None
             ###
         else:
             self.pid       = data[0]
@@ -1094,10 +1113,13 @@ class PSHELL(ShellProperty):
             self.z1        = data[8]
             self.z2        = data[9]
             self.mid4      = data[10]
-            maxMid = max(self.mid,self.mid2,self.mid3,self.mid4)
+            #maxMid = max(self.mid,self.mid2,self.mid3,self.mid4)
         ###
 
         assert self.t>0.0,'the thickness must be defined on the PSHELL card (Ti field not supported)'
+
+    def Thickness(self):
+        return self.t
 
     def Rho(self):
         return self.mid.rho
@@ -1170,11 +1192,15 @@ class PCONEAX(Property): #not done
     type = 'PCONEAX'
     def __init__(self,card=None,data=None):
         Property.__init__(self,card,data)
-        self.pid = card.field(1)
-        self.mid = card.field(2)
-        self.group = card.field(3,'MSCBMLO')
-        self.Type = card.field(4)
-        self.dim = [] # confusing entry...
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+            self.group = card.field(3,'MSCBMLO')
+            self.Type = card.field(4)
+            self.dim = [] # confusing entry...
+        else:
+            raise Exception('not supported')
+        ###
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)

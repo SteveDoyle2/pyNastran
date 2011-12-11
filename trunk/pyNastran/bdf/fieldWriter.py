@@ -1,17 +1,23 @@
 from types import NoneType
-from numpy import allclose
+from numpy import allclose,isinf
+
+def isSame(value1,value2):
+    """checks to see if 2 values are the same"""
+    #print "value=%s default=%s" %(value1,value2)
+    if isinstance(value1,str):
+        if value1==value2:
+            return True
+        return False
+    elif type(value1)==type(value2) and not isinf(value1) and allclose(value1,value2):
+        #print "value=%s default=%s same=%s" %(value,default,True)
+        return True
+    #print "value=%s default=%s same=%s" %(value,default,False)
+    return False
 
 def setBlankIfDefault(value,default):
     """used when setting the output data of a card to clear default values"""
-    #print "value=%s default=%s" %(value,default)
-    if isinstance(value,str):
-        if value==default:
-            return None
-        return value
-    elif type(value)==type(default) and allclose(value,default):
-        #print "value=%s default=%s same=%s" %(value,default,True)
+    if value is None or isSame(value,default):
         return None
-    #print "value=%s default=%s same=%s" %(value,default,False)
     return value
 
 def setDefaultIfBlank(value,default):

@@ -156,8 +156,8 @@ class CaseControlDeck(object):
             #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
             iSubcase = self._addParameterToSubcase(key,value,options,paramType,iSubcase)
             #print "--------------"
-            if i==100:
-                sys.exit('too many lines...')
+            if i==600:
+                raise Exception('too many lines in Case Control Deck <600...')
         ###
         #print "done with while loop...\n"
         

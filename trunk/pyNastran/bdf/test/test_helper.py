@@ -39,7 +39,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
     fem1 = BDF(debug=debug,log=None)
     try:
         #print "xref = ",xref
-        fem1.read(bdfModel,xref=xref)
+        fem1.readBDF(bdfModel,xref=xref)
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
@@ -47,7 +47,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True):
         #fem1.writeAsCTRIA3(outModel)
 
         fem2 = BDF(debug=debug,log=None)
-        fem2.read(outModel,xref=xref)
+        fem2.readBDF(outModel,xref=xref)
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'
@@ -152,17 +152,24 @@ def getElementStats(fem1,fem2):
             if isinstance(e,ShellElement):
                 a = e.Area()
                 m = e.Mass()
+                t = e.Thickness()
+                nsm = e.Nsm()
             elif isinstance(e,SolidElement):
                 #v = e.Volume()
                 #m = e.Mass()
                 pass
-            elif isinstance(e,LineElement):
+            elif isinstance(e,LineElement): # BAR
                 L = e.Length()
                 m = e.Mass()
+                A = e.Area()
+                nsm = e.Nsm()
             elif isinstance(e,RigidElement):
                 pass
+            elif isinstance(e,DamperElement):
+                b = e.B()
             elif isinstance(e,SpringElement):
                 L = e.Length()
+                K = e.K()
             elif isinstance(e,PointElement):
                 m = e.Mass()
             else:

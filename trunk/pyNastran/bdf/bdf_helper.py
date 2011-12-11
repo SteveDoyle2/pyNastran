@@ -1,10 +1,9 @@
 import sys
 import copy
 from pyNastran.bdf.fieldWriter import printCard
-
-from bdf_writeMesh import writeMesh
-from bdf_cardMethods import cardMethods
-from crossReference import XrefMesh
+from pyNastran.bdf.bdf_writeMesh import writeMesh
+from pyNastran.bdf.bdf_cardMethods import cardMethods
+from pyNastran.bdf.crossReference import XrefMesh
 
 class getMethods(object):
     def __init__(self):
@@ -133,6 +132,8 @@ class getMethods(object):
 
     def Aero(self,acsid):
         return self.aeros[acsid]
+    def AEStat(self,eid):
+        return self.aestats[eid]
     def Flfact(self,sid):
         return self.flfacts[sid]
     def Flutter(self,fid):
@@ -227,8 +228,8 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         if not allowOverwrites:
-            assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
-            #pass
+            #assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
+            pass
         assert elem.eid>0,'eid=%s elem=%s' %(elem.eid,elem)
         self.elements[elem.eid] = elem
 
@@ -323,9 +324,10 @@ class addMethods(object):
 
 
     def addDArea(self,darea):
-        assert darea.sid not in self.dareas,'\ndarea=%s oldDArea=\n%s' %(darea,self.dareas[darea.sid])
+        key = (darea.sid,darea.p)
+        assert key not in self.dareas,'\ndarea=%s oldDArea=\n%s' %(darea,self.dareas[key])
         assert darea.sid>0
-        self.dareas[darea.sid] = darea
+        self.dareas[key] = darea
 
 
     def addAero(self,aero):
@@ -337,6 +339,11 @@ class addMethods(object):
         assert aero.acsid not in self.aeros,'\naeros=%s oldAEROS=\n%s' %(aero,self.aeros[aero.acsid])
         assert aero.acsid>=0
         self.aeros[aero.acsid] = aero
+
+    def addAEStat(self,aestat):
+        assert aestat.id not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[aestat.id])
+        assert aestat.id>=0
+        self.aestats[aestat.id] = aestat
 
     def addCAero(self,caero):
         assert caero.eid not in self.caeros,'\nself.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
@@ -365,6 +372,7 @@ class addMethods(object):
 
     def addFLFACT(self,flfact):
         #assert flfact.sid not in self.flfacts
+        assert flfact.sid>0
         self.flfacts[flfact.sid] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact
 
