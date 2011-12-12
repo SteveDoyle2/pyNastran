@@ -1,6 +1,7 @@
 import copy
 import sys
 from subcase import Subcase
+from pyNastran.bdf.errors import *
 
 class CaseControlDeck(object):
     def __init__(self,lines,log=None):
@@ -222,7 +223,11 @@ class CaseControlDeck(object):
         
         if line.startswith('SUBCASE'):
             #print "line = |%r|" %(line)
-            (key,iSubcase) = line.split()
+            line2 = line.replace('=','')
+            sline = line2.split()
+            if len(sline)!=2:
+                raise InvalidSubcaseParseError("trying to parse |%s|..." %(line))
+            (key,iSubcase) = sline
             #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
             value = int(iSubcase)
             #self.iSubcase = int(iSubcase)
@@ -234,11 +239,12 @@ class CaseControlDeck(object):
             options = []
             paramType = 'STRING-type'
         elif equalsCount==1: # STRESS
-            try:
+            if '=' in line:
                 (key,value) = line.strip().split('=')
-            except:
+            else:
                 msg = 'expected item of form "name = value"   line=|%r|' %(line.strip())
                 raise RuntimeError(msg)
+
             key   = key.strip()
             value = value.strip()
             if self.debug:  print "key=|%s| value=|%s|" %(key,value)
@@ -298,11 +304,10 @@ class CaseControlDeck(object):
                 raise RuntimeError(msg)
             paramType = 'BEGIN_BULK-type'
         elif 'PARAM' in line: # param
-            try:
-                (key,value,options) = line.split(',')
-            except ValueError:
-                print "trying to parse |%s| bug cant..." %(line)
-                raise
+            sline = line.split(',')
+            if len(sline) != 3:
+                raise ParamParseError("trying to parse |%s|..." %(line))
+            (key,value,options) = sline
             ###
             paramType = 'CSV-type'
         elif ' ' not in line:

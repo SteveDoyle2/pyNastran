@@ -4,17 +4,23 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.resultObjects.ougv1_Objects import (
-     temperatureObject,displacementObject,  # approachCode=1, sortCode=0
-     eigenVectorObject,                     # approachCode=2, sortCode=0
-     fluxObject,                            # approachCode=1, sortCode=3
-     nonlinearTemperatureObject,            # approachCode=10,sortCode=0
-     eigenVector14Object, # approach=5
+     temperatureObject,displacementObject,  # approachCode=1, formatCode=1 sortCode=0
+     complexDisplacementObject,             # approachCode=5  formatCode=3 sortCode=1
+     fluxObject,                            # approachCode=1, formatCode=1 sortCode=3
+     nonlinearTemperatureObject,            # approachCode=10,formatCode=1 sortCode=0 ???
+     )
+
+from pyNastran.op2.resultObjects.oug_eigenvectors import (
+     eigenVectorObject,                     # approachCode=2, sortCode=0 formatCode   tableCode=7
+     eigenVector14Object,                   # approach    =5, sortCode=  formatCode   tableCode=7
+     realEigenVectorObject,                 # approachCode=9, sortCode=1 formatCode=1 tableCode=7
      )
 
 class OUGV1(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
 
     def readTable_OUG1(self):
+        self.tableName = 'OUG'
         table3 = self.readTable_OUGV1_3
         table4Data = self.readOUGV1_Data
         self.readResultsTable(table3,table4Data)
@@ -126,7 +132,7 @@ class OUGV1(object):
         
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
-        print self.codeInformation()
+        #print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
@@ -140,65 +146,81 @@ class OUGV1(object):
         print "tfsCode=%s" %(tfsCode)
         # displacement
         if   tfsCode==[1,1,0]:
-            self.readOUGV1_Data_format1_sort0()
+            self.readOUGV1_Data_table1_format1_sort0()
         elif tfsCode==[1,1,1]:
-            self.readOUGV1_Data_format1_sort1()
+            self.readOUGV1_Data_table1_format1_sort1()
         elif tfsCode==[1,2,0]:
-            self.readOUGV1_Data_format2_sort0()
+            self.readOUGV1_Data_table1_format2_sort0()
         elif tfsCode==[1,2,1]:
-            self.readOUGV1_Data_format2_sort1()
+            self.readOUGV1_Data_table1_format2_sort1()
+        elif tfsCode==[1,2,2]:
+            self.readOUGV1_Data_table1_format2_sort2()
         elif tfsCode==[1,3,0]:
-            self.readOUGV1_Data_format3_sort0()
+            self.readOUGV1_Data_table1_format3_sort0()
         elif tfsCode==[1,3,1]:
-            self.readOUGV1_Data_format3_sort1()
+            self.readOUGV1_Data_table1_format3_sort1()
+        elif tfsCode==[1,3,2]:
+            self.readOUGV1_Data_table1_format3_sort2()
 
         # modes
         elif tfsCode==[7,1,0]:
-            self.readOUGV1_Data_format1_sort0()
+            self.readOUGV1_Data_table7_format1_sort0()
         elif tfsCode==[7,1,1]:
-            self.readOUGV1_Data_format1_sort1()
+            self.readOUGV1_Data_table7_format1_sort1()
         elif tfsCode==[7,2,0]:
-            self.readOUGV1_Data_format2_sort0()
+            self.readOUGV1_Data_table7_format2_sort0()
         elif tfsCode==[7,2,1]:
-            self.readOUGV1_Data_format2_sort1()
+            self.readOUGV1_Data_table7_format2_sort1()
+        elif tfsCode==[7,2,2]:
+            self.readOUGV1_Data_table7_format2_sort2()
         elif tfsCode==[7,3,0]:
-            self.readOUGV1_Data_format3_sort0()
+            self.readOUGV1_Data_table7_format3_sort0()
         elif tfsCode==[7,3,1]:
-            self.readOUGV1_Data_format3_sort1()
+            self.readOUGV1_Data_table7_format3_sort1()
+        elif tfsCode==[7,3,2]:
+            self.readOUGV1_Data_table7_format3_sort2()
 
         # velocity
         elif tfsCode==[10,1,0]:
-            self.readOUGV1_Data_format1_sort0()
+            self.readOUGV1_Data_table10_format1_sort0()
         elif tfsCode==[10,1,1]:
-            self.readOUGV1_Data_format1_sort1()
+            self.readOUGV1_Data_table10_format1_sort1()
         elif tfsCode==[10,2,0]:
-            self.readOUGV1_Data_format2_sort0()
+            self.readOUGV1_Data_table10_format2_sort0()
         elif tfsCode==[10,2,1]:
-            self.readOUGV1_Data_format2_sort1()
+            self.readOUGV1_Data_table10_format2_sort1()
+        elif tfsCode==[10,2,2]:
+            self.readOUGV1_Data_table10_format2_sort2()
         elif tfsCode==[10,3,0]:
-            self.readOUGV1_Data_format3_sort0()
+            self.readOUGV1_Data_table10_format3_sort0()
         elif tfsCode==[10,3,1]:
-            self.readOUGV1_Data_format3_sort1()
+            self.readOUGV1_Data_table10_format3_sort1()
+        elif tfsCode==[10,3,2]:
+            self.readOUGV1_Data_table10_format3_sort2()
 
         # Acceleration vector
         elif tfsCode==[11,1,0]:
-            self.readOUGV1_Data_format1_sort0()
+            self.readOUGV1_Data_table11_format1_sort0()
         elif tfsCode==[11,1,1]:
-            self.readOUGV1_Data_format1_sort1()
+            self.readOUGV1_Data_table11_format1_sort1()
         elif tfsCode==[11,2,0]:
-            self.readOUGV1_Data_format2_sort0()
+            self.readOUGV1_Data_table11_format2_sort0()
         elif tfsCode==[11,2,1]:
-            self.readOUGV1_Data_format2_sort1()
+            self.readOUGV1_Data_table11_format2_sort1()
+        elif tfsCode==[11,2,2]:
+            self.readOUGV1_Data_table11_format2_sort2()
         elif tfsCode==[11,3,0]:
-            self.readOUGV1_Data_format3_sort0()
+            self.readOUGV1_Data_table11_format3_sort0()
         elif tfsCode==[11,3,1]:
-            self.readOUGV1_Data_format3_sort1()
+            self.readOUGV1_Data_table11_format3_sort1()
+        elif tfsCode==[11,3,2]:
+            self.readOUGV1_Data_table11_format3_sort2()
 
         else:
             raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
         ###
 
-    def readOUGV1_Data_format1_sort0(self):
+    def readOUGV1_Data_table1_format1_sort0(self):
         assert self.formatCode==1 # Real
         assert self.sortCode==0   # Real
         if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
@@ -206,19 +228,10 @@ class OUGV1(object):
                 print "isDisplacement"
                 self.obj = displacementObject(self.dataCode,self.iSubcase)
                 self.displacements[self.iSubcase] = self.obj
-            elif self.approachCode==1: # spc forces
-                print "isForces"
-                raise Exception('is this correct???')
-                self.obj = spcForcesObject(self.dataCode,self.iSubcase)
-                self.spcForces[self.iSubcase] = self.obj
-
-            elif self.approachCode==2: # nonlinear static eigenvector
-                print "isEigenvector"
-                self.createTransientObject(self.eigenvectors,eigenVectorObject)
 
             elif self.approachCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
-                self.createTransientObject(self.freqDisplacements,eigenVectorObject)
+                self.createTransientObject(self.displacements,eigenVectorObject)
 
             elif self.approachCode==6: # transient displacement
                 print "isTransientDisplacement"
@@ -226,15 +239,15 @@ class OUGV1(object):
 
             elif self.approachCode==7: # pre-buckling displacement
                 print "isPreBucklingDisplacement"
-                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
+                self.createTransientObject(self.displacements,displacementObject)
 
             elif self.approachCode==8: # post-buckling eigenvector
                 print "isPostBucklingEigenvector"
-                self.createTransientObject(self.postBucklingEigenvector,eigenVectorObject)
+                self.createTransientObject(self.displacements,eigenVectorObject)
 
-            elif self.approachCode==9: # nonlinear static eigenvector
-                print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
+            #elif self.approachCode==9: # nonlinear static eigenvector
+            #    print "isComplexEigenvalues"
+            #    self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
 
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
@@ -253,15 +266,9 @@ class OUGV1(object):
                 print "isTemperature"
                 self.obj = temperatureObject(self.dataCode,self.iSubcase)
                 self.temperatures[self.iSubcase] = self.obj
-
-            #elif self.approachCode==1 and self.sortCode==1: # heat fluxes
-            #    print "isFluxes"
-            #    self.obj = fluxObject(self.iSubcase,dt=self.dt)
-            #    self.fluxes[self.iSubcase] = self.obj
             elif self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
                 self.createTransientObject(self.temperatures,temperatureObject)
-
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
@@ -280,33 +287,86 @@ class OUGV1(object):
         #print self.obj
         #return
 
-    def readOUGV1_Data_format1_sort1(self):
+    def readOUGV1_Data_table7_format1_sort0(self):
+        assert self.formatCode==1 # Real
+        assert self.sortCode==0   # Real
+        if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
+            if self.approachCode==2: # nonlinear static eigenvector
+                print "isEigenvector"
+                self.createTransientObject(self.eigenvectors,eigenVectorObject)
+            else:
+                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+            ###
+        elif self.thermal==1:
+            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+        else:
+            raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        self.readScalars8(self.obj,debug=True)
+        #self.readScalars5(self.obj,debug=True)
+        #if self.obj:
+        #    self.readScalars8(self.obj)
+        #else:
+        #    self.skipOES_Element(None)
+        ###
+        #print self.obj
+        #return
+
+    def readOUGV1_Data_table1_format1_sort1(self):
         assert self.formatCode==1 # Real
         assert self.sortCode==1   # Real/Imaginary
         if self.thermal==0:
-            if self.approachCode==5: # frequency displacement
-                print "isFrequencyDisplacement"
-                self.createTransientObject(self.freqDisplacements,eigenVectorObject)
-            elif self.approachCode==7: # pre-buckling displacement
-                print "isPreBucklingDisplacement"
-                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
-            elif self.approachCode==9: # nonlinear static eigenvector
-                print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
-            elif self.approachCode==11: # Geometric nonlinear statics
-                print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.freqDisplacements,displacementObject)
+            if self.approachCode==5: # complex displacements (real/imaginary)
+                print "isComplexDisplacement"
+                self.createTransientObject(self.displacements,complexDisplacementObject)
+            #elif self.approachCode==7: # pre-buckling displacement
+            #    print "isPreBucklingDisplacement"
+            #    self.createTransientObject(self.displacements,displacementObject)
+            #elif self.approachCode==9: # nonlinear static eigenvector
+            #    print "isComplexEigenvalues"
+            #    self.createTransientObject(self.displacements,eigenVectorObject)
+            #elif self.approachCode==11: # Geometric nonlinear statics
+            #    print "isNonlinearStaticDisplacement"
+            #    self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise Exception('unsupported OUGV1 static format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
+                raise Exception('unsupported OUGV1 static table1_format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        print "objName = ",self.obj.name()
+        self.readScalars14(self.obj,debug=True)
+        print self.obj
+        #return
+
+    def readOUGV1_Data_table7_format1_sort1(self):
+        assert self.formatCode==1 # Real
+        assert self.sortCode==1   # Real/Imaginary
+        if self.thermal==0:
+            #if self.approachCode==5: # frequency displacement
+            #    print "isFrequencyDisplacement"
+            #    self.createTransientObject(self.freqDisplacements,eigenVectorObject)
+            #elif self.approachCode==7: # pre-buckling displacement
+            #    print "isPreBucklingDisplacement"
+            #    self.createTransientObject(self.displacements,displacementObject)
+            if self.approachCode==9: # nonlinear static eigenvector
+                print "isComplexEigenvalues"
+                self.createTransientObject(self.eigenvectors,realEigenVectorObject)
+            #elif self.approachCode==11: # Geometric nonlinear statics
+            #    print "isNonlinearStaticDisplacement"
+            #    self.createTransientObject(self.displacements,displacementObject)
+            else:
+                raise Exception('unsupported OUGV1 static table7_format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
+            ###
+        else:
+            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        #print "objName = ",self.obj.name()
         self.readScalars14(self.obj)
         #print self.obj
         #return
 
-    def readOUGV1_Data_format2_sort0(self):
+    def readOUGV1_Data_table1_format2_sort0(self):
         if self.thermal==0:
             if self.approachCode==6: # transient displacement
                 print "isTransientDisplacement"
@@ -321,17 +381,17 @@ class OUGV1(object):
         ###
         self.readScalars8(self.obj)
 
-    def readOUGV1_Data_format2_sort1(self):
+    def readOUGV1_Data_table1_format2_sort1(self):
         assert self.formatCode==2 # Real/Imaginary
         assert self.sortCode==1   # Real/Imaginary
         if self.thermal==0:
             if self.approachCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
-                self.createTransientObject(self.freqDisplacements,eigenVector14Object)
+                self.createTransientObject(self.displacements,eigenVector14Object)
                 self.readScalarsF14(self.obj)
             elif self.approachCode==7: # pre-buckling displacement
                 print "isPreBucklingDisplacement"
-                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
+                self.createTransientObject(self.displacements,displacementObject)
             elif self.approachCode==9 and self.sortCode==1: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
                 self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
@@ -348,10 +408,11 @@ class OUGV1(object):
         #return
 
 
-    def readOUGV1_Data_format3_sort0(self):
+    def readOUGV1_Data_table1_format3_sort0(self):
         assert self.formatCode==3 # Magnitude/Phase
         assert self.sortCode==0   # Real
         if self.thermal==0:
+            raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             if self.approachCode==1: # displacement
                 print "isDisplacement"
                 self.obj = displacementObject(self.dataCode,self.iSubcase)
@@ -380,16 +441,16 @@ class OUGV1(object):
         ###
         self.readScalars8(self.obj)
 
-    def readOUGV1_Data_format3_sort1(self):
+    def readOUGV1_Data_table1_format3_sort1(self):
         assert self.formatCode==3 # Magnitude/Phase
         assert self.sortCode==1   # Imaginary
         if self.thermal==0:
-            if self.approachCode==5: # frequency displacement
-                print "isFreqDisplacement"
-                self.createTransientObject(self.freqDisplacements,displacementObject)
+            if self.approachCode==5: # complex frequency displacement
+                print "isComplexFreqDisplacement"
+                self.createTransientObject(self.displacements,complexDisplacementObject)
             elif self.approachCode==7: # pre-buckling displacement
-                print "isPreBucklingDisplacement"
-                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
+                print "isComlexPreBucklingDisplacement"
+                self.createTransientObject(self.complexDisplacements,displacementObject)
             elif self.approachCode==9: # nonlinear static eigenvector
                 print "isComplexEigenvalues"
                 self.createTransientObject(self.complexEigenvalues,eigenVectorObject)

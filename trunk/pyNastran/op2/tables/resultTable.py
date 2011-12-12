@@ -22,7 +22,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         if self.iSubcase in storageObj:
             #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
-            self.obj.updateDt(self.nonlinearFactor)
+            self.obj.updateDt(self.dataCode,self.nonlinearFactor)
         else:
             self.obj = classObj(self.dataCode,self.iSubcase,self.nonlinearFactor)
         storageObj[self.iSubcase] = self.obj
@@ -212,7 +212,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             func(stress)
         ###
 
-    def readScalars4(self,scalarObject):
+    def readScalars4(self,scalarObject,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -234,7 +234,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
-            #print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
+            if debug:
+                print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
             scalarObject.add(grid,dx,dy,dz)
             n+=16
         ###
@@ -242,7 +243,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,scalarObject,debug=False)
 
-    def readScalars8(self,scalarObject):
+    def readScalars8(self,scalarObject,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -263,7 +264,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
-            #print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            if debug:
+                print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
@@ -271,13 +273,14 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
 
-    def readScalarsF8(self,scalarObject):
+    def readScalarsF8(self,scalarObject,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
         
         n = 0
         nEntries = len(data)/32
+        print "len(data) = ",len(data)
         for i in range(nEntries):
             #print self.printBlock(self.data[n:n+64])
             eData = data[n:n+32]
@@ -291,7 +294,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             #if grid<100:
-            #print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
+            if debug:
+                print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
@@ -299,18 +303,20 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
 
-    def readScalars14(self,scalarObject):
+    def readScalars14(self,scalarObject,debug=True):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
 
         n = 0
         nEntries = len(data)/56
+        print "len(data) = ",len(data)
+        print "nEntries = %s" %(nEntries)
         for i in range(nEntries):
             eData = data[n:n+56]
             #print self.printBlock(self.data[n:n+64])
             #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
+            print "len(data) = ",len(data)
             #self.printBlock(data[56:])
             #msg = 'len(data)=%s\n'%(len(data))
             #assert len(data)>=56,msg+self.printSection(120)
@@ -323,16 +329,17 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
-            #   print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
-            #scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
-            #                               dxi,dyi,dzi,rxi,ryi,rzi)
+            if debug:
+               print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+            scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
+                                           dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56
         ###
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars14,scalarObject,debug=False)
 
-    def readScalarsF14(self,scalarObject):
+    def readScalarsF14(self,scalarObject,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -355,9 +362,10 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             #if grid<100:
-            #print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
-            #scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
-            #                               dxi,dyi,dzi,rxi,ryi,rzi)
+            if debug:
+                print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
+            scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
+                                           dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56
         ###
         self.data = data[n:]

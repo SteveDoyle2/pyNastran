@@ -37,6 +37,11 @@ class ElementsStressStrain(object):
         ###
 
     def CROD_1(self,stress): # works
+        """
+        stress & strain
+        formatCode=1 sortCode=0 (eid,axial,axialMS,torsion,torsionMS)
+        formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
+        """
         if self.makeOp2Debug:
             self.op2Debug.write('---CROD_1---\n')
         deviceCode = self.deviceCode

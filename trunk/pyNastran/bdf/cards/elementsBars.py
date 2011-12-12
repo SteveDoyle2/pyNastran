@@ -1,12 +1,11 @@
 import sys
 
-from baseCard import Mid
-
 from numpy import matrix,zeros,ones,array,transpose,dot
 from numpy.linalg import norm
 
-class CardInstantiationError(RuntimeError):
-    pass
+from pyNastran.bdf.cards.baseCard import Mid
+from pyNastran.bdf.errors import *
+
 
 from elements import Element
 
@@ -20,7 +19,7 @@ class LineElement(Element):
 
     def Area(self):
         """returns the area of the element face"""
-        raise Exception('implement self.Area() for %s' %(self.type))
+        raise NotImplementedMethodError('implement self.Area() for %s' %(self.type))
     
     def E(self):
         """returns the Young's Modulus  \f$ E \f$"""
@@ -45,12 +44,12 @@ class LineElement(Element):
     def Rho(self):
         """returns the material density  \f$ \rho \f$"""
         #print str(self.pid),type(self.pid)
-        #raise Exception('implement self.Rho() for %s' %(self.type))
+        #raise NotImplementedMethodError('implement self.Rho() for %s' %(self.type))
         return self.pid.mid.rho
 
     def Nsm(self):
         """Placeholder method for the non-structural mass"""
-        raise Exception('implement self.Area() for %s' %(self.type))
+        raise NotImplementedMethodError('implement self.Area() for %s' %(self.type))
 
     def Mass(self):
         """
@@ -407,7 +406,7 @@ class CONROD(CROD):
         
         if L==0.0:
             msg = 'invalid CROD length=0.0\n%s' %(self.__repr__())
-            raise RuntimeError(msg)
+            raise StiffnessMatrixError(msg)
         
         A = self.A
         mat = self.mid
@@ -528,7 +527,7 @@ class CBAR(LineElement):
             self.x3 = float(card.field(7,0.0))
         else:
             msg = 'field5 on %s is the wrong type...id=%s field5=%s type=%s' %(self.type,self.eid,field5,type(field5))
-            raise RuntimeError(msg)
+            raise InvalidFieldError(msg)
         #if self.eid==14100238:
             #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0,self.x1,self.x2,self.x3)
 
@@ -626,7 +625,7 @@ class CBEAM(CBAR):
             self.sa = card.field(17)
             self.sb = card.field(18)
         else:
-            raise Exception('not implemented...')
+            raise NotImplementedError(data)
 
     def initOfftBit(self,card):
         field8 = card.field(8)

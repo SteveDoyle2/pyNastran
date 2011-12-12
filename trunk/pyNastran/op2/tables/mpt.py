@@ -8,6 +8,7 @@ from pyNastran.bdf.cards.materials import CREEP,MAT1,MAT2,MAT3,MAT4,MAT5,MAT8,MA
 class MPT(object):
 
     def readTable_MPTS(self):
+        self.tableName = 'MPT'
         self.bigMaterials = {}
         self.iTableMap = {
                          (1003,10,245): self.readCREEP, # record 1
@@ -80,7 +81,7 @@ class MPT(object):
             #print "MAT2 = ",out
             mat = MAT2(None,out)
 
-            if mid>1e8:
+            if mid>1e8 or mid<0:  # just a checker for out of range materials
                 self.bigMaterials[mid] = mat
             else:
                 self.addOp2Material(mat)

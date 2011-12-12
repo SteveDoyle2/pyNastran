@@ -6,7 +6,7 @@ from struct import unpack
 from pyNastran.op2.resultObjects.op2_Objects import spcForcesObject
 from pyNastran.op2.resultObjects.ougv1_Objects import (
      temperatureObject,displacementObject,  # approachCode=1, sortCode=0
-     eigenVectorObject,                     # approachCode=2, sortCode=0
+     #eigenVectorObject,                     # approachCode=2, sortCode=0
      fluxObject,                            # approachCode=1, sortCode=3
      nonlinearTemperatureObject,            # approachCode=10,sortCode=0
      )
@@ -15,6 +15,7 @@ class OQG1(object):
     """Table of spc/mpc forces/momenets"""
 
     def readTable_OQG1(self):
+        self.tableName = 'OQG'
         table3 = self.readTable_OQG1_3
         table4Data = self.readOQG1_Data
         self.readResultsTable(table3,table4Data)

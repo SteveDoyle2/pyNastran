@@ -35,7 +35,7 @@ class Op2(BDF,
                              'DIT',  # some header table...
 
                              'DESTAB',                # design variables
-                             'OQG1','OQMG1',          # spc/mpc forces
+                             'OQG1','OQGV1','OQMG1',  # spc/mpc forces
                              'OUGV1',                 # displacements
                              'OEF1X','DOEF1','OEFIT', # applied forces
                              'OGPFB1','OGS1',         # grid point forces/stresses
@@ -50,14 +50,15 @@ class Op2(BDF,
                              'R1TABRG','HISADD',  # SOL 200
 
                              ## @todo what do these do???
-                             'OPG1', # think this is an OUG table...
+                             'OPG1','OPGV1', # think this is an OUG table...
                              'OPNL1',
                              'OUPV1',
                              'VIEWTB','ERRORN',
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
+                             'PCOMPTS',
+                             # OMNS
                              
                              # new
-                             # PCOMPTS,
                              #'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2''OMM2','AGRF','AFRF','AEMONPT','PERF','PMRF','MONITOR','SDF','FOL','STDISP'
                              #'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2'
                              ]
@@ -255,7 +256,7 @@ class Op2(BDF,
                 elif tableName in ['VIEWTB']: # not done
                     self.readTable_R1TAB()
 
-                elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1']: # table of applied loads
+                elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
                     self.readTable_OGP1()
                 elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
                     self.readTable_OGP1()
@@ -263,7 +264,7 @@ class Op2(BDF,
                 
                 elif tableName in ['OEF1X','DOEF1','OEFIT']:  # applied loads
                     self.readTable_OEF1()
-                elif tableName in ['OQG1','OQMG1']:  # spc/mpc forces
+                elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
                     self.readTable_OQG1()
                 elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                     self.readTable_OUG1()
@@ -275,6 +276,8 @@ class Op2(BDF,
 
                 elif tableName in ['ONRGY1']: # energy???
                     self.readTable_OEE1()
+                elif tableName in ['PCOMPTS']:
+                    self.readTable_PCOMPTS()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "endTell   = ",self.op2.tell()
@@ -373,6 +376,7 @@ class Op2(BDF,
             self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
     def tableInit(self,word):
+        self.tableName = word.strip()
         msg = '*'*20+word+'*'*20+'\n'
         if self.makeOp2Debug:
             self.op2Debug.write(msg)
