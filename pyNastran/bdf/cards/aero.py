@@ -25,6 +25,16 @@ class DAREA(BaseCard):
             assert len(data)==4,'data = %s' %(data)
         ###
 
+    def isSameCard(self,darea):
+        fields1 = [self.sid, self.p, self.c, self.a ]
+        fields2 = [darea.sid,darea.p,darea.c,darea.a]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
+        
     def __repr__(self):
         fields = ['DAREA',self.sid, self.p,self.c,self.a]
         return self.printCard(fields)
@@ -310,7 +320,7 @@ class AERO(Aero):
     def __init__(self,card=None,data=None):
         Aero.__init__(self,card,data)
         if card:
-            self.acsid    = card.field(1)
+            self.acsid    = card.field(1,0)
             self.velocity = card.field(2)
             self.cRef     = card.field(3)
             self.rhoRef   = card.field(4)
@@ -343,7 +353,7 @@ class AEROS(Aero):
     def __init__(self,card=None,data=None):
         Aero.__init__(self,card,data)
         if card:
-            self.acsid  = card.field(1)
+            self.acsid  = card.field(1,0)
             self.rcsid  = card.field(2)
             self.cRef   = card.field(3)
             self.bRef   = card.field(4)

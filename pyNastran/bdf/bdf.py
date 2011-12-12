@@ -9,6 +9,7 @@ from numpy import any,cross
 
 # my code
 from pyNastran.general.general import ListPrint
+from pyNastran.bdf.errors import *
 #from mathFunctions import *
 
 from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
@@ -147,14 +148,20 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                         'CTRAN'     : 115,
                         'CFREQ'     : 118,
                         
-                        # unofficial names
+                        # solution 200 names
                         'STATICS'  : 101,
                         'MODES'    : 103,
+                        'BUCK'     : 105,
+                        'DFREQ'    : 108,
+                        'MFREQ'    : 111,
+                        'MTRAN'    : 112,
+                        'DCEIG'    : 107,
+                        'MCEIG'    : 110,
+                        #'HEAT'     : None,
+                        #'STRUCTURE': None,
+                        #'DIVERGE'  : None,
                         'FLUTTER'  : 145,
                         'SAERO'    : 146,
-
-                        'STATIC'   : 101, #???
-                        'MODE'     : 103, #???
                        }
 
 
@@ -309,7 +316,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if self.isOpened[infileName]==False:
             self.activeFileNames.append(infileName)
             #self.log().info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
-            assert os.path.exists(infileName),"infileName=|%s| does not exist..." %(infileName)
+            if not os.path.exists(infileName):
+                raise MissingFileError("infileName=|%s| does not exist..." %(infileName))
             infile = open(infileName,'r')
             self.infilesPack.append(infile)
             self.lineNumbers.append(0)
@@ -443,9 +451,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             line = lineIn.strip()
             if self.debug:
                 (n) = self.getLineNumber()
-                self.log().debug("line[%s]*= |%r|" %(n,line.upper()))
+                self.log().debug("line[%s]*= |%r|" %(n,line))
             self.executiveControlLines.append(lineIn)
-            if 'CEND' in line:
+            if 'CEND' in line.upper():
                 break
             ###
         ###
@@ -1128,7 +1136,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             # thermal elements
             elif cardName=='CHBDYE':
                 element = CHBDYE(cardObj)
-                self.addThermalElement(element)
+                #self.addThermalElement(element)
             elif cardName=='CHBDYG':
                 element = CHBDYG(cardObj)
                 self.addThermalElement(element)

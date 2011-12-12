@@ -237,6 +237,7 @@ class Op2Codes(object):
             231 : 'RROD',
             232 : 'QUADRLC',
             233 : 'TRIARLC',
+            235 : '???'
         }
         return elements[eCode] # +'_'+str(eCode)
 

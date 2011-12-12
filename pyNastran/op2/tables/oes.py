@@ -12,6 +12,7 @@ class OES(object):
     """Table of stresses/strains"""
 
     def readTable_OES1(self):
+        self.tableName = 'OES'
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
         self.readResultsTable(table3,table4Data,flag=1) # flag=1 defines old style
@@ -44,7 +45,7 @@ class OES(object):
         self.thermal    = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
 
         self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
-                         'loadSet':self.loadSet,'formatCode':self.formatCode,
+                         'loadSet':self.loadSet,'formatCode':self.formatCode,'sortCode':self.sortCode,
                          'numWide': self.numWide,'sCode':self.sCode,
                          'thermal': self.thermal}
 
@@ -55,10 +56,15 @@ class OES(object):
         self.nonlinearFactor = None
         if self.approachCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            self.dataCode['lsdvmn'] = self.lsdvmn
         elif self.approachCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
             self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
+            self.dataCode['mode'] = self.mode
+            self.dataCode['eign'] = self.eign
+            self.dataCode['modeCycle'] = self.modeCycle
+            self.dataCode['name'] = 'mode'
             self.nonlinearFactor = self.mode
         #elif self.approachCode==3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
@@ -69,41 +75,59 @@ class OES(object):
 
         elif self.approachCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
+            self.dataCode['freq'] = self.freq
             self.nonlinearFactor = self.freq
         elif self.approachCode==6: # transient
             self.dt = self.getValues(data,'f',5) ## time step
+            self.dataCode['dt'] = self.dt
+            self.dataCode['name'] = 'dt'
+            
             print "DT(5)=%s" %(self.dt)
             self.nonlinearFactor = self.dt
         elif self.approachCode==7: # pre-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## load set
+            self.dataCode['lsdvmn'] = self.lsdvmn
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==8: # post-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
+            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.dataCode['eigr']   = self.eigr
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.approachCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
-            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
             self.nonlinearFactor = self.mode
+            self.dataCode['mode'] = self.mode
+            self.dataCode['eigr'] = self.eigr
+            self.dataCode['eigi'] = self.eigi
+            self.dataCode['name'] = 'mode'
+            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.approachCode==10: # nonlinear statics
             self.lftsfq = self.getValues(data,'f',5) ## load step
+            self.dataCode['lftsfq'] = self.lftsfq
+            self.dataCode['name'] = 'lftsfq'
             self.nonlinearFactor = self.lftsfq
             print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.approachCode==11: # old geometric nonlinear statics
             self.lsdvmn = self.getValues(data,'i',5)
+            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.dataCode['name'] = 'lsdvmn'
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             #self.lsdvmn = self.getValues(data,'i',5)
             self.dt = self.getValues(data,'f',5)  ## Time step ??? --> straight from DMAP
+            self.dataCode['dt'] = self.dt
+            self.dataCode['name'] = 'dt'
             self.nonlinearFactor = self.dt
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
+        self.dataCode['nonlinearFactor'] = self.nonlinearFactor
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
@@ -184,12 +208,25 @@ class OES(object):
         #print 'reading big data block'
         #print self.printBlock(self.data)
 
+        #msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         if self.thermal==0:
-            if tfsCode==[5,1,0]:  # Stress
+            # Stress / Strain
+            if tfsCode==[5,1,0]:
                 self.readOES1_Data_format1_sort0()
-            if tfsCode==[5,2,0]:  # Stress
-                self.readOES1_Data_format1_sort0()  # dummy
+            elif tfsCode==[5,1,1]:
+                self.readOES1_Data_format1_sort1()
+            elif tfsCode==[5,2,0]:
+                self.readOES1_Data_format2_sort0()
+            elif tfsCode==[5,2,1]:
+                self.readOES1_Data_format2_sort1()
+            elif tfsCode==[5,3,0]:
+            
+                self.readOES1_Data_format3_sort0()
+            elif tfsCode==[5,3,1]:
+                self.readOES1_Data_format3_sort1()
+            elif tfsCode==[5,3,2]:
+                self.readOES1_Data_format3_sort2()
             else:
                 raise Exception('invalid atfsCode=%s' %(self.atfsCode))
             ###
@@ -201,9 +238,95 @@ class OES(object):
         ###
         #print stressStrainObj
 
+    def readOES1_Data_format1_sort1(self):
+        #msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        msg = ''
+        if 0:
+            pass
+        else:
+            #self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
+            msg = 'OES format1_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            print msg
+            #raise RuntimeError(msg)
+        ###
+        self.skippedCardsFile.write(msg)
+
+    def readOES1_Data_format2_sort0(self):
+        #msg = 'OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        msg = ''
+        if 0:
+            pass
+        else:
+            #self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
+            msg = 'OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            print msg
+            #raise RuntimeError(msg)
+        ###
+        self.skippedCardsFile.write(msg)
+
+    def readOES1_Data_format2_sort1(self):
+        #msg = 'OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        msg = ''
+        if self.elementType==1: # crod
+            #print "    found crod_1"
+            stressStrainObj = self.instantiateRodObject()
+            self.CROD_1(stressStrainObj)
+        else:
+            #self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
+            msg = 'OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            print msg
+            #raise RuntimeError(msg)
+        ###
+        self.skippedCardsFile.write(msg)
+
+    def readOES1_Data_format3_sort0(self):
+        msg = 'OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #msg = ''
+        if 0:
+            pass
+        else:
+            #self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
+            msg = 'OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            print msg
+            #raise RuntimeError(msg)
+        ###
+        self.skippedCardsFile.write(msg)
+
+    def readOES1_Data_format3_sort1(self):
+        #msg = 'OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        msg = ''
+        if 0:
+            pass
+        else:
+            #self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
+            msg = 'OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            print msg
+            #raise RuntimeError(msg)
+        ###
+        self.skippedCardsFile.write(msg)
+
+    def readOES1_Data_format3_sort2(self):
+        #msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        msg = ''
+        if 0:
+            pass
+        else:
+            #self.printBlock(self.data[0:100])
+            self.skipOES_Element(None)
+            msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            print msg
+            #raise RuntimeError(msg)
+        ###
+        self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format1_sort0(self):
-        msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
+        #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
+        msg = ''
         if self.elementType==1: # crod
             #print "    found crod_1"
             stressStrainObj = self.instantiateRodObject()
@@ -213,7 +336,7 @@ class OES(object):
         #    #stressStrainObj = self.instantiateBeamObject()
         #    stressStrainObj = None
         #    self.CBEAM_2(stressStrainObj)
-        #elif self.elementType == 10:   # conrod
+        elif self.elementType == 10:   # conrod
             print "    found conrod_10"
             #stressStrainObj = self.instantiateConrodObject()
             stressStrainObj = None
@@ -264,14 +387,27 @@ class OES(object):
             stressStrainObj = self.instantiateCompositePlateObject()
             self.CQUAD4_95(stressStrainObj)
             del self.eid2
+        #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
+        #    self.skipOES_Element(None)
+            #elementType=2   -> BEAM    is not supported
+            #elementType=53  -> TRIAX6  is not supported
+            #elementType=61  -> DUM9    is not supported
+            #elementType=70  -> TRIAR   is not supported
+            #elementType=86  -> GAPNL   is not supported
+            #elementType=88  -> TRIA3NL is not supported
+            #elementType=90  -> QUAD4NL is not supported
+            #elementType=94  -> BEAMNL  is not supported
+            #elementType=102 -> BUSH    is not supported
+            #elementType=189 -> VUQUAD  is not supported
+            #elementType=232 -> QUADRLC is not supported
         else:
-            self.printBlock(self.data[0:100])
+            #self.printBlock(self.data[0:100])
             self.skipOES_Element(None)
-            msg = 'elementType=%s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
         ###
-        self.skippedCardsFile.write(msg+'\n')
+        self.skippedCardsFile.write(msg)
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (untested)
         #elif self.elementType == 3:    # ctube

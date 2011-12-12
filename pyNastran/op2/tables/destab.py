@@ -19,6 +19,7 @@ class DESTAB(object):
         #self.readData(8)
 
     def readTable_DesTab(self):
+        self.tableName = 'DESTAB'
         tableName = self.readTableName(rewind=False) # DESTAB
         print "tableName = |%r|" %(tableName)
 

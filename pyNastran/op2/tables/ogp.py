@@ -13,6 +13,7 @@ from pyNastran.op2.resultObjects.opg_Objects import appliedLoadsObject
 class OGP(object):
     """Table of element forces"""
     def readTable_OGP1(self):
+        self.tableName = 'OGP'
         table3     = self.readTable_OGP_3
         table4Data = self.readOGP1_Data
         self.readResultsTable(table3,table4Data)
@@ -169,11 +170,10 @@ class OGP(object):
             self.readOGP1_Data_format1_sort1()
         elif tfsCode==[2,2,1]:
             self.readOGP1_Data_format2_sort1()
-        #elif tfsCode==[2,3,0]:
-        #    self.readOGP1_Data_format3_sort0()
-        #elif tfsCode==[2,3,1]:
-        #    self.readOGP1_Data_format3_sort1()
-        
+        elif tfsCode==[2,3,0]:
+            self.readOGP1_Data_format3_sort0()
+        elif tfsCode==[2,3,1]:
+            self.readOGP1_Data_format3_sort1()
 
         # Nonlinear force vector
         elif tfsCode==[12,1,0]:

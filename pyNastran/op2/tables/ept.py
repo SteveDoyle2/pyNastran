@@ -3,11 +3,12 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.properties import PROD,PBAR,PBARL,PBEAM,PSHELL,PSOLID,PCOMP,PTUBE,PELAS,PDAMP
+from pyNastran.bdf.cards.properties import *
 
 class EPT(object):
 
     def readTable_EPT(self):
+        self.tableName = 'EPT'
         self.bigProperties = {}
         self.iTableMap = {
                          (3201,32,55):    self.readNSM,     # record 2

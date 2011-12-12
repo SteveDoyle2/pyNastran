@@ -77,6 +77,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.alpha = fields.pop() # the last field is not part of fields
 
         # loop till UM, no field9,field10
+        i=0
         while i<iUM-4:
             self.Gni.append(card.field(i ))
             self.Cni.append(card.field(i+1))
@@ -85,8 +86,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             i+=2
         ###
 
-        self.Gni = []
-        self.Cni = []
+        self.Gmi = []
+        self.Cmi = []
         # loop till alpha, no field9,field10
         while i <card.nFields()-1: # dont grab alpha
             self.Gmi.append(card.field(i ))
@@ -162,7 +163,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
                 wt = card.field(i)
                 ci = card.field(i+1)
                 i+=2
-                g = 0
+                gij = 0
                 while isinstance(gij,int):  # does this get extra fields???
                     gij = card.field(i+1)
                     Gij.append(gij)

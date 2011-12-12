@@ -1,5 +1,6 @@
 import sys
 from op2_Objects import scalarObject #,array
+from pyNastran.op2.op2Errors import *
 
 class plateStrainObject(scalarObject):
     """
@@ -22,8 +23,10 @@ class plateStrainObject(scalarObject):
         self.eType     = {}
 
         self.appendDataMember('sCodes','sCode')
-        print "self.sCode = ",self.sCode
-        if self.sCode in [11]:
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        
+        print self.dataCode
+        if self.code == [1,0,11]:
             self.fiberCurvature = {}
             self.exx    = {}
             self.eyy    = {}
@@ -35,7 +38,7 @@ class plateStrainObject(scalarObject):
             self.isFiberDistance = False
             self.isBilinear = True
         
-        elif self.sCode in [15]:
+        elif self.code == [1,0,15]:
             self.fiberCurvature = {}
             self.exx    = {}
             self.eyy    = {}
@@ -47,7 +50,7 @@ class plateStrainObject(scalarObject):
             self.isFiberDistance = True
             self.isBilinear = False
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('plateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt:
             self.dt = dt
@@ -250,11 +253,9 @@ class plateStressObject(scalarObject):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
-
         #self.appendDataMember('sCodes','sCode')
-        #print "self.sCodes = ",self.sCodes
-        print "self.sCode = ",self.sCode
-        if self.sCode in [1]:
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,1]:
             self.fiberDistance = {}
             self.oxx    = {}
             self.oyy    = {}
@@ -264,7 +265,7 @@ class plateStressObject(scalarObject):
             self.minorP = {}
             self.ovm    = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
 
 
@@ -476,8 +477,8 @@ class compositePlateStressObject(scalarObject):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType  = {}
 
-        print "self.sCode = ",self.sCode
-        if self.sCode in [0]:
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,0]:
             self.fiberDistance = {}
             self.o11    = {}
             self.o22    = {}
@@ -489,7 +490,7 @@ class compositePlateStressObject(scalarObject):
             self.minorP = {}
             self.ovm    = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
 
         if dt is not None:
@@ -671,8 +672,8 @@ class compositePlateStrainObject(scalarObject):
         scalarObject.__init__(self,dataCode,iSubcase)
 
         self.eType  = {}
-        print "self.sCode = ",self.sCode
-        if self.sCode in [14]:
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,14]:
             self.e11    = {}
             self.e22    = {}
             self.e12    = {}
@@ -683,7 +684,7 @@ class compositePlateStrainObject(scalarObject):
             self.minorP = {}
             self.evm    = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('compositePlateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
 
         if dt is not None:
@@ -858,31 +859,51 @@ class compositePlateStrainObject(scalarObject):
 
 class rodStressObject(scalarObject):
     """
-    # sCode=0
+    # formatCode=1 sortCode=0 stressCode=0
                                   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
     ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
       ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+
+    # formatCode=2 sortCode=1 stressCode=0
+      COMPLEX EIGENVALUE = -3.575608E+04,  6.669431E+02
+                             C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C R O D )
+                                                          (REAL/IMAGINARY)
+                 ELEMENT                             AXIAL                                         TORQUE
+                   ID.                               FORCE
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CROD'
-        print "self.sCode = ",self.sCode
-        if self.sCode in [0]:
+        
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code in [[1,0,0],[1,0,1]]:
             self.axial      = {}
             self.MS_axial   = {}
             self.torsion    = {}
             self.MS_torsion = {}
+            self.isImaginary = False
+            if dt is not None:
+                self.addNewTransient = self.addNewTransient_format1_sort0
+                self.addNewEid       = self.addNewEidTransient_format1_sort0
+                self.isTransient = True
+            else:
+                self.addNewEid = self.addNewEid_format1_sort0
+            ###
+        elif self.code==[2,1,0]:
+            self.axial      = {}
+            self.torsion    = {}
+            self.addNewTransient = self.addNewTransient_format2_sort1
+            self.addNewEid       = self.addNewEidTransient_format2_sort1
+            self.isImaginary = True
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('rodStress - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
-            self.dt = dt
-            self.isTransient = True
+            self.dt = self.nonlinearFactor
             self.addNewTransient()
-            self.addNewEid = self.addNewEidTransient
         ###
 
-    def addNewTransient(self):
+    def addNewTransient_format1_sort0(self):
         """
         initializes the transient variables
         @note make sure you set self.dt first
@@ -892,22 +913,42 @@ class rodStressObject(scalarObject):
         self.torsion[self.dt]    = {}
         self.MS_torsion[self.dt] = {}
 
-    def addNewEid(self,eid,axial,SMa,torsion,SMt):
+    def addNewTransient_format2_sort1(self):
+        """
+        initializes the transient variables
+        @note make sure you set self.dt first
+        """
+        print self.dataCode
+        self.axial[self.dt]     = {}
+        self.torsion[self.dt]   = {}
+
+    def addNewEid_format1_sort0(self,eid,axial,SMa,torsion,SMt):
         #print "Rod Stress add..."
         self.axial[eid]      = axial
         self.MS_axial[eid]   = SMa
         self.torsion[eid]    = torsion
         self.MS_torsion[eid] = SMt
 
-    def addNewEidTransient(self,eid,axial,SMa,torsion,SMt):
-        #print "Rod Stress add..."
+    def addNewEid_format2_sort1(self,eid,axialReal,axialImag,torsionReal,torsionImag):
+        assert eid >= 0
+        self.axial[eid]      = [axialReal,axialImag]
+        self.torsion[eid]    = [torsionReal,torsionImag]
+
+    def addNewEidTransient_format1_sort0(self,eid,axial,SMa,torsion,SMt):
         dt = self.dt
+        assert eid >= 0
         self.axial[dt][eid]      = axial
         self.MS_axial[dt][eid]   = SMa
         self.torsion[dt][eid]    = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def __reprTransient__(self):
+    def addNewEidTransient_format2_sort1(self,eid,axialReal,axialImag,torsionReal,torsionImag):
+        dt = self.dt
+        assert eid >= 0
+        self.axial[dt][eid]      = [axialReal,axialImag]
+        self.torsion[dt][eid]    = [torsionReal,torsionImag]
+
+    def __reprTransient_format1_sort0__(self):
         msg = '---ROD STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['axial','torsion','MS_axial','MS_torsion']
@@ -935,9 +976,37 @@ class rodStressObject(scalarObject):
             ###
         return msg
 
+    def __reprTransient_format2_sort1__(self):
+        msg = '---COMPLEX ROD STRESSES---\n'
+        msg += '%-10s %10s ' %('EID','eType')
+        headers = ['axialReal','axialImag','torsionReal','torsionImag']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,axial in sorted(self.axial.items()):
+            msg += 'dt = %s' %(dt)
+            for eid in sorted(axial):
+                axial   = self.axial[dt][eid]
+                torsion = self.torsion[dt][eid]
+                msg += '%-6i %6s ' %(eid,self.eType)
+                vals = axial + torsion # concatination
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10i ' %(val)
+                    ###
+                msg += '\n'
+                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
+            ###
+        return msg
+
     def __repr__(self):
-        if self.isTransient:
-            return self.__reprTransient__()
+        if   isTransient and self.code==[1,0,1]:
+            return self.__reprTransient_format1_sort0__()
+        elif isTransient and self.code==[2,1,1]:
+            return self.__reprTransient_format2_sort1__()
 
         msg = '---ROD STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
@@ -979,23 +1048,35 @@ class rodStrainObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CROD/CONROD'
-        print "self.sCode = ",self.sCode
-        if self.sCode in [10]:
+
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,10]:
             self.axial      = {}
             self.MS_axial   = {}
             self.torsion    = {}
             self.MS_torsion = {}
+            self.addNewTransient = self.addNewTransient_format1_sort0
+            self.addNewEid       = self.addNewEidTransient_format1_sort0
+            self.isImaginary = False
+            if dt:
+                self.isTransient = True
+            ###
+
+        elif self.code==[2,1,10]:
+            self.axial      = {}
+            self.torsion    = {}
+            self.addNewTransient = self.addNewTransient_format2_sort1
+            self.addNewEid       = self.addNewEidTransient_format2_sort1
+            self.isImaginary = True
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('rodStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
+        if dt:
+            self.dt = self.nonlinearFactor
             self.addNewTransient()
-            self.addNewEid = self.addNewEidTransient
         ###
 
-    def addNewTransient(self):
+    def addNewTransient_format1_sort0(self):
         """
         initializes the transient variables
         @note make sure you set self.dt first
@@ -1005,7 +1086,16 @@ class rodStrainObject(scalarObject):
         self.torsion[self.dt]    = {}
         self.MS_torsion[self.dt] = {}
 
-    def addNewEid(self,eid,axial,SMa,torsion,SMt):
+    def addNewTransient_format2_sort1(self):
+        """
+        initializes the transient variables
+        @note make sure you set self.dt first
+        """
+        print self.dataCode
+        self.axial[self.dt]     = {}
+        self.torsion[self.dt]   = {}
+
+    def addNewEid_format1_sort0(self,eid,axial,SMa,torsion,SMt):
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
@@ -1014,7 +1104,12 @@ class rodStrainObject(scalarObject):
         self.torsion[eid]    = torsion
         self.MS_torsion[eid] = SMt
 
-    def addNewEidTransient(self,eid,axial,SMa,torsion,SMt):
+    def addNewEid_format2_sort1(self,eid,axialReal,axialImag,torsionReal,torsionImag):
+        assert eid >= 0
+        self.axial[eid]      = [axialReal,axialImag]
+        self.torsion[eid]    = [torsionReal,torsionImag]
+
+    def addNewEidTransient_format1_sort0(self,eid,axial,SMa,torsion,SMt):
         #print "Rod Strain add..."
         assert eid >= 0
         dt = self.dt
@@ -1024,9 +1119,17 @@ class rodStrainObject(scalarObject):
         self.torsion[dt][eid]    = torsion
         self.MS_torsion[dt][eid] = SMt
 
+    def addNewEidTransient_format2_sort1(self,eid,axialReal,axialImag,torsionReal,torsionImag):
+        assert eid >= 0
+        dt = self.dt
+        self.axial[dt][eid]      = [axialReal,axialImag]
+        self.torsion[dt][eid]    = [torsionReal,torsionImag]
+
     def __repr__(self):
-        if self.isTransient:
-            return self.__reprTransient__()
+        if   isTransient and self.code==[1,0,1]:
+            return self.__reprTransient_format1_sort0__()
+        elif isTransient and self.code==[2,1,1]:
+            return self.__reprTransient_format2_sort1__()
 
         msg = '---ROD STRAINS---\n'
         msg += '%-6s %6s ' %('EID','eType')
@@ -1061,8 +1164,9 @@ class barStressObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
-        print "self.sCode = ",self.sCode
-        if self.sCode in [0]:
+
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code==[1,0,0]:
             self.s1    = {}
             self.s2    = {}
             self.s3    = {}
@@ -1073,7 +1177,7 @@ class barStressObject(scalarObject):
             self.MS_tension = {}
             self.MS_compression = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('barStress - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
             self.dt = dt
@@ -1248,9 +1352,10 @@ class barStrainObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
-        print "self.sCode = ",self.sCode
-        if self.sCode in [1]:
-            raise Exception('verify...')
+
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,1]:
+            raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
             self.e1    = {}
             self.e2    = {}
             self.e3    = {}
@@ -1260,7 +1365,7 @@ class barStrainObject(scalarObject):
             self.emin  = {}
             #self.MS_tension = {}
             #self.MS_compression = {}
-        elif self.sCode in [10]:
+        elif self.code == [1,0,10]:
             self.e1    = {}
             self.e2    = {}
             self.e3    = {}
@@ -1271,7 +1376,7 @@ class barStrainObject(scalarObject):
             self.MS_tension = {}
             self.MS_compression = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
             self.dt = dt
@@ -1406,8 +1511,9 @@ class solidStressObject(scalarObject):
         scalarObject.__init__(self,dataCode,iSubcase)
 
         self.eType = {}
-        print "self.sCode = ",self.sCode
-        if self.sCode in [0]:  # not done...
+
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,0]:  # not done...
             self.cid = {} # gridGauss
             self.oxx = {}
             self.oyy = {}
@@ -1422,7 +1528,7 @@ class solidStressObject(scalarObject):
             #self.effStrain      = {}
             #self.effCreepStrain = {}
             self.ovm = {}
-        elif self.sCode in [1]:
+        elif self.code == [1,0,1]:
             self.cid = {}
             self.oxx = {}
             self.oyy = {}
@@ -1436,7 +1542,7 @@ class solidStressObject(scalarObject):
             #self.pressure = {}
             self.ovm = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('solidStress - get the format/sort/stressCode=%s' %(self.code))
 
         if dt is not None:
             self.dt = dt
@@ -1633,8 +1739,9 @@ class solidStrainObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
-        print "self.sCode = ",self.sCode
-        if self.sCode in [11]:
+
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        if self.code == [1,0,11]:
             self.cid = {}
             self.exx = {}
             self.eyy = {}
@@ -1648,7 +1755,7 @@ class solidStrainObject(scalarObject):
             #self.pressure = {}
             self.evm = {}
         else:
-            raise Exception('get the sCode=%s' %(self.sCode))
+            raise InvalidCodeError('solidStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
             self.dt = dt

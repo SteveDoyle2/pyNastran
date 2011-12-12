@@ -1,4 +1,5 @@
 from numpy import array
+from pyNastran.op2.op2Errors import *
 
 class scalarObject(object):
     def __init__(self,dataCode,iSubcase):
@@ -6,6 +7,9 @@ class scalarObject(object):
         self.isTransient = False
         self.dataCode = dataCode
         self.applyDataCode()
+
+    def name(self):
+        return self.obj.__class__.__name__
 
     def applyDataCode(self):
         for key,value in self.dataCode.items():
@@ -48,6 +52,7 @@ class scalarObject(object):
         this method is called if the object
         already exits and a new time step is found
         """
+        raise Exception('updateDt not implemented in the %s class' %(self.__class__.__name__))
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         if dt is not None:

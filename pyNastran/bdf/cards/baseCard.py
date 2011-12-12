@@ -3,14 +3,20 @@ import sys
 import pyNastran
 import pyNastran.bdf
 
-from pyNastran.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank
-from pyNastran.bdf.BDF_Card import BDF_Card
+from pyNastran.bdf.errors      import *
+from pyNastran.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank,isSame
+from pyNastran.bdf.BDF_Card    import BDF_Card
 
 class BaseCard(BDF_Card):
     #def __init__(self,card):
     #    pass
 
     #def wipeEmptyFields(self,card): # BaseCard
+
+    def isSame(self,field1,field2):
+        if isSame(self,field1,field2):
+            return True
+        return False
 
     def Is(self,typeCheck):
         """retruns True if the card type is the same as the object"""
@@ -352,22 +358,22 @@ class Element(BaseCard):
         return self.printCard(fields)
 
     def Centroid(self):
-        raise Exception('Centroid not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('Centroid not implemented in the %s class' %(self.__class__.__name__))
     def Length(self):
-        raise Exception('Length not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('Length not implemented in the %s class' %(self.__class__.__name__))
     def Area(self):
-        raise Exception('Area not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('Area not implemented in the %s class' %(self.__class__.__name__))
     def Volume(self):
-        raise Exception('Volume not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('Volume not implemented in the %s class' %(self.__class__.__name__))
     def Mass(self):
-        raise Exception('Mass not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('Mass not implemented in the %s class' %(self.__class__.__name__))
 
     def Jacobian(self):
-        raise Exception('Jacobian not implemented for %s' %(self.type))
+        raise NotImplementedMethodError('Jacobian not implemented for %s' %(self.self.__class__.__name__))
     def stiffnessMatrix(self):
-        raise Exception('stiffnessMatrix not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('stiffnessMatrix not implemented in the %s class' %(self.__class__.__name__))
     def massMatrix(self):
-        raise Exception('massMatrix not implemented in the %s class' %(self.type))
+        raise NotImplementedMethodError('massMatrix not implemented in the %s class' %(self.__class__.__name__))
 
 
 #dnMax = 2

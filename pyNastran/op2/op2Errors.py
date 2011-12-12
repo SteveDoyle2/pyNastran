@@ -1,3 +1,5 @@
+class InvalidCodeError(RuntimeError):
+    pass
 
 class EndOfFileError(RuntimeError):
     pass

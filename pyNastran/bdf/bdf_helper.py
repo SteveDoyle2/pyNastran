@@ -217,13 +217,19 @@ class addMethods(object):
         pass
 
     def addParam(self,param):
-        assert param.key not in self.params
-        self.params[param.key] = param
+        key = param.key
+
+        if key in self.params:
+            if not param.isSameCard(self.params[key]):
+                assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
+        else:
+            self.params[key] = param
+        ###
 
     def addNode(self,node):
         #print node
         #assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[node.nid],node)  ## @todo enable before release...
-        assert node.nid>0
+        assert node.nid>0,'nid=%s node=\n%s' %(node.nid,node)
         self.nodes[node.nid] = node
 
     def addElement(self,elem,allowOverwrites=False):
@@ -242,19 +248,19 @@ class addMethods(object):
     def addProperty(self,prop,allowOverwrites=False):
         if not allowOverwrites:
             assert prop.pid not in self.properties,'eid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
-        assert prop.pid>0
+        assert prop.pid>0,'property=\n%s' %(prop.pid,prop)
         self.properties[prop.pid] = prop
 
     def addMaterial(self,material,allowOverwrites=False):
         if not allowOverwrites:
             assert material.mid not in self.materials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(material.mid,self.materials[material.mid],material)
-        assert material.mid>0
+        assert material.mid>0,'mid=%s material=\n%s' %(material.mid,material)
         self.materials[material.mid] = material
 
     def addCoord(self,coord,allowOverwrites=False):
         if not allowOverwrites:
             assert coord.cid not in self.coords,'cid=%s\noldElement=\n%snewElement=\n%s' %(coord.cid,self.coords[coord.cid],coord)
-        assert coord.cid>-1
+        assert coord.cid>-1,'cid=%s coord=\n%s' %(coord.cid,coord)
         self.coords[coord.cid] = coord
 
     def addLoad(self,load):
@@ -322,13 +328,15 @@ class addMethods(object):
     def addSUPORT(self,suport):
         self.suports.append(suport)
 
-
     def addDArea(self,darea):
         key = (darea.sid,darea.p)
-        assert key not in self.dareas,'\ndarea=%s oldDArea=\n%s' %(darea,self.dareas[key])
-        assert darea.sid>0
-        self.dareas[key] = darea
-
+        if key in self.dareas:
+            if not darea.isSameCard(self.dareas[key]):
+                assert key not in self.dareas,'\ndarea=%s oldDArea=\n%s' %(darea,self.dareas[key])
+        else:
+            assert darea.sid>0
+            self.dareas[key] = darea
+        ###
 
     def addAero(self,aero):
         assert aero.acsid not in self.aero,'\naero=%s oldAERO=\n%s' %(aero,self.aero[aero.acsid])

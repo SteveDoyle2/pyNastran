@@ -2,9 +2,12 @@ from types import NoneType
 from numpy import allclose,isinf
 
 def isSame(value1,value2):
-    """checks to see if 2 values are the same"""
+    """
+    checks to see if 2 values are the same
+    @warning doesnt support None
+    """
     #print "value=%s default=%s" %(value1,value2)
-    if isinstance(value1,str):
+    if isinstance(value1,str) or isinstance(value1,NoneType):
         if value1==value2:
             return True
         return False
@@ -16,7 +19,7 @@ def isSame(value1,value2):
 
 def setBlankIfDefault(value,default):
     """used when setting the output data of a card to clear default values"""
-    if value is None or isSame(value,default):
+    if isSame(value,default):
         return None
     return value
 

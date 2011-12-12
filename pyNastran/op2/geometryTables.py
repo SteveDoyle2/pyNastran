@@ -132,7 +132,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                 self.iTableMap[tableType](data)
             else:
                 if not(tableType[0]==tableType[1]==tableType[2]):
-                    print "skipping iTable=%-3s with tableType=%s" %(iTable,tableType)
+                    print "skipping %s iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType)
                 ###
             ###
             #self.op2Debug.write('ints = %s\n' %(str(ints)))
@@ -153,6 +153,11 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         #print "exiting the geom sub table"
         return (tableName,isNextTable,isNextSubTable,isFileDone)
 
+    def readTable_PCOMPTS(self):
+        self.iTableMap = {
+                         }
+        self.readRecordTable('PCOMPTS')
+
     def readTable_DIT(self):
         self.iTableMap = {
                             (1105,11,133): self.readFake,
@@ -160,8 +165,6 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                             (15, 21, 162): self.readFake,
                             (56, 26, 303): self.readFake,
                             (3105,31, 97): self.readFake,
-                            
-                            
                          }
         self.readRecordTable('DIT')
 

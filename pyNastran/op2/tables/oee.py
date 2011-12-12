@@ -14,6 +14,7 @@ class OEE(object):
     """Table of energy"""
 
     def readTable_OEE1(self):
+        self.tableName = 'OEE'
         #self.staticEnergy = {} # aCode=1 tCode=18 fCode=1 sortCode=0
 
         table3 = self.readTable_OEE1_3

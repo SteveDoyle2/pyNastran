@@ -13,8 +13,35 @@ class PointProperty(Property):
         Property.__init__(self,card,data)
         pass
 
+class NSM(PointProperty):
+    """
+    Defines a set of non structural mass.
+    """
+    ## Set points to either Property entries or Element entries. Properties are:
+    validProperties = [
+        'PSHELL', 'PCOMP', 'PBAR',  'PBARL', 'PBEAM',  'PBEAML', 'PBCOMP', 'PROD',
+        'CONROD', 'PBEND', 'PSHEAR','PTUBE', 'PCONEAX','PRAC2D']
+    def __init__(self,card=None,nOffset=0,data=None):
+        #Element.__init__(self,card,data)
+        nOffset *= 2
+        if card:
+            self.sid   = card.field(1)
+            self.Type  = card.field(2)
+            self.id    = card.field(3+nOffset)
+            self.value = card.field(4+nOffset)
+        else:
+            self.sid   = data[0]
+            self.Type  = data[1]
+            self.id    = data[2]
+            self.value = data[3]
+        ###
+    def __repr__(self):
+        nodes = self.nodeIDs()
+        fields = ['NSM',self.sid,self.Type,self.id,self.value]
+        return self.printCard(fields)
+
 class PMASS(PointProperty):
-    def __init__(self,card=None,data=None):
+    def __init__(self,card=None,nOffset=0,data=None):
         PointProperty.__init__(self,card,nOffset=0)
         
         nOffset *= 2
@@ -1055,6 +1082,7 @@ class PLSOLID(SolidProperty):
             self.mid = data[1]
             self.ge  = data[2]
             self.str = data[3]
+            print "data = ",data
         ###
         assert self.str in ['GRID','GAUS'],'card=%s doesnt have a valid stress/strain output value set\n'
 

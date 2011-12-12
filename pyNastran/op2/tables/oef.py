@@ -8,8 +8,8 @@ from struct import unpack
 #    fluxObject,nonlinearFluxObject)
 
 from pyNastran.op2.resultObjects.ougv1_Objects import (
-    displacementObject,temperatureObject,
-    eigenVectorObject)
+    displacementObject,temperatureObject)
+#    eigenVectorObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
 
@@ -202,12 +202,15 @@ class OEF(object):
                 self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject)
                 self.readForcesNonlinear(self.obj)
             else:
-                raise Exception('not supported OEF thermal solution...')
+                msg = 'OEF_thermal format1_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+                self.skippedCardsFile.write(msg)
+                self.skipOES_Element(None)
+                #raise Exception('not supported OEF thermal solution...')
             ###
         else:
-            msg = 'invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal)
+            msg = 'invalid thermal flag...not 0 or 1...flag=%s\n' %(self.thermal)
             self.obj = None
-            sys.stderr.write(msg+'\n')
+            sys.stderr.write(msg)
             #raise Exception(msg)
         ###
         #self.readForces(data,self.obj)

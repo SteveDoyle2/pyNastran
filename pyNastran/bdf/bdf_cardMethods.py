@@ -318,7 +318,7 @@ class cardMethods(object):
             vFactor=1.
         else:
             msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s|' %(valueRaw,v0)
-            raise Exception(msg)
+            raise FloatScientificParseError(msg)
 
         vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
         vp = valueIn.find('+',1)
@@ -330,7 +330,7 @@ class cardMethods(object):
             expFactor = 1.
         else:
             msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s|' %(valueRaw,valueLeft)
-            raise Exception(msg)
+            raise ScientificParseError(msg)
 
         s0 = vFactor*float(sline[0])
         s1 = expFactor*int(sline[1])
