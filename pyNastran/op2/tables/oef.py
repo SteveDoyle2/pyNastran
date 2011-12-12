@@ -9,7 +9,8 @@ from struct import unpack
 
 from pyNastran.op2.resultObjects.ougv1_Objects import (
     displacementObject,temperatureObject)
-#    eigenVectorObject)
+from pyNastran.op2.resultObjects.oug_eigenvectors import (
+    eigenVectorObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
 
@@ -150,24 +151,24 @@ class OEF(object):
             if self.approachCode==1: # displacement
                 print "isForces"
                 self.obj = displacementObject(self.dataCode,self.iSubcase)
-                self.displacementForces[self.iSubcase] = self.obj
+                self.forces[self.iSubcase] = self.obj
                 self.readForces(self.obj)
 
             elif self.approachCode==2 and self.sortCode==1: # buckling forces
                 print "isBucklingForces"
-                self.createTransientObject(self.bucklingForces,displacementObject)
+                self.createTransientObject(self.forces,displacementObject)
                 self.readForces(self.obj)
             elif self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
                 self.readForces(self.obj)
             elif self.approachCode==6: # transient displacement
                 print "isTransientForces"
-                self.createTransientObject(self.displacementForces,displacementObject)
+                self.createTransientObject(self.forces,displacementObject)
                 self.readForces(self.obj)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
                 self.readForces(self.obj)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticForces"
@@ -191,7 +192,7 @@ class OEF(object):
             #    self.fluxes[self.iSubcase] = self.obj
             if self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
                 self.readForces(self.obj)
             elif self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
@@ -224,11 +225,11 @@ class OEF(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
                 #self.readForces(self.obj)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,(self.mode,self.eigr,self.eigi))
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             else:
                 raise Exception('not supported OEF static solution...')
             ###
@@ -248,10 +249,10 @@ class OEF(object):
         if self.thermal==0:
             if self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
-                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             else:
                 raise Exception('not supported OEF static solution...')
             ###

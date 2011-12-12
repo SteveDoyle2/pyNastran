@@ -1,8 +1,8 @@
 import sys
-from op2_Objects import scalarObject #,array
+from op2_Objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class plateStrainObject(scalarObject):
+class plateStrainObject(strainObject):
     """
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 
@@ -19,7 +19,7 @@ class plateStrainObject(scalarObject):
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        strainObject.__init__(self,dataCode,iSubcase)
         self.eType     = {}
 
         self.appendDataMember('sCodes','sCode')
@@ -244,13 +244,13 @@ class plateStrainObject(scalarObject):
         ###
         return msg
 
-class plateStressObject(scalarObject):
+class plateStressObject(stressObject):
     """
     ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        stressObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
         #self.appendDataMember('sCodes','sCode')
@@ -465,7 +465,7 @@ class plateStressObject(scalarObject):
         return msg
 
 
-class compositePlateStressObject(scalarObject):
+class compositePlateStressObject(stressObject):
     """
     # sCode = 0
                     S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
@@ -474,7 +474,7 @@ class compositePlateStressObject(scalarObject):
 
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        stressObject.__init__(self,dataCode,iSubcase)
         self.eType  = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
@@ -662,14 +662,14 @@ class compositePlateStressObject(scalarObject):
         ###
         return msg
 
-class compositePlateStrainObject(scalarObject):
+class compositePlateStrainObject(strainObject):
     """
     ???
     ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
       ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        strainObject.__init__(self,dataCode,iSubcase)
 
         self.eType  = {}
         self.code = [self.formatCode,self.sortCode,self.sCode]
@@ -857,7 +857,7 @@ class compositePlateStrainObject(scalarObject):
         return msg
 
 
-class rodStressObject(scalarObject):
+class rodStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
@@ -872,7 +872,7 @@ class rodStressObject(scalarObject):
                    ID.                               FORCE
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CROD'
         
         self.code = [self.formatCode,self.sortCode,self.sCode]
@@ -1032,7 +1032,7 @@ class rodStressObject(scalarObject):
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-class rodStrainObject(scalarObject):
+class rodStrainObject(strainObject):
     """
     # sCode=1???
                                      S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
@@ -1046,7 +1046,7 @@ class rodStrainObject(scalarObject):
        1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CROD/CONROD'
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
@@ -1154,7 +1154,7 @@ class rodStrainObject(scalarObject):
             msg += '\n'
         return msg
 
-class barStressObject(scalarObject):
+class barStressObject(stressObject):
     """
     # sCode=0
                                S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
@@ -1162,7 +1162,7 @@ class barStressObject(scalarObject):
       ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        stressObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
@@ -1341,7 +1341,7 @@ class barStressObject(scalarObject):
         return msg
 
 
-class barStrainObject(scalarObject):
+class barStrainObject(strainObject):
     """
     # sCode=10
                                     S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )
@@ -1350,7 +1350,7 @@ class barStrainObject(scalarObject):
 
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        strainObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
@@ -1489,7 +1489,7 @@ class barStrainObject(scalarObject):
         return msg
 
 
-class solidStressObject(scalarObject):
+class solidStressObject(stressObject):
     """
     # sCode=0
             N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )
@@ -1508,7 +1508,7 @@ class solidStressObject(scalarObject):
                            Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        stressObject.__init__(self,dataCode,iSubcase)
 
         self.eType = {}
 
@@ -1725,7 +1725,7 @@ class solidStressObject(scalarObject):
         ###
         return msg
 
-class solidStrainObject(scalarObject):
+class solidStrainObject(strainObject):
     """
                           S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )
                    CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   
@@ -1737,7 +1737,7 @@ class solidStrainObject(scalarObject):
 
     """
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        strainObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]

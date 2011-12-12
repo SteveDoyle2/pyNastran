@@ -9,11 +9,12 @@ class scalarObject(object):
         self.applyDataCode()
 
     def name(self):
-        return self.obj.__class__.__name__
+        return self.__class__.__name__
 
     def applyDataCode(self):
         for key,value in self.dataCode.items():
             self.__setattr__(key,value)
+            print "  key=%s value=%s" %(key,value)
     
     def getVar(self,name):
         return getattr(self,name)
@@ -47,11 +48,13 @@ class scalarObject(object):
             msg += '%s = %s' %(word,selfVarName)
         return msg
 
-    def updateDt(self,dt):
+    def updateDt(self,dataCode,dt):
         """
         this method is called if the object
         already exits and a new time step is found
         """
+        self.dataCode = dataCode
+        self.applyDataCode()
         raise Exception('updateDt not implemented in the %s class' %(self.__class__.__name__))
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
@@ -59,6 +62,34 @@ class scalarObject(object):
             self.dt = dt
             self.addNewTransient()
         ###
+
+class stressObject(scalarObject):
+    def __init__(self,dataCode,iSubcase):
+        scalarObject.__init__(self,dataCode,iSubcase)
+
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #assert dt>=0.
+        #print "updating dt...dt=%s" %(dt)
+        if dt is not None:
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
+class strainObject(scalarObject):
+    def __init__(self,dataCode,iSubcase):
+        scalarObject.__init__(self,dataCode,iSubcase)
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #assert dt>=0.
+        #print "updating dt...dt=%s" %(dt)
+        if dt is not None:
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
 
 class spcForcesObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
@@ -74,17 +105,25 @@ class spcForcesObject(scalarObject):
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
         ###
 
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #assert dt>=0.
+        #print "updating dt...dt=%s" %(dt)
+        if dt is not None:
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
     def addNewTransient(self):
         self.forces[self.dt]  = {}
         self.moments[self.dt] = {}
 
-    def updateDt(self,dt=None):
-        """
-        this method is called if the object
-        already exits and a new time step is found
-        """
-        assert dt>=0.
-        self.dt = dt
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #assert dt>=0.
+        #print "updating dt...dt=%s" %(dt)
         if dt is not None:
             self.dt = dt
             self.addNewTransient()

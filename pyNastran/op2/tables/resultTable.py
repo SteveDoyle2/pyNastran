@@ -16,7 +16,7 @@ from pyNastran.op2.tables.destab import DESTAB
 
 class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
-    def createTransientObject(self,storageObj,classObj,dt=None):
+    def createTransientObject(self,storageObj,classObj):
         """@note dt can also be loadStep depending on the class"""
         #print "create Transient Object"
         if self.iSubcase in storageObj:
@@ -280,7 +280,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         
         n = 0
         nEntries = len(data)/32
-        print "len(data) = ",len(data)
+        #print "len(data) = ",len(data)
         for i in range(nEntries):
             #print self.printBlock(self.data[n:n+64])
             eData = data[n:n+32]
@@ -310,13 +310,13 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
         n = 0
         nEntries = len(data)/56
-        print "len(data) = ",len(data)
-        print "nEntries = %s" %(nEntries)
+        #print "len(data) = ",len(data)
+        #print "nEntries = %s" %(nEntries)
         for i in range(nEntries):
             eData = data[n:n+56]
             #print self.printBlock(self.data[n:n+64])
             #print "self.numWide = ",self.numWide
-            print "len(data) = ",len(data)
+            #print "len(data) = ",len(data)
             #self.printBlock(data[56:])
             #msg = 'len(data)=%s\n'%(len(data))
             #assert len(data)>=56,msg+self.printSection(120)
@@ -364,7 +364,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
+            scalarObject.add(freq,gridType,dx, dy, dz, rx, ry, rz,
                                            dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56
         ###

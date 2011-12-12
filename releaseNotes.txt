@@ -25,6 +25,7 @@ BDF Bug Fixes
    - CELASx cards had issues with proper order of entries
    - PELAS cards werent processed properly
    - files on remote drives dont cause crashes anymore
+   - cend now also signifies the end of the executive control deck
 
 Overall BDF
    - renamed read method  to readBDF (it got confusing when the op2 object can 
