@@ -3,9 +3,9 @@ import copy
 from struct import unpack
 
 from pyNastran.op2.op2Errors     import *
-from pyNastran.op2.tables.ougv1  import OUGV1
+from pyNastran.op2.tables.oug.ougv1  import OUGV1
+from pyNastran.op2.tables.oes.oes    import OES
 from pyNastran.op2.tables.oqg1   import OQG1
-from pyNastran.op2.tables.oes    import OES
 from pyNastran.op2.tables.oef    import OEF
 from pyNastran.op2.tables.ogp    import OGP
 from pyNastran.op2.tables.oee    import OEE
