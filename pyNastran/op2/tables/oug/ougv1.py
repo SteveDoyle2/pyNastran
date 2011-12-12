@@ -3,14 +3,14 @@ import copy
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.resultObjects.ougv1_Objects import (
+from ougv1_Objects import (
      temperatureObject,displacementObject,  # approachCode=1, formatCode=1 sortCode=0
      complexDisplacementObject,             # approachCode=5  formatCode=3 sortCode=1
      fluxObject,                            # approachCode=1, formatCode=1 sortCode=3
      nonlinearTemperatureObject,            # approachCode=10,formatCode=1 sortCode=0 ???
      )
 
-from pyNastran.op2.resultObjects.oug_eigenvectors import (
+from oug_eigenvectors import (
      eigenVectorObject,                     # approachCode=2, sortCode=0 formatCode   tableCode=7
      complexEigenVectorObject,              # approach    =5, sortCode=1 formatCode=1 tableCode=7
      realEigenVectorObject,                 # approachCode=9, sortCode=1 formatCode=1 tableCode=7
