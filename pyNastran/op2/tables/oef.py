@@ -152,31 +152,23 @@ class OEF(object):
                 print "isForces"
                 self.obj = displacementObject(self.dataCode,self.iSubcase)
                 self.forces[self.iSubcase] = self.obj
-                self.readForces(self.obj)
-
             elif self.approachCode==2 and self.sortCode==1: # buckling forces
                 print "isBucklingForces"
                 self.createTransientObject(self.forces,displacementObject)
-                self.readForces(self.obj)
             elif self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
-                self.readForces(self.obj)
             elif self.approachCode==6: # transient displacement
                 print "isTransientForces"
                 self.createTransientObject(self.forces,displacementObject)
-                self.readForces(self.obj)
             elif self.approachCode==9: # complex eigenvalue forces
                 print "isComplexEigenvalues"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
-                self.readForces(self.obj)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticForces"
                 self.createTransientObject(self.nonlinearForces,displacementObject)
-                ##self.readForcesNonlinear(self.obj)
-                self.skipOES_Element(None)
             else:
-                self.skipOES_Element(None)
+                self.obj = None
                 #raise Exception('not supported OEF static solution...')
             ###
 
@@ -188,32 +180,31 @@ class OEF(object):
             #elif self.approachCode==1 and self.sortCode==1: # heat fluxes
             #    print "isFluxes"
             #    raise Exception('verify...')
-            #    self.obj = fluxObject(self.iSubcase,dt=self.dt)
-            #    self.fluxes[self.iSubcase] = self.obj
+            #    self.createTransientObject(self.fluxes,fluxObject)
             if self.approachCode==5: # frequency forces
                 print "isFrequencyForces"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
-                self.readForces(self.obj)
             elif self.approachCode==6: # transient temperature
                 print "isTransientTemperature"
                 self.createTransientObject(self.temperatureForces,temperatureObject)
-                self.readForces(self.obj)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearFluxes,nonlinearFluxObject)
-                self.readForcesNonlinear(self.obj)
+                self.createTransientObject(self.fluxes,nonlinearFluxObject)
             else:
                 msg = 'OEF_thermal format1_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
                 self.skippedCardsFile.write(msg)
-                self.skipOES_Element(None)
                 #raise Exception('not supported OEF thermal solution...')
             ###
         else:
             msg = 'invalid thermal flag...not 0 or 1...flag=%s\n' %(self.thermal)
             self.obj = None
             sys.stderr.write(msg)
-            #raise Exception(msg)
+            raise Exception(msg)
         ###
+        if self.obj:
+            self.skipOES_Element(None)
+        else:
+            self.skipOES_Element(None)
         #self.readForces(data,self.obj)
         #return
 
@@ -260,7 +251,10 @@ class OEF(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.skipOES_Element(None)
+        if self.obj:
+            self.skipOES_Element(None)
+        else:
+            self.skipOES_Element(None)
         #self.readForces(data,self.obj)
         #return
 

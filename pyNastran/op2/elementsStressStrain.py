@@ -134,13 +134,10 @@ class ElementsStressStrain(object):
             print "done with CONROD_10"
         ###
 
-    def CELAS2_12(self,stress): # not done
-        """
-        @todo doesnt support results yet
-        """
-        print '---CELAS2_12---\n'
+    def CELAS1_11(self,stress):
+        print '---CELAS1_11---\n'
         if self.makeOp2Debug:
-            self.op2Debug.write('---CELAS2_12---\n')
+            self.op2Debug.write('---CELAS1_11---\n')
         deviceCode = self.deviceCode
         #assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
 
@@ -171,18 +168,49 @@ class ElementsStressStrain(object):
             self.data = self.data[minBuffer: ]
             #print "len(data) = ",len(eData)
 
-            parse(eData)
-            #if self.tableCode in [0,2]:
-            #    force = unpack('f',eData[4:8])
-            #else:
-            #    (sReal,sImag) = unpack('ff',eData[4:12])
-            ###
+            out = parse(eData)
+            stress.addEid(out)
+        ###
+        self.handleResultsBuffer(self.CELAS1_11,stress)
+        #print self.rodStress[self.iSubcase]
+        if self.makeOp2Debug:
+            print "done with CELAS1-11"
 
-            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
-            #print "len(data) = ",len(self.data)
+    def CELAS2_12(self,stress):
+        print '---CELAS2_12---\n'
+        if self.makeOp2Debug:
+            self.op2Debug.write('---CELAS2_12---\n')
+        deviceCode = self.deviceCode
+        #assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
+
+        if self.tableCode in [0,2]:
+            minBuffer = 8
+            def parse(eData):
+                (eid,force) = unpack('if',eData)
+                eid = (eid - deviceCode) / 10
+                #if force>1.:
+                #print "eid=%s force=%s" %(eid,force)
+                return (eid,force)
+                ###
+            ###
+        else:
+            minBuffer = 12
+            def parse(eData):
+                (eid,sReal,sImag) = unpack('iff',eData)
+                eid = (eid - deviceCode) / 10
+                #if sReal>1e-5:
+                #print "eid=%s force=%s imag=%s" %(eid,sReal,sImag)
+                return (eid,sReal,sImag)
+            ###
+        ###
+
+        while len(self.data)>=minBuffer:
+            eData     = self.data[0:minBuffer]
+            self.data = self.data[minBuffer: ]
+            out = parse(eData)
+            stress.addEid(out)
         ###
         self.handleResultsBuffer(self.CELAS2_12,stress)
-        #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CELAS2-12"
 

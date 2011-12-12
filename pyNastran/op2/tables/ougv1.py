@@ -147,77 +147,78 @@ class OUGV1(object):
         # displacement
         if   tfsCode==[1,1,0]:
             self.readOUGV1_Data_table1_format1_sort0()
-        elif tfsCode==[1,1,1]:
-            self.readOUGV1_Data_table1_format1_sort1()
+        #elif tfsCode==[1,1,1]:
+        #    self.readOUGV1_Data_table1_format1_sort1()
         elif tfsCode==[1,2,0]:
             self.readOUGV1_Data_table1_format2_sort0()
-        elif tfsCode==[1,2,1]:
-            self.readOUGV1_Data_table1_format2_sort1()
-        elif tfsCode==[1,2,2]:
-            self.readOUGV1_Data_table1_format2_sort2()
-        elif tfsCode==[1,3,0]:
-            self.readOUGV1_Data_table1_format3_sort0()
-        elif tfsCode==[1,3,1]:
-            self.readOUGV1_Data_table1_format3_sort1()
-        elif tfsCode==[1,3,2]:
-            self.readOUGV1_Data_table1_format3_sort2()
+        #elif tfsCode==[1,2,1]:
+        #    self.readOUGV1_Data_table1_format2_sort1()
+        #elif tfsCode==[1,2,2]:
+        #    self.readOUGV1_Data_table1_format2_sort2()
+        #elif tfsCode==[1,3,0]:
+        #    self.readOUGV1_Data_table1_format3_sort0()
+        #elif tfsCode==[1,3,1]:
+        #    self.readOUGV1_Data_table1_format3_sort1()
+        #elif tfsCode==[1,3,2]:
+        #    self.readOUGV1_Data_table1_format3_sort2()
 
         # modes
         elif tfsCode==[7,1,0]:
             self.readOUGV1_Data_table7_format1_sort0()
-        elif tfsCode==[7,1,1]:
-            self.readOUGV1_Data_table7_format1_sort1()
+        #elif tfsCode==[7,1,1]:
+        #    self.readOUGV1_Data_table7_format1_sort1()
         elif tfsCode==[7,2,0]:
             self.readOUGV1_Data_table7_format2_sort0()
-        elif tfsCode==[7,2,1]:
-            self.readOUGV1_Data_table7_format2_sort1()
-        elif tfsCode==[7,2,2]:
-            self.readOUGV1_Data_table7_format2_sort2()
-        elif tfsCode==[7,3,0]:
-            self.readOUGV1_Data_table7_format3_sort0()
-        elif tfsCode==[7,3,1]:
-            self.readOUGV1_Data_table7_format3_sort1()
-        elif tfsCode==[7,3,2]:
-            self.readOUGV1_Data_table7_format3_sort2()
+        #elif tfsCode==[7,2,1]:
+        #    self.readOUGV1_Data_table7_format2_sort1()
+        #elif tfsCode==[7,2,2]:
+        #    self.readOUGV1_Data_table7_format2_sort2()
+        #elif tfsCode==[7,3,0]:
+        #    self.readOUGV1_Data_table7_format3_sort0()
+        #elif tfsCode==[7,3,1]:
+        #    self.readOUGV1_Data_table7_format3_sort1()
+        #elif tfsCode==[7,3,2]:
+        #    self.readOUGV1_Data_table7_format3_sort2()
 
         # velocity
         elif tfsCode==[10,1,0]:
             self.readOUGV1_Data_table10_format1_sort0()
-        elif tfsCode==[10,1,1]:
-            self.readOUGV1_Data_table10_format1_sort1()
-        elif tfsCode==[10,2,0]:
-            self.readOUGV1_Data_table10_format2_sort0()
-        elif tfsCode==[10,2,1]:
-            self.readOUGV1_Data_table10_format2_sort1()
-        elif tfsCode==[10,2,2]:
-            self.readOUGV1_Data_table10_format2_sort2()
-        elif tfsCode==[10,3,0]:
-            self.readOUGV1_Data_table10_format3_sort0()
-        elif tfsCode==[10,3,1]:
-            self.readOUGV1_Data_table10_format3_sort1()
-        elif tfsCode==[10,3,2]:
-            self.readOUGV1_Data_table10_format3_sort2()
+        #elif tfsCode==[10,1,1]:
+        #    self.readOUGV1_Data_table10_format1_sort1()
+        #elif tfsCode==[10,2,0]:
+        #    self.readOUGV1_Data_table10_format2_sort0()
+        #elif tfsCode==[10,2,1]:
+        #    self.readOUGV1_Data_table10_format2_sort1()
+        #elif tfsCode==[10,2,2]:
+        #    self.readOUGV1_Data_table10_format2_sort2()
+        #elif tfsCode==[10,3,0]:
+        #    self.readOUGV1_Data_table10_format3_sort0()
+        #elif tfsCode==[10,3,1]:
+        #    self.readOUGV1_Data_table10_format3_sort1()
+        #elif tfsCode==[10,3,2]:
+        #    self.readOUGV1_Data_table10_format3_sort2()
 
         # Acceleration vector
         elif tfsCode==[11,1,0]:
             self.readOUGV1_Data_table11_format1_sort0()
-        elif tfsCode==[11,1,1]:
-            self.readOUGV1_Data_table11_format1_sort1()
-        elif tfsCode==[11,2,0]:
-            self.readOUGV1_Data_table11_format2_sort0()
-        elif tfsCode==[11,2,1]:
-            self.readOUGV1_Data_table11_format2_sort1()
-        elif tfsCode==[11,2,2]:
-            self.readOUGV1_Data_table11_format2_sort2()
-        elif tfsCode==[11,3,0]:
-            self.readOUGV1_Data_table11_format3_sort0()
-        elif tfsCode==[11,3,1]:
-            self.readOUGV1_Data_table11_format3_sort1()
-        elif tfsCode==[11,3,2]:
-            self.readOUGV1_Data_table11_format3_sort2()
+        #elif tfsCode==[11,1,1]:
+        #    self.readOUGV1_Data_table11_format1_sort1()
+        #elif tfsCode==[11,2,0]:
+        #    self.readOUGV1_Data_table11_format2_sort0()
+        #elif tfsCode==[11,2,1]:
+        #    self.readOUGV1_Data_table11_format2_sort1()
+        #elif tfsCode==[11,2,2]:
+        #    self.readOUGV1_Data_table11_format2_sort2()
+        #elif tfsCode==[11,3,0]:
+        #    self.readOUGV1_Data_table11_format3_sort0()
+        #elif tfsCode==[11,3,1]:
+        #    self.readOUGV1_Data_table11_format3_sort1()
+        #elif tfsCode==[11,3,2]:
+        #    self.readOUGV1_Data_table11_format3_sort2()
 
         else:
-            raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
+            #raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
+            self.skipOES_Element(None)
         ###
 
     def readOUGV1_Data_table1_format1_sort0(self):
@@ -294,6 +295,9 @@ class OUGV1(object):
             if self.approachCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
                 self.createTransientObject(self.eigenvectors,eigenVectorObject)
+            elif self.approachCode==8: # post-buckling eigenvector
+                #print "isPostBucklingEigenvector"
+                self.createTransientObject(self.eigenvectors,realEigenVectorObject)
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -303,6 +307,9 @@ class OUGV1(object):
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readScalars8(self.obj,debug=True)
+        if self.approachCode not in [2,8]:
+            raise Exception('check_format1...')
+        ###
 
     def readOUGV1_Data_table10_format1_sort0(self): # velocity
         assert self.formatCode==1 # Real
