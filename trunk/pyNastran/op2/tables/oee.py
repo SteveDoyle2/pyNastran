@@ -1,6 +1,7 @@
 import sys
 import copy
 from struct import unpack
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 # pyNastran
 #from pyNastran.op2.resultObjects.ougv1_Objects import (
@@ -166,8 +167,6 @@ class OEE(object):
         ###
         self.readScalars4(self.obj)
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-
 class StrainEnergyObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
@@ -180,6 +179,20 @@ class StrainEnergyObject(scalarObject):
             self.addNewTransient()
             self.isTransient = True
             self.add       = self.addTransient
+        ###
+
+    def updateDt(self,dataCode,dt):
+        """
+        this method is called if the object
+        already exits and a new time step is found
+        """
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #assert dt>=0.
+        #print "updating dt...dt=%s" %(dt)
+        if dt is not None:
+            self.dt = dt
+            self.addNewTransient()
         ###
 
     def addNewTransient(self):

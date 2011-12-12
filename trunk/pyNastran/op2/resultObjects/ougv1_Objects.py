@@ -21,6 +21,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         ###
 
     def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
             self.dt = dt
@@ -172,10 +173,11 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
     def __init__(self,dataCode,iSubcase,freq=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.freq = freq
-        print "complexDisplacementObject - self.dt=|%s|" %(self.freq)
+        print "complexDisplacementObject - self.freq=|%s|" %(self.freq)
         self.gridType      = {}
         self.displacements = {}
         self.rotations     = {}
+        self.addNewTransient()
 
     def updateDt(self,dataCode,freq):
         self.applyDataCode()
@@ -185,9 +187,7 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
         ###
 
     def addNewTransient(self):
-        """
-        initializes the transient variables
-        """
+        """initializes the transient variables"""
         self.displacements[self.freq] = {}
         self.rotations[self.freq]     = {}
 
@@ -197,39 +197,31 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements,'displacementObject - static failure'
 
-        self.displacements[nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
-        self.rotations[nodeID]     = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
+        self.displacements[self.freq][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
+        self.rotations[self.freq][nodeID]     = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
     ###
 
-    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
-        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
-        assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
-        
-        self.displacements[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[self.dt][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
-    ###
-
-    def __reprTransient__(self):
+    def __repr__(self):
         msg = '---COMPLEX DISPLACEMENTS---\n'
         #if self.dt is not None:
         #    msg += 'dt = %g\n' %(self.dt)
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+        headers = ['DxReal','DxImag','DyReal','DyImag','DzReal','DyImag','RxReal','RxImag','RyReal','RyImag','RzReal','RzImag']
         msg += '%-8s ' %('nodeID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,displacements in sorted(self.displacements.items()):
-            msg += 'dt = %g\n' %(dt)
+        for freq,displacements in sorted(self.displacements.items()):
+            msg += 'freq = %g\n' %(freq)
+            print "freq = ",freq
+            print displacements
             for nodeID,displacement in sorted(displacements.items()):
-                rotation = self.rotations[dt][nodeID]
+                rotation = self.rotations[freq][nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
                 msg += '%-8i ' %(nodeID)
-                vals = [dx,dy,dz,rx,ry,rz]
+                vals = dx+dy+dz+rx+ry+rz
                 for val in vals:
                     if abs(val)<1e-6:
                         msg += '%10s ' %(0)
@@ -238,35 +230,6 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
                     ###
                 msg += '\n'
             ###
-        return msg
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---COMPLEX DISPLACEMENTS---\n'
-        if self.dt is not None:
-            msg += 'dt = %g\n' %(self.dt)
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-8s ' %('nodeID')
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for nodeID,displacement in sorted(self.displacements.items()):
-            rotation = self.rotations[nodeID]
-            (dx,dy,dz) = displacement
-            (rx,ry,rz) = rotation
-
-            msg += '%-8i ' %(nodeID)
-            vals = [dx,dy,dz,rx,ry,rz]
-            for val in vals:
-                if abs(val)<1e-6:
-                    msg += '%10s ' %(0)
-                else:
-                    msg += '%10.3e ' %(val)
-                ###
-            msg += '\n'
         return msg
 
 class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
@@ -283,29 +246,21 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.isTransient = True
             self.temperatures = {self.dt:{}}
             self.add = self.addTransient
-            self.addBinary = self.addBinaryTransient
+            #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...            
         ###
 
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        if dt is not None:
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
     def addNewTransient(self):
-        """
-        initializes the transient variables
-        @note make sure you set self.dt first
-        """
+        """initializes the transient variables"""
         self.temperatures[self.dt] = {}
-
-    def addBinary(self,deviceCode,data):
-        (nodeID,v1) = unpack('if',data[0:8])
-        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
-        assert nodeID not in self.temperatures
-        self.temperatures[nodeID] = v1
-
-    def addBinaryTransient(self,deviceCode,data):
-        raise Exception('not implemented...')
-        (nodeID,v1) = unpack('if',data[0:8])
-        assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
-        assert nodeID not in self.temperatures
-        self.temperatures[nodeID] = v1
 
     def add(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)

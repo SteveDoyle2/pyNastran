@@ -211,16 +211,20 @@ OP2 Reader
 
 All Thermal=0
 
-CROD_1 (2/6)
+CROD_1 (4/6)
  - sCode6=0 (Strain)
-   - tCode7=0,1 (Real & Real/Imaginary)
-     numWide=5 (done 1/2)
+   - tCode7=0 (Real)
+     numWide=5 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=5 (done)
    - tCode7=2 (Random)
      numWide=3
 
  - sCode6=0 (Stress)
-   - tCode7=0,1 (Real & Real/Imaginary)
-     numWide=5 (done 1/2)
+   - tCode7=0 (Real)
+     numWide=5 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=5 (done)
    - tCode7=2 (Random)
      numWide=3
 

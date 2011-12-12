@@ -71,14 +71,10 @@ class Op2(BDF,
         # OUG - displacement
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
         self.temperatures  = {}           # aCode=1 ------- ------- sortCode=0 thermal=1
-        self.freqDisplacements = {}       # aCode=5 ------- fCode=3 sortCode=1 thermal=0
         self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
         self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
-        self.preBucklingDisplacements= {} # aCode=7 ------- ------- ---------- thermal=0
 
         self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
-        self.postBucklingEigenvector = {} # aCode=8 ------- ------- ---------- thermal=0
-        self.complexEigenvalues = {}      # aCode=9 ------- ------- ---------- thermal=0
 
         # OUG - velocity
         self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
@@ -88,14 +84,10 @@ class Op2(BDF,
 
         # OEF
         ## rename to staticLoads/thermalLoads
-        self.displacementForces = {}      # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=0
+        self.forces = {}
         self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
-        self.bucklingForces = {}          # aCode=2  tCode=4 fCode=1 sortCode=0 thermal=0
-        self.freqForces   = {}            # aCode=5  tCode=4 fCode=2 sortCode=1 thermal=0
-
-        ## rename to complexEigenvalueLoads ???
-        self.imagEigenvalueForces    = {} # aCode=9  tCode=4 fCode=1 sortCode=1 thermal=0
-        self.complexEigenvalueForces = {} # aCode=9  tCode=4 fCode=2 sortCode=1 thermal=0
+    
+        self.modalForces = {}
         
         ## rename to nonlinearStaticLoads/nonlinearThermalLoads ???
         self.nonlinearForces = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=0
@@ -118,18 +110,17 @@ class Op2(BDF,
         
 
         # OQG
-        self.spcForces           = {} # aCode=1  tCode=3  fCode=1 sortCode=0 thermal=0
-        self.spcBucklingForces   = {} # aCode=2  tCode=3  fCode=1 sortCode=0 thermal=0
-        self.realImagConstraints = {} # aCode=10 tCode=?  fCode=1 sortCode=1 thermal=?
-        self.mpcForces           = {} # aCode=1  tCode=39 fCode=1 sortCode=0 thermal=0
+        self.spcForces      = {}
+        self.modalSPCForces = {}
+
+        self.mpcForces      = {}
+        self.modalMPCForces = {}
         
         # OPG
-        self.appliedLoads        = {} # aCode=1  tCode=2  fCode=1 sortCode=0 thermal=0
+        self.appliedLoads = {}
         
         # OEE
-        self.strainEnergy        = {} # aCode=1  tCode=18 fCode=1 sortCode=0
-        self.modesStrainEnergy   = {} # aCode=2  tCode=18 fCode=1 sortCode=0
-        self.complexStrainEnergy = {} # aCode=9  tCode=18 fCode=1 sortCode=0
+        self.strainEnergy = {}
 
     def printResults(self):
         results = [

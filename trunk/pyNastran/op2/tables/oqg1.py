@@ -6,9 +6,14 @@ from struct import unpack
 from pyNastran.op2.resultObjects.op2_Objects import spcForcesObject
 from pyNastran.op2.resultObjects.ougv1_Objects import (
      temperatureObject,displacementObject,  # approachCode=1, sortCode=0
-     #eigenVectorObject,                     # approachCode=2, sortCode=0
      fluxObject,                            # approachCode=1, sortCode=3
      nonlinearTemperatureObject,            # approachCode=10,sortCode=0
+     )
+
+from pyNastran.op2.resultObjects.oug_eigenvectors import (
+     eigenVectorObject,                     # approachCode=2, sortCode=0 formatCode   tableCode=7
+     complexEigenVectorObject,              # approach    =5, sortCode=1 formatCode=1 tableCode=7
+     realEigenVectorObject,                 # approachCode=9, sortCode=1 formatCode=1 tableCode=7
      )
 
 class OQG1(object):
@@ -173,19 +178,19 @@ class OQG1(object):
                 self.spcForces[self.iSubcase] = self.obj
             elif self.approachCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
-                self.createTransientObject(self.spcBucklingForces,eigenVectorObject,self.nonlinearFactor)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.nonlinearFactor)
+                self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.approachCode==6: # transient forces
                 print "isTransientForces"
-                self.createTransientObject(self.spcForces,spcForcesObject,self.nonlinearFactor)
+                self.createTransientObject(self.spcForces,spcForcesObject)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.realImagConstraints,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.spcForces,displacementObject)
             elif self.approachCode==11: # Geometric nonlinear statics
                 print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.spcForces,displacementObject,self.nonlinearFactor)
+                self.createTransientObject(self.spcForces,displacementObject)
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -196,10 +201,10 @@ class OQG1(object):
                 self.temperatures[self.iSubcase] = self.obj
             elif self.approachCode==6: # transient forces
                 print "isTransientForces"
-                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.nonlinearFactor)
+                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
             elif self.approachCode==10: # nonlinear static displacement
                 print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject,self.nonlinearFactor)
+                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
             else:
                 raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -207,16 +212,17 @@ class OQG1(object):
         else:
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        print "objName = ",self.obj.name()
         self.readScalars8(self.obj)
 
     def readOQG1_Data_format1_sort1(self):
         if self.thermal==0:
             if self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
             elif self.approachCode==9: # frequency
                 print "isComplexEigenvalueForces"
-                self.createTransientObject(self.complexEigenvalueForces,eigenVectorObject,self.mode)
+                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
             ###
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
@@ -226,14 +232,14 @@ class OQG1(object):
         else:
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        #print self.printSection(120)
+        print "objName = ",self.obj.name()
         self.readScalars14(self.obj)
 
     def readOQG1_Data_format2_sort1(self):
         if self.thermal==0:
             if self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -242,22 +248,23 @@ class OQG1(object):
         else:
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        print "objName = ",self.obj.name()
         self.readScalars14(self.obj) # readImaginary
 
     def readOQG1_Data_format3_sort1(self):
         if self.thermal==0:
             if self.approachCode==5: # frequency
                 print "isFrequencyForces"
-                self.createTransientObject(self.freqForces,eigenVectorObject,self.freq)
+                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
             elif self.approachCode==6: # transient forces
                 print "isTransientForces"
-                self.createTransientObject(self.spcForces,spcForcesObject,self.nonlinearFactor)
+                self.createTransientObject(self.spcForces,spcForcesObject)
             elif self.approachCode==8: # post-buckling forces
                 print "isPostBucklingForces"
-                self.createTransientObject(self.postbucklingForces,spcForcesObject,self.nonlinearFactor)
+                self.createTransientObject(self.spcForces,spcForcesObject)
             elif self.approachCode==11: # Geometric nonlinear statics
                 print "isFrequencyForces"
-                self.createTransientObject(self.nonlinearForces,eigenVectorObject,self.nonlinearFactor)
+                self.createTransientObject(self.nonlinearForces,eigenVectorObject)
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -267,5 +274,6 @@ class OQG1(object):
         else:
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        print "objName = ",self.obj.name()
         self.readScalars14(self.obj) # readImaginary
 
