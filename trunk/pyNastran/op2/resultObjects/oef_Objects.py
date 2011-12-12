@@ -1,5 +1,4 @@
 from struct import pack,unpack
-
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
@@ -16,13 +15,20 @@ class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
             #raise Exception('transient not supported for flux yet...')
         ###
 
+    def updateDt(self,dataCode,loadStep):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        assert loadStep>=0.
+        self.loadStep = loadStep
+        self.addNewTransient()
+
     def addNewTransient(self):
         """
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.fluxes[self.loadStep] = {}
-        self.gradients[self.loadStep]   = {}
+        self.fluxes[self.loadStep]    = {}
+        self.gradients[self.loadStep] = {}
 
     def add(self,nodeID,eType,v1,v2,v3,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
@@ -31,15 +37,6 @@ class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
         self.gradients[self.loadStep][nodeID] = array([v1,v2,v3])
         self.fluxes[   self.loadStep][nodeID] = array([v4,v5,v6])
         self.eTypes[nodeID] = eType
-
-    def updateDt(self,loadStep):
-        """
-        this method is called if the object
-        already exits and a new time step is found
-        """
-        assert loadStep>=0.
-        self.loadStep = loadStep
-        self.addNewTransient()
 
     def __repr__(self):
         msg = '---NONLINEAR GRADIENTS & HEAT FLUX---\n'

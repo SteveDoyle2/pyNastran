@@ -22,7 +22,13 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         if self.iSubcase in storageObj:
             #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
-            self.obj.updateDt(self.dataCode,self.nonlinearFactor)
+            
+            try:
+                self.obj.updateDt(self.dataCode,self.nonlinearFactor)
+            except:
+                print "objName = ",self.obj.name()
+                raise
+            ###
         else:
             self.obj = classObj(self.dataCode,self.iSubcase,self.nonlinearFactor)
         storageObj[self.iSubcase] = self.obj
@@ -265,7 +271,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
             if debug:
-                print "grid=%-3i dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+                print "grid=%-3i type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz)
             scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
@@ -307,7 +313,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-
+        print "objName = ",scalarObject.name()
         n = 0
         nEntries = len(data)/56
         #print "len(data) = ",len(data)

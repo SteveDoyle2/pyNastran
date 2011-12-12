@@ -9,6 +9,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         ## this could get very bad very quick, but it could be great!
         ## basically it's a way to handle transients without making
         ## a whole new class
+        self.gridTypes     = {}
         self.displacements = {}
         self.rotations     = {}
         if dt is not None:
@@ -54,6 +55,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements,'displacementObject - static failure'
 
+        self.gridTypes[nodeID] = gridType
         self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
     ###
@@ -63,7 +65,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
         assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
-        
+        self.gridTypes[nodeID] = gridType
         self.displacements[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.dt][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
     ###
@@ -173,7 +175,7 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
     def __init__(self,dataCode,iSubcase,freq=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.freq = freq
-        print "complexDisplacementObject - self.freq=|%s|" %(self.freq)
+        #print "complexDisplacementObject - self.freq=|%s|" %(self.freq)
         self.gridType      = {}
         self.displacements = {}
         self.rotations     = {}
@@ -213,8 +215,8 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
 
         for freq,displacements in sorted(self.displacements.items()):
             msg += 'freq = %g\n' %(freq)
-            print "freq = ",freq
-            print displacements
+            #print "freq = ",freq
+            #print displacements
             for nodeID,displacement in sorted(displacements.items()):
                 rotation = self.rotations[freq][nodeID]
                 (dx,dy,dz) = displacement
@@ -392,6 +394,8 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
 class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,loadStep):
         scalarObject.__init__(self,dataCode,iSubcase)
+        self.dataCode = dataCode
+        self.applyDataCode()
         self.loadStep = loadStep
         
         assert loadStep>=0.
@@ -401,16 +405,16 @@ class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, 
 class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, thermal=1
     def __init__(self,dataCode,iSubcase,loadStep):
         scalarObject.__init__(self,dataCode,iSubcase)
+        self.dataCode = dataCode
+        self.applyDataCode()
         self.loadStep = loadStep
         
         assert loadStep>=0.
         self.temperatures = {loadStep: {}}
 
-    def updateDt(self,loadStep):
-        """
-        this method is called if the object
-        already exits and a new time step is found
-        """
+    def updateDt(self,dataCode,loadStep):
+        self.dataCode = dataCode
+        self.applyDataCode()
         assert loadStep>=0.
         self.loadStep = loadStep
         self.temperatures[loadStep] = {}
@@ -426,7 +430,7 @@ class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, t
     ###
 
     def __repr__(self):
-        msg = '---TEMPERATURE VECTOR---\n'
+        msg = '---NONLINEAR TEMPERATURE VECTOR---\n'
         if self.loadStep is not None:
             msg += 'loadStep = %g\n' %(self.loadStep)
         headers = ['Temperature']
