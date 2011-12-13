@@ -7,7 +7,7 @@ from pyNastran.op2.tables.oug.ougv1  import OUGV1
 from pyNastran.op2.tables.oes.oes    import OES
 from pyNastran.op2.tables.oqg.oqg1   import OQG1
 from pyNastran.op2.tables.oef.oef    import OEF
-from pyNastran.op2.tables.ogp    import OGP
+from pyNastran.op2.tables.ogp.ogp    import OGP
 from pyNastran.op2.tables.oee.oee    import OEE
 #from pyNastran.op2.tables.hisadd import HISADD - combined with R1TAB for now
 from pyNastran.op2.tables.r1tab  import R1TAB
@@ -249,6 +249,27 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,scalarObject,debug=False)
 
+    def readScalarsX(self,scalarObject,strFormat,nTotal,debug=False):
+        data = self.data
+        deviceCode = self.deviceCode
+        #print type(scalarObject)
+        
+        n = 0
+        nEntries = len(data)/nTotal
+        for i in range(nEntries):
+            eData = data[n:n+nTotal]
+            #print self.printBlock(data[n:n+nTotal])
+            out = unpack(strFormat,eData)
+            #print "Xout = ",out
+            scalarObject.add(out)
+            n+=nTotal
+        ###
+        self.data = data[n:]
+        self.handleResultsBuffer(self.readScalarsX,scalarObject,strFormat,nTotal,debug=False)
+
+    #def readScalars8(self,scalarObject,debug=False):
+    #    self.readScalarsX(self,scalarObject,'iiffffff',32,debug)
+
     def readScalars8(self,scalarObject,debug=False):
         data = self.data
         deviceCode = self.deviceCode
@@ -261,7 +282,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             eData = data[n:n+32]
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
-            #self.printBlock(data[32:])
+            #print self.printBlock(data[n:n+60])
             out = unpack('iiffffff',eData)
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
             if self.makeOp2Debug:
@@ -279,6 +300,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
 
+    #def readScalarsF8(self,scalarObject,debug=False):
+    #    self.readScalars(self,scalarObject,'fiffffff',32,debug)
+
     def readScalarsF8(self,scalarObject,debug=False):
         data = self.data
         deviceCode = self.deviceCode
@@ -292,7 +316,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             eData = data[n:n+32]
             #print "self.numWide = ",self.numWide
             #print "len(data) = ",len(data)
-            #self.printBlock(data[32:])
+            self.printBlock(data[n:n+60])
             out = unpack('fiffffff',eData)
             (freq,gridType,dx,dy,dz,rx,ry,rz) = out
             if self.makeOp2Debug:
@@ -302,12 +326,15 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
+            scalarObject.add(freq,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
+        self.handleResultsBuffer(self.readScalarsF8,scalarObject,debug=False)
+
+    #def readScalars14(self,scalarObject,debug=False):
+    #    self.readScalarsX(self,scalarObject,'iiffffffffffff',56,debug)
 
     def readScalars14(self,scalarObject,debug=True):
         data = self.data
@@ -344,6 +371,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars14,scalarObject,debug=False)
+
+    #def readScalarsF14(self,scalarObject,debug=False):
+    #    self.readScalarsX(self,scalarObject,'fiffffffffffff',56,debug)
 
     def readScalarsF14(self,scalarObject,debug=False):
         data = self.data

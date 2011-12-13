@@ -14,7 +14,7 @@ class scalarObject(object):
     def applyDataCode(self):
         for key,value in self.dataCode.items():
             self.__setattr__(key,value)
-            print "  key=%s value=%s" %(key,value)
+            #print "  key=%s value=%s" %(key,value)
     
     def getVar(self,name):
         return getattr(self,name)
