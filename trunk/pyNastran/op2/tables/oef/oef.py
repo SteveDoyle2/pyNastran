@@ -7,10 +7,10 @@ from struct import unpack
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
 
-from pyNastran.op2.tables.oug.ougv1_Objects import (
-    displacementObject,temperatureObject)
-from pyNastran.op2.tables.oug.oug_eigenvectors import (
-    eigenVectorObject)
+#from pyNastran.op2.tables.oug.ougv1_Objects import (
+#    displacementObject,temperatureObject)
+#from pyNastran.op2.tables.oug.oug_eigenvectors import (
+#    eigenVectorObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
 
@@ -123,20 +123,24 @@ class OEF(object):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         
         # element forces & moments / flux
-        if   tfsCode==[4,1,0]:
-            self.readOEF1_Data_format1_sort0()
-        elif tfsCode==[4,1,1]:
-            self.readOEF1_Data_format1_sort1()
-        elif tfsCode==[4,2,1]:
-            self.readOEF1_Data_format2_sort1()
-        elif tfsCode==[4, 3, 1]:
-            self.readOEF1_Data_format3_sort1()
+        if 0:
+            if   tfsCode==[4,1,0]:
+                self.readOEF1_Data_format1_sort0()
+            elif tfsCode==[4,1,1]:
+                self.readOEF1_Data_format1_sort1()
+            elif tfsCode==[4,2,1]:
+                self.readOEF1_Data_format2_sort1()
+            elif tfsCode==[4, 3, 1]:
+                self.readOEF1_Data_format3_sort1()
 
-        # composite failure indicies
-        elif tfsCode==[25,1,0]:
-            self.readOEF1_Data_format1_sort0()
+            # composite failure indicies
+            elif tfsCode==[25,1,0]:
+                self.readOEF1_Data_format1_sort0()
+            else:
+                raise Exception('bad tableCode/formatCode/sortCode=%s on OEF table' %(tfsCode))
+            ###
         else:
-            raise Exception('bad tableCode/formatCode/sortCode=%s on OEF table' %(tfsCode))
+            self.skipOES_Element(None)
         ###
 
     def readOEF1_Data_format3_sort1(self):
@@ -146,12 +150,13 @@ class OEF(object):
         assert self.formatCode==1
         assert self.sortCode==0
 
+        self.obj = None
         print "self.approachCode=%s tableCode(1)=%s sortCode=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.sortCode,self.thermal)
+
         if self.thermal==0:
             if self.approachCode==1: # displacement
                 print "isForces"
-                self.obj = displacementObject(self.dataCode,self.iSubcase)
-                self.forces[self.iSubcase] = self.obj
+                self.createTransientObject(self.forces,displacementObject)
             elif self.approachCode==2 and self.sortCode==1: # buckling forces
                 print "isBucklingForces"
                 self.createTransientObject(self.forces,displacementObject)
@@ -168,8 +173,8 @@ class OEF(object):
                 print "isNonlinearStaticForces"
                 self.createTransientObject(self.nonlinearForces,displacementObject)
             else:
-                self.obj = None
-                #raise Exception('not supported OEF static solution...')
+                pass
+                raise Exception('not supported OEF static solution...')
             ###
 
         elif self.thermal==1:
@@ -203,9 +208,12 @@ class OEF(object):
         ###
         if self.obj:
             self.skipOES_Element(None)
+            #self.readScalars8(self.obj,debug=True)
+            #self.readForces(data,self.obj)
+            #self.skipOES_Element(None)
         else:
             self.skipOES_Element(None)
-        #self.readForces(data,self.obj)
+        ###
         #return
 
     def readOEF1_Data_format1_sort1(self):

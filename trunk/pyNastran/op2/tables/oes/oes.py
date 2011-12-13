@@ -272,7 +272,7 @@ class OES(object):
         if self.elementType==1: # crod
             #print "    found crod_1"
             stressStrainObj = self.instantiateRodObject()
-            self.CROD_1(stressStrainObj)
+            self.basicElement(stressStrainObj)
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element(None)
