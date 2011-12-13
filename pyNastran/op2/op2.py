@@ -18,12 +18,14 @@ class Op2(BDF,
     def __init__(self,op2FileName):
         BDF.__init__(self,debug=True,log=None)
         bdfExtension = '.bdf'
+        f06Extension = '.f06'
         (fname,extension) = os.path.splitext(op2FileName)
         
         print "fname=%s ext=%s" %(fname,extension)
         
         self.op2FileName = op2FileName
         self.bdfFileName = fname+bdfExtension
+        self.f06FileName = fname+f06Extension
         print "bdfFileName = ",self.bdfFileName
         self.stopCode = False
         self.makeOp2Debug = False
@@ -66,6 +68,7 @@ class Op2(BDF,
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
 
         self.iSubcaseNameMap = {}
+        self.tableNames = []
 
 
         # OUG - displacement
@@ -369,6 +372,10 @@ class Op2(BDF,
 
     def tableInit(self,word):
         self.tableName = word.strip()
+        self.tableNames.append(word)
         msg = '*'*20+word+'*'*20+'\n'
         if self.makeOp2Debug:
             self.op2Debug.write(msg)
+
+    def getTableNamesFromOP2(self):
+       return self.tableNames

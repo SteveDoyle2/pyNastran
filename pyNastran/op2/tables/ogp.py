@@ -108,43 +108,13 @@ class OGP(object):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set, Mode number
         
-        print "*iSubcase=%s"%(self.iSubcase)
-        print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
-        print self.codeInformation()
+        #print "*iSubcase=%s"%(self.iSubcase)
+        #print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
+        #print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
 
-        #if self.j==3:
-        #    #print str(self.obj)
-        #    sys.exit('checkA...j=%s dt=6E-2 dx=%s dtActual=%f' %(self.j,'1.377e+01',self.dt))
-        ###
-
-    def readTable_OGP_4_Data(self,iTable): # iTable=-4
-        isTable4Done = False
-        isBlockDone = False
-
-        bufferWords = self.getMarker('OGP')
-        #print len(bufferWords)
-        data = self.readBlock()
-        #self.printBlock(data)
-
-        if bufferWords==146:  # table -4 is done, restarting table -3
-            isTable4Done = True
-            return isTable4Done,isBlockDone
-        elif bufferWords==0:
-            print "bufferWords 0 - done with Table4"
-            isTable4Done = True
-            isBlockDone = True
-            return isTable4Done,isBlockDone
-
-
-        isBlockDone = not(bufferWords)
-        
-        self.readOGP1_Data()
-        return (isTable4Done,isBlockDone)
-
-        
     def readOGP1_Data(self):
         print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
@@ -164,59 +134,61 @@ class OGP(object):
         #    self.readOGP1_Data_format3_sort1()
         
         # load vector
-        elif tfsCode==[2,1,0]:
-            self.readOGP1_Data_format1_sort0()
-        elif tfsCode==[2,1,1]:
-            self.readOGP1_Data_format1_sort1()
-        elif tfsCode==[2,2,1]:
-            self.readOGP1_Data_format2_sort1()
-        elif tfsCode==[2,3,0]:
-            self.readOGP1_Data_format3_sort0()
-        elif tfsCode==[2,3,1]:
-            self.readOGP1_Data_format3_sort1()
+        #elif tfsCode==[2,1,0]:
+        #    self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[2,1,1]:
+        #    self.readOGP1_Data_format1_sort1()
+        #elif tfsCode==[2,2,1]:
+        #    self.readOGP1_Data_format2_sort1()
+        #elif tfsCode==[2,3,0]:
+        #    self.readOGP1_Data_format3_sort0()
+        #elif tfsCode==[2,3,1]:
+        #    self.readOGP1_Data_format3_sort1()
 
         # Nonlinear force vector
-        elif tfsCode==[12,1,0]:
-            self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[12,1,0]:
+        #    self.readOGP1_Data_format1_sort0()
 
         # OGS1- grid point stresses - surface
-        elif tfsCode==[26,1,0]:
-            self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[26,1,0]:
+        #    self.readOGP1_Data_format1_sort0()
 
         # OGS1- grid point stresses - volume direct
-        elif tfsCode==[27,1,0]:
-            self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[27,1,0]:
+        #    self.readOGP1_Data_format1_sort0()
 
         # OGS1- grid point stresses - principal
-        elif tfsCode==[28,1,0]:
-            self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[28,1,0]:
+        #    self.readOGP1_Data_format1_sort0()
 
         # OGS - Grid point stress discontinuities (plane strain)
-        elif tfsCode==[35,1,0]:
-            self.readOGP1_Data_format1_sort0()
+        #elif tfsCode==[35,1,0]:
+        #    self.readOGP1_Data_format1_sort0()
         
 
         # OFMPF2M - does this belong here?
-        elif tfsCode==[51,3,3]:
-            self.readOGP1_Data_format3_sort3()
+        #elif tfsCode==[51,3,3]:
+        #    self.readOGP1_Data_format3_sort3()
         
         # OSMPF2M - does this belong here?
-        elif tfsCode==[52,3,3]:
-            self.readOGP1_Data_format3_sort3()
+        #elif tfsCode==[52,3,3]:
+        #    self.readOGP1_Data_format3_sort3()
         
         # OPMPF2M - does this belong here?
-        elif tfsCode==[53,3,3]:
-            self.readOGP1_Data_format3_sort3()
+        #elif tfsCode==[53,3,3]:
+        #    self.readOGP1_Data_format3_sort3()
         
         # OLMPF2M - does this belong here?
-        elif tfsCode==[54,3,3]:
-            self.readOGP1_Data_format3_sort3()
+        #elif tfsCode==[54,3,3]:
+        #    self.readOGP1_Data_format3_sort3()
 
         # OGMPF2M - does this belong here?
-        elif tfsCode==[55,3,3]:
-            self.readOGP1_Data_format3_sort3()
+        #elif tfsCode==[55,3,3]:
+        #    self.readOGP1_Data_format3_sort3()
         else:
-            raise Exception('bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode))
+            #raise Exception('bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode))
+            print 'bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode)
+            self.skipOES_Element(None)
         ###
         #print self.obj
         print "-------finished OGP----------"

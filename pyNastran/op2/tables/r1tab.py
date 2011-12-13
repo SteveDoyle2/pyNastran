@@ -11,6 +11,7 @@ class R1TAB(object):
 
     def readTable_R1TAB(self):
         tableName = self.readTableName(rewind=False) # R1TAB
+        self.tableInit(tableName)
         print "tableName = |%r|" %(tableName)
 
         self.readMarkers([-1,7],'R1TAB')

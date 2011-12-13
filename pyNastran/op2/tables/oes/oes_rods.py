@@ -1,5 +1,5 @@
 import sys
-from op2_Objects import stressObject,strainObject #,array
+from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class rodStressObject(stressObject):
@@ -44,6 +44,7 @@ class rodStressObject(stressObject):
             raise InvalidCodeError('rodStress - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
+            #self.isTransient = True
             self.dt = self.nonlinearFactor
             self.addNewTransient()
         ###
@@ -148,9 +149,9 @@ class rodStressObject(stressObject):
         return msg
 
     def __repr__(self):
-        if   isTransient and self.code==[1,0,1]:
+        if   self.isTransient and self.code==[1,0,1]:
             return self.__reprTransient_format1_sort0__()
-        elif isTransient and self.code==[2,1,1]:
+        elif self.isTransient and self.code==[2,1,1]:
             return self.__reprTransient_format2_sort1__()
 
         msg = '---ROD STRESSES---\n'

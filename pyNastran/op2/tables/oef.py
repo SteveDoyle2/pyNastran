@@ -7,9 +7,9 @@ from struct import unpack
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
 
-from pyNastran.op2.resultObjects.ougv1_Objects import (
+from pyNastran.op2.tables.oug.ougv1_Objects import (
     displacementObject,temperatureObject)
-from pyNastran.op2.resultObjects.oug_eigenvectors import (
+from pyNastran.op2.tables.oug.oug_eigenvectors import (
     eigenVectorObject)
 from pyNastran.op2.resultObjects.oef_Objects import (
     nonlinearFluxObject)
