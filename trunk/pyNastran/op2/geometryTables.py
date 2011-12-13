@@ -192,7 +192,4 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                             
                             
                          }
-
-
-
         self.readRecordTable('DYNAMICS')

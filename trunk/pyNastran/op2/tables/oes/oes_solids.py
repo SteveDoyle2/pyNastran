@@ -1,5 +1,5 @@
 import sys
-from op2_Objects import stressObject,strainObject #,array
+from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class solidStressObject(stressObject):

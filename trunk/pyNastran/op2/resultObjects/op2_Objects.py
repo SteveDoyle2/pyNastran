@@ -63,34 +63,6 @@ class scalarObject(object):
             self.addNewTransient()
         ###
 
-class stressObject(scalarObject):
-    def __init__(self,dataCode,iSubcase):
-        scalarObject.__init__(self,dataCode,iSubcase)
-
-    def updateDt(self,dataCode,dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-        ###
-
-class strainObject(scalarObject):
-    def __init__(self,dataCode,iSubcase):
-        scalarObject.__init__(self,dataCode,iSubcase)
-    def updateDt(self,dataCode,dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-        ###
-
-
 class spcForcesObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
