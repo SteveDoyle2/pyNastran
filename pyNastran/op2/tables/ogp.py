@@ -248,7 +248,10 @@ class OGP(object):
             #print "source = |%s|" %(source)
             #print "len(data[8:40]"
             
-            print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
+            #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
+            source2 = source.replace('*','').replace('-','').strip()
+            assert source2.isalnum(),'source=|%s| contains invalid characters...' %(source)
+            
             scalarObject.add(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode

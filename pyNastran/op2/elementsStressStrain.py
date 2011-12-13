@@ -1,6 +1,10 @@
 import sys
 from struct import unpack
 
+#91  -> PENTANL
+#2   -> BEAM
+#33   -> TUBE
+#92  -> CONRODNL
 class ElementsStressStrain(object):
 
     def skipOES_Element(self,stress): # works???
@@ -35,6 +39,23 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with OES_Thermal"
         ###
+
+    def basicElement(self,stress):
+        """
+        genericStressReader - based on CROD_1
+        stress & strain
+        formatCode=1 sortCode=0 (eid,axial,axialMS,torsion,torsionMS)
+        formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
+        """
+        deviceCode = self.deviceCode
+        (n,dataFormat) = stress.getLength()
+        while len(self.data)>=n:
+            eData     = self.data[0:n]
+            self.data = self.data[n: ]
+            out = unpack(dataFormat,eData)
+            stress.addNewEid(out)
+        ###
+        self.handleResultsBuffer(self.basicElement,stress)
 
     def CROD_1(self,stress): # works
         """
@@ -412,6 +433,43 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_67,stress)
         #print self.solidStress[self.iSubcase]
 
+    def CPENTANL_91(self,stress):
+        """
+        The DMAP manual says fields 3-18 repeat 7 times. but they dont.
+        They repeat 6 times.  Other DMAP cards are correct with
+        their repeat statements.
+        """
+        print "CHEXANL_93"
+        #print "len(self.data) = ",len(self.data)
+
+        n = 0
+        while len(self.data)>=456: # 2+16*7 = 114 -> 114*4 = 456
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid,a,b,c,d) = unpack('icccc',eData)
+            eid = (eid - self.deviceCode) / 10
+            #out = unpack("ii",eData)
+            #(eid,cType) = out
+            cType = a+b+c+d
+
+            for i in range(7):
+                #print "len(self.data) = ",len(self.data)
+                eData = self.data[0:64]
+                self.data = self.data[64:]
+                out = unpack('ifffffffffffffff',eData)
+                assert len(out)==16
+                (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
+                print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #print ""
+                assert a=='G'
+            
+            #self.data = self.data[1456:]
+            #sys.exit('hexa...')
+        #print "buffer time..."
+        #self.firstPass = True
+        self.handleResultsBuffer(self.CHEXANL_93,stress,debug=True)
+
     def CHEXANL_93(self,stress):
         """
         The DMAP manual says fields 3-18 repeat 9 times. but they dont.
@@ -422,7 +480,7 @@ class ElementsStressStrain(object):
         #print "len(self.data) = ",len(self.data)
 
         n = 0
-        while len(self.data)>=584: # 2+16*9 = 182 -> 146*4 = 584
+        while len(self.data)>=584: # 2+16*9 = 146 -> 146*4 = 584
             eData = self.data[0:8]
             self.data = self.data[8:]
             (eid,a,b,c,d) = unpack('icccc',eData)
@@ -565,15 +623,10 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             self.op2Debug.write('---CTRIA3_74---\n')
         deviceCode = self.deviceCode
-        #self.printSection(20)
-        #term      = self.data[0:4] CEN/
-        #self.data = self.data[4:]
-        #print "*****"
         assert self.numWide==17,'invalid numWide...numWide=%s' %(self.numWide)
         while len(self.data)>=68:
             eData     = self.data[0:4*17]
             self.data = self.data[4*17: ]
-            #print "len(data) = ",len(eData)
             out = unpack('iffffffffffffffff',eData)
 
             (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
@@ -585,8 +638,6 @@ class ElementsStressStrain(object):
             stress.add(               eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
-
-            #print "len(data) = ",len(data)
         ###
         self.handleResultsBuffer(self.CTRIA3_74,stress)
 
@@ -624,13 +675,6 @@ class ElementsStressStrain(object):
                 stress.add(eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
             ###
             self.eid2 = eid
-
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-            #print "tell = ",self.op2.tell()
-            
-            #self.printSection(100)
-            #sys.exit('asdf')
             #self.dn += 348
         ###
         #print "5 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)

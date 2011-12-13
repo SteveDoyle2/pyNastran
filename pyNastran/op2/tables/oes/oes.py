@@ -47,7 +47,7 @@ class OES(object):
         self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
                          'loadSet':self.loadSet,'formatCode':self.formatCode,'sortCode':self.sortCode,
                          'numWide': self.numWide,'sCode':self.sCode,
-                         'thermal': self.thermal}
+                         'thermal': self.thermal,'elementType':self.elementType}
 
         print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
         print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
@@ -328,9 +328,10 @@ class OES(object):
         #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
         msg = ''
         if self.elementType==1: # crod
-            #print "    found crod_1"
+            print "    found crod_1"
             stressStrainObj = self.instantiateRodObject()
-            self.CROD_1(stressStrainObj)
+            #self.CROD_1(stressStrainObj)
+            self.basicElement(stressStrainObj)
         #elif self.elementType == 2:   # cbeam
         #    print "    found cbeam_2"
         #    #stressStrainObj = self.instantiateBeamObject()
@@ -376,6 +377,10 @@ class OES(object):
             #print "    found ctetra_85 / hexa_93 / cpenta_91"
             stressStrainObj = self.instantiateSolidObject()
             self.CSOLID_85(stressStrainObj)
+        elif self.elementType in [91]: # CPENTANL
+            stressStrainObj = None
+            #print "hexa_93"
+            self.CPENTANL_91(stressStrainObj)
         elif self.elementType in [93]: # CHEXANL
             stressStrainObj = None
             #print "hexa_93"

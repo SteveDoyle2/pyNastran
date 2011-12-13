@@ -15,17 +15,19 @@ class compositePlateStressObject(stressObject):
         self.eType  = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
+        self.o11    = {}
+        self.o22    = {}
+        self.t12    = {}
+        self.t1z    = {}
+        self.t2z    = {}
+        self.angle  = {}
+        self.majorP = {}
+        self.minorP = {}
         if self.code == [1,0,0]:
             self.fiberDistance = {}
-            self.o11    = {}
-            self.o22    = {}
-            self.t12    = {}
-            self.t1z    = {}
-            self.t2z    = {}
-            self.angle  = {}
-            self.majorP = {}
-            self.minorP = {}
             self.ovm    = {}
+            self.isfiberDistance = True
+            self.isVonMises      = True
         else:
             raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -124,10 +126,18 @@ class compositePlateStressObject(stressObject):
         self.ovm[dt][eid].append(ovm)
         #if nodeID==0: raise Exception(msg)
 
+    def getHeaders(self):
+        headers = ['o11','o22','t12','t1z','t2z','ovm']
+        #if self.isVonMises:
+        #    headers.append('ovm')
+        #else:
+        #    headers.append('maxShear')
+        return headers
+
     def __reprTransient__(self):
         msg = '---COMPOSITE PLATE STRESS---\n'
         msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
-        headers = ['o11','o22','t12','t1z','t2z','ovm']
+        headers = self.getHeaders()
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -167,7 +177,7 @@ class compositePlateStressObject(stressObject):
 
         msg = '---COMPOSITE PLATE STRESS---\n'
         msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
-        headers = ['o11','o22','t12','t1z','t2z','ovm']
+        headers = self.getHeaders()
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -210,16 +220,17 @@ class compositePlateStrainObject(strainObject):
 
         self.eType  = {}
         self.code = [self.formatCode,self.sortCode,self.sCode]
+        self.e11    = {}
+        self.e22    = {}
+        self.e12    = {}
+        self.e1z    = {}
+        self.e2z    = {}
+        self.angle  = {}
+        self.majorP = {}
+        self.minorP = {}
         if self.code == [1,0,14]:
-            self.e11    = {}
-            self.e22    = {}
-            self.e12    = {}
-            self.e1z    = {}
-            self.e2z    = {}
-            self.angle  = {}
-            self.majorP = {}
-            self.minorP = {}
             self.evm    = {}
+            self.isVonMises = True
         else:
             raise InvalidCodeError('compositePlateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -318,9 +329,17 @@ class compositePlateStrainObject(strainObject):
         self.evm[dt][eid].append(evm)
         #if nodeID==0: raise Exception(msg)
 
+    def getHeaders(self):
+        headers = ['e11','e22','e12','e1z','e2z','evm']
+        #if self.isVonMises:
+        #    headers.append('evm')
+        #else:
+        #    headers.append('maxShear')
+        return headers
+
     def __reprTransient__(self):
         msg = '---COMPOSITE PLATE STAIN---\n'
-        headers = ['e11','e22','e12','e1z','e2z','evm']
+        headers = self.getHeaders()
         msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
         for header in headers:
             msg += '%10s ' %(header)
@@ -360,8 +379,8 @@ class compositePlateStrainObject(strainObject):
             return self.__reprTransient__()
 
         msg = '---COMPOSITE PLATE STAIN---\n'
-        headers = ['e11','e22','e12','e1z','e2z','evm']
         msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
+        headers = self.getHeaders()
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
