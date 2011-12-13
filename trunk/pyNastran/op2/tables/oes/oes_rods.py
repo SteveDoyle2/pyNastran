@@ -22,6 +22,7 @@ class rodStressObject(stressObject):
         
         self.code = [self.formatCode,self.sortCode,self.sCode]
         if self.code in [[1,0,0],[1,0,1]]:
+            self.getLength = self.getLength_format1_sort0
             self.axial      = {}
             self.MS_axial   = {}
             self.torsion    = {}
@@ -35,6 +36,7 @@ class rodStressObject(stressObject):
                 self.addNewEid = self.addNewEid_format1_sort0
             ###
         elif self.code==[2,1,0]:
+            self.getLength = self.getLength_format1_sort0
             self.axial      = {}
             self.torsion    = {}
             self.addNewTransient = self.addNewTransient_format2_sort1
@@ -48,6 +50,9 @@ class rodStressObject(stressObject):
             self.dt = self.nonlinearFactor
             self.addNewTransient()
         ###
+
+    def getLength_format1_sort0(self):
+        return (20,'iffff')
 
     def addNewTransient_format1_sort0(self):
         """
@@ -68,8 +73,10 @@ class rodStressObject(stressObject):
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
 
-    def addNewEid_format1_sort0(self,eid,axial,SMa,torsion,SMt):
+    def addNewEid_format1_sort0(self,data):
         #print "Rod Stress add..."
+        (eid,axial,SMa,torsion,SMt) = data
+        eid = (eid-self.deviceCode)/10
         self.axial[eid]      = axial
         self.MS_axial[eid]   = SMa
         self.torsion[eid]    = torsion
@@ -193,22 +200,29 @@ class rodStrainObject(strainObject):
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
-        self.eType = 'CROD/CONROD'
+        self.eType = 'CROD' #{} # 'CROD/CONROD'
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
+        
+        self.isTransient = False
         if self.code == [1,0,10]:
+            self.getLength = self.getLength_format1_sort0
             self.axial      = {}
             self.MS_axial   = {}
             self.torsion    = {}
             self.MS_torsion = {}
-            self.addNewTransient = self.addNewTransient_format1_sort0
-            self.addNewEid       = self.addNewEidTransient_format1_sort0
             self.isImaginary = False
             if dt:
+                self.addNewTransient = self.addNewTransient_format1_sort0
+                self.addNewEid       = self.addNewEidTransient_format1_sort0
                 self.isTransient = True
+            ###
+            else:
+                self.addNewEid = self.addNewEid_format1_sort0
             ###
 
         elif self.code==[2,1,10]:
+            self.getLength = self.getLength_format1_sort0
             self.axial      = {}
             self.torsion    = {}
             self.addNewTransient = self.addNewTransient_format2_sort1
@@ -217,10 +231,13 @@ class rodStrainObject(strainObject):
         else:
             raise InvalidCodeError('rodStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
+        self.dt = self.nonlinearFactor
         if dt:
-            self.dt = self.nonlinearFactor
             self.addNewTransient()
         ###
+
+    def getLength_format1_sort0(self):
+        return (20,'iffff')
 
     def addNewTransient_format1_sort0(self):
         """
@@ -241,7 +258,10 @@ class rodStrainObject(strainObject):
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
 
-    def addNewEid_format1_sort0(self,eid,axial,SMa,torsion,SMt):
+    def addNewEid_format1_sort0(self,out):
+    
+        (eid,axial,SMa,torsion,SMt) = out
+        eid = (eid-self.deviceCode)/10
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
@@ -250,31 +270,39 @@ class rodStrainObject(strainObject):
         self.torsion[eid]    = torsion
         self.MS_torsion[eid] = SMt
 
-    def addNewEid_format2_sort1(self,eid,axialReal,axialImag,torsionReal,torsionImag):
+    def addNewEid_format2_sort1(self,out):
         assert eid >= 0
+        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
+        eid = (eid-self.deviceCode)/10
         self.axial[eid]      = [axialReal,axialImag]
         self.torsion[eid]    = [torsionReal,torsionImag]
 
-    def addNewEidTransient_format1_sort0(self,eid,axial,SMa,torsion,SMt):
+    def addNewEidTransient_format1_sort0(self,out):
         #print "Rod Strain add..."
+        print out
+        (eid,axial,SMa,torsion,SMt) = out
+        eid = (eid-self.deviceCode)/10
         assert eid >= 0
         dt = self.dt
-        self.eType[eid] = self.eType
+
+        self.eType[eid] = self.elementType
         self.axial[dt][eid]      = axial
         self.MS_axial[dt][eid]   = SMa
         self.torsion[dt][eid]    = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def addNewEidTransient_format2_sort1(self,eid,axialReal,axialImag,torsionReal,torsionImag):
+    def addNewEidTransient_format2_sort1(self,out):
+        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
+        eid = (eid-self.deviceCode)/10
         assert eid >= 0
         dt = self.dt
         self.axial[dt][eid]      = [axialReal,axialImag]
         self.torsion[dt][eid]    = [torsionReal,torsionImag]
 
     def __repr__(self):
-        if   isTransient and self.code==[1,0,1]:
+        if   self.isTransient and self.code==[1,0,1]:
             return self.__reprTransient_format1_sort0__()
-        elif isTransient and self.code==[2,1,1]:
+        elif self.isTransient and self.code==[2,1,1]:
             return self.__reprTransient_format2_sort1__()
 
         msg = '---ROD STRAINS---\n'
@@ -292,10 +320,10 @@ class rodStrainObject(strainObject):
             msg += '%-6i %6s ' %(eid,self.eType)
             vals = [axial,torsion,SMa,SMt]
             for val in vals:
-                if abs(val)<1e-6:
+                if abs(val)<1e-7:
                     msg += '%8s ' %('0')
                 else:
-                    msg += '%8i ' %(val)
+                    msg += '%1.3g ' %(val)
                 ###
             msg += '\n'
         return msg

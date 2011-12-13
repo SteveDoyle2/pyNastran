@@ -26,14 +26,15 @@ class solidStressObject(stressObject):
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
+
+        self.oxx = {}
+        self.oyy = {}
+        self.ozz = {}
+        self.txy = {}
+        self.tyz = {}
+        self.txz = {}
         if self.code == [1,0,0]:  # not done...
             self.cid = {} # gridGauss
-            self.oxx = {}
-            self.oyy = {}
-            self.ozz = {}
-            self.txy = {}
-            self.tyz = {}
-            self.txz = {}
 
             #EQUIVALENT EFF. STRAIN  EFF. CREEP
             #  STRESS   PLAS/NLELAS   STRAIN
@@ -43,12 +44,6 @@ class solidStressObject(stressObject):
             self.ovm = {}
         elif self.code == [1,0,1]:
             self.cid = {}
-            self.oxx = {}
-            self.oyy = {}
-            self.ozz = {}
-            self.txy = {}
-            self.tyz = {}
-            self.txz = {}
             #self.aCos = {}
             #self.bCos = {}
             #self.cCos = {}
@@ -240,6 +235,7 @@ class solidStressObject(stressObject):
 
 class solidStrainObject(strainObject):
     """
+    # code=[1,0,11]
                           S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )
                    CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   
     ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES 
@@ -248,25 +244,37 @@ class solidStrainObject(strainObject):
                            Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                            Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
 
+    # code=[1,0,10]
+                       S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )
+                   CORNER        ------CENTER AND CORNER POINT  STRAINS---------       DIR.  COSINES       MEAN         OCTAHEDRAL
+    ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE         SHEAR   
+            4           0GRID CS  4 GP
+                   CENTER  X  -2.288232E-04  XY   1.240506E-04   A   9.631978E-04  LX-0.10-0.71-0.70  -1.601805E-04    5.692614E-04
+                           Y  -2.289814E-04  YZ  -2.369997E-04   B  -2.909276E-04  LY-0.10 0.71-0.70
+                           Z   9.383460E-04  ZX  -2.369997E-04   C  -1.917288E-04  LZ 0.99 0.00-0.15
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
-        if self.code == [1,0,11]:
-            self.cid = {}
-            self.exx = {}
-            self.eyy = {}
-            self.ezz = {}
-            self.exy = {}
-            self.eyz = {}
-            self.exz = {}
-            #self.aCos = {}
-            #self.bCos = {}
-            #self.cCos = {}
-            #self.pressure = {}
-            self.evm = {}
+
+        self.cid = {}
+        self.exx = {}
+        self.eyy = {}
+        self.ezz = {}
+        self.exy = {}
+        self.eyz = {}
+        self.exz = {}
+        #self.aCos = {}
+        #self.bCos = {}
+        #self.cCos = {}
+        #self.pressure = {}
+        self.evmShear = {}
+        if   self.code == [1,0,10]:
+            self.isVonMises = False
+        elif self.code == [1,0,11]:
+            self.isVonMises = True
         else:
             raise InvalidCodeError('solidStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -293,7 +301,7 @@ class solidStrainObject(strainObject):
         #self.bCos[self.dt] = {}
         #self.cCos[self.dt] = {}
         #self.pressure[self.dt] = {}
-        self.evm[self.dt]      = {}
+        self.evmShear[self.dt]      = {}
 
     def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
@@ -311,8 +319,8 @@ class solidStrainObject(strainObject):
         #self.bCos[eid] = {nodeID: bCos}
         #self.cCos[eid] = {nodeID: cCos}
         #self.pressure[eid] = {nodeID: pressure}
-        self.evm[eid]      = {nodeID: evm}
-        msg = "*eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
+        self.evmShear[eid]      = {nodeID: evm}
+        msg = "*eid=%s nodeID=%s evmShear=%g" %(eid,nodeID,evm)
         #print msg
         if nodeID==0: raise Exception(msg)
 
@@ -333,8 +341,8 @@ class solidStrainObject(strainObject):
         #self.bCos[dt][eid] = {nodeID: bCos}
         #self.cCos[dt][eid] = {nodeID: cCos}
         #self.pressure[dt][eid] = {nodeID: pressure}
-        self.evm[dt][eid]      = {nodeID: evm}
-        msg = "*eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
+        self.evmShear[dt][eid]      = {nodeID: evm}
+        msg = "*eid=%s nodeID=%s evmShear=%g" %(eid,nodeID,evm)
         #print msg
         if nodeID==0: raise Exception(msg)
 
@@ -356,7 +364,7 @@ class solidStrainObject(strainObject):
         #self.bCos[eid][nodeID] = bCos
         #self.cCos[eid][nodeID] = cCos
         #self.pressure[eid][nodeID] = pressure
-        self.evm[eid][nodeID] = evm
+        self.evmShear[eid][nodeID] = evm
 
         if nodeID==0: raise Exception(msg)
 
@@ -379,19 +387,27 @@ class solidStrainObject(strainObject):
         #self.bCos[dt][eid][nodeID] = bCos
         #self.cCos[dt][eid][nodeID] = cCos
         #self.pressure[dt][eid][nodeID] = pressure
-        self.evm[dt][eid][nodeID] = evm
+        self.evmShear[dt][eid][nodeID] = evm
 
         if nodeID==0: raise Exception(msg)
+
+    def getHeaders(self):
+        headers = ['exx','eyy','ezz','exy','eyz','exz']
+        if self.isVonMises:
+            headers.append('evm')
+        else:
+            headers.append('maxShear')
+        return headers
 
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
 
         msg = '---SOLID STRAIN---\n'
-        headers = ['exx','eyy','ezz','exy','eyz','exz','evm']
+        headers = self.getHeaders()
         msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
         for header in headers:
-            msg += '%9s ' %(header)
+            msg += '%10s ' %(header)
         msg += '\n'
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
@@ -402,14 +418,14 @@ class solidStrainObject(strainObject):
                 exy = self.exy[eid][nid]
                 eyz = self.eyz[eid][nid]
                 exz = self.exz[eid][nid]
-                evm = self.evm[eid][nid]
+                evm = self.evmShear[eid][nid]
                 msg += '%-6i %6s %8s ' %(eid,eType,nid)
                 vals = [exx,eyy,ezz,exy,eyz,exz,evm]
                 for val in vals:
                     if abs(val)<1e-6:
-                        msg += '%9s ' %('0')
+                        msg += '%10s ' %('0')
                     else:
-                        msg += '%9e ' %(val)
+                        msg += '%10.3e ' %(val)
                     ###
                 msg += '\n'
                 #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
