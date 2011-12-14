@@ -468,7 +468,11 @@ class plateStressObject(stressObject):
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0')
                             else:
-                                msg += '%10i ' %(val)
+                                try:
+                                    msg += '%10i ' %(val)
+                                except:
+                                    print "bad val = ",val
+                                    raise
                             ###
                         msg += '\n'
                     ###
@@ -509,7 +513,11 @@ class plateStressObject(stressObject):
                         if abs(val)<1e-6:
                             msg += '%10s ' %('0')
                         else:
-                            msg += '%10i ' %(val)
+                            try:
+                                msg += '%10i ' %(val)
+                            except:
+                                print "bad val = ",val
+                                raise
                         ###
                     msg += '\n'
                 ###
