@@ -137,6 +137,8 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             Type = 'G'
         elif gridType==2:
             Type = 'S'
+        elif gridType==7:
+            Type = 'L'
         else:
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
@@ -168,12 +170,14 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
             for nodeID,T in sorted(eigVals.items()):
+                Type = self.gridTypes[nodeID]
+                
                 msg += '%-8i %8s ' %(nodeID,Type)
 
-                if abs(val)<1e-6:
+                if abs(T)<1e-6:
                     msg += '%10s ' %(0)
                 else:
-                    msg += '%10.3g ' %(T)
+                    msg += '%10.3f ' %(T)
                 ###
                 msg += '\n'
             ###

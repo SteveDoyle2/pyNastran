@@ -260,7 +260,7 @@ class OES(ElementsStressStrain):
             pass
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format1_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -274,7 +274,7 @@ class OES(ElementsStressStrain):
             pass
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -293,7 +293,7 @@ class OES(ElementsStressStrain):
             raise Exception('add element=%s' %(self.elementType))
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -307,7 +307,7 @@ class OES(ElementsStressStrain):
             pass
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -321,7 +321,7 @@ class OES(ElementsStressStrain):
             pass
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -335,7 +335,7 @@ class OES(ElementsStressStrain):
             pass
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -421,7 +421,7 @@ class OES(ElementsStressStrain):
             self.CQUAD4_95()
             del self.eid2
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
-        #    self.skipOES_Element(None)
+        #    self.skipOES_Element()
             #elementType=2   -> BEAM    is not supported
             #elementType=53  -> TRIAX6  is not supported
             #elementType=61  -> DUM9    is not supported
@@ -435,7 +435,7 @@ class OES(ElementsStressStrain):
             #elementType=232 -> QUADRLC is not supported
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             print msg
             #raise RuntimeError(msg)
@@ -534,7 +534,7 @@ class OES(ElementsStressStrain):
             return True
         return False
 
-    def makeOES_Object(self,stress,stressObj,strain,strainObj):
+    def makeOES_Object(self,stress,stressObject,strain,strainObject):
         """
         Creates a stress/strain object if necessary
         """

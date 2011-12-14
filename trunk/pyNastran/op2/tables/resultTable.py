@@ -163,7 +163,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print "-------finished OUGV1----------"
         return (isTable4Done,isBlockDone)
 
-    def handleResultsBuffer(self,func,stress,debug=False):
+    def handleResultsBuffer(self,func,debug=False):
         """
         works by knowing that:
         the end of an unbuffered table has a
@@ -219,7 +219,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             func(stress)
         ###
 
-    def readScalars4(self,scalarObject,debug=False):
+    def readScalars4(self,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -243,14 +243,14 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
-            scalarObject.add(grid,dx,dy,dz)
+            self.obj.add(grid,dx,dy,dz)
             n+=16
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars4,scalarObject,debug=False)
+        self.handleResultsBuffer(self.readScalars4,debug=False)
 
-    def readScalarsX(self,scalarObject,strFormat,nTotal,debug=False):
+    def readScalarsX(self,strFormat,nTotal,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -262,16 +262,16 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print self.printBlock(data[n:n+nTotal])
             out = unpack(strFormat,eData)
             #print "Xout = ",out
-            scalarObject.add(out)
+            self.obj.add(out)
             n+=nTotal
         ###
         self.data = data[n:]
-        self.handleResultsBuffer(self.readScalarsX,scalarObject,strFormat,nTotal,debug=False)
+        self.handleResultsBuffer(self.readScalarsX,strFormat,nTotal,debug=False)
 
-    #def readScalars8(self,scalarObject,debug=False):
-    #    self.readScalarsX(self,scalarObject,'iiffffff',32,debug)
+    #def readScalars8(self,debug=False):
+    #    self.readScalarsX(self,'iiffffff',32,debug)
 
-    def readScalars8(self,scalarObject,debug=False):
+    def readScalars8(self,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -296,17 +296,17 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "grid=%-3i type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(grid,gridType,dx,dy,dz,rx,ry,rz)
+            self.obj.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars8,scalarObject,debug=False)
+        self.handleResultsBuffer(self.readScalars8,debug=False)
 
-    #def readScalarsF8(self,scalarObject,debug=False):
-    #    self.readScalars(self,scalarObject,'fiffffff',32,debug)
+    #def readScalarsF8(self,debug=False):
+    #    self.readScalars(self,'fiffffff',32,debug)
 
-    def readScalarsF8(self,scalarObject,debug=False):
+    def readScalarsF8(self,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -329,21 +329,21 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(freq,gridType,dx,dy,dz,rx,ry,rz)
+            self.obj.add(freq,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalarsF8,scalarObject,debug=False)
+        self.handleResultsBuffer(self.readScalarsF8,debug=False)
 
-    #def readScalars14(self,scalarObject,debug=False):
-    #    self.readScalarsX(self,scalarObject,'iiffffffffffff',56,debug)
+    #def readScalars14(self,debug=False):
+    #    self.readScalarsX(self,'iiffffffffffff',56,debug)
 
-    def readScalars14(self,scalarObject,debug=True):
+    def readScalars14(self,debug=True):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-        print "objName = ",scalarObject.name()
+        print "objName = ",self.obj.name()
         n = 0
         nEntries = len(data)/56
         #print "len(data) = ",len(data)
@@ -367,18 +367,18 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(grid,gridType,dx, dy, dz, rx, ry, rz,
+            self.obj.add(grid,gridType,dx, dy, dz, rx, ry, rz,
                                            dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars14,scalarObject,debug=False)
+        self.handleResultsBuffer(self.readScalars14,debug=False)
 
-    #def readScalarsF14(self,scalarObject,debug=False):
-    #    self.readScalarsX(self,scalarObject,'fiffffffffffff',56,debug)
+    #def readScalarsF14(self,debug=False):
+    #    self.readScalarsX(self,'fiffffffffffff',56,debug)
 
-    def readScalarsF14(self,scalarObject,debug=False):
+    def readScalarsF14(self,debug=False):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -403,11 +403,11 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz)
-            scalarObject.add(freq,gridType,dx, dy, dz, rx, ry, rz,
-                                           dxi,dyi,dzi,rxi,ryi,rzi)
+            self.obj.add(freq,gridType,dx, dy, dz, rx, ry, rz,
+                                       dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars14,scalarObject,debug=False)
+        self.handleResultsBuffer(self.readScalars14,debug=False)
     

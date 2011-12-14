@@ -133,7 +133,7 @@ class OEE(object):
         #elif fsCode==[18,2,1]:
         #    self.readOEE1_Data_format2_sort1()
         else:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             raise Exception('unsupported OEE1 static solution...aftsCode=%s' %(self.atfsCode))
         ###
         #print str(self.obj)
