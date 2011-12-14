@@ -331,10 +331,10 @@ class solidStrainObject(strainObject):
         #print "Solid Strain add..."
         assert cid >= 0
         assert eid >= 0
+        dt = self.dt
         assert eid not in self.exx[dt]
         self.eType[eid] = eType
         self.cid[eid]  = cid
-        dt = self.dt
         self.exx[dt][eid]  = {nodeID: exx}
         self.eyy[dt][eid]  = {nodeID: eyy}
         self.ezz[dt][eid]  = {nodeID: ezz}

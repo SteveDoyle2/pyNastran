@@ -5,9 +5,15 @@ from pyNastran.op2.op2Errors import *
 class rodStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
-                                  S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-      ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+             1    5.000000E+03              0.0                               2    0.0                       0.0           
+
+    # formatCode=1 sortCode=0 stressCode=0
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+      ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+        ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
 
     # formatCode=2 sortCode=1 stressCode=0
       COMPLEX EIGENVALUE = -3.575608E+04,  6.669431E+02
@@ -163,21 +169,21 @@ class rodStressObject(stressObject):
         return msg
 
     def __repr__(self):
-        if   self.isTransient and self.code==[1,0,1]:
+        if   self.isTransient and self.code in [[1,0,0],[1,0,1]]:
             return self.__reprTransient_format1_sort0__()
         elif self.code==[2,1,0]:
             return self.__reprTransient_format2_sort1__()
-        else:
-            raise Exception('code=%s' %(self.code))
+        #else:
+        #    raise Exception('code=%s' %(self.code))
         msg = '---ROD STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['axial','torsion','MS_axial','MS_torsion']
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
-        print "self.code = ",self.code
+        #print "self.code = ",self.code
         for eid in sorted(self.axial):
-            print self.__dict__.keys()
+            #print self.__dict__.keys()
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
             SMa     = self.MS_axial[eid]

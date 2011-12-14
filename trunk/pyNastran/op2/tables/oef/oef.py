@@ -1,5 +1,6 @@
 import sys
 from struct import unpack
+from pyNastran.op2.op2Errors import *
 
 # pyNastran
 #from pyNastran.op2.resultObjects.ougv1_Objects import (
@@ -101,7 +102,7 @@ class OEF(object):
             self.nonlinearFactor = self.loadID
             print "loadID(5)=%s" %(self.loadID)
         else:
-            raise RuntimeError('invalid approach code...analysisCode=%s' %(self.analysisCode))
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
 
         # tCode=2
         #if self.analysisCode==2: # sort2

@@ -1,3 +1,4 @@
+from pyNastran.op2.op2Errors import *
 
 class Op2Codes(object):
     def ElementType(self,eCode):
@@ -353,7 +354,7 @@ class Op2Codes(object):
         else:
             sortWord = ''
             msg = 'unsupported formatCode:  formatCode=%s\n' %(formatCode)
-            raise Exception(msg)
+            raise InvalidFormatCodeError(msg)
 
         sortWord = ''
         if(  self.sortCode==0): sortWord = 'Real'

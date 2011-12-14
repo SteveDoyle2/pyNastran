@@ -1,6 +1,16 @@
 class InvalidCodeError(RuntimeError):
     pass
 
+class InvalidAnalysisCodeError(InvalidCodeError):
+    pass
+
+class InvalidFormatCodeError(InvalidCodeError):
+    pass
+
+
+class AddNewElementError(InvalidCodeError):
+    pass
+
 class EndOfFileError(RuntimeError):
     pass
 
