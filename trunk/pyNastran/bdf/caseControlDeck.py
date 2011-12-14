@@ -15,6 +15,7 @@ class CaseControlDeck(object):
             loggerObj = dummyLogger()
             log = loggerObj.startLog('debug') # or info
         self.debug = False
+        #self.debug = True
 
         self.log = log
         self.lines = lines
@@ -311,8 +312,8 @@ class CaseControlDeck(object):
             ###
             paramType = 'CSV-type'
         elif ' ' not in line:
-            key = line
-            value = None
+            key = line.strip()
+            value = line.strip()
             options = None
             paramType = 'KEY-type'
         else:

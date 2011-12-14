@@ -3,7 +3,7 @@ import sys
 import traceback
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement
+from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
 
 
 import pyNastran.bdf.test
@@ -95,7 +95,7 @@ def computeInts(cards1,cards2,fem1):
     
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
-    msg = 'diffKeys1=%s diffKeys2=%s' %(diffKeys2,diffKeys2)
+    msg = ' diffKeys1=%s diffKeys2=%s' %(diffKeys2,diffKeys2)
     print msg
     for key in sorted(allKeys):
         msg = ''
@@ -118,7 +118,7 @@ def computeInts(cards1,cards2,fem1):
         if factor1 != factor2:
             factorMsg = 'diff=%s factor1=%g factor2=%g' %(diff,factor1,factor2)
 
-        msg += '  %skey=%-7s value1=%-4s value2=%-4s' %(star,key,value1,value2)+factorMsg #+'\n'
+        msg += '  %skey=%-7s value1=%-7s value2=%-7s' %(star,key,value1,value2)+factorMsg #+'\n'
         msg = msg.rstrip()
         print msg
     ###
@@ -151,18 +151,18 @@ def getElementStats(fem1,fem2):
         try:
             if isinstance(e,ShellElement):
                 a = e.Area()
-                m = e.Mass()
                 t = e.Thickness()
                 nsm = e.Nsm()
+                m = e.Mass()
             elif isinstance(e,SolidElement):
                 #v = e.Volume()
                 #m = e.Mass()
                 pass
             elif isinstance(e,LineElement): # BAR
                 L = e.Length()
-                m = e.Mass()
-                A = e.Area()
                 nsm = e.Nsm()
+                A = e.Area()
+                m = e.Mass()
             elif isinstance(e,RigidElement):
                 pass
             elif isinstance(e,DamperElement):

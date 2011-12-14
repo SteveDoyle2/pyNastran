@@ -15,8 +15,11 @@ This code was written entirely in Python and should install easily.
 -----------------------v0.2 released ??/??/????-----------------------
 
 BDF Bug Fixes
-   - DCONSTR weren't processed properly
-   - DAREA   weren't processed properly
+   - DCONSTR wasn't processed properly
+   - DDVAL   wasn't processed properly
+   - DAREA   wasn't processed properly
+   - fixed RBE1 bug
+   - fixed RBE3 bug
    - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
    - FLFACT reading when the card is short works
    - PCOMP Thickness method doesnt crash when you want the total thickness.
@@ -26,6 +29,8 @@ BDF Bug Fixes
    - PELAS cards werent processed properly
    - files on remote drives dont cause crashes anymore
    - cend now also signifies the end of the executive control deck
+   - fixed issue with the case control deck parsing on some uncommon cards
+
 
 Overall BDF
    - renamed read method  to readBDF (it got confusing when the op2 object can 
@@ -40,11 +45,11 @@ Added BDF
    - CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
    - PDAMP
    - AESTAT
+   - DRESP1
+   - DVPREL1
 
 Overall OP2
    - reading support ONLY
-   - preliminary bdf writing support based on the OP2 file
-     using BDF class write methods
    - static solutions (SOL 101) results will be very stable
    - thermal solutions have significantly less support than
      structural solutions.
@@ -52,14 +57,12 @@ Overall OP2
          use   DISPLACEMENT(PLOT,SORT1)=ALL
          not   DISPLACEMENT(PLOT,SORT2)=ALL
    - Many examples outside of SOL 101 have been tested 
-     and dont crash.  This includes large SOL 200 models.  However,
-     make sure you verify the results make sense before you trust them.
-     The biggest "error" will be in the names of outputs.  For example,
-     you might find frequencies in a transient displacement table or max shear
-     stress might be labeled von mises stress.
-   - The user can modify the tablesToRead variable to adjust the tables
-     that are read.  NOTE: large tables are much more robust when read and
-     is not recommended (unlike the BDF).
+     and dont crash.  This includes large SOL 200 models.  For example,
+     you might find max shear labeled as von mises stress.
+   - The user has the option to read the Geometry tables (GEOM1 (nodes/coords),
+     GEOM2 (elements), GEOM3 (loads), GEOM4 (constraints),
+     EPT/EPTS (properties), MPT/MPTS (materials) and can write the data to a
+     BDF.  This is still a preliminary option,
 
 OP2 Tables
    - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)
@@ -87,9 +90,9 @@ OP2 Tables
                   x axis)
                 - isotropic stress elements have max shear stress (maxShear)
        - All this information is contained within boolean variables such as 
-         isVonMises
+         isVonMises (stress/strain),isFiberCurvature (strain)
          and isFiber which are located on the result objects.
-       - Rod elements can have different outputs depending on the
+       - Elements can have different outputs depending on the
          solution and user requested output options.  For example, rods can
          contain the margin of safety in tension and compression, but they
          don't always have that data.  You can check this by using the

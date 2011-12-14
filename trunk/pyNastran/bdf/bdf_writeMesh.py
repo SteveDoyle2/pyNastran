@@ -65,11 +65,13 @@ class writeMesh(object):
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
 
-        self.log().info("***writing %s" %(os.path.relpath(outfilename)))
+        fname = self.printFileName(outfilename)
+        self.log().info("***writing %s" %(fname))
+        
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
-
+    
     def write(self,outfilename='fem.out.bdf',debug=False):
         """
         Writes the bdf.  It groups the various sections together to make it
@@ -285,7 +287,7 @@ class writeMesh(object):
 
     def writeOptimization(self):
         msg = ''
-        if self.dconstrs or self.desvars or self.ddvals:
+        if self.dconstrs or self.desvars or self.ddvals or self.dresps or self.dvprels:
             msg += '$OPTIMIZATION\n'
         for ID,dconstr in sorted(self.dconstrs.items()):
             msg += str(dconstr)
@@ -293,6 +295,10 @@ class writeMesh(object):
             msg += str(desvar)
         for ID,ddval in sorted(self.ddvals.items()):
             msg += str(ddval)
+        for ID,dresp in sorted(self.dresps.items()):
+            msg += str(dresp)
+        for ID,dvprel in sorted(self.dvprels.items()):
+            msg += str(dvprel)
         return msg
 
     def writeDynamic(self):

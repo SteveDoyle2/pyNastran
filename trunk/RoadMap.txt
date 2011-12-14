@@ -59,11 +59,11 @@ OP2 Reader
 
    - GEOM2
      - CBAR    (8,  done)
-     - CDAMP1  (16)
-     - CDAMP2  (17)
-     - CDAMP3  (18)
-     - CDAMP4  (19)
-     - CDAMP5  (20, needs testing)
+     - CDAMP1  (16, done)
+     - CDAMP2  (17, done)
+     - CDAMP3  (18, done)
+     - CDAMP4  (19, done)
+     - CDAMP5  (20, done)
      - CELAS1  (29)
      - CELAS2  (30)
      - CELAS3  (31)
@@ -87,7 +87,7 @@ OP2 Reader
      - FORCE   (3,done)
      - FORCE1  (4,done)
      - FORCE2  (5,done)
-     - GRAV    (7,buggy)
+     - GRAV    (7,done)
      - LOAD    (8,done)
      - MOMENT  (13,done)
      - MOMENT1 (14,done)
@@ -110,7 +110,7 @@ OP2 Reader
           properties created by the solution are identified)
      - NSM     (2, done)
      - PBAR    (11,buggy)
-     - PBARL   (12,close)
+     - PBARL   (12,done)
      - PBEAM   (13)
      - PCOMP   (22,done)
      - PROD    (49,done)
@@ -545,6 +545,8 @@ SPLINE1 (done)
 DCONSTR  (done)
 DESVAR   (done)
 DDVAL    (done)
+DRESP1   (done)
+DVPREL1  (done)
 
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)
@@ -696,10 +698,8 @@ CORD3G (partial)
 
 ----Optimization----:
 DEQATN
-DRESP1
 DRESP2
 DRESP3
-DVPREL1
 DLINK
 
 ----Methods----:
