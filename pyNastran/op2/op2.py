@@ -5,15 +5,14 @@ import os
 import sys
 from struct import unpack
 
-from geometryTables import GeometryTables
-from elementsStressStrain import ElementsStressStrain
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
+from pyNastran.op2.geom.geometryTables import GeometryTables
 from pyNastran.op2.tables.resultTable import ResultTable
 
 class Op2(BDF,
 #class Op2(getMethods,addMethods,writeMesh, # BDF methods
-          FortranFile,Op2Codes,GeometryTables,ElementsStressStrain,ResultTable):
+          FortranFile,Op2Codes,GeometryTables,ResultTable):
 
     def __init__(self,op2FileName):
         BDF.__init__(self,debug=True,log=None)
