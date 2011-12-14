@@ -6,6 +6,8 @@ from pyNastran.op2.op2Errors import *
 from elementsStressStrain import ElementsStressStrain
 from oes_rods   import rodStressObject,rodStrainObject
 from oes_bars   import barStressObject,barStrainObject
+from oes_beams  import beamStressObject,beamStrainObject
+
 from oes_solids import solidStressObject,solidStrainObject
 from oes_plates import plateStressObject,plateStrainObject
 from oes_compositePlates import compositePlateStressObject,compositePlateStrainObject

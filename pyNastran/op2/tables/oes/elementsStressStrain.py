@@ -44,7 +44,7 @@ class ElementsStressStrain(object):
 
     def basicElement(self):
         """
-        genericStressReader - based on CROD_1
+        genericStressReader - works on CROD_1, CELAS2_12
         stress & strain
         formatCode=1 sortCode=0 (eid,axial,axialMS,torsion,torsionMS)
         formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
@@ -61,71 +61,36 @@ class ElementsStressStrain(object):
         ###
         self.handleResultsBuffer(self.basicElement)
 
-    def CROD_1(self): # works
-        """
-        stress & strain
-        formatCode=1 sortCode=0 (eid,axial,axialMS,torsion,torsionMS)
-        formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
-        """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CROD_1---\n')
-        deviceCode = self.deviceCode
-        assert self.numWide==5,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=20:
-            #self.printSection(40)
-            eData     = self.data[0:20]
-            self.data = self.data[20: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack('iffff',eData)
-            (eid,axial,axialMS,torsion,torsionMS) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            eid = (eid - deviceCode) / 10
-            self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
-
-            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.CROD_1)
-        #print self.rodStress[self.iSubcase]
-        if self.makeOp2Debug:
-            print "done with CROD-1"
-        ###
-
-    def CBEAM_2(self): # not tested; CBEAM class not written
+    def CBEAM_2(self): # not tested
         if self.makeOp2Debug:
             self.op2Debug.write('---BEAM_2---\n')
         deviceCode = self.deviceCode
         nNodes = 11
         assert self.numWide==12*10+1,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=20:
-            #self.printSection(40)
-            eData     = self.data[0:44]
-            self.data = self.data[44: ]
+        nTotal = self.getLengthTotal()
+        (n1,format1) = self.getLength1()
+        (n2,format2) = self.getLength2()
+
+        while len(self.data)>=nTotal:
+            eData     = self.data[0:n1]
+            self.data = self.data[n1: ]
             #print "len(data) = ",len(eData)
 
-            out = struct.unpack('iifffffffff', eData)
-            (eid,nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            eid = (eid - deviceCode) / 10
-            #self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+            out = struct.unpack(format1, eData)
+            print "outA = ",out
+            self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
             
             for iNode in range(nNodes):
-                eData     = self.data[0:40]
-                self.data = self.data[40: ]
-                out = struct.unpack('iifffffffff', eData)
-                (nodeID,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
-                if self.makeOp2Debug:
-                    self.op2Debug.write('%s\n' %(str(out)))
-                #self.obj.add(eid,axial,axialMS,torsion,torsionMS)
+                eData     = self.data[0:n2]
+                self.data = self.data[n2: ]
+                out = struct.unpack(format2, eData)
+                print "outB = ",out
+                self.obj.add(eid,axial,axialMS,torsion,torsionMS)
 
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.CBEAM_2)
-        #print self.beamStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CBEAM-2"
         raise Exception('add CBEAM-2...')
