@@ -9,6 +9,7 @@ from oes_bars   import barStressObject,barStrainObject
 from oes_solids import solidStressObject,solidStrainObject
 from oes_plates import plateStressObject,plateStrainObject
 from oes_compositePlates import compositePlateStressObject,compositePlateStrainObject
+from oes_springs import celasStressObject,celasStrainObject
 
 class OES(ElementsStressStrain):
     """Table of stresses/strains"""
@@ -69,6 +70,7 @@ class OES(ElementsStressStrain):
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.dataCode['lsdvmn'] = self.lsdvmn
+            self.dataCode['name'] = 'lsdvmn'
         elif self.analysisCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
@@ -88,6 +90,7 @@ class OES(ElementsStressStrain):
         elif self.analysisCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
             self.dataCode['freq'] = self.freq
+            self.dataCode['name'] = 'freq'
             self.nonlinearFactor = self.freq
         elif self.analysisCode==6: # transient
             self.dt = self.getValues(data,'f',5) ## time step
@@ -345,34 +348,41 @@ class OES(ElementsStressStrain):
     def readOES1_Data_format1_sort0(self):
         #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
         msg = ''
+        assert self.analysisCode in [1,6,10],'self.atfsCode=%s' %(self.atfsCode)
         if self.elementType==1: # crod
             print "    found crod_1"
+            self.dataCode['ElementName'] = 'CROD'
             self.makeOES_Object(self.rodStress,rodStressObject,
                                 self.rodStrain,rodStrainObject)
             self.basicElement()
         elif self.elementType == 2:   # cbeam
             #print "    found cbeam_2"
+            self.dataCode['ElementName'] = 'CBEAM'
             self.makeOES_Object(self.beamStress,beamStressObject,
-                                               self.beamStrain,beamStrainObject)
+                                self.beamStrain,beamStrainObject)
             self.CBEAM_2()
         elif self.elementType == 10:   # conrod
             #print "    found conrod_10"
+            self.dataCode['ElementName'] = 'CONROD'
             self.makeOES_Object(self.conrodStress,conrodStressObject,
                                 self.conrodStrain,conrodStrainObject)
             self.CONROD_10()
 
         elif self.elementType == 11:   # celas1
             #print "    found celas2_12"
+            self.dataCode['ElementName'] = 'CELAS1'
             self.makeOES_Object(self.celasStress,celasStressObject,
                                 self.celasStrain,celasStrainObject)
-            self.CELAS1_11()
+            self.basicElement()
         elif self.elementType == 12:   # celas2
             #print "    found celas2_12"
+            self.dataCode['ElementName'] = 'CELAS2'
             self.makeOES_Object(self.celasStress,celasStressObject,
                                 self.celasStrain,celasStrainObject)
-            self.CELAS2_12()
+            self.basicElement()
         elif self.elementType == 34:   # cbar
             #print "    found cbar_34"
+            self.dataCode['ElementName'] = 'CBAR'
             self.makeOES_Object(self.barStress,barStressObject,
                                 self.barStrain,barStrainObject)
             self.CBAR_34()
@@ -380,17 +390,20 @@ class OES(ElementsStressStrain):
         elif self.elementType==33: # cquad4_33
             self.stopCode = True
             #print "    found cquad_33"
+            self.dataCode['ElementName'] = 'CQUAD4'
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_33()
         elif self.elementType==74:  # ctria
             #print "    found ctria_74"
+            self.dataCode['ElementName'] = 'CTRIA3'
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CTRIA3_74() # ctria3
         elif self.elementType==144: # cquad4
             self.stopCode = True
             #print "    found cquad_144"
+            self.dataCode['ElementName'] = 'CQUAD4'
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_144()

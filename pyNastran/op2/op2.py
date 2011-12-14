@@ -37,7 +37,10 @@ class Op2(BDF,
 
                              'DESTAB',                # design variables
                              'OQG1','OQGV1','OQMG1',  # spc/mpc forces
+                             
                              'OUGV1',                 # displacements
+                             'OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2',
+                             
                              'OEF1X','DOEF1','OEFIT', # applied forces
                              'OGPFB1','OGS1',         # grid point forces/stresses
                              
@@ -46,6 +49,7 @@ class Op2(BDF,
                              'OESNLXR','OESNLXD','OESNL1X','OESTRCP', # nonlinear stress
                              'OESCP',                       # cylinder stress???
                              'OESTRCP',                     # cylinder strain???
+                             'OESRT',                       # rotational stress?
 
                              'ONRGY1', # energy
                              'R1TABRG','HISADD',  # SOL 200
@@ -55,7 +59,7 @@ class Op2(BDF,
                              'OPNL1',
                              'OUPV1',
                              'VIEWTB','ERRORN',
-                             'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
+                             'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2',
                              'PCOMPTS',
                              # OMNS
                              'OMM2',
@@ -262,7 +266,7 @@ class Op2(BDF,
 
                 elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
                     self.readTable_OGP1()
-                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
+                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2']: # what are these???
                     self.readTable_OGP1()
                 elif tableName in ['SDF']: # no idea
                     self.readTable_OGP1()
@@ -272,15 +276,18 @@ class Op2(BDF,
                     self.readTable_OEF1()
                 elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
                     self.readTable_OQG1()
+
                 elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                     self.readTable_OUG1()
+                elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
+                    self.readTable_OUG1()
 
-                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXR','OESNLXD','OESNL1X','OESCP']: # stress
+                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXR','OESNLXD','OESNL1X','OESCP','OESRT']: # stress
                     self.readTable_OES1()
                 elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
                     self.readTable_OES1()
 
-                elif tableName in ['ONRGY1']: # energy???
+                elif tableName in ['ONRGY1']: # energy
                     self.readTable_OEE1()
                 elif tableName in ['PCOMPTS','MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
                     self.readTable_PCOMPTS() # 'SDF',

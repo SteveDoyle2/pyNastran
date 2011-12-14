@@ -23,6 +23,7 @@ class compositePlateStressObject(stressObject):
         self.angle  = {}
         self.majorP = {}
         self.minorP = {}
+        #print "self.dataCode = ",self.dataCode
         if self.code == [1,0,0]:
             self.fiberDistance = {}
             self.ovm    = {}
@@ -59,7 +60,7 @@ class compositePlateStressObject(stressObject):
     def addNewEid(self,eType,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
-        assert eid not in self.o11
+        #assert eid not in self.o11
         self.eType[eid]  = eType
         self.o11[eid]    = [o11]
         self.o22[eid]    = [o22]
