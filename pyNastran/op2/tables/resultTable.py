@@ -216,7 +216,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if len(data)<marker:
             #    self.goto(self.n-4) # handles last buffer not having an extra 4
             self.data += data
-            func(stress)
+            func(debug)
         ###
 
     def readScalars4(self,debug=False):

@@ -2,7 +2,7 @@ import sys
 import copy
 from struct import unpack
 
-
+from pyNastran.op2.op2Errors import *
 from elementsStressStrain import ElementsStressStrain
 from oes_rods   import rodStressObject,rodStrainObject
 from oes_bars   import barStressObject,barStrainObject
@@ -138,7 +138,7 @@ class OES(ElementsStressStrain):
             self.nonlinearFactor = self.dt
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
-            raise RuntimeError('invalid approach code...analysisCode=%s' %(self.analysisCode))
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         self.dataCode['nonlinearFactor'] = self.nonlinearFactor
         # tCode=2
         #if self.analysisCode==2: # sort2
@@ -289,8 +289,8 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.rodStress,rodStressObject,
                                                self.rodStrain,rodStrainObject)
             self.basicElement()
-        elif self.elementType in [10,11,12,33,74]:
-            raise Exception('add element=%s' %(self.elementType))
+        #elif self.elementType in [10,11,12,33,74]:
+        #    raise AddNewElementError('add element=%s' %(self.elementType))
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()

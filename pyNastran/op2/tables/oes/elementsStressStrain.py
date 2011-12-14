@@ -1,6 +1,8 @@
 import sys
 from struct import unpack
 
+from pyNastran.op2.op2Errors import *
+
 #91  -> PENTANL
 #2   -> BEAM
 #33   -> TUBE
@@ -152,7 +154,7 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with CONROD_10"
         ###
-        raise Exception('add CONROD...')
+        raise AddNewElementError('add CONROD...')
 
     def CELAS1_11(self):
         print '---CELAS1_11---\n'
@@ -194,7 +196,7 @@ class ElementsStressStrain(object):
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CELAS1-11"
-        raise Exception('add CELAS1...')
+        raise AddNewElementError('add CELAS1...')
 
     def CELAS2_12(self):
         print '---CELAS2_12---\n'
@@ -233,7 +235,7 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CELAS2_12)
         if self.makeOp2Debug:
             print "done with CELAS2-12"
-        raise Exception('add CELAS2...')
+        raise AddNewElementError('add CELAS2...')
 
     def CQUAD4_33(self): # works
         """
@@ -359,14 +361,11 @@ class ElementsStressStrain(object):
             assert nNodes < 21,self.printBlock(eData)
             eid = (eid - deviceCode) / 10
 
-            if ElementType=='CTETRA':
-                nNodesExpected = 5
-            elif ElementType=='CPENTA':
-                nNodesExpected = 7
-            elif ElementType=='CHEXA':
-                nNodesExpected = 9
+            if   ElementType=='TETRA':   nNodesExpected = 5
+            elif ElementType=='PENTA':   nNodesExpected = 7
+            elif ElementType=='HEXA':    nNodesExpected = 9
             else:
-                raise Exception('not supported....EType=%s eType=%s nNodes=%s numWide=%s' %(ElementType,self.elementType,nNodes,self.numWide))
+                raise AddNewElementError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' %(ElementType,self.elementType,nNodes,self.numWide))
 
             #print "len(data) = ",len(self.data)
             for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
@@ -784,6 +783,6 @@ class ElementsStressStrain(object):
             ###
         ###
         else:
-            raise Exception('invalid numWide')
+            raise AddNewElementError('invalid numWide')
         self.handleResultsBuffer(self.CQUAD4_144)
 
