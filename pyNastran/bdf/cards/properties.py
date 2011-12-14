@@ -23,14 +23,17 @@ class NSM(PointProperty):
         'CONROD', 'PBEND', 'PSHEAR','PTUBE', 'PCONEAX','PRAC2D']
     def __init__(self,card=None,nOffset=0,data=None):
         #Element.__init__(self,card,data)
-        nOffset *= 2
         if card:
+            nOffset *= 2
             self.sid   = card.field(1)
             self.Type  = card.field(2)
             self.id    = card.field(3+nOffset)
             self.value = card.field(4+nOffset)
         else:
             self.sid   = data[0]
+            #sid=9 propSet=PBEA ID=538976333 value=0.0
+            #sid=10 propSet=PDUM ID=538976312 value=2.80259692865e-45
+            #sid=10 propSet=ELEM ID=542395973 value=0.0
             self.Type  = data[1]
             self.id    = data[2]
             self.value = data[3]
@@ -963,7 +966,6 @@ class PCOMP(ShellProperty):
             #fields = card.fields(1)
 
             self.pid = card.field(1)
-            self.z0   = card.field(2)
             self.nsm  = card.field(3,0.0)
             self.sb   = card.field(4,0.0)
             self.ft   = card.field(5)
@@ -1008,6 +1010,7 @@ class PCOMP(ShellProperty):
             #    #print str(self)
             ###
             #sys.exit()
+            self.z0 = card.field(2,-0.5*self.Thickness())
         else:
             #print "len(data) = ",len(data)
             self.pid  = data[0]
@@ -1017,13 +1020,11 @@ class PCOMP(ShellProperty):
             self.ft   = data[4]
             self.TRef = data[5]
             self.ge   = data[6]
-
-            self.lam  = None ## @todo No Symmetry - check if this is correct
-
-            Mid   = data[7]
-            T     = data[8]
-            Theta = data[9]
-            Sout  = data[10]
+            self.lam  = data[7]
+            Mid       = data[8]
+            T         = data[9]
+            Theta     = data[10]
+            Sout      = data[11]
 
             self.plies = []
             #ply = [mid,t,theta,sout]

@@ -64,7 +64,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "reading iTable3=%s" %(iTable)
             #self.obj = None
             table3(iTable)
-            self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
+            self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
             #print "self.tellA = ",self.op2.tell()
             
             self.isMarker = False
@@ -84,6 +84,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             n = self.n
             #print self.printSection(100)
             self.readMarkers([iTable,1,0],tableName)
+            print ""
             #print "i read the markers!!!"
    
         ###
@@ -278,6 +279,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         n = 0
         nEntries = len(data)/32
         for i in range(nEntries):
+            #if debug:
+            #    print self.printBlock(self.data[n:n+64])
             #print self.printBlock(self.data[n:n+64])
             eData = data[n:n+32]
             #print "self.numWide = ",self.numWide

@@ -52,6 +52,8 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             Type = 'G'
         elif gridType==2:
             Type = 'S'
+        elif gridType==7:
+            Type = 'L'
         else:
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 

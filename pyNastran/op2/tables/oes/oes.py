@@ -26,16 +26,26 @@ class OES(ElementsStressStrain):
         self.deleteAttributes(params)
 
     def readTable_OES_3(self,iTable):
-        #print "iTable3 = ",iTable
+        #print "*iTable3 = ",iTable
+        #if 0:
+            #markers = self.readMarkers([0,2])
+            #print "markers=%s" %(markers)
+            #block = self.readBlock()
+            #print "block = ",block
+            #markers = self.readMarkers([-1,7])
+            #print "markers=%s" %(markers)
+            #print self.printSection(200)
+        
         bufferWords = self.getBufferWords()
         
         data = self.getData(4)
+        #print "data = ".data
         bufferSize, = unpack('i',data)
         if self.makeOp2Debug:
             self.op2Debug.write('bufferSize=|%s|\n' %(str(bufferSize)))
 
         data = self.getData(4*50)
-        #self.printBlock(data) # on
+        self.printBlock(data) # on
         if self.makeOp2Debug:
             self.op2Debug.write('block3header\n')
 
@@ -46,20 +56,20 @@ class OES(ElementsStressStrain):
         self.sCode      = self.getValues(data,'i',11)
         self.thermal    = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
 
-        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
                          'loadSet':self.loadSet,'formatCode':self.formatCode,'sortCode':self.sortCode,
                          'numWide': self.numWide,'sCode':self.sCode,
                          'thermal': self.thermal,'elementType':self.elementType}
-
-        print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
-        print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
+        print "self.dataCode = ",self.dataCode
+        #print "loadset=%s formatCode=%s numWordsEntry=%s sCode=%s" %(self.loadSet,self.formatCode,self.numWide,self.sCode)
+        #print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
 
         ## assuming tCode=1
         self.nonlinearFactor = None
-        if self.approachCode==1:   # statics / displacement / heat flux
+        if self.analysisCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.dataCode['lsdvmn'] = self.lsdvmn
-        elif self.approachCode==2: # real eigenvalues
+        elif self.analysisCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
             self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
@@ -68,37 +78,37 @@ class OES(ElementsStressStrain):
             self.dataCode['modeCycle'] = self.modeCycle
             self.dataCode['name'] = 'mode'
             self.nonlinearFactor = self.mode
-        #elif self.approachCode==3: # differential stiffness
+        #elif self.analysisCode==3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         #    self.nonlinearFactor = self.lsdvmn
-        #elif self.approachCode==4: # differential stiffness
+        #elif self.analysisCode==4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         #    self.nonlinearFactor = self.lsdvmn
 
-        elif self.approachCode==5:   # frequency
+        elif self.analysisCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
             self.dataCode['freq'] = self.freq
             self.nonlinearFactor = self.freq
-        elif self.approachCode==6: # transient
+        elif self.analysisCode==6: # transient
             self.dt = self.getValues(data,'f',5) ## time step
             self.dataCode['dt'] = self.dt
             self.dataCode['name'] = 'dt'
             
             print "DT(5)=%s" %(self.dt)
             self.nonlinearFactor = self.dt
-        elif self.approachCode==7: # pre-buckling
+        elif self.analysisCode==7: # pre-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## load set
             self.dataCode['lsdvmn'] = self.lsdvmn
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
-        elif self.approachCode==8: # post-buckling
+        elif self.analysisCode==8: # post-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.dataCode['lsdvmn'] = self.lsdvmn
             self.dataCode['eigr']   = self.eigr
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
-        elif self.approachCode==9: # complex eigenvalues
+        elif self.analysisCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
@@ -108,19 +118,19 @@ class OES(ElementsStressStrain):
             self.dataCode['eigi'] = self.eigi
             self.dataCode['name'] = 'mode'
             print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
-        elif self.approachCode==10: # nonlinear statics
+        elif self.analysisCode==10: # nonlinear statics
             self.lftsfq = self.getValues(data,'f',5) ## load step
             self.dataCode['lftsfq'] = self.lftsfq
             self.dataCode['name'] = 'lftsfq'
             self.nonlinearFactor = self.lftsfq
             print "LFTSFQ(5) = %s" %(self.lftsfq)
-        elif self.approachCode==11: # old geometric nonlinear statics
+        elif self.analysisCode==11: # old geometric nonlinear statics
             self.lsdvmn = self.getValues(data,'i',5)
             self.dataCode['lsdvmn'] = self.lsdvmn
             self.dataCode['name'] = 'lsdvmn'
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
-        elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             #self.lsdvmn = self.getValues(data,'i',5)
             self.dt = self.getValues(data,'f',5)  ## Time step ??? --> straight from DMAP
             self.dataCode['dt'] = self.dt
@@ -128,7 +138,7 @@ class OES(ElementsStressStrain):
             self.nonlinearFactor = self.dt
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
-            raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
+            raise RuntimeError('invalid approach code...analysisCode=%s' %(self.analysisCode))
         self.dataCode['nonlinearFactor'] = self.nonlinearFactor
         # tCode=2
         #if self.analysisCode==2: # sort2
@@ -147,12 +157,13 @@ class OES(ElementsStressStrain):
             value = sCode%2
             sCode = (sCode - value)/2
             bits[i] = value
-            print "    *bit = ",value
+            #print "    *bit = ",value
             #print "    sCode = ",sCode
             i-=1
         #bits.reverse()
         print "bits = ",bits
-        return bits
+        self.stressBits = bits
+        self.dataCode['stressBits'] = self.stressBits
 
     def readTable_OES_4_Data(self,iTable):
         print "-------------"
@@ -212,6 +223,8 @@ class OES(ElementsStressStrain):
 
         #msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+
+        self.parseStressCode()
         if self.thermal==0:
             # Stress / Strain
             if tfsCode==[5,1,0]:
@@ -238,7 +251,7 @@ class OES(ElementsStressStrain):
         else:
             raise Exception('invalid thermal option...')
         ###
-        #print stressStrainObj
+        #print self.obj
 
     def readOES1_Data_format1_sort1(self):
         #msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
@@ -273,8 +286,11 @@ class OES(ElementsStressStrain):
         msg = ''
         if self.elementType==1: # crod
             #print "    found crod_1"
-            stressStrainObj = self.instantiateRodObject()
-            self.basicElement(stressStrainObj)
+            self.makeOES_Object(self.rodStress,rodStressObject,
+                                               self.rodStrain,rodStrainObject)
+            self.basicElement()
+        elif self.elementType in [10,11,12,33,74]:
+            raise Exception('add element=%s' %(self.elementType))
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element(None)
@@ -331,68 +347,78 @@ class OES(ElementsStressStrain):
         msg = ''
         if self.elementType==1: # crod
             print "    found crod_1"
-            stressStrainObj = self.instantiateRodObject()
-            #self.CROD_1(stressStrainObj)
-            self.basicElement(stressStrainObj)
-        #elif self.elementType == 2:   # cbeam
-        #    print "    found cbeam_2"
-        #    #stressStrainObj = self.instantiateBeamObject()
-        #    stressStrainObj = None
-        #    self.CBEAM_2(stressStrainObj)
+            self.makeOES_Object(self.rodStress,rodStressObject,
+                                self.rodStrain,rodStrainObject)
+            self.basicElement()
+        elif self.elementType == 2:   # cbeam
+            #print "    found cbeam_2"
+            self.makeOES_Object(self.beamStress,beamStressObject,
+                                               self.beamStrain,beamStrainObject)
+            self.CBEAM_2()
         elif self.elementType == 10:   # conrod
-            print "    found conrod_10"
-            #stressStrainObj = self.instantiateConrodObject()
-            stressStrainObj = None
-            self.CONROD_10(stressStrainObj)
+            #print "    found conrod_10"
+            self.makeOES_Object(self.conrodStress,conrodStressObject,
+                                self.conrodStrain,conrodStrainObject)
+            self.CONROD_10()
 
+        elif self.elementType == 11:   # celas1
+            #print "    found celas2_12"
+            self.makeOES_Object(self.celasStress,celasStressObject,
+                                self.celasStrain,celasStrainObject)
+            self.CELAS1_11()
         elif self.elementType == 12:   # celas2
             #print "    found celas2_12"
-            #stressStrainObj = self.instantiateCelasObject()
-            stressStrainObj = None
-            self.CELAS2_12(stressStrainObj)
+            self.makeOES_Object(self.celasStress,celasStressObject,
+                                self.celasStrain,celasStrainObject)
+            self.CELAS2_12()
         elif self.elementType == 34:   # cbar
             #print "    found cbar_34"
-            stressStrainObj = self.instantiateBarObject()
-            self.CBAR_34(stressStrainObj)
+            self.makeOES_Object(self.barStress,barStressObject,
+                                self.barStrain,barStrainObject)
+            self.CBAR_34()
 
         elif self.elementType==33: # cquad4_33
             self.stopCode = True
             #print "    found cquad_33"
-            stressStrainObj = self.instantiatePlateObject()
-            self.CQUAD4_33(stressStrainObj)
+            self.makeOES_Object(self.plateStress,plateStressObject,
+                                self.plateStrain,plateStrainObject)
+            self.CQUAD4_33()
         elif self.elementType==74:  # ctria
             #print "    found ctria_74"
-            stressStrainObj = self.instantiatePlateObject()
-            self.CTRIA3_74(stressStrainObj) # ctria3
+            self.makeOES_Object(self.plateStress,plateStressObject,
+                                self.plateStrain,plateStrainObject)
+            self.CTRIA3_74() # ctria3
         elif self.elementType==144: # cquad4
             self.stopCode = True
             #print "    found cquad_144"
-            stressStrainObj = self.instantiatePlateObject()
-            self.CQUAD4_144(stressStrainObj)
+            self.makeOES_Object(self.plateStress,plateStressObject,
+                                self.plateStrain,plateStrainObject)
+            self.CQUAD4_144()
 
         elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
             #print "    found ctetra_39 / hexa_67 / cpenta_68"
-            stressStrainObj = self.instantiateSolidObject()
-            self.CSOLID_67(stressStrainObj)
+            self.makeOES_Object(self.solidStress,solidStressObject,
+                                self.solidStrain,solidStrainObject)
+            self.CSOLID_67()
 
         elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
             #print "    found ctetra_85 / hexa_93 / cpenta_91"
-            stressStrainObj = self.instantiateSolidObject()
-            self.CSOLID_85(stressStrainObj)
+            self.makeOES_Object(self.solidStress,solidStressObject,
+                                self.solidStrain,solidStrainObject)
+            self.CSOLID_85()
         elif self.elementType in [91]: # CPENTANL
-            stressStrainObj = None
             #print "hexa_93"
-            self.CPENTANL_91(stressStrainObj)
+            self.CPENTANL_91()
         elif self.elementType in [93]: # CHEXANL
-            stressStrainObj = None
             #print "hexa_93"
-            self.CHEXANL_93(stressStrainObj)
+            self.CHEXANL_93()
 
         elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
             #print "    found a 95/96/97 or 98!"
             self.eid2 = None # stores the previous elementID
-            stressStrainObj = self.instantiateCompositePlateObject()
-            self.CQUAD4_95(stressStrainObj)
+            self.makeOES_Object(self.compositePlateStress,compositePlateStressObject,
+                                self.compositePlateStrain,compositePlateStrainObject)
+            self.CQUAD4_95()
             del self.eid2
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
         #    self.skipOES_Element(None)
@@ -503,105 +529,18 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 78:   # ctetra (acoustic)
         #elif self.elementType == 101:  # caabsf (acoustic)
 
+    def isStress(self):
+        if self.stressBits[1]==0:
+            return True
+        return False
 
-    def instantiateRodObject(self): # 1 (CROD)
+    def makeOES_Object(self,stress,stressObj,strain,strainObj):
         """
         Creates a stress/strain object if necessary
         """
-        #print "starting a ROD stress/strain object"
-        #print "    iSubcase = ",self.iSubcase
-        #print "    sCode    = ",self.sCode
-        #bits = self.parseStressCode()
-        #if (self.iSubcase not in self.rodStress) and (self.iSubcase not in self.rodStrain):
-        #    print "making new subcase..."
-
-        if self.sCode in [0,1]:
-            self.createTransientObject(self.rodStress,rodStressObject)
-        elif self.sCode in [10,11]:
-            self.createTransientObject(self.rodStrain,rodStrainObject)
+        if self.isStress():
+            self.createTransientObject(stress,stressObject)
         else:
-            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
+            self.createTransientObject(strain,strainObject)
         ###
         return self.obj
-
-    def instantiateBarObject(self): # 34 (CBAR)
-        """
-        Creates a stress/strain object if necessary
-        """
-        #print "starting a BAR stress/strain object"
-        #print "    iSubcase = %s" %(self.iSubcase)
-        #print "    sCode    = %s" %(self.sCode)
-        #bits = self.parseStressCode()
-        #if (self.iSubcase not in self.barStress) and (self.iSubcase not in self.barStrain):
-        #    print "making new subcase..."
-
-        if self.sCode in [0,1]:
-            self.createTransientObject(self.barStress,barStressObject)
-        elif self.sCode in [10,11]:
-            self.createTransientObject(self.barStrain,barStrainObject)
-        else:
-            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
-        ###
-        return self.obj
-
-    def instantiateCompositePlateObject(self):  # 95,96,97,98 (CQUAD4, CQUAD8, CTRIA3, CTRIA6)
-        """
-        Creates a stress/strain object if necessary
-        """
-        #print "starting a COMPOSITE PLATE stress/strain object"
-        #print "    iSubcase = %s" %(self.iSubcase)
-        #print "    sCode    = %s" %(self.sCode)
-        #bits = self.parseStressCode()
-        #if (self.iSubcase not in self.compositePlateStress) and (self.iSubcase not in self.compositePlateStrain):
-        #    print "making new subcase..."
-
-        if self.sCode in [0,1,16,17]: # stress
-            self.createTransientObject(self.compositePlateStress,compositePlateStressObject)
-        elif self.sCode in [10,11,13,14,15,26,27,30,31]: # strain
-            self.createTransientObject(self.compositePlateStrain,compositePlateStrainObject)
-        else:
-            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
-        ###
-        return self.obj
-
-    def instantiatePlateObject(self): # 74, 39, 144 (CTRIA3, CQUAD4)
-        """
-        Creates a stress/strain object if necessary
-        """
-        #print "starting a PLATE stress/strain object"
-        #print "    iSubcase = %s" %(self.iSubcase)
-        #print "    sCode    = %s" %(self.sCode)
-        #bits = self.parseStressCode()
-        #if (self.iSubcase not in self.plateStress) and (self.iSubcase not in self.plateStrain):
-        #    print "making new subcase..."
-
-        if self.sCode in [0,1]:
-            self.createTransientObject(self.plateStress,plateStressObject)
-        elif self.sCode in [10,11,15]:
-            self.createTransientObject(self.plateStrain,plateStrainObject)
-        else:
-            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
-        ###
-        print type(self.obj)
-        return self.obj
-
-    def instantiateSolidObject(self): # 39, 67, 68 (CTETRA, CPENTA, CHEXA)
-        """
-        Creates a stress/strain object if necessary
-        """
-        #print "starting a SOLID stress/strain object"
-        #print "    iSubcase = %s" %(self.iSubcase)
-        #print "    sCode    = %s" %(self.sCode)
-        #bits = self.parseStressCode()
-        #if (self.iSubcase not in self.solidStress) and (self.iSubcase not in self.solidStrain):
-        #    print "making new subcase..."
-
-        if self.sCode in [0,1]:
-            self.createTransientObject(self.solidStress,solidStressObject)
-        elif self.sCode in [10,11]:
-            self.createTransientObject(self.solidStrain,solidStrainObject)
-        else:
-            raise Exception('invalid sCode...sCode=|%s|' %(self.sCode))
-        ###
-        return self.obj
-

@@ -58,10 +58,13 @@ class Op2(BDF,
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
                              'PCOMPTS',
                              # OMNS
+                             'OMM2',
                              
                              # new
                              #'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2''OMM2','AGRF','AFRF','AEMONPT','PERF','PMRF','MONITOR','SDF','FOL','STDISP'
                              #'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2'
+                             'STDISP','SDF','MONITOR','PMRF','PERF','PFRF','AEMONPT','AFRF','AGRF',
+                             #'FOL',
                              ]
                              
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
@@ -247,12 +250,14 @@ class Op2(BDF,
                     self.isOptimization = True
                 elif tableName in ['ERRORN']: # not done
                     self.readTable_R1TAB()
-                elif tableName in ['VIEWTB']: # not done
+                elif tableName in ['VIEWTB','STDISP','FOL','OMM2']: # not done
                     self.readTable_R1TAB()
 
                 elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
                     self.readTable_OGP1()
                 elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',]: # what are these???
+                    self.readTable_OGP1()
+                elif tableName in ['SDF']: # no idea
                     self.readTable_OGP1()
 
                 
@@ -270,8 +275,8 @@ class Op2(BDF,
 
                 elif tableName in ['ONRGY1']: # energy???
                     self.readTable_OEE1()
-                elif tableName in ['PCOMPTS']:
-                    self.readTable_PCOMPTS()
+                elif tableName in ['PCOMPTS','MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
+                    self.readTable_PCOMPTS() # 'SDF',
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "endTell   = ",self.op2.tell()
@@ -309,8 +314,8 @@ class Op2(BDF,
         self.tableCode = tCode%1000
         self.sortCode  = tCode/1000
         self.deviceCode   = aCode%10
-        self.approachCode = (aCode-self.deviceCode)/10
-        #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.approachCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
+        self.analysisCode = (aCode-self.deviceCode)/10
+        #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
         print self.printTableCode(self.tableCode)
         return (int3)
 
@@ -332,7 +337,7 @@ class Op2(BDF,
         return unpack(sFormat,ds)
         
     def deleteAttributes(self,params):
-        params += ['dataCode','deviceCode','approachCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
+        params += ['dataCode','deviceCode','analysisCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))

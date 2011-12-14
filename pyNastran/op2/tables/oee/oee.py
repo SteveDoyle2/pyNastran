@@ -5,10 +5,10 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 # pyNastran
 #from pyNastran.op2.resultObjects.ougv1_Objects import (
-#     temperatureObject,displacementObject,  # approachCode=1, sortCode=0
-#     eigenVectorObject,                     # approachCode=2, sortCode=0
-#     fluxObject,                            # approachCode=1, sortCode=3
-#     nonlinearTemperatureObject,            # approachCode=10,sortCode=0
+#     temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
+#     eigenVectorObject,                     # analysisCode=2, sortCode=0
+#     fluxObject,                            # analysisCode=1, sortCode=3
+#     nonlinearTemperatureObject,            # analysisCode=10,sortCode=0
 #     )
 
 class OEE(object):
@@ -65,65 +65,65 @@ class OEE(object):
         self.etotneg      = self.getValues(data,'f',19) ## Total negative energy
         self.nonlinearFactor = None
 
-        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
                          'loadSet':self.loadSet,'formatCode':self.formatCode,
                          'numWide': self.numWide,'cvalres':self.cvalres,
                          'esubt': self.esubt,'setID':self.setID,'eigenReal':self.eigenReal,'eigenImag':self.eigenImag,
                          'freq':self.freq,'etotpos':self.etotpos,'etotneg':self.etotneg}
 
         #self.printBlock(data) # on
-        if self.approachCode==1:   # statics / displacement / heat flux
+        if self.analysisCode==1:   # statics / displacement / heat flux
             pass
-        elif self.approachCode==2: # real eigenvalues
+        elif self.analysisCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.nonlinearFactor = self.mode
             print "mode(5)=%s" %(self.mode)
-        elif self.approachCode==3: # differential stiffness
+        elif self.analysisCode==3: # differential stiffness
             pass
-        elif self.approachCode==4: # differential stiffness
+        elif self.analysisCode==4: # differential stiffness
             pass
-        elif self.approachCode==5:   # frequency
+        elif self.analysisCode==5:   # frequency
             self.freq2 = self.getValues(data,'f',5) ## frequency
             self.nonlinearFactor = self.freq2 ## why are there 2 values of freq?
 
-        elif self.approachCode==6: # transient
+        elif self.analysisCode==6: # transient
             self.time = self.getValues(data,'f',5) ## time step
             self.nonlinearFactor = self.time
             print "time(5)=%s" %(self.time)
-        elif self.approachCode==7: # pre-buckling
+        elif self.analysisCode==7: # pre-buckling
             pass
-        elif self.approachCode==8: # post-buckling
+        elif self.analysisCode==8: # post-buckling
             self.mode = self.getValues(data,'i',5) ## mode number
             self.nonlinearFactor = self.mode
             print "mode(5)=%s" %(self.mode)
-        elif self.approachCode==9: # complex eigenvalues
+        elif self.analysisCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode number
             self.nonlinearFactor = self.mode
             print "mode(5)=%s" %(self.mode)
-        elif self.approachCode==10: # nonlinear statics
+        elif self.analysisCode==10: # nonlinear statics
             self.loadFactor = self.getValues(data,'f',5) ## load factor
             self.nonlinearFactor = self.loadFactor
             print "loadFactor(5) = %s" %(self.loadFactor)
-        elif self.approachCode==11: # old geometric nonlinear statics
+        elif self.analysisCode==11: # old geometric nonlinear statics
             pass
-        elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.time = self.getValues(data,'f',5) ## time step
             self.nonlinearFactor = self.time
             print "time(5)=%s" %(self.time)
         else:
-            raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
+            raise RuntimeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
         ###
         
         print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
-        print "approachCode=%s tableCode=%s" %(self.approachCode,self.tableCode)
+        print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
         print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
 
     def readOEE1_Data(self):
-        print "self.approachCode=%s tableCode(1)=%s" %(self.approachCode,self.tableCode)
-        self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
+        print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
+        self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
         tfsCode       =                   [self.tableCode,self.formatCode,self.sortCode]
         
         if tfsCode==[18,1,0]:
@@ -143,27 +143,27 @@ class OEE(object):
         assert self.formatCode==1 # Real
         assert self.sortCode==0   # Real
 
-        if self.approachCode==1: # displacement
+        if self.analysisCode==1: # displacement
             print "isStrainEnergy"
             self.obj = StrainEnergyObject(self.dataCode,self.iSubcase,self.nonlinearFactor)
             self.strainEnergy[self.iSubcase] = self.obj
-        elif self.approachCode==2: # buckling modes
+        elif self.analysisCode==2: # buckling modes
             print "isBucklingStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.approachCode==5: # freq
+        elif self.analysisCode==5: # freq
             print "isFreqStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.approachCode==6: # transient
+        elif self.analysisCode==6: # transient
             print "isTransientStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.approachCode==9: # nonlinear static eigenvector
+        elif self.analysisCode==9: # nonlinear static eigenvector
             print "isComplexStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.approachCode==10: # nonlinear statics
+        elif self.analysisCode==10: # nonlinear statics
             print "isNonlinearStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         else:
-            raise Exception('bad approach/table/format/sortCode=%s on OEE table' %(self.atfsCode))
+            raise Exception('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
         ###
         self.readScalars4(self.obj)
 

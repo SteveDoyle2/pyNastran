@@ -80,6 +80,7 @@ class solidStressObject(stressObject):
 
     def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
+        assert eid not in self.oxx
         assert cid >= 0
         assert eid >= 0
         self.eType[eid] = eType
@@ -104,6 +105,7 @@ class solidStressObject(stressObject):
         assert cid >= 0
         assert eid >= 0
         dt = self.dt
+        assert eid not in self.oxx[dt]
         self.eType[eid] = eType
         self.cid[eid]   = cid
         self.oxx[dt][eid]  = {nodeID: oxx}
@@ -305,6 +307,7 @@ class solidStrainObject(strainObject):
 
     def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
+        assert eid not in self.exx
         assert cid >= 0
         assert eid >= 0
         self.eType[eid] = eType
@@ -328,6 +331,7 @@ class solidStrainObject(strainObject):
         #print "Solid Strain add..."
         assert cid >= 0
         assert eid >= 0
+        assert eid not in self.exx[dt]
         self.eType[eid] = eType
         self.cid[eid]  = cid
         dt = self.dt

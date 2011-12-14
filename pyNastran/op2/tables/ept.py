@@ -13,9 +13,9 @@ class EPT(object):
         self.iTableMap = {
                          (3201,32,55):    self.readNSM,     # record 2
                          (52,20,181):     self.readPBAR,    # record 11 - buggy
-                        #(9102,91,52):    self.readPBARL,   # record 12 - almost there...
+                         (9102,91,52):    self.readPBARL,   # record 12 - almost there...
                         #(5402,54,262):   self.readPBEAM,   # record 14 - not done
-                         (2706,27,287):   self.readPCOMP,   # record 22 - buggy
+                        #(2706,27,287):   self.readPCOMP,   # record 22 - buggy
                          (902,9,29):      self.readPROD,    # record 49
                         #(1002,10,42):    self.readPSHEAR,  # record 50 - no PSHEAR object
                          (2402,24,281):   self.readPSOLID,  # record 51
@@ -47,6 +47,7 @@ class EPT(object):
     def readNSM(self,data):
         """
         NSM(3201,32,55) - the marker for Record 2
+        @todo this isnt a property...
         """
         print "reading NSM"
         while len(data)>=16: # 4*4
@@ -56,8 +57,8 @@ class EPT(object):
             (sid,A,B,C,D,ID,value) = out
             propSet = A+B+C+D
             print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
-            prop = NSM(None,[sid,propSet,ID,value])
-            self.addOp2Property(prop)
+            prop = NSM(None,None,[sid,propSet,ID,value])
+            #self.addOp2Property(prop)
         ###
 
 
@@ -137,7 +138,7 @@ class EPT(object):
             #print "len(out) = ",len(out)
             #print "PBARL = ",dataIn
             prop = PBARL(None,dataIn)
-            self.addProperty(prop)
+            self.addOp2Property(prop)
             #print self.printSection(20)
         ###
 
@@ -194,6 +195,9 @@ class EPT(object):
         """
         #print "reading PCOMP"
         while len(data)>=32: # 8*4 - dynamic
+            print "len(data) = ",len(data)
+            print self.printBlock(data[0:200])
+            isSymmetrical = 'NO'
             eData = data[:32]
             data  = data[32:]
             out = unpack('iifffiff',eData)
@@ -203,8 +207,14 @@ class EPT(object):
             data  = data[16*(nLayers):]
             
             Mid=[]; T=[]; Theta=[]; Sout=[]
+            if nLayers<0:
+                isSymmetrical = 'YES'
+                nLayers = abs(nLayers)
+            print "nLayers = ",nLayers
+            assert 0<nLayers<100,'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' %(pid,nLayers,z0,nsm,sb,ft,Tref,ge)
+
             for n in range(nLayers):
-                #print "len(eData) = ",len(eData)
+                print "len(eData) = ",len(eData)
                 (mid,t,theta,sout) = unpack('iffi',eData[0:16])
                 Mid.append(mid)
                 T.append(t)
@@ -213,8 +223,8 @@ class EPT(object):
                 eData = eData[16:]
             ###
             
-            dataIn = [pid,z0,nsm,sb,ft,Tref,ge,Mid,T,Theta,Sout]
-            #print "PCOMP = %s" %(dataIn)
+            dataIn = [pid,z0,nsm,sb,ft,Tref,ge,isSymmetrical,Mid,T,Theta,Sout]
+            print "PCOMP = %s" %(dataIn)
             prop = PCOMP(None,dataIn)
             self.addOp2Property(prop)
         ###
