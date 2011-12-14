@@ -7,8 +7,8 @@ from struct import unpack
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
-from pyNastran.op2.geom.geometryTables import GeometryTables
 from pyNastran.op2.tables.resultTable import ResultTable
+from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 
 class Op2(BDF,
 #class Op2(getMethods,addMethods,writeMesh, # BDF methods
