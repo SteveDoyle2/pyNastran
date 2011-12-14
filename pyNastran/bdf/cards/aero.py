@@ -400,7 +400,6 @@ class GRAV(BaseCard):
             self.mb  = data[6]
             assert len(data)==7
         ###            
-        assert max(self.N) != min(self.N),'N=%s max(N)=%s min(N)=%s' %(self.N,max(self.N),min(self.N))
 
     def __repr__(self):
         N = []

@@ -499,7 +499,9 @@ class Subcase(object):
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif paramType=='KEY-type':
-            msg += '%s\n' %(value)
+            #print "KEY-TYPE:  |%s|" %(value)
+            assert value is not None,param
+            msg += spaces + '%s\n' %(value)
         elif paramType=='STRING-type':
             msg += spaces+'%s = %s\n' %(key,value)
         elif paramType=='CSV-type':

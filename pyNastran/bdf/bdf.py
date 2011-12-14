@@ -25,7 +25,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     #def setCardsToInclude():
     #    pass
 
+    def printFileName(self,filename):
+        #driveLetter = os.path.splitdrive(filename)[0]
+        #if driveLetter==os.path.splitdrive(os.curdir)[0] and self.relpath:
+        if self.relpath:
+            return os.path.relpath(outfilename)
+        else:
+            return filename
+        ###
+
     def __init__(self,debug=True,log=None):
+        if sys.version_info < (2,6):
+            version = sys.version_info
+            self.relpath = False
+            #raise Exception("must use python 2.6 or greater...version=%s" %(str(version)))
+
         if log is None:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
@@ -93,7 +107,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'DAREA','NLPARM',
 
         # aero
-        'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
+        'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV','AESTAT',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
 
@@ -108,7 +122,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'RADBC','CONV',  #'RADM',
         
         # optimization
-        'DCONSTR','DESVAR','DDVAL',
+        'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
         ])
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
@@ -258,6 +272,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.dconstrs = {}
         self.desvars  = {}
         self.ddvals   = {}
+        self.dresps   = {}
+        self.dvprels  = {}
 
     def _initThermalDefaults(self):
         # BCs
@@ -385,13 +401,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## determines if self.activefilename should be closed at the next opportunity
         self.doneReading = False
         if debug:
-            uncpathA = os.path.splitunc(activeFileName)
-            uncpathB = os.path.splitunc(self.bdfFileName)
-            if not(uncpathA=='' and uncpathB):
-                print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(activeFileName,self.bdfFileName,nlines)
-            else:
-                print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(os.path.relpath(activeFileName),os.path.relpath(self.bdfFileName),nlines)
-            ###
+            fnameA = self.printFileName(activeFileName)
+            fnameB = self.printFileName(self.bdfFileName)
+
+            print "activeFileName=|%s| infilename=%s len(pack)=%s\n" %(fnameA,fnameB,nlines)
         ###
         #print "\n\n"
 
@@ -405,11 +418,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         self._setInfile(infilename,includeDir)
 
-        uncpath = os.path.splitunc(self.bdfFileName)
-        if uncpath=='':
-            self.log().info('---starting BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
-        else:
-            self.log().info('---starting BDF.read of %s---' %(self.bdfFileName))
+        fname = self.printFileName(self.bdfFileName)
+        self.log().info('---starting BDF.read of %s---' %(fname))
         sys.stdout.flush()
 
         #self.debug = True
@@ -423,10 +433,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if self.debug:
             self.log().debug("***BDF.read")
 
-        if uncpath=='':
-            self.log().info('---finished BDF.read of %s---' %(os.path.relpath(self.bdfFileName)))
-        else:
-            self.log().info('---finished BDF.read of %s---' %(self.bdfFileName))
+        self.log().info('---finished BDF.read of %s---' %(fname))
         sys.stdout.flush()
 
         isDone = self.foundEndData
@@ -1255,6 +1262,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='DDVAL':
                 ddval = DDVAL(cardObj)
                 self.addDDVal(ddval)
+            elif cardName=='DRESP1':
+                ddval = DRESP1(cardObj)
+                self.addDResp(ddval)
+            elif cardName=='DVPREL1':
+                dvprel = DVPREL1(cardObj)
+                self.addDvprel(dvprel)
 
 
             # coordinate systems

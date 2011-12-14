@@ -504,14 +504,19 @@ class CBAR(LineElement):
         assert self.offt[2] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
 
     def Area(self):
-        return self.pid.A
+        A = self.pid.Area()
+        assert isinstance(A,float)
+        return A
 
     def Length(self):
         L = self.Length_noXref(self.ga,self.gb)
+        assert isinstance(L,float)
         return L
 
     def Nsm(self):
-        return self.pid.nsm
+        nsm = self.pid.Nsm()
+        assert isinstance(nsm,float)
+        return nsm
 
     def initX_G0(self,card):
         field5 = card.field(5)

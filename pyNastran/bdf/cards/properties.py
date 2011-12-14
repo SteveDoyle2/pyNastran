@@ -379,10 +379,11 @@ class PBARL(LineProperty):
 
             #self.dim = fields(9)
             if nDim>0:
-                self.nsm = self.dim.pop()
+                self.nsm = self.setDefaultIfBlank(self.dim.pop(),0.0)
             else:
                 self.nsm = 0.0
             ###
+            assert isinstance(self.nsm,float)
         else:
             self.pid   = data[0]
             self.mid   = data[1]
@@ -403,7 +404,106 @@ class PBARL(LineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def Nsm():
+    def Area(self):
+        if   self.Type=='ROD':  A=pi*self.dim[0]**2
+        elif self.Type=='TUBE': A=pi*(self.dim[0]**2-self.dim[1]**2)
+        elif self.Type=='I':
+            h1 = self.dim[5]
+            w1 = self.dim[2]
+
+            h3 = self.dim[4]
+            w3 = self.dim[1]
+
+            h2 = self.dim[0]-h1-h3
+            w2 = self.dim[3]
+            A = h1*w1+h2*w2+h3*w3
+        elif self.Type=='CHAN':
+            h1 = self.dim[3]
+            w1 = self.dim[0]
+
+            h3 = h1
+            w3 = w1
+            h2 = self.dim[1]-h1-h3
+            w2 = self.dim[2]
+            A = h1*w1+h2*w2+h3*w3
+        elif self.Type=='T':
+            h1 = self.dim[2]
+            w1 = self.dim[0]
+
+            h2 = self.dim[1]-h1
+            w2 = self.dim[3]
+            A = h1*w1+h2*w2
+        elif self.Type=='BOX':
+            h1 = self.dim[2]
+            w1 = self.dim[0]
+
+            h2 = self.dim[1]-2*h1
+            w2 = self.dim[3]
+            A = 2*(h1*w1+h2*w2)
+        elif self.Type=='BAR':
+            h1 = self.dim[1]
+            w1 = self.dim[0]
+            A = h1*w1
+        elif self.Type=='CROSS':
+            h1 = self.dim[2]
+            w1 = self.dim[1]
+
+            h2 = self.dim[3]
+            w2 = self.dim[0]
+            A = h1*w1+h2*w2
+        elif self.Type=='H':
+            h1 = self.dim[2]
+            w1 = self.dim[1]
+
+            h2 = self.dim[3]
+            w2 = self.dim[0]
+            A = h1*w1+h2*w2
+        elif self.Type=='T1':
+            h1 = self.dim[0]
+            w1 = self.dim[2]
+
+            h2 = self.dim[3]
+            w2 = self.dim[1]
+            A = h1*w1+h2*w2
+        elif self.Type=='I1':
+            h2 = self.dim[2]
+            w2 = self.dim[1]
+
+            h1 = self.dim[3]-h2
+            w1 = self.dim[0]+w2
+            A = h1*w1+h2*w2
+        elif self.Type=='CHAN1':
+            h2 = self.dim[2]
+            w2 = self.dim[1]
+
+            h1 = self.dim[3]-h2
+            w1 = self.dim[0]+w2
+            A = h1*w1+h2*w2
+        #elif self.Type=='Z':
+        #elif self.Type=='CHAN2':
+        elif self.Type=='T2':
+            h1 = self.dim[3]
+            w1 = self.dim[1]
+
+            h2 = h1-self.dim[2]
+            w2 = self.dim[0]
+            A = h1*w1+h2*w2
+        #elif self.Type=='BOX1':
+        elif self.Type=='HEXA':
+            hBox = self.dim[2]
+            wBox = self.dim[1]
+
+            wTri = self.dim[0]
+            A = hBox*wBox - wTri*hBox
+        #elif self.Type=='HAT':
+        #elif self.Type=='HAT1':
+        #elif self.Type=='DBOX':
+        else:
+            raise Exception('Type=%s is not supported...' %(self.Type))
+            
+        return A
+        
+    def Nsm(self):
         return self.nsm
 
     def __repr__(self):

@@ -233,11 +233,13 @@ class addMethods(object):
         self.nodes[node.nid] = node
 
     def addElement(self,elem,allowOverwrites=False):
-        if not allowOverwrites:
+        key = elem.eid
+        if key in self.elements and not allowOverwrites:
+            print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
             #assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
             pass
-        assert elem.eid>0,'eid=%s elem=%s' %(elem.eid,elem)
-        self.elements[elem.eid] = elem
+        assert key>0,'eid=%s elem=%s' %(key,elem)
+        self.elements[key] = elem
 
     def addThermalElement(self,elem):  # same function at the moment...
         self.addElement(elem)
@@ -399,6 +401,14 @@ class addMethods(object):
         assert ddval.oid not in self.ddvals
         assert ddval.oid>0
         self.ddvals[ddval.oid] = ddval
+    def addDResp(self,dresp):
+        assert dresp.oid not in self.dresps
+        assert dresp.oid>0
+        self.dresps[dresp.oid] = dresp
+    def addDvprel(self,dvprel):
+        assert dvprel.oid not in self.dvprels
+        assert dvprel.oid>0
+        self.dvprels[dvprel.oid] = dvprel
 
 
     def addNLParm(self,nlparm):
