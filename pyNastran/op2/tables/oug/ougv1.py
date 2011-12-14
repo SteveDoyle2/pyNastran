@@ -141,7 +141,7 @@ class OUGV1(object):
         print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         #if self.thermal==2:
-        #    self.skipOES_Element(None)
+        #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         # displacement
         if   tfsCode==[1,1,0]:
@@ -220,7 +220,7 @@ class OUGV1(object):
             print "***start skipping***"
             print 'bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode)
             print self.codeInformation()
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             print "***end skipping***"
             
         ###
@@ -231,8 +231,7 @@ class OUGV1(object):
         if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
             if self.analysisCode==1: # displacement
                 print "isDisplacement"
-                self.obj = displacementObject(self.dataCode,self.iSubcase)
-                self.displacements[self.iSubcase] = self.obj
+                self.createTransientObject(self.displacements,displacementObject)
 
             elif self.analysisCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
@@ -269,8 +268,7 @@ class OUGV1(object):
         elif self.thermal==1:
             if self.analysisCode==1: # temperature
                 print "isTemperature"
-                self.obj = temperatureObject(self.dataCode,self.iSubcase)
-                self.temperatures[self.iSubcase] = self.obj
+                self.createTransientObject(self.temperatures,temperatureObject)
             elif self.analysisCode==6: # transient temperature
                 print "isTransientTemperature"
                 self.createTransientObject(self.temperatures,temperatureObject)
@@ -283,11 +281,11 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(self.obj)
+        self.readScalars8()
         #if self.obj:
-        #    self.readScalars8(self.obj)
+        #    self.readScalars8()
         #else:
-        #    self.skipOES_Element(None)
+        #    self.skipOES_Element()
         ###
         #print self.obj
         #return
@@ -310,7 +308,7 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(self.obj,debug=False)
+        self.readScalars8(debug=False)
         if self.analysisCode not in [2,8]:
             raise Exception('check_format1...')
         ###
@@ -321,12 +319,10 @@ class OUGV1(object):
         if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
             if self.analysisCode==1: # velocity
                 print "isVelocity"
-                self.obj = displacementObject(self.dataCode,self.iSubcase)
-                self.velocities[self.iSubcase] = self.obj
+                self.createTransientObject(self.velocities,displacementObject)
             elif self.analysisCode==6: # transient velocity
                 print "isTransientVelocity"
                 self.createTransientObject(self.velocities,displacementObject)
-
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -335,18 +331,17 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(self.obj,debug=True)
+        self.readScalars8(debug=True)
 
     def readOUGV1_Data_table11_format1_sort0(self): # velocity
         assert self.formatCode==1 # Real
         assert self.sortCode==0   # Real
         if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
             if self.analysisCode==1: # acceleration
-                print "isVelocity"
-                self.obj = displacementObject(self.dataCode,self.iSubcase)
-                self.accelerations[self.iSubcase] = self.obj
+                print "isAcceleration"
+                self.createTransientObject(self.accelerations,displacementObject)
             elif self.analysisCode==6: # transient acceleration
-                print "isTransientVelocity"
+                print "isTransientAcceleration"
                 self.createTransientObject(self.accelerations,displacementObject)
 
             else:
@@ -357,7 +352,7 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(self.obj,debug=True)
+        self.readScalars8(debug=True)
 
     def readOUGV1_Data_table1_format1_sort1(self):
         assert self.formatCode==1 # Real
@@ -381,8 +376,8 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        print "objName = ",self.obj.name()
-        self.readScalars14(self.obj,debug=True)
+        #print "objName = ",self.obj.name()
+        self.readScalars14(debug=True)
         print self.obj
         #return
 
@@ -408,9 +403,9 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        print "objName = ",self.obj.name()
-        self.readScalars14(self.obj)
-        #print self.obj
+        #print "objName = ",self.obj.name()
+        self.readScalars14()
+        print self.obj
         #return
 
     def readOUGV1_Data_table10_format1_sort1(self):
@@ -436,8 +431,8 @@ class OUGV1(object):
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         print "objName = ",self.obj.name()
-        self.readScalars14(self.obj)
-        #print self.obj
+        self.readScalars14()
+        print self.obj
         #return
 
     def readOUGV1_Data_table1_format2_sort0(self):
@@ -453,7 +448,7 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(self.obj)
+        self.readScalars8()
 
     def readOUGV1_Data_table1_format2_sort1(self):
         assert self.formatCode==2 # Real/Imaginary
@@ -462,15 +457,15 @@ class OUGV1(object):
             if self.analysisCode==5: # frequency displacement
                 print "isFrequencyDisplacement"
                 self.createTransientObject(self.displacements,complexDisplacementObject)
-                self.readScalarsF14(self.obj)
+                self.readScalarsF14()
             elif self.analysisCode==7: # pre-buckling displacement
                 print "isPreBucklingDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
-                self.readScalarsF14(self.obj)
+                self.readScalarsF14()
             #elif self.analysisCode==9 and self.sortCode==1: # nonlinear static eigenvector
             #    print "isComplexEigenvalues"
             #    self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
-            #    self.readScalars8(self.obj)
+            #    self.readScalars8()
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -514,7 +509,7 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(self.obj)
+        self.readScalars8()
 
     def readOUGV1_Data_table1_format3_sort1(self):
         assert self.formatCode==3 # Magnitude/Phase
@@ -537,5 +532,5 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars14(self.obj)
+        self.readScalars14()
 

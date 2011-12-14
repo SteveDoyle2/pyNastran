@@ -135,11 +135,11 @@ class OEF(object):
                 raise Exception('bad tableCode/formatCode/sortCode=%s on OEF table' %(tfsCode))
             ###
         else:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
         ###
 
     def readOEF1_Data_format3_sort1(self):
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOEF1_Data_format1_sort0(self):
         assert self.formatCode==1
@@ -202,12 +202,12 @@ class OEF(object):
             raise Exception(msg)
         ###
         if self.obj:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             #self.readScalars8(self.obj,debug=True)
             #self.readForces(data,self.obj)
-            #self.skipOES_Element(None)
+            #self.skipOES_Element()
         else:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
         ###
         #return
 
@@ -230,7 +230,7 @@ class OEF(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.skipOES_Element(None)
+        self.skipOES_Element()
         #self.readForces(data,self.obj)
         #return
         
@@ -255,9 +255,9 @@ class OEF(object):
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         if self.obj:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
         else:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
         #self.readForces(data,self.obj)
         #return
 

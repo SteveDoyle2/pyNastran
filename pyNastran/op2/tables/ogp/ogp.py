@@ -187,30 +187,30 @@ class OGP(object):
         else:
             #raise Exception('bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode))
             print 'bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode)
-            self.skipOES_Element(None)
+            self.skipOES_Element()
         ###
         #print self.obj
         print "-------finished OGP----------"
 
     def readOGP1_Data_format1_sort1(self):
         print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOGP1_Data_format2_sort1(self):
         print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOGP1_Data_format3_sort0(self):
         print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOGP1_Data_format3_sort1(self):
         print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOGP1_Data_format3_sort3(self):
         print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOGP1_Data_format1_sort0(self):
         if self.thermal==0:
@@ -220,12 +220,12 @@ class OGP(object):
                 self.appliedLoads[self.iSubcase] = self.obj
                 self.readOGPForces(self.data,self.obj)
             else:
-                self.skipOES_Element(None)
+                self.skipOES_Element()
                 print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
                 #raise Exception('not supported OGP solution...')
             ###
         elif self.thermal==1:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###

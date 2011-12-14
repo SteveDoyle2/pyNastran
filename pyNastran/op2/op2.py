@@ -100,13 +100,19 @@ class Op2(BDF,
         self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
 
         # OES
-        self.conrodStress   = {}
-        self.conrodStrain   = {}
+        self.celasStress   = {}
+        self.celasStrain   = {}
 
-        self.rodStress   = {}
-        self.rodStrain   = {}
-        self.barStress   = {}
-        self.barStrain   = {}
+        self.rodStress    = {}
+        self.rodStrain    = {}
+        self.conrodStress = {}
+        self.conrodStrain = {}
+
+        self.barStress  = {}
+        self.barStrain  = {}
+        self.beamStress = {}
+        self.beamStrain = {}
+
         self.plateStress = {}
         self.plateStrain = {}
         self.solidStress = {}
@@ -145,6 +151,7 @@ class Op2(BDF,
                    self.spcForces,self.mpcForces,
                    
                    # OES - Stress/Strain
+                   self.celasStress,self.celasStrain,
                    self.rodStress,self.rodStrain,
                    self.barStress,self.barStrain,
                    self.plateStress,self.plateStrain,

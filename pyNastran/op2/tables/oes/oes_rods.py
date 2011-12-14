@@ -23,7 +23,10 @@ class rodStressObject(stressObject):
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.axial      = {}
         self.torsion    = {}
+        
         if self.code in [[1,0,0],[1,0,1]]:
+            self.MS_axial   = {}
+            self.MS_torsion = {}
             self.getLength = self.getLength_format1_sort0
             self.isImaginary = False
             if dt is not None:

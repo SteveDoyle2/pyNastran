@@ -158,20 +158,21 @@ class OQG1(object):
         #elif tfsCode==[39,1,1]:
         #    self.readOQG1_Data_format1_sort1()
         else:
-            self.skipOES_Element(None)
+            self.skipOES_Element()
             #raise Exception('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
     def readOQG1_Data_format2_sort0(self):
         print 'not supported OQG solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOQG1_Data_format3_sort0(self):
         print 'not supported OQG solution...atfsCode=%s' %(self.atfsCode)
-        self.skipOES_Element(None)
+        self.skipOES_Element()
 
     def readOQG1_Data_table3_format1_sort0(self):
+        self.obj = None
         if self.thermal==0:
             if self.analysisCode==1: # displacement
                 print "isSPCForces"
@@ -192,7 +193,8 @@ class OQG1(object):
             #    print "isNonlinearStaticDisplacement"
             #    self.createTransientObject(self.spcForces,displacementObject)
             else:
-                self.skipOES_Element(None)
+                #self.skipOES_Element()
+                pass
                 #raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
@@ -209,7 +211,8 @@ class OQG1(object):
             if 0:
                 pass
             else:
-                self.skipOES_Element(None)
+                #self.skipOES_Element()
+                pass
                 print 'unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode)
                 #raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -218,7 +221,9 @@ class OQG1(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars8(self.obj)
+        #self.readScalars8(self.obj)
+        self.skipOES_Element()
+        
 
     def readOQG1_Data_format1_sort1(self):
         if self.thermal==0:
