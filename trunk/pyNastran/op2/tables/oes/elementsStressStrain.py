@@ -51,10 +51,12 @@ class ElementsStressStrain(object):
         """
         deviceCode = self.deviceCode
         (n,dataFormat) = self.obj.getLength()
+        print "n=%s dataFormat=%s len(data)=%s" %(n,dataFormat,len(self.data))
         while len(self.data)>=n:
             eData     = self.data[0:n]
             self.data = self.data[n: ]
             out = unpack(dataFormat,eData)
+            #print "out = ",out
             self.obj.addNewEid(out)
         ###
         self.handleResultsBuffer(self.basicElement)
@@ -204,27 +206,6 @@ class ElementsStressStrain(object):
             self.op2Debug.write('---CELAS2_12---\n')
         deviceCode = self.deviceCode
         #assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
-
-        if self.tableCode in [0,2]:
-            minBuffer = 8
-            def parse(eData):
-                (eid,force) = unpack('if',eData)
-                eid = (eid - deviceCode) / 10
-                #if force>1.:
-                #print "eid=%s force=%s" %(eid,force)
-                return (eid,force)
-                ###
-            ###
-        else:
-            minBuffer = 12
-            def parse(eData):
-                (eid,sReal,sImag) = unpack('iff',eData)
-                eid = (eid - deviceCode) / 10
-                #if sReal>1e-5:
-                #print "eid=%s force=%s imag=%s" %(eid,sReal,sImag)
-                return (eid,sReal,sImag)
-            ###
-        ###
 
         while len(self.data)>=minBuffer:
             eData     = self.data[0:minBuffer]
