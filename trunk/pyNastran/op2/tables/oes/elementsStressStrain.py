@@ -124,6 +124,7 @@ class ElementsStressStrain(object):
         #print self.beamStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CBEAM-2"
+        raise Exception('add CBEAM-2...')
 
     def CONROD_10(self,stress): # not done
         """
@@ -137,23 +138,22 @@ class ElementsStressStrain(object):
             #self.printSection(40)
             eData     = self.data[0:44]
             self.data = self.data[44: ]
-            #print "len(data) = ",len(eData)
 
             out = unpack('iifffffffff',eData)
             (eid,grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             eid = (eid - deviceCode) / 10
-            #stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
-
-            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
-            #print "len(data) = ",len(self.data)
+            print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            stress.addNewEid(eid,axial,axialMS,torsion,torsionMS)
         ###
         self.handleResultsBuffer(self.CONROD_10,stress)
+
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CONROD_10"
         ###
+        raise Exception('add CONROD...')
 
     def CELAS1_11(self,stress):
         print '---CELAS1_11---\n'
@@ -196,6 +196,7 @@ class ElementsStressStrain(object):
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with CELAS1-11"
+        raise Exception('add CELAS1...')
 
     def CELAS2_12(self,stress):
         print '---CELAS2_12---\n'
@@ -234,6 +235,7 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CELAS2_12,stress)
         if self.makeOp2Debug:
             print "done with CELAS2-12"
+        raise Exception('add CELAS2...')
 
     def CQUAD4_33(self,stress): # works
         """
@@ -340,10 +342,10 @@ class ElementsStressStrain(object):
         #term      = self.data[0:4] CEN/
         #self.data = self.data[4:]
         #print "*****"
-
+        ElementType = self.ElementType(self.elementType)
         nNodes=1  # this is a minimum, it will be reset later
         nNodesExpected = 1
-        assert self.numWide in [109,151,193],'invalid numWide...numWide=%s' %(self.numWide)
+        #assert self.numWide in [109,151,193],'invalid numWide...numWide=%s' %(self.numWide)
         while len(self.data)>= 16+84*nNodesExpected:
             eData     = self.data[0:16]
             self.data = self.data[16:]
@@ -359,17 +361,14 @@ class ElementsStressStrain(object):
             assert nNodes < 21,self.printBlock(eData)
             eid = (eid - deviceCode) / 10
 
-            if(  nNodes in [4,10]):
-                elementType = "CTETRA"
+            if ElementType=='CTETRA':
                 nNodesExpected = 5
-            elif(nNodes in [6,15]):
-                elementType = "CPENTA"
+            elif ElementType=='CPENTA':
                 nNodesExpected = 7
-            elif(nNodes in [8,20]):
-                elementType = "CHEXA"
+            elif ElementType=='CHEXA':
                 nNodesExpected = 9
             else:
-                raise Exception('not supported....nNodes=%s' %(nNodes))
+                raise Exception('not supported....EType=%s eType=%s nNodes=%s numWide=%s' %(ElementType,self.elementType,nNodes,self.numWide))
 
             #print "len(data) = ",len(self.data)
             for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
@@ -380,7 +379,6 @@ class ElementsStressStrain(object):
                 #self.printBlock(eData)
 
                 #print "self.tableCode = ",self.tableCode
-                
                 #print "len(data) = ",len(self.data)
                 
                 gridDevice, = unpack('i',eData[0:4])
@@ -412,7 +410,7 @@ class ElementsStressStrain(object):
                 cCos = []
                 if nodeID==0:
                     #print "adding new eid"
-                    stress.addNewEid(elementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                    stress.addNewEid(ElementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
                 else:
                     stress.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)

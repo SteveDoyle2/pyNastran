@@ -45,81 +45,80 @@ class OGP(object):
         self.oCode      = self.getValues(data,'i',11) ## undefined in DMAP...
         self.thermal    = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
 
-        self.dataCode = {'analysisCode': self.approachCode,'deviceCode':self.deviceCode,
+        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
                          'dLoadID':self.dLoadID,'formatCode':self.formatCode,
                          'numWide': self.numWide,'oCode':self.oCode,
                          'thermal': self.thermal}
         print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
-        if self.approachCode==1:   # statics
+        if self.analysisCode==1:   # statics
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.nonlinearFactor = self.lsdvmn
-        elif self.approachCode==2: # normal modes/buckling (real eigenvalues)
+        elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
             self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
             self.nonlinearFactor = self.mode
-        elif self.approachCode==3: # differential stiffness 0
+        elif self.analysisCode==3: # differential stiffness 0
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.nonlinearFactor = self.lsdvmn
-        elif self.approachCode==4: # differential stiffness 1
+        elif self.analysisCode==4: # differential stiffness 1
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.nonlinearFactor = self.lsdvmn
-        elif self.approachCode==5:   # frequency
+        elif self.analysisCode==5:   # frequency
             self.freq = self.getValues(data,'f',5) ## frequency
             self.nonlinearFactor = self.freq
 
-        elif self.approachCode==6: # transient
+        elif self.analysisCode==6: # transient
             self.time = self.getValues(data,'f',5) ## time step
             self.nonlinearFactor = self.time
             print "TIME(5)=%s" %(self.time)
-        elif self.approachCode==7: # pre-buckling
+        elif self.analysisCode==7: # pre-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## load set
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
-        elif self.approachCode==8: # post-buckling
+        elif self.analysisCode==8: # post-buckling
             self.lsdvmn = self.getValues(data,'i',5) ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
-        elif self.approachCode==9: # complex eigenvalues
+        elif self.analysisCode==9: # complex eigenvalues
             self.mode   = self.getValues(data,'i',5) ## mode
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
             self.nonlinearFactor = self.mode
             print "LFTSFQ(5)=%s  EIGR(6)=%s  EIGI(7)=%s" %(self.lftsfq,self.eigr,self.eigi)
-        elif self.approachCode==10: # nonlinear statics
+        elif self.analysisCode==10: # nonlinear statics
             self.lftsfq = self.getValues(data,'f',5) ## load step
             self.nonlinearFactor = self.lftsfq
             print "LFTSFQ(5) = %s" %(self.lftsfq)
-        elif self.approachCode==11: # old geometric nonlinear statics
+        elif self.analysisCode==11: # old geometric nonlinear statics
             self.lsdvmn = self.getValues(data,'i',5)
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
-        elif self.approachCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.lsdvmn = self.getValues(data,'i',5)
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
-            raise RuntimeError('invalid approach code...approachCode=%s' %(self.approachCode))
+            raise RuntimeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
 
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set, Mode number
         
         #print "*iSubcase=%s"%(self.iSubcase)
-        #print "approachCode=%s tableCode=%s thermal=%s" %(self.approachCode,self.tableCode,self.thermal)
+        #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
 
     def readOGP1_Data(self):
-        print "self.approachCode=%s tableCode(1)=%s thermal(23)=%g" %(self.approachCode,self.tableCode,self.thermal)
+        print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.atfsCode = [self.approachCode,self.tableCode,self.formatCode,self.sortCode]
-        print "tfsCode=%s" %(tfsCode)
+        self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
 
         # grid point force balance
         if   tfsCode==[19,1,0]:
@@ -215,7 +214,7 @@ class OGP(object):
 
     def readOGP1_Data_format1_sort0(self):
         if self.thermal==0:
-            if self.approachCode==1: # displacement
+            if self.analysisCode==1: # displacement
                 print "isAppliedLoads"
                 self.obj = appliedLoadsObject(self.dataCode,self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj

@@ -245,7 +245,7 @@ class Op2Codes(object):
         tableCodeContent = tableCode%1000
         dataFormat = tableCode/1000
         msg = ''
-        msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
+        #msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
 
         tableContent = {
             0  : '',
@@ -304,7 +304,7 @@ class Op2Codes(object):
         DMAP - page 60-63
         """
         deviceCode   = self.deviceCode
-        #approachCode = self.approachCode
+        #analysisCode = self.analysisCode
         #tableCode    = self.tableCode
         sortCode     = self.sortCode
 
@@ -373,18 +373,18 @@ class Op2Codes(object):
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
             #raise Exception(msg)
         
-        approach=''
-        if(  self.approachCode== 1):  approach = "Statics"
-        elif(self.approachCode== 2):  approach = "Normal modes or buckling (real eigenvalues)"
-        elif(self.approachCode== 3):  approach = "Differential Stiffness 0 - obsolete"
-        elif(self.approachCode== 4):  approach = "Differential Stiffness 1 - obsolete"
-        elif(self.approachCode== 5):  approach = "Frequency"
-        elif(self.approachCode== 6):  approach = "Transient"
-        elif(self.approachCode== 7):  approach = "Pre-buckling"
-        elif(self.approachCode== 8):  approach = "Post-buckling"
-        elif(self.approachCode== 9):  approach = "Complex eigenvalues"
-        elif(self.approachCode==10):  approach = "Nonlinear statics"
-        elif(self.approachCode==11):  approach = "Geometric nonlinear statics"
+        analysis=''
+        if(  self.analysisCode== 1):  analysis = "Statics"
+        elif(self.analysisCode== 2):  analysis = "Normal modes or buckling (real eigenvalues)"
+        elif(self.analysisCode== 3):  analysis = "Differential Stiffness 0 - obsolete"
+        elif(self.analysisCode== 4):  analysis = "Differential Stiffness 1 - obsolete"
+        elif(self.analysisCode== 5):  analysis = "Frequency"
+        elif(self.analysisCode== 6):  analysis = "Transient"
+        elif(self.analysisCode== 7):  analysis = "Pre-buckling"
+        elif(self.analysisCode== 8):  analysis = "Post-buckling"
+        elif(self.analysisCode== 9):  analysis = "Complex eigenvalues"
+        elif(self.analysisCode==10):  analysis = "Nonlinear statics"
+        elif(self.analysisCode==11):  analysis = "Geometric nonlinear statics"
 
         device=''
         if(  self.deviceCode==1):  device = "Print"
@@ -438,7 +438,7 @@ class Op2Codes(object):
         elif(self.tableCode==40):  table = "OGPKE - Grip point kinetic energy"
 
         msg  = "  deviceCode   = %-3s %s\n" %(self.deviceCode,device)
-        msg += "  analysisCode = %-3s %s\n" %(self.approachCode,approach)
+        msg += "  analysisCode = %-3s %s\n" %(self.analysisCode,analysis)
         msg += "  tableCode    = %-3s %s\n" %(self.tableCode,table)
         msg += "  formatCode   = %-3s %s\n" %(formatCode,formatWord)
         msg += "  sortCode     = %-3s %s\n" %(self.sortCode,sortWord)
