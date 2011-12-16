@@ -84,9 +84,9 @@ class dummyLogger(object):
 
     def startLog(self,level):
         if level=='debug':
-            return debugLogger
+            return debugLogger()
         elif level=='info':
-            return infoLogger
+            return infoLogger()
         else:
             raise Exception("invalid logger:  debug, info ONLY!")
 
@@ -107,4 +107,5 @@ if __name__=='__main__':
     # how to use a dummy logger
     logger = dummyLogger()
     log = logger.startLog('debug') # or info
+    log.debug('test message')
 
