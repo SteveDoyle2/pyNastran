@@ -13,7 +13,7 @@ class ElementsStressStrain(object):
         self.data = ''
         self.handleResultsBuffer(self.skipOES_Element)
 
-    def OES_Thermal(self): # works
+    def OES_Thermal(self,debug=False): # works
         if self.makeOp2Debug:
             self.op2Debug.write('---OES_Thermal---\n')
         deviceCode = self.deviceCode
@@ -50,15 +50,19 @@ class ElementsStressStrain(object):
         formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
         """
         deviceCode = self.deviceCode
-        (n,dataFormat) = self.obj.getLength()
-        print "n=%s dataFormat=%s len(data)=%s" %(n,dataFormat,len(self.data))
-        while len(self.data)>=n:
-            eData     = self.data[0:n]
-            self.data = self.data[n: ]
+        (nTotal,dataFormat) = self.obj.getLength()
+        #print "nTotal=%s dataFormat=%s len(data)=%s" %(nTotal,dataFormat,len(self.data))
+        
+        n = 0
+        nEntries = len(self.data)/nTotal
+        for i in range(nEntries):
+            eData = self.data[n:n+nTotal]
             out = unpack(dataFormat,eData)
             #print "out = ",out
             self.obj.addNewEid(out)
+            n+=nTotal
         ###
+        self.data = self.data[n: ]
         self.handleResultsBuffer(self.basicElement)
 
     def CBEAM_2(self): # not tested
@@ -77,14 +81,14 @@ class ElementsStressStrain(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            print "outA = ",out
+            #print "outA = ",out
             eid = self.obj.addNewEid(out)
             
             for iNode in range(nNodes):
                 eData     = self.data[0:n2]
                 self.data = self.data[n2: ]
                 out = unpack(format2, eData)
-                print "outB = ",out
+                #print "outB = ",out
                 self.obj.add(eid,out)
 
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
@@ -93,7 +97,7 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CBEAM_2)
         if self.makeOp2Debug:
             print "done with CBEAM-2"
-        raise Exception('add CBEAM-2...')
+        #raise Exception('add CBEAM-2...')
 
     def CONROD_10(self): # not done
         """
@@ -164,24 +168,6 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with CELAS1-11"
         raise AddNewElementError('add CELAS1...')
-
-    def CELAS2_12(self):
-        print '---CELAS2_12---\n'
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CELAS2_12---\n')
-        deviceCode = self.deviceCode
-        #assert self.numWide==2,'invalid numWide...numWide=%s' %(self.numWide)
-
-        while len(self.data)>=minBuffer:
-            eData     = self.data[0:minBuffer]
-            self.data = self.data[minBuffer: ]
-            out = parse(eData)
-            self.obj.addEid(out)
-        ###
-        self.handleResultsBuffer(self.CELAS2_12)
-        if self.makeOp2Debug:
-            print "done with CELAS2-12"
-        raise AddNewElementError('add CELAS2...')
 
     def CQUAD4_33(self): # works
         """

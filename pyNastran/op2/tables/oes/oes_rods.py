@@ -38,7 +38,6 @@ class rodStressObject(stressObject):
             if dt is not None:
                 self.addNewTransient = self.addNewTransient_format1_sort0
                 self.addNewEid       = self.addNewEidTransient_format1_sort0
-                self.isTransient = True
             else:
                 self.addNewEid = self.addNewEid_format1_sort0
             ###
@@ -51,7 +50,7 @@ class rodStressObject(stressObject):
             raise InvalidCodeError('rodStress - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
-            #self.isTransient = True
+            self.isTransient = True
             self.dt = self.nonlinearFactor
             self.addNewTransient()
         ###
@@ -230,7 +229,6 @@ class rodStrainObject(strainObject):
             if dt is not None:
                 self.addNewTransient = self.addNewTransient_format1_sort0
                 self.addNewEid       = self.addNewEidTransient_format1_sort0
-                self.isTransient = True
             ###
             else:
                 self.addNewEid = self.addNewEid_format1_sort0
@@ -248,6 +246,7 @@ class rodStrainObject(strainObject):
         ###
         self.dt = self.nonlinearFactor
         if dt is not None:
+            self.isTransient = True
             self.addNewTransient()
         ###
 
@@ -300,7 +299,7 @@ class rodStrainObject(strainObject):
         assert eid >= 0
         dt = self.dt
 
-        self.eType[eid] = self.elementType
+        #self.eType[eid] = self.elementType
         self.axial[dt][eid]      = axial
         self.MS_axial[dt][eid]   = SMa
         self.torsion[dt][eid]    = torsion

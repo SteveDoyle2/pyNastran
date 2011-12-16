@@ -27,9 +27,15 @@ class OUGV1(object):
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):
-        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag']
+        params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','randomCode','fCode','numWide','acousticFlag']
         self.deleteAttributes(params)
     
+    def addDataParameter(self,data,Name,Type,Field):
+        #self.mode      = self.getValues(data,'i',5) ## mode number
+        value = self.getValues(data,Type,Field)
+        setattr(self,Name,value)
+        self.dataCode[Name] = value
+
     def readTable_OUGV1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
         if self.makeOp2Debug:
@@ -45,29 +51,22 @@ class OUGV1(object):
         #print "aCode = ",aCode
         three = self.parseApproachCode(data) # 3
 
-        self.rCode        = self.getValues(data,'i',8)  ## random code
-        self.formatCode   = self.getValues(data,'i',9)  ## format code
-        self.numWide      = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
-        self.acousticFlag = self.getValues(data,'f',13) ## acoustic pressure flag
-        self.thermal      = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
-        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
-                         'randomCode':self.rCode,'formatCode':self.formatCode,
-                         'numWide': self.numWide,'acousticFlag':self.acousticFlag,
-                         'thermal': self.thermal}
+        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,}
+
+        self.addDataParameter(data,'randomCode',  'i',8)   ## random code
+        self.addDataParameter(data,'formatCode',  'i',9)   ## format code
+        self.addDataParameter(data,'numWide',     'i',10)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'acousticFlag','f',13)  ## acoustic pressure flag
+        self.addDataParameter(data,'thermal',     'i',23)  ## thermal flag; 1 for heat ransfer, 0 otherwise
         
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.dataCode['lsdvmn'] = self.lsdvmn
-            #self.nonlinearFactor = self.lsdvmn
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
         elif self.analysisCode==2: # real eigenvalues
-            self.mode      = self.getValues(data,'i',5) ## mode number
-            self.eigr      = self.getValues(data,'f',6) ## real eigenvalue
-            self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type - F1???
-            self.dataCode['mode'] = self.mode
-            self.dataCode['eigr'] = self.eigr
-            self.dataCode['modeCycle'] = self.modeCycle
+            self.addDataParameter(data,'mode',     'i',5)   ## mode number
+            self.addDataParameter(data,'eigr',     'f',6)   ## real eigenvalue
+            self.addDataParameter(data,'modeCycle','i',7)   ## mode or cycle @todo confused on the type - F1???
             self.nonlinearFactor = self.mode
             print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
@@ -79,53 +78,42 @@ class OUGV1(object):
         #    self.dataCode['lsdvmn'] = self.lsdvmn
         #    self.nonlinearFactor = self.lsdvmn
         elif self.analysisCode==5:   # frequency
-            self.freq = self.getValues(data,'f',5) ## frequency
-            self.dataCode['freq'] = self.freq
+            self.addDataParameter(data,'freq','f',5)   ## frequency
             self.nonlinearFactor = self.freq
 
         elif self.analysisCode==6: # transient
-            self.dt = self.getValues(data,'f',5) ## time step
-            self.dataCode['dt'] = self.dt
+            self.addDataParameter(data,'dt','f',5)   ## time step
             self.nonlinearFactor = self.dt
             print "DT(5)=%s" %(self.dt)
         elif self.analysisCode==7: # pre-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## load set
-            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==8: # post-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## mode number
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.dataCode['lsdvmn'] = self.lsdvmn
-            self.dataCode['eigr'] = self.eigr
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.addDataParameter(data,'eigr',    'f',6)   ## real eigenvalue
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
-            self.mode   = self.getValues(data,'i',5) ## mode
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
-            self.dataCode['mode'] = self.mode
-            self.dataCode['eigr'] = self.eigr
-            self.dataCode['eigi'] = self.eigi
+            self.addDataParameter(data,'mode','i',5)   ## mode number
+            self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
+            self.addDataParameter(data,'eigi','i',7)   ## imaginary eigenvalue
             print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
             self.nonlinearFactor = self.mode
         elif self.analysisCode==10: # nonlinear statics
-            self.lftsfq = self.getValues(data,'f',5) ## load step
-            self.dataCode['lftsfq'] = self.lftsfq
+            self.addDataParameter(data,'lftsfq','f',5)   ## load step
             self.nonlinearFactor = self.lftsfq
-            print "LFTSFQ(5) = %s" %(self.lftsfq)
+            #print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
-            self.lsdvmn = self.getValues(data,'i',5)
-            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.lsdvmn = self.getValues(data,'i',5)
-            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
-            raise RuntimeError('invalid approach code...analysisCode=%s' %(self.analysisCode))
+            raise InvalidAnalysisCodeError('invalid approach code...analysisCode=%s' %(self.analysisCode))
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)

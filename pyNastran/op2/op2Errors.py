@@ -4,6 +4,9 @@ class InvalidCodeError(RuntimeError):
 class InvalidAnalysisCodeError(InvalidCodeError):
     pass
 
+class InvalidATFSCodeError(InvalidCodeError):
+    pass
+
 class InvalidFormatCodeError(InvalidCodeError):
     pass
 

@@ -101,7 +101,7 @@ class celasStressObject(stressObject):
                 if abs(istress)<1e-6:
                     msg += '%10s ' %('0')
                 else:
-                    msg += '%10g ' %(val)
+                    msg += '%10g ' %(istress)
                 ###
                 msg += '\n'
             ###
@@ -152,7 +152,7 @@ class celasStressObject(stressObject):
             if abs(istress)<1e-6:
                 msg += '%10s ' %('0')
             else:
-                msg += '%10i ' %(val)
+                msg += '%10i ' %(istress)
             ###
             msg += '\n'
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
@@ -295,7 +295,7 @@ class celasStrainObject(strainObject):
             if abs(strain)<1e-7:
                 msg += '%8s ' %('0')
             else:
-                msg += '%1.3g ' %(val)
+                msg += '%1.3g ' %(strain)
             ###
             msg += '\n'
         return msg

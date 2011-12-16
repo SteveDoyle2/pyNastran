@@ -58,7 +58,6 @@ class OQG1(object):
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.nonlinearFactor = self.lsdvmn
             self.dataCode['lsdvmn'] = self.lsdvmn
         elif self.analysisCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
