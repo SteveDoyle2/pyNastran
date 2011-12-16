@@ -70,9 +70,7 @@ class OES(ElementsStressStrain):
         ## assuming tCode=1
         self.nonlinearFactor = None
         if self.analysisCode==1:   # statics / displacement / heat flux
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.dataCode['lsdvmn'] = self.lsdvmn
-            self.dataCode['name'] = 'lsdvmn'
+            self.addDataParameter(data,'lsdvmn','i',5)   ## load set number
         elif self.analysisCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue
@@ -102,14 +100,12 @@ class OES(ElementsStressStrain):
             print "DT(5)=%s" %(self.dt)
             self.nonlinearFactor = self.dt
         elif self.analysisCode==7: # pre-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## load set
-            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.addDataParameter(data,'lsdvmn','i',5)   ## load set
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==8: # post-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## mode number
+            self.addDataParameter(data,'lsdvmn','i',5)   ## mode number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.dataCode['lsdvmn'] = self.lsdvmn
             self.dataCode['eigr']   = self.eigr
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
@@ -124,24 +120,20 @@ class OES(ElementsStressStrain):
             self.dataCode['name'] = 'mode'
             print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
-            self.lftsfq = self.getValues(data,'f',5) ## load step
-            self.dataCode['lftsfq'] = self.lftsfq
+            self.addDataParameter(data,'lftsfq','f',5)   ## load step
             self.dataCode['name'] = 'lftsfq'
             self.nonlinearFactor = self.lftsfq
             print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
-            self.lsdvmn = self.getValues(data,'i',5)
-            self.dataCode['lsdvmn'] = self.lsdvmn
+            self.addDataParameter(data,'lsdvmn','i',5)   ## load set number
             self.dataCode['name'] = 'lsdvmn'
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            #self.lsdvmn = self.getValues(data,'i',5)
             self.dt = self.getValues(data,'f',5)  ## Time step ??? --> straight from DMAP
             self.dataCode['dt'] = self.dt
             self.dataCode['name'] = 'dt'
             self.nonlinearFactor = self.dt
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         self.dataCode['nonlinearFactor'] = self.nonlinearFactor
@@ -248,10 +240,10 @@ class OES(ElementsStressStrain):
             elif tfsCode==[5,3,2]:
                 self.readOES1_Data_format3_sort2()
             else:
-                raise Exception('invalid atfsCode=%s' %(self.atfsCode))
+                raise InvalidATFSCodeError('invalid atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
-            self.OES_Thermal(None)
+            self.OES_Thermal()
             #raise Exception('thermal stress')
         else:
             raise Exception('invalid thermal option...')
@@ -350,7 +342,9 @@ class OES(ElementsStressStrain):
     def readOES1_Data_format1_sort0(self):
         #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
         msg = ''
-        assert self.analysisCode in [1,6,10],'self.atfsCode=%s' %(self.atfsCode)
+        if self.analysisCode not in [1,6,10]:
+            raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
+
         if self.elementType==1: # crod
             print "    found crod_1"
             self.dataCode['ElementName'] = 'CROD'

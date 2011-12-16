@@ -262,14 +262,13 @@ class Op2(BDF,
                     self.isOptimization = True
                 elif tableName in ['ERRORN']: # not done
                     self.readTable_R1TAB()
+
                 elif tableName in ['VIEWTB','STDISP','FOL','OMM2','BGPDT','EQEXINS','PVT0','CASECC',]: # not done
-                    self.readTable_R1TAB()
+                    self.readTableB_DUMMY()
+                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2','SDF']:
+                    self.readTableB_DUMMY()
 
                 elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
-                    self.readTable_OGP1()
-                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2']: # what are these???
-                    self.readTable_OGP1()
-                elif tableName in ['SDF']: # no idea
                     self.readTable_OGP1()
 
                 

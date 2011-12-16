@@ -80,7 +80,7 @@ class solidStressObject(stressObject):
 
     def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
-        assert eid not in self.oxx
+        #assert eid not in self.oxx
         assert cid >= 0
         assert eid >= 0
         self.eType[eid] = eType
@@ -282,6 +282,7 @@ class solidStrainObject(strainObject):
         ###
         if dt is not None:
             self.dt = dt
+            self.isTransient = True
             self.addNewTransient()
             self.add       = self.addTransient
             self.addNewEid = self.addNewEidTransient
@@ -402,6 +403,40 @@ class solidStrainObject(strainObject):
         else:
             headers.append('maxShear')
         return headers
+
+    def __reprTransient__(self):
+        msg = '---SOLID STRAIN---\n'
+        headers = self.getHeaders()
+        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+        for dt,exxs in sorted(self.exx.items()):
+            msg += 'dt = %s\n' %(self.dt)
+            for eid,exxNodes in sorted(exxs.items()):
+                eType = self.eType[eid]
+                for nid in sorted(exxNodes):
+                    exx = self.exx[dt][eid][nid]
+                    eyy = self.eyy[dt][eid][nid]
+                    ezz = self.ezz[dt][eid][nid]
+                    exy = self.exy[dt][eid][nid]
+                    eyz = self.eyz[dt][eid][nid]
+                    exz = self.exz[dt][eid][nid]
+                    evm = self.evmShear[dt][eid][nid]
+                    msg += '%-6i %6s %8s ' %(eid,eType,nid)
+                    vals = [exx,eyy,ezz,exy,eyz,exz,evm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10.3e ' %(val)
+                        ###
+                    msg += '\n'
+                    #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
+                ###
+            ###
+        ###
+        return msg
 
     def __repr__(self):
         if self.isTransient:

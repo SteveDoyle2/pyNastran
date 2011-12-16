@@ -54,7 +54,6 @@ class OGP(object):
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.nonlinearFactor = self.lsdvmn
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eign      = self.getValues(data,'f',6) ## real eigenvalue

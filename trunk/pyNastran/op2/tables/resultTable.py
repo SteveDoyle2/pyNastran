@@ -16,6 +16,29 @@ from pyNastran.op2.tables.destab import DESTAB
 
 class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
+
+    def readTableA_DUMMY(self):
+        self.iTableMap = {
+                         }
+        self.readRecordTable('DUMMY')
+
+    def readTableB_DUMMY(self):
+        self.tableName = 'DUMMY'
+        table3     = self.readTable_DUMMY_3
+        table4Data = self.readDUMMY_Data
+        self.readResultsTable(table3,table4Data)
+        self.deleteAttributes_OGP()
+
+    def readTable_DUMMY_3(self,iTable):
+        self.analysisCode = None
+        self.tableCode    = None
+        self.formatCode   = None
+        self.sortCode     = None
+
+    def readDUMMY_Data(self):
+        self.obj = None
+        self.readOES_Element()
+
     def createTransientObject(self,storageObj,classObj):
         """@note dt can also be loadStep depending on the class"""
         #print "create Transient Object"
