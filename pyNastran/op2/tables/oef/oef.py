@@ -12,7 +12,7 @@ from pyNastran.op2.op2Errors import *
 #    displacementObject,temperatureObject)
 #from pyNastran.op2.tables.oug.oug_eigenvectors import (
 #    eigenVectorObject)
-from pyNastran.op2.resultObjects.oef_Objects import (
+from pyNastran.op2.tables.oef.oef_Objects import (
     nonlinearFluxObject)
 
 class OEF(object):

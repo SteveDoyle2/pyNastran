@@ -65,27 +65,27 @@ class ElementsStressStrain(object):
         if self.makeOp2Debug:
             self.op2Debug.write('---BEAM_2---\n')
         deviceCode = self.deviceCode
-        nNodes = 11
-        assert self.numWide==12*10+1,'invalid numWide...numWide=%s' %(self.numWide)
-        nTotal = self.getLengthTotal()
-        (n1,format1) = self.getLength1()
-        (n2,format2) = self.getLength2()
+        nNodes = 10 # 11-1
+
+        nTotal       = self.obj.getLengthTotal()
+        (n1,format1) = self.obj.getLength1()
+        (n2,format2) = self.obj.getLength2()
 
         while len(self.data)>=nTotal:
             eData     = self.data[0:n1]
             self.data = self.data[n1: ]
             #print "len(data) = ",len(eData)
 
-            out = struct.unpack(format1, eData)
+            out = unpack(format1, eData)
             print "outA = ",out
-            self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
+            eid = self.obj.addNewEid(out)
             
             for iNode in range(nNodes):
                 eData     = self.data[0:n2]
                 self.data = self.data[n2: ]
-                out = struct.unpack(format2, eData)
+                out = unpack(format2, eData)
                 print "outB = ",out
-                self.obj.add(eid,axial,axialMS,torsion,torsionMS)
+                self.obj.add(eid,out)
 
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)

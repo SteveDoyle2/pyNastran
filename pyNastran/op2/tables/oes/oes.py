@@ -366,6 +366,7 @@ class OES(ElementsStressStrain):
         elif self.elementType == 10:   # conrod
             #print "    found conrod_10"
             self.dataCode['ElementName'] = 'CONROD'
+            #self.skipOES_Element()
             self.makeOES_Object(self.conrodStress,conrodStressObject,
                                 self.conrodStrain,conrodStrainObject)
             self.CONROD_10()

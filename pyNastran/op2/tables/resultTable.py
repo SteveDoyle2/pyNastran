@@ -63,6 +63,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print self.printSection(140)
             #print "reading iTable3=%s" %(iTable)
             #self.obj = None
+
+            self.nonlinearFactor = None
+            self.dataCode = {}
             table3(iTable)
             self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
             #print "self.tellA = ",self.op2.tell()
@@ -216,7 +219,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if len(data)<marker:
             #    self.goto(self.n-4) # handles last buffer not having an extra 4
             self.data += data
-            func(debug)
+            func()
         ###
 
     def readScalars4(self,debug=False):

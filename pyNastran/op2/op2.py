@@ -34,7 +34,7 @@ class Op2(BDF,
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # some header table...
-
+                            'BGPDT','EQEXINS','PVT0','CASECC',#'EDOM',
                              'DESTAB',                # design variables
                              'OQG1','OQGV1','OQMG1',  # spc/mpc forces
                              
@@ -158,6 +158,7 @@ class Op2(BDF,
                    self.celasStress,self.celasStrain,
                    self.rodStress,self.rodStrain,
                    self.barStress,self.barStrain,
+                   self.beamStress,self.beamStrain,
                    self.plateStress,self.plateStrain,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
@@ -246,7 +247,7 @@ class Op2(BDF,
                     self.readTable_MPTS()
                 elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
                     self.readTable_DYNAMICS()
-                elif  tableName=='DIT':  # tables...TABLED1/TABLEM1/TABLES1/GUST
+                elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
                     self.readTable_DIT()
 
                 elif tableName in ['DESTAB']:  # design variable table
@@ -261,7 +262,7 @@ class Op2(BDF,
                     self.isOptimization = True
                 elif tableName in ['ERRORN']: # not done
                     self.readTable_R1TAB()
-                elif tableName in ['VIEWTB','STDISP','FOL','OMM2']: # not done
+                elif tableName in ['VIEWTB','STDISP','FOL','OMM2','BGPDT','EQEXINS','PVT0','CASECC',]: # not done
                     self.readTable_R1TAB()
 
                 elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
@@ -397,3 +398,4 @@ class Op2(BDF,
 
     def getTableNamesFromOP2(self):
        return self.tableNames
+
