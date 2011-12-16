@@ -450,5 +450,6 @@ class Op2Codes(object):
             msg += "  sCode        = %-3s %s\n" %(sCode,sWord)
         if thermalWord:
             msg += "  thermal      = %-3s %s\n" %(thermal,thermalWord)
+        msg += "  numWide      = %-3s\n" %(self.numWide)
         #print msg
         return msg

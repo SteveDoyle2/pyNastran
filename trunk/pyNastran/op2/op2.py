@@ -165,6 +165,9 @@ class Op2(BDF,
                    
                    # OGP - Applied Force/Moment
                    self.appliedLoads,
+
+                   # OEE - Strain Energy
+                   self.strainEnergy,
                    ]
         
         msg = '---ALL RESULTS---\n'
@@ -263,11 +266,6 @@ class Op2(BDF,
                 elif tableName in ['ERRORN']: # not done
                     self.readTable_R1TAB()
 
-                elif tableName in ['VIEWTB','STDISP','FOL','OMM2','BGPDT','EQEXINS','PVT0','CASECC',]: # not done
-                    self.readTableB_DUMMY()
-                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2','SDF']:
-                    self.readTableB_DUMMY()
-
                 elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
                     self.readTable_OGP1()
 
@@ -289,8 +287,17 @@ class Op2(BDF,
 
                 elif tableName in ['ONRGY1']: # energy
                     self.readTable_OEE1()
-                elif tableName in ['PCOMPTS','MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
+
+                elif tableName in ['PCOMPTS']:
                     self.readTable_PCOMPTS() # 'SDF',
+                    
+                # not done
+                elif tableName in ['VIEWTB','STDISP','FOL','OMM2','BGPDT','EQEXINS','PVT0','CASECC',]:
+                    self.readTableB_DUMMY()
+                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2','SDF']:
+                    self.readTableB_DUMMY()
+                elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
+                    self.readTableB_DUMMY()
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "endTell   = ",self.op2.tell()

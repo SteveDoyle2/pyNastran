@@ -11,6 +11,9 @@ class InvalidFormatCodeError(InvalidCodeError):
     pass
 
 
+class InvalidGridID_Error(ValueError):
+    pass
+
 class AddNewElementError(InvalidCodeError):
     pass
 

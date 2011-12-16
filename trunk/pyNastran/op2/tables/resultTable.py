@@ -259,7 +259,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #self.printBlock(data[16:])
             #msg = 'len(data)=%s\n'%(len(data))
             #assert len(data)>=16,msg+self.printSection(120)
-            out = unpack('ifff',eData)
+            out  = unpack('ifff',eData)
+            a,b,c,d,E,F,G = unpack('ssssfff',eData)
+            print "abcd=|%s|" %(a+b+c+d)
             (gridDevice,dx,dy,dz) = out
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
@@ -269,12 +271,30 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
+            print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
             self.obj.add(grid,dx,dy,dz)
             n+=16
         ###
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,debug=False)
+
+    def readScalars4o(self,debug=False):
+        data = self.data
+        deviceCode = self.deviceCode
+        #print type(scalarObject)
+        (nTotal,strFormat) = self.obj.getLength()
+        n = 0
+        nEntries = len(data)/nTotal
+        for i in range(nEntries):
+            eData = data[n:n+nTotal]
+            out  = unpack(strFormat,eData)
+            self.obj.add(out)
+            n+=nTotal
+        ###
+        self.data = data[n:]
+        #print self.printSection(200)
+        self.handleResultsBuffer(self.readScalars4o,debug=False)
 
     def readScalarsX(self,strFormat,nTotal,debug=False):
         data = self.data

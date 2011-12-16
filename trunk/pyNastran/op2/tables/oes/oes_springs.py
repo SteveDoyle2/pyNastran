@@ -11,8 +11,9 @@ class celasStressObject(stressObject):
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
-        self.eType = self.dataCode['ElementName']
-        
+        self.eType = {}
+        self.elementName = self.dataCode['ElementName']
+
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.stress = {}
         if self.code in [[1,0,0]]:
@@ -46,6 +47,7 @@ class celasStressObject(stressObject):
         """
         initializes the transient variables
         """
+        self.elementName = self.dataCode['ElementName']
         self.stress[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
@@ -53,6 +55,7 @@ class celasStressObject(stressObject):
         initializes the transient variables
         """
         print self.dataCode
+        self.elementName = self.dataCode['ElementName']
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
 
@@ -61,21 +64,25 @@ class celasStressObject(stressObject):
         (eid,stress) = out
         eid = (eid-self.deviceCode)/10
         #assert isinstance(eid,int)
+        self.eType[eid]  = self.elementName
         self.stress[eid] = stress
 
     def addNewEid_format2_sort1(self,out):
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
         eid = (eid-self.deviceCode)/10
         assert eid >= 0
+        self.eType[eid]      = self.elementName
         self.axial[eid]      = [axialReal,axialImag]
         self.torsion[eid]    = [torsionReal,torsionImag]
 
     def addNewEidTransient_format1_sort0(self,out):
         (eid,stress) = out
         eid = (eid-self.deviceCode)/10
+        self.eType[eid] = self.elementName
         dt = self.dt
         #assert isinstance(eid,int)
         #assert eid >= 0
+        self.eType[eid]           = self.elementName
         self.stress[dt][eid]      = stress
 
     def addNewEidTransient_format2_sort1(self,out):
@@ -83,6 +90,7 @@ class celasStressObject(stressObject):
         eid = (eid-self.deviceCode)/10
         dt = self.dt
         assert eid >= 0
+        self.eType[eid]          = self.elementName
         self.axial[dt][eid]      = [axialReal,axialImag]
         self.torsion[dt][eid]    = [torsionReal,torsionImag]
 
@@ -97,7 +105,7 @@ class celasStressObject(stressObject):
         for dt,stress in sorted(self.stress.items()):
             msg += 'dt = %g\n' %(dt)
             for eid,istress in sorted(stress.items()):
-                msg += '%-6g %6s ' %(eid,self.eType)
+                msg += '%-6g %6s ' %(eid,self.eType[eid])
                 if abs(istress)<1e-6:
                     msg += '%10s ' %('0')
                 else:
@@ -148,7 +156,7 @@ class celasStressObject(stressObject):
         print "self.code = ",self.code
         for eid,istress in sorted(self.stress.items()):
 
-            msg += '%-6i %6s ' %(eid,self.eType)
+            msg += '%-6i %6s ' %(eid,self.eType[eid])
             if abs(istress)<1e-6:
                 msg += '%10s ' %('0')
             else:
@@ -163,10 +171,11 @@ class celasStrainObject(strainObject):
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
-        self.eType = 'CELASx'
+        self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
         
+        self.elementName = self.dataCode['ElementName']
         self.isTransient = False
         if self.code == [1,0,10]:
             self.getLength = self.getLength_format1_sort0
@@ -221,12 +230,14 @@ class celasStrainObject(strainObject):
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
+        self.eType[eid]  = self.elementName
         self.strain[eid] = strain
 
     def addNewEid_format2_sort1(self,out):
         assert eid >= 0
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
         eid = (eid-self.deviceCode)/10
+        self.eType[eid] = self.elementType
         self.axial[eid]      = [axialReal,axialImag]
         self.torsion[eid]    = [torsionReal,torsionImag]
 
@@ -262,7 +273,7 @@ class celasStrainObject(strainObject):
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
-                msg += '%-6i %6s ' %(eid,self.eType)
+                msg += '%-6i %6s ' %(eid,self.eType[eid])
                 vals = axial + torsion # concatination
                 for val in vals:
                     if abs(val)<1e-6:
@@ -290,12 +301,12 @@ class celasStrainObject(strainObject):
 
         for eid,strain in sorted(self.strain.items()):
             #strain = self.strain[eid]
-            msg += '%-6i %6s ' %(eid,self.eType)
+            msg += '%-6i %6s ' %(eid,self.eType[eid])
 
             if abs(strain)<1e-7:
                 msg += '%8s ' %('0')
             else:
-                msg += '%1.3g ' %(strain)
+                msg += '%8.3g ' %(strain)
             ###
             msg += '\n'
         return msg

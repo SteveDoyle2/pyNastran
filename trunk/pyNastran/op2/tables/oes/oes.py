@@ -175,7 +175,7 @@ class OES(ElementsStressStrain):
         #self.printBlock(data)
         #self.printBlock(data)
         bufferWords, = unpack('i',data[4:8])
-        print "bufferWords = ",bufferWords
+        #print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=|%s|\n' %(str(bufferWords)))
 
@@ -345,9 +345,13 @@ class OES(ElementsStressStrain):
         if self.analysisCode not in [1,6,10]:
             raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
 
-        if self.elementType==1: # crod
+        self.dataCode['ElementName'] = self.ElementType(self.elementType)
+        if self.elementType in [1,3,10]: # crod/ctube/conrod
             print "    found crod_1"
-            self.dataCode['ElementName'] = 'CROD'
+            if self.elementType==1:    self.dataCode['ElementName'] = 'CROD'
+            if self.elementType==3:    self.dataCode['ElementName'] = 'CTUBE'
+            if self.elementType==10:   self.dataCode['ElementName'] = 'CONROD'
+            
             self.makeOES_Object(self.rodStress,rodStressObject,
                                 self.rodStrain,rodStrainObject)
             self.basicElement()
@@ -357,6 +361,7 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.beamStress,beamStressObject,
                                 self.beamStrain,beamStrainObject)
             self.CBEAM_2()
+
         elif self.elementType == 10:   # conrod
             #print "    found conrod_10"
             self.dataCode['ElementName'] = 'CONROD'
@@ -365,15 +370,13 @@ class OES(ElementsStressStrain):
                                 self.conrodStrain,conrodStrainObject)
             self.CONROD_10()
 
-        elif self.elementType == 11:   # celas1
+        elif self.elementType in [11,12,13]:   # celas1/celas2/celas3
             #print "    found celas2_12"
-            self.dataCode['ElementName'] = 'CELAS1'
-            self.makeOES_Object(self.celasStress,celasStressObject,
-                                self.celasStrain,celasStrainObject)
-            self.basicElement()
-        elif self.elementType == 12:   # celas2
-            #print "    found celas2_12"
-            self.dataCode['ElementName'] = 'CELAS2'
+            if   self.elementType==11: self.dataCode['ElementName'] = 'CELAS1'
+            elif self.elementType==12: self.dataCode['ElementName'] = 'CELAS2'
+            elif self.elementType==13: self.dataCode['ElementName'] = 'CELAS3'
+            else:  raise Exception('not implemented error')
+           
             self.makeOES_Object(self.celasStress,celasStressObject,
                                 self.celasStrain,celasStrainObject)
             self.basicElement()
@@ -385,7 +388,6 @@ class OES(ElementsStressStrain):
             self.CBAR_34()
 
         elif self.elementType==33: # cquad4_33
-            self.stopCode = True
             #print "    found cquad_33"
             self.dataCode['ElementName'] = 'CQUAD4'
             self.makeOES_Object(self.plateStress,plateStressObject,
@@ -397,10 +399,14 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CTRIA3_74() # ctria3
-        elif self.elementType==144: # cquad4
-            self.stopCode = True
+        #elif self.elementType in [64,144,70,75]: # cquad8/cquad4/ctriar/ctria6
+        elif self.elementType in [64,144]: # cquad8/cquad4
             #print "    found cquad_144"
-            self.dataCode['ElementName'] = 'CQUAD4'
+            if     self.elementType==64:  self.dataCode['ElementName'] = 'CQUAD8'
+            elif   self.elementType==144: self.dataCode['ElementName'] = 'CQUAD4'
+            #elif   self.elementType==70:  self.dataCode['ElementName'] = 'CTRIAR'
+            #elif   self.elementType==75:  self.dataCode['ElementName'] = 'CTRIA6'
+            else:  raise Exception('not implemented error')
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_144()
@@ -452,8 +458,8 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
         #elif self.elementType == 1:    # crod     (done)
-        #elif self.elementType == 2:    # cbeam    (untested)
-        #elif self.elementType == 3:    # ctube
+        #elif self.elementType == 2:    # cbeam    (done)
+        #elif self.elementType == 3:    # ctube    (done)
         #elif self.elementType == 4:    # cshear
         #elif self.elementType == 10:   # conrod   (done)
 
@@ -476,18 +482,18 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 58:   # cdum6
         #elif self.elementType == 59:   # cdum7
         #elif self.elementType == 60:   # cdum8/crac2d
-        #elif self.elementType == 64:   # cquad8
+        #elif self.elementType == 64:   # cquad8   (done)
         #elif self.elementType == 67:   # chexa    (done)
         #elif self.elementType == 68:   # cpenta   (done)
         #elif self.elementType == 69:   # cbend
         #elif self.elementType == 70:   # ctriar
         #elif self.elementType == 74:   # ctria3  (done)
-        #elif self.elementType == 75:   # ctria6
+        #elif self.elementType == 75:   # ctria6  (in progress)
         #elif self.elementType == 82:   # cquadr
-        #elif self.elementType == 95: # CQUAD4    (done)
-        #elif self.elementType == 96: # CQUAD8    (done)
-        #elif self.elementType == 97: # CTRIA3    (done)
-        #elif self.elementType == 98: # CTRIA6    (done)
+        #elif self.elementType == 95:   # composite CQUAD4    (done)
+        #elif self.elementType == 96:   # composite CQUAD8    (done)
+        #elif self.elementType == 97:   # composite CTRIA3    (done)
+        #elif self.elementType == 98:   # composite CTRIA6    (done)
         #elif self.elementType == 100:  # cbar w/ cbarao or pload1
 
         #elif self.elementType == 102:  # cbush
@@ -496,19 +502,23 @@ class OES(ElementsStressStrain):
 
         # rods/bars/beams
         #elif self.elementType == 1:    # crod   (done)
-        #elif self.elementType == 2:    # cbeam  (untested)
-        #elif self.elementType == 3:    # ctube
+        #elif self.elementType == 2:    # cbeam  (done)
+        #elif self.elementType == 3:    # ctube  (done)
         #elif self.elementType == 10:   # conrod (done)
         #elif self.elementType == 34:   # cbar   (done)
 
         #springs
-        #elif self.elementType == 11:   # celas1
-        #elif self.elementType == 12:   # celas2 (not integrated)
-        #elif self.elementType == 13:   # celas3
+        #elif self.elementType == 11:   # celas1 (done)
+        #elif self.elementType == 12:   # celas2 (done)
+        #elif self.elementType == 13:   # celas3 (done)
         #elif self.elementType == 14:   # celas4
         
         #plate
         #elif self.elementType == 33:   # cquad_33 (done)
+        #elif self.elementType == 74:   # ctria3_74  - (done)
+        #elif self.elementType == 75:   # ctria6_75  - (in progress)
+        #elif self.elementType == 64:   # cquad8_64  - corner stresses (done)
+        #elif self.elementType == 144:  # cquad4_144 - corner stresses (done)
 
         #solid (???)
         #elif self.elementType == 39:  # ctetra (done)
