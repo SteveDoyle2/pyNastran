@@ -73,7 +73,7 @@ class rodStressObject(stressObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        print self.dataCode
+        #print self.dataCode
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
 
@@ -268,7 +268,7 @@ class rodStrainObject(strainObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        print self.dataCode
+        #print self.dataCode
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
 
@@ -293,7 +293,7 @@ class rodStrainObject(strainObject):
 
     def addNewEidTransient_format1_sort0(self,out):
         #print "Rod Strain add..."
-        print out
+        #print out
         (eid,axial,SMa,torsion,SMt) = out
         eid = (eid-self.deviceCode)/10
         assert eid >= 0
@@ -312,6 +312,34 @@ class rodStrainObject(strainObject):
         dt = self.dt
         self.axial[dt][eid]      = [axialReal,axialImag]
         self.torsion[dt][eid]    = [torsionReal,torsionImag]
+
+    def __reprTransient_format1_sort0__(self):
+        msg = '---ROD STRAINS---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['axial','torsion','MS_axial','MS_torsion']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,axial in sorted(self.axial.items()):
+            msg += 'dt = %s' %(dt)
+            for eid in sorted(axial):
+                axial   = self.axial[dt][eid]
+                torsion = self.torsion[dt][eid]
+                SMa     = self.MS_axial[dt][eid]
+                SMt     = self.MS_torsion[dt][eid]
+                msg += '%-6i %6s ' %(eid,self.eType)
+                vals = [axial,torsion,SMa,SMt]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10g ' %(val)
+                    ###
+                msg += '\n'
+                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
+            ###
+        return msg
 
     def __reprTransient_format2_sort1__(self):
         msg = '---COMPLEX ROD STRAINS---\n'
@@ -363,7 +391,7 @@ class rodStrainObject(strainObject):
                 if abs(val)<1e-7:
                     msg += '%8s ' %('0')
                 else:
-                    msg += '%1.3g ' %(val)
+                    msg += '%8.3g ' %(val)
                 ###
             msg += '\n'
         return msg

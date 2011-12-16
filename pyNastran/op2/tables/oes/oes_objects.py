@@ -8,6 +8,8 @@ class stressObject(scalarObject):
         self.dataCode = dataCode
         self.applyDataCode()
         #assert dt>=0.
+        print "dataCode=",self.dataCode
+        self.elementName = self.dataCode['ElementName']
         print "updating dt...dt=%s" %(dt)
         if dt is not None:
             self.dt = dt
@@ -20,6 +22,8 @@ class strainObject(scalarObject):
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
+        print "dataCode=",self.dataCode
+        self.elementName = self.dataCode['ElementName']
         #assert dt>=0.
         print "updating dt...dt=%s" %(dt)
         if dt is not None:
