@@ -60,46 +60,46 @@ class OEF(object):
         if self.analysisCode==1:   # statics
             self.loadID = self.getValues(data,'i',5) ## load set ID number
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
-            self.mode      = self.getValues(data,'i',5) ## mode number
-            self.eign      = self.getValues(data,'f',6) ## eigenvalue
+            self.addDataParameter(data,'mode','i',5)   ## mode number
+            self.addDataParameter(data,'eign','f',6)   ## eigenvalue
             self.nonlinearFactor = self.mode
         elif self.analysisCode==3: # differential stiffness 0
-            self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.addDataParameter(data,'loadID','i',5)   ## load set ID number
             self.nonlinearFactor = self.loadID
         elif self.analysisCode==4: # differential stiffness 1
-            self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.addDataParameter(data,'loadID','i',5)   ## load set ID number
             self.nonlinearFactor = self.loadID
         elif self.analysisCode==5:   # frequency
-            self.freq = self.getValues(data,'f',5) ## frequency
+            self.addDataParameter(data,'freq','f',5)   ## frequency
             self.nonlinearFactor = self.freq
 
         elif self.analysisCode==6: # transient
-            self.time = self.getValues(data,'f',5) ## time step
+            self.addDataParameter(data,'time','f',5)   ## time step
             self.nonlinearFactor = self.time
-            print "time(5)=%s" %(self.time)
+            #print "time(5)=%s" %(self.time)
         elif self.analysisCode==7: # pre-buckling
-            self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.addDataParameter(data,'loadID','i',5)   ## load set ID number
             self.nonlinearFactor = self.loadID
-            print "loadID(5)=%s" %(self.loadID)
+            #print "loadID(5)=%s" %(self.loadID)
         elif self.analysisCode==8: # post-buckling
             self.loadID = self.getValues(data,'i',5) ## load set ID number
             self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
             self.nonlinearFactor = self.loadID
-            print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
+            #print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
-            self.mode   = self.getValues(data,'i',5) ## mode
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
+            self.addDataParameter(data,'mode','i',5)   ## mode number
+            self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
+            self.addDataParameter(data,'eigi','f',7)   ## imaginary eigenvalue
             self.nonlinearFactor = self.mode
-            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
-            self.loadStep = self.getValues(data,'f',5) ## load step
+            self.addDataParameter(data,'loadStep','f',5)   ## load step
             self.nonlinearFactor = self.loadStep
-            print "loadStep(5) = %s" %(self.loadStep)
+            #print "loadStep(5) = %s" %(self.loadStep)
         elif self.analysisCode==11: # geometric nonlinear statics
-            self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.addDataParameter(data,'loadID','i',5)   ## load set ID number
             self.nonlinearFactor = self.loadID
-            print "loadID(5)=%s" %(self.loadID)
+            #print "loadID(5)=%s" %(self.loadID)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
 

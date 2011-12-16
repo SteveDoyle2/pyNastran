@@ -76,7 +76,7 @@ class OEE(object):
         if self.analysisCode==1:   # statics / displacement / heat flux
             pass
         elif self.analysisCode==2: # real eigenvalues
-            self.addDataParameter(data,'mode',     'i',5)   ## mode number
+            self.addDataParameter(data,'mode','i',5)   ## mode number
             self.nonlinearFactor = self.mode
             #print "mode(5)=%s" %(self.mode)
         elif self.analysisCode==3: # differential stiffness
@@ -88,7 +88,7 @@ class OEE(object):
             self.nonlinearFactor = self.freq2 ## why are there 2 values of freq?
 
         elif self.analysisCode==6: # transient
-            self.time = self.getValues(data,'f',5) ## time step
+            self.addDataParameter(data,'time','f',5)   ## time step
             self.nonlinearFactor = self.time
             print "time(5)=%s" %(self.time)
         elif self.analysisCode==7: # pre-buckling
@@ -96,21 +96,21 @@ class OEE(object):
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.nonlinearFactor = self.mode
-            print "mode(5)=%s" %(self.mode)
+            #print "mode(5)=%s" %(self.mode)
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.nonlinearFactor = self.mode
             #print "mode(5)=%s" %(self.mode)
         elif self.analysisCode==10: # nonlinear statics
-            self.loadFactor = self.getValues(data,'f',5) ## load factor
+            self.addDataParameter(data,'loadFactor','f',5)   ## load factor
             self.nonlinearFactor = self.loadFactor
-            print "loadFactor(5) = %s" %(self.loadFactor)
+            #print "loadFactor(5) = %s" %(self.loadFactor)
         elif self.analysisCode==11: # old geometric nonlinear statics
             pass
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.time = self.getValues(data,'f',5) ## time step
+            self.addDataParameter(data,'time','f',5)   ## time step
             self.nonlinearFactor = self.time
-            print "time(5)=%s" %(self.time)
+            #print "time(5)=%s" %(self.time)
         else:
             raise RuntimeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
         ###
@@ -146,8 +146,7 @@ class OEE(object):
 
         if self.analysisCode==1: # displacement
             print "isStrainEnergy"
-            self.obj = StrainEnergyObject(self.dataCode,self.iSubcase,self.nonlinearFactor)
-            self.strainEnergy[self.iSubcase] = self.obj
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.analysisCode==2: # buckling modes
             #print "isBucklingStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)

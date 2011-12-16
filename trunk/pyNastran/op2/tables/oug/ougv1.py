@@ -47,9 +47,7 @@ class OUGV1(object):
         data = self.getData(4*50)
         #print self.printBlock(data)
         
-        aCode = self.getBlockIntEntry(data,1)
-        #print "aCode = ",aCode
-        three = self.parseApproachCode(data) # 3
+        (three) = self.parseApproachCode(data)
 
         self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,}
 
@@ -71,7 +69,6 @@ class OUGV1(object):
             print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        #    self.dataCode['lsdvmn'] = self.lsdvmn
         #    self.nonlinearFactor = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
@@ -80,7 +77,6 @@ class OUGV1(object):
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
             self.nonlinearFactor = self.freq
-
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
             self.nonlinearFactor = self.dt
@@ -97,9 +93,9 @@ class OUGV1(object):
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
-            self.addDataParameter(data,'eigi','i',7)   ## imaginary eigenvalue
-            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            self.addDataParameter(data,'eigi','f',7)   ## imaginary eigenvalue
             self.nonlinearFactor = self.mode
+            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
             self.nonlinearFactor = self.lftsfq
@@ -113,7 +109,7 @@ class OUGV1(object):
             self.nonlinearFactor = self.lsdvmn
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
-            raise InvalidAnalysisCodeError('invalid approach code...analysisCode=%s' %(self.analysisCode))
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
@@ -204,16 +200,17 @@ class OUGV1(object):
         #    self.readOUGV1_Data_table11_format3_sort2()
 
         else:
-            #raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
             print "***start skipping***"
             print 'bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode)
             print self.codeInformation()
             self.skipOES_Element()
             print "***end skipping***"
-            
+            #raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
         ###
+        #print self.obj
 
     def readOUGV1_Data_table1_format1_sort0(self):
+        print self.codeInformation()
         assert self.formatCode==1 # Real
         assert self.sortCode==0   # Real
         if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!

@@ -2,6 +2,7 @@ import sys
 import copy
 from struct import unpack
 
+# pyNastran
 from pyNastran.op2.op2Errors import *
 from elementsStressStrain import ElementsStressStrain
 from oes_rods   import rodStressObject,rodStrainObject
@@ -53,12 +54,15 @@ class OES(ElementsStressStrain):
             self.op2Debug.write('block3header\n')
 
         self.elementType = self.parseApproachCode(data) # 3
-        self.loadSet    = self.getValues(data,'i',8)
-        self.formatCode = self.getValues(data,'i',9)
-        self.numWide    = self.getValues(data,'i',10)
-        self.sCode      = self.getValues(data,'i',11)
-        self.thermal    = self.getValues(data,'i',23) # 1 is heat transfer, 0 otherwise
+        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,}
 
+        self.addDataParameter(data,'loadSet',     'i',8)   ## load set ID
+        self.addDataParameter(data,'formatCode',  'i',9)   ## format code
+        self.addDataParameter(data,'numWide',     'i',10)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'sCode',       'i',11)  ## stress/strain codes
+        self.addDataParameter(data,'thermal',     'i',23)  ## thermal flag; 1 for heat ransfer, 0 otherwise
+
+        self.dataCode['elementType'] = self.elementType
         self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
                          'loadSet':self.loadSet,'formatCode':self.formatCode,'sortCode':self.sortCode,
                          'numWide': self.numWide,'sCode':self.sCode,
@@ -72,12 +76,9 @@ class OES(ElementsStressStrain):
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.addDataParameter(data,'lsdvmn','i',5)   ## load set number
         elif self.analysisCode==2: # real eigenvalues
-            self.mode      = self.getValues(data,'i',5) ## mode number
-            self.eign      = self.getValues(data,'f',6) ## real eigenvalue
-            self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
-            self.dataCode['mode'] = self.mode
-            self.dataCode['eign'] = self.eign
-            self.dataCode['modeCycle'] = self.modeCycle
+            self.addDataParameter(data,'mode',     'i',5)   ## mode number
+            self.addDataParameter(data,'eign',     'f',6)   ## real eigenvalue
+            self.addDataParameter(data,'modeCycle','f',7)   ## mode or cycle @todo confused on the type - F1???
             self.dataCode['name'] = 'mode'
             self.nonlinearFactor = self.mode
         #elif self.analysisCode==3: # differential stiffness
@@ -88,50 +89,40 @@ class OES(ElementsStressStrain):
         #    self.nonlinearFactor = self.lsdvmn
 
         elif self.analysisCode==5:   # frequency
-            self.freq = self.getValues(data,'f',5) ## frequency
-            self.dataCode['freq'] = self.freq
+            self.addDataParameter(data,'freq','f',5)   ## frequency
             self.dataCode['name'] = 'freq'
             self.nonlinearFactor = self.freq
         elif self.analysisCode==6: # transient
-            self.dt = self.getValues(data,'f',5) ## time step
-            self.dataCode['dt'] = self.dt
+            self.addDataParameter(data,'dt','f',5)   ## time step
             self.dataCode['name'] = 'dt'
-            
-            print "DT(5)=%s" %(self.dt)
             self.nonlinearFactor = self.dt
+            print "DT(5)=%s" %(self.dt)
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn','i',5)   ## load set
             self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn','i',5)   ## mode number
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.dataCode['eigr']   = self.eigr
+            self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
-            self.mode   = self.getValues(data,'i',5) ## mode
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
+            self.addDataParameter(data,'mode','i',5)   ## mode number
+            self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
+            self.addDataParameter(data,'eigi','f',7)   ## imaginary eigenvalue
             self.nonlinearFactor = self.mode
-            self.dataCode['mode'] = self.mode
-            self.dataCode['eigr'] = self.eigr
-            self.dataCode['eigi'] = self.eigi
             self.dataCode['name'] = 'mode'
             print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
-            self.dataCode['name'] = 'lftsfq'
             self.nonlinearFactor = self.lftsfq
-            print "LFTSFQ(5) = %s" %(self.lftsfq)
+            #print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn','i',5)   ## load set number
-            self.dataCode['name'] = 'lsdvmn'
             self.nonlinearFactor = self.lsdvmn
             print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.dt = self.getValues(data,'f',5)  ## Time step ??? --> straight from DMAP
-            self.dataCode['dt'] = self.dt
+            self.addDataParameter(data,'dt','f',5)   ## Time step ??? --> straight from DMAP
             self.dataCode['name'] = 'dt'
             self.nonlinearFactor = self.dt
         else:
