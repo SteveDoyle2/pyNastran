@@ -221,7 +221,7 @@ class celasStrainObject(strainObject):
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
-        self.strainl[eid] = strain
+        self.strain[eid] = strain
 
     def addNewEid_format2_sort1(self,out):
         assert eid >= 0
@@ -288,8 +288,8 @@ class celasStrainObject(strainObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for eid in sorted(self.axial):
-            strain = self.strain[eid]
+        for eid,strain in sorted(self.strain.items()):
+            #strain = self.strain[eid]
             msg += '%-6i %6s ' %(eid,self.eType)
 
             if abs(strain)<1e-7:

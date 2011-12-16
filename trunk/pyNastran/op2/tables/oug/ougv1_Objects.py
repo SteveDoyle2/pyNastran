@@ -1,3 +1,4 @@
+import sys
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
@@ -5,7 +6,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
-        print "displacementObject - self.dt=|%s|" %(self.dt)
+        #print "displacementObject - self.dt=|%s|" %(self.dt)
         ## this could get very bad very quick, but it could be great!
         ## basically it's a way to handle transients without making
         ## a whole new class
@@ -25,6 +26,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
+            #sys.exit('updating dt...')
             self.dt = dt
             self.addNewTransient()
         ###
@@ -115,8 +117,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
     def __reprTransient__(self):
         msg = '---DISPLACEMENTS---\n'
-        #if self.dt is not None:
-        #    msg += 'dt = %g\n' %(self.dt)
+        msg += 'dt = %g\n' %(self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
         msg += '%-8s ' %('nodeID')
         for header in headers:
@@ -147,8 +148,6 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             return self.__reprTransient__()
 
         msg = '---DISPLACEMENTS---\n'
-        if self.dt is not None:
-            msg += 'dt = %g\n' %(self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
         msg += '%-8s ' %('nodeID')
         for header in headers:

@@ -60,7 +60,7 @@ class OUGV1(object):
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.dataCode['lsdvmn'] = self.lsdvmn
-            self.nonlinearFactor = self.lsdvmn
+            #self.nonlinearFactor = self.lsdvmn
         elif self.analysisCode==2: # real eigenvalues
             self.mode      = self.getValues(data,'i',5) ## mode number
             self.eigr      = self.getValues(data,'f',6) ## real eigenvalue
@@ -231,6 +231,7 @@ class OUGV1(object):
         if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
             if self.analysisCode==1: # displacement
                 print "isDisplacement"
+                print "self.dataCode = ",self.dataCode
                 self.createTransientObject(self.displacements,displacementObject)
 
             elif self.analysisCode==5: # frequency displacement
@@ -485,7 +486,7 @@ class OUGV1(object):
             raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             if self.analysisCode==1: # displacement
                 #print "isDisplacement"
-                self.obj = displacementObject(self.dataCode,self.iSubcase)
+                self.createTransientObject(self.displacements,displacementObject)
             elif self.analysisCode==2: # nonlinear static eigenvector
                 print "isEigenvector"
                 self.createTransientObject(self.eigenvectors,eigenVectorObject)
