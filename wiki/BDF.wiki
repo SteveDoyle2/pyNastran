@@ -56,6 +56,7 @@ print e1.Length()  # length of the element (only for Bars - CONROD, CROD, CBEAM,
 print e1.Area()    # area of the element   (only for CTRIA, CQUAD)
 print e1.Volume()  # volume of the element (only for CTETRA right now)
 print e1.Nsm()     # gets the non-structural mass
+print e1.Thickness() # gets the element thickness (only for CQUAD/CTRIA)
 print e1.pid.nsm   # gets the non-structural mass
 # the function version will work for any
 # element (assuming it has the quantity)
