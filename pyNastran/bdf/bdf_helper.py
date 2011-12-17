@@ -56,7 +56,7 @@ class getMethods(object):
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid)
-            self.log().info("element.pid = %s" %(element.pid))
+            self.log.info("element.pid = %s" %(element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
         ###
@@ -66,7 +66,7 @@ class getMethods(object):
         return self.getElementIDsWithPIDs([pid])
 
     def getElementIDsWithPIDs(self,pids):
-        #self.log().info("pids = %s" %(pids))
+        #self.log.info("pids = %s" %(pids))
 
         eids = self.elementIDs()
         eids2 = []
@@ -185,7 +185,7 @@ class getMethods(object):
                     print "f = ",f
                     F += f
                 ###
-            self.log().info("case=%s F=%s\n\n" %(key,F))
+            self.log.info("case=%s F=%s\n\n" %(key,F))
         ###
 
     def sumMoments(self):

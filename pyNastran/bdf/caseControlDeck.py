@@ -142,7 +142,7 @@ class CaseControlDeck(object):
         while i < len(lines):
             line = lines[i]
             #print "rawLine = |%s|" %(line)
-            #self.log().debug("rawLine = |%r|" %(line))
+            #self.log.debug("rawLine = |%r|" %(line))
 
             lines2 = [line]
             while ',' in lines[i][-1]:
