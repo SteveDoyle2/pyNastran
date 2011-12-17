@@ -522,14 +522,14 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             (eid,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
-            print "out =",out
+            #print "out =",out
             eid = (eid - deviceCode) / 10  ## @todo adjust with deviceCode...
             
             if eid!=self.eid2: # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
                 self.obj.addNewEid(eType,eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
             else:
-                print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+                #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
                 self.obj.add(eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
             ###
             self.eid2 = eid

@@ -4,7 +4,7 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.nodes import GRID
-from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD1C,CORD1S, CORD2R,CORD2C,#CORD2S, CORD3G,
+from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD1C,CORD1S, CORD2R,CORD2C  #,CORD2S, CORD3G,
 
 
 class Geometry1(object):

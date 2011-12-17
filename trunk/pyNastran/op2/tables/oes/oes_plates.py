@@ -36,9 +36,9 @@ class plateStressObject(stressObject):
         if self.code == [1,0,1]:
             #self.isVonMises = True
             assert self.isFiberDistance() == False,self.stressBits
-            assert self.isVonMises()      == True,self.stressBits
+            assert self.isVonMises()      == False,self.stressBits
         elif self.code == [1,0,0]:
-            assert self.isFiberDistance() == True,self.stressBits
+            assert self.isFiberDistance() == False,self.stressBits
             assert self.isVonMises()      == False,self.stressBits
         else:
             raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
@@ -98,7 +98,10 @@ class plateStressObject(stressObject):
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" %(dt,eid,nodeID,fd,oxx,majorP,ovm)
         #print msg
-        assert eid not in self.ovmShear[self.dt],msg
+        if eid in self.ovmShear[dt]:
+            return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+
+        assert eid not in self.ovmShear[dt],msg
         assert isinstance(eid,int)
         self.eType[eid] = eType
         self.fiberCurvature[dt][eid] = {nodeID: [fd]}
@@ -169,7 +172,7 @@ class plateStressObject(stressObject):
         #print self.oxx
         assert eid is not None
         dt = self.dt
-        assert nodeID not in self.oxx[eid]
+        assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[dt][eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID]    = [oxx]
         self.oyy[dt][eid][nodeID]    = [oyy]
@@ -330,14 +333,14 @@ class plateStrainObject(strainObject):
             #self.isVonMises = True
             self.isBilinear = True
             assert self.isFiberDistance() == False
-            assert self.isVonMises()      == True
+            assert self.isVonMises()      == False
 
         elif self.code == [1,0,15]:
             #self.isFiberDistance = True
             #self.isVonMises = True
             self.isBilinear = False
             assert self.isFiberDistance() == True
-            assert self.isVonMises()      == True
+            assert self.isVonMises()      == False
         else:
             raise InvalidCodeError('plateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
