@@ -419,7 +419,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
             if debug:
-               print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
+                print "grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz)
             self.obj.add(grid,gridType,dx, dy, dz, rx, ry, rz,
                                            dxi,dyi,dzi,rxi,ryi,rzi)
             n+=56

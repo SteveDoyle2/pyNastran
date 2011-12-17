@@ -46,7 +46,7 @@ class celasStressObject(stressObject):
     def addNewTransient_format1_sort0(self):
         """initializes the transient variables"""
         self.elementName = self.dataCode['elementName']
-        if self.dt not in axial:
+        if self.dt not in self.stress:
             self.stress[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
@@ -54,7 +54,7 @@ class celasStressObject(stressObject):
         raise Exception('not implemented')
         #print self.dataCode
         self.elementName = self.dataCode['elementName']
-        if self.dt not in axial:
+        if self.dt not in self.stress:
             self.axial[self.dt]     = {}
             self.torsion[self.dt]   = {}
 
@@ -216,7 +216,7 @@ class celasStrainObject(strainObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        if self.dt not in axial:
+        if self.dt not in self.strain:
             self.strain[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
@@ -225,7 +225,7 @@ class celasStrainObject(strainObject):
         """
         raise Exception('not implemented')
         #print self.dataCode
-        if self.dt not in axial:
+        if self.dt not in self.strain:
             self.axial[self.dt]     = {}
             self.torsion[self.dt]   = {}
 

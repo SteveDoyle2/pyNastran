@@ -5,6 +5,7 @@ class scalarObject(object):
     def __init__(self,dataCode,iSubcase):
         self.iSubcase = iSubcase
         self.isTransient = False
+        #self.dt = None
         self.dataCode = dataCode
         self.applyDataCode()
 

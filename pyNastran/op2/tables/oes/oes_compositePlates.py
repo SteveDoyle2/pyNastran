@@ -272,6 +272,8 @@ class compositePlateStrainObject(strainObject):
     def addNewEid(self,eType,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
+        if eid in self.e11:
+            return self.add(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
         assert eid not in self.e11
         assert isinstance(eid,int)
         self.eType[eid]  = eType
