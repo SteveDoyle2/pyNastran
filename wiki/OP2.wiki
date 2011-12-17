@@ -63,7 +63,7 @@ iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
 EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        ovm 
 1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
-1      CQUAD4        C       2        888       7777        222       3333        555       7777 
+1      CTRIA3        C       2        888       7777        222       3333        555       7777 
 1      CQUAD4        1       1        888       7777        222       3333        555       7777 
 1      CQUAD4        1       2        888       7777        222       3333        555       7777 
 1      CQUAD4        2       1        888       7777        222       3333        555       7777 
@@ -76,15 +76,16 @@ EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     m
 ### NOTE "C" for nodeID means Centroid.
 ### NOTE iLayer=1,2 for an isotropic material means Z1/Z2 (Top Half/Bottom Half).
 
-# lets print all the plate stress only
+# lets print all the plate stress only (static loading only)
 # and then print oxx and ovm (x-stress and von mises stress)
+# you can use this instead to process the data (e.g. calculate margins)
 
 for iSubcase,stressCase in op2Obj.plateStress.items():
     print stressCase
-
     for eid in stressCase:
-        print stressCase[eid].oxx
-        print stressCase[eid].ovmShear
+        for iLayer in range(len(stressCase[eid])):
+            print "oxx =",stressCase[eid][iLayer].oxx
+            print "ovm =",stressCase[eid][iLayer].ovmShear
 
 # To get ONLY plate stress for subcase 1:
 stressSubcase1 = op2Obj.plateStress[1]
@@ -97,6 +98,31 @@ isVM = stressSubcase1.isVonMises # returns True/False
 # look at the printout or in code...
 isFiber = stressSubcase1.isFiber # returns True/False; verify...
 
-## NOTE:  there are no interface methods to these objects yet...
+# we know by looking at the printout, but we can also query the object to find out if is transient stress or not
+isTransient = stressSubcase1.isTransient # returns True/False
+
+
+# If stress looked like this instead...
+iSubcase = 1
+---ISOTROPIC PLATE STRESS---
+EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        ovm 
+dt = 0.1
+1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
+1      CTRIA3        C       2        888       7777        222       3333        555       7777 
+
+dt = 0.2
+1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
+1      CTRIA3        C       2        888       7777        222       3333        555       7777 
+
+# I'll use the transient version instead (print still works the same)
+# only accessing the data changes
+for iSubcase,stressCase in op2Obj.plateStress.items():
+    print stressCase
+    for dt,stress in sorted(stressCase.items()):
+        print "dt = ",dt
+        for eid in stressCase:
+            for iLayer in range(len(stressCase[dt][eid])):
+                print "oxx =",stressCase[dt][eid][iLayer].oxx
+                print "ovm =",stressCase[dt][eid][iLayer].ovmShear
 
 }}}
