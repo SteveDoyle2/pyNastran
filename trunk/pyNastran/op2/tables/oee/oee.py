@@ -17,13 +17,11 @@ class OEE(object):
 
     def readTable_OEE1(self):
         self.tableName = 'OEE'
-        #self.staticEnergy = {} # aCode=1 tCode=18 fCode=1 sortCode=0
 
         table3 = self.readTable_OEE1_3
         table4Data = self.readOEE1_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEE()
-        #sys.exit('end of oee')
 
     def deleteAttributes_OEE(self): # no thermal
         params = ['lsdvm','mode','eigr','freq','dt','lftsfq','formatCode','numWide']
@@ -52,24 +50,23 @@ class OEE(object):
         #                 'esubt': self.esubt,'setID':self.setID,'eigenReal':self.eigenReal,'eigenImag':self.eigenImag,
         #                 'freq':self.freq,'etotpos':self.etotpos,'etotneg':self.etotneg}
 
-        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,}
-
-        self.elementName  = ''.join(unpack('cccccccc',data[24:32])) ## element name
+        self.elementName  = ''.join(unpack('cccccccc',data[24:32])).strip() ## element name
+        self.dataCode['name'] = self.elementName
         #elementName1      = self.getValues(data,'cccc',6)  
         #elementName2      = self.getValues(data,'cccc',7)  ## element name
         #self.elementName  = elementName1+elementName2
 
-        self.addDataParameter(data,'loadSet',   'i',8)   ## Load set or zero
-        self.addDataParameter(data,'formatCode','i',9)   ## format code
-        self.addDataParameter(data,'numWide',   'i',10)  ## number of words per entry in record; @note is this needed for this table ???
-        self.addDataParameter(data,'cvalres',   'i',11)  ## C
+        self.addDataParameter(data,'loadSet',   'i',8,False)   ## Load set or zero
+        self.addDataParameter(data,'formatCode','i',9,False)   ## format code
+        self.addDataParameter(data,'numWide',   'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'cvalres',   'i',11,False)  ## C
 
-        self.addDataParameter(data,'setID',    'i',13)  ## Set identification number Number
-        self.addDataParameter(data,'eigenReal','i',14)  ## Natural eigenvalue - real part
-        self.addDataParameter(data,'eigenImag','i',15)  ## Natural eigenvalue - imaginary part
-        self.addDataParameter(data,'freq',     'f',16)  ## Natural frequency
-        self.addDataParameter(data,'etotpos',  'f',18)  ## Total positive energy
-        self.addDataParameter(data,'etotneg',  'f',19)  ## Total negative energy
+        self.addDataParameter(data,'setID',    'i',13,False)  ## Set identification number Number
+        self.addDataParameter(data,'eigenReal','i',14,False)  ## Natural eigenvalue - real part
+        self.addDataParameter(data,'eigenImag','i',15,False)  ## Natural eigenvalue - imaginary part
+        self.addDataParameter(data,'freq',     'f',16,False)  ## Natural frequency
+        self.addDataParameter(data,'etotpos',  'f',18,False)  ## Total positive energy
+        self.addDataParameter(data,'etotneg',  'f',19,False)  ## Total negative energy
 
 
         #self.printBlock(data) # on
@@ -77,7 +74,6 @@ class OEE(object):
             pass
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.nonlinearFactor = self.mode
             #print "mode(5)=%s" %(self.mode)
         elif self.analysisCode==3: # differential stiffness
             pass
@@ -85,31 +81,25 @@ class OEE(object):
             pass
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq2','f',5)   ## frequency
-            self.nonlinearFactor = self.freq2 ## why are there 2 values of freq?
 
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'time','f',5)   ## time step
-            self.nonlinearFactor = self.time
-            print "time(5)=%s" %(self.time)
+            #print "time(5)=%s" %(self.time)
         elif self.analysisCode==7: # pre-buckling
             pass
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.nonlinearFactor = self.mode
             #print "mode(5)=%s" %(self.mode)
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.nonlinearFactor = self.mode
             #print "mode(5)=%s" %(self.mode)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'loadFactor','f',5)   ## load factor
-            self.nonlinearFactor = self.loadFactor
             #print "loadFactor(5) = %s" %(self.loadFactor)
         elif self.analysisCode==11: # old geometric nonlinear statics
             pass
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'time','f',5)   ## time step
-            self.nonlinearFactor = self.time
             #print "time(5)=%s" %(self.time)
         else:
             raise RuntimeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
@@ -165,5 +155,9 @@ class OEE(object):
         else:
             raise Exception('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
         ###
-        self.readScalars4o(debug=True)
+        if self.obj:
+            self.readScalars4o(debug=True)
+        else:
+            self.skipOES_Element()
+        ###
 

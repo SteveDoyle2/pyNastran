@@ -238,7 +238,8 @@ class Op2Codes(object):
             231 : 'RROD',
             232 : 'QUADRLC',
             233 : 'TRIARLC',
-            235 : '???'
+            234 : '???',
+            235 : '???',
         }
         return elements[eCode] # +'_'+str(eCode)
 
@@ -326,20 +327,20 @@ class Op2Codes(object):
             elementType = self.elementType
 
         sWord = ''
-        if(  sCode==0):  sWord += 'Coordinate Element - Stress Max Shear or Octahedral'
-        elif(sCode==14): sWord += 'Coordinate Element - Strain Fiber Max Shear or Octahedral'
+        if(  sCode==0):  sWord += 'Coordinate Element - Stress Max Shear (Octahedral)'
+        elif(sCode==14): sWord += 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
 
-        elif(sCode==1):  sWord += 'Coordinate Element - Stress von Mises Max Shear or Octahedral'
+        elif(sCode==1):  sWord += 'Coordinate Element - Stress von Mises Max Shear (Octahedral)'
         elif(sCode==10): sWord += 'Coordinate Element - Strain Curvature Max Shear'
 
         elif(sCode==11): sWord += 'Coordinate Element - Strain Curvature von Mises'
         elif(sCode==15): sWord += 'Coordinate Element - Strain Fiber von Mises'
 
-        elif(sCode==16): sWord += 'Coordinate Material - Stress Max Shear or Octahedral'
-        elif(sCode==17): sWord += 'Coordinate Material - Stress von Mises Max Shear or Octahedral'
+        elif(sCode==16): sWord += 'Coordinate Material - Stress Max Shear (Octahedral)'
+        elif(sCode==17): sWord += 'Coordinate Material - Stress von Mises Max Shear (Octahedral)'
 
         elif(sCode==26): sWord += 'Coordinate Material - Strain Curvature Max Shear'
-        elif(sCode==30): sWord += 'Coordinate Material - Strain Fiber Max Shear or Octahedral'
+        elif(sCode==30): sWord += 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
 
         elif(sCode==27): sWord += 'Coordinate Material - Strain Curvature von Mises'
         elif(sCode==31): sWord += 'Coordinate Material - Strain Fiber von Mises'
@@ -356,15 +357,21 @@ class Op2Codes(object):
             msg = 'unsupported formatCode:  formatCode=%s\n' %(formatCode)
             raise InvalidFormatCodeError(msg)
 
-        sortWord = ''
-        if(  self.sortCode==0): sortWord = 'Real'
-        elif(self.sortCode==1): sortWord = 'Real/Imaginary'
-        elif(self.sortCode==2): sortWord = 'Random Responses'
-        else:
-            sortWord = '???'
-            msg = 'unsupported sortCode:  sortCode=%s\n' %(sortCode)
-            print msg
-            #raise Exception(msg)
+        if   self.sortBits[0]==0: sortWord1 = 'Sort1'
+        else:                     sortWord1 = 'Sort2'
+        if   self.sortBits[1]==0: sortWord2 = 'Real'
+        else:                     sortWord2 = 'Real/Imaginary'
+        if   self.sortBits[2]==0: sortWord3 = 'Sorted Responses'
+        else:                     sortWord3 = 'Random Responses'
+
+        #if(  self.sortCode==0): sortWord = 'Real'
+        #elif(self.sortCode==1): sortWord = 'Real/Imaginary'
+        #elif(self.sortCode==2): sortWord = 'Random Responses'
+        #else:
+        #    sortWord = '???'
+        #    msg = 'unsupported sortCode:  sortCode=%s\n' %(sortCode)
+        #    print msg
+        #    #raise Exception(msg)
 
         if(  thermal is None): thermalWord = ''
         elif(thermal==0): thermalWord = 'isHeatTransfer = False'
@@ -442,7 +449,10 @@ class Op2Codes(object):
         msg += "  analysisCode = %-3s %s\n" %(self.analysisCode,analysis)
         msg += "  tableCode    = %-3s %s\n" %(self.tableCode,table)
         msg += "  formatCode   = %-3s %s\n" %(formatCode,formatWord)
-        msg += "  sortCode     = %-3s %s\n" %(self.sortCode,sortWord)
+
+        msg += "  sortType     = %-3s %s\n" %(self.sortBits[0],sortWord1)
+        msg += "  dataFormat   = %-3s %s\n" %(self.sortBits[1],sortWord2)
+        msg += "  isRandom     = %-3s %s\n" %(self.sortBits[2],sortWord3)
         
         if elementType is not None:
             msg += "  elementType  = %-3s %s\n" %(elementType,self.ElementType(elementType))

@@ -4,7 +4,7 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.nodes import GRID
-from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD2R,CORD2C,CORD3G,CORD1C,CORD1S,CORD2S
+from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD1C,CORD1S, CORD2R,CORD2C,#CORD2S, CORD3G,
 
 
 class Geometry1(object):
@@ -17,7 +17,7 @@ class Geometry1(object):
                             (2001,20,9):     self.readCord2C, # record 4
                             (2101,21,8):     self.readCord2R, # record 5
                             (2201,22,10):    self.readCord2S, # record 6
-                            (14301,143,651): self.readCord3G, # record 7
+                           #(14301,143,651): self.readCord3G, # record 7
                             (4501,45,1):     self.readGrid,   # record 17 - slow, but works
                             (5301,53,4):     self.readSEQGP,  # record 27 - not done
 

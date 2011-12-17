@@ -24,7 +24,7 @@ class plateStressObject(stressObject):
         #self.appendDataMember('sCodes','sCode')
         self.code = [self.formatCode,self.sortCode,self.sCode]
 
-        self.fiberDistance = {}
+        self.fiberCurvature = {}
         self.oxx    = {}
         self.oyy    = {}
         self.txy    = {}
@@ -34,9 +34,12 @@ class plateStressObject(stressObject):
         self.ovmShear = {}
 
         if self.code == [1,0,1]:
-            self.isVonMises = True
+            #self.isVonMises = True
+            assert self.isFiberDistance() == False,self.stressBits
+            assert self.isVonMises()      == True,self.stressBits
         elif self.code == [1,0,0]:
-            self.isVonMises = False
+            assert self.isFiberDistance() == True,self.stressBits
+            assert self.isVonMises()      == False,self.stressBits
         else:
             raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -50,7 +53,6 @@ class plateStressObject(stressObject):
             self.add        = self.addTransient
             self.addNewEid  = self.addNewEidTransient
             self.addNewNode = self.addNewNodeTransient
-            self.isTransient = True
         #else:
         #    self.dt = None
         ###
@@ -58,24 +60,26 @@ class plateStressObject(stressObject):
     def addNewTransient(self):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        self.fiberDistance[self.dt] = {}
-        self.oxx[self.dt]    = {}
-        self.oyy[self.dt]    = {}
-        self.txy[self.dt]    = {}
-        self.angle[self.dt]  = {}
-        self.majorP[self.dt] = {}
-        self.minorP[self.dt] = {}
-        self.ovmShear[self.dt]    = {}
+        if self.dt not in self.oxx:
+            self.fiberCurvature[self.dt] = {}
+            self.oxx[self.dt]    = {}
+            self.oyy[self.dt]    = {}
+            self.txy[self.dt]    = {}
+            self.angle[self.dt]  = {}
+            self.majorP[self.dt] = {}
+            self.minorP[self.dt] = {}
+            self.ovmShear[self.dt]    = {}
 
     def addNewEid(self,eType,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "Plate Stress add..."
-        #assert eid not in self.oxx
-        #print self.oxx
+        if eid in self.oxx:
+            return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
+        assert eid not in self.oxx
+        #print self.oxx
         self.eType[eid] = eType
-        self.fiberDistance[eid] = {nodeID: [fd]}
+        self.fiberCurvature[eid] = {nodeID: [fd]}
         assert isinstance(eid,int)
         self.oxx[eid]    = {nodeID: [oxx]}
         self.oyy[eid]    = {nodeID: [oyy]}
@@ -97,7 +101,7 @@ class plateStressObject(stressObject):
         assert eid not in self.ovmShear[self.dt],msg
         assert isinstance(eid,int)
         self.eType[eid] = eType
-        self.fiberDistance[dt][eid] = {nodeID: [fd]}
+        self.fiberCurvature[dt][eid] = {nodeID: [fd]}
         self.oxx[dt][eid]    = {nodeID: [oxx]}
         self.oyy[dt][eid]    = {nodeID: [oyy]}
         self.txy[dt][eid]    = {nodeID: [txy]}
@@ -113,9 +117,9 @@ class plateStressObject(stressObject):
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #print self.oxx
-        #print self.fiberDistance
+        #print self.fiberCurvature
         assert isinstance(eid,int)
-        self.fiberDistance[eid][nodeID].append(fd)
+        self.fiberCurvature[eid][nodeID].append(fd)
         self.oxx[eid][nodeID].append(oxx)
         self.oyy[eid][nodeID].append(oyy)
         self.txy[eid][nodeID].append(txy)
@@ -131,9 +135,9 @@ class plateStressObject(stressObject):
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #print self.oxx
-        #print self.fiberDistance
+        #print self.fiberCurvatrure
         assert eid is not None
-        self.fiberDistance[dt][eid][nodeID].append(fd)
+        self.fiberCurvature[dt][eid][nodeID].append(fd)
         self.oxx[dt][eid][nodeID].append(oxx)
         self.oyy[dt][eid][nodeID].append(oyy)
         self.txy[dt][eid][nodeID].append(txy)
@@ -148,7 +152,7 @@ class plateStressObject(stressObject):
         #print self.oxx
         assert eid is not None
         #assert nodeID not in self.oxx[eid]
-        self.fiberDistance[eid][nodeID] = [fd]
+        self.fiberCurvature[eid][nodeID] = [fd]
         self.oxx[eid][nodeID]    = [oxx]
         self.oyy[eid][nodeID]    = [oyy]
         self.txy[eid][nodeID]    = [txy]
@@ -165,8 +169,8 @@ class plateStressObject(stressObject):
         #print self.oxx
         assert eid is not None
         dt = self.dt
-        #assert nodeID not in self.oxx[eid]
-        self.fiberDistance[dt][eid][nodeID] = [fd]
+        assert nodeID not in self.oxx[eid]
+        self.fiberCurvature[dt][eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID]    = [oxx]
         self.oyy[dt][eid][nodeID]    = [oyy]
         self.txy[dt][eid][nodeID]    = [txy]
@@ -179,9 +183,13 @@ class plateStressObject(stressObject):
         if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
-        headers = ['oxx','oyy','txy','majorP','minorP']
-        if self.isVonMises:
-            headers.append('ovm')
+        if self.isFiberDistance():
+            headers = ['fiberDist']
+        else:
+            headers = ['curvature']
+        headers += ['oxx','oyy','txy','majorP','minorP']
+        if self.isVonMises():
+            headers.append('oVonMises')
         else:
             headers.append('maxShear')
         return headers
@@ -196,12 +204,12 @@ class plateStressObject(stressObject):
 
         #print self.oxx.keys()
         for dt,oxxs in sorted(self.oxx.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
                     for iLayer in range(len(self.oxx[dt][eid][nid])):
-                        fd    = self.fiberDistance[dt][eid][nid][iLayer]
+                        fd    = self.fiberCurvature[dt][eid][nid][iLayer]
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
                         oyy   = self.oyy[   dt][eid][nid][iLayer]
                         txy   = self.txy[   dt][eid][nid][iLayer]
@@ -211,7 +219,7 @@ class plateStressObject(stressObject):
                         ovm = self.ovmShear[dt][eid][nid][iLayer]
 
                         msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
-                        vals = [oxx,oyy,txy,major,minor,ovm]
+                        vals = [fd,oxx,oyy,txy,major,minor,ovm]
                         for val in vals:
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0')
@@ -246,7 +254,7 @@ class plateStressObject(stressObject):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
                 for iLayer in range(len(self.oxx[eid][nid])):
-                    fd    = self.fiberDistance[eid][nid][iLayer]
+                    fd    = self.fiberCurvature[eid][nid][iLayer]
                     oxx   = self.oxx[eid][nid][iLayer]
                     oyy   = self.oyy[eid][nid][iLayer]
                     txy   = self.txy[eid][nid][iLayer]
@@ -311,19 +319,25 @@ class plateStrainObject(strainObject):
         self.evmShear = {}
 
         if self.code == [1,0,10]:
-            self.isFiberDistance = False
+            #self.isFiberDistance = False
+            #self.isVonMises = False
             self.isBilinear = True
-            self.isVonMises = False
+            assert self.isFiberDistance() == False
+            assert self.isVonMises()      == False
 
         elif self.code == [1,0,11]:
-            self.isFiberDistance = False
+            #self.isFiberDistance = False
+            #self.isVonMises = True
             self.isBilinear = True
-            self.isVonMises = True
+            assert self.isFiberDistance() == False
+            assert self.isVonMises()      == True
 
         elif self.code == [1,0,15]:
-            self.isFiberDistance = True
+            #self.isFiberDistance = True
+            #self.isVonMises = True
             self.isBilinear = False
-            self.isVonMises = True
+            assert self.isFiberDistance() == True
+            assert self.isVonMises()      == True
         else:
             raise InvalidCodeError('plateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -340,14 +354,15 @@ class plateStrainObject(strainObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.fiberCurvature[self.dt] = {}
-        self.exx[self.dt]   = {}
-        self.eyy[self.dt]   = {}
-        self.exy[self.dt]   = {}
-        self.angle[self.dt] = {}
-        self.majorP[self.dt] = {}
-        self.minorP[self.dt] = {}
-        self.evmShear[self.dt]   = {}
+        if self.dt not in self.exx:
+            self.fiberCurvature[self.dt] = {}
+            self.exx[self.dt]   = {}
+            self.eyy[self.dt]   = {}
+            self.exy[self.dt]   = {}
+            self.angle[self.dt] = {}
+            self.majorP[self.dt] = {}
+            self.minorP[self.dt] = {}
+            self.evmShear[self.dt]   = {}
 
     def addNewEid(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "Plate add..."
@@ -355,6 +370,9 @@ class plateStrainObject(strainObject):
         
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
+
+        if eid in self.exx:
+            return self.add(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         assert eid not in self.exx
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [curvature]}
@@ -393,7 +411,7 @@ class plateStrainObject(strainObject):
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
         #print self.oxx
-        #print self.fiberDistance
+        #print self.fiberCurvature
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         self.fiberCurvature[eid][nodeID].append(curvature)
@@ -411,7 +429,7 @@ class plateStrainObject(strainObject):
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
         #print self.oxx
-        #print self.fiberDistance
+        #print self.fiberCurvature
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         dt = self.dt
@@ -442,9 +460,14 @@ class plateStrainObject(strainObject):
         if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
-        headers = ['exx','eyy','exy','eMajor','eMinor']
-        if self.isVonMises:
-            headers.append('evm')
+        if self.isFiberDistance():
+            headers = ['fiberDist']
+        else:
+            headers = ['curvature']
+    
+        headers += ['exx','eyy','exy','eMajor','eMinor']
+        if self.isVonMises():
+            headers.append('eVonMises')
         else:
             headers.append('maxShear')
         return headers
@@ -458,7 +481,7 @@ class plateStrainObject(strainObject):
         msg += '\n'
 
         for dt,exx in sorted(self.exx.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid,exxNodes in sorted(exx.items()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
@@ -473,7 +496,7 @@ class plateStrainObject(strainObject):
                         evm   = self.evmShear[   dt][eid][nid][iLayer]
 
                         msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
-                        vals = [exx,eyy,exy,major,minor,evm]
+                        vals = [fd,exx,eyy,exy,major,minor,evm]
                         for val in vals:
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0.')

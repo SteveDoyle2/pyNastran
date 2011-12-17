@@ -42,6 +42,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
     def createTransientObject(self,storageObj,classObj):
         """@note dt can also be loadStep depending on the class"""
         #print "create Transient Object"
+        #print "***NF = ",self.nonlinearFactor
+        #print "DC = ",self.dataCode
         if self.iSubcase in storageObj:
             #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
@@ -49,7 +51,10 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             try:
                 self.obj.updateDt(self.dataCode,self.nonlinearFactor)
             except:
-                print "objName = ",self.obj.name()
+                #try:
+                #    print "objName = ",self.obj.name()
+                #except:
+                #    print "objName = ",self.obj
                 raise
             ###
         else:
@@ -87,6 +92,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "reading iTable3=%s" %(iTable)
             #self.obj = None
 
+            self.obj = None
             self.nonlinearFactor = None
             self.dataCode = {}
             table3(iTable)
@@ -261,7 +267,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #assert len(data)>=16,msg+self.printSection(120)
             out  = unpack('ifff',eData)
             a,b,c,d,E,F,G = unpack('ssssfff',eData)
-            print "abcd=|%s|" %(a+b+c+d)
+            #print "abcd=|%s|" %(a+b+c+d)
             (gridDevice,dx,dy,dz) = out
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
@@ -271,7 +277,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #if grid<100:
             if debug:
                 print "grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
-            print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
+            #print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
             self.obj.add(grid,dx,dy,dz)
             n+=16
         ###
@@ -289,6 +295,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         for i in range(nEntries):
             eData = data[n:n+nTotal]
             out  = unpack(strFormat,eData)
+            #print "*out =",out
             self.obj.add(out)
             n+=nTotal
         ###
@@ -389,7 +396,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
-        print "objName = ",self.obj.name()
+        #print "objName = ",self.obj.name()
         n = 0
         nEntries = len(data)/56
         #print "len(data) = ",len(data)

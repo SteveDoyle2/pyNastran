@@ -23,12 +23,13 @@ class compositePlateStressObject(stressObject):
         self.angle  = {}
         self.majorP = {}
         self.minorP = {}
+        #self.fiberCurvature = {}
+        self.ovmShear       = {}
         #print "self.dataCode = ",self.dataCode
+        #if self.isVonMisesStress():
         if self.code == [1,0,0]:
-            self.fiberDistance = {}
-            self.ovm    = {}
-            self.isfiberDistance = True
-            self.isVonMises      = True
+            assert self.isVonMises()==False
+            #self.isVonMises      = True
         else:
             raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -47,20 +48,25 @@ class compositePlateStressObject(stressObject):
         @note make sure you set self.dt first
         """
         #self.fiberDistance[self.dt] = {}
-        self.o11[self.dt]    = {}
-        self.o22[self.dt]    = {}
-        self.t12[self.dt]    = {}
-        self.t1z[self.dt]    = {}
-        self.t2z[self.dt]    = {}
-        self.angle[self.dt]  = {}
-        self.majorP[self.dt] = {}
-        self.minorP[self.dt] = {}
-        self.ovm[self.dt]    = {}
+        if self.dt not in self.o11:
+            self.o11[self.dt]    = {}
+            self.o22[self.dt]    = {}
+            self.t12[self.dt]    = {}
+            self.t1z[self.dt]    = {}
+            self.t2z[self.dt]    = {}
+            self.angle[self.dt]  = {}
+            self.majorP[self.dt] = {}
+            self.minorP[self.dt] = {}
+            self.ovmShear[self.dt]    = {}
 
     def addNewEid(self,eType,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
-        #assert eid not in self.o11
+        msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,eType,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+        if eid in self.o11:
+            return self.add(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+        assert eid not in self.o11,msg+'\n  o11=%s eType=%s code=%s' %(self.o11[eid],self.eType[eid],self.dataCode)
+
         self.eType[eid]  = eType
         self.o11[eid]    = [o11]
         self.o22[eid]    = [o22]
@@ -70,8 +76,7 @@ class compositePlateStressObject(stressObject):
         self.angle[eid]  = [angle]
         self.majorP[eid] = [majorP]
         self.minorP[eid] = [minorP]
-        self.ovm[eid]    = [ovm]
-        msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+        self.ovmShear[eid]    = [ovm]
         #print msg
         #if nodeID==0: raise Exception(msg)
 
@@ -79,6 +84,8 @@ class compositePlateStressObject(stressObject):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         dt = self.dt
+        if eid in self.o11[dt]:
+            return self.add(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
         assert eid not in self.o11[dt]
         self.eType[eid]  = eType
         self.o11[dt][eid]    = [o11]
@@ -89,7 +96,7 @@ class compositePlateStressObject(stressObject):
         self.angle[dt][eid]  = [angle]
         self.majorP[dt][eid] = [majorP]
         self.minorP[dt][eid] = [minorP]
-        self.ovm[dt][eid]    = [ovm]
+        self.ovmShear[dt][eid]    = [ovm]
         msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
         #print msg
         #if nodeID==0: raise Exception(msg)
@@ -107,7 +114,7 @@ class compositePlateStressObject(stressObject):
         self.angle[eid].append(angle)
         self.majorP[eid].append(majorP)
         self.minorP[eid].append(minorP)
-        self.ovm[eid].append(ovm)
+        self.ovmShear[eid].append(ovm)
         #if nodeID==0: raise Exception(msg)
 
     def addTransient(self,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
@@ -124,15 +131,15 @@ class compositePlateStressObject(stressObject):
         self.angle[dt][eid].append(angle)
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
-        self.ovm[dt][eid].append(ovm)
+        self.ovmShear[dt][eid].append(ovm)
         #if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
-        headers = ['o11','o22','t12','t1z','t2z','ovm']
-        #if self.isVonMises:
-        #    headers.append('ovm')
-        #else:
-        #    headers.append('maxShear')
+        headers = ['o11','o22','t12','t1z','t2z']
+        if self.isVonMises:
+            headers.append('oVonMises')
+        else:
+            headers.append('maxShear')
         return headers
 
     def __reprTransient__(self):
@@ -157,7 +164,7 @@ class compositePlateStressObject(stressObject):
                     angle = self.angle[dt][eid][iLayer]
                     major = self.majorP[dt][eid][iLayer]
                     minor = self.minorP[dt][eid][iLayer]
-                    ovm   = self.ovm[dt][eid][iLayer]
+                    ovm   = self.ovmShear[dt][eid][iLayer]
 
                     msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
                     vals = [o11,o22,t12,t1z,t2z,ovm]
@@ -195,7 +202,7 @@ class compositePlateStressObject(stressObject):
                 angle = self.angle[eid][iLayer]
                 major = self.majorP[eid][iLayer]
                 minor = self.minorP[eid][iLayer]
-                ovm   = self.ovm[eid][iLayer]
+                ovm   = self.ovmShear[eid][iLayer]
 
                 msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
                 vals = [o11,o22,t12,t1z,t2z,ovm]
@@ -229,9 +236,10 @@ class compositePlateStrainObject(strainObject):
         self.angle  = {}
         self.majorP = {}
         self.minorP = {}
+        
         if self.code == [1,0,14]:
-            self.evm    = {}
-            self.isVonMises = True
+            self.evmShear   = {}
+            assert self.isVonMises()==False
         else:
             raise InvalidCodeError('compositePlateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -250,20 +258,21 @@ class compositePlateStrainObject(strainObject):
         @note make sure you set self.dt first
         """
         #self.fiberDistance[self.dt] = {}
-        self.e11[self.dt]    = {}
-        self.e22[self.dt]    = {}
-        self.e12[self.dt]    = {}
-        self.e1z[self.dt]    = {}
-        self.e2z[self.dt]    = {}
-        self.angle[self.dt]  = {}
-        self.majorP[self.dt] = {}
-        self.minorP[self.dt] = {}
-        self.evm[self.dt]    = {}
+        if self.dt not in self.e11:
+            self.e11[self.dt]    = {}
+            self.e22[self.dt]    = {}
+            self.e12[self.dt]    = {}
+            self.e1z[self.dt]    = {}
+            self.e2z[self.dt]    = {}
+            self.angle[self.dt]  = {}
+            self.majorP[self.dt] = {}
+            self.minorP[self.dt] = {}
+            self.evmShear[self.dt]    = {}
 
     def addNewEid(self,eType,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
-        #assert eid not in self.e11
+        assert eid not in self.e11
         assert isinstance(eid,int)
         self.eType[eid]  = eType
         self.e11[eid]    = [e11]
@@ -274,7 +283,7 @@ class compositePlateStrainObject(strainObject):
         self.angle[eid]  = [angle]
         self.majorP[eid] = [majorP]
         self.minorP[eid] = [minorP]
-        self.evm[eid]    = [evm]
+        self.evmShear[eid] = [evm]
         msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
         #print msg
         #if nodeID==0: raise Exception(msg)
@@ -294,7 +303,7 @@ class compositePlateStrainObject(strainObject):
         self.angle[dt][eid]  = [angle]
         self.majorP[dt][eid] = [majorP]
         self.minorP[dt][eid] = [minorP]
-        self.evm[dt][eid]    = [evm]
+        self.evmShear[dt][eid] = [evm]
         msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
         #print msg
         #if nodeID==0: raise Exception(msg)
@@ -312,7 +321,7 @@ class compositePlateStrainObject(strainObject):
         self.angle[eid].append(angle)
         self.majorP[eid].append(majorP)
         self.minorP[eid].append(minorP)
-        self.evm[eid].append(evm)
+        self.evmShear[eid].append(evm)
         #if nodeID==0: raise Exception(msg)
 
     def addTransient(self,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
@@ -329,15 +338,15 @@ class compositePlateStrainObject(strainObject):
         self.angle[dt][eid].append(angle)
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
-        self.evm[dt][eid].append(evm)
+        self.evmShear[dt][eid].append(evm)
         #if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
-        headers = ['e11','e22','e12','e1z','e2z','evm']
-        #if self.isVonMises:
-        #    headers.append('evm')
-        #else:
-        #    headers.append('maxShear')
+        headers = ['e11','e22','e12','e1z','e2z']
+        if self.isVonMises:
+            headers.append('eVonMises')
+        else:
+            headers.append('maxShear')
         return headers
 
     def __reprTransient__(self):
@@ -349,7 +358,7 @@ class compositePlateStrainObject(strainObject):
         msg += '\n'
 
         for dt,E11s in sorted(self.e11.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid,e11s in sorted(E11s.items()):
                 eType = self.eType[eid]
                 for iLayer in range(len(e11s)):
@@ -362,7 +371,7 @@ class compositePlateStrainObject(strainObject):
                     angle = self.angle[dt][eid][iLayer]
                     major = self.majorP[dt][eid][iLayer]
                     minor = self.minorP[dt][eid][iLayer]
-                    evm   = self.evm[dt][eid][iLayer]
+                    evm   = self.evmShear[dt][eid][iLayer]
 
                     msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
                     vals = [e11,e22,e12,e1z,e2z,evm]
@@ -400,7 +409,7 @@ class compositePlateStrainObject(strainObject):
                 angle = self.angle[eid][iLayer]
                 major = self.majorP[eid][iLayer]
                 minor = self.minorP[eid][iLayer]
-                evm   = self.evm[eid][iLayer]
+                evm   = self.evmShear[eid][iLayer]
 
                 msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
                 vals = [e11,e22,e12,e1z,e2z,evm]
