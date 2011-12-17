@@ -38,67 +38,52 @@ class OEF(object):
         #self.printBlock(data)
         
         aCode = self.getBlockIntEntry(data,1)
-        #print "aCode = ",aCode
         
         self.parseApproachCode(data)
-        self.elementType = self.getValues(data,'i',3)  ## element type
-        self.dLoadID     = self.getValues(data,'i',8)  ## dynamic load set ID/random code
-        self.formatCode  = self.getValues(data,'i',9)  ## format code
-        self.numWide     = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
-        self.oCode       = self.getValues(data,'i',11) ## undefined in DMAP...
-        self.thermal     = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
-        print "dLoadID(8)=%s formatCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
+        self.addDataParameter(data,'elementType', 'i',3,False)   ## element type
+        self.addDataParameter(data,'dLoadID',     'i',8,False)   ## dynamic load set ID/random code
+        self.addDataParameter(data,'formatCode',  'i',9,False)   ## format code
+        self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'oCode',       'i',11,False)  ## undefined in DMAP...
+        self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
 
-        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
-                         'elementType':self.elementType,'dLoadID':self.dLoadID,
-                         'formatCode':self.formatCode,
-                         'numWide': self.numWide,'oCode':self.oCode,
-                         'thermal': self.thermal}
+        #print "dLoadID(8)=%s formatCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
+        #print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
 
-        
+
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
-            self.loadID = self.getValues(data,'i',5) ## load set ID number
+            self.addDataParameter(data,'loadID','i',5,False)   ## load set ID number
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.addDataParameter(data,'eign','f',6)   ## eigenvalue
-            self.nonlinearFactor = self.mode
+            self.addDataParameter(data,'eign','f',6,False)   ## eigenvalue
         elif self.analysisCode==3: # differential stiffness 0
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            self.nonlinearFactor = self.loadID
         elif self.analysisCode==4: # differential stiffness 1
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            self.nonlinearFactor = self.loadID
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
-            self.nonlinearFactor = self.freq
 
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'time','f',5)   ## time step
-            self.nonlinearFactor = self.time
             #print "time(5)=%s" %(self.time)
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            self.nonlinearFactor = self.loadID
             #print "loadID(5)=%s" %(self.loadID)
         elif self.analysisCode==8: # post-buckling
-            self.loadID = self.getValues(data,'i',5) ## load set ID number
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.nonlinearFactor = self.loadID
+            self.addDataParameter(data,'loadID','i',5)       ## load set ID number
+            self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             #print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
-            self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
-            self.addDataParameter(data,'eigi','f',7)   ## imaginary eigenvalue
-            self.nonlinearFactor = self.mode
+            self.addDataParameter(data,'mode','i',5)         ## mode number
+            self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+            self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
             #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'loadStep','f',5)   ## load step
-            self.nonlinearFactor = self.loadStep
             #print "loadStep(5) = %s" %(self.loadStep)
         elif self.analysisCode==11: # geometric nonlinear statics
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            self.nonlinearFactor = self.loadID
             #print "loadID(5)=%s" %(self.loadID)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
@@ -116,6 +101,8 @@ class OEF(object):
 
     def readOEF1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        self.skipOES_Element() # skipping entire table
+        return
         
         # element forces & moments / flux
         if 0:
@@ -125,7 +112,7 @@ class OEF(object):
                 self.readOEF1_Data_format1_sort1()
             elif tfsCode==[4,2,1]:
                 self.readOEF1_Data_format2_sort1()
-            elif tfsCode==[4, 3, 1]:
+            elif tfsCode==[4,3,1]:
                 self.readOEF1_Data_format3_sort1()
 
             # composite failure indicies
@@ -145,7 +132,6 @@ class OEF(object):
         assert self.formatCode==1
         assert self.sortCode==0
 
-        self.obj = None
         print "self.analysisCode=%s tableCode(1)=%s sortCode=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.sortCode,self.thermal)
 
         if self.thermal==0:
@@ -197,7 +183,6 @@ class OEF(object):
             ###
         else:
             msg = 'invalid thermal flag...not 0 or 1...flag=%s\n' %(self.thermal)
-            self.obj = None
             sys.stderr.write(msg)
             raise Exception(msg)
         ###

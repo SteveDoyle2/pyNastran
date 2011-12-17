@@ -1,9 +1,10 @@
-from fortranFile import FortranFile
-from op2Codes import Op2Codes
-from op2Errors import *
 import os
 import sys
 from struct import unpack
+
+from fortranFile import FortranFile
+from op2Codes import Op2Codes
+from op2Errors import *
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
@@ -35,7 +36,7 @@ class Op2(BDF,
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # some header table...
-                            'BGPDT','EQEXINS','PVT0','CASECC',#'EDOM',
+                            'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC',#'EDOM',
                              'DESTAB',                # design variables
                              'OQG1','OQGV1','OQMG1',  # spc/mpc forces
                              
@@ -62,14 +63,13 @@ class Op2(BDF,
                              'VIEWTB','ERRORN',
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2',
                              'PCOMPTS',
-                             # OMNS
                              'OMM2',
                              
                              # new
-                             #'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2''OMM2','AGRF','AFRF','AEMONPT','PERF','PMRF','MONITOR','SDF','FOL','STDISP'
-                             #'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2'
+                             'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2','OMM2',
+                             'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2',
                              'STDISP','SDF','MONITOR','PMRF','PERF','PFRF','AEMONPT','AFRF','AGRF',
-                             #'FOL',
+                             'FOL',
                              ]
                              
         ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
@@ -97,7 +97,7 @@ class Op2(BDF,
         self.forces = {}
         self.fluxes = {}
         self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
-    
+
         self.modalForces = {}
         
         ## rename to nonlinearStaticLoads/nonlinearThermalLoads ???
@@ -211,7 +211,10 @@ class Op2(BDF,
         
         self.n = self.op2.tell()
         #print "self.n = ",self.n
-        self.readTapeCode()
+        try:
+            self.readTapeCode()
+        except:
+            raise TapeCodeError('when this happens, the analysis failed...check the F06')
         #sys.exit('end of tape code')
 
         isAnotherTable = True
@@ -253,6 +256,8 @@ class Op2(BDF,
                     self.readTable_DYNAMICS()
                 elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
                     self.readTable_DIT()
+                elif tableName in ['VIEWTB','EQEXIN','OEFIT']:
+                    self.readTable_DUMMY_GEOM(tableName)
 
                 elif tableName in ['DESTAB']:  # design variable table
                     self.readTable_DesTab()
@@ -271,7 +276,7 @@ class Op2(BDF,
                     self.readTable_OGP1()
 
                 
-                elif tableName in ['OEF1X','DOEF1','OEFIT']:  # applied loads
+                elif tableName in ['OEF1X','DOEF1']:  # applied loads
                     self.readTable_OEF1()
                 elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
                     self.readTable_OQG1()
@@ -293,12 +298,17 @@ class Op2(BDF,
                     self.readTable_PCOMPTS() # 'SDF',
                     
                 # not done
-                elif tableName in ['VIEWTB','STDISP','FOL','OMM2','BGPDT','EQEXINS','PVT0','CASECC',]:
+                elif tableName in ['OMM2','BGPDT','EQEXINS','PVT0','CASECC',]:
                     self.readTableB_DUMMY()
-                elif tableName in ['OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2','SDF']:
+                elif tableName in ['OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2','SDF']:
                     self.readTableB_DUMMY()
                 elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
                     self.readTableB_DUMMY()
+                #elif tableName in []:
+                #    self.readTableB_DUMMY()
+                
+                elif tableName in ['STDISP','FOL','OFMPF2M']:
+                    self.readTable_DUMMY_GEOM(tableName)
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
                 #print "endTell   = ",self.op2.tell()
@@ -316,6 +326,24 @@ class Op2(BDF,
         print "---end of all tables---"
         self.skippedCardsFile.close()
         
+    def parseSortCode(self):
+        bits = [0,0,0]
+        
+        sortCode = self.sortCode
+        i=2
+        #print "***sortCode = ",self.sortCode
+        while sortCode>0:
+            value = sortCode%2
+            sortCode = (sortCode - value)/2
+            bits[i] = value
+            #print "    *bit = ",value
+            #print "    sortCode = ",sortCode
+            i-=1
+        #bits.reverse()
+        #print "sortBits = ",bits
+        self.sortBits = bits
+        self.dataCode['sortBits'] = self.sortBits
+
     def parseApproachCode(self,data):
         """
         int3 is the 3rd word in table=-3 and may be 
@@ -328,6 +356,14 @@ class Op2(BDF,
         self.sortCode  = tCode/1000
         self.deviceCode   = aCode%10
         self.analysisCode = (aCode-self.deviceCode)/10
+
+        self.parseSortCode()
+        self.dataCode = {'analysisCode': self.analysisCode,
+                         'deviceCode':self.deviceCode,
+                         'tableCode' :self.deviceCode,
+                         'sortCode'  :self.sortCode,
+                         }
+
         #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
         print self.printTableCode(self.tableCode)
         return (int3)
@@ -350,7 +386,8 @@ class Op2(BDF,
         return unpack(sFormat,ds)
         
     def deleteAttributes(self,params):
-        params += ['dataCode','deviceCode','analysisCode','tableCode','iSubcase','data','numWide','nonlinearFactor','obj']
+        params += ['dataCode','deviceCode','analysisCode','tableCode','sortCode','iSubcase',
+                   'data','numWide','nonlinearFactor','obj']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))

@@ -1,6 +1,26 @@
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
-class stressObject(scalarObject):
+class OES_Object(scalarObject):
+    def __init__(self,dataCode,iSubcase):
+        scalarObject.__init__(self,dataCode,iSubcase)
+
+    def isCurvature(self):
+        if self.stressBits[2]==0:
+            return True
+        return False
+
+    def isFiberDistance(self):
+        return not(self.isCurvature())
+
+    def isVonMises(self):
+        return not(self.isMaxShear())
+
+    def isMaxShear(self):
+        if self.stressBits[0]==0:
+            return True
+        return False
+
+class stressObject(OES_Object):
     def __init__(self,dataCode,iSubcase):
         scalarObject.__init__(self,dataCode,iSubcase)
 
@@ -9,21 +29,29 @@ class stressObject(scalarObject):
         self.applyDataCode()
         #assert dt>=0.
         print "dataCode=",self.dataCode
-        self.elementName = self.dataCode['ElementName']
+        self.elementName = self.dataCode['elementName']
         print "updating dt...dt=%s" %(dt)
         if dt is not None:
             self.dt = dt
             self.addNewTransient()
         ###
 
-class strainObject(scalarObject):
+    def isStrain(self):
+        return True
+
+    def isStress(self):
+        return False
+    
+
+class strainObject(OES_Object):
     def __init__(self,dataCode,iSubcase):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        OES_Object.__init__(self,dataCode,iSubcase)
+
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
         print "dataCode=",self.dataCode
-        self.elementName = self.dataCode['ElementName']
+        self.elementName = self.dataCode['elementName']
         #assert dt>=0.
         print "updating dt...dt=%s" %(dt)
         if dt is not None:
@@ -31,4 +59,8 @@ class strainObject(scalarObject):
             self.addNewTransient()
         ###
 
-
+    def isStress(self):
+        return False
+    
+    def isStrain(self):
+        return True

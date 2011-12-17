@@ -39,70 +39,55 @@ class OGP(object):
         self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
-        self.dLoadID    = self.getValues(data,'i',8)  ## dynamic load set ID/random code
-        self.formatCode = self.getValues(data,'i',9)  ## format code
-        self.numWide    = self.getValues(data,'i',10) ## number of words per entry in record; @note is this needed for this table ???
-        self.oCode      = self.getValues(data,'i',11) ## undefined in DMAP...
-        self.thermal    = self.getValues(data,'i',23) ## thermal flag; 1 for heat ransfer, 0 otherwise
+        self.addDataParameter(data,'dLoadID',     'i',8,False)   ## dynamic load set ID/random code
+        self.addDataParameter(data,'formatCode',  'i',9,False)   ## format code
+        self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'oCode',       'i',11,False)   ## undefined in DMAP...
+        self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
 
-        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
-                         'dLoadID':self.dLoadID,'formatCode':self.formatCode,
-                         'numWide': self.numWide,'oCode':self.oCode,
-                         'thermal': self.thermal}
         print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
-            self.mode      = self.getValues(data,'i',5) ## mode number
-            self.eign      = self.getValues(data,'f',6) ## real eigenvalue
-            self.modeCycle = self.getValues(data,'f',7) ## mode or cycle @todo confused on the type ???
-            self.nonlinearFactor = self.mode
-        elif self.analysisCode==3: # differential stiffness 0
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.nonlinearFactor = self.lsdvmn
-        elif self.analysisCode==4: # differential stiffness 1
-            self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.nonlinearFactor = self.lsdvmn
+            self.addDataParameter(data,'mode',     'i',5)   ## mode number
+            self.addDataParameter(data,'eign',     'f',6,False)   ## real eigenvalue
+            self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
+        #elif self.analysisCode==3: # differential stiffness
+        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+        #elif self.analysisCode==4: # differential stiffness
+        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
-            self.freq = self.getValues(data,'f',5) ## frequency
-            self.nonlinearFactor = self.freq
+            self.addDataParameter(data,'freq','f',5)   ## frequency
 
         elif self.analysisCode==6: # transient
-            self.time = self.getValues(data,'f',5) ## time step
-            self.nonlinearFactor = self.time
-            print "TIME(5)=%s" %(self.time)
+            self.addDataParameter(data,'time','f',5)   ## time step
+            #print "TIME(5)=%s" %(self.time)
         elif self.analysisCode==7: # pre-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## load set
-            self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==8: # post-buckling
-            self.lsdvmn = self.getValues(data,'i',5) ## mode number
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
+            #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
-            self.mode   = self.getValues(data,'i',5) ## mode
-            self.eigr   = self.getValues(data,'f',6) ## real eigenvalue
-            self.eigi   = self.getValues(data,'f',7) ## imaginary eigenvalue
-            self.nonlinearFactor = self.mode
-            print "LFTSFQ(5)=%s  EIGR(6)=%s  EIGI(7)=%s" %(self.lftsfq,self.eigr,self.eigi)
+            self.addDataParameter(data,'mode','i',5)   ## mode number
+            self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+            self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
-            self.lftsfq = self.getValues(data,'f',5) ## load step
-            self.nonlinearFactor = self.lftsfq
-            print "LFTSFQ(5) = %s" %(self.lftsfq)
+            self.addDataParameter(data,'lftsfq','f',5)   ## load step
+            #print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
-            self.lsdvmn = self.getValues(data,'i',5)
-            self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.lsdvmn = self.getValues(data,'i',5)
-            self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
-            raise RuntimeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
-
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+        ###
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set, Mode number
@@ -115,7 +100,7 @@ class OGP(object):
         self.readTitle()
 
     def readOGP1_Data(self):
-        print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
+        #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
 

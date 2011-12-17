@@ -74,16 +74,18 @@ class beamStressObject(stressObject):
         @note make sure you set self.dt first
         """
         #print "addNewTransient_beam+1+0"
-        self.smax[self.dt] = {}
-        self.smin[self.dt] = {}
-        self.MS_tension[self.dt]     = {}
-        self.MS_compression[self.dt] = {}
+        if self.dt not in self.smax:
+            self.smax[self.dt] = {}
+            self.smin[self.dt] = {}
+            self.MS_tension[self.dt]     = {}
+            self.MS_compression[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
         """
         initializes the transient variables
         @note make sure you set self.dt first
         """
+        raise Exception('not supported')
         print self.dataCode
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
@@ -128,6 +130,7 @@ class beamStressObject(stressObject):
         return eid
 
     def addNewEidTransient_format2_sort1(self,out):
+        raise Exception('not supported')
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
         eid = (eid-self.deviceCode)/10
         dt = self.dt
@@ -170,7 +173,7 @@ class beamStressObject(stressObject):
         msg += '\n'
 
         for dt,smax in sorted(self.smax.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid in sorted(smax):
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]
@@ -203,7 +206,7 @@ class beamStressObject(stressObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -321,19 +324,22 @@ class beamStrainObject(strainObject):
         @note make sure you set self.dt first
         """
         #print "addNewTransient_beam+1+0"
-        self.smax[self.dt] = {}
-        self.smin[self.dt] = {}
-        self.MS_tension[self.dt]     = {}
-        self.MS_compression[self.dt] = {}
+        if self.dt not in self.smax:
+            self.smax[self.dt] = {}
+            self.smin[self.dt] = {}
+            self.MS_tension[self.dt]     = {}
+            self.MS_compression[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
         """
         initializes the transient variables
         @note make sure you set self.dt first
         """
+        raise Exception('not supported')
         print self.dataCode
-        self.axial[self.dt]     = {}
-        self.torsion[self.dt]   = {}
+        if self.dt not in self.smax:
+            self.axial[self.dt]     = {}
+            self.torsion[self.dt]   = {}
 
     def addNewEid_format1_sort0(self,out):
         #print "Beam Stress addNewEid..."
@@ -352,6 +358,7 @@ class beamStrainObject(strainObject):
         return eid
 
     def addNewEid_format2_sort1(self,out):
+        raise Exception('not supported')
         assert eid >= 0
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
         eid = (eid-self.deviceCode)/10
@@ -374,6 +381,7 @@ class beamStrainObject(strainObject):
         return eid
 
     def addNewEidTransient_format2_sort1(self,out):
+        raise Exception('not supported')
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
         eid = (eid-self.deviceCode)/10
         assert eid >= 0
@@ -407,6 +415,7 @@ class beamStrainObject(strainObject):
         ###
 
     def __reprTransient_format2_sort1__(self):
+        raise Exception('not supported')
         msg = '---COMPLEX BEAM STRAINS---\n'
         msg += '%-10s %10s ' %('EID','eType')
         headers = ['axialReal','axialImag','torsionReal','torsionImag']
@@ -415,7 +424,7 @@ class beamStrainObject(strainObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]

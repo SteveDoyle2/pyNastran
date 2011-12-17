@@ -37,10 +37,10 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def addNewTransient(self):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        self.displacements[self.dt] = {}
-        self.rotations[self.dt]     = {}
+        if self.dt not in self.displacements:
+            self.displacements[self.dt] = {}
+            self.rotations[self.dt]     = {}
 
     def addBinary(self,deviceCode,data):
         (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
@@ -189,8 +189,9 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
 
     def addNewTransient(self):
         """initializes the transient variables"""
-        self.displacements[self.freq] = {}
-        self.rotations[self.freq]     = {}
+        if self.dt not in self.displacements:
+            self.displacements[self.freq] = {}
+            self.rotations[self.freq]     = {}
 
     def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
         #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
@@ -261,7 +262,8 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
 
     def addNewTransient(self):
         """initializes the transient variables"""
-        self.temperatures[self.dt] = {}
+        if self.dt not in self.temperatures:
+            self.temperatures[self.dt] = {}
 
     def add(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)

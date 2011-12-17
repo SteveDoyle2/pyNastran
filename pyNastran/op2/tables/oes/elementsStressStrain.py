@@ -290,79 +290,31 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_67)
         #print self.solidStress[self.iSubcase]
 
-    def CPENTANL_91(self):
+    def CTRIA3_74(self): # works
         """
-        The DMAP manual says fields 3-18 repeat 7 times. but they dont.
-        They repeat 6 times.  Other DMAP cards are correct with
-        their repeat statements.
+        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
+        stress is extracted at the centroid
         """
-        print "CHEXANL_93"
-        #print "len(self.data) = ",len(self.data)
+        if self.makeOp2Debug:
+            self.op2Debug.write('---CTRIA3_74---\n')
+        deviceCode = self.deviceCode
+        assert self.numWide==17,'invalid numWide...numWide=%s' %(self.numWide)
+        while len(self.data)>=68:
+            eData     = self.data[0:4*17]
+            self.data = self.data[4*17: ]
+            out = unpack('iffffffffffffffff',eData)
 
-        n = 0
-        while len(self.data)>=456: # 2+16*7 = 114 -> 114*4 = 456
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            (eid,a,b,c,d) = unpack('icccc',eData)
-            eid = (eid - self.deviceCode) / 10
-            #out = unpack("ii",eData)
-            #(eid,cType) = out
-            cType = a+b+c+d
-
-            for i in range(7):
-                #print "len(self.data) = ",len(self.data)
-                eData = self.data[0:64]
-                self.data = self.data[64:]
-                out = unpack('ifffffffffffffff',eData)
-                assert len(out)==16
-                (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
-                print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
-                print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
-                #print ""
-                assert a=='G'
-            
-            #self.data = self.data[1456:]
-            #sys.exit('hexa...')
-        #print "buffer time..."
-        #self.firstPass = True
-        self.handleResultsBuffer(self.CHEXANL_93,debug=True)
-
-    def CHEXANL_93(self):
-        """
-        The DMAP manual says fields 3-18 repeat 9 times. but they dont.
-        They repeat 8 times.  Other DMAP cards are correct with
-        their repeat statements.
-        """
-        print "CHEXANL_93"
-        #print "len(self.data) = ",len(self.data)
-
-        n = 0
-        while len(self.data)>=584: # 2+16*9 = 146 -> 146*4 = 584
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            (eid,a,b,c,d) = unpack('icccc',eData)
-            eid = (eid - self.deviceCode) / 10
-            #out = unpack("ii",eData)
-            #(eid,cType) = out
-            cType = a+b+c+d
-
-            for i in range(9):
-                #print "len(self.data) = ",len(self.data)
-                eData = self.data[0:64]
-                self.data = self.data[64:]
-                out = unpack('ifffffffffffffff',eData)
-                assert len(out)==16
-                (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
-                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
-                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
-                #print ""
-                assert a=='G'
-            
-            #self.data = self.data[1456:]
-            #sys.exit('hexa...')
-        #print "buffer time..."
-        #self.firstPass = True
-        self.handleResultsBuffer(self.CHEXANL_93,debug=True)
+            (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
+                 fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
+            eid = (eid - deviceCode) / 10
+            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            self.obj.add(               eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+        ###
+        self.handleResultsBuffer(self.CTRIA3_74)
 
     def CSOLID_85(self):  # works
         """
@@ -472,31 +424,79 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
-    def CTRIA3_74(self): # works
+    def CPENTANL_91(self):
         """
-        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
-        stress is extracted at the centroid
+        The DMAP manual says fields 3-18 repeat 7 times. but they dont.
+        They repeat 6 times.  Other DMAP cards are correct with
+        their repeat statements.
         """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CTRIA3_74---\n')
-        deviceCode = self.deviceCode
-        assert self.numWide==17,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=68:
-            eData     = self.data[0:4*17]
-            self.data = self.data[4*17: ]
-            out = unpack('iffffffffffffffff',eData)
+        print "CHEXANL_93"
+        #print "len(self.data) = ",len(self.data)
 
-            (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                 fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-            eid = (eid - deviceCode) / 10
-            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            self.obj.add(               eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-        ###
-        self.handleResultsBuffer(self.CTRIA3_74)
+        n = 0
+        while len(self.data)>=456: # 2+16*7 = 114 -> 114*4 = 456
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid,a,b,c,d) = unpack('icccc',eData)
+            eid = (eid - self.deviceCode) / 10
+            #out = unpack("ii",eData)
+            #(eid,cType) = out
+            cType = a+b+c+d
+
+            for i in range(7):
+                #print "len(self.data) = ",len(self.data)
+                eData = self.data[0:64]
+                self.data = self.data[64:]
+                out = unpack('ifffffffffffffff',eData)
+                assert len(out)==16
+                (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
+                print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #print ""
+                assert a=='G'
+            
+            #self.data = self.data[1456:]
+            #sys.exit('hexa...')
+        #print "buffer time..."
+        #self.firstPass = True
+        self.handleResultsBuffer(self.CHEXANL_93,debug=True)
+
+    def CHEXANL_93(self):
+        """
+        The DMAP manual says fields 3-18 repeat 9 times. but they dont.
+        They repeat 8 times.  Other DMAP cards are correct with
+        their repeat statements.
+        """
+        print "CHEXANL_93"
+        #print "len(self.data) = ",len(self.data)
+
+        n = 0
+        while len(self.data)>=584: # 2+16*9 = 146 -> 146*4 = 584
+            eData = self.data[0:8]
+            self.data = self.data[8:]
+            (eid,a,b,c,d) = unpack('icccc',eData)
+            eid = (eid - self.deviceCode) / 10
+            #out = unpack("ii",eData)
+            #(eid,cType) = out
+            cType = a+b+c+d
+
+            for i in range(9):
+                #print "len(self.data) = ",len(self.data)
+                eData = self.data[0:64]
+                self.data = self.data[64:]
+                out = unpack('ifffffffffffffff',eData)
+                assert len(out)==16
+                (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
+                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #print ""
+                assert a=='G'
+            
+            #self.data = self.data[1456:]
+            #sys.exit('hexa...')
+        #print "buffer time..."
+        #self.firstPass = True
+        self.handleResultsBuffer(self.CHEXANL_93,debug=True)
 
     def CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho
         """
@@ -522,19 +522,20 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             (eid,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
+            print "out =",out
             eid = (eid - deviceCode) / 10  ## @todo adjust with deviceCode...
             
             if eid!=self.eid2: # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+                print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
                 self.obj.addNewEid(eType,eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
             else:
-                #print "4 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+                print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
                 self.obj.add(eid,o1,o2,t12,t1z,t2z,angle,major,minor,ovm)
             ###
             self.eid2 = eid
             #self.dn += 348
         ###
-        #print "5 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
+        #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
         self.printSection(100)
         self.handleResultsBuffer(self.CQUAD4_95)
 

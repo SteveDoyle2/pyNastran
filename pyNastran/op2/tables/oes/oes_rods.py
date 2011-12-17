@@ -63,10 +63,11 @@ class rodStressObject(stressObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.axial[self.dt]      = {}
-        self.MS_axial[self.dt]   = {}
-        self.torsion[self.dt]    = {}
-        self.MS_torsion[self.dt] = {}
+        if self.dt not in self.axial:
+            self.axial[self.dt]      = {}
+            self.MS_axial[self.dt]   = {}
+            self.torsion[self.dt]    = {}
+            self.MS_torsion[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
         """
@@ -74,8 +75,9 @@ class rodStressObject(stressObject):
         @note make sure you set self.dt first
         """
         #print self.dataCode
-        self.axial[self.dt]     = {}
-        self.torsion[self.dt]   = {}
+        if self.dt not in self.axial:
+            self.axial[self.dt]     = {}
+            self.torsion[self.dt]   = {}
 
     def addNewEid_format1_sort0(self,out):
         #print "Rod Stress add..."
@@ -122,7 +124,7 @@ class rodStressObject(stressObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += 'dt = %s' %(dt)
+            msg += '%s = %s' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -150,7 +152,7 @@ class rodStressObject(stressObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -214,16 +216,16 @@ class rodStrainObject(strainObject):
     """
     def __init__(self,dataCode,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
-        self.eType = 'CROD' #{} # 'CROD/CONROD'
+        self.eType = 'CROD' #{} # 'CROD/CONROD/CTUBE'
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
         
+        self.axial      = {}
+        self.torsion    = {}
         self.isTransient = False
         if self.code == [1,0,10]:
             self.getLength = self.getLength_format1_sort0
-            self.axial      = {}
             self.MS_axial   = {}
-            self.torsion    = {}
             self.MS_torsion = {}
             self.isImaginary = False
             if dt is not None:
@@ -236,16 +238,14 @@ class rodStrainObject(strainObject):
 
         elif self.code==[2,1,10]:
             self.getLength = self.getLength_format1_sort0
-            self.axial      = {}
-            self.torsion    = {}
             self.addNewTransient = self.addNewTransient_format2_sort1
             self.addNewEid       = self.addNewEidTransient_format2_sort1
             self.isImaginary = True
         else:
             raise InvalidCodeError('rodStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
-        self.dt = self.nonlinearFactor
         if dt is not None:
+            self.dt = self.nonlinearFactor
             self.isTransient = True
             self.addNewTransient()
         ###
@@ -258,10 +258,11 @@ class rodStrainObject(strainObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.axial[self.dt]      = {}
-        self.MS_axial[self.dt]   = {}
-        self.torsion[self.dt]    = {}
-        self.MS_torsion[self.dt] = {}
+        if self.dt not in self.axial:
+            self.axial[self.dt]      = {}
+            self.MS_axial[self.dt]   = {}
+            self.torsion[self.dt]    = {}
+            self.MS_torsion[self.dt] = {}
 
     def addNewTransient_format2_sort1(self):
         """
@@ -269,8 +270,9 @@ class rodStrainObject(strainObject):
         @note make sure you set self.dt first
         """
         #print self.dataCode
-        self.axial[self.dt]     = {}
-        self.torsion[self.dt]   = {}
+        if self.dt not in self.axial:
+            self.axial[self.dt]     = {}
+            self.torsion[self.dt]   = {}
 
     def addNewEid_format1_sort0(self,out):
     
@@ -322,7 +324,7 @@ class rodStrainObject(strainObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += 'dt = %s' %(dt)
+            msg += '%s = %s' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -350,7 +352,7 @@ class rodStrainObject(strainObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += 'dt = %s\n' %(dt)
+            msg += '%s = %s\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]

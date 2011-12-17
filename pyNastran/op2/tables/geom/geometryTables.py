@@ -163,6 +163,9 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                          }
         self.readRecordTable('PCOMPTS')
 
+    def readTable_DUMMY_GEOM(self,tableName):
+        self.readRecordTable(tableName)
+
     def readTable_DIT(self):
         self.iTableMap = {
                             (1105,11,133): self.readFake,

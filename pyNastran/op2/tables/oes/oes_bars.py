@@ -39,29 +39,31 @@ class barStressObject(stressObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.s1[self.dt]    = {}
-        self.s2[self.dt]    = {}
-        self.s3[self.dt]    = {}
-        self.s4[self.dt]    = {}
-        self.axial[self.dt] = {}
-        self.smax[self.dt]  = {}
-        self.smin[self.dt]  = {}
-        #self.MS_tension[self.dt]     = {}
-        #self.MS_compression[self.dt] = {}
+        if self.dt not in self.s1:
+            self.s1[self.dt]    = {}
+            self.s2[self.dt]    = {}
+            self.s3[self.dt]    = {}
+            self.s4[self.dt]    = {}
+            self.axial[self.dt] = {}
+            self.smax[self.dt]  = {}
+            self.smin[self.dt]  = {}
+            #self.MS_tension[self.dt]     = {}
+            #self.MS_compression[self.dt] = {}
 
     def addNewEid(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
                                  s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
-        self.s1[eid]    = [s1a,s1b]
-        self.s2[eid]    = [s2a,s2b]
-        self.s3[eid]    = [s3a,s3b]
-        self.s4[eid]    = [s4a,s4b]
-        self.axial[eid] = axial
-        self.smax[eid]  = [smaxa,smaxb]
-        self.smin[eid]  = [smina,sminb]
-        #self.MS_tension[eid]     = MSt
-        #self.MS_compression[eid] = MSc
+        if self.dt not in self.s1:
+            self.s1[eid]    = [s1a,s1b]
+            self.s2[eid]    = [s2a,s2b]
+            self.s3[eid]    = [s3a,s3b]
+            self.s4[eid]    = [s4a,s4b]
+            self.axial[eid] = axial
+            self.smax[eid]  = [smaxa,smaxb]
+            self.smin[eid]  = [smina,sminb]
+            #self.MS_tension[eid]     = MSt
+            #self.MS_compression[eid] = MSc
 
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
@@ -95,7 +97,7 @@ class barStressObject(stressObject):
         msg += '\n'
 
         for dt,S1ss in sorted(self.s1.items()):
-            msg += 'dt = %s' %(self.dt)
+            msg += '%s = %s' %(self.dataCode['name'],self.dt)
             for eid,S1s in sorted(S1ss.items()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -238,29 +240,31 @@ class barStrainObject(strainObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.e1[self.dt]    = {}
-        self.e2[self.dt]    = {}
-        self.e3[self.dt]    = {}
-        self.e4[self.dt]    = {}
-        self.axial[self.dt] = {}
-        self.emax[self.dt]  = {}
-        self.emin[self.dt]  = {}
-        #self.MS_tension[self.dt]     = {}
-        #self.MS_compression[self.dt] = {}
+        if self.dt not in self.e1:
+            self.e1[self.dt]    = {}
+            self.e2[self.dt]    = {}
+            self.e3[self.dt]    = {}
+            self.e4[self.dt]    = {}
+            self.axial[self.dt] = {}
+            self.emax[self.dt]  = {}
+            self.emin[self.dt]  = {}
+            #self.MS_tension[self.dt]     = {}
+            #self.MS_compression[self.dt] = {}
 
     def addNewEid(self,eType,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
                                  e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
-        self.e1[eid]    = [e1a,e1b]
-        self.e2[eid]    = [e2a,e2b]
-        self.e3[eid]    = [e3a,e3b]
-        self.e4[eid]    = [e4a,e4b]
-        self.axial[eid] = axial
-        self.emax[eid]  = [emaxa,emaxb]
-        self.emin[eid]  = [emina,eminb]
-        #self.MS_tension[eid]     = MSt
-        #self.MS_compression[eid] = MSc
+        if self.dt not in self.e1:
+            self.e1[eid]    = [e1a,e1b]
+            self.e2[eid]    = [e2a,e2b]
+            self.e3[eid]    = [e3a,e3b]
+            self.e4[eid]    = [e4a,e4b]
+            self.axial[eid] = axial
+            self.emax[eid]  = [emaxa,emaxb]
+            self.emin[eid]  = [emina,eminb]
+            #self.MS_tension[eid]     = MSt
+            #self.MS_compression[eid] = MSc
 
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
@@ -329,7 +333,6 @@ class barStrainObject(strainObject):
                     msg += '%10.3g ' %(val)
                 ###
             msg += '\n'
-
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
             #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])

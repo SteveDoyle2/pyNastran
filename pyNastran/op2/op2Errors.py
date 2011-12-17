@@ -20,6 +20,9 @@ class AddNewElementError(InvalidCodeError):
 class EndOfFileError(RuntimeError):
     pass
 
+class TapeCodeError(RuntimeError):
+    pass
+
 class ZeroBufferError(RuntimeError):
     pass
 

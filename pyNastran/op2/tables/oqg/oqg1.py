@@ -43,65 +43,51 @@ class OQG1(object):
         
         (three) = self.parseApproachCode(data)
 
-        self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,}
-
-        self.addDataParameter(data,'randomCode',  'i',8)   ## random code
-        self.addDataParameter(data,'formatCode',  'i',9)   ## format code
-        self.addDataParameter(data,'numWide',     'i',10)  ## number of words per entry in record; @note is this needed for this table ???
-        self.addDataParameter(data,'acousticFlag','f',13)  ## acoustic pressure flag
-        self.addDataParameter(data,'thermal',     'i',23)  ## thermal flag; 1 for heat ransfer, 0 otherwise
+        self.addDataParameter(data,'randomCode',  'i',8,False)   ## random code
+        self.addDataParameter(data,'formatCode',  'i',9,False)   ## format code
+        self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'acousticFlag','f',13,False)  ## acoustic pressure flag
+        self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
         
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
         elif self.analysisCode==2: # real eigenvalues
-            self.addDataParameter(data,'mode',     'i',5)   ## mode number
-            self.addDataParameter(data,'eigr',     'f',6)   ## real eigenvalue
-            self.addDataParameter(data,'modeCycle','f',7)   ## mode or cycle @todo confused on the type - F1???
-            self.nonlinearFactor = self.mode
-            print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
+            self.addDataParameter(data,'mode',     'i',5)         ## mode number
+            self.addDataParameter(data,'eigr',     'f',6,False)   ## real eigenvalue
+            self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
+            #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        #    self.nonlinearFactor = self.lsdvmn
         #    self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        #    self.nonlinearFactor = self.lsdvmn
-        #    self.dataCode['lsdvmn'] = self.lsdvmn
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
-            self.nonlinearFactor = self.freq
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
-            self.nonlinearFactor = self.dt
-            print "DT(5)=%s" %(self.dt)
+            #print "DT(5)=%s" %(self.dt)
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.nonlinearFactor = self.lsdvmn
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==8: # post-buckling
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.addDataParameter(data,'eigr',    'f',6)   ## real eigenvalue
-            self.nonlinearFactor = self.lsdvmn
-            print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
+            self.addDataParameter(data,'lsdvmn',  'i',5)         ## load set number
+            self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
+            #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
-            self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.addDataParameter(data,'eigr','f',6)   ## real eigenvalue
-            self.addDataParameter(data,'eigi','f',7)   ## imaginary eigenvalue
-            self.nonlinearFactor  = self.mode
-            print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            self.addDataParameter(data,'mode','i',5)         ## mode number
+            self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+            self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
-            self.nonlinearFactor = self.lftsfq
             #print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.nonlinearFactor = self.lsdvmn
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.nonlinearFactor = self.lsdvmn
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
@@ -118,6 +104,9 @@ class OQG1(object):
 
     def readOQG1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        self.skipOES_Element() # skipping entire table
+        return
+
         print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1]
 
@@ -153,7 +142,6 @@ class OQG1(object):
         self.skipOES_Element()
 
     def readOQG1_Data_table3_format1_sort0(self):
-        self.obj = None
         if self.thermal==0:
             if self.analysisCode==1: # displacement
                 print "isSPCForces"
