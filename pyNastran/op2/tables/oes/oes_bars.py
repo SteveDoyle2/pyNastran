@@ -290,10 +290,10 @@ class barStrainObject(strainObject):
             return self.__reprTransient__()
 
         msg = '---BAR STRAIN---\n'
-        msg += '%-6s %6s ' %('EID','eType')
+        msg += '%-8s %6s ' %('EID','eType')
         headers = ['e1','e2','e3','e4','Axial','eMax','eMin']
         for header in headers:
-            msg += '%6s ' %(header)
+            msg += '%10s ' %(header)
         msg += '\n'
 
         for eid,E1s in sorted(self.e1.items()):
@@ -308,25 +308,25 @@ class barStrainObject(strainObject):
             e4   = self.e4[eid]
             emax = self.emax[eid]
             emin = self.emin[eid]
-            msg += '%-6i %6s ' %(eid,eType)
+            msg += '%-8i %6s ' %(eid,eType)
             vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0]]
             for val in vals:
                 if abs(val)<1e-6:
-                    msg += '%6s ' %('0')
+                    msg += '%10s ' %('0')
                 else:
-                    msg += '%6i ' %(val)
+                    msg += '%10.3g ' %(val)
                 ###
             msg += '\n'
 
-            msg += '%s ' %(' '*13)
+            msg += '%s ' %(' '*17)
             vals = [e1[1],e2[1],e3[1],e4[1],'',emax[1],emin[1]]
             for val in vals:
                 if isinstance(val,str):
-                    msg += '%6s ' %(val)
+                    msg += '%10s ' %(val)
                 elif abs(val)<1e-6:
-                    msg += '%6s ' %('0')
+                    msg += '%10s ' %('0')
                 else:
-                    msg += '%6i ' %(val)
+                    msg += '%10.3g ' %(val)
                 ###
             msg += '\n'
 

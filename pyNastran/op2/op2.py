@@ -14,14 +14,15 @@ class Op2(BDF,
 #class Op2(getMethods,addMethods,writeMesh, # BDF methods
           FortranFile,Op2Codes,GeometryTables,ResultTable):
 
-    def __init__(self,op2FileName):
-        BDF.__init__(self,debug=True,log=None)
+    def __init__(self,op2FileName,makeGeom=False,debug=True,log=None):
+        BDF.__init__(self,debug=debug,log=log)
         bdfExtension = '.bdf'
         f06Extension = '.f06'
         (fname,extension) = os.path.splitext(op2FileName)
         
         print "fname=%s ext=%s" %(fname,extension)
         
+        self.makeGeom = makeGeom
         self.op2FileName = op2FileName
         self.bdfFileName = fname+bdfExtension
         self.f06FileName = fname+f06Extension
@@ -311,18 +312,9 @@ class Op2(BDF,
             print "*** finished tableName = |%r|" %(tableName)
             ###
         ###
-        #
 
-        #tableName = self.readTableName(rewind=True)
-        #self.readTable_Geom2()
-        #self.readTable_Geom3()
-        #self.readTable_Geom4()
-        #self.readTable_OQG1()
-        #self.readTable_OES1X1()
         print "---end of all tables---"
         self.skippedCardsFile.close()
-
-        #self.printSection(4*51+12)
         
     def parseApproachCode(self,data):
         """
@@ -366,8 +358,8 @@ class Op2(BDF,
 
     def getBufferWords(self):
         bufferWords = self.getMarker()
-        print "buffMarker = |%s|" %(bufferWords)
-        print "bufferWords = ",bufferWords,bufferWords*4
+        #print "buffMarker = |%s|" %(bufferWords)
+        #print "bufferWords = ",bufferWords,bufferWords*4
         assert bufferWords >0
         return bufferWords
 

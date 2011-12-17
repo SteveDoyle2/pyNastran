@@ -44,10 +44,10 @@ OP2 Reader
      - OPNL1
 
    - GEOM1
-     - CORD1C  (1, needs integration)
-     - CORD1R  (2, needs integration)
+     - CORD1C  (1, done)
+     - CORD1R  (2, done)
      - CORD1S  (3, needs integration)
-     - CORD2C  (4, needs integration)
+     - CORD2C  (4, done)
      - CORD2R  (5, done)
      - CORD2S  (6, needs integration)
      - CORD3R  (7, needs integration)
@@ -142,11 +142,13 @@ OP2 Reader
    OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
       - all midside nodes must be included on elements (for example CQUAD8 have 6 nodes)
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
-         - CROD    (1,done)
-         - CBEAM   (2, not integrated)
-         - CONROD  (10, no object)
-         - CELAS2  (12, no object)
-         - CBAR    (34,done)
+         - CROD    (1,  done)
+         - CBEAM   (2,  done)
+         - CONROD  (10, done)
+         - CELAS1  (11, done)
+         - CELAS2  (12, done)
+         - CELAS3  (13, done)
+         - CBAR    (34, done)
          
          - CTETRA  (39, done)
          - CHEXA   (67, done)
@@ -155,7 +157,7 @@ OP2 Reader
          - CQUAD4  (144,done)
          
          - CQUAD4 (33,done)
-         - CQUAD8 (64)
+         - CQUAD8 (64,done)
          - CTRIA6 (75)
          - CELAS1 (11,done)
          - CELAS2 (12,done)
@@ -164,13 +166,13 @@ OP2 Reader
 
        - OESNLXR
          # nonlinear
-         - CTETRA (85,done)
+         - CTETRA (85,verify object)
          - CTRIA3 (88)
          - CROD   (89)
          - CQUAD4 (90)
          - CPENTA (91)
          - CONROD (92)
-         - CHEXA  (93,done)
+         - CHEXA  (93,verify object)
          - CBEAM  (94)
 
        - OESNLXD
@@ -190,19 +192,19 @@ OP2 Reader
 
 
    - OQGV1 Table (single/multipoint constraint forces)
-      - spc forces (needs cleanup) # verify
+      - spc forces (needs cleanup) # disabled
 
    - OGP1 Table (grid point forces)
       - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
       
    - OEF1X Table (element forces)
       - OGPFB1
-        temperatureForces (approachCode=6, sortCode=0,done)
-        nonlinearFluxes   (approachCode=10,sortCode=0,done) - long table...
+        temperatureForces (approachCode=6, sortCode=0,disabled)
+        nonlinearFluxes   (approachCode=10,sortCode=0,disabled) - long table...
          - CHBDY
 
    - OEE Table (element energy strain/kinetic/loss)
-      - 
+      - strain energy
 
    - KDICT Table (element stiffness table)
       - None
@@ -228,10 +230,10 @@ CROD_1 (4/6)
    - tCode7=2 (Random)
      numWide=3
 
-CBEAM_2 (2/6 not integrated)
+CBEAM_2 (2/6)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
-     numWide=11 (not integrated)
+     numWide=11 (done)
    - tCode7=1 (Real/Imaginary)
      numWide=11
    - tCode7=2 (Random)
@@ -239,22 +241,13 @@ CBEAM_2 (2/6 not integrated)
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
-     numWide=11 (not integrated)
+     numWide=11 (done)
    - tCode7=1 (Real/Imaginary)
      numWide=11
    - tCode7=2 (Random)
      numWide=7
 
-CTUBE_3 (None)
- - sCode6=0 (Strain)
-   - tCode7=0,1 (Real & Real/Imaginary)
-     numWide=5
-   - tCode7=2 (Random)
-     numWide=3
-
- - sCode6=0 (Stress)
-   - tCode7=0,1,2 (Real & Real/Imaginary & Random)
-     numWide=5
+CTUBE_3 (see CROD_1)
 
 CSHEAR_4 (None)
  - sCode6=0 (Strain)
@@ -321,21 +314,7 @@ CTRIA3_74 (2/6)
      numWide=9
 
 CTRIA6_75 (None)
- - sCode6=0 (Strain)
-   - tCode7=0 (Real)
-     numWide=19
-   - tCode7=1 (Real/Imaginary)
-     numWide=17
-   - tCode7=2 (Random)
-     numWide=11
-
- - sCode6=0 (Stress)
-   - tCode7=0 (Real)
-     numWide=19
-   - tCode7=1 (Real/Imaginary)
-     numWide=17
-   - tCode7=2 (Random)
-     numWide=11
+CTRIAR_?? (None)
 
 CTETRA_39/CHEXA_67/CPENTA_68 (2/6)
  - sCode6=0 (Strain)
