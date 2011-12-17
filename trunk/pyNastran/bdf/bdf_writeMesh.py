@@ -66,7 +66,7 @@ class writeMesh(object):
         msg += 'ENDDATA\n'
 
         fname = self.printFileName(outfilename)
-        self.log().info("***writing %s" %(fname))
+        self.log.info("***writing %s" %(fname))
         
         outfile = open(outfilename,'wb')
         outfile.write(msg)
@@ -96,7 +96,7 @@ class writeMesh(object):
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
 
-        self.log().info("***writing %s" %(outfilename))
+        self.log.info("***writing %s" %(outfilename))
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -117,7 +117,7 @@ class writeMesh(object):
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
 
-        self.log().info("***writing %s" %(outfilename))
+        self.log.info("***writing %s" %(outfilename))
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -318,7 +318,7 @@ class writeMesh(object):
         if (self.flfacts or self.aero or self.aeros or self.aestats
                         or self.gusts or self.flutters):  msg = '$AERO\n'
         #flfactKeys = self.flfacts.keys()
-        #self.log().info("flfactKeys = %s" %(flfactKeys))
+        #self.log.info("flfactKeys = %s" %(flfactKeys))
         for ID,flfact in sorted(self.flfacts.items()):
             #if ID!=0:
             msg += str(flfact)
@@ -371,7 +371,7 @@ class writeMesh(object):
         if len(self.coords)>1:
             msg += '$COORDS\n'
         coordKeys = self.coords.keys()
-        #self.log().info("coordKeys = %s" %(coordKeys))
+        #self.log.info("coordKeys = %s" %(coordKeys))
         for ID,coord in sorted(self.coords.items()):
             if ID!=0:
                 msg += str(coord)

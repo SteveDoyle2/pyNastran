@@ -67,10 +67,10 @@ class cardMethods(object):
         #print "|%s|" %(cardName)
         #if cardName=='CTRIA3':
         if debug:
-            self.log().debug("cardName  = |%s|" %(cardName))
-            self.log().debug("upperCard = |%s|" %(upperCard))
-            self.log().debug("tempcard  = |%s|" %(tempcard))
-            self.log().debug("-------\n")
+            self.log.debug("cardName  = |%s|" %(cardName))
+            self.log.debug("upperCard = |%s|" %(upperCard))
+            self.log.debug("tempcard  = |%s|" %(tempcard))
+            self.log.debug("-------\n")
         self._increaseCardCount(cardName)
         return (tempcard,upperCard,cardName)
 
@@ -101,10 +101,10 @@ class cardMethods(object):
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
         isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
         if debug:
-            self.log().debug("  len(iline) = |%s|" %(len(iline)))
+            self.log.debug("  len(iline) = |%s|" %(len(iline)))
             print "  iline[0] = |%s|" %(iline[0])
-            self.log().debug("  sCardName = |%s|" %(sCardName))
-            self.log().debug("  iline = |%s|" %(iline))
+            self.log.debug("  sCardName = |%s|" %(sCardName))
+            self.log.debug("  iline = |%s|" %(iline))
             print ""
             print "isNotDone A = %s" %(isNotDone)
         
@@ -136,7 +136,7 @@ class cardMethods(object):
                 print "isNotDone B = ",isNotDone
         ###
         #if debug:
-        #self.log().debug("tempcard2 = |%s|" %(tempcard))
+        #self.log.debug("tempcard2 = |%s|" %(tempcard))
             #print ""
         #sys.exit('asdf')
         return (i,tempcard)
@@ -166,7 +166,7 @@ class cardMethods(object):
             #    pass
             #else:
             if debug:
-                self.log().debug("i=%s rawField=|%s| field=|%s|" %(i,rawField,field))
+                self.log.debug("i=%s rawField=|%s| field=|%s|" %(i,rawField,field))
             fields2.append(field)
         return fields2
 
@@ -194,12 +194,12 @@ class cardMethods(object):
             isLargeField = self.isLargeField(line)
             #print "i = ",i
             if debug:
-                self.log().debug("  line  = |%r|" %(line))
+                self.log.debug("  line  = |%r|" %(line))
             sline = line[0:73]
             if not(sline):
                 break
             if debug:
-                self.log().debug("  line2 = |%r|" %(sline))
+                self.log.debug("  line2 = |%r|" %(sline))
 
             if ',' in sline:  #CSV
                 sline = sline.split(',')
@@ -229,8 +229,8 @@ class cardMethods(object):
         ###
         #print "cardOut&& = ",card
         if debug:
-            self.log().debug("  sline2 = %s" %(card))
-            #self.log().debug("  sline2 = %s" %(collapse(card)))
+            self.log.debug("  sline2 = %s" %(card))
+            #self.log.debug("  sline2 = %s" %(collapse(card)))
         #return self.makeSingleStreamedCard(card)
         return card
         
@@ -242,7 +242,7 @@ class cardMethods(object):
         cardOut = []
         n=0
         if debug:
-            self.log().debug("card = %s" %(card))
+            self.log.debug("card = %s" %(card))
         for i,field in enumerate(card):
             if n-9==0:
                 pass

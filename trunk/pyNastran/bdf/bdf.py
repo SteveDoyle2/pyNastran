@@ -331,7 +331,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #print self.isOpened
         if self.isOpened[infileName]==False:
             self.activeFileNames.append(infileName)
-            #self.log().info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
+            #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
             if not os.path.exists(infileName):
                 raise MissingFileError("infileName=|%s| does not exist..." %(infileName))
             infile = open(infileName,'r')
@@ -419,21 +419,21 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self._setInfile(infilename,includeDir)
 
         fname = self.printFileName(self.bdfFileName)
-        self.log().info('---starting BDF.read of %s---' %(fname))
+        self.log.info('---starting BDF.read of %s---' %(fname))
         sys.stdout.flush()
 
         #self.debug = True
         if self.debug:
-            self.log().info("*BDF.read")
+            self.log.info("*BDF.read")
         self.readExecutiveControlDeck()
         self.readCaseControlDeck(self.bdfFileName)
         self.readBulkDataDeck()
         #self.closeFile()
         self.crossReference(xref=xref)
         if self.debug:
-            self.log().debug("***BDF.read")
+            self.log.debug("***BDF.read")
 
-        self.log().info('---finished BDF.read of %s---' %(fname))
+        self.log.info('---finished BDF.read of %s---' %(fname))
         sys.stdout.flush()
 
         isDone = self.foundEndData
@@ -458,7 +458,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             line = lineIn.strip()
             if self.debug:
                 (n) = self.getLineNumber()
-                self.log().debug("line[%s]*= |%r|" %(n,line))
+                self.log.debug("line[%s]*= |%r|" %(n,line))
             self.executiveControlLines.append(lineIn)
             if 'CEND' in line.upper():
                 break
@@ -536,7 +536,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     def readCaseControlDeck(self,infilename):
         #print "opening |%s|" %(infilename)
         self.openFile(infilename)
-        #self.log().info("reading Case Control Deck...")
+        #self.log.info("reading Case Control Deck...")
         line = ''
         #self.caseControlControlLines = []
 
@@ -580,7 +580,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             if i>600:
                 raise RuntimeError('there are too many lines in the Case Control Deck < 600')
             i+=1
-        #self.log().info("finished with Case Control Deck..")
+        #self.log.info("finished with Case Control Deck..")
         #print "self.caseControlLines = ",self.caseControlLines
         
         #for line in self.caseControlLines:
@@ -623,13 +623,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             Parses the first 8 characters of a card, splits bassed on a comma,
             pulls off any spaces or asterisks and returns what is left.
         """
-        #self.log().debug("getting cardName...")
+        #self.log.debug("getting cardName...")
         cardName = cardLines[0][0:8].strip()
         if ',' in cardName:
             cardName = cardName.split(',')[0].strip()
 
         cardName = cardName.lstrip().rstrip(' *')
-        #self.log().debug("getCardName cardName=|%s|" %(cardName))
+        #self.log.debug("getCardName cardName=|%s|" %(cardName))
         return cardName
     
     def isReject(self,cardName):
@@ -642,7 +642,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #print "RcardName = |%s|" %(cardName)
             return False
         if cardName.strip():
-            self.log().info("RejectCardName = |%s|" %(cardName))
+            self.log.info("RejectCardName = |%s|" %(cardName))
         return True
 
     def getIncludeFileName(self,cardLines,cardName):
@@ -678,7 +678,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #debug = False
         
         if self.debug:
-            self.log().debug("*readBulkDataDeck")
+            self.log.debug("*readBulkDataDeck")
         self.openFile(self.bdfFileName)
         #self.nodes = {}
         #self.elements = {}
@@ -726,7 +726,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             if 'ENDDATA' in cardName:
                 #print cardName
                 break # exits while loop
-            #self.log().debug('cardName = |%s|' %(cardName))
+            #self.log.debug('cardName = |%s|' %(cardName))
             
             #cardObj = BDF_Card(card,oldCardObj)
             cardObj = BDF_Card(card)
@@ -770,11 +770,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             #for eid,element in self.elements.items():
             #    print element
             
-            self.log().debug("\n$REJECTS")
+            self.log.debug("\n$REJECTS")
             #for reject in self.rejects:
                 #print printCard(reject)
                 #print ''.join(reject)
-            self.log().debug("***readBulkDataDeck")
+            self.log.debug("***readBulkDataDeck")
         ###
 
     def addCard(self,card,cardName,iCard=0,oldCardObj=None):
@@ -799,8 +799,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #print "card = ",card
         cardObj = BDF_Card(card,oldCardObj=None)
         #if self.debug:
-        #    self.log().debug("*oldCardObj = \n%s" %(oldCardObj))
-        #    self.log().debug("*cardObj = \n%s" %(cardObj))
+        #    self.log.debug("*oldCardObj = \n%s" %(oldCardObj))
+        #    self.log.debug("*cardObj = \n%s" %(cardObj))
         #cardObj.applyOldFields(iCard)
 
         try:
