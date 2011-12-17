@@ -4,19 +4,19 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.nodes import GRID
-from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD2R,CORD2C,CORD3G #CORD1C,CORD1S,CORD2S
+from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD2R,CORD2C,CORD3G,CORD1C,CORD1S,CORD2S
 
 
 class Geometry1(object):
 
     def readTable_Geom1(self):
         self.iTableMap = {
-                            #(1701,17,6):    self.readCord1C, # record 1
+                            (1701,17,6):     self.readCord1C, # record 1
                             (1801,18,5):     self.readCord1R, # record 2
-                            #(1901,19,7):    self.readCord1S, # record 3
+                            (1901,19,7):     self.readCord1S, # record 3
                             (2001,20,9):     self.readCord2C, # record 4
                             (2101,21,8):     self.readCord2R, # record 5
-                            #(2201,22,10):   self.readCord2S, # record 6
+                            (2201,22,10):    self.readCord2S, # record 6
                             (14301,143,651): self.readCord3G, # record 7
                             (4501,45,1):     self.readGrid,   # record 17 - slow, but works
                             (5301,53,4):     self.readSEQGP,  # record 27 - not done
@@ -33,9 +33,6 @@ class Geometry1(object):
                          }
         self.readRecordTable('GEOM1N')
 
-    def readSEQGP(self,data):
-        pass
-
     def readCord1C(self,data):
         """
         (1701,17,6) - the marker for Record 1
@@ -47,7 +44,7 @@ class Geometry1(object):
             eData = data[n:n+24] # 6*4
             (cid,one,two,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
-            coord = CORD1R(None,None,dataIn)
+            coord = CORD1C(None,None,dataIn)
             self.addCoord(coord)
             n+=24
         ###
@@ -184,7 +181,8 @@ class Geometry1(object):
         #assert len(data)==0,'len(data)!=0   len(data)=%s' %(len(data))
         #print "len(data) = ",len(data)
 
-# integrated into readGeom1 function
-#-------------------------------------
-# not integrated
+
+    def readSEQGP(self,data):
+        """(5301,53,4) - the marker for Record 27"""
+        pass
 

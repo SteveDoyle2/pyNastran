@@ -24,6 +24,9 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         """
         @note assumes self.iTableMap has already been set
         """
+        if self.makeGeom==False:
+            self.iTableMap = {}
+
         tableName = self.readTableName(rewind=False) # GEOM1
         self.tableInit(tableName)
         #print "*tableName = |%r|" %(tableName)
@@ -132,7 +135,9 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                 self.iTableMap[tableType](data)
             else:
                 if not(tableType[0]==tableType[1]==tableType[2]):
-                    print "skipping %s iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType)
+                    if self.makeGeom:
+                        print "skipping %s iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType)
+                    ###
                 ###
             ###
             #self.op2Debug.write('ints = %s\n' %(str(ints)))
