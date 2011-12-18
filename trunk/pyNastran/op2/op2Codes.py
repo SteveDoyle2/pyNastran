@@ -297,7 +297,7 @@ class Op2Codes(object):
             54 : 'OLMPF2M - ???',
             55 : 'OGMPF2M - ???',
         }
-        msg += 'table = %s' %(tableContent[tableCodeContent])
+        msg += 'n=%s table=%s' %(self.n, tableContent[tableCodeContent])
         return msg
 
     def codeInformation(self):
@@ -376,6 +376,10 @@ class Op2Codes(object):
         if(  thermal is None): thermalWord = ''
         elif(thermal==0): thermalWord = 'isHeatTransfer = False'
         elif(thermal==1): thermalWord = 'isHeatTransfer = True'
+        elif(thermal==2): thermalWord = 'Scaled response spectra ABS'
+        elif(thermal==3): thermalWord = 'Scaled response spectra SRSS'
+        elif(thermal==4): thermalWord = 'Scaled response spectra NRL'
+        elif(thermal==5): thermalWord = 'Scaled response spectra NRLO'
         else:
             thermalWord = '???'
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
@@ -461,5 +465,6 @@ class Op2Codes(object):
         if thermalWord:
             msg += "  thermal      = %-3s %s\n" %(thermal,thermalWord)
         msg += "  numWide      = %-3s\n" %(self.numWide)
+        msg += "  iSubcase     = %-3s\n" %(self.iSubcase)
         #print msg
         return msg

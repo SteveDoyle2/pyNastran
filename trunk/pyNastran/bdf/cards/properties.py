@@ -2,7 +2,7 @@
 #from numpy import array,cross,dot
 #from numpy import array
 #from numpy.linalg import norm
-from numpy import zeros
+from numpy import zeros,pi
 
 # my code
 from baseCard import Property
@@ -482,8 +482,21 @@ class PBARL(LineProperty):
             h1 = self.dim[3]-h2
             w1 = self.dim[0]+w2
             A = h1*w1+h2*w2
-        #elif self.Type=='Z':
-        #elif self.Type=='CHAN2':
+        elif self.Type=='Z':
+            h2 = self.dim[2]
+            w2 = self.dim[1]
+
+            h1 = self.dim[4]-h2
+            w1 = self.dim[0]
+            A = h1*w1+h2*w2
+        elif self.Type=='CHAN2':
+            h2 = self.dim[1]
+            w2 = self.dim[3]
+
+            h1 = self.dim[2]-h2
+            w1 = self.dim[0]*2
+            A = h1*w1+h2*w2
+
         elif self.Type=='T2':
             h1 = self.dim[3]
             w1 = self.dim[1]
@@ -491,16 +504,90 @@ class PBARL(LineProperty):
             h2 = h1-self.dim[2]
             w2 = self.dim[0]
             A = h1*w1+h2*w2
-        #elif self.Type=='BOX1':
+        elif self.Type=='BOX1':
+            h1 = self.dim[2]  # top
+            w1 = self.dim[0]
+            
+            h2 = sefl.dim[3] # btm
+            A1 = (h1+h2)*w1
+            
+            h3 = self.dim[1]-h1-h2  # left
+            w3 = self.dim[5]
+            
+            w4 = self.dim[4] # right
+            A2 = h3*(w3+w4)
+            A  = A1+A2
         elif self.Type=='HEXA':
             hBox = self.dim[2]
             wBox = self.dim[1]
 
             wTri = self.dim[0]
             A = hBox*wBox - wTri*hBox
-        #elif self.Type=='HAT':
-        #elif self.Type=='HAT1':
-        #elif self.Type=='DBOX':
+        elif self.Type=='HAT':
+            w = self.dim[1] # constant width (note h is sometimes w)
+            h1 = w                # horizontal lower bar
+            w1 = self.dim[3]
+            
+            h2 = self.dim[0]-2*w  # vertical bar
+            w2 = w
+            
+            h3 = w                # half of top bar
+            w3 = self.dim[2]/2.
+            
+            A = 2*(h1*w1+h2*w2+h3*w3)  # symmetrical box
+        elif self.Type=='HAT1':
+            w = self.dim[3]
+            
+            h0 = self.dim[4]         # btm bar
+            w0 = self.dim[0]/2.
+
+            h2 = self.dim[1]-h0-2*w  # vertical bar
+            w2 = w
+
+            h3 = w              # top bar
+            w3 = self.dim[2]/2.
+
+            h1 = w              # upper, horizontal lower bar (see HAT)
+            w1 = w0-w3
+            
+            A = 2*(h0*w0+h1*w1+h2*w2+h3*w3)
+            
+        elif self.Type=='DBOX':
+            #
+            #  |--2------5----
+            #  |     |       |
+            #  1     3       6
+            #  |     |       |
+            #  |--4--|---7---|
+            #
+            
+            0,1,2,6,11
+            1,2,3,7,12
+            
+            hTotal = self.dim[11]
+            wTotal = self.dim[0]
+
+            h2 = self.dim[6]
+            w2 = self.dim[3]
+
+            h4 = self.dim[7]
+            w4 = w2
+
+            h1 = hTotal-h2-h4
+            w1 = self.dim[3]
+            
+            h5 = self.dim[8]
+            w5 = wTotal-w2
+
+            h7 = self.dim[9]
+            w7 = w5
+
+            h6 = hTotal-h5-h7
+            w6 = self.dim[5]
+
+            h3 = (h1+h6)/2.
+            w3 = self.dim[4]
+            A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7 +h8*w8
         else:
             raise Exception('Type=%s is not supported...' %(self.Type))
             

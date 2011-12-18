@@ -1,13 +1,15 @@
 from numpy import array
 from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Codes import Op2Codes
 
-class scalarObject(object):
+class scalarObject(Op2Codes):
     def __init__(self,dataCode,iSubcase):
         self.iSubcase = iSubcase
         self.isTransient = False
-        #self.dt = None
+        self.dt = None
         self.dataCode = dataCode
         self.applyDataCode()
+        print self.codeInformation()
 
     def name(self):
         return self.__class__.__name__

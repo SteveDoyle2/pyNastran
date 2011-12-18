@@ -170,11 +170,10 @@ class OGP(object):
         #    self.readOGP1_Data_format3_sort3()
         else:
             #raise Exception('bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode))
-            print 'bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode)
+            #print 'bad tableCode/formatCode/sortCode=%s on OGP table' %(self.atfsCode)
             self.skipOES_Element()
         ###
         #print self.obj
-        print "-------finished OGP----------"
 
     def readOGP1_Data_format1_sort1(self):
         print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)

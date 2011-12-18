@@ -109,7 +109,8 @@ class OES(ElementsStressStrain):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
 
-        print self.codeInformation()
+        #if self.analysisCode is not 6:
+        #    print self.codeInformation()
         self.readTitle()
         #print "n4 = ",self.n
 
@@ -126,13 +127,11 @@ class OES(ElementsStressStrain):
             #print "    sCode = ",sCode
             i-=1
         #bits.reverse()
-        print "stressBits = ",bits
+        #print "stressBits = ",bits
         self.stressBits = bits
         self.dataCode['stressBits'] = self.stressBits
 
     def readTable_OES_4_Data(self,iTable):
-        print "-------------"
-        print "**self.readTable_OES_4_Data"
         isTable4Done = False
         isBlockDone  = False
         #print self.printSection(100)
@@ -173,7 +172,7 @@ class OES(ElementsStressStrain):
 
     def readElementTable(self):
         #print "**self.readElementTable"
-        print "*elementType = ",self.elementType
+        #print "*elementType = ",self.elementType
         #print "op2.tell=%s n=%s" %(self.op2.tell(),self.n)
         
         self.rewind(4)
@@ -317,7 +316,7 @@ class OES(ElementsStressStrain):
             #raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
 
         if self.elementType in [1,3,10]: # crod/ctube/conrod
-            print "    found crod_1"
+            #print "    found crod_1"
             #if self.elementType==1:    self.dataCode['elementName'] = 'CROD'
             #if self.elementType==3:    self.dataCode['elementName'] = 'CTUBE'
             #if self.elementType==10:   self.dataCode['elementName'] = 'CONROD'
@@ -331,14 +330,6 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.beamStress,beamStressObject,
                                 self.beamStrain,beamStrainObject)
             self.CBEAM_2()
-
-        #elif self.elementType == 10:   # conrod
-            #print "    found conrod_10"
-            #self.dataCode['elementName'] = 'CONROD'
-            #self.skipOES_Element()
-            #self.makeOES_Object(self.conrodStress,conrodStressObject,
-            #                    self.conrodStrain,conrodStrainObject)
-            #self.CONROD_10()
 
         elif self.elementType in [11,12,13]:   # celas1/celas2/celas3
             #print "    found celas2_12"
@@ -408,7 +399,6 @@ class OES(ElementsStressStrain):
             del self.eid2
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
         #    self.skipOES_Element()
-            #elementType=2   -> BEAM    is not supported
             #elementType=53  -> TRIAX6  is not supported
             #elementType=61  -> DUM9    is not supported
             #elementType=70  -> TRIAR   is not supported
@@ -422,7 +412,8 @@ class OES(ElementsStressStrain):
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             print msg
             #raise RuntimeError(msg)
         ###
@@ -481,7 +472,6 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 11:   # celas1 (done)
         #elif self.elementType == 12:   # celas2 (done)
         #elif self.elementType == 13:   # celas3 (done)
-        #elif self.elementType == 14:   # celas4
         
         #plate
         #elif self.elementType == 33:   # cquad_33 (done)
@@ -502,7 +492,7 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 98: # CTRIA6 (done)
 
         # nonlinear
-        #elif self.elementType == 85:   # tetra  (nonlinear,done)
+        #elif self.elementType == 85:   # tetra  (nonlinear,not integrated)
         #elif self.elementType == 86:   # gap    (nonlinear)
         #elif self.elementType == 87:   # ctube  (nonlinear)
         #elif self.elementType == 88:   # tria3  (nonlinear) - same as quad4
@@ -510,7 +500,7 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 90:   # quad4  (nonlinear)
         #elif self.elementType == 91:   # cpenta (nonlinear)
         #elif self.elementType == 92:   # conrod (nonlinear)
-        #elif self.elementType == 93:   # chexa  (nonlinear,done)
+        #elif self.elementType == 93:   # chexa  (nonlinear,not integrated)
         #elif self.elementType == 94:   # cbeam  (nonlinear)
         
         # acoustic

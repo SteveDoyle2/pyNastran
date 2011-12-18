@@ -38,35 +38,22 @@ class OEE(object):
         data = self.getData(4*50)
         #print self.printBlock(data)
 
-        
-        
         aCode = self.getBlockIntEntry(data,1)
-        #print "aCode = ",aCode
         self.eTotal = self.parseApproachCode(data) # total energy of all elements in iSubcase/mode
 
-        #self.dataCode = {'analysisCode': self.analysisCode,'deviceCode':self.deviceCode,
-        #                 'loadSet':self.loadSet,'formatCode':self.formatCode,
-        #                 'numWide': self.numWide,'cvalres':self.cvalres,
-        #                 'esubt': self.esubt,'setID':self.setID,'eigenReal':self.eigenReal,'eigenImag':self.eigenImag,
-        #                 'freq':self.freq,'etotpos':self.etotpos,'etotneg':self.etotneg}
-
         self.elementName  = ''.join(unpack('cccccccc',data[24:32])).strip() ## element name
-        self.dataCode['name'] = self.elementName
-        #elementName1      = self.getValues(data,'cccc',6)  
-        #elementName2      = self.getValues(data,'cccc',7)  ## element name
-        #self.elementName  = elementName1+elementName2
+        self.dataCode['elementName'] = self.elementName
 
-        self.addDataParameter(data,'loadSet',   'i',8,False)   ## Load set or zero
-        self.addDataParameter(data,'formatCode','i',9,False)   ## format code
+        self.addDataParameter(data,'loadSet',   'i',8, False)  ## Load set or zero
+        self.addDataParameter(data,'formatCode','i',9, False)  ## format code
         self.addDataParameter(data,'numWide',   'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
         self.addDataParameter(data,'cvalres',   'i',11,False)  ## C
-
-        self.addDataParameter(data,'setID',    'i',13,False)  ## Set identification number Number
-        self.addDataParameter(data,'eigenReal','i',14,False)  ## Natural eigenvalue - real part
-        self.addDataParameter(data,'eigenImag','i',15,False)  ## Natural eigenvalue - imaginary part
-        self.addDataParameter(data,'freq',     'f',16,False)  ## Natural frequency
-        self.addDataParameter(data,'etotpos',  'f',18,False)  ## Total positive energy
-        self.addDataParameter(data,'etotneg',  'f',19,False)  ## Total negative energy
+        self.addDataParameter(data,'setID',     'i',13,False)  ## Set identification number Number
+        self.addDataParameter(data,'eigenReal', 'i',14,False)  ## Natural eigenvalue - real part
+        self.addDataParameter(data,'eigenImag', 'i',15,False)  ## Natural eigenvalue - imaginary part
+        self.addDataParameter(data,'freq',      'f',16,False)  ## Natural frequency
+        self.addDataParameter(data,'etotpos',   'f',18)        ## Total positive energy
+        self.addDataParameter(data,'etotneg',   'f',19,False)  ## Total negative energy
 
 
         #self.printBlock(data) # on
@@ -102,7 +89,7 @@ class OEE(object):
             self.addDataParameter(data,'time','f',5)   ## time step
             #print "time(5)=%s" %(self.time)
         else:
-            raise RuntimeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
+            raise InvalidATFSCodeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
         ###
         
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
@@ -114,8 +101,8 @@ class OEE(object):
         self.readTitle()
 
     def readOEE1_Data(self):
-        print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
-        tfsCode       =                   [self.tableCode,self.formatCode,self.sortCode]
+        #print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
+        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         
         if tfsCode==[18,1,0]:
             self.readStrainEnergy_table18_format1_sort0()
@@ -125,38 +112,40 @@ class OEE(object):
         #    self.readOEE1_Data_format2_sort1()
         else:
             self.skipOES_Element()
-            raise Exception('unsupported OEE1 static solution...aftsCode=%s' %(self.atfsCode))
+            #raise Exception('unsupported OEE1 static solution...aftsCode=%s' %(self.atfsCode))
         ###
         #print str(self.obj)
 
     def readStrainEnergy_table18_format1_sort0(self):
+        """
         assert self.tableCode==18 # Strain Energy
         assert self.formatCode==1 # Real
         assert self.sortCode==0   # Real
-
+        """
         if self.analysisCode==1: # displacement
-            print "isStrainEnergy"
+            #print "isStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.analysisCode==2: # buckling modes
             #print "isBucklingStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.analysisCode==5: # freq
-            print "isFreqStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
+        #elif self.analysisCode==5: # freq
+            #print "isFreqStrainEnergy"
+            #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.analysisCode==6: # transient
-            print "isTransientStrainEnergy"
+            #print "isTransientStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.analysisCode==9: # nonlinear static eigenvector
-            print "isComplexStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
+        #elif self.analysisCode==9: # nonlinear static eigenvector
+            #print "isComplexStrainEnergy"
+            #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.analysisCode==10: # nonlinear statics
-            print "isNonlinearStrainEnergy"
+            #print "isNonlinearStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         else:
-            raise Exception('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
+            #raise Exception('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
+            pass
         ###
         if self.obj:
-            self.readScalars4o(debug=True)
+            self.readScalars4o(debug=False)
         else:
             self.skipOES_Element()
         ###

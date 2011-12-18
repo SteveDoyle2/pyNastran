@@ -21,20 +21,21 @@ class Op2(BDF,
         f06Extension = '.f06'
         (fname,extension) = os.path.splitext(op2FileName)
         
-        print "fname=%s ext=%s" %(fname,extension)
+        #print "fname=%s ext=%s" %(fname,extension)
         
         self.makeGeom = makeGeom
         self.op2FileName = op2FileName
         self.bdfFileName = fname+bdfExtension
         self.f06FileName = fname+f06Extension
         print "bdfFileName = ",self.bdfFileName
-        self.stopCode = False
+
         self.makeOp2Debug = False
         self.skippedCardsFile = open('skippedCards.out','a')
 
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
+                             
                              'DIT',  # some header table...
                             'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC',#'EDOM',
                              'DESTAB',                # design variables
@@ -69,11 +70,15 @@ class Op2(BDF,
                              'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2','OMM2',
                              'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2',
                              'STDISP','SDF','MONITOR','PMRF','PERF','PFRF','AEMONPT','AFRF','AGRF',
-                             'FOL',
+                             'FOL','GEOM1N',
+                             
+                             'OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2','OESRMS2','OESNO2','OESCRM2',
+                             'OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2',
+                             'OVGCRM2',
+                             'OPGATO2','OPGPSD2','OPGPSD2','OPGRMS2','OPGNO2','OPGCRM2',
+                             'OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2',
                              ]
                              
-        ## GEOM1 & GEOM2 are skippable on simple problems...hmmm
-
         self.iSubcaseNameMap = {}
         self.tableNames = []
 
@@ -108,11 +113,8 @@ class Op2(BDF,
         self.celasStress   = {}
         self.celasStrain   = {}
 
-        self.rodStress    = {}
-        self.rodStrain    = {}
-        self.conrodStress = {}
-        self.conrodStrain = {}
-
+        self.rodStress  = {}
+        self.rodStrain  = {}
         self.barStress  = {}
         self.barStrain  = {}
         self.beamStress = {}
@@ -286,7 +288,7 @@ class Op2(BDF,
                 elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
                     self.readTable_OUG1()
 
-                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXD','OESCP','OESRT']: # stress
+                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXD','OESCP','OESRT','OESRMS2','OESNO2','OESCRM2',]: # stress
                     self.readTable_OES1()  # 'OESNLXR','OESNL1X'
                 elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
                     self.readTable_OES1()
@@ -300,7 +302,7 @@ class Op2(BDF,
                 # not done
                 elif tableName in ['BGPDT','EQEXINS','PVT0','CASECC',]:
                     self.readTableB_DUMMY()
-                elif tableName in ['OPGPSD2','SDF']:
+                elif tableName in ['SDF']:
                     self.readTableB_DUMMY()
                 elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
                     self.readTableB_DUMMY()
@@ -309,7 +311,18 @@ class Op2(BDF,
                 
                 elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','DIT','OVGPSD2']:
                     self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OESNLXR','OESNL1X','OVGATO2']:
+                elif tableName in ['OVGATO2','OVGRMS2','OVGNO2']:
+                    self.readTable_DUMMY_GEOM(tableName)
+
+                elif tableName in ['OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                #elif tableName in []:
+                #    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OVGCRM2','OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2','OPGPSD2','OPGPSD2','OPGPSD2','OPGATO2']:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2',]:
                     self.readTable_DUMMY_GEOM(tableName)
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
@@ -359,14 +372,18 @@ class Op2(BDF,
         self.deviceCode   = aCode%10
         self.analysisCode = (aCode-self.deviceCode)/10
 
-        self.parseSortCode()
         self.dataCode = {'analysisCode': self.analysisCode,
                          'deviceCode':self.deviceCode,
                          'tableCode' :self.deviceCode,
                          'sortCode'  :self.sortCode,
                          }
+        self.parseSortCode()
+        if self.deviceCode==3:
+            #sys.stderr.write('The op2 may be inconsistent...\n')
+            #sys.stderr.write('  print and plot can cause bad results...if there's a crash, try plot only\n')
+            self.deviceCode = 1
 
-        #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s elementType(3)=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,elementType,self.iSubcase)
+        #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase)
         print self.printTableCode(self.tableCode)
         return (int3)
 

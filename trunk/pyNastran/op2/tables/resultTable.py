@@ -16,7 +16,6 @@ from pyNastran.op2.tables.destab import DESTAB
 
 class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
-
     def readTableA_DUMMY(self):
         self.iTableMap = {
                          }
@@ -295,7 +294,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         for i in range(nEntries):
             eData = data[n:n+nTotal]
             out  = unpack(strFormat,eData)
-            #print "*out =",out
+            if debug:
+                print "*out =",out
             self.obj.add(out)
             n+=nTotal
         ###
@@ -341,14 +341,18 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print self.printBlock(data[n:n+60])
             out = unpack('iiffffff',eData)
             (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
+            #if self.makeOp2Debug:
+                #self.op2Debug.write('%s\n' %(str(out)))
+                
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-deviceCode)/10
             #if grid<100:
+            #print "grid=%-3s type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz)
             if debug:
                 print "grid=%-3i type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz)
+                print self.printBlock(self.data[n:n+64])
+                sys.stdout.flush()
             self.obj.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32
         ###

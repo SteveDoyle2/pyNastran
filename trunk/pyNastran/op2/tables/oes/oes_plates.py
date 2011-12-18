@@ -172,6 +172,8 @@ class plateStressObject(stressObject):
         #print self.oxx
         assert eid is not None
         dt = self.dt
+        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        #print msg
         assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[dt][eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID]    = [oxx]
@@ -181,8 +183,6 @@ class plateStressObject(stressObject):
         self.majorP[dt][eid][nodeID] = [majorP]
         self.minorP[dt][eid][nodeID] = [minorP]
         self.ovmShear[dt][eid][nodeID]    = [ovm]
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        #print msg
         if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
@@ -392,7 +392,7 @@ class plateStrainObject(strainObject):
     def addNewEidTransient(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
-        print msg
+        #print msg
         dt = self.dt
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)

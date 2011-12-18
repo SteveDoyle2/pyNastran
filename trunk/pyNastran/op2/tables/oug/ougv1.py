@@ -78,7 +78,7 @@ class OUGV1(object):
             self.addDataParameter(data,'freq','f',5)   ## frequency
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
-            #print "DT(5)=%s" %(self.dt)
+            print "DT(5)=%s" %(self.dt)
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
@@ -194,7 +194,7 @@ class OUGV1(object):
         else:
             #print "***start skipping***"
             print 'skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode)
-            print self.codeInformation()
+            #print self.codeInformation()
             self.skipOES_Element()
             #print "***end skipping***"
             #raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
@@ -202,14 +202,14 @@ class OUGV1(object):
         #print self.obj
 
     def readOUGV1_Data_table1_format1_sort0(self):
-        print self.codeInformation()
-        assert self.formatCode==1 # Real
-        assert self.sortCode==0   # Real
+        #if self.analysisCode is not 6:
+        #    print self.codeInformation()
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==0   # Real
 
-        if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
+        if self.thermal==0:
             if self.analysisCode==1: # displacement
                 #print "isDisplacement"
-                #print "self.dataCode = ",self.dataCode
                 self.createTransientObject(self.displacements,displacementObject)
 
             elif self.analysisCode==5: # frequency displacement
@@ -234,10 +234,10 @@ class OUGV1(object):
 
             elif self.analysisCode==10: # nonlinear static displacement
                 #print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.nonlinearDisplacements,displacementObject)
+                self.createTransientObject(self.displacements,displacementObject)
             elif self.analysisCode==11: # nonlinear geometric static displacement
                 #print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.nonlinearDisplacements,displacementObject)
+                self.createTransientObject(self.displacements,displacementObject)
             else:
                 pass
                 #raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
@@ -252,17 +252,18 @@ class OUGV1(object):
                 self.createTransientObject(self.temperatures,temperatureObject)
             elif self.analysisCode==10: # nonlinear static displacement
                 #print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
+                self.createTransientObject(self.temperatures,temperatureObject)
+                #self.createTransientObject(self.temperatures,nonlinearTemperatureObject)
             else:
                 #raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
                 pass
             ###
-        else:
+        else:   # self.thermal>1:  ## @warning thermal>0!!!!
             pass
             #raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         if self.obj:
-            self.readScalars8()
+            self.readScalars8(debug=False)
         else:
             self.skipOES_Element()
         ###
@@ -319,7 +320,7 @@ class OUGV1(object):
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         if self.obj:
-            self.readScalars8(debug=True)
+            self.readScalars8(debug=False)
         else:
             self.skipOES_Element()
         ###
@@ -334,7 +335,6 @@ class OUGV1(object):
             elif self.analysisCode==6: # transient acceleration
                 #print "isTransientAcceleration"
                 self.createTransientObject(self.accelerations,displacementObject)
-
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -343,7 +343,22 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(debug=True)
+        self.readScalars8(debug=False)
+
+    def readScalarsX1(n,sFormat,debug):
+        #self.readScalarsX1(8,sFormat,debug=False)
+        if n==8:
+            if   sFormat=='iiffffff':
+                self.readScalars8(debug)
+            elif sFormat=='fiffffff':
+                self.readScalarsF8(debug)
+            else:
+                raise Exception('not supported format...')
+            ###
+        ###
+        else:
+            raise Exception('not supported format...')
+        ###
 
     def readOUGV1_Data_table1_format1_sort1(self):
         assert self.formatCode==1 # Real
