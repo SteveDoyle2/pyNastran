@@ -20,6 +20,17 @@ class StrainEnergyObject(scalarObject):
         self.density = {}
         #print self.dataCode
         #print "numWide = %s %s"  %(self.dataCode['numWide'],type(self.dataCode['numWide']))
+        self.updateNumWide()
+
+        if dt is not None:
+            self.dt = dt
+            self.addNewTransient()
+            self.isTransient = True
+            self.add         = self.addTransient
+        ###
+
+    def updateNumWide(self):
+        #print "***dataCode = ",self.dataCode
         if self.dataCode['numWide']==4:
             self.getLength    = self.getLength4
             self.add          = self.add4
@@ -30,12 +41,6 @@ class StrainEnergyObject(scalarObject):
             self.addTransient = self.addTransient5
         else:
             raise RuntimeError('invalid numWide=%s' %(self.numWide))
-        ###
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-            self.isTransient = True
-            self.add         = self.addTransient
         ###
 
     def getLength4(self):
@@ -51,8 +56,9 @@ class StrainEnergyObject(scalarObject):
         """
         self.dataCode = dataCode
         self.applyDataCode()
+        self.updateNumWide()
         #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
+        self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.name,self.name,dt,self.iSubcase))
         #print "dataCode = ",self.dataCode
         if dt is not None:
             self.dt = dt
@@ -73,7 +79,7 @@ class StrainEnergyObject(scalarObject):
         (grid,energy,percent,density) = out
         grid = (grid-self.deviceCode)/10
         #print "energyGridIDs = %s" %(self.energy.keys())
-        assert grid not in self.energy,'grid=%s out=%s' %(grid,out)
+        #assert grid not in self.energy,'grid=%s out=%s' %(grid,out)
         if grid<=0:
             raise InvalidGridID_Error('grid=%s' %(grid))
         self.energy[grid]  = energy

@@ -26,7 +26,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
-            #sys.exit('updating dt...')
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
             self.dt = dt
             self.addNewTransient()
         ###
@@ -53,10 +53,17 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     ###
 
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements,'displacementObject - static failure'
-
+        
+        if gridType==1:
+            gridType = 'G'
+        elif gridType==2:
+            gridType = 'S'
+        else:
+            raise Exception('gridType=%s' %(gridType))
+        ###
         self.gridTypes[nodeID] = gridType
         self.displacements[nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[nodeID]     = array([v4,v5,v6]) # rx,ry,rz
@@ -73,7 +80,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     ###
 
     def __reprTransient__(self):
-        print "Transient..."
+        self.log.debug("Transient...")
         raise Exception('this could be cool...')
         return self.__repr__()
 
@@ -116,10 +123,10 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     #    return msg
 
     def __reprTransient__(self):
-        msg = '---DISPLACEMENTS---\n'
-        msg += 'dt = %g\n' %(self.dt)
+        msg = '---TRANSIENT DISPLACEMENTS---\n'
+        msg += '%s = %g\n' %(self.name,self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-8s ' %('nodeID')
+        msg += '%-8s %-8s ' %('nodeID','gridType')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -128,10 +135,11 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             msg += 'dt = %g\n' %(dt)
             for nodeID,displacement in sorted(displacements.items()):
                 rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
-                msg += '%-8i ' %(nodeID)
+                msg += '%-8i %-8s ' %(nodeID,gridType)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
@@ -149,17 +157,19 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
         msg = '---DISPLACEMENTS---\n'
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-8s ' %('nodeID')
+        msg += '%-8s %-8s ' %('nodeID','gridType')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
         for nodeID,displacement in sorted(self.displacements.items()):
             rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
             (dx,dy,dz) = displacement
             (rx,ry,rz) = rotation
 
-            msg += '%-8i ' %(nodeID)
+            msg += '%-8i %-8s ' %(nodeID,gridType)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:
@@ -181,8 +191,10 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
         self.addNewTransient()
 
     def updateDt(self,dataCode,freq):
+        self.dataCode = dataCode
         self.applyDataCode()
         if freq is not None:
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
             self.freq = freq
             self.addNewTransient()
         ###
@@ -241,12 +253,12 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         self.temperatures = {}
         
         #print "dt = ",self.dt
-        self.temperatures = {}
         if dt is not None:
             #assert dt>=0.
             self.addNewTransient()
             self.isTransient = True
-            self.temperatures = {self.dt:{}}
+            self.addNewTransient()
+            #self.temperatures = {self.dt:{}}
             self.add = self.addTransient
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...            
@@ -256,6 +268,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.name,self.name,dt,self.iSubcase))
             self.dt = dt
             self.addNewTransient()
         ###
@@ -405,6 +418,7 @@ class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, 
 
 class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, thermal=1
     def __init__(self,dataCode,iSubcase,loadStep):
+        raise Exceptiton('disabled...')
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dataCode = dataCode
         self.applyDataCode()

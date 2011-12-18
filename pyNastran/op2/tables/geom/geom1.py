@@ -39,7 +39,7 @@ class Geometry1(object):
         """
         print "reading CORD1C"
         n=0
-        nEntries = len(data)/24
+        nEntries = len(data)//24
         for i in range(nEntries):
             eData = data[n:n+24] # 6*4
             (cid,one,two,g1,g2,g3) = unpack('iiiiii',eData)
@@ -56,7 +56,7 @@ class Geometry1(object):
         """
         print "reading CORD1R"
         n=0
-        nEntries = len(data)/24
+        nEntries = len(data)//24
         for i in range(nEntries):
             eData = data[n:n+24] # 6*4
             (cid,one,one,g1,g2,g3) = unpack('iiiiii',eData)
@@ -73,7 +73,7 @@ class Geometry1(object):
         """
         print "reading CORD1S"
         n=0
-        nEntries = len(data)/24
+        nEntries = len(data)//24
         for i in range(nEntries):
             eData = data[n:n+24] # 6*4
             (cid,three,one,g1,g2,g3) = unpack('iiiiii',eData)
@@ -90,7 +90,7 @@ class Geometry1(object):
         """
         print "reading CORD2C"
         n=0
-        nEntries = len(data)/52
+        nEntries = len(data)//52
         for i in range(nEntries):
             eData = data[n:n+52] # 13*4
             (cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
@@ -108,7 +108,7 @@ class Geometry1(object):
         """
         print "reading CORD2R"
         n=0
-        nEntries = len(data)/52
+        nEntries = len(data)//52
         for i in range(nEntries):
             eData = data[n:n+52] # 13*4
             (cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
@@ -126,7 +126,7 @@ class Geometry1(object):
         """
         print "reading CORD2S"
         n=0
-        nEntries = len(data)/52
+        nEntries = len(data)//52
         for i in range(nEntries):
             eData = data[n:n+52] # 13*4
             (cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack('iiiifffffffff',eData)
@@ -145,7 +145,7 @@ class Geometry1(object):
         """
         print "reading CORD3G"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)//16
         for i in range(nEntries):
             eData = data[n:n+16] # 4*4
             (cid,n1,n2,n3) = unpack('iiii',eData)
@@ -162,7 +162,7 @@ class Geometry1(object):
         return
         
         n=0
-        nEntries = len(data)/32
+        nEntries = len(data)//32
         for i in range(nEntries):
             eData = data[n:n+32]
             out = unpack('iifffiii',eData)

@@ -45,7 +45,7 @@ class OGP(object):
         self.addDataParameter(data,'oCode',       'i',11,False)   ## undefined in DMAP...
         self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
 
-        print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
+        #print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
@@ -198,13 +198,13 @@ class OGP(object):
     def readOGP1_Data_format1_sort0(self):
         if self.thermal==0:
             if self.analysisCode==1: # displacement
-                print "isAppliedLoads"
+                #print "isAppliedLoads"
                 self.obj = appliedLoadsObject(self.dataCode,self.iSubcase)
                 self.appliedLoads[self.iSubcase] = self.obj
                 self.readOGPForces(self.data,self.obj)
             else:
                 self.skipOES_Element()
-                print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
+                #print 'not supported OGP solution...atfsCode=%s' %(self.atfsCode)
                 #raise Exception('not supported OGP solution...')
             ###
         elif self.thermal==1:
@@ -222,7 +222,7 @@ class OGP(object):
             eData = data[0:dn]
             #self.printBlock(data[:dn])
             gridDevice,eid = unpack('ii',data[0:8])
-            nodeID = (gridDevice-deviceCode)/10
+            nodeID = (gridDevice-deviceCode) // 10
             
             source = ''.join(unpack('cccccccc',data[8:16]))
             #self.printBlock(data[16:dn])
@@ -237,7 +237,7 @@ class OGP(object):
             scalarObject.add(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
-            grid = (gridDevice-self.deviceCode)/10
+            grid = (gridDevice-self.deviceCode) // 10
             #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             #print type(scalarObject)
             data = data[dn:]

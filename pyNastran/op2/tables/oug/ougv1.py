@@ -78,7 +78,7 @@ class OUGV1(object):
             self.addDataParameter(data,'freq','f',5)   ## frequency
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
-            print "DT(5)=%s" %(self.dt)
+            self.log.debug("DT(5)=%s" %(self.dt))
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
@@ -156,8 +156,8 @@ class OUGV1(object):
         #    self.readOUGV1_Data_table7_format3_sort2()
 
         # velocity
-        elif tfsCode==[10,1,0]:
-            self.readOUGV1_Data_table10_format1_sort0()
+        #elif tfsCode==[10,1,0]:
+        #    self.readOUGV1_Data_table10_format1_sort0()
         #elif tfsCode==[10,1,1]:
         #    self.readOUGV1_Data_table10_format1_sort1()
         #elif tfsCode==[10,2,0]:
@@ -174,8 +174,8 @@ class OUGV1(object):
         #    self.readOUGV1_Data_table10_format3_sort2()
 
         # Acceleration vector
-        elif tfsCode==[11,1,0]:
-            self.readOUGV1_Data_table11_format1_sort0()
+        #elif tfsCode==[11,1,0]:
+        #    self.readOUGV1_Data_table11_format1_sort0()
         #elif tfsCode==[11,1,1]:
         #    self.readOUGV1_Data_table11_format1_sort1()
         #elif tfsCode==[11,2,0]:
@@ -193,7 +193,7 @@ class OUGV1(object):
 
         else:
             #print "***start skipping***"
-            print 'skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode)
+            self.log.debug('skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
             #print self.codeInformation()
             self.skipOES_Element()
             #print "***end skipping***"
@@ -202,10 +202,6 @@ class OUGV1(object):
         #print self.obj
 
     def readOUGV1_Data_table1_format1_sort0(self):
-        #if self.analysisCode is not 6:
-        #    print self.codeInformation()
-        #assert self.formatCode==1 # Real
-        #assert self.sortCode==0   # Real
 
         if self.thermal==0:
             if self.analysisCode==1: # displacement

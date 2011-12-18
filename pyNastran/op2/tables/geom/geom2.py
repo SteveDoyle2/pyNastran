@@ -147,7 +147,7 @@ class Geometry2(object):
         """
         print "reading CDAMP1"
         n=0
-        nEntries = len(data)/24
+        nEntries = len(data)//24
         for i in range(nEntries):
             eData = data[n:n+24] # 6*4
             out = unpack('iiiiii',eData)
@@ -164,7 +164,7 @@ class Geometry2(object):
         """
         print "reading CDAMP2"
         n=0
-        nEntries = len(data)/24
+        nEntries = len(data)//24
         for i in range(nEntries):
             eData = data[n:n+24] # 6*4
             out = unpack('ifiiii',eData)
@@ -181,7 +181,7 @@ class Geometry2(object):
         """
         print "reading CDAMP3"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)//16
         for i in range(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)
@@ -198,7 +198,7 @@ class Geometry2(object):
         """
         print "reading CDAMP4"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)//16
         for i in range(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack('ifii',eData)
@@ -215,7 +215,7 @@ class Geometry2(object):
         """
         print "reading CDAMP5"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)//16
         for i in range(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)
@@ -283,7 +283,7 @@ class Geometry2(object):
         """
         print "reading CELAS4"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)//16
         for i in range(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack('ifii',eData)
@@ -440,7 +440,7 @@ class Geometry2(object):
         """
         print "reading CPENTA"
         n=0
-        nEntries = len(data)/68
+        nEntries = len(data)//68
         for i in range(nEntries):
             eData = data[n:n+68] # 17*4
             out = unpack('iiiiiiiiiiiiiiiii',eData)
@@ -475,7 +475,7 @@ class Geometry2(object):
     def runCQUAD(self,data,Element):
         """common method for CQUAD, CQUADX"""
         n=0
-        nEntries = len(data)/44 # 11*4
+        nEntries = len(data)//44 # 11*4
         for i in range(nEntries):
             eData = data[n:n+44]
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9) = unpack('iiiiiiiiiii',eData)
@@ -501,7 +501,7 @@ class Geometry2(object):
         common method for CQUAD4, CQUADR
         """
         n=0
-        nEntries = len(data)/56
+        nEntries = len(data)//56
         for i in range(nEntries):
             eData = data[n:n+56] # 14*4
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack('iiiiiiffiiffff',eData)
@@ -523,7 +523,7 @@ class Geometry2(object):
         #print "reading CQUAD8"
         return
         n=0
-        nEntries = len(data)/64 # 17*4
+        nEntries = len(data)//64 # 17*4
         for i in range(nEntries):
             eData = data[n:n+64]
             out = unpack('iiiiiiiiiifffffi',eData)
@@ -565,7 +565,7 @@ class Geometry2(object):
         """
         #print "reading CROD"
         n=0
-        nEntries = len(data)/16 # 4*4
+        nEntries = len(data)//16 # 4*4
         for i in range(nEntries):
             eData = data[n:n+16]
             out = unpack('iiii',eData)
@@ -615,7 +615,7 @@ class Geometry2(object):
         """
         #print "reading CTETRA"
         n=0
-        nEntries = len(data)/48 # 12*4
+        nEntries = len(data)//48 # 12*4
         for i in range(nEntries):
             eData = data[n:n+48]
             out = unpack('iiiiiiiiiiii',eData)
@@ -665,7 +665,7 @@ class Geometry2(object):
         #print "reading CTRIA6"
         return
         n=0
-        nEntries = len(data)/52 # 13*4
+        nEntries = len(data)//52 # 13*4
         for i in range(nEntries):
             eData = data[n:n+52]
             out = unpack('iiiiiiiiffffi',eData)
@@ -697,7 +697,7 @@ class Geometry2(object):
         """
         print "reading CTUBE"
         n=0
-        nEntries = len(data)/16
+        nEntries = len(data)//16
         for i in range(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack('iiii',eData)

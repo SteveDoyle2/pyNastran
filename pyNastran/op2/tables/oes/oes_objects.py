@@ -4,7 +4,7 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 class OES_Object(scalarObject):
     def __init__(self,dataCode,iSubcase):
         scalarObject.__init__(self,dataCode,iSubcase)
-        print "starting OES...elementName=%s iSubcase=%s" %(self.elementName,self.iSubcase)
+        self.log.debug("starting OES...elementName=%s iSubcase=%s" %(self.elementName,self.iSubcase))
         #print self.dataCode
 
     def isCurvature(self):
@@ -33,8 +33,8 @@ class stressObject(OES_Object):
         #assert dt>=0.
         #print "dataCode=",self.dataCode
         self.elementName = self.dataCode['elementName']
-        print "updating stress...dt=%s elementName=%s" %(dt,self.elementName)
         if dt is not None:
+            self.log.debug("updating stress...%s=%s elementName=%s" %(self.dataCode['name'],dt,self.elementName))
             self.dt = dt
             self.addNewTransient()
         ###
@@ -56,8 +56,8 @@ class strainObject(OES_Object):
         #print "dataCode=",self.dataCode
         self.elementName = self.dataCode['elementName']
         #assert dt>=0.
-        print "updating strain...dt=%s elementName=%s" %(dt,self.elementName)
         if dt is not None:
+            self.log.debug("updating strain...%s=%s elementName=%s" %(self.dataCode['name'],dt,self.elementName))
             self.dt = dt
             self.addNewTransient()
         ###

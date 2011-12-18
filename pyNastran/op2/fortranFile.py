@@ -114,7 +114,7 @@ class FortranFile(object):
         unpacks a data set into a series of ints
         """
         n = len(data)
-        nInts = n/4
+        nInts = n//4
         #print "nInts = ",nInts
         iFormat = 'i'*nInts
         ints = unpack(iFormat,data[:nInts*4])
@@ -127,7 +127,7 @@ class FortranFile(object):
         unpacks a data set into a series of longs
         """
         n = len(data)
-        nLongs = n/4
+        nLongs = n//4
         #print "nLongs = ",nLongs
         #a = pack('l',200)
         #print "len(a) = ",len(a)
@@ -141,7 +141,7 @@ class FortranFile(object):
         unpacks a data set into a series of floats
         """
         n = len(data)
-        nFloats = n/4
+        nFloats = n//4
         fFormat = 'f'*nFloats
         ints = unpack(fFormat,data[:nFloats*4])
         return ints
@@ -173,7 +173,7 @@ class FortranFile(object):
         msg += "floats  = %s\n" %(str(floats))
         #msg += "doubles = %s\n" %(doubles)
         msg += "strings = |%r|\n" %(''.join(strings))
-        msg += "nWords  = %s\n" %(len(data)/4)
+        msg += "nWords  = %s\n" %(len(data)//4)
         #msg += "tell    = %s\n" %(self.op2.tell())
         return msg
 
@@ -272,8 +272,8 @@ class FortranFile(object):
         if self.makeOp2Debug:
             self.op2Debug.write(msg[:-3]+'\n')
         if debug:
-            print "@markers = ",markers
-            print ""
+            self.log.debug("@markers = %s" %(markers))
+            self.log.debug("")
         ###
 
     def getNMarkers(self,nMarkers,rewind=False):
@@ -347,7 +347,7 @@ class FortranFile(object):
         """
         data = self.op2.read(4)
         if len(data)==0:
-            print "found the end of the file..."
+            self.log.debug("found the end of the file...")
             return []
         nValues, = unpack('i',data)
         self.n+=4
@@ -355,8 +355,8 @@ class FortranFile(object):
         self.n+=nValues+4
         self.goto(self.n)
 
-        #nInts = len(data)/4
-        nInts = len(data)/4
+        #nInts = len(data)//4
+        nInts = len(data)//4
         #print "**nInts = ",nInts
         ints = unpack('i'*nInts,data)
         return [nValues]+list(ints)+[nValues]
@@ -383,7 +383,7 @@ class FortranFile(object):
         assumes that the data is made up of integers only
         """
         data = self.readBlock()
-        nInts = len(data)/4
+        nInts = len(data)//4
         #print "**nInts = ",nInts
         ints = unpack('i'*nInts,data)
         return ints
@@ -394,7 +394,7 @@ class FortranFile(object):
         assumes that the data is made up of floats only
         """
         data = self.readBlock()
-        nFloats = len(data)/4
+        nFloats = len(data)//4
         floats = unpack('f'*nFloats,data)
         return floats
 
@@ -458,8 +458,8 @@ class FortranFile(object):
         """
         tableName = self.readTableName(rewind=False) # GEOM1
         self.tableInit(tableName)
-        print "skippingTable |%s|" %(tableName)
-        print "self.n = ",self.n
+        self.log.debug("skippingTable |%s|" %(tableName))
+        self.log.debug("self.n = %s" %(self.n))
 
         self.readMarkers([-1,7],tableName)
         
@@ -491,7 +491,7 @@ class FortranFile(object):
         #    pass
 
         self.op2.seek(self.n)
-        print "self.op2.tell() = ",self.op2.tell()
+        self.log.debug("self.op2.tell() = %s" %(self.op2.tell()))
         #self.printSection(200)
         marker = self.getMarker()
         #print "marker = ",marker
@@ -504,8 +504,8 @@ class FortranFile(object):
         #print "isAnotherTable = ",isAnotherTable
         self.n -= 24  # subtract off the header [0,2] or [0,0]
         self.op2.seek(self.n)
-        print "self.n = ",self.n
-        print "---table %s is skipped---" %(tableName)
+        self.log.debug("self.n = %s" %(self.n))
+        self.log.debug("---table %s is skipped---" %(tableName))
         
         return isAnotherTable
 
