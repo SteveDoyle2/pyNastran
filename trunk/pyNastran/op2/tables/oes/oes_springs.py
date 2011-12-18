@@ -61,7 +61,7 @@ class celasStressObject(stressObject):
     def addNewEid_format1_sort0(self,out):
         #print "Rod Stress add..."
         (eid,stress) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         #assert isinstance(eid,int)
         self.eType[eid]  = self.elementName
         self.stress[eid] = stress
@@ -69,7 +69,7 @@ class celasStressObject(stressObject):
     def addNewEid_format2_sort1(self,out):
         raise Exception('not implemented')
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
         self.eType[eid]      = self.elementName
         self.axial[eid]      = [axialReal,axialImag]
@@ -77,7 +77,7 @@ class celasStressObject(stressObject):
 
     def addNewEidTransient_format1_sort0(self,out):
         (eid,stress) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         self.eType[eid] = self.elementName
         dt = self.dt
         #assert isinstance(eid,int)
@@ -88,7 +88,7 @@ class celasStressObject(stressObject):
     def addNewEidTransient_format2_sort1(self,out):
         raise Exception('not implemented')
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         dt = self.dt
         assert eid >= 0
         self.eType[eid]          = self.elementName
@@ -231,7 +231,7 @@ class celasStrainObject(strainObject):
 
     def addNewEid_format1_sort0(self,out):
         (eid,strain) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
@@ -242,7 +242,7 @@ class celasStrainObject(strainObject):
         raise Exception('not implemented')
         assert eid >= 0
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         self.eType[eid] = self.elementType
         self.axial[eid]      = [axialReal,axialImag]
         self.torsion[eid]    = [torsionReal,torsionImag]
@@ -251,7 +251,7 @@ class celasStrainObject(strainObject):
         #print "Rod Strain add..."
         #print out
         (eid,strain) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
         dt = self.dt
 
@@ -261,7 +261,7 @@ class celasStrainObject(strainObject):
     def addNewEidTransient_format2_sort1(self,out):
         raise Exception('not implemented')
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
         dt = self.dt
         self.axial[dt][eid]      = [axialReal,axialImag]

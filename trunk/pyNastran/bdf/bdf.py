@@ -18,6 +18,7 @@ from bdf_helper      import getMethods,addMethods,writeMesh,cardMethods,XrefMesh
 from caseControlDeck import CaseControlDeck
 from fieldWriter     import printCard
 
+
 class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     modelType = 'nastran'
     isStructured = False
@@ -29,12 +30,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         #driveLetter = os.path.splitdrive(filename)[0]
         #if driveLetter==os.path.splitdrive(os.curdir)[0] and self.relpath:
         if self.relpath:
-            return os.path.relpath(outfilename)
+            return os.path.relpath(filename)
         else:
             return filename
         ###
 
     def __init__(self,debug=True,log=None):
+        self.relpath = True
         if sys.version_info < (2,6):
             version = sys.version_info
             self.relpath = False

@@ -17,11 +17,13 @@ from pyNastran.op2.tables.destab import DESTAB
 class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
     def readTableA_DUMMY(self):
+        """reads a dummy geometry table"""
         self.iTableMap = {
                          }
         self.readRecordTable('DUMMY')
 
     def readTableB_DUMMY(self):
+        """reads a dummy results table"""
         self.tableName = 'DUMMY'
         table3     = self.readTable_DUMMY_3
         table4Data = self.readDUMMY_Data
@@ -29,20 +31,28 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         self.deleteAttributes_OGP()
 
     def readTable_DUMMY_3(self,iTable):
+        """sets dummy parameters"""
         self.analysisCode = None
         self.tableCode    = None
         self.formatCode   = None
         self.sortCode     = None
 
     def readDUMMY_Data(self):
+        """creates a dummy object and skips the results"""
         self.obj = None
         self.readOES_Element()
 
     def createTransientObject(self,storageObj,classObj):
-        """@note dt can also be loadStep depending on the class"""
+        """
+        Creates a transient object (or None if the subcase should be skippied).
+        @param storageObj  the dictionary to store the object in (e.g. self.bars)
+        @param classObj    the class object to instantiate
+        @note dt can also be loadStep depending on the class
+        """
         #print "create Transient Object"
         #print "***NF = ",self.nonlinearFactor
         #print "DC = ",self.dataCode
+        
         if self.iSubcase in storageObj:
             #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
@@ -59,9 +69,6 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         else:
             self.obj = classObj(self.dataCode,self.iSubcase,self.nonlinearFactor)
         storageObj[self.iSubcase] = self.obj
-        ###
-        #if self.stopCode:
-        #    sys.exit('stopping in createTransientObject in op2.py')
         ###
 
     def readResultsTable(self,table3,table4Data,flag=0):
@@ -91,14 +98,23 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "reading iTable3=%s" %(iTable)
             #self.obj = None
 
+            ## the results object
             self.obj = None
+            ## dt/loadFactor/frequency/loadStep value (or None for static)
             self.nonlinearFactor = None
             self.dataCode = {}
             table3(iTable)
+            ## developer parameter - Analysis/Table/Format/Sort Codes
             self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
             #print "self.tellA = ",self.op2.tell()
             
+            ## ???
             self.isMarker = False
+
+            #if not self.isValidSubcase(): # lets the user skip a certain subcase
+            #    self.skipOES_Element()
+            #    return
+            #else:
             isBlockDone = self.readTable4(table4Data,flag,iTable-1)
             #self.firstPass = False
 
@@ -191,7 +207,6 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         isBlockDone = not(bufferWords)
 
         table4Data()
-        #print "-------finished OUGV1----------"
         return (isTable4Done,isBlockDone)
 
     def handleResultsBuffer(self,func,debug=False):
@@ -203,15 +218,24 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             - [4,4,x,4] where x is the next buffer size, which may have another buffer
         the end of the final buffer block has
             - nothing!
-        
-        The code knows that the large buffer is the default size and the
-        only way there will be a smaller buffer is if there are no more
-        buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
-        this end shift.  An extra marker value is read, but no big deal.
-        Beyond that it's just appending some data to the binary string
-        and calling the function that's passed in
+
+        @param self the object pointer
+        @param func the function to recursively call (the function that called this)
+        @param debug developer debug
+
+        @note
+            The code knows that the large buffer is the default size and the
+            only way there will be a smaller buffer is if there are no more
+            buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
+            this end shift.  An extra marker value is read, but no big deal.
+            Beyond that it's just appending some data to the binary string
+            and calling the function that's passed in
+
+        @warning
+            Dont modify this without LOTS of testing.
+            It's a VERY important function
         """
-        #print stress
+        #print self.obj
         #print "len(data) = ",len(self.data)
         #if marker[0]==4:
         #    self.log.debug("found a 4 - end of unbuffered table")
@@ -230,7 +254,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print "markers = ",markers
         #print self.printSection(160)
         
-        if markers<0:
+        if markers<0:  # not a buffer, the table may be done
             self.goto(nOld)
             if markers is not None and markers%2==1:
                 self.isBufferDone = True
@@ -251,6 +275,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         ###
 
     def readScalars4(self,debug=False):
+        """
+        reads 4 values "ifff" and puts them into the result object
+        """
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -285,9 +312,16 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         self.handleResultsBuffer(self.readScalars4,debug=False)
 
     def readScalars4o(self,debug=False):
+        """
+        reads len(strFormat) values and puts it into the result object
+        the "o" in readScalars4o means "out" b/c it creates an out tuple
+        instead of 4 values like readScalars4
+        @note
+            nTotal is the number of bytes
+            strFormat = 'iiii'
+        """
         data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
+        #print type(self.obj)
         (nTotal,strFormat) = self.obj.getLength()
         n = 0
         nEntries = len(data)//nTotal
@@ -304,9 +338,12 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         self.handleResultsBuffer(self.readScalars4o,debug=False)
 
     def readScalarsX(self,strFormat,nTotal,debug=False):
+        """
+        unused...
+        """
         data = self.data
         deviceCode = self.deviceCode
-        #print type(scalarObject)
+        #print type(self.boj)
         
         n = 0
         nEntries = len(data)//nTotal
@@ -325,6 +362,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
     #    self.readScalarsX(self,'iiffffff',32,debug)
 
     def readScalars8(self,debug=False):
+        """
+        @see readScalars4
+        """
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -364,6 +404,10 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
     #    self.readScalars(self,'fiffffff',32,debug)
 
     def readScalarsF8(self,debug=False):
+        """
+        @see readScalars8
+        F is Float
+        """
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -397,6 +441,9 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
     #    self.readScalarsX(self,'iiffffffffffff',56,debug)
 
     def readScalars14(self,debug=True):
+        """
+        @see readScalars8
+        """
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -436,6 +483,10 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
     #    self.readScalarsX(self,'fiffffffffffff',56,debug)
 
     def readScalarsF14(self,debug=False):
+        """
+        @see readScalars8
+        F is Float
+        """
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)

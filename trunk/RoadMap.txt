@@ -27,21 +27,6 @@ see a gap in the numbers, that means there are missing cards.
 For convenience, the last card is listed as well.
 
 OP2 Reader
-   - Dont know what these are
-     - OFMPF2M
-     - OSMPF2M
-     - OPMPF2M
-     - OGPMPF2M
-     - OLMPF2M
-
-   - other
-     - HISADD
-     - DESTAB
-     - ERRORN
-     - VIEWTB
-     - R1TABRG
-     - OUPV1
-     - OPNL1
 
    - GEOM1
      - CORD1C  (1, done)
@@ -103,9 +88,6 @@ OP2 Reader
      - SPCADD
      - USET1   (63)
    
-   - DIT
-     - TABRNDG (15)
-
    - EPT (properties may be created that are too large >100000000.  this is how
           properties created by the solution are identified)
      - NSM     (2, done)
@@ -134,9 +116,6 @@ OP2 Reader
      - MATS1
      - NLPARM
      - TSTEPNL (29)
-
-   - DYNAMIC / DYNAMICS
-     - UNBALNC (40)
 
    - OES
    OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
@@ -175,8 +154,6 @@ OP2 Reader
          - CHEXA  (93,verify object)
          - CBEAM  (94)
 
-       - OESNLXD
-
       - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
          - CQUAD4 (95,done)
          - CQUAD8 (96,done)
@@ -184,30 +161,56 @@ OP2 Reader
          - CTRIA6 (98,done)
 
    - OUGV1 Table (displacement/velocity/acceleration)
-      - displacement           / temperature           (approachCode=1, sortCode=0, done)
-      - eigenvectors           /                       (approachCode=2, sortCode=0, done)
-      -                        / heat flux             (approachCode=1, sortCode=1, done)
-      - transient displacement / transient temperature (approachCode=6, sortCode=0, done)
-      - nonlinear displacement / nonlinear temperature (approachCode=10,sortCode=0, done)
+      - displacement           / temperature           (approachCode=1/6/10, sortCode=0, done)
+      - eigenvectors           /                       (approachCode=2,      sortCode=0, done)
 
-
-   - OQGV1 Table (single/multipoint constraint forces)
-      - spc forces (needs cleanup) # disabled
 
    - OGP1 Table (grid point forces)
       - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
       
+   - OEE Table (element energy strain/kinetic/loss)
+      - strain energy
+
+OP2 Backup
+   - DIT
+     - TABRNDG (15)
+
+
+   - DYNAMIC / DYNAMICS
+     - UNBALNC (40)
+
+   - Dont know what these are
+     - OFMPF2M
+     - OSMPF2M
+     - OPMPF2M
+     - OGPMPF2M
+     - OLMPF2M
+
+   - other
+     - HISADD
+     - DESTAB
+     - ERRORN
+     - VIEWTB
+     - R1TABRG
+     - OUPV1
+     - OPNL1
+     - OESNLXD
+
+   - OUGV1 Table (displacement/velocity/acceleration)
+      - heat flux (approachCode=1, sortCode=1)
+
+   - OQGV1 Table (single/multipoint constraint forces)
+      - spc forces (needs cleanup) # disabled
+
    - OEF1X Table (element forces)
       - OGPFB1
         temperatureForces (approachCode=6, sortCode=0,disabled)
         nonlinearFluxes   (approachCode=10,sortCode=0,disabled) - long table...
          - CHBDY
 
-   - OEE Table (element energy strain/kinetic/loss)
-      - strain energy
-
    - KDICT Table (element stiffness table)
       - None
+
 
 ----OES LONG VERSION----
 
@@ -413,8 +416,8 @@ CMASS2 (done)
 CMASS3 (done)
 CMASS4 (done)
 
-CRAC2D  (done)
-CRAC3D  (done)
+CRAC2D (done)
+CRAC3D (done)
 
 ----Rigid Elements----:
 RBE1  (done)
@@ -568,7 +571,7 @@ RADM   (needs integration)
 -----------------------------------------------
 
 
-Potential (v0.2) - these will be added in groupings...maybe (not necessarily in order):
+Potential (v0.3) - these will be added in groupings...maybe (not necessarily in order):
 If you want a certain group...ask!
 **************
 AXIC
@@ -663,7 +666,6 @@ NSM1
 ----Properties----:
 PBEAM3
 PBCOMP
-PCOMPG
 PCONEAX
 
 ----Loads----:

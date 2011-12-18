@@ -11,12 +11,47 @@ from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 
-class Op2(BDF,
+class OP2(BDF,
 #class Op2(getMethods,addMethods,writeMesh, # BDF methods
           FortranFile,Op2Codes,GeometryTables,ResultTable):
 
+    def setSubcases(self,iSubcases=[]):
+        """
+        allows you to read only the subcases in the list of iSubcases
+        
+        @param iSubcases list of [subcase1_ID,subcase2_ID]
+        @note  the default is all the subcases
+        """
+        if iSubcases==[]:
+            self.isAllSubcases = True
+            #self.iSubcases = []
+        else:
+            ## should all the subcases be read (default=True)
+            self.isAllSubcases = False
+            ## the list of valid subcases [1,2,3]
+            self.iSubcases = list(set(iSubcases))
+        ###
+
+    def isValidSubcase(self):
+        """
+        lets the code check whether or not to read a subcase
+        """
+        if not self.isAllSubcases:
+            if self.iSubcase in self.iSubcases:
+                return True
+            return False
+        return True
+
     def __init__(self,op2FileName,makeGeom=False,debug=True,log=None):
+        """
+        Initializes the Op2 object
+        @param op2FileName the file to be parsed
+        @param makeGeom    reads the BDF tables (default=False)
+        @param debug       prints data about how the OP2 was parsed (default=False)
+        @param log         a logging object to write debug messages to (@see import logging)
+        """
         BDF.__init__(self,debug=debug,log=log)
+        self.setSubcases() # initializes the variables
         self.log.debug('op2FileName = %s' %(op2FileName))
         bdfExtension = '.bdf'
         f06Extension = '.f06'
@@ -24,15 +59,27 @@ class Op2(BDF,
         
         #print "fname=%s ext=%s" %(fname,extension)
         
+        ## should the BDF tables be parsed
         self.makeGeom = makeGeom
+        
+        ## the input OP2 filename
         self.op2FileName = op2FileName
+        
+        ## the expected BDF filename (guessed)
         self.bdfFileName = fname+bdfExtension
+        
+        ## the expected F06 filename (guessed)
         self.f06FileName = fname+f06Extension
         #print "bdfFileName = ",self.bdfFileName
 
+        ## developer parameter to write the OP2 is ASCII format
+        ## to better understand it
         self.makeOp2Debug = False
+        
+        ## file object containing the skipped cards
         self.skippedCardsFile = open('skippedCards.out','a')
 
+        ## the list of supported tables (dont edit this)
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
@@ -66,7 +113,8 @@ class Op2(BDF,
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2',
                              'PCOMPTS',
                              'OMM2',
-                             
+                             'OGPWG','EDOM',
+
                              # new
                              'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2','OMM2',
                              'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2',
@@ -79,67 +127,88 @@ class Op2(BDF,
                              'OPGATO2','OPGPSD2','OPGPSD2','OPGRMS2','OPGNO2','OPGCRM2',
                              'OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2',
                              ]
-                             
+        
+        ## a dictionary that maps an integer of the subcaseName to the subcaseID
         self.iSubcaseNameMap = {}
+        
+        ## list of OP2 tables that were read
+        ## mainly for debugging
         self.tableNames = []
 
 
-        # OUG - displacement
+        ## OUG - displacement
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
+        ## OUG - temperatures
         self.temperatures  = {}           # aCode=1 ------- ------- sortCode=0 thermal=1
-        self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
-        self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
+        #self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
+        #self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
 
+        ## OUG - eigenvectors
         self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
 
-        # OUG - velocity
+        ## OUG - velocity (not done)
         self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
 
-        # OUG - acceleration
+        ## OUG - acceleration (not done)
         self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
 
         # OEF
-        ## rename to staticLoads/thermalLoads
-        self.forces = {}
-        self.fluxes = {}
-        self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
+        # rename to staticLoads/thermalLoads
+        #self.forces = {}
+        #self.fluxes = {}
+        #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
-        self.modalForces = {}
+        #self.modalForces = {}
         
-        ## rename to nonlinearStaticLoads/nonlinearThermalLoads ???
-        self.nonlinearForces = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=0
-        self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
+        # rename to nonlinearStaticLoads/nonlinearThermalLoads ???
+        #self.nonlinearForces = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=0
+        #self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
 
         # OES
+        ## OES - CELAS1/CELAS2/CELAS3/CELAS4
         self.celasStress   = {}
+        ## OES - CELAS1/CELAS2/CELAS3/CELAS4
         self.celasStrain   = {}
-
+        
+        ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStress  = {}
+        ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStrain  = {}
+        ## OES - isotropic CBAR
         self.barStress  = {}
+        ## OES - isotropic CBAR
         self.barStrain  = {}
+        ## OES - isotropic CBEAM
         self.beamStress = {}
+        ## OES - isotropic CBEAM
         self.beamStrain = {}
 
+        ## OES - isotropic CTRIA3/CQUAD4
         self.plateStress = {}
+        ## OES - isotropic CTRIA3/CQUAD4
         self.plateStrain = {}
+
+        ## OES - isotropic CTETRA/CHEXA/CPENTA
         self.solidStress = {}
+        ## OES - isotropic CTETRA/CHEXA/CPENTA
         self.solidStrain = {}
+        ## OES - composite CTRIA3/CQUAD4
         self.compositePlateStress = {}
+        ## OES - composite CTRIA3/CQUAD4
         self.compositePlateStrain = {}
         
 
         # OQG
-        self.spcForces      = {}
-        self.modalSPCForces = {}
+        #self.spcForces      = {}
+        #self.modalSPCForces = {}
 
-        self.mpcForces      = {}
-        self.modalMPCForces = {}
+        #self.mpcForces      = {}
+        #self.modalMPCForces = {}
         
-        # OPG
+        ## OPG - summation of loads for each element
         self.appliedLoads = {}
         
-        # OEE
+        ## OEE - strain energy density
         self.strainEnergy = {}
 
     def printResults(self):
@@ -184,6 +253,10 @@ class Op2(BDF,
         return msg
         
     def readTapeCode(self):
+        """
+        reads the OP2 header
+        @todo whats in this table?
+        """
         #self.printSection(500)
         #sys.exit('op2-readTapeCode')
         self.readMarkers([3])
@@ -206,19 +279,24 @@ class Op2(BDF,
         #data = self.getData(60)
         #self.printBlock(data)
 
-    def readOp2(self):
+    def readOP2(self):
+        """
+        reads the op2 file
+        """
+        ## the OP2 file object
         self.op2 = open(self.op2FileName,'rb')
         
         if self.makeOp2Debug:
+            ## a developer debug file (largely unsupported)
             self.op2Debug = open('debug.out','wb')
-        
+        ## the byte position in the OP2
         self.n = self.op2.tell()
-        #print "self.n = ",self.n
+
         try:
             self.readTapeCode()
         except:
             raise TapeCodeError('when this happens, the analysis failed...check the F06')
-        #sys.exit('end of tape code')
+        ###
 
         isAnotherTable = True
         while isAnotherTable:
@@ -259,7 +337,7 @@ class Op2(BDF,
                     self.readTable_DYNAMICS()
                 #elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
                 #    self.readTable_DIT()
-                elif tableName in ['VIEWTB','EQEXIN','OEFIT','GEOM1N','OMM2',]:
+                elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OMM2','OGPWG',]:
                     self.readTable_DUMMY_GEOM(tableName)
 
                 elif tableName in ['DESTAB']:  # design variable table
@@ -301,7 +379,7 @@ class Op2(BDF,
                     self.readTable_PCOMPTS() # 'SDF',
                     
                 # not done
-                elif tableName in ['BGPDT','EQEXINS','PVT0','CASECC',]:
+                elif tableName in []:
                     self.readTableB_DUMMY()
                 elif tableName in ['SDF']:
                     self.readTableB_DUMMY()
@@ -321,7 +399,7 @@ class Op2(BDF,
                     self.readTable_DUMMY_GEOM(tableName)
                 elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
                     self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2',]:
+                elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
                     self.readTable_DUMMY_GEOM(tableName)
                 else:
                     raise Exception('unhandled tableName=|%s|' %(tableName))
@@ -353,9 +431,10 @@ class Op2(BDF,
             #print "    *bit = ",value
             #print "    sortCode = ",sortCode
             i-=1
-        #bits.reverse()
         #print "sortBits = ",bits
+        ## the bytes describe the SORT information
         self.sortBits = bits
+        
         self.dataCode['sortBits'] = self.sortBits
 
     def parseApproachCode(self,data):
@@ -365,12 +444,19 @@ class Op2(BDF,
         """
         #self.printBlock(data)
         (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
+        ## the local subcase ID
         self.iSubcase = iSubcase
+        ## the type of result being processed
         self.tableCode = tCode%1000
+        ## used to create sortBits
         self.sortCode  = tCode//1000
+        ## what type of data was saved from the run; used to parse the approachCode and gridDevice
         self.deviceCode   = aCode%10
+        ## what solution was run (e.g. Static/Transient/Modal)
         self.analysisCode = (aCode-self.deviceCode) // 10
 
+        ## dataCode stores the active variables; these pass important
+        ## self variables into the result object
         self.dataCode = {'analysisCode': self.analysisCode,
                          'deviceCode'  : self.deviceCode,
                          'tableCode'   : self.deviceCode,
@@ -392,6 +478,10 @@ class Op2(BDF,
         """
         extracts the ith word from the data structure as the provided type
         supports multiple inputs with iWordStop (note this is words, not outputs)
+        @param self the object pointer
+        @param data the binary data that is as long as the buffer size
+        @param iWordStart the word to start reading from
+        @param iWordStop  the word to stop reading on (largely unused)
         @warning
             works with nastran syntax, not standard python syntax
             this makes it work with what's documented in the DMAP manual
@@ -400,12 +490,15 @@ class Op2(BDF,
             #print "iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4)
             ds = data[(iWordStart-1)*4:iWordStart*4]
             return unpack(sFormat,ds)[0]
-            
         #print "type(data) = ",type(data)
         ds = data[(iWordStart-1)*4:(iWordStop-1)*4]
         return unpack(sFormat,ds)
         
     def deleteAttributes(self,params):
+        """
+        deletes any parameters before going to the next table to avoid
+        messing up data
+        """
         params += ['dataCode','deviceCode','analysisCode','tableCode','sortCode','iSubcase',
                    'data','numWide','nonlinearFactor','obj']
         for param in params:
@@ -424,6 +517,8 @@ class Op2(BDF,
         assert bufferWords>0,self.printSection(220)
 
     def readTitle(self):
+        """reads the Title, Subtitle, and Label.
+        Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]"""
         word = self.readString(384) # titleSubtitleLabel
         Title    = word[0:128].strip()
         Subtitle = word[128:256].strip()
@@ -439,12 +534,17 @@ class Op2(BDF,
         #print "Label    |%s|" %(Label)
 
         self.readHollerith() # not really a hollerith, just the end of the block (so bufferWords*4)
-        
+
+        ## the title of the analysis
         self.Title = Title.strip()
         if self.iSubcase not in self.iSubcaseNameMap:
             self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
     def tableInit(self,word):
+        """
+        starts a new table
+        """
+        ## the local table name
         self.tableName = word.strip()
         self.tableNames.append(word)
         msg = '*'*20+word+'*'*20+'\n'
@@ -452,5 +552,8 @@ class Op2(BDF,
             self.op2Debug.write(msg)
 
     def getTableNamesFromOP2(self):
-       return self.tableNames
+        """
+        returns the list of parsed tables
+        """
+        return self.tableNames
 

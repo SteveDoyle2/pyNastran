@@ -37,7 +37,7 @@ class Geometry1(object):
         """
         (1701,17,6) - the marker for Record 1
         """
-        print "reading CORD1C"
+        #print "reading CORD1C"
         n=0
         nEntries = len(data)//24
         for i in range(nEntries):
@@ -54,7 +54,7 @@ class Geometry1(object):
         """
         (1801,18,5) - the marker for Record 2
         """
-        print "reading CORD1R"
+        #print "reading CORD1R"
         n=0
         nEntries = len(data)//24
         for i in range(nEntries):
@@ -71,7 +71,7 @@ class Geometry1(object):
         """
         (1901,19,7) - the marker for Record 3
         """
-        print "reading CORD1S"
+        #print "reading CORD1S"
         n=0
         nEntries = len(data)//24
         for i in range(nEntries):
@@ -88,7 +88,7 @@ class Geometry1(object):
         """
         (2001,20,9) - the marker for Record 4
         """
-        print "reading CORD2C"
+        #print "reading CORD2C"
         n=0
         nEntries = len(data)//52
         for i in range(nEntries):
@@ -106,7 +106,7 @@ class Geometry1(object):
         """
         (2101,21,8) - the marker for Record 5
         """
-        print "reading CORD2R"
+        #print "reading CORD2R"
         n=0
         nEntries = len(data)//52
         for i in range(nEntries):
@@ -124,7 +124,7 @@ class Geometry1(object):
         """
         (2201,22,10) - the marker for Record 6
         """
-        print "reading CORD2S"
+        #print "reading CORD2S"
         n=0
         nEntries = len(data)//52
         for i in range(nEntries):
@@ -143,7 +143,7 @@ class Geometry1(object):
         (14301,143,651) - the marker for Record 7
         @todo isnt this a CORD3G, not a CORD3R ???
         """
-        print "reading CORD3G"
+        #print "reading CORD3G"
         n=0
         nEntries = len(data)//16
         for i in range(nEntries):
@@ -158,7 +158,7 @@ class Geometry1(object):
 
     def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        print "reading GRID"
+        #print "reading GRID"
         return
         
         n=0
@@ -172,7 +172,7 @@ class Geometry1(object):
                 node = GRID(None,out)
                 self.addNode(node)
             else:
-                print "*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid)
+                self.log.debug("*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %(nID,cp,x1,x2,x3,cd,ps,seid))
             ###
             #print str(grid)[:-1]
             n+=32
