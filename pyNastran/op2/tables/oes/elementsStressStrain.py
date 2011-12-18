@@ -54,7 +54,7 @@ class ElementsStressStrain(object):
         #print "nTotal=%s dataFormat=%s len(data)=%s" %(nTotal,dataFormat,len(self.data))
         
         n = 0
-        nEntries = len(self.data)/nTotal
+        nEntries = len(self.data)//nTotal
         for i in range(nEntries):
             eData = self.data[n:n+nTotal]
             out = unpack(dataFormat,eData)
@@ -245,7 +245,7 @@ class ElementsStressStrain(object):
                 if gridDevice==0:
                     grid = 'C'
                 else:
-                    #grid = (gridDevice - deviceCode) / 10
+                    #grid = (gridDevice - deviceCode) // 10
                     grid = gridDevice
                 ###
 
@@ -387,7 +387,7 @@ class ElementsStressStrain(object):
                 if gridGauss==0:
                     gridGauss = 'C'
                 else:
-                    #grid = (gridDevice - deviceCode) / 10
+                    #grid = (gridDevice - deviceCode) // 10
                     gridGauss = gridGauss
                 ###
 
@@ -438,7 +438,7 @@ class ElementsStressStrain(object):
             eData = self.data[0:8]
             self.data = self.data[8:]
             (eid,a,b,c,d) = unpack('icccc',eData)
-            eid = (eid - self.deviceCode) / 10
+            eid = (eid - self.deviceCode) // 10
             #out = unpack("ii",eData)
             #(eid,cType) = out
             cType = a+b+c+d
@@ -475,7 +475,7 @@ class ElementsStressStrain(object):
             eData = self.data[0:8]
             self.data = self.data[8:]
             (eid,a,b,c,d) = unpack('icccc',eData)
-            eid = (eid - self.deviceCode) / 10
+            eid = (eid - self.deviceCode) // 10
             #out = unpack("ii",eData)
             #(eid,cType) = out
             cType = a+b+c+d

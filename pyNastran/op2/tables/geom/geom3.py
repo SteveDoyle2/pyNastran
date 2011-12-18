@@ -54,7 +54,7 @@ class Geometry3(object):
         FORCE(4201,42,18) - the marker for Record 3
         """
         return
-        print "reading FORCE"
+        #print "reading FORCE"
         n=0
         nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
@@ -70,7 +70,7 @@ class Geometry3(object):
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
-        print "reading FORCE1"
+        #print "reading FORCE1"
         n=0
         nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
@@ -106,7 +106,7 @@ class Geometry3(object):
         """
         GRAV(4401,44,26) - the marker for Record 7
         """
-        print "reading GRAV"
+        #print "reading GRAV"
         n=0
         nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
@@ -124,7 +124,7 @@ class Geometry3(object):
         (4551, 61, 84) - the marker for Record 8
         @todo add object
         """
-        print "reading LOAD"
+        #print "reading LOAD"
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
@@ -163,7 +163,7 @@ class Geometry3(object):
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
-        print "reading MOMENT"
+        #print "reading MOMENT"
         n=0
         nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
@@ -181,7 +181,7 @@ class Geometry3(object):
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
-        print "reading MOMENT1"
+        #print "reading MOMENT1"
         n=0
         nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
@@ -198,7 +198,7 @@ class Geometry3(object):
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
-        print "reading MOMENT2"
+        #print "reading MOMENT2"
         n=0
         nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
@@ -219,14 +219,14 @@ class Geometry3(object):
         """
         PLOAD2(6802,68,199) - the marker for Record 17
         """
-        print "reading PLOAD1"
+        #print "reading PLOAD1"
         n=0
         nEntries = len(data)//32  # 8*4
         for i in range(nEntries):
             eData = data[n:n+32]
             out = unpack('iiiiffff',eData)
             (sid,eid,Type,scale,x1,p1,x2,p2) = out
-            print "PLOAD1 = ",out
+            #print "PLOAD1 = ",out
             load = PLOAD1(None,out)
             self.addLoad(load)
             n+=32
@@ -237,7 +237,7 @@ class Geometry3(object):
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
-        print "reading PLOAD2"
+        #print "reading PLOAD2"
         n=0
         nEntries = len(data)//12  # 3*4
         for i in range(nEntries):
@@ -254,7 +254,7 @@ class Geometry3(object):
         """
         PLOAD3(7109,71,255) - the marker for Record 19
         """
-        print "reading PLOAD3"
+        #print "reading PLOAD3"
         n=0
         nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
@@ -271,7 +271,7 @@ class Geometry3(object):
         """
         PLOAD4(7209,72,299) - the marker for Record 20
         """
-        print "reading PLOAD4"
+        #print "reading PLOAD4"
         n=0
         nEntries = len(data)//48  # 13*4
         for i in range(nEntries):
@@ -308,7 +308,7 @@ class Geometry3(object):
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
-        print "reading QBDY1"
+        #print "reading QBDY1"
         n=0
         nEntries = len(data)//12  # 3*4
         for i in range(nEntries):
@@ -325,7 +325,7 @@ class Geometry3(object):
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
-        print "reading QBDY2"
+        #print "reading QBDY2"
         n=0
         nEntries = len(data)//40  # 10*4
         for i in range(nEntries):
@@ -342,7 +342,7 @@ class Geometry3(object):
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
-        print "reading QBDY3"
+        #print "reading QBDY3"
         n=0
         nEntries = len(data)//16  # 4*4
         for i in range(nEntries):
@@ -360,7 +360,7 @@ class Geometry3(object):
         TEMP(5701,57,27) - the marker for Record 32
         @warning buggy
         """
-        print "reading TEMP"
+        #print "reading TEMP"
         n=0
         nEntries = len(data)//12  # 3*4
         for i in range(nEntries):
@@ -371,7 +371,7 @@ class Geometry3(object):
                 load = TEMP(None,out)
                 self.addThermalLoad(load)
             else:
-                print 'TEMP = ',out
+                self.log.debug('TEMP = %s' %(out))
             n+=12
         ###
         data = data[n:]
@@ -381,7 +381,7 @@ class Geometry3(object):
         TEMPD(5641,65,98) - the marker for Record 33
         @todo add object
         """
-        print "reading TEMPD"
+        #print "reading TEMPD"
         n=0
         nEntries = len(data)//8  # 2*4
         for i in range(nEntries):

@@ -274,8 +274,8 @@ class PBAR(LineProperty):
             self.F1  = card.field(15,0.0)
             self.F2  = card.field(16,0.0)
 
-            self.K1  = card.field(17)
-            self.K2  = card.field(18)
+            self.K1  = card.field(17,1e8) ## default=infinite
+            self.K2  = card.field(18,1e8) ## default=infinite
             self.I12 = card.field(19,0.0)
             if self.A==0.0:
                 assert self.K1==None
@@ -305,6 +305,24 @@ class PBAR(LineProperty):
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
+
+    def Area(self):
+        return self.A
+
+    def Nsm(self):
+        return self.nsm
+
+    def J(self):
+        return self.J
+
+    def Izz(self):
+        return self.I1
+
+    def Iyy(self):
+        return self.I2
+
+    def Iyz(self):
+        return self.I12
 
     def __repr__(self):
         A   = self.setBlankIfDefault(self.A,0.0)
@@ -341,7 +359,7 @@ class PBAR(LineProperty):
 
 class PBARL(LineProperty):
     """
-    doesnt support user-defined types
+    @warning doesnt support user-defined types
     """
     type = 'PBARL'
     validTypes = {
@@ -1339,6 +1357,9 @@ class PSHELL(ShellProperty):
 
     def Rho(self):
         return self.mid.rho
+
+    def Nsm(self):
+        return self.nsm
 
     def massPerArea(self):
         """

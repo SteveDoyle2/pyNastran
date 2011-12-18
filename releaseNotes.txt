@@ -12,25 +12,7 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 
 This code was written entirely in Python and should install easily.
 
------------------------v0.2 released ??/??/????-----------------------
-
-BDF Bug Fixes
-   - DCONSTR wasn't processed properly
-   - DDVAL   wasn't processed properly
-   - DAREA   wasn't processed properly
-   - fixed RBE1 bug
-   - fixed RBE3 bug
-   - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
-   - FLFACT reading when the card is short works
-   - PCOMP Thickness method doesnt crash when you want the total thickness.
-     Better defaults on PCOMP
-   - fixed some fields on disabled CORDxx cards
-   - CELASx cards had issues with proper order of entries
-   - PELAS cards werent processed properly
-   - files on remote drives dont cause crashes anymore
-   - cend now also signifies the end of the executive control deck
-   - fixed issue with the case control deck parsing on some uncommon cards
-
+-----------------------v0.2 released 2011/12/??-----------------------
 
 Overall BDF
    - renamed read method  to readBDF (it got confusing when the op2 object can 
@@ -39,14 +21,7 @@ Overall BDF
    - added extra argument to all cards to set data directly from the 
      OP2 (no data type setting as the OP2 is binary).
    - max lines in executive & case control decks is now 600
-
-Added BDF
-   - PBARL
-   - CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
-   - PDAMP
-   - AESTAT
-   - DRESP1
-   - DVPREL1
+   - methods for Elements (Area, Nsm, Thicknesss)
 
 Overall OP2
    - reading support ONLY
@@ -62,7 +37,35 @@ Overall OP2
    - The user has the option to read the Geometry tables (GEOM1 (nodes/coords),
      GEOM2 (elements), GEOM3 (loads), GEOM4 (constraints),
      EPT/EPTS (properties), MPT/MPTS (materials) and can write the data to a
-     BDF.  This is still a preliminary option,
+     BDF.  This is still a preliminary option.  Use the makeGeom argument.
+     You still need to write the BDF.
+
+BDF Bug Fixes
+   - DCONSTR wasn't processed properly
+   - DDVAL   wasn't processed properly
+   - DAREA   wasn't processed properly
+   - fixed RBE1 bug
+   - fixed RBE3 bug
+   - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
+   - FLFACT reading when the card is short works
+   - PCOMP Thickness method doesnt crash when you want the total thickness
+     Better defaults on PCOMP
+   - fixed some fields on disabled CORDxx cards
+   - CELASx cards had issues with proper order of entries
+   - PELAS cards werent processed properly
+   - files on remote drives dont cause crashes anymore
+   - cend now also signifies the end of the executive control deck
+   - fixed issue with the case control deck parsing on some uncommon cards
+
+Added BDF
+   - PBARL
+   - CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
+   - PDAMP
+   - AESTAT
+   - DRESP1
+   - DVPREL1
+   - DRESP1
+   - PBARL
 
 OP2 Tables
    - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)

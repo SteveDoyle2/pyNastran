@@ -11,7 +11,7 @@ class EPT(object):
         self.tableName = 'EPT'
         self.bigProperties = {}
         self.iTableMap = {
-                         (3201,32,55):    self.readNSM,     # record 2
+                         (3201,32,55):    self.readNSM,     # record 2  - needs an object holder (e.g. self.elements/self.properties)
                          (52,20,181):     self.readPBAR,    # record 11 - buggy
                          (9102,91,52):    self.readPBARL,   # record 12 - almost there...
                         #(5402,54,262):   self.readPBEAM,   # record 14 - not done
@@ -49,14 +49,15 @@ class EPT(object):
         NSM(3201,32,55) - the marker for Record 2
         @todo this isnt a property...
         """
-        print "reading NSM"
+        #print "reading NSM"
+        return
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
             out = unpack('iccccif',eData)
             (sid,A,B,C,D,ID,value) = out
             propSet = A+B+C+D
-            print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
+            #print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
             prop = NSM(None,None,[sid,propSet,ID,value])
             #self.addOp2Property(prop)
         ###
@@ -116,7 +117,7 @@ class EPT(object):
             "DBOX"  : 10,  # was 12
             } # for GROUP="MSCBML0"
 
-        print "reading PBARL"
+        #print "reading PBARL"
         while len(data)>=28: # 7*4 - ROD - shortest entry...could be buggy... ## @todo fix this
             eData = data[:28]
             data  = data[28:]
@@ -149,7 +150,7 @@ class EPT(object):
         PBEAM(5402,54,262) - the marker for Record 14
         @todo add object
         """
-        print "reading PBEAM"
+        #print "reading PBEAM"
         while len(data)>=1072: # 44+12*84+20
             eData = data[:20]
             data  = data[20:]
@@ -171,12 +172,10 @@ class EPT(object):
             dataIn = list(unpack('fffffffffff',eData))
             (k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
             
-                
             prop = PBEAM(None,out)
             self.addOp2Property(prop)
-            sys.exit('ept-PBEAM')
+            #sys.exit('ept-PBEAM')
         ###
-
 
 # PBEAML
 
@@ -195,7 +194,7 @@ class EPT(object):
         """
         #print "reading PCOMP"
         while len(data)>=32: # 8*4 - dynamic
-            print "len(data) = ",len(data)
+            #print "len(data) = ",len(data)
             print self.printBlock(data[0:200])
             isSymmetrical = 'NO'
             eData = data[:32]
@@ -210,11 +209,11 @@ class EPT(object):
             if nLayers<0:
                 isSymmetrical = 'YES'
                 nLayers = abs(nLayers)
-            print "nLayers = ",nLayers
+            #print "nLayers = ",nLayers
             assert 0<nLayers<100,'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' %(pid,nLayers,z0,nsm,sb,ft,Tref,ge)
 
             for n in range(nLayers):
-                print "len(eData) = ",len(eData)
+                #print "len(eData) = ",len(eData)
                 (mid,t,theta,sout) = unpack('iffi',eData[0:16])
                 Mid.append(mid)
                 T.append(t)
@@ -224,7 +223,7 @@ class EPT(object):
             ###
             
             dataIn = [pid,z0,nsm,sb,ft,Tref,ge,isSymmetrical,Mid,T,Theta,Sout]
-            print "PCOMP = %s" %(dataIn)
+            #print "PCOMP = %s" %(dataIn)
             prop = PCOMP(None,dataIn)
             self.addOp2Property(prop)
         ###
@@ -266,7 +265,7 @@ class EPT(object):
         """
         PROD(902,9,29) - the marker for Record 49
         """
-        print "reading PSHEAR"
+        #print "reading PSHEAR"
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
@@ -280,7 +279,7 @@ class EPT(object):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
-        print "reading PSHEAR"
+        #print "reading PSHEAR"
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
@@ -315,7 +314,7 @@ class EPT(object):
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
-        print "reading PSOLID"
+        #print "reading PSOLID"
         while len(data)>=28: # 7*4
             eData = data[:28]
             data  = data[28:]
@@ -333,10 +332,11 @@ class EPT(object):
     def readPTUBE(self,data):
         """
         PTUBE(1602,16,30) - the marker for Record 56
-        @todo OD2 only exists for heat transfer...how do i know if there's heat transfer...
+        @todo OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
+        @todo I could store all the tubes and add them later, but what about themal/non-thermal subcases
         @warning assuming OD2 is not written (only done for thermal)
         """
-        print "reading PTUBE"
+        #print "reading PTUBE"
         while len(data)>=20: # 5*4
             eData = data[:20]
             data  = data[20:] # or 24

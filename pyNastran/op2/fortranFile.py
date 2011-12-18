@@ -8,14 +8,25 @@ from op2Errors import *
 
 class FortranFile(object):
     def __init__(self):
-        self.endian = '>'
+        ## the endian of the processor (typically '<' for Windows/Linux/Mac, '>' for HPCs)
+        self.endian = '<'
+        ## currently does nothing
         self.bufferSize = 65535
     
-    def setEndian(self,endian):
+    def setEndian(self,endian='<'):
+        """
+        sets the endian
+        @todo hasnt been implemented
+        """
         self.endian = endian
 
     def readHollerith(self):
-        self.skip(4)  # weird hollerith
+        """
+        doesnt really read a hollerith, it's an integer
+        of value=528 which corresponds to the length of
+        iTable=3
+        """
+        self.skip(4)
         
     def readHeader(self,expected=None,debug=True):
         """
@@ -29,6 +40,7 @@ class FortranFile(object):
         
         if len(ints)==5:
             #print "   buffer block..."
+            ## flag to help know if a buffer was found
             self.hasBuffer = True
             ints = self.readFullIntBlock()
             if debug and self.makeOp2Debug:
@@ -63,7 +75,10 @@ class FortranFile(object):
 
     def readInts(self,nInts,debug=True):
         """
-        reads nIntegers
+        reads a list of nIntegers
+        @param self the object pointer
+        @param nInts the number of ints to read
+        @debug developer debug combined with makeOp2Debug
         """
         nData = 4*nInts
         #print "nData = ",nData
@@ -79,7 +94,10 @@ class FortranFile(object):
 
     def readDoubles(self,nData,debug=True):
         """
-        reads nDoubles
+        reads a list of nDoubles
+        @param self the object pointer
+        @param nData the number of doubles to read
+        @debug developer debug combined with makeOp2Debug
         """
         data = self.op2.read(nData)
         self.n += nData
@@ -160,6 +178,7 @@ class FortranFile(object):
         """
         prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
+        @note this is a great function for debugging
         """
         msg = ''
         #raise Exception('disabled...')
@@ -204,6 +223,10 @@ class FortranFile(object):
     def printSection(self,nBytes):
         """
         prints data, but doesn't move the cursor
+        @param self the object pointer
+        @param nBytes the number of bytes to print the data specs on
+        @retval msg ints/floats/strings of the next nBytes (handles poorly sized nBytes; uncrashable :) )
+        @note this the BEST function when adding new cards/tables/debugging
         """
         data = self.op2.read(nBytes)
         msg = self.printBlock(data)
@@ -302,6 +325,12 @@ class FortranFile(object):
             raise RuntimeError('this should never happen...invalid markers...expected=%s markers=%s' %(expectedMarkers,markers))
 
     def goto(self,n):
+        """
+        jumps to position n in the file
+        @param self the object pointer
+        @param n the position to goto
+        @note n>0
+        """
         #print "goto n = |%s|" %(n)
         assert n>0
         self.n = n

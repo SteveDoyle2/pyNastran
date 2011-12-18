@@ -145,7 +145,7 @@ class Geometry2(object):
         """
         CDAMP1(201,2,69) - the marker for Record 16
         """
-        print "reading CDAMP1"
+        #print "reading CDAMP1"
         n=0
         nEntries = len(data)//24
         for i in range(nEntries):
@@ -162,7 +162,7 @@ class Geometry2(object):
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
-        print "reading CDAMP2"
+        #print "reading CDAMP2"
         n=0
         nEntries = len(data)//24
         for i in range(nEntries):
@@ -179,7 +179,7 @@ class Geometry2(object):
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
-        print "reading CDAMP3"
+        #print "reading CDAMP3"
         n=0
         nEntries = len(data)//16
         for i in range(nEntries):
@@ -196,7 +196,7 @@ class Geometry2(object):
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
-        print "reading CDAMP4"
+        #print "reading CDAMP4"
         n=0
         nEntries = len(data)//16
         for i in range(nEntries):
@@ -213,7 +213,7 @@ class Geometry2(object):
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
-        print "reading CDAMP5"
+        #print "reading CDAMP5"
         n=0
         nEntries = len(data)//16
         for i in range(nEntries):
@@ -239,7 +239,7 @@ class Geometry2(object):
         """
         CELAS1(601,6,73) - the marker for Record 29
         """
-        print "reading CELAS1"
+        #print "reading CELAS1"
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
@@ -253,7 +253,7 @@ class Geometry2(object):
         """
         CELAS2(701,7,74) - the marker for Record 30
         """
-        print "reading CELAS2"
+        #print "reading CELAS2"
         while len(data)>=32: # 8*4
             eData = data[:32]
             data  = data[32:]
@@ -267,7 +267,7 @@ class Geometry2(object):
         """
         CELAS3(801,8,75) - the marker for Record 31
         """
-        print "reading CELAS3"
+        #print "reading CELAS3"
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
@@ -281,7 +281,7 @@ class Geometry2(object):
         """
         CELAS4(901,9,76) - the marker for Record 32
         """
-        print "reading CELAS4"
+        #print "reading CELAS4"
         n=0
         nEntries = len(data)//16
         for i in range(nEntries):
@@ -298,7 +298,7 @@ class Geometry2(object):
         """
         CONM2(1501,15,64) - the marker for Record 32
         """
-        print "reading CONM2"
+        #print "reading CONM2"
         while len(data)>=52: # 13*4
             eData = data[:52]
             data  = data[52:]
@@ -325,7 +325,7 @@ class Geometry2(object):
         CHBDYG(10808,108,406) - the marker for Record 43
         """
         return
-        print "reading CHBDYG"
+        #print "reading CHBDYG"
         while len(data)>=64: # 16*4
             eData = data[:64]
             data  = data[64:]
@@ -344,7 +344,7 @@ class Geometry2(object):
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
-        print "reading CHEXA"
+        #print "reading CHEXA"
         while len(data)>=88: # 22*4
             eData = data[:88]
             data  = data[88:]
@@ -438,7 +438,7 @@ class Geometry2(object):
         """
         CPENTA(4108,41,280) - the marker for Record 62
         """
-        print "reading CPENTA"
+        #print "reading CPENTA"
         n=0
         nEntries = len(data)//68
         for i in range(nEntries):
@@ -469,7 +469,7 @@ class Geometry2(object):
         """
         CQUAD(9108,91,507)  - the marker for Record 68
         """
-        print "reading CQUAD"
+        #print "reading CQUAD"
         self.runCQUAD(data,CQUAD)
         
     def runCQUAD(self,data,Element):
@@ -492,7 +492,7 @@ class Geometry2(object):
         CQUAD4(2958,51,177)    - the marker for Record 69
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
-        print "reading CQUAD4"
+        #print "reading CQUAD4"
         return
         self.runCQUAD4(data,CQUAD4)
 
@@ -695,7 +695,7 @@ class Geometry2(object):
         """
         CTUBE(3701,37,49)    - the marker for Record 103
         """
-        print "reading CTUBE"
+        #print "reading CTUBE"
         n=0
         nEntries = len(data)//16
         for i in range(nEntries):
