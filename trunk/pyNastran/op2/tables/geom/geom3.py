@@ -56,7 +56,7 @@ class Geometry3(object):
         return
         print "reading FORCE"
         n=0
-        nEntries = len(data)/28  # 7*4
+        nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
             eData = data[n:n+28]
             (sid,g,cid,f,n1,n2,n3) = unpack('iiiffff',eData)
@@ -72,7 +72,7 @@ class Geometry3(object):
         """
         print "reading FORCE1"
         n=0
-        nEntries = len(data)/20  # 5*4
+        nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
             eData = data[n:n+20]
             (sid,g,f,n1,n2) = unpack('iifii',eData)
@@ -89,7 +89,7 @@ class Geometry3(object):
         """
         print "reading FORCE2"
         n=0
-        nEntries = len(data)/28  # 7*4
+        nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
             eData = data[n:n+28]
             (sid,g,f,n1,n2,n3,n4) = unpack('iifiiii',eData)
@@ -108,7 +108,7 @@ class Geometry3(object):
         """
         print "reading GRAV"
         n=0
-        nEntries = len(data)/28  # 7*4
+        nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
             eData = data[n:n+28]
             out = unpack('iiffffi',eData)
@@ -165,7 +165,7 @@ class Geometry3(object):
         """
         print "reading MOMENT"
         n=0
-        nEntries = len(data)/28  # 7*4
+        nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
             eData = data[n:n+28]
             out = unpack('iiiffff',eData)
@@ -183,7 +183,7 @@ class Geometry3(object):
         """
         print "reading MOMENT1"
         n=0
-        nEntries = len(data)/20  # 5*4
+        nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
             eData = data[n:n+20]
             out = unpack('iifii',eData)
@@ -200,7 +200,7 @@ class Geometry3(object):
         """
         print "reading MOMENT2"
         n=0
-        nEntries = len(data)/28  # 7*4
+        nEntries = len(data)//28  # 7*4
         for i in range(nEntries):
             eData = data[n:n+28]
             out = unpack('iifiiii',eData)
@@ -221,7 +221,7 @@ class Geometry3(object):
         """
         print "reading PLOAD1"
         n=0
-        nEntries = len(data)/32  # 8*4
+        nEntries = len(data)//32  # 8*4
         for i in range(nEntries):
             eData = data[n:n+32]
             out = unpack('iiiiffff',eData)
@@ -239,7 +239,7 @@ class Geometry3(object):
         """
         print "reading PLOAD2"
         n=0
-        nEntries = len(data)/12  # 3*4
+        nEntries = len(data)//12  # 3*4
         for i in range(nEntries):
             eData = data[n:n+12]
             out = unpack('ifi',eData)
@@ -256,7 +256,7 @@ class Geometry3(object):
         """
         print "reading PLOAD3"
         n=0
-        nEntries = len(data)/20  # 5*4
+        nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
             eData = data[n:n+20]
             out = unpack('ifiii',eData)
@@ -273,7 +273,7 @@ class Geometry3(object):
         """
         print "reading PLOAD4"
         n=0
-        nEntries = len(data)/48  # 13*4
+        nEntries = len(data)//48  # 13*4
         for i in range(nEntries):
             eData = data[n:n+48]
                          #iiffffiiifffi   ssssssssssssssss
@@ -310,7 +310,7 @@ class Geometry3(object):
         """
         print "reading QBDY1"
         n=0
-        nEntries = len(data)/12  # 3*4
+        nEntries = len(data)//12  # 3*4
         for i in range(nEntries):
             eData = data[n:n+12]
             out = unpack('ifi',eData)
@@ -327,7 +327,7 @@ class Geometry3(object):
         """
         print "reading QBDY2"
         n=0
-        nEntries = len(data)/40  # 10*4
+        nEntries = len(data)//40  # 10*4
         for i in range(nEntries):
             eData = data[n:n+40]
             out = unpack('iiffffffff',eData)
@@ -344,7 +344,7 @@ class Geometry3(object):
         """
         print "reading QBDY3"
         n=0
-        nEntries = len(data)/16  # 4*4
+        nEntries = len(data)//16  # 4*4
         for i in range(nEntries):
             eData = data[n:n+16]
             out = unpack('ifii',eData)
@@ -362,7 +362,7 @@ class Geometry3(object):
         """
         print "reading TEMP"
         n=0
-        nEntries = len(data)/12  # 3*4
+        nEntries = len(data)//12  # 3*4
         for i in range(nEntries):
             eData = data[n:n+12]
             out = unpack('iif',eData)
@@ -383,7 +383,7 @@ class Geometry3(object):
         """
         print "reading TEMPD"
         n=0
-        nEntries = len(data)/8  # 2*4
+        nEntries = len(data)//8  # 2*4
         for i in range(nEntries):
             eData = data[n:n+8]
             out = unpack('if',eData)

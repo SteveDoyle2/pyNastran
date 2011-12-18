@@ -109,8 +109,6 @@ class OES(ElementsStressStrain):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
 
-        #if self.analysisCode is not 6:
-        #    print self.codeInformation()
         self.readTitle()
         #print "n4 = ",self.n
 
@@ -121,7 +119,7 @@ class OES(ElementsStressStrain):
         i=4
         while sCode>0:
             value = sCode%2
-            sCode = (sCode - value)/2
+            sCode = (sCode - value)//2
             bits[i] = value
             #print "    *bit = ",value
             #print "    sCode = ",sCode
@@ -228,7 +226,7 @@ class OES(ElementsStressStrain):
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
             msg = 'OES format1_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
@@ -242,7 +240,7 @@ class OES(ElementsStressStrain):
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
             msg = 'OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
@@ -262,7 +260,7 @@ class OES(ElementsStressStrain):
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
             msg = 'OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
@@ -276,7 +274,7 @@ class OES(ElementsStressStrain):
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
             msg = 'OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
@@ -290,7 +288,7 @@ class OES(ElementsStressStrain):
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
             msg = 'OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
@@ -304,7 +302,7 @@ class OES(ElementsStressStrain):
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
             msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
@@ -414,7 +412,7 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
-            print msg
+            self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)

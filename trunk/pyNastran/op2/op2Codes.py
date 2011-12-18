@@ -245,7 +245,7 @@ class Op2Codes(object):
 
     def printTableCode(self,tableCode):
         tableCodeContent = tableCode%1000
-        dataFormat = tableCode/1000
+        #dataFormat = tableCode/1000
         msg = ''
         #msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
 
@@ -348,14 +348,14 @@ class Op2Codes(object):
             #sWord = 'Stress or Strain - UNDEFINED'
             sWord = ''
 
-        formatWord = ''
+        formatWord = '???'
         if(  formatCode==1):  formatWord = "Real"
         elif(formatCode==2):  formatWord = "Real/Imaginary"
         elif(formatCode==3):  formatWord = "Magnitude/Phase"
         else:
-            sortWord = ''
-            msg = 'unsupported formatCode:  formatCode=%s\n' %(formatCode)
-            raise InvalidFormatCodeError(msg)
+            formatWord = '???'
+            #msg = 'unsupported formatCode:  formatCode=%s\n' %(formatCode)
+            #raise InvalidFormatCodeError(msg)
 
         if   self.sortBits[0]==0: sortWord1 = 'Sort1'
         else:                     sortWord1 = 'Sort2'
@@ -373,8 +373,7 @@ class Op2Codes(object):
         #    print msg
         #    #raise Exception(msg)
 
-        if(  thermal is None): thermalWord = ''
-        elif(thermal==0): thermalWord = 'isHeatTransfer = False'
+        if(  thermal==0): thermalWord = 'isHeatTransfer = False'
         elif(thermal==1): thermalWord = 'isHeatTransfer = True'
         elif(thermal==2): thermalWord = 'Scaled response spectra ABS'
         elif(thermal==3): thermalWord = 'Scaled response spectra SRSS'
@@ -385,7 +384,7 @@ class Op2Codes(object):
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
             #raise Exception(msg)
         
-        analysis=''
+        analysis='???'
         if(  self.analysisCode== 1):  analysis = "Statics"
         elif(self.analysisCode== 2):  analysis = "Normal modes or buckling (real eigenvalues)"
         elif(self.analysisCode== 3):  analysis = "Differential Stiffness 0 - obsolete"
@@ -398,7 +397,7 @@ class Op2Codes(object):
         elif(self.analysisCode==10):  analysis = "Nonlinear statics"
         elif(self.analysisCode==11):  analysis = "Geometric nonlinear statics"
 
-        device=''
+        device='???'
         if(  self.deviceCode==1):  device = "Print"
         elif(self.deviceCode==2):  device = "Plot"
         elif(self.deviceCode==3):  device = "Print and Plot"
@@ -407,7 +406,7 @@ class Op2Codes(object):
         elif(self.deviceCode==6):  device = "Plot and Punch"
         elif(self.deviceCode==7):  device = "Print, Plot, and Punch"
 
-        table = ''
+        table = '???'
         if(  self.tableCode== 1):  table = "OUG - Displacement vector/scalar"
         elif(self.tableCode== 2):  table = "OPG - Load vector"
         elif(self.tableCode== 3):  table = "OQG - SPC Force vector"
@@ -448,8 +447,9 @@ class Op2Codes(object):
         elif(self.tableCode==38):  table = "OMM - Max/Min summary"
         elif(self.tableCode==39):  table = "OQG - MPC Forces"
         elif(self.tableCode==40):  table = "OGPKE - Grip point kinetic energy"
-
-        msg  = "  deviceCode   = %-3s %s\n" %(self.deviceCode,device)
+        
+        msg  = '--Table3Data--\n\n'
+        msg += "  deviceCode   = %-3s %s\n" %(self.deviceCode,device)
         msg += "  analysisCode = %-3s %s\n" %(self.analysisCode,analysis)
         msg += "  tableCode    = %-3s %s\n" %(self.tableCode,table)
         msg += "  formatCode   = %-3s %s\n" %(formatCode,formatWord)
@@ -462,7 +462,7 @@ class Op2Codes(object):
             msg += "  elementType  = %-3s %s\n" %(elementType,self.ElementType(elementType))
         if sWord: # stress code
             msg += "  sCode        = %-3s %s\n" %(sCode,sWord)
-        if thermalWord:
+        if thermal is not None:
             msg += "  thermal      = %-3s %s\n" %(thermal,thermalWord)
         msg += "  numWide      = %-3s\n" %(self.numWide)
         msg += "  iSubcase     = %-3s\n" %(self.iSubcase)

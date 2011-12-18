@@ -41,8 +41,9 @@ class OEE(object):
         aCode = self.getBlockIntEntry(data,1)
         self.eTotal = self.parseApproachCode(data) # total energy of all elements in iSubcase/mode
 
-        self.elementName  = ''.join(unpack('cccccccc',data[24:32])).strip() ## element name
-        self.dataCode['elementName'] = self.elementName
+        elementName = ''.join(unpack('cccccccc',data[24:32])).strip() ## element name
+        if elementName.isalpha():
+            self.dataCode['elementName'] = elementName
 
         self.addDataParameter(data,'loadSet',   'i',8, False)  ## Load set or zero
         self.addDataParameter(data,'formatCode','i',9, False)  ## format code

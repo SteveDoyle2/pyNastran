@@ -27,7 +27,7 @@ class ElementsStressStrain(object):
 
             out = unpack('iiifffff',eData)
             (eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal) = out
-            eid = (eid - deviceCode) / 10
+            eid = (eid - deviceCode) // 10
             #print "eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s fRad=%s fTotal=%s" %(eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal)
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
@@ -128,7 +128,7 @@ class ElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
             (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1,
                  fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2) = out
-            eid = (eid - deviceCode) / 10
+            eid = (eid - deviceCode) // 10
 
             #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
             #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       %(fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
@@ -176,7 +176,7 @@ class ElementsStressStrain(object):
 
             (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
                  s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)= unpack('ifffffffffffffff',eData)
-            eid = (eid - deviceCode) / 10
+            eid = (eid - deviceCode) // 10
             self.obj.addNewEid('CBAR',eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
                                         s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)
 
@@ -221,7 +221,7 @@ class ElementsStressStrain(object):
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
             assert nNodes < 21,self.printBlock(eData)
-            eid = (eid - deviceCode) / 10
+            eid = (eid - deviceCode) // 10
 
             if   ElementType=='TETRA':   nNodesExpected = 5
             elif ElementType=='PENTA':   nNodesExpected = 7
@@ -306,7 +306,7 @@ class ElementsStressStrain(object):
 
             (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
                  fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-            eid = (eid - deviceCode) / 10
+            eid = (eid - deviceCode) // 10
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
@@ -349,7 +349,7 @@ class ElementsStressStrain(object):
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
             assert nNodes < 21,self.printBlock(eData)
-            eid = (eid - deviceCode) / 10
+            eid = (eid - deviceCode) // 10
             if(  nNodes in [4,10]):
                 elementType = "CTETRA"
                 nNodesExpected = 5
@@ -523,7 +523,7 @@ class ElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
             (eid,iLayer,o1,o2,t12,t1z,t2z,angle,major,minor,ovm) = out
             #print "out =",out
-            eid = (eid - deviceCode) / 10  ## @todo adjust with deviceCode...
+            eid = (eid - deviceCode) // 10  ## @todo adjust with deviceCode...
             
             if eid!=self.eid2: # originally initialized to None, the buffer doesnt reset it, so it is the old value
                 #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
@@ -557,7 +557,7 @@ class ElementsStressStrain(object):
             while len(self.data)>=348: # 2+17*5 = 87 -> 87*4 = 348
                 (eid,_,_,_,_) = unpack("issss",self.data[0:8])
                 self.data = self.data[8:]  # 2
-                eid = (eid - deviceCode) / 10
+                eid = (eid - deviceCode) // 10
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
                 out = unpack('iffffffffffffffff',eData)  # len=17*4
@@ -598,7 +598,7 @@ class ElementsStressStrain(object):
             while len(self.data)>=308: # 2+15*5 = 77 -> 77*4 = 308
                 (eid,_,_,_,_) = unpack("issss",self.data[0:8])
                 self.data = self.data[8:]  # 2
-                eid = (eid - deviceCode) / 10
+                eid = (eid - deviceCode) // 10
                 eData     = self.data[0:4*15]
                 self.data = self.data[4*15: ]
 
@@ -623,7 +623,7 @@ class ElementsStressStrain(object):
             while len(self.data)>=188: # 2+9*5 = 47 -> 47*4 = 188
                 (eid,_,_,_,_) = unpack("issss",self.data[0:8])
                 self.data = self.data[8:]  # 2
-                eid = (eid - deviceCode) / 10
+                eid = (eid - deviceCode) // 10
                 eData     = self.data[0:4*9]
                 self.data = self.data[4*9: ]
 

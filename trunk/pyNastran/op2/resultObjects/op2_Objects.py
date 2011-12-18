@@ -9,15 +9,17 @@ class scalarObject(Op2Codes):
         self.dt = None
         self.dataCode = dataCode
         self.applyDataCode()
-        print self.codeInformation()
+        self.log.debug(self.codeInformation())
 
     def name(self):
         return self.__class__.__name__
 
     def applyDataCode(self):
+        self.log = self.dataCode['log']
         for key,value in self.dataCode.items():
-            self.__setattr__(key,value)
-            #print "  key=%s value=%s" %(key,value)
+            if key is not 'log':
+                self.__setattr__(key,value)
+                self.log.debug("  key=%s value=%s" %(key,value))
     
     def getVar(self,name):
         return getattr(self,name)

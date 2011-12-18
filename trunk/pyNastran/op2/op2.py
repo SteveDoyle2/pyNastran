@@ -17,6 +17,7 @@ class Op2(BDF,
 
     def __init__(self,op2FileName,makeGeom=False,debug=True,log=None):
         BDF.__init__(self,debug=debug,log=log)
+        self.log.debug('op2FileName = %s' %(op2FileName))
         bdfExtension = '.bdf'
         f06Extension = '.f06'
         (fname,extension) = os.path.splitext(op2FileName)
@@ -27,7 +28,7 @@ class Op2(BDF,
         self.op2FileName = op2FileName
         self.bdfFileName = fname+bdfExtension
         self.f06FileName = fname+f06Extension
-        print "bdfFileName = ",self.bdfFileName
+        #print "bdfFileName = ",self.bdfFileName
 
         self.makeOp2Debug = False
         self.skippedCardsFile = open('skippedCards.out','a')
@@ -147,16 +148,19 @@ class Op2(BDF,
                    #       SPC Forces
                    self.displacements,self.temperatures,
                    self.eigenvectors,
-                   self.nonlinearTemperatures,self.nonlinearDisplacements,
+                   #self.nonlinearTemperatures,self.nonlinearDisplacements,
                    #self.forces,self.fluxes,
                    
                    # OEF - Applied Forces/Temperatures
-                   self.nonlinearForces,self.nonlinearFluxes,
-                   self.temperatureForces,
+                   #self.nonlinearForces,self.nonlinearFluxes,
+                   #self.temperatureForces,
                    
                    # OQG1 - Forces
-                   self.spcForces,self.mpcForces,
+                   #self.spcForces,self.mpcForces,
                    
+                   # OGP - Applied Force/Moment
+                   self.appliedLoads,
+
                    # OES - Stress/Strain
                    self.celasStress,self.celasStrain,
                    self.rodStress,self.rodStrain,
@@ -166,9 +170,6 @@ class Op2(BDF,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
                    
-                   # OGP - Applied Force/Moment
-                   self.appliedLoads,
-
                    # OEE - Strain Energy
                    self.strainEnergy,
                    ]
@@ -221,21 +222,21 @@ class Op2(BDF,
 
         isAnotherTable = True
         while isAnotherTable:
-            print '-'*80
+            self.log.debug('-'*80)
             try:
                 tableName = self.readTableName(rewind=True,stopOnFailure=False)
             except EndOfFileError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
-                print "***ok exit, but it could be better..."
+                self.log.debug("***ok exit, but it could be better...")
                 break
             except InvalidMarkersError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
-                print "***poor exit, but it worked..."
+                self.log.debug("***poor exit, but it worked...")
                 #raise
                 break
             except:
                 raise
-            print "tableName = |%r|" %(tableName)
+            self.log.debug("tableName = |%r|" %(tableName))
  
             if tableName in self.tablesToRead:
                 #print "startTell = ",self.op2.tell()
@@ -316,8 +317,6 @@ class Op2(BDF,
 
                 elif tableName in ['OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2',]:
                     self.readTable_DUMMY_GEOM(tableName)
-                #elif tableName in []:
-                #    self.readTable_DUMMY_GEOM(tableName)
                 elif tableName in ['OVGCRM2','OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2','OPGPSD2','OPGPSD2','OPGPSD2','OPGATO2']:
                     self.readTable_DUMMY_GEOM(tableName)
                 elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
@@ -334,11 +333,11 @@ class Op2(BDF,
                 (isAnotherTable) = self.skipNextTable()
                 continue
             #print self.printSection(140)
-            print "*** finished tableName = |%r|" %(tableName)
+            self.log.debug("*** finished tableName = |%r|" %(tableName))
             ###
         ###
 
-        print "---end of all tables---"
+        self.log.debug("---end of all tables---")
         self.skippedCardsFile.close()
         
     def parseSortCode(self):
@@ -349,7 +348,7 @@ class Op2(BDF,
         #print "***sortCode = ",self.sortCode
         while sortCode>0:
             value = sortCode%2
-            sortCode = (sortCode - value)/2
+            sortCode = (sortCode - value)//2
             bits[i] = value
             #print "    *bit = ",value
             #print "    sortCode = ",sortCode
@@ -368,14 +367,16 @@ class Op2(BDF,
         (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
         self.iSubcase = iSubcase
         self.tableCode = tCode%1000
-        self.sortCode  = tCode/1000
+        self.sortCode  = tCode//1000
         self.deviceCode   = aCode%10
-        self.analysisCode = (aCode-self.deviceCode)/10
+        self.analysisCode = (aCode-self.deviceCode) // 10
 
         self.dataCode = {'analysisCode': self.analysisCode,
-                         'deviceCode':self.deviceCode,
-                         'tableCode' :self.deviceCode,
-                         'sortCode'  :self.sortCode,
+                         'deviceCode'  : self.deviceCode,
+                         'tableCode'   : self.deviceCode,
+                         'sortCode'    : self.sortCode,
+                         'dt'          : None,
+                         'log'         : self.log,
                          }
         self.parseSortCode()
         if self.deviceCode==3:
@@ -384,7 +385,7 @@ class Op2(BDF,
             self.deviceCode = 1
 
         #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase)
-        print self.printTableCode(self.tableCode)
+        self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
     def getValues(self,data,sFormat,iWordStart,iWordStop=None):

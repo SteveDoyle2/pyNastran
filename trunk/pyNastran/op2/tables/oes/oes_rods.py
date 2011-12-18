@@ -82,7 +82,7 @@ class rodStressObject(stressObject):
     def addNewEid_format1_sort0(self,out):
         #print "Rod Stress add..."
         (eid,axial,SMa,torsion,SMt) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert isinstance(eid,int)
         self.axial[eid]      = axial
         self.MS_axial[eid]   = SMa
@@ -91,14 +91,14 @@ class rodStressObject(stressObject):
 
     def addNewEid_format2_sort1(self,out):
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
         self.axial[eid]      = [axialReal,axialImag]
         self.torsion[eid]    = [torsionReal,torsionImag]
 
     def addNewEidTransient_format1_sort0(self,out):
         (eid,axial,SMa,torsion,SMt) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         dt = self.dt
         assert isinstance(eid,int)
         assert eid >= 0
@@ -109,7 +109,7 @@ class rodStressObject(stressObject):
 
     def addNewEidTransient_format2_sort1(self,out):
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         dt = self.dt
         assert eid >= 0
         self.axial[dt][eid]      = [axialReal,axialImag]
@@ -277,7 +277,7 @@ class rodStrainObject(strainObject):
     def addNewEid_format1_sort0(self,out):
     
         (eid,axial,SMa,torsion,SMt) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
@@ -289,7 +289,7 @@ class rodStrainObject(strainObject):
     def addNewEid_format2_sort1(self,out):
         assert eid >= 0
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         self.axial[eid]      = [axialReal,axialImag]
         self.torsion[eid]    = [torsionReal,torsionImag]
 
@@ -297,7 +297,7 @@ class rodStrainObject(strainObject):
         #print "Rod Strain add..."
         #print out
         (eid,axial,SMa,torsion,SMt) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
         dt = self.dt
 
@@ -309,7 +309,7 @@ class rodStrainObject(strainObject):
 
     def addNewEidTransient_format2_sort1(self,out):
         (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode)/10
+        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
         dt = self.dt
         self.axial[dt][eid]      = [axialReal,axialImag]

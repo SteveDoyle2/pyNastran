@@ -86,7 +86,7 @@ class OEF(object):
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
             #print "loadID(5)=%s" %(self.loadID)
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
 
         # tCode=2
         #if self.analysisCode==2: # sort2
@@ -132,7 +132,7 @@ class OEF(object):
         assert self.formatCode==1
         assert self.sortCode==0
 
-        print "self.analysisCode=%s tableCode(1)=%s sortCode=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.sortCode,self.thermal)
+        self.log.debug("self.analysisCode=%s tableCode(1)=%s sortCode=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.sortCode,self.thermal))
 
         if self.thermal==0:
             if self.analysisCode==1: # displacement
