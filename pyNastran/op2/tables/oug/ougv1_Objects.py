@@ -66,7 +66,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
+        #assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
         self.gridTypes[nodeID] = gridType
         self.displacements[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.dt][nodeID]     = array([v4,v5,v6]) # rx,ry,rz

@@ -28,7 +28,7 @@ class ElementsStressStrain(object):
             out = unpack('iiifffff',eData)
             (eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal) = out
             eid = (eid - deviceCode) / 10
-            print "eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s fRad=%s fTotal=%s" %(eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal)
+            #print "eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s fRad=%s fTotal=%s" %(eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal)
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             #self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
@@ -430,7 +430,7 @@ class ElementsStressStrain(object):
         They repeat 6 times.  Other DMAP cards are correct with
         their repeat statements.
         """
-        print "CHEXANL_93"
+        #print "CHEXANL_93"
         #print "len(self.data) = ",len(self.data)
 
         n = 0
@@ -450,8 +450,8 @@ class ElementsStressStrain(object):
                 out = unpack('ifffffffffffffff',eData)
                 assert len(out)==16
                 (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
-                print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
-                print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
+                #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  %(grid,ecs,ex,ey,ez,exy,eyz,exz)
                 #print ""
                 assert a=='G'
             
@@ -467,7 +467,7 @@ class ElementsStressStrain(object):
         They repeat 8 times.  Other DMAP cards are correct with
         their repeat statements.
         """
-        print "CHEXANL_93"
+        #print "CHEXANL_93"
         #print "len(self.data) = ",len(self.data)
 
         n = 0

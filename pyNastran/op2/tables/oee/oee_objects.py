@@ -18,8 +18,8 @@ class StrainEnergyObject(scalarObject):
         self.energy  = {}
         self.percent = {}
         self.density = {}
-        print self.dataCode
-        print "numWide = %s %s"  %(self.dataCode['numWide'],type(self.dataCode['numWide']))
+        #print self.dataCode
+        #print "numWide = %s %s"  %(self.dataCode['numWide'],type(self.dataCode['numWide']))
         if self.dataCode['numWide']==4:
             self.getLength    = self.getLength4
             self.add          = self.add4
@@ -52,8 +52,8 @@ class StrainEnergyObject(scalarObject):
         self.dataCode = dataCode
         self.applyDataCode()
         #assert dt>=0.
-        print "updating dt...dt=%s" %(dt)
-        print "dataCode = ",self.dataCode
+        #print "updating dt...dt=%s" %(dt)
+        #print "dataCode = ",self.dataCode
         if dt is not None:
             self.dt = dt
             self.addNewTransient()
@@ -72,7 +72,8 @@ class StrainEnergyObject(scalarObject):
     def add4(self,out):
         (grid,energy,percent,density) = out
         grid = (grid-self.deviceCode)/10
-        assert grid not in self.energy
+        #print "energyGridIDs = %s" %(self.energy.keys())
+        assert grid not in self.energy,'grid=%s out=%s' %(grid,out)
         if grid<=0:
             raise InvalidGridID_Error('grid=%s' %(grid))
         self.energy[grid]  = energy
