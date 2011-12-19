@@ -175,7 +175,7 @@ class solidStressObject(stressObject):
         msg += '\n'
 
         for dt,oxxs in sorted(self.oxx.items()):
-            msg += 'dt = %g\n' %(dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
@@ -412,7 +412,7 @@ class solidStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
         for dt,exxs in sorted(self.exx.items()):
-            msg += 'dt = %s\n' %(self.dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
             for eid,exxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):

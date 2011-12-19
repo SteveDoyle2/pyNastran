@@ -92,11 +92,11 @@ class barStressObject(stressObject):
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['s1','s2','s3','s4','Axial','sMax','sMin']
         for header in headers:
-            msg += '%6s ' %(header)
+            msg += '%8s ' %(header)
         msg += '\n'
 
         for dt,S1ss in sorted(self.s1.items()):
-            msg += '%s = %s' %(self.dataCode['name'],self.dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
             for eid,S1s in sorted(S1ss.items()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -113,9 +113,9 @@ class barStressObject(stressObject):
                 vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0]]
                 for val in vals:
                     if abs(val)<1e-6:
-                        msg += '%6s ' %('0')
+                        msg += '%8s ' %('0')
                     else:
-                        msg += '%6i ' %(val)
+                        msg += '%8i ' %(val)
                     ###
                 msg += '\n'
 
@@ -123,11 +123,11 @@ class barStressObject(stressObject):
                 vals = [s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1]]
                 for val in vals:
                     if isinstance(val,str):
-                        msg += '%6s ' %(val)
+                        msg += '%8s ' %(val)
                     elif abs(val)<1e-6:
-                        msg += '%6s ' %('0')
+                        msg += '%8s ' %('0')
                     else:
-                        msg += '%6i ' %(val)
+                        msg += '%8i ' %(val)
                     ###
                 msg += '\n'
 
@@ -146,7 +146,7 @@ class barStressObject(stressObject):
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['s1','s2','s3','s4','Axial','sMax','sMin']
         for header in headers:
-            msg += '%6s ' %(header)
+            msg += '%8s ' %(header)
         msg += '\n'
 
         for eid,S1s in sorted(self.s1.items()):
@@ -165,9 +165,9 @@ class barStressObject(stressObject):
             vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0]]
             for val in vals:
                 if abs(val)<1e-6:
-                    msg += '%6s ' %('0')
+                    msg += '%8s ' %('0')
                 else:
-                    msg += '%6i ' %(val)
+                    msg += '%8i ' %(val)
                 ###
             msg += '\n'
 
@@ -175,11 +175,11 @@ class barStressObject(stressObject):
             vals = [s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1]]
             for val in vals:
                 if isinstance(val,str):
-                    msg += '%6s ' %(val)
+                    msg += '%8s ' %(val)
                 elif abs(val)<1e-6:
-                    msg += '%6s ' %('0')
+                    msg += '%8s ' %('0')
                 else:
-                    msg += '%6i ' %(val)
+                    msg += '%8i ' %(val)
                 ###
             msg += '\n'
 
@@ -299,7 +299,7 @@ class barStrainObject(strainObject):
         msg += '\n'
 
         for dt,E1s in sorted(self.e1.items()):
-            print "%s = %s\n" %(self.dataCode['name'],self.dt)
+            msg += "%s = %g\n" %(self.dataCode['name'],self.dt)
             for eid,e1s in sorted(Els.items()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]

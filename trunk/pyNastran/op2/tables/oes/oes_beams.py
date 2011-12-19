@@ -86,7 +86,7 @@ class beamStressObject(stressObject):
         @note make sure you set self.dt first
         """
         raise Exception('not supported')
-        print self.dataCode
+        #print self.dataCode
         self.axial[self.dt]     = {}
         self.torsion[self.dt]   = {}
 
@@ -173,7 +173,7 @@ class beamStressObject(stressObject):
         msg += '\n'
 
         for dt,smax in sorted(self.smax.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(smax):
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]
@@ -206,7 +206,7 @@ class beamStressObject(stressObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -336,7 +336,7 @@ class beamStrainObject(strainObject):
         @note make sure you set self.dt first
         """
         raise Exception('not supported')
-        print self.dataCode
+        #print self.dataCode
         if self.dt not in self.smax:
             self.axial[self.dt]     = {}
             self.torsion[self.dt]   = {}
@@ -424,7 +424,7 @@ class beamStrainObject(strainObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]

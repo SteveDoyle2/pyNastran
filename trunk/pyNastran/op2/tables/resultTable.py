@@ -42,16 +42,17 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         self.obj = None
         self.readOES_Element()
 
-    def createTransientObject(self,storageObj,classObj):
+    def createTransientObject(self,storageObj,classObj,debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
         @param storageObj  the dictionary to store the object in (e.g. self.bars)
         @param classObj    the class object to instantiate
         @note dt can also be loadStep depending on the class
         """
-        #print "create Transient Object"
-        #print "***NF = ",self.nonlinearFactor
-        #print "DC = ",self.dataCode
+        if debug:
+            print "create Transient Object"
+            print "***NF = ",self.nonlinearFactor
+            #print "DC = ",self.dataCode
         
         if self.iSubcase in storageObj:
             #print "updating dt..."
@@ -325,6 +326,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print type(self.obj)
         (nTotal,strFormat) = self.obj.getLength()
         n = 0
+        #print  "strFormat = ",strFormat
         nEntries = len(data)//nTotal
         for i in range(nEntries):
             eData = data[n:n+nTotal]

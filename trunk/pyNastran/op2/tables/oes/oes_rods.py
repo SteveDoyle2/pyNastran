@@ -124,7 +124,7 @@ class rodStressObject(stressObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += '%s = %s' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -152,7 +152,7 @@ class rodStressObject(stressObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -324,7 +324,7 @@ class rodStrainObject(strainObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += '%s = %s' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
@@ -352,7 +352,7 @@ class rodStrainObject(strainObject):
         msg += '\n'
 
         for dt,axial in sorted(self.axial.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
