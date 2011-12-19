@@ -319,98 +319,103 @@ class OP2(BDF,
             except:
                 raise
             self.log.debug("tableName = |%r|" %(tableName))
- 
-            if tableName in self.tablesToRead:
-                #print "startTell = ",self.op2.tell()
-                if tableName=='GEOM1': # nodes,coords,etc.
-                    self.readTable_Geom1()
-                #elif tableName=='GEOM1N':
-                #    self.readTable_Geom1N()
-                elif tableName=='GEOM2': # elements
-                    self.readTable_Geom2()
-                elif tableName=='GEOM3': # static/thermal loads
-                    self.readTable_Geom3()
-                elif tableName=='GEOM4': # constraints
-                    self.readTable_Geom4()
+            if tableName==None:
+                break
+            elif tableName in self.tablesToRead:
+                try:
+                    #print "startTell = ",self.op2.tell()
+                    if tableName=='GEOM1': # nodes,coords,etc.
+                        self.readTable_Geom1()
+                    #elif tableName=='GEOM1N':
+                    #    self.readTable_Geom1N()
+                    elif tableName=='GEOM2': # elements
+                        self.readTable_Geom2()
+                    elif tableName=='GEOM3': # static/thermal loads
+                        self.readTable_Geom3()
+                    elif tableName=='GEOM4': # constraints
+                        self.readTable_Geom4()
 
-                elif tableName in ['EPT','EPTS']:  # element properties
-                    self.readTable_EPT()
-                elif tableName in ['MPT','MPTS']:  # material properties
-                    self.readTable_MPTS()
-                elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
-                    self.readTable_DYNAMICS()
-                #elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
-                #    self.readTable_DIT()
-                elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OMM2','OGPWG',]:
-                    self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['EPT','EPTS']:  # element properties
+                        self.readTable_EPT()
+                    elif tableName in ['MPT','MPTS']:  # material properties
+                        self.readTable_MPTS()
+                    elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
+                        self.readTable_DYNAMICS()
+                    #elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
+                    #    self.readTable_DIT()
+                    elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OMM2','OGPWG',]:
+                        self.readTable_DUMMY_GEOM(tableName)
 
-                elif tableName in ['DESTAB']:  # design variable table
-                    self.readTable_DesTab()
-                
-                elif tableName in ['R1TABRG']: # not done - response table
-                    self.readTable_R1TAB()
-                    self.isOptimization = True
+                    elif tableName in ['DESTAB']:  # design variable table
+                        self.readTable_DesTab()
 
-                elif tableName in ['HISADD']: # not done
-                    self.readTable_R1TAB()
-                    self.isOptimization = True
-                elif tableName in ['ERRORN']: # not done
-                    self.readTable_R1TAB()
+                    elif tableName in ['R1TABRG']: # not done - response table
+                        self.readTable_R1TAB()
+                        self.isOptimization = True
 
-                elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
-                    self.readTable_OGP1()
+                    elif tableName in ['HISADD']: # not done
+                        self.readTable_R1TAB()
+                        self.isOptimization = True
+                    elif tableName in ['ERRORN']: # not done
+                        self.readTable_R1TAB()
 
-                
-                elif tableName in ['OEF1X','DOEF1']:  # applied loads
-                    self.readTable_OEF1()
-                elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
-                    self.readTable_OQG1()
+                    elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
+                        self.readTable_OGP1()
 
-                elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
-                    self.readTable_OUG1()
-                elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
-                    self.readTable_OUG1()
 
-                elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXD','OESCP','OESRT','OESRMS2','OESNO2','OESCRM2',]: # stress
-                    self.readTable_OES1()  # 'OESNLXR','OESNL1X'
-                elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
-                    self.readTable_OES1()
+                    elif tableName in ['OEF1X','DOEF1']:  # applied loads
+                        self.readTable_OEF1()
+                    elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
+                        self.readTable_OQG1()
 
-                elif tableName in ['ONRGY1']: # energy
-                    self.readTable_OEE1()
+                    elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
+                        self.readTable_OUG1()
+                    elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
+                        self.readTable_OUG1()
 
-                elif tableName in ['PCOMPTS']:
-                    self.readTable_PCOMPTS() # 'SDF',
-                    
-                # not done
-                elif tableName in []:
-                    self.readTableB_DUMMY()
-                elif tableName in ['SDF']:
-                    self.readTableB_DUMMY()
-                elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
-                    self.readTableB_DUMMY()
-                #elif tableName in []:
-                #    self.readTableB_DUMMY()
-                
-                elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','DIT','OVGPSD2']:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OVGATO2','OVGRMS2','OVGNO2']:
-                    self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXD','OESCP','OESRT','OESRMS2','OESNO2','OESCRM2',]: # stress
+                        self.readTable_OES1()  # 'OESNLXR','OESNL1X'
+                    elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
+                        self.readTable_OES1()
 
-                elif tableName in ['OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2',]:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OVGCRM2','OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2','OPGPSD2','OPGPSD2','OPGPSD2','OPGATO2']:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
-                    self.readTable_DUMMY_GEOM(tableName)
-                elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
-                    self.readTable_DUMMY_GEOM(tableName)
-                else:
-                    raise Exception('unhandled tableName=|%s|' %(tableName))
-                #print "endTell   = ",self.op2.tell()
-                #print "---isAnotherTable---"
-                (isAnotherTable) = self.hasMoreTables()
-                #isAnotherTable = True
+                    elif tableName in ['ONRGY1']: # energy
+                        self.readTable_OEE1()
+
+                    elif tableName in ['PCOMPTS']:
+                        self.readTable_PCOMPTS() # 'SDF',
+
+                    # not done
+                    elif tableName in []:
+                        self.readTableB_DUMMY()
+                    elif tableName in ['SDF']:
+                        self.readTableB_DUMMY()
+                    elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
+                        self.readTableB_DUMMY()
+                    #elif tableName in []:
+                    #    self.readTableB_DUMMY()
+
+                    elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','DIT','OVGPSD2']:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['OVGATO2','OVGRMS2','OVGNO2']:
+                        self.readTable_DUMMY_GEOM(tableName)
+
+                    elif tableName in ['OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2',]:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['OVGCRM2','OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2','OPGPSD2','OPGPSD2','OPGPSD2','OPGATO2']:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    else:
+                        raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))
+                    #print "endTell   = ",self.op2.tell()
+                    #print "---isAnotherTable---"
+                    (isAnotherTable) = self.hasMoreTables()
+                    #isAnotherTable = True
+                except EndOfFileError:
+                    isAnotherTable = False
+                ###
             else:
                 (isAnotherTable) = self.skipNextTable()
                 continue

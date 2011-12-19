@@ -54,7 +54,7 @@ class StrainEnergyObject(scalarObject):
         return(16,'ifff')
 
     def getLength5(self):
-        return(16,'ssssfff')
+        return(20,'ssssssssfff')
 
     def updateDt(self,dataCode,dt):
         """
@@ -95,9 +95,10 @@ class StrainEnergyObject(scalarObject):
 
     def add5(self,out):
         #print "add5"
-        (a,b,c,d,energy,percent,density) = out
+        (a,b,c,d,e,f,g,h,energy,percent,density) = out
         #print "out = ",out
-        word = a+b+c+d
+        word = a+b+c+d+e+f+g+h
+        word = word.strip()
         #assert word not in self.energy,'%s in energy...' %(word)
         #if grid<=0:
         #    raise InvalidGridID_Error('grid=%s' %(grid))
@@ -146,11 +147,11 @@ class StrainEnergyObject(scalarObject):
                 else:
                     density2 = '%-14g\n' %(density)
                 
-                print "eid = ",eid
-                print "energy = ",energy
-                print "percent = ",percent
-                print "density = ",density
-                print "density2 = ",density2
+                #print "eid = ",eid
+                #print "energy = ",energy
+                #print "percent = ",percent
+                #print "density = ",density
+                #print "density2 = ",density2
                 sys.stdout.flush()
                 msg += "%-10s %-14g %-14g %s" %(eid,energy,percent,density2)
             ###
