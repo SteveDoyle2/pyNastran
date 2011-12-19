@@ -81,16 +81,25 @@ EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     m
 
 for iSubcase,stressCase in op2Obj.plateStress.items():
     print stressCase
-    for eid in stressCase:
-        for iLayer in range(len(stressCase[eid])):
-            print "oxx =",stressCase[eid][iLayer].oxx
-            print "ovm =",stressCase[eid][iLayer].ovmShear
+    for eid,oxxNodes in sorted(stressCase.oxx.items()):
+        eType = stressCase.eType[eid]
+        for nid in sorted(oxxNodes):
+            for iLayer in range(len(stressCase.oxx[eid][nid])):
+                fd    = stressCase.fiberCurvature[eid][nid][iLayer] # fiber/curvature
+                oxx   = stressCase.oxx[eid][nid][iLayer]
+                oyy   = stressCase.oyy[eid][nid][iLayer]
+                txy   = stressCase.txy[eid][nid][iLayer]
+                angle = stressCase.angle[eid][nid][iLayer]
+                major = stressCase.majorP[eid][nid][iLayer]
+                minor = stressCase.minorP[eid][nid][iLayer]
+                ovm   = stressCase.ovmShear[eid][nid][iLayer] # VonMises/MaxShear
 
 # To get ONLY plate stress for subcase 1:
 stressSubcase1 = op2Obj.plateStress[1]
 
 # to check if the results contains Von Mises Stress or max Shear Stress
 # look at the printout or in code...
+# NOTE:  this will be consistent across the entire subcase
 isVM = stressSubcase1.isVonMises() # returns True/False
 isMaxShear = stressSubcase1.isMaxShear() # returns True/False
 
@@ -99,8 +108,9 @@ isMaxShear = stressSubcase1.isMaxShear() # returns True/False
 isFiber = stressSubcase1.isFiberDistance() # returns True/False
 isCurvature = stressSubcase1.isCurvature() # returns True/False
 
-# we know by looking at the printout, but we can also query the object 
-# to find out if is transient stress or not; this works for all result objects
+# we know by looking at the printout or by knowing what was run, but we
+# can also query the object to find out if is transient stress or not; 
+# this works for all result objects
 isTransient = stressSubcase1.isTransient # returns True/False
 
 
@@ -120,15 +130,26 @@ dt = 0.2
 # only accessing the data changes
 for iSubcase,stressCase in op2Obj.plateStress.items():
     print stressCase
-    for dt,stress in sorted(stressCase.items()):
-        print "dt = ",dt
-        for eid in stressCase:
-            for iLayer in range(len(stressCase[dt][eid])):
-                print "oxx =",stressCase[dt][eid][iLayer].oxx
-                print "ovm =",stressCase[dt][eid][iLayer].ovmShear
+    for dt,oxxs in sorted(stressCase.oxx.items()):
+        msg += '%s = %s\n' %(stressCase.dataCode['name'],dt)
+        for eid,oxxNodes in sorted(oxxs.items()):
+            eType = stressCase.eType[eid]
+            for nid in sorted(oxxNodes):
+                for iLayer in range(len(self.oxx[dt][eid][nid])):
+                    fd    = stressCase.fiberCurvature[dt][eid][nid][iLayer]
+                    oxx   = stressCase.oxx[   dt][eid][nid][iLayer]
+                    oyy   = stressCase.oyy[   dt][eid][nid][iLayer]
+                    txy   = stressCase.txy[   dt][eid][nid][iLayer]
+                    angle = stressCase.angle[ dt][eid][nid][iLayer]
+                    major = stressCase.majorP[dt][eid][nid][iLayer]
+                    minor = stressCase.minorP[dt][eid][nid][iLayer]
+                    ovm   = stressCase.ovmShear[dt][eid][nid][iLayer]
+
+## NOTE:  dataCode contains important information about the case that was analyzed (e.g. loadSet, method, the name of the "transient" variable, etc.)
+# valid transient variable names include:  None, freq, dt, loadStep
 
 
-##Some other elements...
+##Some other elements/results...
 
 iSubcase = 1
 ---COMPOSITE PLATE STRESS---
@@ -162,5 +183,72 @@ iSubcase = 1
 EID     eType     s1     s2     s3     s4  Axial   sMax   sMin 
 22052    CBAR  -6383   1754   5502  -6008  -5409     92 -11793 
               -11870   8336   5718 -12132          2927 -17542 
+
+iSubcase = 1
+---APPLIED LOADS---
+nodeID   eID        source         Fx         Fy         Fz         Mx         My         Mz 
+----------------------------------------------------------------------------------------------------
+1        1        HEXA         28.956      5.041   2576.704          0          0          0 
+1        6        QUAD4        22.757     -3.334  -1276.954      0.007     -0.074      0.624 
+1        10       TRIA3       -37.645     -1.545    -14.417      0.685      0.038     -1.486 
+1        11       TRIA3       -14.068     -0.163  -1285.333     -0.692      0.036      0.862 
+1        =        *TOTALS*          0          0          0          0          0          0 
+----------------------------------------------------------------------------------------------------
+
+iSubcase = 1
+---EIGENVECTORS---
+-eigenvalues-
+0  1.000000
+1  3.000000
+
+eigenvalueReal = 1.000000
+nodeID   GridType         Tx         Ty         Tz         Rx         Ry         Rz 
+100000          G          0          0          0          0          0          0 
+100001          G          0          0          0          0          0          0 
+101             S  -0.000399          0          0          0          0          0 
+
+eigenvalueReal = 3.000000
+nodeID   GridType         Tx         Ty         Tz         Rx         Ry         Rz 
+100000          G          0          0          0          0          0          0 
+100001          G          0          0          0          0          0          0 
+101             S  -0.000399          0          0          0          0          0 
+
+iSubcase = 1
+---TEMPERATURE---
+GRID     TEMPERATURE
+dt = 0
+        1        300
+        2        300
+dt = 30
+        1    297.233
+        2    295.214
+
+iSubcase = 1
+---BEAM STRESSES---
+EID     eType    NID    xxb      sMax       sMin MS_tension MS_compression 
+1       CBEAM      1 0.00    -249940    -249940          0          0 
+1       CBEAM      3 1.00     499251     499251          0          0 
+
+
+iSubcase = 2
+---TRANSIENT DISPLACEMENTS---
+lftsfq = 2
+nodeID   gridType         Dx         Dy         Dz         Rx         Ry         Rz 
+dt = 1.0625
+1        1                 0          0          0          0          0          0 
+2        1                 0 -6.600e-02          0          0          0 -9.900e-03 
+dt = 1.125
+1        1                 0          0          0          0          0          0 
+2        1                 0 -6.800e-02          0          0          0 -1.020e-02 
+
+iSubcase = 1
+---TRANSIENT DISPLACEMENTS---
+dt = 2.5
+nodeID   gridType         Dx         Dy         Dz         Rx         Ry         Rz 
+dt = 0
+1        1                 0          0          0          0          0          0 
+2        1                 0          0          0          0          0          0 
+3        1                 0          0          0          0          0          0 
+
 
 }}}
