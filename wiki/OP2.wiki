@@ -20,7 +20,7 @@ op2Obj.readOP2()  # yup, that simple...
 # lets print the results
 print op2Obj.printResults() # prints ALL results from ALL tables
 
-# It prints
+# It prints the following formatted results
 ---ALL RESULTS---
 iSubcase = 1
 ---DISPLACEMENTS---
@@ -62,7 +62,7 @@ EID     eType     strains
 
 iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
-EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        oVonMises
+EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP       oVonMises
 1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
 1      CTRIA3        C       2        888       7777        222       3333        555       7777 
 1      CQUAD4        1       1        888       7777        222       3333        555       7777 
@@ -109,7 +109,7 @@ isTransient = stressSubcase1.isTransient # returns True/False
 # If stress looked like this instead...
 iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
-EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        oVonMises 
+EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP       oVonMises 
 dt = 0.1
 1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
 1      CTRIA3        C       2        888       7777        222       3333        555       7777 
