@@ -14,8 +14,7 @@ from pyNastran.op2.op2 import OP2
 infileName = 'fem.op2'
 
 op2Obj = OP2(infileName)  # instantiates the object
-#op2.setSubcases([]) # the default, this line isn't required for all subcases
-op2.setSubcases(iSubcases=[100,200])  # read ONLY subcases 100 & 200
+op2.setSubcases(iSubcases=[100,200])  # read ONLY subcases 100 & 200; delete line for ALL subcases
 op2Obj.readOP2()  # yup, that simple...
 
 # lets print the results
