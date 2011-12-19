@@ -11,11 +11,12 @@ This is how the version 0.2 OP2 reading software works if you're interested.  *D
 
 from pyNastran.op2.op2 import OP2
 
-infileName = 'fem.op2'
+# the OP2 is loaded
+op2Obj = OP2('fem.op2')  # instantiates the object
 
-op2Obj = OP2(infileName)  # instantiates the object
-op2.setSubcases(iSubcases=[100,200])  # read ONLY subcases 100 & 200; delete line for ALL subcases
-op2Obj.readOP2()  # yup, that simple...
+# optional - # read ONLY subcases 100 & 200; delete line for ALL subcases
+op2.setSubcases(iSubcases=[100,200])  
+op2Obj.readOP2()
 
 # lets print the results
 print op2Obj.printResults() # prints ALL results from ALL tables
