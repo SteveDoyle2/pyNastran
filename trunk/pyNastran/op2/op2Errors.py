@@ -32,3 +32,5 @@ class InvalidMarkersError(RuntimeError):
 class InvalidMarkerError(RuntimeError):
     pass
 
+class InvalidKeywordError(RuntimeError):
+    pass
