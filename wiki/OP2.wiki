@@ -88,20 +88,16 @@ EID     eType     strains
 {{{
 iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
-EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP       oVonMises
-1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
-1      CTRIA3        C       2        888       7777        222       3333        555       7777 
-1      CQUAD4        1       1        888       7777        222       3333        555       7777 
-1      CQUAD4        1       2        888       7777        222       3333        555       7777 
-1      CQUAD4        2       1        888       7777        222       3333        555       7777 
-1      CQUAD4        2       2        888       7777        222       3333        555       7777 
-1      CQUAD4        3       1        888       7777        222       3333        555       7777 
-1      CQUAD4        3       2        888       7777        222       3333        555       7777 
-1      CQUAD4        4       1        888       7777        222       3333        555       7777 
-1      CQUAD4        4       2        888       7777        222       3333        555       7777 
+EID     eType   nodeID  iLayer  curvature        oxx        oyy        txy     majorP     minorP   maxShear 
+110001 CQUAD4        C       1      -0.05     -17683      -7216      -9280      -1795     -23103      22260 
+110001 CQUAD4        C       2       0.05     -17762      -7252      -9275      -1846     -23168      22302 
+110002 CQUAD4        C       1      -0.05      -4872        750       -904        891      -5014       5514 
+110002 CQUAD4        C       2       0.05      -4852        740       -907        883      -4996       5492 
+110003 CQUAD4        C       1      -0.05      -1870       -362       -284       -310      -1922       1787 
 
-# NOTE "C" for nodeID means Centroid.
-# NOTE iLayer=1,2 for an isotropic material means Z1/Z2 (Top Half/Bottom Half).
+# "C" for nodeID means Centroid.
+# if nodeID was a number, that would refer to the actual node ID
+# iLayer=1,2 for an isotropic material means Z1/Z2 (Top Half/Bottom Half).
 
 
 # lets print all the plate stress only (static loading only)
@@ -148,16 +144,18 @@ isTransient = stressSubcase1.isTransient # returns True/False
 {{{
 
 # If stress looked like this instead...
-iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
-EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP       oVonMises 
-dt = 0.1
-1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
-1      CTRIA3        C       2        888       7777        222       3333        555       7777 
-
-dt = 0.2
-1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
-1      CTRIA3        C       2        888       7777        222       3333        555       7777 
+EID     eType   nodeID  iLayer  curvature        oxx        oyy        txy     majorP     minorP   maxShear 
+dt = 0.0
+11     CQUAD4        C       1     -0.025          0          0          0          0          0          0          0 
+11     CQUAD4        C       2      0.025          0          0          0          0          0          0          0 
+12     CQUAD4        C       1     -0.025          0          0          0          0          0          0          0 
+12     CQUAD4        C       2      0.025          0          0          0          0          0          0          0 
+dt = 0.0249999985099
+11     CQUAD4        C       1     -0.025          0       7140      22854       -117      22855       7139      20252 
+11     CQUAD4        C       2      0.025          0      -7140     -22854        117      -7139     -22855      20252 
+12     CQUAD4        C       1     -0.025          0       7140      22854        117      22855       7139      20252 
+12     CQUAD4        C       2      0.025          0      -7140     -22854       -117      -7139     -22855      20252 
 
 # I'll use the transient version instead (print still works the same)
 # only accessing the data changes
@@ -272,21 +270,20 @@ iSubcase = 2
 ---TRANSIENT DISPLACEMENTS---
 lftsfq = 2
 nodeID   gridType         Dx         Dy         Dz         Rx         Ry         Rz 
-dt = 1.0625
-1        1                 0          0          0          0          0          0 
-2        1                 0 -6.600e-02          0          0          0 -9.900e-03 
-dt = 1.125
-1        1                 0          0          0          0          0          0 
-2        1                 0 -6.800e-02          0          0          0 -1.020e-02 
+lftsfq = 1.0
+1        G                 0          0          0          0          0          0 
+2        G                 0          0          0          0          0          0 
+3        G                 0          0          0          0          0          0 
 
 iSubcase = 1
 ---TRANSIENT DISPLACEMENTS---
 dt = 2.5
 nodeID   gridType         Dx         Dy         Dz         Rx         Ry         Rz 
 dt = 0
-1        1                 0          0          0          0          0          0 
-2        1                 0          0          0          0          0          0 
-3        1                 0          0          0          0          0          0 
+1        G                 0          0          0          0          0          0 
+2        G                 0          0          0          0          0          0 
+3        G                 0          0          0          0          0          0 
 
+# NOTE the difference in the variable names (dt vs lftsfq)
 
 }}}
