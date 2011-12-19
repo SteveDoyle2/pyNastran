@@ -91,15 +91,18 @@ for iSubcase,stressCase in op2Obj.plateStress.items():
 # To get ONLY plate stress for subcase 1:
 stressSubcase1 = op2Obj.plateStress[1]
 
-# to check if contains Von Mises Stress or max Shear Stress
+# to check if the results contains Von Mises Stress or max Shear Stress
 # look at the printout or in code...
 isVM = stressSubcase1.isVonMises() # returns True/False
+isMaxShear = stressSubcase1.isMaxShear() # returns True/False
 
-# to check if contains Fiber / Curvature (composites only)
+# to check if the results contains Fiber / Curvature (composites only)
 # look at the printout or in code...
-isFiber = stressSubcase1.isFiber # returns True/False; verify...
+isFiber = stressSubcase1.isFiberDistance() # returns True/False
+isCurvature = stressSubcase1.isCurvature() # returns True/False
 
-# we know by looking at the printout, but we can also query the object to find out if is transient stress or not
+# we know by looking at the printout, but we can also query the object 
+# to find out if is transient stress or not; this works for all result objects
 isTransient = stressSubcase1.isTransient # returns True/False
 
 
@@ -147,7 +150,10 @@ iSubcase = 1
 EID       eType   iLayer        e11        e22        e12        e1z        e2z  eMaxShear 
 1001    QUAD4LC        1    0.00011   9.19e-05   6.02e-05          0          0   6.28e-05 
 
-## note that in the top first composite strain example, eVonMises is used, while in the second eMaxShear is used.  isVonMises() will evaluate to False
+# note that in the top first composite strain example, eVonMises is
+# used, while in the second eMaxShear is used.  isVonMises() will 
+# evaluate to False
+
 iSubcase = 1
 ---BAR STRAIN---
 EID       eType         e1         e2         e3         e4      Axial       eMax       eMin 
