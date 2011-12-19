@@ -111,10 +111,6 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             ## ???
             self.isMarker = False
 
-            #if not self.isValidSubcase(): # lets the user skip a certain subcase
-            #    self.skipOES_Element()
-            #    return
-            #else:
             isBlockDone = self.readTable4(table4Data,flag,iTable-1)
             #self.firstPass = False
 
@@ -206,7 +202,12 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
 
         isBlockDone = not(bufferWords)
 
-        table4Data()
+        if self.isValidSubcase(): # lets the user skip a certain subcase
+            table4Data()
+        else:
+            self.log.debug("***skipping table=%s iSubcase=%s" %(self.tableName,self.iSubcase))
+            self.skipOES_Element()
+        ###
         return (isTable4Done,isBlockDone)
 
     def handleResultsBuffer(self,func,debug=False):

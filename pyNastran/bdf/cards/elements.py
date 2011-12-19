@@ -386,7 +386,7 @@ class CSHEAR(Element):
         assert len(self.nodes)==4
 
     def __repr__(self):
-        fields = [self.type,self.eid,self.Pid()]+self.nodes
+        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
 class CRAC2D(Element):
@@ -655,4 +655,3 @@ class CONM2(PointElement): # v0.1 not done
         fields = ['CONM2',self.eid,self.gid,cid,mass]+X+I
         return self.printCard(fields)
 
-   

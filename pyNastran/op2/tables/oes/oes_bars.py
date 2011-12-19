@@ -37,7 +37,6 @@ class barStressObject(stressObject):
     def addNewTransient(self):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
         if self.dt not in self.s1:
             self.s1[self.dt]    = {}
@@ -238,7 +237,6 @@ class barStrainObject(strainObject):
     def addNewTransient(self):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
         if self.dt not in self.e1:
             self.e1[self.dt]    = {}
@@ -274,7 +272,7 @@ class barStrainObject(strainObject):
                                       e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
         dt = self.dt
-        self.eType[dt][eid] = eType
+        self.eType[eid] = eType
         self.e1[dt][eid]    = [e1a,e1b]
         self.e2[dt][eid]    = [e2a,e2b]
         self.e3[dt][eid]    = [e3a,e3b]
@@ -288,6 +286,59 @@ class barStrainObject(strainObject):
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #if nodeID==0: raise Exception(msg)
+
+    def __reprTransient__(self):
+        """
+        @warning untested
+        """
+        msg = '---BAR STRAIN---\n'
+        msg += '%-8s %6s ' %('EID','eType')
+        headers = ['e1','e2','e3','e4','Axial','eMax','eMin']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,E1s in sorted(self.e1.items()):
+            print "%s = %s\n" %(self.dataCode['name'],self.dt)
+            for eid,e1s in sorted(Els.items()):
+                eType = self.eType[eid]
+                axial = self.axial[dt][eid]
+                #MSt  = self.MS_tension[dt][eid]
+                #MSc  = self.MS_compression[dt][eid]
+
+                e1   = self.e1[dt][eid]
+                e2   = self.e2[dt][eid]
+                e3   = self.e3[dt][eid]
+                e4   = self.e4[dt][eid]
+                emax = self.emax[dt][eid]
+                emin = self.emin[dt][eid]
+                msg += '%-8i %6s ' %(eid,eType)
+                vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0]]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10.3g ' %(val)
+                    ###
+                msg += '\n'
+
+                msg += '%s ' %(' '*17)
+                vals = [e1[1],e2[1],e3[1],e4[1],'',emax[1],emin[1]]
+                for val in vals:
+                    if isinstance(val,str):
+                        msg += '%10s ' %(val)
+                    elif abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10.3g ' %(val)
+                    ###
+                msg += '\n'
+
+                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
+                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
+            ###
+        ###
+        return msg
 
     def __repr__(self):
         if self.isTransient:

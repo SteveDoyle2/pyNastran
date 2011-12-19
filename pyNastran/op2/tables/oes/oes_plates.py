@@ -221,7 +221,7 @@ class plateStressObject(stressObject):
                         minor = self.minorP[dt][eid][nid][iLayer]
                         ovm = self.ovmShear[dt][eid][nid][iLayer]
 
-                        msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
+                        msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
                         vals = [fd,oxx,oyy,txy,major,minor,ovm]
                         for val in vals:
                             if abs(val)<1e-6:
@@ -266,7 +266,7 @@ class plateStressObject(stressObject):
                     minor = self.minorP[eid][nid][iLayer]
                     ovm = self.ovmShear[eid][nid][iLayer]
 
-                    msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
+                    msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
                     vals = [oxx,oyy,txy,major,minor,ovm]
                     for val in vals:
                         if abs(val)<1e-6:
@@ -498,8 +498,8 @@ class plateStrainObject(strainObject):
                         minor = self.minorP[dt][eid][nid][iLayer]
                         evm   = self.evmShear[   dt][eid][nid][iLayer]
 
-                        msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
-                        vals = [fd,exx,eyy,exy,major,minor,evm]
+                        msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
+                        vals = [exx,eyy,exy,major,minor,evm]
                         for val in vals:
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0.')
@@ -539,7 +539,7 @@ class plateStrainObject(strainObject):
                     minor = self.minorP[eid][nid][iLayer]
                     evm   = self.evmShear[eid][nid][iLayer]
                     
-                    msg += '%-6i %6s %8s %7s ' %(eid,eType,nid,iLayer+1)
+                    msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
                     vals = [exx,eyy,exy,major,minor,evm]
                     for val in vals:
                         if abs(val)<1e-6:

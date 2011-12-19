@@ -185,7 +185,11 @@ class OES(ElementsStressStrain):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
 
         self.parseStressCode()
-        if self.thermal==0:
+
+        if not self.isValidSubcase():# lets the user skip a certain subcase
+            self.log.debug("***skipping table=%s iSubcase=%s" %(self.tableName,self.iSubcase))
+            self.skipOES_Element()
+        elif self.thermal==0:
             # Stress / Strain
             self.dataCode['elementName'] = self.ElementType(self.elementType)
             if   tfsCode==[5,1,0]:
