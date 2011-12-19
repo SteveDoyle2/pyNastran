@@ -14,6 +14,8 @@ from pyNastran.op2.op2 import OP2
 infileName = 'fem.op2'
 
 op2Obj = OP2(infileName)  # instantiates the object
+#op2.setSubcases([]) # the default, this line isn't required for all subcases
+op2.setSubcases(iSubcases=[100,200])  # read ONLY subcases 100 & 200
 op2Obj.readOP2()  # yup, that simple...
 
 # lets print the results
@@ -61,7 +63,7 @@ EID     eType     strains
 
 iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
-EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        ovm 
+EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        oVonMises
 1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
 1      CTRIA3        C       2        888       7777        222       3333        555       7777 
 1      CQUAD4        1       1        888       7777        222       3333        555       7777 
@@ -92,7 +94,7 @@ stressSubcase1 = op2Obj.plateStress[1]
 
 # to check if contains Von Mises Stress or max Shear Stress
 # look at the printout or in code...
-isVM = stressSubcase1.isVonMises # returns True/False
+isVM = stressSubcase1.isVonMises() # returns True/False
 
 # to check if contains Fiber / Curvature (composites only)
 # look at the printout or in code...
@@ -105,7 +107,7 @@ isTransient = stressSubcase1.isTransient # returns True/False
 # If stress looked like this instead...
 iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
-EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        ovm 
+EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP        oVonMises 
 dt = 0.1
 1      CTRIA3        C       1      -4444      -9999       1111      -2222      -1000       6666
 1      CTRIA3        C       2        888       7777        222       3333        555       7777 
@@ -124,5 +126,38 @@ for iSubcase,stressCase in op2Obj.plateStress.items():
             for iLayer in range(len(stressCase[dt][eid])):
                 print "oxx =",stressCase[dt][eid][iLayer].oxx
                 print "ovm =",stressCase[dt][eid][iLayer].ovmShear
+
+
+##Some other elements...
+
+iSubcase = 1
+---COMPOSITE PLATE STRESS---
+EID       eType   iLayer        o11        o22        t12        t1z        t2z  oVonMises 
+1001    QUAD4LC        1       1729       1273        667          0          0        705 
+1211    TRIA3LC       20      -5397      -1694      -1453          0          0       2353 
+
+## for a QUAD4LC, the stress only exists at the center of the element
+
+iSubcase = 1
+---COMPOSITE PLATE STAIN---
+EID       eType   iLayer        e11        e22        e12        e1z        e2z  eVonMises 
+1001    QUAD4LC        1    0.00011   9.19e-05   6.02e-05          0          0   6.28e-05 
+
+iSubcase = 1
+---COMPOSITE PLATE STAIN---
+EID       eType   iLayer        e11        e22        e12        e1z        e2z  eMaxShear 
+1001    QUAD4LC        1    0.00011   9.19e-05   6.02e-05          0          0   6.28e-05 
+
+## note that in the top first composite strain example, eVonMises is used, while in the second eMaxShear is used.  isVonMises() will evaluate to False
+iSubcase = 1
+---BAR STRAIN---
+EID       eType         e1         e2         e3         e4      Axial       eMax       eMin 
+22052      CBAR   -0.00062    0.00017   0.000534  -0.000583  -0.000525   8.99e-06   -0.00114 
+                  -0.00115   0.000809   0.000555   -0.00118              0.000284    -0.0017 
+iSubcase = 1
+---BAR STRESS---
+EID     eType     s1     s2     s3     s4  Axial   sMax   sMin 
+22052    CBAR  -6383   1754   5502  -6008  -5409     92 -11793 
+              -11870   8336   5718 -12132          2927 -17542 
 
 }}}
