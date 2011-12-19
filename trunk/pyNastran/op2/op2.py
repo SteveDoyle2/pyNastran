@@ -18,26 +18,29 @@ class OP2(BDF,
     def setSubcases(self,iSubcases=[]):
         """
         allows you to read only the subcases in the list of iSubcases
-        
         @param iSubcases list of [subcase1_ID,subcase2_ID]
         @note  the default is all the subcases
         """
+        ## stores the set of all subcases that are in the OP2
+        self.subcases = set()
         if iSubcases==[]:
+            ## stores if the user entered [] for iSubcases
             self.isAllSubcases = True
-            #self.iSubcases = []
+            self.validSubcases = []
         else:
             ## should all the subcases be read (default=True)
             self.isAllSubcases = False
-            ## the list of valid subcases [1,2,3]
-            self.iSubcases = list(set(iSubcases))
+            ## the set of valid subcases -> set([1,2,3])
+            self.validSubcases = set(iSubcases)
         ###
+        self.log.debug("setSubcases - iSubcases = %s" %(self.validSubcases))
 
     def isValidSubcase(self):
         """
         lets the code check whether or not to read a subcase
         """
         if not self.isAllSubcases:
-            if self.iSubcase in self.iSubcases:
+            if self.iSubcase in self.validSubcases:
                 return True
             return False
         return True
@@ -138,6 +141,7 @@ class OP2(BDF,
 
         ## OUG - displacement
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
+
         ## OUG - temperatures
         self.temperatures  = {}           # aCode=1 ------- ------- sortCode=0 thermal=1
         #self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
@@ -147,10 +151,10 @@ class OP2(BDF,
         self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
 
         ## OUG - velocity (not done)
-        self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
+        #self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
 
         ## OUG - acceleration (not done)
-        self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
+        #self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
 
         # OEF
         # rename to staticLoads/thermalLoads
@@ -446,6 +450,8 @@ class OP2(BDF,
         (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
         ## the local subcase ID
         self.iSubcase = iSubcase
+        self.subcases.add(self.iSubcase) # set notation
+
         ## the type of result being processed
         self.tableCode = tCode%1000
         ## used to create sortBits
@@ -464,6 +470,7 @@ class OP2(BDF,
                          'dt'          : None,
                          'log'         : self.log,
                          }
+        #print "iSubcase = ",self.iSubcase
         self.parseSortCode()
         if self.deviceCode==3:
             #sys.stderr.write('The op2 may be inconsistent...\n')

@@ -45,7 +45,11 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if log is None:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
-            log = loggerObj.startLog('debug') # or info
+            if debug:
+                word = 'debug'
+            else:
+                word = 'info'
+            log = loggerObj.startLog(word) # or info
         self.log = log
 
         ## allows the BDF variables to be scoped properly (i think...)
@@ -78,7 +82,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
         'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
-        'CDAMP2',#'CDAMP1','CDAMP3','CDAMP4','CDAMP5',
+        'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
         'CTRIA3','CTRIA6','CTRIAX6',
@@ -158,9 +162,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                         'DESOPT'    : 200,
                         
                         # guessing
-                        'DFREQ'     : 108,
-                        'MFREQ'     : 111,
-                        'MTRAN'     : 112,
                         'CTRAN'     : 115,
                         'CFREQ'     : 118,
                         
@@ -212,7 +213,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.sol = None
         ## used in solution 600
         self.solMethod = None
-        self.iSolLine = None
+        self.iSolLine  = None
         self.caseControlDeck = CaseControlDeck([],self.log)
         #self.executiveControlLines = [self.sol]
 
@@ -348,10 +349,19 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ###
 
     def getFileStats(self):
+        """
+        gets information about the active BDF file being read
+        @param self the object pointer
+        @param  bdfFileName   the active BDF filename
+        @retval lineNumber the active file's line number
+        """
         filename   = self.activeFileNames[-1]
         return (filename,self.getLineNumber())
 
     def getLineNumber(self):
+        """
+        @retval returns the line number of the active BDF filename
+        """
         lineNumber = self.lineNumbers[-1]
         return lineNumber
 
@@ -511,7 +521,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         @param sol    the solution type (101,103, etc)
         @param method the solution method (only for SOL=600), default=None
         """
-
         ## the integer of the solution type (e.g. SOL 101)
         try:
             self.sol = int(sol)
@@ -591,7 +600,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.caseControlDeck = CaseControlDeck(self.caseControlLines,self.log)
         self.caseControlDeck.solmap_toValue = self.solmap_toValue
         self.caseControlDeck.rsolmap_toStr  = self.rsolmap_toStr
-
 
         #print "done w/ case control..."
         #print '***********************'
