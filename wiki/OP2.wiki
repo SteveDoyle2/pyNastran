@@ -4,8 +4,27 @@
 
 This is how the version 0.2 OP2 reading software works if you're interested.  *Don't try and use the version 0.1 software unless you have a very simple CQUAD4 static model.*
 
-= Details =
+= Features =
+ * multiple subcases
+ * ability to set list of subcases to extract
+ * lots of transient/static results
+   * displacements
+   * rod stress/strain
+   * beam stress/strain
+   * plate stress/strain
+   * composite plate stress/strain
+   * solid stress/strain
+   * eigenvectors
+   * elment strain energy support (limited)
+ * maxShear/vonMises, fiberDistance/plateCurvature support
+ * automated printing of tables
+ 
+== Limitations ==
+ * limited thermal support (only temperature)
+ * no heat flux
+ * no applied/spc/mpc forces
 
+= Details =
 
 {{{
 
@@ -13,6 +32,11 @@ from pyNastran.op2.op2 import OP2
 
 # the OP2 is loaded
 op2Obj = OP2('fem.op2')  # instantiates the object
+
+# limits reading to subcase 100 & 200; be careful with SOL 200, it may ONLY has 1 subcase, despite analyzing 2 cases
+op2.setSubcases([100,200])
+
+# read the OP2
 op2Obj.readOP2()
 
 # lets print the results
@@ -22,16 +46,16 @@ print op2Obj.printResults() # prints ALL results from ALL tables
 ---ALL RESULTS---
 iSubcase = 1
 ---DISPLACEMENTS---
-nodeID           Dx         Dy         Dz         Rx         Ry         Rz 
-1        -1.111e-01 -1.111e-01  1.111e-01 -1.111e-03 -1.111e-02 -1.111e-02 
-2        -1.111e-02  1.111e+00 -1.111e-01  1.111e-05 -1.111e-03 -1.111e-02 
+nodeID   gridType         Dx         Dy         Dz         Rx         Ry         Rz 
+1        G         1.523e-02 -1.641e-06 -2.276e-03          0          0          0 
+2        G         1.530e-02          0 -2.300e-03          0          0          0 
 
 
 iSubcase = 200
 ---DISPLACEMENTS---
-nodeID           Dx         Dy         Dz         Rx         Ry         Rz 
-1         1.111e+01 -1.111e-02  1.111e+01 -1.111e-03 -1.111e+00 -2.378e-02 
-2         1.111e+01  1.111e-03 -1.111e+02  1.111e-04 -1.111e+00          0 
+nodeID   gridType         Dx         Dy         Dz         Rx         Ry         Rz 
+1        G         1.523e-02 -1.641e-06 -2.276e-03          0          0          0 
+2        G         1.530e-02          0 -2.300e-03          0          0          0 
 
 iSubcase = 1
 ---CELASx STRESSES---
@@ -58,6 +82,10 @@ EID     eType     strains
 10002  CELAS2          0 
 
 
+
+}}}
+==Static Table ==
+{{{
 iSubcase = 1
 ---ISOTROPIC PLATE STRESS---
 EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     minorP       oVonMises
@@ -72,13 +100,14 @@ EID     eType   nodeID  iLayer        oxx        oyy        txy     majorP     m
 1      CQUAD4        4       1        888       7777        222       3333        555       7777 
 1      CQUAD4        4       2        888       7777        222       3333        555       7777 
 
-### NOTE "C" for nodeID means Centroid.
-### NOTE iLayer=1,2 for an isotropic material means Z1/Z2 (Top Half/Bottom Half).
+# NOTE "C" for nodeID means Centroid.
+# NOTE iLayer=1,2 for an isotropic material means Z1/Z2 (Top Half/Bottom Half).
+
 
 # lets print all the plate stress only (static loading only)
 # and then print oxx and ovm (x-stress and von mises stress)
 # you can use this instead to process the data (e.g. calculate margins)
-
+# generally all tables follow this pattern
 for iSubcase,stressCase in op2Obj.plateStress.items():
     print stressCase
     for eid,oxxNodes in sorted(stressCase.oxx.items()):
@@ -93,6 +122,7 @@ for iSubcase,stressCase in op2Obj.plateStress.items():
                 major = stressCase.majorP[eid][nid][iLayer]
                 minor = stressCase.minorP[eid][nid][iLayer]
                 ovm   = stressCase.ovmShear[eid][nid][iLayer] # VonMises/MaxShear
+
 
 # To get ONLY plate stress for subcase 1:
 stressSubcase1 = op2Obj.plateStress[1]
@@ -113,6 +143,9 @@ isCurvature = stressSubcase1.isCurvature() # returns True/False
 # this works for all result objects
 isTransient = stressSubcase1.isTransient # returns True/False
 
+}}}
+==Transient Table ==
+{{{
 
 # If stress looked like this instead...
 iSubcase = 1
@@ -145,11 +178,16 @@ for iSubcase,stressCase in op2Obj.plateStress.items():
                     minor = stressCase.minorP[dt][eid][nid][iLayer]
                     ovm   = stressCase.ovmShear[dt][eid][nid][iLayer]
 
-## NOTE:  dataCode contains important information about the case that was analyzed (e.g. loadSet, method, the name of the "transient" variable, etc.)
+# NOTE:  dataCode contains important information about the case that
+# was analyzed (e.g. loadSet, method, the name of the "transient"
+# variable, etc.)
 # valid transient variable names include:  None, freq, dt, loadStep
 
 
-##Some other elements/results...
+
+}}}
+== More Result Tables ==
+{{{
 
 iSubcase = 1
 ---COMPOSITE PLATE STRESS---
