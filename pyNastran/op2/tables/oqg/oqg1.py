@@ -59,10 +59,10 @@ class OQG1(object):
             self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
             #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
-        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        #    self.dataCode['lsdvmn'] = self.lsdvmn
+            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
-        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
         elif self.analysisCode==6: # transient

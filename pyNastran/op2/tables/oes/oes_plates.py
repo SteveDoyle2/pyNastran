@@ -174,7 +174,7 @@ class plateStressObject(stressObject):
         dt = self.dt
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
-        assert nodeID not in self.oxx[dt][eid]
+        #assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[dt][eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID]    = [oxx]
         self.oyy[dt][eid][nodeID]    = [oyy]
@@ -207,7 +207,7 @@ class plateStressObject(stressObject):
 
         #print self.oxx.keys()
         for dt,oxxs in sorted(self.oxx.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
@@ -222,7 +222,7 @@ class plateStressObject(stressObject):
                         ovm = self.ovmShear[dt][eid][nid][iLayer]
 
                         msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
-                        vals = [fd,oxx,oyy,txy,major,minor,ovm]
+                        vals = [oxx,oyy,txy,major,minor,ovm]
                         for val in vals:
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0')
@@ -484,7 +484,7 @@ class plateStrainObject(strainObject):
         msg += '\n'
 
         for dt,exx in sorted(self.exx.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,exxNodes in sorted(exx.items()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):

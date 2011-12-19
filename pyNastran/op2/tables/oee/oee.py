@@ -59,7 +59,8 @@ class OEE(object):
 
         #self.printBlock(data) # on
         if self.analysisCode==1:   # statics / displacement / heat flux
-            pass
+            #del self.dataCode['nonlinearFactor']
+            self.nonlinearFactor = None
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             #print "mode(5)=%s" %(self.mode)
@@ -126,15 +127,15 @@ class OEE(object):
         if self.analysisCode==1: # displacement
             #print "isStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.analysisCode==2: # buckling modes
+        #elif self.analysisCode==2: # buckling modes
             #print "isBucklingStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
+            #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         #elif self.analysisCode==5: # freq
             #print "isFreqStrainEnergy"
             #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         elif self.analysisCode==6: # transient
             #print "isTransientStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject,debug=False)
         #elif self.analysisCode==9: # nonlinear static eigenvector
             #print "isComplexStrainEnergy"
             #self.createTransientObject(self.strainEnergy,StrainEnergyObject)

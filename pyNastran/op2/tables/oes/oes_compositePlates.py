@@ -360,7 +360,7 @@ class compositePlateStrainObject(strainObject):
         msg += '\n'
 
         for dt,E11s in sorted(self.e11.items()):
-            msg += '%s = %s\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,e11s in sorted(E11s.items()):
                 eType = self.eType[eid]
                 for iLayer in range(len(e11s)):

@@ -61,6 +61,8 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             gridType = 'G'
         elif gridType==2:
             gridType = 'S'
+        elif gridType==7:
+            gridType = 'L'
         else:
             raise Exception('gridType=%s' %(gridType))
         ###
@@ -74,6 +76,17 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
+
+        if gridType==1:
+            gridType = 'G'
+        elif gridType==2:
+            gridType = 'S'
+        elif gridType==7:
+            gridType = 'L'
+        else:
+            raise Exception('gridType=%s' %(gridType))
+        ###
+
         self.gridTypes[nodeID] = gridType
         self.displacements[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.dt][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
@@ -109,7 +122,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     #    for dt,displacements in sorted(self.displacements.items()):
     #        XXX = 50 ## this isnt correct... @todo update dt
     #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
-    #        #msg += 'dt = %g\n' %(dt)
+    #        #msg += '%s = %g\n' %(self.dataCode['name'],dt)
     #
     #        for nodeID,displacement in sorted(displacements.items()):
     #            rotation = self.rotations[nodeID]
@@ -124,22 +137,22 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
     def __reprTransient__(self):
         msg = '---TRANSIENT DISPLACEMENTS---\n'
-        msg += '%s = %g\n' %(self.name,self.dt)
+        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-8s %-8s ' %('nodeID','gridType')
+        msg += '%-10s %-8s ' %('nodeID','gridType')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
         for dt,displacements in sorted(self.displacements.items()):
-            msg += 'dt = %g\n' %(dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for nodeID,displacement in sorted(displacements.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
-                msg += '%-8i %-8s ' %(nodeID,gridType)
+                msg += '%-10i %-8s ' %(nodeID,gridType)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
@@ -157,7 +170,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
         msg = '---DISPLACEMENTS---\n'
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-8s %-8s ' %('nodeID','gridType')
+        msg += '%-10s %-8s ' %('nodeID','gridType')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -169,7 +182,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             (dx,dy,dz) = displacement
             (rx,ry,rz) = rotation
 
-            msg += '%-8i %-8s ' %(nodeID,gridType)
+            msg += '%-10i %-8s ' %(nodeID,gridType)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:
@@ -218,9 +231,9 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
     def __repr__(self):
         msg = '---COMPLEX DISPLACEMENTS---\n'
         #if self.dt is not None:
-        #    msg += 'dt = %g\n' %(self.dt)
+        #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         headers = ['DxReal','DxImag','DyReal','DyImag','DzReal','DyImag','RxReal','RxImag','RyReal','RyImag','RzReal','RzImag']
-        msg += '%-8s ' %('nodeID')
+        msg += '%-10s ' %('nodeID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -234,7 +247,7 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
-                msg += '%-8i ' %(nodeID)
+                msg += '%-10i ' %(nodeID)
                 vals = dx+dy+dz+rx+ry+rz
                 for val in vals:
                     if abs(val)<1e-6:
@@ -251,6 +264,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         self.temperatures = {}
+        self.gridTypes    = {}
         
         #print "dt = ",self.dt
         if dt is not None:
@@ -280,22 +294,25 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
 
     def add(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
-        assert nodeID not in self.temperatures
+        #assert nodeID not in self.temperatures
+        self.gridTypes[nodeID] = gridType
         self.temperatures[nodeID] = v1
 
     def addTransient(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
-        assert nodeID not in self.temperatures[self.dt]
+        #assert nodeID not in self.temperatures[self.dt]
+        self.gridTypes[nodeID] = gridType
         self.temperatures[self.dt][nodeID] = v1
 
     def __reprTransient__(self):
-        msg = '---TEMPERATURE---\n'
-        msg += '%-8s %-8s\n' %('GRID','TEMPERATURE')
+        msg = '---TRANSIENT TEMPERATURE---\n'
+        msg += '%-10s %8s %-8s\n' %('GRID','GRIDTYPE','TEMPERATURE')
 
         for dt,temperatures in sorted(self.temperatures.items()):
-            msg += 'dt = %g\n' %(dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for nodeID,T in sorted(temperatures.items()):
-                msg += '%9i ' %(nodeID)
+                gridType = self.gridTypes[nodeID]
+                msg += '%8s %10i ' %(nodeID,gridType)
 
                 if abs(T)<1e-6:
                     msg += '%10s\n' %(0)
@@ -327,7 +344,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         for dt,temperatures in sorted(self.temperatures.items()):
             XXX = 50 ## this isnt correct... @todo update dt
             msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
-            #msg += 'dt = %g\n' %(dt)
+            #msg += '%s = %g\n' %(self.dataCode['name'],dt)
     
             for nodeID,T in sorted(temperatures.items()):
                 grid = nodeID*10+deviceCode
@@ -341,11 +358,12 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'
-        msg += '%-8s %-8s\n' %('GRID','TEMPERATURE')
+        msg += '%-10s %8s %-8s\n' %('GRID','GRIDTYPE','TEMPERATURE')
         #print "self.dataCode=",self.dataCode
         #print "self.temperatures=",self.temperatures
         for nodeID,T in sorted(self.temperatures.items()):
-            msg += '%9i ' %(nodeID)
+            gridType = self.gridTypes[nodeID]
+            msg += '%8s %10i ' %(nodeID,gridType)
 
             if abs(T)<1e-6:
                 msg += '%10s\n' %(0)
@@ -390,9 +408,9 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
             return self.__reprTransient__()
 
         msg = '---HEAT FLUX---\n'
-        msg += '%-8s %-8s %-8s %-8s\n' %('GRID','xFlux','yFlux','zFlux')
+        msg += '%-10s %-8s %-8s %-8s\n' %('GRID','xFlux','yFlux','zFlux')
         for nodeID,flux in sorted(self.fluxes.items()):
-            msg += '%9i ' %(nodeID)
+            msg += '%10i ' %(nodeID)
 
             for val in flux:
                 if abs(val)<1e-6:
@@ -449,14 +467,14 @@ class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, t
         if self.loadStep is not None:
             msg += 'loadStep = %g\n' %(self.loadStep)
         headers = ['Temperature']
-        msg += '%9s ' %('GRID')
+        msg += '%10s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
         for dt,temps in sorted(self.temperatures.items()):
             for nodeID,T in sorted(temps.items()):
-                msg += '%9i ' %(nodeID)
+                msg += '%10i ' %(nodeID)
                 if abs(T)<1e-6:
                     msg += '%10s ' %(0)
                 else:

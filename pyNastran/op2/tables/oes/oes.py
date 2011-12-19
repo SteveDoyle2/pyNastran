@@ -414,9 +414,9 @@ class OES(ElementsStressStrain):
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
-            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
+            #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)

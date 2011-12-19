@@ -124,8 +124,8 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
-        print "self.dataCode = ",self.dataCode
-        print "dt = ",dt
+        #print "self.dataCode = ",self.dataCode
+        #print "dt = ",dt
         #raise Exception(self.dataCode)
         
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
