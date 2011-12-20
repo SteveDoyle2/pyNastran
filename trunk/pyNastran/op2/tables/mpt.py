@@ -44,14 +44,14 @@ class MPT(object):
         """
         CREEP(1003,10,245) - record 1
         """
-        print "reading CREEP"
+        #print "reading CREEP"
         while len(data)>=64: # 16*4
             eData = data[:64]
             data  = data[64:]
             out = unpack('iffiiiififffffff',eData)
             (mid,T0,exp,form,tidkp,tidcp,tidcs,thresh,Type,ag1,ag2,ag3,ag4,ag5,ag6,ag7) = out
             mat = CREEP(None,out)
-            self.addOp2Material(mat)
+            self.addCreepMaterial(mat,allowOverwrites=True)
         ###
 
     def readMAT1(self,data):
@@ -92,7 +92,7 @@ class MPT(object):
         """
         MAT3(1403,14,122) - record 4
         """
-        print "reading MAT3"
+        #print "reading MAT3"
         while len(data)>=64: # 16*4
             eData = data[:64]
             data  = data[64:]
@@ -106,35 +106,35 @@ class MPT(object):
         """
         MAT4(2103,21,234) - record 5
         """
-        print "reading MAT4"
+        #print "reading MAT4"
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
             out = unpack('iffffffffff',eData)
             (mid,k,cp,rho,h,mu,hgen,refenth,tch,tdelta,qlat) = out
             mat = MAT4(None,out)
-            self.addOp2Material(mat)
+            self.addThermalMaterial(mat,allowOverwrites=True)
         ###
 
     def readMAT5(self,data):
         """
         MAT5(2203,22,235) - record 6
         """
-        print "reading MAT5"
+        #print "reading MAT5"
         while len(data)>=40: # 10*4
             eData = data[:40]
             data  = data[40:]
             out = unpack('ifffffffff',eData)
             (mid,k1,k2,k3,k4,k5,k6,cp,rho,hgen) = out
             mat = MAT5(None,out)
-            self.addOp2Material(mat)
+            self.addThermalMaterial(mat,allowOverwrites=True)
         ###
 
     def readMAT8(self,data):
         """
         MAT8(2503,25,288) - record 7
         """
-        print "reading MAT8"
+        #print "reading MAT8"
         while len(data)>=76: # 19*4
             eData = data[:76]
             data  = data[76:]
@@ -149,7 +149,7 @@ class MPT(object):
         MAT9(2603,26,300) - record 9
         @todo buggy
         """
-        print "reading MAT9"
+        #print "reading MAT9"
         while len(data)>=140: # 35*4
             eData = data[:140]
             data  = data[140:]
@@ -169,7 +169,7 @@ class MPT(object):
         """
         MAT10(2801,28,365) - record 9
         """
-        print "reading MAT10"
+        #print "reading MAT10"
         while len(data)>=20: # 5*4
             eData = data[:20]
             data  = data[20:]
@@ -187,7 +187,7 @@ class MPT(object):
         MATS1(503,5,90) - record 12
         @todo add object
         """
-        print "reading MATS1"
+        #print "reading MATS1"
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
@@ -229,7 +229,7 @@ class MPT(object):
         RADM(8802,88,413) - record 25
         @todo add object
         """
-        print "reading RADM"
+        #print "reading RADM"
         return
         while len(data)>=4: # 1*4
             eData = data[:4]
@@ -261,7 +261,7 @@ class MPT(object):
         NLPARM(3003,30,286) - record 27
         @todo add object
         """
-        print "reading NLPARM"
+        #print "reading NLPARM"
         while len(data)>=76: # 19*4
             eData = data[:76]
             data  = data[76:]
@@ -279,7 +279,7 @@ class MPT(object):
         TSTEPNL(3103,31,337) - record 29
         @todo add object
         """
-        print "reading TSTEPNL"
+        #print "reading TSTEPNL"
         while len(data)>=88: # 19*4
             eData = data[:88]
             data  = data[88:]

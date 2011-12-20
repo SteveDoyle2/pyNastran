@@ -262,6 +262,15 @@ class addMethods(object):
             assert key>0,'mid=%s material=\n%s' %(key,material)
             self.materials[key] = material
 
+    def addCreepMaterial(self,material,allowOverwrites=False):
+        key = material.mid
+        if key in self.thermalMaterials:
+            if not material.isSameCard(self.creepMaterials[key]):
+                assert key not in self.creepMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.creepMaterials[key],material)
+        else:
+            assert key>0,'mid=%s material=\n%s' %(key,material)
+            self.creepMaterials[key] = material
+
     def addCoord(self,coord,allowOverwrites=False):
         key = coord.cid
         if not allowOverwrites:
@@ -289,6 +298,15 @@ class addMethods(object):
     #def addThermalProperty(self,prop):
     #    assert prop.pconid not in self.thermalProperties
     #    self.thermalProperties[prop.pconid] = prop
+
+    def addThermalMaterial(self,material,allowOverwrites=False):
+        key = material.mid
+        if key in self.thermalMaterials:
+            if not material.isSameCard(self.thermalMaterials[key]):
+                assert key not in self.thermalMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.thermalMaterials[key],material)
+        else:
+            assert key>0,'mid=%s material=\n%s' %(key,material)
+            self.thermalMaterials[key] = material
 
     def addThermalBC(self,bc,key):
         assert key>0

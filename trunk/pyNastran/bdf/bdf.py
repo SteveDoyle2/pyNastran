@@ -230,6 +230,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.properties = {}
         ## stores MAT1,MAT2,...,MAT10 materials
         self.materials = {}
+        self.creepMaterials = {}
         ## stores LOAD,FORCE,MOMENT
         self.loads = {}
         ## stores coordinate systems
@@ -282,6 +283,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
         self.bcs   = {}  # e.g. RADBC
+        ## defines the MAT4, MATT4, etc. @todo verify MATT4
+        self.thermalMaterials = {}
         
         # elements
         # see self.elements
@@ -1046,6 +1049,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
 
+            #elif cardName=='CREEP': # not enabled
+            #    creep = CREEP(cardObj)
+            #    self.addCreepMaterial(material) # links up to MAT1, MAT2, MAT9 w/ same PID
             elif cardName=='MAT1':
                 material = MAT1(cardObj)
                 self.addMaterial(material)
@@ -1057,10 +1063,10 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 self.addMaterial(material)
             elif cardName=='MAT4':
                 material = MAT4(cardObj)
-                self.addMaterial(material) # maybe addThermalMaterial
+                self.addThermalMaterial(material)
             elif cardName=='MAT5':
                 material = MAT5(cardObj)
-                self.addMaterial(material) # maybe addThermalMaterial
+                self.addThermalMaterial(material)
             elif cardName=='MAT8':  # note there is no MAT6 or MAT7
                 material = MAT8(cardObj)
                 self.addMaterial(material)

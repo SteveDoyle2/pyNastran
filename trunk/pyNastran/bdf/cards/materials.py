@@ -248,6 +248,17 @@ class MAT2(AnisotropicMaterial):
             self.Mcsid = data[16]
         ###
 
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid,self.G11,self.G12,self.G13,self.G22,self.G23,self.G33,self.rho,self.a1,self.a2,self.a3,self.TRef,self.ge,self.St,self.Sc,self.Ss,self.Mcsid]
+        fields2 = [ mat.mid, mat.G11, mat.G12, mat.G13, mat.G22, mat.G23, mat.G33, mat.rho, mat.a1, mat.a2, mat.a3, mat.TRef, mat.ge, mat.St, mat.Sc, mat.Ss, mat.Mcsid]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
+
     def __repr__(self):
         G11 = self.setBlankIfDefault(self.G11,0.0)
         G12 = self.setBlankIfDefault(self.G12,0.0)
@@ -347,6 +358,17 @@ class MAT4(ThermalMaterial):
             self.qlat   = data[10]
         ###
 
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid,self.k,self.cp,self.rho,self.H,self.mu,self.hgen,self.refEnthalpy,self.tch,self.tdelta,self.qlat]
+        fields2 = [ mat.mid, mat.k, mat.cp, mat.rho, mat.H, mat.mu, mat.hgen, mat.refEnthalpy, mat.tch, mat.tdelta, mat.qlat]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
+
     def __repr__(self):
         rho  = self.setBlankIfDefault(self.rho,1.0)
         hgen = self.setBlankIfDefault(self.hgen,1.0)
@@ -388,6 +410,17 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.rho  = data[8]
             self.hgen = data[9]
         ###
+
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,self.cp,self.rho,self.hgen]
+        fields2 = [ mat.mid, mat.kxx, mat.kxy, mat.kxz, mat.kyy, mat.kyz, mat.kzz, mat.cp, mat.rho, mat.hgen]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
 
     def __repr__(self):
         rho  = self.setBlankIfDefault(self.rho, 1.0)
@@ -556,6 +589,17 @@ class MAT9(AnisotropicMaterial):
         ###
         assert len(self.A)==6
             
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid,self.G11,self.G12,self.G13,self.G14,self.G15,self.G16,self.G22,self.G23,self.G24,self.G25,self.G26,self.G33,self.G34,self.G35,self.G36,self.G44,self.G45,self.G46,self.G55,self.G56,self.G66,self.rho,self.A,self.TRef,self.ge,]
+        fields2 = [ mat.mid, mat.G11, mat.G12, mat.G13, mat.G14, mat.G15, mat.G16, mat.G22, mat.G23, mat.G24, mat.G25, mat.G26, mat.G33, mat.G34, mat.G35, mat.G36, mat.G44, mat.G45, mat.G46, mat.G55, mat.G56, mat.G66, mat.rho, mat.A, mat.TRef, mat.ge,]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
+
     def __repr__(self):
         A = []
         for a in self.A:
@@ -588,6 +632,17 @@ class MAT10(Material):
             self.c    = data[3]
             self.ge   = data[4]
         ###
+
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid, self.bulk,self.rho,self.c,self.ge]
+        fields2 = [ mat.mid,  mat.bulk, mat.rho, mat.c, mat.ge]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
 
     def getBulkRhoC(self,card):
         """
