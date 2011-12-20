@@ -249,21 +249,25 @@ class addMethods(object):
 
     def addProperty(self,prop,allowOverwrites=False):
         if not allowOverwrites:
-            assert prop.pid not in self.properties,'eid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
+            assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
         assert prop.pid>0,'property=\n%s' %(prop.pid,prop)
         self.properties[prop.pid] = prop
 
     def addMaterial(self,material,allowOverwrites=False):
-        if not allowOverwrites:
-            assert material.mid not in self.materials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(material.mid,self.materials[material.mid],material)
-        assert material.mid>0,'mid=%s material=\n%s' %(material.mid,material)
-        self.materials[material.mid] = material
+        key = material.mid
+        if key in self.materials:
+            if not material.isSameCard(self.materials[key]):
+                assert key not in self.materials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.materials[key],material)
+        else:
+            assert key>0,'mid=%s material=\n%s' %(key,material)
+            self.materials[key] = material
 
     def addCoord(self,coord,allowOverwrites=False):
+        key = coord.cid
         if not allowOverwrites:
-            assert coord.cid not in self.coords,'cid=%s\noldElement=\n%snewElement=\n%s' %(coord.cid,self.coords[coord.cid],coord)
-        assert coord.cid>-1,'cid=%s coord=\n%s' %(coord.cid,coord)
-        self.coords[coord.cid] = coord
+            assert key not in self.coords,'cid=%s\noldElement=\n%snewElement=\n%s' %(key,self.coords[key],coord)
+        assert coord.cid>-1,'cid=%s coord=\n%s' %(key,coord)
+        self.coords[key] = coord
 
     def addLoad(self,load):
         key = load.lid
@@ -334,19 +338,19 @@ class addMethods(object):
         key = (darea.sid,darea.p)
         if key in self.dareas:
             if not darea.isSameCard(self.dareas[key]):
-                assert key not in self.dareas,'\ndarea=%s oldDArea=\n%s' %(darea,self.dareas[key])
+                assert key not in self.dareas,'\ndarea=\n%s oldDArea=\n%s' %(darea,self.dareas[key])
         else:
             assert darea.sid>0
             self.dareas[key] = darea
         ###
 
     def addAero(self,aero):
-        assert aero.acsid not in self.aero,'\naero=%s oldAERO=\n%s' %(aero,self.aero[aero.acsid])
+        assert aero.acsid not in self.aero,'\naero=\n%s oldAERO=\n%s' %(aero,self.aero[aero.acsid])
         assert aero.acsid>=0
         self.aero[aero.acsid] = aero
 
     def addAeros(self,aero):
-        assert aero.acsid not in self.aeros,'\naeros=%s oldAEROS=\n%s' %(aero,self.aeros[aero.acsid])
+        assert aero.acsid not in self.aeros,'\naeros=\n%s oldAEROS=\n%s' %(aero,self.aeros[aero.acsid])
         assert aero.acsid>=0
         self.aeros[aero.acsid] = aero
 

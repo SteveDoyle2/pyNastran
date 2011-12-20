@@ -3,6 +3,7 @@ from numpy import array,cross,dot
 from numpy.linalg import norm
 
 # my code
+from pyNastran.bdf.errors import *
 from pyNastran.bdf.BDF_Card import BDF_Card
 from baseCard import BaseCard
 
@@ -22,11 +23,20 @@ class Coord(BaseCard):
         #print "eo = ",self.eo
         #print "ez = ",self.ez
         #print "ex = ",self.ex
-
-        ## the normalized version of self.ez
-        self.ez0 = self.normalize(self.ez-self.eo)
-        ## the normalized version of self.ex
-        self.ex0 = self.normalize(self.ex-self.eo)
+        try:
+            ## the normalized version of self.ez
+            self.ez0 = self.normalize(self.ez-self.eo)
+            ## the normalized version of self.ex
+            self.ex0 = self.normalize(self.ex-self.eo)
+        except TypeError:
+            msg  = 'There is a problem handling these lines:\n'
+            msg += '    self.ez0 = self.normalize(self.ez-self.eo)\n'
+            msg += '    self.ex0 = self.normalize(self.ex-self.eo)\n'
+            msg += 'eo=%s Type=%s\n' %(self.eo,type(self.eo))
+            msg += 'ex=%s Type=%s\n' %(self.ex,type(self.ex))
+            msg += 'ez=%s Type=%s\n' %(self.ez,type(self.ez))
+            #print msg
+            raise CoordTypeError(msg)
         ## the normalized version of self.ey
         self.ey0 = cross(self.ez0,self.ex0)
 

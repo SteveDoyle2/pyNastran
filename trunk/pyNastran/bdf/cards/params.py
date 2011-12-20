@@ -10,7 +10,7 @@ class PARAM(BaseCard):
         fields1 = [self.key, self.value ]
         fields2 = [param.key,param.value]
         for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(fields1,fields2):
+            if not self.isSame(field1,field2):
                 return False
             ###
         ###

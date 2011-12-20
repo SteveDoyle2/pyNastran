@@ -136,7 +136,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
             else:
                 if not(tableType[0]==tableType[1]==tableType[2]):
                     if self.makeGeom:
-                        print "skipping %s iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType)
+                        self.log.debug("skipping %s GEOMx iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType))
                     ###
                 ###
             ###
@@ -164,6 +164,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
         self.readRecordTable('PCOMPTS')
 
     def readTable_DUMMY_GEOM(self,tableName):
+        self.iTableMap = {}
         self.readRecordTable(tableName)
 
     def readTable_DIT(self):

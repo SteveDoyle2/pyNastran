@@ -402,7 +402,7 @@ class CRAC2D(Element):
             self.pid = data[1]
             nids = data[2:]
         ###
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==18
 
     def __repr__(self):
@@ -422,7 +422,7 @@ class CRAC3D(Element):
             self.pid = data[1]
             nids = data[2:]
         ###
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==64
 
     def __repr__(self):

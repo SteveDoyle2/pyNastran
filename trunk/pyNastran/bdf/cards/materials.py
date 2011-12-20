@@ -15,6 +15,9 @@ class Material(BaseCard):
     def crossReference(self,mesh):
         pass
 
+    def isSameCard(self,mat):
+        return False
+
     def __repr__(self):
         fields = [self.type,self.mid]
         return self.printCard(fields)
@@ -115,6 +118,17 @@ class MAT1(Material):
             self.Sc    = data[9]
             self.Ss    = data[10]
             self.Mcsid = data[11]
+
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid, self.E,self.G,self.nu,self.rho,self.a,self.TRef,self.ge,self.St,self.Sc,self.Ss,self.Mcsid]
+        fields2 = [ mat.mid,  mat.E, mat.G, mat.nu, mat.rho, mat.a, mat.TRef, mat.ge, mat.St, mat.Sc, mat.Ss, mat.Mcsid]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
 
     #def G(self):
     #    return self.G
@@ -433,7 +447,17 @@ class MAT8(AnisotropicMaterial):
             self.ge   = data[16]
             self.F12  = data[17]
             self.strn = data[18]
-            
+
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = [self.mid,self.E11,self.E22,self.nu12,self.G12,self.G1z,self.G2z,self.a1,self.a2,self.TRef,self.Xt,self.Xc,self.Yt,self.Yc,self.S,self.ge,self.F12,self.strn]
+        fields2 = [ mat.mid, mat.E11, mat.E22, mat.nu12, mat.G12, mat.G1z, mat.G2z, mat.a1, mat.a2, mat.TRef, mat.Xt, mat.Xc, mat.Yt, mat.Yc, mat.S, mat.ge, mat.F12, mat.strn]
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
 
     def __repr__(self):
         G12  = self.setBlankIfDefault(self.G12,0.)
@@ -441,8 +465,8 @@ class MAT8(AnisotropicMaterial):
         G2z  = self.setBlankIfDefault(self.G2z,1e8)
 
         rho  = self.setBlankIfDefault(self.rho, 0.0)
-        a1   = self.setBlankIfDefault(self.a1, 0.0)
-        a2   = self.setBlankIfDefault(self.a2, 0.0)
+        a1   = self.setBlankIfDefault(self.a1,  0.0)
+        a2   = self.setBlankIfDefault(self.a2,  0.0)
         Tref = self.setBlankIfDefault(self.TRef,0.0)
 
         Xt   = self.setBlankIfDefault(self.Xt, 0.)

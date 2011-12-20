@@ -168,12 +168,12 @@ class RBE3(RigidElement):  # not done, needs testing badly
                     gij = card.field(i+1)
                     Gij.append(gij)
                     i+=1
-                print "gij_stop? = ",gij
+                #print "gij_stop? = ",gij
                 if gij=='UM':
-                    print "breaking A..."
+                    #print "breaking A..."
                     break
                 ###
-                self.WtCG_groups.append(wt,ci,Gij)
+                self.WtCG_groups.append([wt,ci,Gij])
             ###
         
         self.Gmi = []
@@ -189,7 +189,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
                 self.Cmi.append(cmi)
                 j+=2
 
-                print "next_stop? = ",nextEntry
+                #print "next_stop? = ",nextEntry
                 if nextEntry=='ALPHA':
                     break
                 ###
