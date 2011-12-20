@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 
+import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
 
@@ -32,8 +33,11 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
     print '*'*80
 ###
 
-def runBDF(folder,bdfFilename,debug=False,xref=True):
-    bdfModel = os.path.join(testPath,folder,bdfFilename)
+def runBDF(folder,bdfFilename,debug=False,xref=True,isTesting=False):
+    bdfModel = str(bdfFilename)
+    if isTesting:
+        bdfModel = os.path.join(testPath,folder,bdfFilename)
+    
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
     fem1 = BDF(debug=debug,log=None)
@@ -208,41 +212,25 @@ def printPoints(fem1,fem2):
 
 
 if __name__=='__main__':
-    #bdfFileName = sys.argv[1]
-    #debug = sys.argv[1]
-
     import argparse
 
-    ver = '0.2.0.r210'
-    parser = argparse.ArgumentParser(description='Tests to see if a BDF will work with pyNastran.',add_help=True) #,version=ver)
-    parser.add_argument('bdfFile', metavar='bdfFileName', type=str, nargs='+',
+    ver = str(pyNastran.__version__)
+    parser = argparse.ArgumentParser(description='Tests to see if a BDF will work with pyNastran.',add_help=True)
+    parser.add_argument('bdfFileName', metavar='bdfFileName', type=str, nargs=1,
                        help='path to BDF/DAT file')
-    parser.add_argument('op2File', metavar='op2FileName', type=str, nargs='+',
-                       help='path to OP2 file')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-d','--debug', dest='debug',action='store_true',  help='Prints   debug messages')
-    #group.add_argument('-q','--quiet', dest='quiet',action='store_false', help='Disables debug messages')
-
-    parser.add_argument('-x','--xref', dest='xref', action='store_true',help='Disables cross-referencing of the BDF')
+    group.add_argument('-q','--quiet', dest='quiet',action='store_true',  help='Prints   debug messages (default=False)')
+    parser.add_argument('-x','--xref',    dest='xref', action='store_true',help='Disables cross-referencing of the BDF')
     parser.add_argument('-v','--version',action='version',version=ver)
     
-    #args = parser.parse_args(['--debug','--xref','bdfFileName'])
     args = parser.parse_args()
-    print args
-    #print(args.accumulate(args.integers))
-    print "xref    = ",args.xref
-    print "bdfFile = ",args.bdfFile
-    print "op2File = ",args.op2File
-    print "debug   = ",args.debug
-    #print "quiet   = ",args.quiet
+    print "bdfFile     = ",args.bdfFileName[0]
+    print "xref        = ",args.xref
+    print "debug       = ",not(args.quiet)
 
-    out = args.debug
+    xref        = args.xref
+    debug       = not(args.quiet)
+    bdfFileName = args.bdfFileName[0]
 
-    #if   args.quiet==False and args.debug==False:
-    #    out = False
-    #elif args.quiet==True  and args.debug==True:
-    #    out = True
-
-    print "out = ",out
-    #runBDF('',bdfFileName)
+    runBDF('.',bdfFileName,debug=debug,xref=xref)
