@@ -40,7 +40,7 @@ OP2 Reader
      - SWLDPRM (34)
    
    - GEOM1N
-     - None
+     - ???
 
    - GEOM2
      - CBAR    (8,  done)
@@ -53,13 +53,15 @@ OP2 Reader
      - CELAS2  (30, done)
      - CELAS3  (31, done)
      - CELAS4  (32, done)
-     - CHBDY   (43, done)
+     - CHBDYG  (43, done)
      - CHEXA   (45, done)
+     - CONV    (59, done)
+     - CONVM   (60, done)
      - CPENTA  (62, done)
      - CQUAD   (68)
-     - CQUAD4  (69, buggy - zOffset/mcsid)
-     - CQUAD4  (70, buggy - zOffset/mcsid)
-     - CQUAD8  (70, buggy - zOffset/mcsid)
+     - CQUAD4  (69, done)
+     - CQUAD4  (70, done)
+     - CQUAD8  (70, done)
      - CROD    (80, done)
      - CTETP   (86)
      - CTETRA  (87, done)
