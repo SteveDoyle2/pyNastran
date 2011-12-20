@@ -27,9 +27,8 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
     #    pass
 
     def printFileName(self,filename):
-        #driveLetter = os.path.splitdrive(filename)[0]
-        #if driveLetter==os.path.splitdrive(os.curdir)[0] and self.relpath:
-        if self.relpath:
+        driveLetter = os.path.splitdrive(filename)[0]
+        if driveLetter==os.path.splitdrive(os.curdir)[0] and self.relpath:
             return os.path.relpath(filename)
         else:
             return filename
@@ -85,7 +84,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
-        'CTRIA3','CTRIA6','CTRIAX6',
+        'CTRIA3','CTRIA6',#'CTRIAX6',
         'CQUAD4','CQUAD8','CQUADR','CQUADX',
         'CHEXA','CPENTA','CTETRA',
         'CSHEAR','CVISC','CRAC2D','CRAC3D',
@@ -138,6 +137,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.autoReject = False
         self.solmap_toValue = {
                         'SESTATIC'  : 101,
+                        'SESTATICS' : 101,
                         'SEMODES'   : 103,
                         'BUCKLING'  : 105,
                         'SEBUCKL'   : 105,
@@ -484,7 +484,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         """
         for i,eline in enumerate(self.executiveControlLines):
             #print 'eLine = |%r|' %(eline)
-            uline = eline.strip().upper()
+            uline = eline.strip().upper()  # uppercase line
             if 'SOL ' in uline:
                 #print "line = ",uline
                 if ',' in uline:
@@ -585,7 +585,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             ###
 
             #print "*line = |%s|" %(line)
-            if 'BEGIN BULK' in line:
+            if 'BEGIN BULK' in line.upper():
                 #print "breaking"
                 break
             if i>600:
@@ -848,9 +848,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 elem = CTRIA6(cardObj)
                 self.addElement(elem)
 
-            elif cardName=='CTRIAX6':
-                elem = CTRIAX6(cardObj)
-                self.addElement(elem)
+            #elif cardName=='CTRIAX6':
+            #    elem = CTRIAX6(cardObj)
+            #    self.addElement(elem)
             elif cardName=='CQUAD':
                 elem = CQUAD(cardObj)
                 self.addElement(elem)
@@ -974,9 +974,9 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
             elif cardName=='RBE2':
                 (elem) = RBE2(cardObj)
                 self.addElement(elem)
-            elif cardName=='RBE3':
-                (elem) = RBE3(cardObj)
-                self.addElement(elem)
+            #elif cardName=='RBE3':
+            #    (elem) = RBE3(cardObj)
+            #    self.addElement(elem)
 
             elif cardName=='PELAS':
                 prop = PELAS(cardObj)
@@ -1019,13 +1019,13 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 prop = PMASS(cardObj,nOffset=0)
                 self.addProperty(prop)
 
-                if card.field(3):
+                if cardObj.field(3) is not None:
                     prop = PMASS(cardObj,nOffset=1)
                     self.addProperty(prop)
-                if card.field(5):
+                if cardObj.field(5) is not None:
                     prop = PMASS(cardObj,nOffset=2)
                     self.addProperty(prop)
-                if card.field(7):
+                if cardObj.field(7) is not None:
                     prop = PMASS(cardObj,nOffset=3)
                     self.addProperty(prop)
                 ###

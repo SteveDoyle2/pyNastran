@@ -151,7 +151,7 @@ class CTRIA6(CTRIA3):
             self.T2    = data[10]
             self.T3    = data[11]
             self.TFlag = data[12]
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(nids)==6,'error on CTRIA6'
 
         #print self.thetaMcid
@@ -206,7 +206,7 @@ class CTRIAX(CTRIA3):
         self.eid = int(card.field(1))
 
         nids = card.fields(3,9)
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(nids)==6,'error on CTRIAX'
 
     def __repr__(self):
@@ -221,7 +221,7 @@ class CTRIAX6(CTRIA3):
         self.eid = int(card.field(1))
 
         nids = card.fields(3,9)
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(nids)==6,'error on CTRIAX6'
 
         self.th = self.setDefaultIfBlank(card.fields(10),0.0)
@@ -490,7 +490,7 @@ class CQUAD8(CQUAD4):
             self.zOffset   = data[14]
             self.TFlag     = data[15]
         ###
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==8
 
     def Thickness(self):
@@ -512,7 +512,7 @@ class CQUADX(CQUAD4):
         self.pid = card.field(2)
 
         nids = card.fields(3,12)
-        self.prepareNodeIDs(nids)
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==9
 
     def Thickness(self):

@@ -31,3 +31,7 @@ class InvalidFieldError(RuntimeError):
 
 class InvalidResultCode(NotImplementedError):
     pass
+
+class CoordTypeError(TypeError):
+    pass
+

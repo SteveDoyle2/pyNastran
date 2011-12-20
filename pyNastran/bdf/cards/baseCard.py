@@ -14,7 +14,7 @@ class BaseCard(BDF_Card):
     #def wipeEmptyFields(self,card): # BaseCard
 
     def isSame(self,field1,field2):
-        if isSame(self,field1,field2):
+        if isSame(field1,field2):
             return True
         return False
 

@@ -1,3 +1,4 @@
+import sys
 from math import isnan
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
@@ -138,7 +139,7 @@ class StrainEnergyObject(scalarObject):
         msg += "%-10s %-14s% -14s% -14s\n" %('EID','Energy','PercentTotal','Density')
         for dt,Energy in sorted(self.energy.items()):
             msg += "%s = %s\n" %(self.dataCode['name'],dt)
-            print "dt=%s Energy=%s" %(dt,Energy)
+            #print "dt=%s Energy=%s" %(dt,Energy)
             for eid,energy in sorted(Energy.items()):
                 percent = self.percent[dt][eid]
                 density = self.density[dt][eid]
@@ -152,7 +153,7 @@ class StrainEnergyObject(scalarObject):
                 #print "percent = ",percent
                 #print "density = ",density
                 #print "density2 = ",density2
-                sys.stdout.flush()
+                #sys.stdout.flush()
                 msg += "%-10s %-14g %-14g %s" %(eid,energy,percent,density2)
             ###
         ###

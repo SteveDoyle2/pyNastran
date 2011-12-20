@@ -499,6 +499,7 @@ class CBAR(LineElement):
             self.w2b = main[10]
             self.w3b = main[11]
         ###
+        assert isinstance(self.offt,str),'invalid offt expected a string of length 3 offt=|%s|' %(self.offt)
         assert self.offt[0] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
         assert self.offt[1] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
         assert self.offt[2] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)

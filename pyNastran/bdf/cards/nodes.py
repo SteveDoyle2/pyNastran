@@ -201,11 +201,11 @@ class GRID(Node):
             self.seid = data[7]
             assert len(self.xyz)==3
         ###
-        assert self.nid > 0,  'nid=%s'  %(self.nid)
-        assert self.cp >= 0,  'cp=%s'   %(self.cp)
-        assert self.cd >= 0,  'cd=%s'   %(self.cd)
-        assert self.ps >= 0,  'ps=%s'   %(self.ps)
-        assert self.seid >= 0,'seid=%s' %(self.seid)
+        assert self.nid  >   0,  'nid=%s' %(self.nid)
+        assert self.cp   >=  0,  'cp=%s'  %(self.cp)
+        assert self.cd   >= -1,  'cd=%s'  %(self.cd)
+        assert self.ps   >=  0,  'ps=%s'  %(self.ps)
+        assert self.seid >=  0,'seid=%s'  %(self.seid)
 
     def Position(self,debug=False):
         #print type(self.cp)

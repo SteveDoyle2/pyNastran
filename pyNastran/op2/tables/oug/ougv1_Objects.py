@@ -139,7 +139,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         msg = '---TRANSIENT DISPLACEMENTS---\n'
         #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-10s %-8s ' %('nodeID','gridType')
+        msg += '%-10s %-8s ' %('NodeID','GridType')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -170,7 +170,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
         msg = '---DISPLACEMENTS---\n'
         headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-10s %-8s ' %('nodeID','gridType')
+        msg += '%-10s %-8s ' %('NodeID','GridType')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -295,24 +295,46 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     def add(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures
+
+        if gridType==1:
+            gridType = 'G'
+        elif gridType==2:
+            gridType = 'S'
+        elif gridType==7:
+            gridType = 'L'
+        else:
+            raise Exception('gridType=%s' %(gridType))
+        ###
+
         self.gridTypes[nodeID] = gridType
         self.temperatures[nodeID] = v1
 
     def addTransient(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures[self.dt]
+
+        if gridType==1:
+            gridType = 'G'
+        elif gridType==2:
+            gridType = 'S'
+        elif gridType==7:
+            gridType = 'L'
+        else:
+            raise Exception('gridType=%s' %(gridType))
+        ###
+
         self.gridTypes[nodeID] = gridType
         self.temperatures[self.dt][nodeID] = v1
 
     def __reprTransient__(self):
         msg = '---TRANSIENT TEMPERATURE---\n'
-        msg += '%-10s %8s %-8s\n' %('GRID','GRIDTYPE','TEMPERATURE')
+        msg += '%-10s %8s %-8s\n' %('NodeID','GridType','Temperature')
 
         for dt,temperatures in sorted(self.temperatures.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for nodeID,T in sorted(temperatures.items()):
                 gridType = self.gridTypes[nodeID]
-                msg += '%8s %10i ' %(nodeID,gridType)
+                msg += '%10s %8s ' %(nodeID,gridType)
 
                 if abs(T)<1e-6:
                     msg += '%10s\n' %(0)
@@ -358,12 +380,12 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'
-        msg += '%-10s %8s %-8s\n' %('GRID','GRIDTYPE','TEMPERATURE')
+        msg += '%-10s %8s %-8s\n' %('NodeID','GridType','Temperature')
         #print "self.dataCode=",self.dataCode
         #print "self.temperatures=",self.temperatures
         for nodeID,T in sorted(self.temperatures.items()):
             gridType = self.gridTypes[nodeID]
-            msg += '%8s %10i ' %(nodeID,gridType)
+            msg += '%10s %8s ' %(nodeID,gridType)
 
             if abs(T)<1e-6:
                 msg += '%10s\n' %(0)
@@ -408,7 +430,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
             return self.__reprTransient__()
 
         msg = '---HEAT FLUX---\n'
-        msg += '%-10s %-8s %-8s %-8s\n' %('GRID','xFlux','yFlux','zFlux')
+        msg += '%-10s %-8s %-8s %-8s\n' %('NodeID','xFlux','yFlux','zFlux')
         for nodeID,flux in sorted(self.fluxes.items()):
             msg += '%10i ' %(nodeID)
 
@@ -436,7 +458,7 @@ class nonlinearDisplacementObject(scalarObject): # approachCode=10, sortCode=0, 
 
 class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, thermal=1
     def __init__(self,dataCode,iSubcase,loadStep):
-        raise Exceptiton('disabled...')
+        raise Exception('disabled...')
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dataCode = dataCode
         self.applyDataCode()
@@ -465,7 +487,7 @@ class nonlinearTemperatureObject(scalarObject): # approachCode=10, sortCode=0, t
     def __repr__(self):
         msg = '---NONLINEAR TEMPERATURE VECTOR---\n'
         if self.loadStep is not None:
-            msg += 'loadStep = %g\n' %(self.loadStep)
+            msg += '%s = %g\n' %(self.dataCode['name'],self.loadStep)
         headers = ['Temperature']
         msg += '%10s ' %('GRID')
         for header in headers:

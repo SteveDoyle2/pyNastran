@@ -45,7 +45,7 @@ class NSM(PointProperty):
 
 class PMASS(PointProperty):
     def __init__(self,card=None,nOffset=0,data=None):
-        PointProperty.__init__(self,card,nOffset=0)
+        PointProperty.__init__(self,card,data)
         
         nOffset *= 2
         self.pid  = card.field(1+nOffset)
@@ -1091,15 +1091,16 @@ class PCOMP(ShellProperty):
                 nMajor+=1
             nplies = nMajor
 
-            #iPly = 0
+            iPly = 1
             plies = []
             for i in range(9,nplies*4,4):  # doesnt support single ply per line
                 defaults = [None,None,0.0,'NO']
                 (mid,t,theta,sout) = card.fields(i,i+4,defaults)
                 ply = [mid,t,theta,sout]
+                assert t>0.,'thickness of PCOMP layer is invalid iLayer=%s t=%s' %(iPly,t)
                 if ply!=defaults: # if they're not all defaults...
                     plies.append(ply)
-                #iPly +=1
+                iPly +=1
             #print "nplies = ",nplies
 
             ## list of plies
@@ -1290,7 +1291,7 @@ class PLSOLID(SolidProperty):
             self.str = data[3]
             print "data = ",data
         ###
-        assert self.str in ['GRID','GAUS'],'card=%s doesnt have a valid stress/strain output value set\n'
+        assert self.str in ['GRID','GAUS'],'STR=|%s| doesnt have a valid stress/strain output value set\n' %(self.str)
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
