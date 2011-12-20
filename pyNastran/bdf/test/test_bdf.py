@@ -24,18 +24,19 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
     for filename in filenames2:
         print "filename = ",filename
         try:
-            runBDF(folder,filename,debug=debug,xref=xref)
+            runBDF(folder,filename,debug=debug,xref=xref,isTesting=True)
         except:
             traceback.print_exc(file=sys.stdout)
+            #raise
         ###
         print '-'*80
     ###
     print '*'*80
 ###
 
-def runBDF(folder,bdfFilename,debug=False,xref=True,isTesting=False):
+def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
     bdfModel = str(bdfFilename)
-    if isTesting:
+    if isFolder:
         bdfModel = os.path.join(testPath,folder,bdfFilename)
     
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
@@ -210,8 +211,7 @@ def printPoints(fem1,fem2):
     print coord
     #print coord.Stats()
 
-
-if __name__=='__main__':
+def main():
     import argparse
 
     ver = str(pyNastran.__version__)
@@ -224,7 +224,11 @@ if __name__=='__main__':
     parser.add_argument('-x','--xref',    dest='xref', action='store_true',help='Disables cross-referencing of the BDF')
     parser.add_argument('-v','--version',action='version',version=ver)
     
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit()
     args = parser.parse_args()
+
     print "bdfFile     = ",args.bdfFileName[0]
     print "xref        = ",args.xref
     print "debug       = ",not(args.quiet)
@@ -234,3 +238,7 @@ if __name__=='__main__':
     bdfFileName = args.bdfFileName[0]
 
     runBDF('.',bdfFileName,debug=debug,xref=xref)
+
+if __name__=='__main__':
+    main()
+

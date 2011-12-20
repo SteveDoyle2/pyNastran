@@ -23,7 +23,7 @@ class Geometry2(object):
                            (301,3,70):       self.readCDAMP2,  # record 17
                            (401,4,71):       self.readCDAMP3,  # record 18
                            (501,5,72):       self.readCDAMP4,  # record 19
-                           (10608,106,404):  self.readCDAMP5,  # record 20 - not tested
+                           (10608,106,404):  self.readCDAMP5,  # record 20
                            (601,6,73):       self.readCELAS1,  # record 29
                            (701,7,74):       self.readCELAS2,  # record 30
                            (801,8,75):       self.readCELAS3,  # record 31
@@ -34,7 +34,7 @@ class Geometry2(object):
                           #(1908,19,104):    self.readCGAP,    # record 39 - not done
 
                            (10808,108,406):  self.readCHBDYG,   # record 43
-                           (10908,109,407):  self.readCHBDYP,   # record 44 - not done
+                          #(10908,109,407):  self.readCHBDYP,   # record 44 - not done
                            (7308,73,253):    self.readCHEXA,    # record 45
                           #(1001,10,65):     self.readCMASS1,   # record 51 - not done
                           #(1101,11,66):     self.readCMASS2,   # record 52 - not done
@@ -48,24 +48,24 @@ class Geometry2(object):
                            (8908,89,422):    self.readCONVM,    # record 60 - not tested
                            (4108,41,280):    self.readCPENTA,   # record 62
 
-                           (9108,91,507):    self.readCQUAD,    # record 68 - not tested
-                           (2958,51,177):    self.readCQUAD4,   # record 69 - why are there 2???
-                           (13900,139,9989): self.readCQUAD4,   # record 70 - why are there 2???
-                           (4701,47,326):    self.readCQUAD8,   # record 71 - buggy - need to remove the midside nodes that are 0
-                           (8009,80,367):    self.readCQUADR,   # record 74 - not tested
-                           (9008,90,508):    self.readCQUADX,   # record 75 - not tested
+                          #(9108,91,507):    self.readCQUAD,    # record 68 - not tested
+                           (2958,51,177):    self.readCQUAD4,   # record 69 - maybe buggy on theta/Mcsid field
+                           (13900,139,9989): self.readCQUAD4,   # record 70 - maybe buggy on theta/Mcsid field
+                           (4701,47,326):    self.readCQUAD8,   # record 71 - maybe buggy on theta/Mcsid field
+                          #(8009,80,367):    self.readCQUADR,   # record 74 - not tested
+                          #(9008,90,508):    self.readCQUADX,   # record 75 - not tested
         
                            (3001,30,48):     self.readCROD,     # record 80
                           #(12201,122,9013): self.readCTETP,    # record 86 - not done
                            (5508,55,217):    self.readCTETRA,   # record 87
                            (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
-                           (4801,48,327):    self.readCTRIA6,   # record 95 - buggy
-                           (9200,92,385):     self.readCTRIAR,  # record 98 - not done
-                           (6108,61,107):     self.readCTRIAX6, # record 100 - not done
+                          #(4801,48,327):    self.readCTRIA6,   # record 95 - buggy
+                          #(9200,92,385):     self.readCTRIAR,  # record 98 - not done
+                          #(6108,61,107):     self.readCTRIAX6, # record 100 - not done
                            (3701,37,49):     self.readCTUBE,    # record 103
                           #(3901,39, 50):     self.readCVISC,   # record 104 - not done
                           #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
-                           (5551,49,105):    self.readSPOINT,   # record 118 - not done
+                          #(5551,49,105):    self.readSPOINT,   # record 118 - not done
                           #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
                           #(2608, 26, 60)
 

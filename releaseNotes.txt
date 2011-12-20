@@ -15,8 +15,11 @@ This code was written entirely in Python and should install easily.
 -----------------------v0.2 released 2011/12/??-----------------------
 
 Overall BDF
+   - test_bdf can be called from the command line
    - renamed read method  to readBDF (it got confusing when the op2 object can 
      read the bdf b/c it needs to initialize the bdf cards for the geomX tables)
+   - renamed write to writeBDF
+   - renamed writeAsPatran to writeBDFAsPatran
    - a few more cards
    - added extra argument to all cards to set data directly from the 
      OP2 (no data type setting as the OP2 is binary).
@@ -24,16 +27,16 @@ Overall BDF
    - methods for Elements (Area, Nsm, Thicknesss)
 
 Overall OP2
+   - test_op2 can be called from the command line
    - reading support ONLY
-   - static solutions (SOL 101) results will be very stable
+   - static solutions (e.g. SOL 101) results will be very stable
    - thermal solutions have significantly less support than
      structural solutions.
-   - SORT2 is not generally, supported...for example:
+   - SORT2 is not supported...for example:
          use   DISPLACEMENT(PLOT,SORT1)=ALL
          not   DISPLACEMENT(PLOT,SORT2)=ALL
    - Many examples outside of SOL 101 have been tested 
-     and dont crash.  This includes large SOL 200 models.  For example,
-     you might find max shear labeled as von mises stress.
+     and dont crash.  This includes large SOL 200 models.  Verify your results first.
    - The user has the option to read the Geometry tables (GEOM1 (nodes/coords),
      GEOM2 (elements), GEOM3 (loads), GEOM4 (constraints),
      EPT/EPTS (properties), MPT/MPTS (materials) and can write the data to a
@@ -45,7 +48,8 @@ BDF Bug Fixes
    - DDVAL   wasn't processed properly
    - DAREA   wasn't processed properly
    - fixed RBE1 bug
-   - fixed RBE3 bug
+   - fixed RBE3 bug & disabled RBE3
+   - disabled PLOAD4
    - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
    - FLFACT reading when the card is short works
    - PCOMP Thickness method doesnt crash when you want the total thickness
@@ -77,8 +81,8 @@ OP2 Tables
                  velocity,acceleration) is very robust
        - just verify you're getting the result you want, there are
          a lot of results in this table
-   - OQG  table (spc/mpc forces) is spotty, but doesnt crash
-   - OGP  table (grid point forces) works for SOL 101
+   - OQG  table (spc/mpc forces) None
+   - OGP  table (grid point forces) works for SOL 101, untested on others (shouldnt crash)
    - OSTR table (strain) - see OES table
    - OES  table (stress) - elements that arent supported are skipped
        - Be careful about how you request the data from the object as
@@ -93,8 +97,8 @@ OP2 Tables
                   x axis)
                 - isotropic stress elements have max shear stress (maxShear)
        - All this information is contained within boolean variables such as 
-         isVonMises (stress/strain),isFiberCurvature (strain)
-         and isFiber which are located on the result objects.
+         isVonMises(), isMaxShear() (stress/strain),isFiber(), isCurvature() (stress/strain)
+         which are located on the result objects.
        - Elements can have different outputs depending on the
          solution and user requested output options.  For example, rods can
          contain the margin of safety in tension and compression, but they
