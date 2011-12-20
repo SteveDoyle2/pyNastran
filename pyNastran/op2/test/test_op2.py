@@ -42,13 +42,13 @@ def getFailedFiles(filename):
         files.append(line.strip())
     return files
 
-def runOP2(op2file,makeGeom=False,writeBDF=False,debug=False,stopOnFailure=True):
+def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOnFailure=True):
     isPassed = False
     try:
-        nTotal += 1
         op2 = OP2(op2file,makeGeom=makeGeom,debug=debug)
         op2.setSubcases(iSubcases)
-        op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
+        #print "os.getcwd() = ",os.getcwd()
+        #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
         #op2.writeBDFAsPatran()
         op2.readOP2()
         if writeBDF:
@@ -73,8 +73,12 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,debug=False,stopOnFailure=True)
     except AddNewElementError:
         raise
     except TapeCodeError: # the op2 is bad, not my fault
-        isPassed = True
-
+        #isPassed = True
+        if stopOnFailure:
+            raise
+        else:
+            isPassed = True
+        ###
     #except AssertionError:
     #    isPassed = True
 
@@ -109,8 +113,9 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,debug=False,stopOnFailure=True)
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    #except MissingFileError: # missing bdf file
-    #    isPassed = True
+    except MissingFileError: # missing bdf file
+        isPassed = False
+        raise
     #except InvalidSubcaseParseError:
     #    isPassed = True
     #except ScientificParseError:  # bad value parsing
@@ -124,16 +129,16 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,debug=False,stopOnFailure=True)
     except:
         #print e
         print_exc(file=sys.stdout)
+        #print 'hi!'
         if stopOnFailure:
             raise
         else:
-            isPassed = True
+            isPassed = False
         ###
     return isPassed
     ###
 
-if __name__=='__main__':  # op2
-def main(op2FileName):
+def main():
     import argparse
 
     ver = str(pyNastran.__version__)
@@ -162,3 +167,5 @@ def main(op2FileName):
 
     runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,debug=debug)
 
+if __name__=='__main__':  # op2
+    main()

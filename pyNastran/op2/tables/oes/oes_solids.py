@@ -27,28 +27,27 @@ class solidStressObject(stressObject):
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
 
+        self.cid = {} # gridGauss
         self.oxx = {}
         self.oyy = {}
         self.ozz = {}
         self.txy = {}
         self.tyz = {}
         self.txz = {}
+        self.ovmShear = {}
         if self.code == [1,0,0]:  # not done...
-            self.cid = {} # gridGauss
-
+            pass
             #EQUIVALENT EFF. STRAIN  EFF. CREEP
             #  STRESS   PLAS/NLELAS   STRAIN
             #self.eqStress       = {}
             #self.effStrain      = {}
             #self.effCreepStrain = {}
-            self.ovm = {}
         elif self.code == [1,0,1]:
-            self.cid = {}
+            pass
             #self.aCos = {}
             #self.bCos = {}
             #self.cCos = {}
             #self.pressure = {}
-            self.ovm = {}
         else:
             raise InvalidCodeError('solidStress - get the format/sort/stressCode=%s' %(self.code))
 
@@ -76,7 +75,7 @@ class solidStressObject(stressObject):
         #self.bCos[self.dt] = {}
         #self.cCos[self.dt] = {}
         #self.pressure[self.dt] = {}
-        self.ovm[self.dt]      = {}
+        self.ovmShear[self.dt]  = {}
 
     def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
@@ -95,7 +94,7 @@ class solidStressObject(stressObject):
         #self.bCos[eid] = {nodeID: bCos}
         #self.cCos[eid] = {nodeID: cCos}
         #self.pressure[eid] = {nodeID: pressure}
-        self.ovm[eid]      = {nodeID: ovm}
+        self.ovmShear[eid]  = {nodeID: ovm}
         msg = "*eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
         if nodeID==0: raise Exception(msg)
@@ -118,7 +117,7 @@ class solidStressObject(stressObject):
         #self.bCos[dt][eid] = {nodeID: bCos}
         #self.cCos[dt][eid] = {nodeID: cCos}
         #self.pressure[dt][eid] = {nodeID: pressure}
-        self.ovm[dt][eid]      = {nodeID: ovm}
+        self.ovmShear[dt][eid]  = {nodeID: ovm}
         msg = "*eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
         if nodeID==0: raise Exception(msg)
@@ -141,7 +140,7 @@ class solidStressObject(stressObject):
         #self.bCos[eid][nodeID] = bCos
         #self.cCos[eid][nodeID] = cCos
         #self.pressure[eid][nodeID] = pressure
-        self.ovm[eid][nodeID] = ovm
+        self.ovmShear[eid][nodeID] = ovm
         if nodeID==0: raise Exception(msg)
 
     def addTransient(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
@@ -163,13 +162,21 @@ class solidStressObject(stressObject):
         #self.bCos[dt][eid][nodeID] = bCos
         #self.cCos[dt][eid][nodeID] = cCos
         #self.pressure[dt][eid][nodeID] = pressure
-        self.ovm[dt][eid][nodeID] = ovm
+        self.ovmShear[dt][eid][nodeID] = ovm
         if nodeID==0: raise Exception(msg)
+
+    def getHeaders(self):
+        headers = ['oxx','oyy','ozz','txy','tyz','txz']
+        if self.isVonMises():
+            headers.append('oVonMises')
+        else:
+            headers.append('oMaxShear')
+        return headers
 
     def __reprTransient__(self):
         msg = '---SOLID STRESS---\n'
-        headers = ['oxx','oyy','ozz','txy','tyz','txz','ovm']
         msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        headers = self.getHeaders()
         for header in headers:
             msg += '%9s ' %(header)
         msg += '\n'
@@ -185,7 +192,7 @@ class solidStressObject(stressObject):
                     txy = self.txy[dt][eid][nid]
                     tyz = self.tyz[dt][eid][nid]
                     txz = self.txz[dt][eid][nid]
-                    ovm = self.ovm[dt][eid][nid]
+                    ovm = self.ovmShear[dt][eid][nid]
                     msg += '%-6i %6s %8s ' %(eid,eType,nid)
                     vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
                     for val in vals:
@@ -206,7 +213,7 @@ class solidStressObject(stressObject):
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
-        headers = ['oxx','oyy','ozz','txy','tyz','txz','ovm']
+        headers = self.getHeaders()
         msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
         for header in headers:
             msg += '%9s ' %(header)
@@ -220,7 +227,7 @@ class solidStressObject(stressObject):
                 txy = self.txy[eid][nid]
                 tyz = self.tyz[eid][nid]
                 txz = self.txz[eid][nid]
-                ovm = self.ovm[eid][nid]
+                ovm = self.ovmShear[eid][nid]
                 msg += '%-6i %6s %8s ' %(eid,eType,nid)
                 vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
                 for val in vals:
@@ -273,12 +280,14 @@ class solidStrainObject(strainObject):
         #self.cCos = {}
         #self.pressure = {}
         self.evmShear = {}
-        if   self.code == [1,0,10]:
-            self.isVonMises = False
-        elif self.code == [1,0,11]:
-            self.isVonMises = True
-        else:
-            raise InvalidCodeError('solidStrain - get the format/sort/stressCode=%s' %(self.code))
+        
+        #if self.isVonMises():
+        #if   self.code == [1,0,10]:
+        #    self.isVonMises = False
+        #elif self.code == [1,0,11]:
+        #    self.isVonMises = True
+        #else:
+        #    raise InvalidCodeError('solidStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
         if dt is not None:
             self.dt = dt
@@ -398,7 +407,7 @@ class solidStrainObject(strainObject):
 
     def getHeaders(self):
         headers = ['exx','eyy','ezz','exy','eyz','exz']
-        if self.isVonMises:
+        if self.isVonMises():
             headers.append('evm')
         else:
             headers.append('maxShear')
