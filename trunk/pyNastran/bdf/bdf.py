@@ -431,12 +431,12 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self._setInfile(infilename,includeDir)
 
         fname = self.printFileName(self.bdfFileName)
-        self.log.info('---starting BDF.read of %s---' %(fname))
+        self.log.debug('---starting BDF.read of %s---' %(fname))
         sys.stdout.flush()
 
         #self.debug = True
         if self.debug:
-            self.log.info("*BDF.read")
+            self.log.debug("*BDF.read")
         self.readExecutiveControlDeck()
         self.readCaseControlDeck(self.bdfFileName)
         self.readBulkDataDeck()
@@ -445,7 +445,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if self.debug:
             self.log.debug("***BDF.read")
 
-        self.log.info('---finished BDF.read of %s---' %(fname))
+        self.log.debug('---finished BDF.read of %s---' %(fname))
         sys.stdout.flush()
 
         isDone = self.foundEndData

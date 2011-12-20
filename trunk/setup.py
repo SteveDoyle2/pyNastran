@@ -24,5 +24,9 @@ setup(name='pyNastran',
 #          'matplotlib >= 0.99.1',
       ],
       entry_points = {
+        'console_scripts': [
+                            'test_bdf = pyNastran.bdf.test.test_bdf:main',
+                            'test_op2 = pyNastran.op2.test.test_op2:main',
+                           ]
       },
       )

@@ -42,7 +42,7 @@ class writeMesh(object):
         ###
         return msg
 
-    def writeAsPatran(self,outfilename='fem.out.bdf',debug=False):
+    def writeBDFAsPatran(self,outfilename='fem.out.bdf',debug=False):
         """
         Writes a bdf with properties & elements interspersed like how
         Patran writes the bdf.  This takes longer than the write method
@@ -66,13 +66,13 @@ class writeMesh(object):
         msg += 'ENDDATA\n'
 
         fname = self.printFileName(outfilename)
-        self.log.info("***writing %s" %(fname))
+        self.log.debug("***writing %s" %(fname))
         
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
     
-    def write(self,outfilename='fem.out.bdf',debug=False):
+    def writeBDF(self,outfilename='fem.out.bdf',debug=False):
         """
         Writes the bdf.  It groups the various sections together to make it
         easy to find cards.  This method is slightly more stable than 
