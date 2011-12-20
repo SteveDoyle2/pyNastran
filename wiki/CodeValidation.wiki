@@ -3,7 +3,7 @@
 
 = Introduction =
 
-In order to check the software will work read/write a BDF with a given set of cards, it's useful to run the test_helper.py utility.  You can then use a program like "Beyond Compare" to see the differences for yourself.  Most of the changes you'll see are related to positioning of cards, precision of the data fields, and values that were the default value are left blank in order to simplify the file.
+In order to check the software will work read/write a BDF with a given set of cards, it's useful to run the test_bdf.py utility.  You can then use a program like "Beyond Compare" to see the differences for yourself.  Most of the changes you'll see are related to positioning of cards, precision of the data fields, and values that were the default value are left blank in order to simplify the file.
 
 
 *An ENDDATA card is highly recommended* as it's an easy way to tell if all the lines were parsed properly.
@@ -11,12 +11,11 @@ In order to check the software will work read/write a BDF with a given set of ca
 
 = Details =
 
-Navigate to the pyNastran/bdf/test directory and type
+After installing pyNastran, open a command prompt in a folder you have a BDF you want to test and type:
 
 {{{
 
->> python test_helper.py cylinder.bdf > test.out
-
+>> python test_bdf.py cylinder.bdf > test.out
 
 }}}
 
@@ -25,6 +24,7 @@ The file test.out will be created...
 {{{
 INFO:    fname=bdf.pyc                lineNo=371    ---starting BDF.read of cylinder.bdf---
 INFO:    fname=bdf.pyc                lineNo=589    RejectCardName = |TEMPD|
+INFO:    fname=bdf.pyc                lineNo=589    RejectCardName = |CTRIA3|
 INFO:    fname=bdf.pyc                lineNo=384    ---finished BDF.read of cylinder.bdf---
 INFO:    fname=bdf_writeMesh.pyc      lineNo=68     ***writing cylinder02.bdf_out
 
@@ -48,6 +48,7 @@ diffKeys1=[] diffKeys2=[]
    key=SPC     value1=28   value2=28
    key=TEMP    value1=18   value2=18
   -key=TEMPD   value1=1    value2=1
+  *key=CTRIA3  value1=1    value2=0
 ----------------------------------------------------------------
 
 }}}
@@ -57,6 +58,29 @@ It's broken into 3 sections:
  * Section 1 - tells you what file was read and what cards were rejected.
  * Section 2 - uses the output of Section 1 to test again (helps to verifies fields weren't shifted)
  * Section 3 - prints out a cards that were found in the BDF along with the value of each.  
- * A star indicates a cards was not written out and you should be careful of useing the code.  Note that INCLUDE files always have stars by them.
+ * A star indicates a cards was not written out and you should be careful of using the code on the example.  The CTRIA3 card example was lost.  Most likely the CTRIA3 shares an elementID with another element.  Note that INCLUDE files always have stars by them.
  * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card 
 was ignored in both cases.
+
+
+You can also test the code without using cross-Referencing
+{{{
+test_bdf.py -x fem.bdf > test.out
+}}}
+
+{{{
+The full list of arguments is:
+
+usage: test_bdf.py [-h] [-q] [-x] [-v] bdfFileName
+
+Tests to see if a BDF will work with pyNastran.
+
+positional arguments:
+  bdfFileName    path to BDF/DAT file
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -q, --quiet    Prints debug messages (default=False)
+  -x, --xref     Disables cross-referencing of the BDF
+  -v, --version  show program's version number and exit
+}}}
