@@ -12,7 +12,7 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 
 This code was written entirely in Python and should install easily.
 
------------------------v0.2 released 2011/12/??-----------------------
+-----------------------v0.2 released 2011/12/20-----------------------
 
 Overall BDF
    - test_bdf can be called from the command line
@@ -25,6 +25,13 @@ Overall BDF
      OP2 (no data type setting as the OP2 is binary).
    - max lines in executive & case control decks is now 600
    - methods for Elements (Area, Nsm, Thicknesss)
+   - thermal materials (MAT4, MAT5) pulled from self.materials and put into self.thermalMaterials
+     new ThermalMaterial & StructuralMaterial methods
+     Material method checks for either still
+   - rigid elements (RBAR, RBE2, etc.) separated out of elements to avoid overwriting cards
+     new RigidElement method
+     Element method doesnt check for rigid elements anymore
+     
 
 Overall OP2
    - test_op2 can be called from the command line

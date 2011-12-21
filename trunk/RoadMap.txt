@@ -480,7 +480,7 @@ FORCE2  (done)
 PLOAD   (done)
 PLOAD1  (done)
 PLOAD2  (done)
-PLOAD4  (disabled)
+PLOAD4  (done)
 
 MOMENT  (done)
 MOMENT1 (done)
