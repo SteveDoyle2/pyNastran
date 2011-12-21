@@ -44,6 +44,7 @@ def getFailedFiles(filename):
 
 def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
     n = ''
+    iSubcases = []
     failedCases = []
     nFailed = 0
     nTotal  = 0
@@ -203,7 +204,7 @@ def main():
     writeBDF    = args.writeBDF
     op2FileName = args.op2FileName[0]
 
-    runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,debug=debug)
+    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,debug=debug)
 
 if __name__=='__main__':  # op2
     main()
