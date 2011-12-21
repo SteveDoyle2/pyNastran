@@ -548,7 +548,8 @@ class PLOAD4(Load):
         p4 = self.setBlankIfDefault(self.p[3],self.p[0])
         fields = ['PLOAD4',self.lid,self.p[0],p2,p3,p4]
 
-        if self.g3:
+        #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
+        if self.g3 is not None:
             (g3,g4) = self.nodeIDs([self.g3,self.g4])
             fields.append(g3)
             fields.append(g4)

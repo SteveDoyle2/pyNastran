@@ -86,6 +86,9 @@ class getMethods(object):
             elements.append(self.elements[eid])
         return elements
 
+    def RigidElement(self,eid):
+        return self.rigidElements[eid]
+
     #--------------------
     # PROPERTY CARDS
 
@@ -275,6 +278,15 @@ class addMethods(object):
         assert key>0,'eid=%s elem=%s' %(key,elem)
         self.elements[key] = elem
 
+    def addRigidElement(self,elem,allowOverwrites=False):
+        key = elem.eid
+        if key in self.rigidElements and not allowOverwrites:
+            print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.rigidElements[key],elem)
+            #assert elem.eid not in self.rigidElements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.rigidElements[elem.eid],elem)
+            pass
+        assert key>0,'eid=%s elem=%s' %(key,elem)
+        self.rigidElements[key] = elem
+
     def addThermalElement(self,elem):
         """same as addElement at the moment..."""
         self.addElement(elem)
@@ -293,7 +305,7 @@ class addMethods(object):
         only for adding structural materials
         @deprecated this method will be renamed in v0.3 to addStructuralMaterial.
         """
-        self.addStructuralMaterial(self,material,allowOverwrites)
+        self.addStructuralMaterial(material,allowOverwrites)
 
     def addStructuralMaterial(self,material,allowOverwrites=False):
         key = material.mid

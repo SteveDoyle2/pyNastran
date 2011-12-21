@@ -1297,7 +1297,7 @@ class PLSOLID(SolidProperty):
         self.mid = model.Material(self.mid)
 
     def __repr__(self):
-        stressStrain = self.setDefaultIfNone(self.str,'GRID')
+        stressStrain = self.setBlankIfDefault(self.str,'GRID')
         fields = ['PLSOLID',self.pid,self.Mid(),stressStrain]
         return self.printCard(fields)
 

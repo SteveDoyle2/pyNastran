@@ -88,7 +88,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         'CQUAD4','CQUAD8','CQUADR','CQUADX',
         'CHEXA','CPENTA','CTETRA',
         'CSHEAR','CVISC','CRAC2D','CRAC3D',
-        'RBAR','RBAR1','RBE1','RBE2','RBE3',
+        'RBAR','RBAR1','RBE1','RBE2',#'RBE3',
 
         'PMASS',
         'PELAS',
@@ -224,12 +224,15 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         self.nodes = {}
         ## stores GRIDSET card
         self.gridSet = None
-        ## stores LOTS of elements
+        ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD, etc.)
         self.elements = {}
-        ## stores LOTS of elements
+        ## stores rigid elements (RBE2, RBE3, RJOINT, etc.)
+        self.rigidElements = {}
+        ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
-        ## stores MAT1,MAT2,...,MAT10 materials
-        self.materials = {}
+        ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
+        self.materials = {} 
+        ## stores the CREEP card
         self.creepMaterials = {}
         ## stores LOAD,FORCE,MOMENT
         self.loads = {}
@@ -536,7 +539,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         if self.sol==600:
             ## solution 600 method modifier
             self.solMethod = method.strip()
-            print "sol=%s method=%s" %(self.sol,self.solMethod)
+            self.log.debug("sol=%s method=%s" %(self.sol,self.solMethod))
         else: # very common
             self.solMethod = None
         ###
@@ -563,7 +566,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 return
             line = lineIn.strip().split('$')[0].strip()
 
-            if 'INCLUDE' in line.upper():
+            if line.upper().startswith('INCLUDE'):
                 nextLine = self.getNextLine().strip().split('$')[0].strip()
                 includeLines = [line]
                 #print "^&*1",nextLine
@@ -966,20 +969,19 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
             elif cardName=='RBAR':
                 (elem) = RBAR(cardObj)
-                self.addElement(elem)
+                self.addRigidElement(elem)
             elif cardName=='RBAR1':
                 (elem) = RBAR1(cardObj)
-                self.addElement(elem)
-
+                self.addRigidElement(elem)
             elif cardName=='RBE1':
                 (elem) = RBE1(cardObj)
-                self.addElement(elem)
+                self.addRigidElement(elem)
             elif cardName=='RBE2':
                 (elem) = RBE2(cardObj)
-                self.addElement(elem)
+                self.addRigidElement(elem)
             #elif cardName=='RBE3':
             #    (elem) = RBE3(cardObj)
-            #    self.addElement(elem)
+            #    self.addRigidElement(elem)
 
             elif cardName=='PELAS':
                 prop = PELAS(cardObj)

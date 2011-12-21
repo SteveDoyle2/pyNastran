@@ -81,9 +81,9 @@ class DRESP1(OptConstraint):
         self.attb   = card.field(7)
         self.atti   = card.field(8)
         self.others = card.fields(9)
-        if self.others:
-            print "self.others = ",self.others
-            print str(self)
+        #if self.others:
+        #    print "self.others = ",self.others
+        #    print str(self)
         #assert len(self.others)==0
     
     def __repr__(self):
