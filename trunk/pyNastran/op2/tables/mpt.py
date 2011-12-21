@@ -18,7 +18,7 @@ class MPT(object):
                          (2103,21,234): self.readMAT4,  # record 5
                          (2203,22,235): self.readMAT5,  # record 6
                          (2503,25,288): self.readMAT8,  # record 7
-                         (2603,26,300): self.readMAT9,  # record 8
+                        #(2603,26,300): self.readMAT9,  # record 8
                          (2801,28,365): self.readMAT10, # record 9
                          (503,5,90):    self.readMATS1, # record 12 - not done
 
@@ -160,7 +160,7 @@ class MPT(object):
             dataIn = [mid,[g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12,g13,g14,g15,g16,g17,g18,g19,g20,g21],
                       rho,[a1,a2,a3,a4,a5,a6],
                       TRef,ge]
-            print "dataIn = ",dataIn
+            #print "dataIn = ",dataIn
             #mat = MAT9(None,dataIn)
             #self.addOp2Material(mat)
         ###

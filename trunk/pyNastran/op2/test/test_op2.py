@@ -42,6 +42,44 @@ def getFailedFiles(filename):
         files.append(line.strip())
     return files
 
+def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
+    n = ''
+    failedCases = []
+    nFailed = 0
+    nTotal  = 0
+    nPassed = 0
+    t0 = time.time()
+    for i,op2file in enumerate(files[nStart:nStop],nStart):  # 149
+        baseName = os.path.basename(op2file)
+        #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
+        if baseName not in skipFiles:
+            print "%"*80
+            print 'file=%s\n' %(op2file)
+            n = '%s ' %(i)
+            sys.stderr.write('%sfile=%s\n' %(n,op2file))
+            nTotal += 1
+            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
+            if not isPassed:
+                sys.stderr.write('**file=%s\n' %(op2file))
+                failedCases.append(op2file)
+                nFailed +=1
+            else:
+                nPassed +=1
+            #sys.exit('end of test...test_op2.py')
+        ###
+    ###
+    if saveCases:
+        f = open('failedCases.in','wb')
+        for op2file in failedCases:
+            f.write('%s\n' %(op2file))
+        f.close()
+    print "dt = %s seconds" %(time.time()-t0)
+    
+    #op2 = OP2('test_tet10_subcase_1.op2')
+    #op2.readOP2()
+    
+    sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed))
+
 def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOnFailure=True):
     isPassed = False
     try:
@@ -56,6 +94,7 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOn
         #tableNamesF06 = parseTableNamesFromF06(op2.f06FileName)
         tableNamesOP2 = op2.getTableNamesFromOP2()
         print op2.printResults()
+        #op2.printResults()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
@@ -129,7 +168,6 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOn
     except:
         #print e
         print_exc(file=sys.stdout)
-        #print 'hi!'
         if stopOnFailure:
             raise
         else:
