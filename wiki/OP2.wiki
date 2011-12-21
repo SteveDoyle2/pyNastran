@@ -3,7 +3,7 @@
 
 = Introduction =
 
-This is how the version 0.2 OP2 reading software works if you're interested.
+This is how the version 0.2 OP2 reading software.  Make sure you install the software first!
 
 = Features =
  * multiple subcases
