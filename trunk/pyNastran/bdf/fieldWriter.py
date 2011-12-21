@@ -95,8 +95,10 @@ def printFloat(value,tol=1e-8):
                     #if 'e' not in field:
                     field1 = field.replace('-','e-')
 
-                    #print "value=%s field1=%s field2=%s" %(value,field1,field2)
+                    #print "value=|%s| field1=|%s| field2=|%s|" %(value,field1,field2)
                     #print "same - ",float(field1)==float(field2)
+                    if field2=='.':
+                        return "%8s" %('0.')
                     if len(field2)<=8 and float(field1)==float(field2):
                         field = field2
                         #print "*field = ",field

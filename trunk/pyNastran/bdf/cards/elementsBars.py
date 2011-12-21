@@ -216,6 +216,10 @@ class CTUBE(CROD):
     ###
     def Area():
         return self.pid.Area()
+
+    def __repr__(self):
+        fields = ['CTUBE',self.eid,self.Pid()]+self.nodeIDs()
+        return self.printCard(fields)
 ###
 
 class CONROD(CROD):

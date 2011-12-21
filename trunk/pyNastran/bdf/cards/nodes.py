@@ -67,6 +67,7 @@ class SPOINT(Node):
     SPOINT 5   THRU 649
     """
     type = 'SPOINT'
+    nDOF = 1
     def __init__(self,card=None,data=None):
         Node.__init__(self,card,data)
         fields  = card.fields(1)
@@ -160,6 +161,7 @@ class GRIDB(Node):
 
 class GRID(Node):
     type = 'GRID'
+    nDOF = 6
     def __init__(self,card=None,data=None):
         """
         if coming from a BDF object, card is used

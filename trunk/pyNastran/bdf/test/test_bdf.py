@@ -1,5 +1,7 @@
 import os
 import sys
+import numpy
+numpy.seterr(all='raise')
 import traceback
 
 import pyNastran
@@ -17,14 +19,14 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
     filenames  = os.listdir(folder)
     filenames2 = []
     for filename in filenames:
-        if filename.endswith('.bdf') or filename.endswith('.dat'):
+        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas'):
             filenames2.append(filename)
         ###
     ###
     for filename in filenames2:
         print "filename = ",filename
         try:
-            runBDF(folder,filename,debug=debug,xref=xref,isTesting=True)
+            runBDF(folder,filename,debug=debug,xref=xref,isFolder=True)
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
@@ -48,7 +50,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
-        fem1.writeAsPatran(outModel)
+        fem1.writeBDFAsPatran(outModel)
         #fem1.writeAsCTRIA3(outModel)
 
         fem2 = BDF(debug=debug,log=None)
@@ -56,7 +58,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'
-        fem2.writeAsPatran(outModel2)
+        fem2.writeBDFAsPatran(outModel2)
         #fem2.writeAsCTRIA3(outModel2)
         compare(fem1,fem2,xref=xref)
         os.remove(outModel2)
@@ -178,7 +180,7 @@ def getElementStats(fem1,fem2):
             elif isinstance(e,PointElement):
                 m = e.Mass()
             else:
-                print "stats - e.type = ",e.type
+                print "statistics skipped - e.type = ",e.type
                 #try:
                 #    print "e.type = ",e.type
                 #except:

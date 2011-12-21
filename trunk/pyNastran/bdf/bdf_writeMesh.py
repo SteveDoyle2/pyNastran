@@ -12,7 +12,7 @@ class writeMesh(object):
         @todo maybe add the write method
         """
         self.cardsToRead = set([])
-        return self.read(infileName)
+        return self.readBDF(infileName)
 
     def autoRejectBDF(self,infileName):
         """
@@ -21,7 +21,7 @@ class writeMesh(object):
         @todo maybe add the write method
         """
         self.autoReject = True
-        return self.read(infileName)
+        return self.readBDF(infileName)
 
     def writeElementsAsCTRIA3(self):
         """
@@ -42,6 +42,24 @@ class writeMesh(object):
         ###
         return msg
 
+    def writeCommon(self):
+        """
+        method to write the common outputs so none get missed...
+        """
+        msg = ''
+        msg += self.writeRigidElements()
+        msg += self.writeLoads()
+        msg += self.writeDynamic()
+        msg += self.writeAero()
+        msg += self.writeThermal()
+        msg += self.writeThermalMaterials()
+
+        msg += self.writeConstraints()
+        msg += self.writeOptimization()
+        msg += self.writeRejects()
+        msg += self.writeCoords()
+        return msg
+
     def writeBDFAsPatran(self,outfilename='fem.out.bdf',debug=False):
         """
         Writes a bdf with properties & elements interspersed like how
@@ -53,17 +71,9 @@ class writeMesh(object):
         msg += self.writeNodes()
 
         msg += self.writeElementsProperties()
-
         msg += self.writeMaterials()
-        msg += self.writeLoads()
-        msg += self.writeDynamic()
-        msg += self.writeAero()
-        msg += self.writeThermal()
-        msg += self.writeThermalMaterials()
-        msg += self.writeConstraints()
-        msg += self.writeOptimization()
-        msg += self.writeRejects()
-        msg += self.writeCoords()
+
+        msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
         fname = self.printFileName(outfilename)
@@ -86,20 +96,13 @@ class writeMesh(object):
         msg += self.writeElements()
         msg += self.writeProperties()
         msg += self.writeMaterials()
-        msg += self.writeLoads()
 
-        msg += self.writeDynamic()
-        msg += self.writeAero()
-        msg += self.writeThermal()
-        msg += self.writeThermalMaterials()
-
-        msg += self.writeConstraints()
-        msg += self.writeOptimization()
-        msg += self.writeRejects()
-        msg += self.writeCoords()
+        msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        self.log.debug("***writing %s" %(outfilename))
+        fname = self.printFileName(outfilename)
+        self.log.debug("***writing %s" %(fname))
+
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -114,13 +117,13 @@ class writeMesh(object):
         msg += self.writeElementsAsCTRIA3()
         msg += self.writeProperties()
         msg += self.writeMaterials()
-        msg += self.writeLoads()
-        msg += self.writeConstraints()
-        msg += self.writeRejects()
-        msg += self.writeCoords()
+
+        msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        self.log.debug("***writing %s" %(outfilename))
+        fname = self.printFileName(outfilename)
+        self.log.debug("***writing %s" %(fname))
+
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -194,6 +197,15 @@ class writeMesh(object):
             msg += str(element)
         return msg
 
+    def writeRigidElements(self):
+        """writes the rigid elements in a sorted order"""
+        msg = ''
+        if self.rigidElements:
+            msg += '$RIGID ELEMENTS\n'
+        for eid,element in sorted(self.rigidElements.items()):
+            msg += str(element)
+        return msg
+
     def writeProperties(self):
         """writes the properties in a sorted order"""
         msg = ''
@@ -254,8 +266,10 @@ class writeMesh(object):
             msg += '$MATERIALS\n'
         for key,material in sorted(self.materials.items()):
             msg += str(material)
+        return msg
 
     def writeThermalMaterials(self):
+        msg = ''
         if self.thermalMaterials:
             msg += '$THERMAL MATERIALS\n'
         for key,material in sorted(self.thermalMaterials.items()):
