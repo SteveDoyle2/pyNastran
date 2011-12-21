@@ -86,108 +86,8 @@ EID     eType     strains
 
 
 }}}
-==Static Table ==
+== Static Table ==
 All static tables follow this format, so if you can access results from this example, you can access results from any static table.  
-
-Static Tables
- * Displacement
- * Stress/Strain (rod-type, bar-type, beam-type, shell-type, compositeShell-type, solid-type)
- * Temperature
- * Strain Energy Density
-
-Transient Tables
- * Eigenvectors
- * Displacement
- * Stress/Strain (rod-type, bar-type, beam-type, plate-type, compositePlate-type, solid-type)
- * Temperature
- * Strain Energy Density
-
-The tables are organized into 
-
-{{{
-Transient Tables
- * Eigenvectors
-   * gridType[nid]
-   * displacements[dt][nid]
-     * numpy array of length 3
-   * rotations[dt][nid]
-     * numpy array of length 3
-
- * Displacement
-   * gridType[nid]
-   * displacements[dt][nid]
-     * numpy array of length 3
-   * rotations[dt][nid]
-     * numpy array of length 3
-
- * Stress/Strain
-   * rod-type
-     * eType[eid]
-     * axial[dt][eid]
-     * torsion[dt][eid]
-     * MS_axial[dt][eid]
-     * MS_torsion[dt][eid]
-
-   * bar-type (replace "s" for "e" when dealing with strain)
-     * eType[eid]
-     * s1[dt][eid][iPoint]
-       * iPoint is a length=2 list of points A and B of the bar
-     * s2[dt][eid][iPoint]
-     * s3[dt][eid][iPoint]
-     * s4[dt][eid][iPoint]
-     * axial[dt][eid][iPoint]
-     * smax[dt][eid][iPoint]
-     * smin[dt][eid][iPoint]
-
-   * beam-type (replace "s" for "e" when dealing with strain)
-     * eType[eid]
-     * xxb[dt][eid][iPoint]
-       * iPoint is a variable length list of the points along the beam
-     * grids[dt][eid][iPoint]
-     * smax[dt][eid][iPoint]
-     * smin[dt][eid][iPoint]
-     * MS_tension[dt][eid][iPoint]
-     * MS_compression[dt][eid][iPoint]
-
-   * compositePlate-type (substitute "e" for the first letter when it's "o" or "t" for strain, for example o11 becomes e11)
-      * eType[eid]
-      * o11[dt][eid][iLayer]
-        * NOTE: iLayer is a list, not a dictionary
-      * o22[dt][eid][iLayer]
-      * t12[dt][eid][iLayer]
-      * t1z[dt][eid][iLayer]
-      * t2z[dt][eid][iLayer]
-      * angle[dt][eid][iLayer]
-      * majorP[dt][eid][iLayer]
-      * minorP[dt][eid][iLayer]
-      * ovmShear[dt][eid][iLayer]
-
-   * plate-type
-     * same as compositePlate-type, but 1 added parameter
-     * fiberCurvature[dt][eid][iLayer]
-      * iLayer refers to Z_1 or Z_2
-
-   * solid-type (same rule for strain as compositePlate-type)
-      * eType[eid]
-      * oxx[dt][eid][nid]
-      * oyy[dt][eid][nid]
-      * ozz[dt][eid][nid]
-      * txy[dt][eid][nid]
-      * tyz[dt][eid][nid]
-      * txz[dt][eid][nid]
-      * ovmShear[dt][eid][nid]
-
- * Temperature
-    * gridType
-    * T
-
- * Strain Energy Density
-    * energy[dt][eid]
-    * percent[dt][eid]
-    * density[dt][eid]
-}}}
-
-asfa
 
 {{{
 iSubcase = 1
@@ -391,4 +291,119 @@ dt = 0
 
 # NOTE the difference in the variable names (dt vs lftsfq)
 
+}}}
+
+
+= Table Data =
+
+Static Tables
+ * Stress/Strain (compositeShell-type, rod-type, bar-type, beam-type, shell-type, solid-type)
+ * Displacement
+ * Temperature
+ * Strain Energy Density
+
+
+Transient Tables
+ * Stress/Strain (compositeShell-type, rod-type, bar-type, beam-type, shell-type, solid-type)
+ * Eigenvectors
+ * Displacement
+ * Temperature
+ * Strain Energy Density
+
+The tables are organized into cascading dictionaries with the final value being a float unless otherwise noted.  In order to get the static table, drop the "[dt]" term from the transient table.  The actual name of dt can be found by extracting the object.dataCode['name'] string.  
+
+Possible values of gridType include:
+ * G (GRID)
+ * S (SPOINT)
+ * L (Rigid Element Point - not 100% sure)
+
+The list of data members in the various results:
+{{{
+ * Stress/Strain
+   * rod-type
+     * eType[eid]
+     * axial[dt][eid]
+     * torsion[dt][eid]
+     * MS_axial[dt][eid]
+     * MS_torsion[dt][eid]
+
+   * bar-type (replace "s" for "e" when dealing with strain)
+     * eType[eid]
+     * s1[dt][eid][iPoint]
+       * NOTE:  iPoint is a length=2 list of points A and B of the bar
+     * s2[dt][eid][iPoint]
+     * s3[dt][eid][iPoint]
+     * s4[dt][eid][iPoint]
+     * axial[dt][eid][iPoint]
+     * smax[dt][eid][iPoint]
+     * smin[dt][eid][iPoint]
+
+   * beam-type (replace "s" for "e" when dealing with strain)
+     * eType[eid]
+     * xxb[dt][eid][iPoint]
+       * NOTE:  iPoint is a variable length list of the number of points along the beam
+     * grids[dt][eid][iPoint]
+     * smax[dt][eid][iPoint]
+     * smin[dt][eid][iPoint]
+     * MS_tension[dt][eid][iPoint]
+     * MS_compression[dt][eid][iPoint]
+
+   * compositePlate-type (substitute "e" for the "o" and "t")
+      * eType[eid]
+      * o11[dt][eid][iLayer]
+        * NOTE: iLayer is a variable length list depending on the number of plies
+      * o22[dt][eid][iLayer]
+      * t12[dt][eid][iLayer]
+      * t1z[dt][eid][iLayer]
+      * t2z[dt][eid][iLayer]
+      * angle[dt][eid][iLayer]
+      * majorP[dt][eid][iLayer]
+      * minorP[dt][eid][iLayer]
+      * ovmShear[dt][eid][iLayer]
+
+   * plate-type
+     * NOTE:  same as compositePlate-type, but 1 added parameter
+     * fiberCurvature[dt][eid][iLayer]
+      * iLayer refers to Z_1 or Z_2
+
+   * solid-type (same rule for strain as compositePlate-type)
+      * eType[eid]
+      * oxx[dt][eid][nid]
+      * oyy[dt][eid][nid]
+      * ozz[dt][eid][nid]
+      * txy[dt][eid][nid]
+      * tyz[dt][eid][nid]
+      * txz[dt][eid][nid]
+      * ovmShear[dt][eid][nid]
+
+ * Eigenvectors
+   * gridType[nid]
+   * displacements[dt][nid]
+     * numpy array of length 3
+   * rotations[dt][nid]
+     * numpy array of length 3
+
+ * Displacement
+   * gridType[nid]
+   * displacements[dt][nid]
+     * numpy array of length 3
+   * rotations[dt][nid]
+     * numpy array of length 3
+
+ * Temperature
+    * gridType
+    * T
+
+ * Strain Energy Density
+    * energy[dt][eid]
+    * percent[dt][eid]
+    * density[dt][eid]
+
+ * Applied Loads
+    * eids[dt][nid][iLoad]
+      * iLoad represents a list
+    * source[dt][nid][iLoad]
+    * forces[dt][nid][iLoad]
+    * moments[dt][nid][iLoad]
+    * 
 }}}
