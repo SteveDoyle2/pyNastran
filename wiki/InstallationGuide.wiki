@@ -28,13 +28,13 @@ The software has been tested Python 2.6
 
 I use *Python(x,y)-2.6.5.6*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.4 to 2.7 are probably fine, but good luck!
 
- * Python(x,y)  http://code.google.com/p/pythonxy/wiki/Welcome
- * scipy 0.9.0  http://scipy.org/
- * numpy 1.5.1  http://numpy.org/
+ * [http://code.google.com/p/pythonxy/wiki/Welcome Python(x,y) ]
+ * [http://scipy.org/ scipy 0.9.0  ]
+ * [http://numpy.org/ numpy 1.5.1  ]
 
 
 == Download pyNastran ==
- * Click the downloads page and download the most recent version http://code.google.com/p/pynastran/downloads/list
+ * Click the downloads page and download the most recent [http://code.google.com/p/pynastran/downloads/list version]
 
 == Install pyNastran ==
  * Navigate to pyNastran directory on the command line
@@ -46,10 +46,11 @@ Enjoy!
 = Install Procedure - Developer =
 
 == Install Subversion ==
- * download install Subversion.  I use http://tortoisesvn.net/
+ * download install [http://tortoisesvn.net/ Subversion]
+ * checkout the code (see the suberversion website if you need help) and the [http://code.google.com/p/pynastran/source/checkout Source]
 
 == Install Doxygen ==
- * download and install Doxygen http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html
+ * download and install [http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html Doxygen ]
 
 == Install pyNastran ==
  * Navigate to pyNastran directory on the command line
