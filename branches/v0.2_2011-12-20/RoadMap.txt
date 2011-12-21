@@ -1,0 +1,815 @@
+------------------------------OP2 Info------------------------------
+
+In order for an OP2 card to be supported, it somewhat depends on the table.
+
+For the Result Tables:
+    It must read the important fields on the card.  So things like
+    directional cosines and Margins of Safety (usually blank anyways)
+    arent needed.
+
+For the BDF Tables (GEOM1/GEOM2/GEOM3/GEOM4/DIT/DYNAMICS/EPT/MPT):
+    The restrictions are a bit looser on this (for now).  It needs to look like
+    the BDF that was input.  These were going to get pushed off until
+    later, but found out that it was a good way to learn defaults for
+    variables that the QRG doesn't list.  For example, on the GRID card
+    there is a PS field, which is a nodal SPC.  A 0 value is now used instead of a
+    None.  A FEM code using this should be able to handle both, so it's not that
+    big a deal, but it makes it easier when writing the OP2 to not have to
+    worry about None values.
+    
+    NOTE:  just because a card is read, doesn't mean it can be used as a standard BDF card
+           so you should write it out and read it back in before using it.
+
+The "card" notation is more for the developer than the user.
+For example, the CORD1C card is the first card listed in the
+GEOM1 table and is identified as #1.  It's that simple.  So if you
+see a gap in the numbers, that means there are missing cards.
+For convenience, the last card is listed as well.
+
+OP2 Reader
+
+   - GEOM1
+     - CORD1C  (1, done)
+     - CORD1R  (2, done)
+     - CORD1S  (3, needs integration)
+     - CORD2C  (4, done)
+     - CORD2R  (5, done)
+     - CORD2S  (6, needs integration)
+     - CORD3R  (7, needs integration)
+     - GRID    (17,done)
+     - SWLDPRM (34)
+   
+   - GEOM1N
+     - ???
+
+   - GEOM2
+     - CBAR    (8,  done)
+     - CDAMP1  (16, done)
+     - CDAMP2  (17, done)
+     - CDAMP3  (18, done)
+     - CDAMP4  (19, done)
+     - CDAMP5  (20, done)
+     - CELAS1  (29, done)
+     - CELAS2  (30, done)
+     - CELAS3  (31, done)
+     - CELAS4  (32, done)
+     - CHBDYG  (43, done)
+     - CHEXA   (45, done)
+     - CONV    (59, done)
+     - CONVM   (60, done)
+     - CPENTA  (62, done)
+     - CQUAD   (68)
+     - CQUAD4  (69, done)
+     - CQUAD4  (70, done)
+     - CQUAD8  (70, done)
+     - CROD    (80, done)
+     - CTETP   (86)
+     - CTETRA  (87, done)
+     - CTRIA3  (93, buggy - zOffset/mcsid)
+     - CTRIA6  (95, buggy - zOffset/mcsid)
+     - CTUBE   (103,done)
+     - SPOINT  (118)
+     - WELDP   (125)
+
+   - GEOM3
+     - FORCE   (3,done)
+     - FORCE1  (4,done)
+     - FORCE2  (5,done)
+     - GRAV    (7,done)
+     - LOAD    (8,done)
+     - MOMENT  (13,done)
+     - MOMENT1 (14,done)
+     - MOMENT2 (15,done)
+     - PLOAD4  (20,buggy)
+     - QBDY1   (24,done)
+     - QBDY2   (25,done)
+     - QBDY3   (26,done)
+     - PEDGE   (42)
+   
+   - GEOM4
+     - SPC1
+     - SPCADD
+     - USET1   (63)
+   
+   - EPT (properties may be created that are too large >100000000.  this is how
+          properties created by the solution are identified)
+     - NSM     (2, done)
+     - PBAR    (11,buggy)
+     - PBARL   (12,done)
+     - PBEAM   (13)
+     - PCOMP   (22,done)
+     - PROD    (49,done)
+     - PSHEAR  (50,needs object)
+     - PSOLID  (51,done)
+     - PSHELL  (52,done)
+     - PTUBE   (56,done)
+     - VIEW3D  (63)
+
+   - MPT / MPTS (materials may be created that are too large >100000000.  this is how
+                 materials created by the solution are identified)
+     - CREEP   (1,done)
+     - MAT1    (2,done)
+     - MAT2    (3,done)
+     - MAT3    (4,done)
+     - MAT4    (5,done)
+     - MAT5    (6,done)
+     - MAT8    (7,done)
+     - MAT9    (8,done)
+     - MAT10   (9,done)
+     - MATS1
+     - NLPARM
+     - TSTEPNL (29)
+
+   - OES
+   OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
+      - all midside nodes must be included on elements (for example CQUAD8 have 6 nodes)
+      - OES1X1/OES1C Table (Isotropic Stresses/Strain)
+         - CROD    (1,  done)
+         - CBEAM   (2,  done)
+         - CONROD  (10, done)
+         - CELAS1  (11, done)
+         - CELAS2  (12, done)
+         - CELAS3  (13, done)
+         - CBAR    (34, done)
+         
+         - CTETRA  (39, done)
+         - CHEXA   (67, done)
+         - CPENTA  (68, done)
+         - CTRIA3  (74, done)
+         - CQUAD4  (144,done)
+         
+         - CQUAD4 (33,done)
+         - CQUAD8 (64,done)
+         - CTRIA6 (75)
+         - CELAS1 (11,done)
+         - CELAS2 (12,done)
+         - CELAS3 (13,done)
+         - CELAS4 (14,done)
+
+       - OESNLXR
+         # nonlinear
+         - CTETRA (85,verify object)
+         - CTRIA3 (88)
+         - CROD   (89)
+         - CQUAD4 (90)
+         - CPENTA (91)
+         - CONROD (92)
+         - CHEXA  (93,verify object)
+         - CBEAM  (94)
+
+      - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
+         - CQUAD4 (95,done)
+         - CQUAD8 (96,done)
+         - CTRIA3 (97,done)
+         - CTRIA6 (98,done)
+
+   - OUGV1 Table (displacement/velocity/acceleration)
+      - displacement           / temperature           (approachCode=1/6/10, sortCode=0, done)
+      - eigenvectors           /                       (approachCode=2,      sortCode=0, done)
+
+
+   - OGP1 Table (grid point forces)
+      - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
+      
+   - OEE Table (element energy strain/kinetic/loss)
+      - strain energy
+
+OP2 Backup
+   - DIT
+     - TABRNDG (15)
+
+
+   - DYNAMIC / DYNAMICS
+     - UNBALNC (40)
+
+   - Dont know what these are
+     - OFMPF2M
+     - OSMPF2M
+     - OPMPF2M
+     - OGPMPF2M
+     - OLMPF2M
+
+   - other
+     - HISADD
+     - DESTAB
+     - ERRORN
+     - VIEWTB
+     - R1TABRG
+     - OUPV1
+     - OPNL1
+     - OESNLXD
+
+   - OUGV1 Table (displacement/velocity/acceleration)
+      - heat flux (approachCode=1, sortCode=1)
+
+   - OQGV1 Table (single/multipoint constraint forces)
+      - spc forces (needs cleanup) # disabled
+
+   - OEF1X Table (element forces)
+      - OGPFB1
+        temperatureForces (approachCode=6, sortCode=0,disabled)
+        nonlinearFluxes   (approachCode=10,sortCode=0,disabled) - long table...
+         - CHBDY
+
+   - KDICT Table (element stiffness table)
+      - None
+
+
+----OES LONG VERSION----
+
+All Thermal=0
+
+CROD_1 (4/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=5 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=5 (done)
+   - tCode7=2 (Random)
+     numWide=3
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=5 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=5 (done)
+   - tCode7=2 (Random)
+     numWide=3
+
+CBEAM_2 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=11 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=11
+   - tCode7=2 (Random)
+     numWide=7
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=11 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=11
+   - tCode7=2 (Random)
+     numWide=7
+
+CTUBE_3 (see CROD_1)
+
+CSHEAR_4 (None)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=3
+   - tCode7=1 (Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=4
+   - tCode7=1 (Real/Imaginary)
+     numWide=5
+   - tCode7=2 (Random)
+     numWide=3
+
+CQUAD4_33 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+
+CBAR_34 (2/5)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+
+CTRIA3_74 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=17 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=15
+   - tCode7=2 (Random)
+     numWide=9
+
+CTRIA6_75 (None)
+CTRIAR_?? (None)
+
+CTETRA_39/CHEXA_67/CPENTA_68 (2/6)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=25 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=25 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17
+   - tCode7=2 (Random)
+     numWide=11
+
+CQUAD4_95/CQUAD8_96/CTRIA3_97/CTRIA6_98 (done)
+ - sCode6=0 (Strain)
+     numWide=11 (done)
+
+ - sCode6=0 (Stress)
+     numWide=11 (done)
+
+CQUAD4_144 (2/6 done; 4/6 not integrated)
+ - sCode6=0 (Strain)
+   - tCode7=0 (Real)
+     numWide=19 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17 (not integrated)
+   - tCode7=2 (Random)
+     numWide=11 (not integrated)
+
+ - sCode6=0 (Stress)
+   - tCode7=0 (Real)
+     numWide=19 (done)
+   - tCode7=1 (Real/Imaginary)
+     numWide=17 (not integrated)
+   - tCode7=2 (Random)
+     numWide=11 (not integrated)
+
+
+------------------------------BDF Info------------------------------
+
+In order for a card to be supported, it must read AND write ALL fields.
+Important calculated parameters are nice, but not required.
+
+BDF Cards Supported Reading/Writing
+
+----Nodes----:
+GRID   (done)
+GRDSET (done)
+
+----Elements----:
+CONM2  (cid=0)
+
+CDAMP1 (done)
+CDAMP2 (done)
+CDAMP3 (done)
+CDAMP4 (done)
+CDAMP5 (done)
+
+CEALS1 (done)
+CELAS2 (done)
+CELAS3 (done)
+CELAS4 (done)
+
+CBAR   (done)
+CBEAM  (done)
+CONROD (done)
+CROD   (done)
+CTUBE  (done)
+
+CTRIA3  (done)
+CTRIA6  (done)
+CTRIAR  (done)
+CTRIAX  (done)
+CTRIAX6 (done)
+
+CQUAD  (done)
+CQUAD4 (done)
+CQUAD8 (done)
+CQUADR (done)
+CQUADX (done)
+
+CSHEAR (done)
+CVISC  (done)
+
+CTETRA (done)
+CPENTA (done)
+CHEXA  (done)
+
+CMASS1 (done)
+CMASS2 (done)
+CMASS3 (done)
+CMASS4 (done)
+
+CRAC2D (done)
+CRAC3D (done)
+
+----Rigid Elements----:
+RBE1  (done)
+RBE2  (done)
+RBE3  (disabled)
+RBAR  (done)
+RBAR1 (done)
+
+----Constraints----:
+SUPORT  (done)
+SUPORT1 (done)
+
+SPC     (done)
+SPC1    (done)
+SPCD    (done)
+SPCADD  (done)
+SPCAX   (done)
+
+MPC     (done)
+MPCADD  (done)
+
+----Materials----:
+MAT1  (done)
+MAT2  (done)
+MAT3  (done)
+MAT4  (done)
+MAT5  (done)
+MAT8  (done)
+MAT9  (done)
+MAT10 (done)
+
+----Properties----:
+PMASS   (done)
+
+PELAS   (done)
+PDAMP   (done)
+
+PROD    (done)
+PBEAM   (done)
+PBAR    (done)
+PBARL   (done)
+PTUBE   (done)
+
+PSHEAR
+PCOMP   (done)
+PSHELL  (done)
+PSOLID  (done)
+PLSOLID (done)
+
+----Loads----:
+LOAD    (done)
+
+FORCE   (done)
+FORCE1  (done)
+FORCE2  (done)
+
+PLOAD   (done)
+PLOAD1  (done)
+PLOAD2  (done)
+PLOAD4  (done)
+
+MOMENT  (done)
+MOMENT1 (done)
+MOMENT2 (done)
+
+----Thermal Loads----:
+TEMP   (done)
+
+QHBDY  (done)
+QBDY1  (done)
+QBDY2  (done)
+QBDY3  (done)
+
+----Thermal Elements----:
+CHBDYE (done)
+CHBDYG (done)
+CHBDYP (done)
+
+----Thermal BCs----:
+RADBC  (done)
+CONV   (done)
+
+----Thermal Properties----:
+PCONV  (done)
+PCONVM (done)
+PHBDY  (done)
+
+----Coordinates----:
+CORD2R (done)
+
+----Dynamic----:
+DAREA   (done)
+NLPARM  (done)
+
+----Aero----:
+AERO    (done)
+AEROS   (done)
+GUST    (done)
+GRAV    (done)
+FLUTTER (done)
+FLFACT  (done)
+
+CAERO1  (done)
+SPLINE1 (done)
+
+----Optimization----:
+DCONSTR  (done)
+DESVAR   (done)
+DDVAL    (done)
+DRESP1   (done)
+DVPREL1  (done)
+
+----Other----:
+INCLUDE (partial - case control deck & bulk data deck ONLY)
+PARAM (done)
+
+
+-----------------------------------------------
+Missed v0.1
+
+
+nodes
+SPOINT (needs integration)
+RINGAX (needs integration)
+
+Aero
+AEPARM  (needs integration)
+AESTAT  (needs integration)
+AESURFS (needs integration)
+
+Coords
+CORD2C (partial???)
+CORD2S
+
+Temperature
+TEMPD  (needs integration)
+
+elements
+CBEND
+
+properties
+PBEND
+PBEAML
+PBARL
+
+loads
+LSEQ
+
+radiation
+RADM   (needs integration)
+-----------------------------------------------
+
+
+Potential (v0.3) - these will be added in groupings...maybe (not necessarily in order):
+If you want a certain group...ask!
+**************
+AXIC
+PCONEAX
+PCONEAX
+FORCEAX
+**************
+BAROR
+BEAMOR
+CBARAO
+PBEAM3
+**************
+PCOMPG
+**************
+CORD1R
+CORD1C
+CORD1S
+**************
+
+----Patran Elements w/ Properties----:
+CBARAO
+PBCOMP
+
+CBUSH
+PBUSH
+PBUSHT
+
+CGAP
+PGAP
+
+----Patran Elements----:
+CONM1
+
+PLOTEL
+MBOLTUS
+
+----Patran Rigid Elements----:
+RROD
+RSPLINE
+RTRPLT
+
+----Patran Materials----:
+CREEP
+
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
+
+----Patran Loads----:
+PLOADX1
+QVECT
+QVOL
+
+RADCAV
+RADMT
+RFORCE
+
+SLOAD
+
+TEMPP1
+TEMPRB
+
+VIEW
+VIEW3D
+
+----Patran Tables----:
+TABLED1
+TABLED2
+TABLED3
+TABLEM1
+TABLEM2
+TABLEM3
+
+----Nodes----:
+MONPNT1
+MONPNT2
+MONPNT3
+
+----Elements----:
+AXIC
+BAROR
+BEAMOR
+CBARAO
+CCONEAX
+NSM
+NSM1
+
+----Properties----:
+PBEAM3
+PBCOMP
+PCONEAX
+
+----Loads----:
+FORCEAX
+
+----Coordinates----:
+CORD1R (partial)
+CORD1C
+CORD1S
+CORD3G (partial)
+
+----Optimization----:
+DEQATN
+DRESP2
+DRESP3
+DLINK
+
+----Methods----:
+EIGR
+EIGRL
+
+----Modal Cards----:
+FREQ
+FREQ1
+FREQ2
+FREQ3
+FREQ4
+FREQ5
+
+----Aero Cards----:
+CAERO2
+CAERO3
+CAERO4
+CAERO5
+
+PAERO1
+PAERO2
+PAERO3
+PAERO4
+PAERO5
+
+SPLINE2
+SPLINE3
+SPLINE4
+SPLINE5
+SPLINE6
+SPLINE7
+
+----Thermal Loads----:
+CONTRLT
+BDYOR
+
+-----------------------------------------------
+Card Groupings:
+
+----Nodes----:
+
+----Elements----:
+
+----Rigid Elements----:
+RBE2GS
+RBJOINT
+RBJSTIF
+RJOINT
+RTRPLT1
+MATRIG
+
+----Properties----:
+
+----Coordinates----:
+
+----Optimization----:
+
+----Loads----:
+
+----Methods----:
+EIGB
+EIGC
+EIGP
+
+----Constraint Cards----:
+
+----Materials----:
+MATS1
+
+----Thermal----:
+RADBND
+RADLST
+RADMTX
+RADSET
+
+----Modal Cards----:
+
+----Aero Cards----:
+
+----Special----:
+DMIG
+GENEL
+DEQUATN
+
+----Dynamics/Nonlinear---:
+EPOINT
+DLOAD  (needs integration)
+RLOAD1 (needs integration)
+RLOAD2 (needs integration)
+
+----Tables----:
+DTABLE
+
+----Super Elements----:
+CSUPER
+CSUPEXT
+EXTRN
+SEELT
+SEEXCLD
+SELABEL
+SELOC
+SEMPLN
+SENQST
+SEQGP
+SEQSEP
+SEQSET
+SEQSET1
+SESET
+SESUP
+
+----Acoustic----:
+ACSRCE
+CHACAB
+CHACBR
+
+----Unsorted----:
+SET1
+SET2
+SET3
+
+-------------------------------------------
+
+msc Patran card support
+http://www.mscsoftware.com/training_videos/patran/Reverb_help/index.html#page/MD%2520Nastran%2520Structural/nas_input_forms.06.3.html
+
+
+Op2
+http://www.ferespost.be/HTML_MANUAL/III_1_Nastran_Preferences.html
