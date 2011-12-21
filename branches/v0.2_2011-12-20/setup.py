@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.2dev'
+version = '0.2.0'
 
 setup(name='pyNastran',
       version=version,
@@ -10,8 +10,8 @@ setup(name='pyNastran',
 """,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
-      author='mesheb82',
-      author_email='',
+      author='Steven P. Doyle',
+      author_email='mesheb82@gmail.com',
       url='',
       license='GPL V3',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
