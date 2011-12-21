@@ -519,7 +519,7 @@ class Geometry2(object):
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
         #print "reading CQUAD4"
-        return
+        #return
         self.runCQUAD4(data,CQUAD4)
 
     def runCQUAD4(self,data,Element):
