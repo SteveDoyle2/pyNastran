@@ -1,10 +1,9 @@
 #summary Usage of the Op2 Reader
 #labels Featured
-= TODO =
-update displacement
+
 = Introduction =
 
-This is how the version 0.2 OP2 reading software works if you're interested.  *Don't try and use the version 0.1 software unless you have a very simple CQUAD4 static model.*
+This is how the version 0.2 OP2 reading software works if you're interested.
 
 = Features =
  * multiple subcases
@@ -27,20 +26,59 @@ This is how the version 0.2 OP2 reading software works if you're interested.  *D
  * no heat flux
  * no applied/spc/mpc forces
 
-= Details =
+= Getting Started = 
+First install pyNastran v0.2 and on the command line type:
+{{{
+>> test_op2 fem.op2 > test.out
+}}}
+
+The "hardest" test would be the following:
+{{{
+>> test_op2 -g -w fem.op2 > test.out
+}}}
+This will read all sections of the op2 and print out a copy of the geometry to fem.bdf.out
+
+This following will run the model and print out all the results to the screen.  Additional options can be seen by typing:
+{{{
+>> test_op2 --help
+
+usage: test_op2-script.py [-h] [-q] [-g] [-w] [-v] op2FileName
+
+Tests to see if an OP2 will work with pyNastran.
+
+positional arguments:
+  op2FileName     path to OP2 file
+
+optional arguments:
+  -h, --help      show this help message and exit
+  -q, --quiet     Prints debug messages (default=True)
+  -g, --geometry  Reads the OP2 for geometry, which can be written out
+  -w, --writeBDF  Writes the bdf to fem.bdf.out (requires --geometry)
+  -v, --version   show programs version number and exit
+
+}}}
+
+= Using the OP2 Reader =
 
 {{{
 
 from pyNastran.op2.op2 import OP2
 
-# the OP2 is loaded
-op2Obj = OP2('fem.op2')  # instantiates the object
+op2Obj = OP2('fem.op2',makeGeom=False,debug=False,log=None)
+# the OP2 filename is loaded
+# makeGeom=True is required in order to write out the BDF
+# debug=True prints error messages
+# log is None (dummy logger) or a python logging module object
+# see http://docs.python.org/library/logging.html
 
 # limits reading to subcase 100 & 200; be careful with SOL 200, it may ONLY has 1 subcase, despite analyzing 2 cases
 op2.setSubcases([100,200])
 
 # read the OP2
 op2Obj.readOP2()
+
+# writes the bdf if makeGeom is True, otherwise the file is empty
+op2Obj.writeBDFAsPatran('fem.bdf.out')
 
 # lets print the results
 print op2Obj.printResults() # prints ALL results from ALL tables
@@ -87,7 +125,7 @@ EID     eType     strains
 
 
 }}}
-== Static Table ==
+= Static Table =
 All static tables follow this format, so if you can access results from this example, you can access results from any static table.  
 
 {{{
@@ -145,7 +183,7 @@ isCurvature = stressSubcase1.isCurvature() # returns True/False
 isTransient = stressSubcase1.isTransient # returns True/False
 
 }}}
-==Transient Table ==
+=Transient Table =
 {{{
 
 # If stress looked like this instead...
@@ -189,7 +227,7 @@ for iSubcase,stressCase in op2Obj.plateStress.items():
 
 
 }}}
-== More Result Tables ==
+= More Result Tables =
 {{{
 
 iSubcase = 1
