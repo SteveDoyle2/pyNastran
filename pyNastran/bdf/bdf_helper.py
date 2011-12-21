@@ -9,40 +9,15 @@ class getMethods(object):
     def __init__(self):
         pass
 
-    def getNodeIDs(self):
-        raise Exception('use self.nodeIDs()')
-        return sorted(self.nodes.keys())
+    #--------------------
+    # NODE CARDS
 
     def nNodes(self):
         return len(self.nodes)
         
-    def nElements(self):
-        return len(self.elements)
-
     def nodeIDs(self):
         return self.nodes.keys()
         
-    def elementIDs(self):
-        return self.elements.keys()
-
-    def propertyIDs(self):
-        return self.properties.keys()
-
-    def materialIDs(self):
-        return self.materials.keys()
-
-    def getElementIDs(self):
-        raise Exception('use self.elementIDs() and sort it...')
-        return sorted(self.elements.keys())
-
-    def getPropertyIDs(self):
-        raise Exception('use self.propertyIDs() and sort it...')
-        return sorted(self.properties.keys())
-
-    def getMaterialIDs(self):
-        raise Exception('use self.materialIDs() and sort it...')
-        return sorted(self.materials.keys())
-
     def getNodes(self):
         nodes = []
         for nid,node in sorted(self.nodes.items()):
@@ -56,11 +31,33 @@ class getMethods(object):
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid)
-            self.log.info("element.pid = %s" %(element.pid))
+            self.log.debug("element.pid = %s" %(element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
         ###
         return nids2
+
+    def Node(self,nid):
+        return self.nodes[nid]
+
+    def Nodes(self,nids):
+        """
+        Returns a series of node objects given a list of node IDs
+        """
+        #print "nids",nids
+        nodes = []
+        for nid in nids:
+            nodes.append(self.nodes[nid])
+        return nodes
+
+    #--------------------
+    # ELEMENT CARDS
+
+    def nElements(self):
+        return len(self.elements)
+
+    def elementIDs(self):
+        return self.elements.keys()
 
     def getElementIDsWithPID(self,pid):
         return self.getElementIDsWithPIDs([pid])
@@ -80,19 +77,6 @@ class getMethods(object):
         ###
         return (eids2)
 
-    def Node(self,nid):
-        return self.nodes[nid]
-
-    def Nodes(self,nids):
-        """
-        Returns a series of node objects given a list of node IDs
-        """
-        #print "nids",nids
-        nodes = []
-        for nid in nids:
-            nodes.append(self.nodes[nid])
-        return nodes
-
     def Element(self,eid):
         return self.elements[eid]
 
@@ -101,6 +85,12 @@ class getMethods(object):
         for eid in eids:
             elements.append(self.elements[eid])
         return elements
+
+    #--------------------
+    # PROPERTY CARDS
+
+    def propertyIDs(self):
+        return self.properties.keys()
 
     def Property(self,pid):
         return self.properties[pid]
@@ -114,14 +104,40 @@ class getMethods(object):
     def Phbdy(self,pid):
         return self.phbdys[pid]
 
+    #--------------------
+    # MATERIAL CARDS
+
+    def structuralMaterialIDs(self):
+        return self.materials.keys()
+
+    def materialIDs(self):
+        return self.materials.keys()+self.thermalMaterials.keys()
+
+    def thermalMaterialIDs(self):
+        return self.thermalMaterials.keys()
+
     def Material(self,mid):
+        if mid in self.materials:
+            return self.materials[mid]
+        elif mid in self.thermalMaterials:
+            return self.thermalMaterials[mid]
+        else:
+            raise KeyError('Invalid Material ID:  mid=%s' %(mid))
+
+    def StructuralMaterial(self,mid):
         return self.materials[mid]
+
+    def ThermalMaterial(self,mid):
+        return self.thermalMaterials[mid]
 
     def Materials(self,mids):
         materials = []
         for mid in mids:
-            materials.append(self.materials[mid])
+            materials.append(self.Material(mid))
         return materials
+
+    #--------------------
+    # LOADS/CONSTRAINTS/COORDINATES CARDS
 
     def Load(self,lid):
         return self.loads[lid]
@@ -129,34 +145,53 @@ class getMethods(object):
     def Coord(self,cid):
         return self.coords[cid]
 
+    #--------------------
+    # AERO CARDS
 
     def Aero(self,acsid):
+        return self.aero[acsid]
+
+    def Aeros(self,acsid):
         return self.aeros[acsid]
+
     def AEStat(self,eid):
         return self.aestats[eid]
-    def Flfact(self,sid):
-        return self.flfacts[sid]
-    def Flutter(self,fid):
-        return self.flutters[fid]
-    def Gust(self,sid):
-        return self.gusts[sid]
+
     def CAero(self,eid):
         return self.caeros[eid]
-    def Aero(self,acsid):
-        return self.aeros[acsid]
+
+    def Flfact(self,sid):
+        return self.flfacts[sid]
+
+    def Flutter(self,fid):
+        return self.flutters[fid]
+
+    def Gust(self,sid):
+        return self.gusts[sid]
+
     def Spline(self,eid):
         return self.splines[eid]
 
+    #--------------------
+    # OPTIMIZATION CARDS
 
     def DConstr(self,oid):
         return self.dconstrs[oid]
+
     def Desvar(self,oid):
         return self.desvars[oid]
+
     def DDVal(self,oid):
         return self.ddvals[oid]
 
+    #--------------------
+    # NONLINEAR CARDS
+
     def NLParm(self,nid):
         return self.nlparms[nid]
+
+    #--------------------
+    # METHODS
 
     def MassProperties(self):
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
@@ -218,7 +253,6 @@ class addMethods(object):
 
     def addParam(self,param):
         key = param.key
-
         if key in self.params:
             if not param.isSameCard(self.params[key]):
                 assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
@@ -241,7 +275,8 @@ class addMethods(object):
         assert key>0,'eid=%s elem=%s' %(key,elem)
         self.elements[key] = elem
 
-    def addThermalElement(self,elem):  # same function at the moment...
+    def addThermalElement(self,elem):
+        """same as addElement at the moment..."""
         self.addElement(elem)
         #assert elem.eid not in self.elements
         #assert elem.eid>0
@@ -254,6 +289,13 @@ class addMethods(object):
         self.properties[prop.pid] = prop
 
     def addMaterial(self,material,allowOverwrites=False):
+        """
+        only for adding structural materials
+        @deprecated this method will be renamed in v0.3 to addStructuralMaterial.
+        """
+        self.addStructuralMaterial(self,material,allowOverwrites)
+
+    def addStructuralMaterial(self,material,allowOverwrites=False):
         key = material.mid
         if key in self.materials:
             if not material.isSameCard(self.materials[key]):
@@ -262,7 +304,21 @@ class addMethods(object):
             assert key>0,'mid=%s material=\n%s' %(key,material)
             self.materials[key] = material
 
+    def addThermalMaterial(self,material,allowOverwrites=False):
+        key = material.mid
+        if key in self.thermalMaterials:
+            if not material.isSameCard(self.thermalMaterials[key]):
+                assert key not in self.thermalMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.thermalMaterials[key],material)
+        else:
+            assert key>0,'mid=%s material=\n%s' %(key,material)
+            self.thermalMaterials[key] = material
+
     def addCreepMaterial(self,material,allowOverwrites=False):
+        """
+        @note
+            May be removed in the future.  Are CREEP cards materials?
+            They have an MID, but reference structural materials.
+        """
         key = material.mid
         if key in self.thermalMaterials:
             if not material.isSameCard(self.creepMaterials[key]):
@@ -298,15 +354,6 @@ class addMethods(object):
     #def addThermalProperty(self,prop):
     #    assert prop.pconid not in self.thermalProperties
     #    self.thermalProperties[prop.pconid] = prop
-
-    def addThermalMaterial(self,material,allowOverwrites=False):
-        key = material.mid
-        if key in self.thermalMaterials:
-            if not material.isSameCard(self.thermalMaterials[key]):
-                assert key not in self.thermalMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.thermalMaterials[key],material)
-        else:
-            assert key>0,'mid=%s material=\n%s' %(key,material)
-            self.thermalMaterials[key] = material
 
     def addThermalBC(self,bc,key):
         assert key>0
@@ -408,30 +455,32 @@ class addMethods(object):
         self.flfacts[flfact.sid] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact
 
-
     def addDConstr(self,dconstr):
         key = (dconstr.oid,dconstr.rid)
         assert key not in self.dconstrs
         assert dconstr.oid>0
         assert dconstr.rid>0
         self.dconstrs[key] = dconstr
+
     def addDesvar(self,desvar):
         assert desvar.oid not in self.desvars
         assert desvar.oid>0
         self.desvars[desvar.oid] = desvar
+
     def addDDVal(self,ddval):
         assert ddval.oid not in self.ddvals
         assert ddval.oid>0
         self.ddvals[ddval.oid] = ddval
+
     def addDResp(self,dresp):
         assert dresp.oid not in self.dresps
         assert dresp.oid>0
         self.dresps[dresp.oid] = dresp
+
     def addDvprel(self,dvprel):
         assert dvprel.oid not in self.dvprels
         assert dvprel.oid>0
         self.dvprels[dvprel.oid] = dvprel
-
 
     def addNLParm(self,nlparm):
         assert nlparm.nid not in self.nlparms

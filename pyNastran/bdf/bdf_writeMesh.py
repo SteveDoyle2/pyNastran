@@ -59,6 +59,7 @@ class writeMesh(object):
         msg += self.writeDynamic()
         msg += self.writeAero()
         msg += self.writeThermal()
+        msg += self.writeThermalMaterials()
         msg += self.writeConstraints()
         msg += self.writeOptimization()
         msg += self.writeRejects()
@@ -84,19 +85,21 @@ class writeMesh(object):
 
         msg += self.writeElements()
         msg += self.writeProperties()
-
         msg += self.writeMaterials()
         msg += self.writeLoads()
+
         msg += self.writeDynamic()
         msg += self.writeAero()
         msg += self.writeThermal()
+        msg += self.writeThermalMaterials()
+
         msg += self.writeConstraints()
         msg += self.writeOptimization()
         msg += self.writeRejects()
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
 
-        self.log.info("***writing %s" %(outfilename))
+        self.log.debug("***writing %s" %(outfilename))
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -117,7 +120,7 @@ class writeMesh(object):
         msg += self.writeCoords()
         msg += 'ENDDATA\n'
 
-        self.log.info("***writing %s" %(outfilename))
+        self.log.debug("***writing %s" %(outfilename))
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -250,6 +253,12 @@ class writeMesh(object):
         if self.materials:
             msg += '$MATERIALS\n'
         for key,material in sorted(self.materials.items()):
+            msg += str(material)
+
+    def writeThermalMaterials(self):
+        if self.thermalMaterials:
+            msg += '$THERMAL MATERIALS\n'
+        for key,material in sorted(self.thermalMaterials.items()):
             msg += str(material)
         return msg
 

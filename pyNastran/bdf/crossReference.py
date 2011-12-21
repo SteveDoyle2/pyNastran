@@ -20,6 +20,7 @@ class XrefMesh(object):
             self.crossReference_Aero()
             #self.crossReference_Loads()
             self.spcObject.crossReference(self)
+            #self.mpcObject.crossReference(self)
             #self.caseControlDeck.crossReference(self)
         ###
 
