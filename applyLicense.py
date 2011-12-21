@@ -106,27 +106,29 @@ def updateCopyright():
     header.close()
 
     for fname in files:
-        print "adding fname=%s" %(fname)
-        f = open(fname,'r')
-        lines = f.readlines()
-        f.close()
+        if '.py' in fname:
+            print "adding fname=%s" %(fname)
+            f = open(fname,'r')
+            lines = f.readlines()
+            f.close()
 
-        for line in lines[0:20]:
-            print line
+            for line in lines[0:20]:
+                print line
 
-        f.close()
-        lines2 = cleanHeader(lines)
+            f.close()
+            lines2 = cleanHeader(lines)
 
 
-        #break
-        lines3 = headerLines + lines2
+            #break
+            lines3 = headerLines + lines2
 
-        fout = open(fname,'wb')
-        for line in lines3:
-            fout.write(line)
+            fout = open(fname,'wb')
+            for line in lines3:
+                fout.write(line)
+            ###
+            #if 'bdf.py' in fname:
+            #    break
         ###
-        if 'bdf.py' in fname:
-            break
     ###    
     #print "---FOLDERS---"
     #print "folders = ",'\n'.join(folders)+'\n'
