@@ -1,4 +1,5 @@
 #summary Usage of the Op2 Reader
+#labels Featured
 = TODO =
 update displacement
 = Introduction =
@@ -297,18 +298,20 @@ dt = 0
 = Table Data =
 
 Static Tables
- * Stress/Strain (compositeShell-type, rod-type, bar-type, beam-type, shell-type, solid-type)
- * Displacement
  * Temperature
+ * Displacement
  * Strain Energy Density
+ * Applied Loads Summary
+ * Stress/Strain (rod-type, bar-type, beam-type, compositeShell-type, shell-type, solid-type)
 
 
 Transient Tables
- * Stress/Strain (compositeShell-type, rod-type, bar-type, beam-type, shell-type, solid-type)
- * Eigenvectors
- * Displacement
  * Temperature
+ * Displacement
+ * Eigenvectors
  * Strain Energy Density
+ * Applied Loads Summary
+ * Stress/Strain (rod-type, bar-type, beam-type, compositeShell-type, shell-type, solid-type)
 
 The tables are organized into cascading dictionaries with the final value being a float unless otherwise noted.  
 
@@ -326,6 +329,39 @@ Possible values of gridType include:
 
 The list of data members in the various results:
 {{{
+
+ * Temperature
+    * gridType[nid]
+    * T[dt][nid]
+
+ * Displacement
+   * gridType[nid]
+   * displacements[dt][nid]
+     * numpy array of length 3
+   * rotations[dt][nid]
+     * numpy array of length 3
+
+ * Eigenvectors
+   * gridType[nid]
+   * displacements[dt][nid]
+     * numpy array of length 3
+   * rotations[dt][nid]
+     * numpy array of length 3
+
+ * Strain Energy Density
+    * energy[dt][eid]
+    * percent[dt][eid]
+    * density[dt][eid]
+
+ * Applied Loads Summary
+    * eids[dt][nid][iLoad]
+      * iLoad represents a list
+    * source[dt][nid][iLoad]
+    * forces[dt][nid][iLoad]
+      * numpy array of length 3
+    * moments[dt][nid][iLoad]
+      * numpy array of length 3
+
  * Stress/Strain
    * rod-type
      * eType[eid]
@@ -334,7 +370,7 @@ The list of data members in the various results:
      * MS_axial[dt][eid]
      * MS_torsion[dt][eid]
 
-   * bar-type (replace "s" for "e" when dealing with strain)
+   * bar-type (replace "s" for "e" for strain)
      * eType[eid]
      * s1[dt][eid][iPoint]
        * NOTE:  iPoint is a length=2 list of points A and B of the bar
@@ -345,7 +381,7 @@ The list of data members in the various results:
      * smax[dt][eid][iPoint]
      * smin[dt][eid][iPoint]
 
-   * beam-type (replace "s" for "e" when dealing with strain)
+   * beam-type (replace "s" with "e" when dealing with strain)
      * eType[eid]
      * xxb[dt][eid][iPoint]
        * NOTE:  iPoint is a variable length list of the number of points along the beam
@@ -355,7 +391,7 @@ The list of data members in the various results:
      * MS_tension[dt][eid][iPoint]
      * MS_compression[dt][eid][iPoint]
 
-   * compositePlate-type (substitute "e" for the "o" and "t")
+   * compositePlate-type (replace "e" with "o" and "t" for strain)
       * eType[eid]
       * o11[dt][eid][iLayer]
         * NOTE: iLayer is a variable length list depending on the number of plies
@@ -383,34 +419,4 @@ The list of data members in the various results:
       * txz[dt][eid][nid]
       * ovmShear[dt][eid][nid]
 
- * Eigenvectors
-   * gridType[nid]
-   * displacements[dt][nid]
-     * numpy array of length 3
-   * rotations[dt][nid]
-     * numpy array of length 3
-
- * Displacement
-   * gridType[nid]
-   * displacements[dt][nid]
-     * numpy array of length 3
-   * rotations[dt][nid]
-     * numpy array of length 3
-
- * Temperature
-    * gridType
-    * T
-
- * Strain Energy Density
-    * energy[dt][eid]
-    * percent[dt][eid]
-    * density[dt][eid]
-
- * Applied Loads
-    * eids[dt][nid][iLoad]
-      * iLoad represents a list
-    * source[dt][nid][iLoad]
-    * forces[dt][nid][iLoad]
-    * moments[dt][nid][iLoad]
-    * 
 }}}
