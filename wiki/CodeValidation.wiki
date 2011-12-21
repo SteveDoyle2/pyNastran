@@ -50,7 +50,6 @@ diffKeys1=[] diffKeys2=[]
   -key=TEMPD   value1=1    value2=1
   *key=CTRIA3  value1=1    value2=0
 ----------------------------------------------------------------
-
 }}}
 
 
@@ -58,7 +57,7 @@ It's broken into 3 sections:
  * Section 1 - tells you what file was read and what cards were rejected.
  * Section 2 - uses the output of Section 1 to test again (helps to verifies fields weren't shifted)
  * Section 3 - prints out a cards that were found in the BDF along with the value of each.  
- * A star indicates a cards was not written out and you should be careful of using the code on the example.  The CTRIA3 card example was lost.  Most likely the CTRIA3 shares an elementID with another element.  Note that INCLUDE files always have stars by them.
+ * A star indicates a cards was not written out and you should be careful of using the code on the example.  The CTRIA3 card was lost.  Most likely the CTRIA3 shares an elementID with another element.  Note that INCLUDE files always have stars by them.
  * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card 
 was ignored in both cases.
 
@@ -84,3 +83,23 @@ optional arguments:
   -x, --xref     Disables cross-referencing of the BDF
   -v, --version  show program's version number and exit
 }}}
+
+== Duplicated Cards ==
+
+Sometimes this will happen
+{{{
+diffKeys1=[] diffKeys2=[]
+  *key=CROD    value1=2   value2=4
+}}}
+If you look at the definition of the cards, you'll see you can define 2 instances of them on a single Nastran card.  pyNastran rewrites them in long form.
+
+The list of duplicate defined cards include (not a full list):
+ * CORD1R
+ * CORD1C
+ * CORD1S
+ * CROD
+ * DAREA
+ * SPOINT
+ * PELAS
+ * PDAMP
+ * PMASS
