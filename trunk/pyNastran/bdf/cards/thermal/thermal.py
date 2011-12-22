@@ -1,4 +1,4 @@
-from baseCard import BaseCard
+from ..baseCard import BaseCard
 
 class ThermalCard(BaseCard):
     def __init__(self,card,data):
