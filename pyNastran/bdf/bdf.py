@@ -3,10 +3,6 @@ import sys
 import copy
 from math import ceil
 
-# 3rd party
-import numpy
-from numpy import any,cross
-
 # my code
 from pyNastran.general.general import ListPrint
 from pyNastran.bdf.errors import *
@@ -14,12 +10,12 @@ from pyNastran.bdf.errors import *
 
 from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
 from BDF_Card        import BDF_Card
-from bdf_helper      import getMethods,addMethods,writeMesh,cardMethods,XrefMesh
+from bdf_helper      import getMethods,addMethods,writeMesh,cardMethods,XrefMesh,bdfMethods
 from caseControlDeck import CaseControlDeck
 from fieldWriter     import printCard
 
 
-class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
+class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh,bdfMethods):
     modelType = 'nastran'
     isStructured = False
     
@@ -54,6 +50,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
         ## allows the BDF variables to be scoped properly (i think...)
         getMethods.__init__(self)
         addMethods.__init__(self)
+        bdf_Methods.__init__(self)
         writeMesh.__init__(self)
         cardMethods.__init__(self)
         XrefMesh.__init__(self)
@@ -733,7 +730,6 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
                 #print " rejecting card = ",card
                 #card = self.processCard(card)
                 #sys.exit()
-            
 
             #print "card2 = ",ListPrint(card)
             #print "card = ",card
@@ -884,24 +880,18 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
 
             elif cardName=='CTETRA':
                 nFields = cardObj.nFields()
-                if   nFields==7:    elem = CTETRA4(cardObj) # 4+3
-                else:               elem = CTETRA10(cardObj)# 10+3
-                #elif nFields==13:   elem = CTETRA10(cardObj)# 10+3
-                #else: raise Exception('invalid number of CTETRA nodes=%s card=%s' %(nFields-3,str(cardObj)))
+                if   nFields==7:    elem = CTETRA4(cardObj)  # 4+3
+                else:               elem = CTETRA10(cardObj) # 10+3
                 self.addElement(elem)
             elif cardName=='CHEXA':
                 nFields = cardObj.nFields()
-                if   nFields==11: elem = CHEXA8(cardObj)  # 8+3
-                else:             elem = CHEXA20(cardObj) # 20+3
-                #elif nFields==23: elem = CHEXA20(cardObj) # 20+3
-                #else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
+                if   nFields==11: elem = CHEXA8(cardObj)   # 8+3
+                else:             elem = CHEXA20(cardObj)  # 20+3
                 self.addElement(elem)
             elif cardName=='CPENTA': # 6/15
                 nFields = cardObj.nFields()
-                if   nFields==9:  elem = CPENTA6(cardObj)  # 6+3
-                else:             elem = CPENTA15(cardObj) # 15+3
-                #elif nFields==18: elem = CPENTA15(cardObj) # 15+3
-                #else: raise Exception('invalid number of CPENTA nodes=%s card=%s' %(nFields-3,str(cardObj)))
+                if   nFields==9:  elem = CPENTA6(cardObj)   # 6+3
+                else:             elem = CPENTA15(cardObj)  # 15+3
                 self.addElement(elem)
 
             elif cardName=='CBAR':

@@ -53,6 +53,19 @@ class scalarObject(Op2Codes):
             msg += '%s = %s' %(word,selfVarName)
         return msg
 
+    def recastGridType(self,gridType):
+        """converts a gridType integer to a string"""
+        if gridType==1:
+            gridType = 'G'  # GRID
+        elif gridType==2:
+            gridType = 'S'  # SPOINT
+        elif gridType==7:
+            gridType = 'L'  # RIGID POINT ???
+        else:
+            raise Exception('gridType=%s' %(gridType))
+        ###
+        return gridType
+        
     def updateDt(self,dataCode,dt):
         """
         this method is called if the object

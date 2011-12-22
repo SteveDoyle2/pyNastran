@@ -44,6 +44,7 @@ def getFailedFiles(filename):
 
 def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
     n = ''
+    iSubcases = []
     failedCases = []
     nFailed = 0
     nTotal  = 0
@@ -176,7 +177,7 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOn
     return isPassed
     ###
 
-def main():
+def runArgParse():
     import argparse
 
     ver = str(pyNastran.__version__)
@@ -187,8 +188,10 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
-    parser.add_argument('-g','--geometry', dest='geometry', action='store_true',help='Reads the OP2 for geometry, which can be written out')
-    parser.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out (requires --geometry)')
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('-g','--geometry', dest='geometry', action='store_true',help='Reads the OP2 for geometry, which can be written out')
+    group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
+
     parser.add_argument('-v','--version',action='version',version=ver)
     
     if len(sys.argv)==1:
@@ -203,7 +206,11 @@ def main():
     writeBDF    = args.writeBDF
     op2FileName = args.op2FileName[0]
 
-    runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,debug=debug)
+    return (op2FileName,makeGeom,writeBDF,debug)
+
+def main():
+    (op2FileName,makeGeom,writeBDF,debug) = runArgParse()
+    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,debug=debug)
 
 if __name__=='__main__':  # op2
     main()
