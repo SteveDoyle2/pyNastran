@@ -4,14 +4,13 @@ from numpy import array
 #from numpy.linalg import norm
 
 # my code
-from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
 from baseCard import Element
 
-from elementsBars   import *
 from elementsRigid  import *
-from elementsShell  import *
 from elementsSolid  import *
-from elementsSpring import *
+from bars.elementsBars       import *
+from plates.elementsShell    import *
+from springs.elementsSprings import *
 
 class DamperElement(Element):
     def __init__(self,card,data):

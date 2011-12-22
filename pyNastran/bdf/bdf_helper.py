@@ -4,7 +4,7 @@ from pyNastran.bdf.fieldWriter     import printCard
 from pyNastran.bdf.bdf_writeMesh   import writeMesh
 from pyNastran.bdf.bdf_cardMethods import cardMethods
 from pyNastran.bdf.crossReference  import XrefMesh
-from pyNastran.bdf.bdf_Methods     import bdf_Methods
+from pyNastran.bdf.bdf_Methods     import bdfMethods
 
 class getMethods(object):
     def __init__(self):

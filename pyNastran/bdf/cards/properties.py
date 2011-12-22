@@ -2,9 +2,9 @@
 
 # my code
 #from baseCard import Property
-from    bars.propertiesBars   import *
-from  plates.propertiesShell  import *
-from springs.propertiesSpring import *
+from    bars.propertiesBars    import *
+from  plates.propertiesShell   import *
+from springs.propertiesSprings import *
 
 class PointProperty(Property):
     type = 'PointProperty'

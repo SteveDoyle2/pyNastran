@@ -2,7 +2,7 @@ import sys
 from numpy import zeros,pi
 
 # my code
-from .baseCard import Property
+from ..baseCard import Property
 
 class LineProperty(Property):
     type = 'LineProperty'

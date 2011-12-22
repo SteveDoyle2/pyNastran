@@ -50,7 +50,7 @@ class BDF(getMethods,addMethods,writeMesh,cardMethods,XrefMesh,bdfMethods):
         ## allows the BDF variables to be scoped properly (i think...)
         getMethods.__init__(self)
         addMethods.__init__(self)
-        bdf_Methods.__init__(self)
+        bdfMethods.__init__(self)
         writeMesh.__init__(self)
         cardMethods.__init__(self)
         XrefMesh.__init__(self)
