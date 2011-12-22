@@ -460,6 +460,7 @@ PDAMP   (done)
 
 PROD    (done)
 PBEAM   (done)
+PBEAML  (verify me...)
 PBAR    (done)
 PBARL   (done)
 PTUBE   (done)
@@ -524,6 +525,7 @@ FLUTTER (done)
 FLFACT  (done)
 
 CAERO1  (done)
+PAERO1  (not integrated)
 SPLINE1 (done)
 
 ----Optimization----:
@@ -563,7 +565,6 @@ CBEND
 
 properties
 PBEND
-PBEAML
 PBARL
 
 loads
@@ -704,7 +705,6 @@ CAERO3
 CAERO4
 CAERO5
 
-PAERO1
 PAERO2
 PAERO3
 PAERO4

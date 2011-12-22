@@ -12,6 +12,17 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 
 This code was written entirely in Python and should install easily.
 
+-----------------------v0.3 released 2012/01/??-----------------------
+Overall BDF
+   - reorganized code files
+   - improved accuracy of PBEAM methods (Area, Nsm, etc.) by integrating instead
+     of using the first value
+   - 
+
+Added BDF
+   - PBEAML
+   - 
+
 -----------------------v0.2 released 2011/12/20-----------------------
 
 Overall BDF
