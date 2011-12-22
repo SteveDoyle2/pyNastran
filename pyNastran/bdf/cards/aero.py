@@ -143,6 +143,32 @@ class CAERO1(BaseCard): # add helper functions
         return self.printCard(fields)
 
 
+class PAERO1(BaseCard): # aero panel property; not integrated
+    """
+    Defines associated bodies for the panels in the Doublet-Lattice method.
+    PAERO1 PID B1 B2 B3 B4 B5 B6
+    """
+    type = 'PAERO1'
+    def __init__(self,card=None,data=None):
+        self.pid = card.field(1)
+        Bi = card.fields(2)
+        self.Bi = []
+
+        for bi in Bi:
+            if isinstance(bi,int) and bi>=0:
+                self.Bi.append(bi)
+            elif bi is not None:
+                raise Exception('invalid Bi value on PAERO1 bi=|%r|' %(bi))
+            #else:
+            #    pass
+        ###
+
+    def __repr__(self):
+        fields = ['PAERO1'] + self.Bi
+        return self.printCard(fields)
+
+    
+
 class AEPARM(BaseCard): # not integrated
     """
     Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic extra

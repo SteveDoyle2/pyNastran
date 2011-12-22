@@ -1,9 +1,66 @@
 import numpy
 from numpy import array,cross,allclose,zeros,matrix
-from scipy.linalg import solve_banded
 
 #from numpy import 
 from numpy.linalg import norm, solve
+
+from scipy.linalg      import solve_banded
+from scipy.interpolate import splrep,splev
+from scipy.integrate   import quad
+import scipy.weave  # "fixes" bug where scipy screws up return code handling
+
+def integrateLine(x,y):
+    """
+    Integrates a line of length 1.0
+    @param x the independent variable
+    @param y the   dependent variable
+    """
+    if len(set(y))==1:
+        return y[0] # (x1-x0 = 1., so yBar*1 = yBar)
+    try:
+        assert len(x)==len(y), 'x=%s y=%s' %(x,y)
+        spline = buildSpline(x,y)
+        #y = splev(xi,spline)
+        out = quad(scipy.splev,0.,1.,args=(spline))  # now integrate the area
+        A = out[0]
+    except:
+        raise Exception('spline Error x=%s y=%s' %(x,y))
+    return A
+
+def evaluatePositiveSpline(x,spline,minValue):
+    y = scipy.splev(x)
+    return max(y,minValue)
+
+def buildSpline(x,y):
+    """
+    builds a cubic spline or 1st order spline if there are less than 3 terms
+    @param x the independent variable
+    @param y the   dependent variable
+    @note a 1st order spline is the same as linear interpolation
+    """
+    if len(x)<3:
+        spline = splrep(x,y,k=1)  # build a linearly interpolated representation
+    else:
+        spline = splrep(x,y)  # build a cubic spline representation
+    return spline
+
+def integratePositiveLine(x,y,minValue=0.):
+    """
+    Integrates a line of length 1.0
+    @param x the independent variable
+    @param y the   dependent variable
+    """
+    if len(set(y))==1:
+        return y[0] # (x1-x0 = 1., so yBar*1 = yBar)
+    try:
+        assert len(x)==len(y), 'x=%s y=%s' %(x,y)
+        spline = buildSpline(x,y)
+        #y = splev(xi,spline)
+        out = quad(splev,0.,1.,args=(spline,minValue))  # now integrate the area
+        A = out[0]
+    except:
+        raise Exception('spline Error x=%s y=%s' %(x,y))
+    return A
 
 def reduceMatrix(matA,nids):
     """
