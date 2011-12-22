@@ -20,11 +20,14 @@ class ShellElement(Element):
     def Nsm(self):
         return self.pid.Nsm()
 
+    def MassPerArea(self):
+        return self.pid.MassPerArea()
+
     def Mass(self):
         """
         \f[ \large  mass = \frac{mass}{area} area  \f]
         """
-        return self.pid.massPerArea()*self.Area()
+        return self.pid.MassPerArea()*self.Area()
 
     def crossReference(self,mesh):
         self.nodes = mesh.Nodes(self.nodes)

@@ -87,6 +87,9 @@ class SolidProperty(Property):
         Property.__init__(self,card,data)
         pass
 
+    def Rho(self):
+        self.mid.rho
+
 class PLSOLID(SolidProperty):
     """
     Defines a fully nonlinear (i.e., large strain and large rotation) hyperelastic solid
