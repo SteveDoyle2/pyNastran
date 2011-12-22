@@ -4,10 +4,17 @@ from struct import unpack
 
 # pyNastran
 from ougv1_Objects import (
-     temperatureObject,displacementObject,  # analysisCode=1, formatCode=1 sortCode=0
      complexDisplacementObject,             # analysisCode=5  formatCode=3 sortCode=1
-     fluxObject,                            # analysisCode=1, formatCode=1 sortCode=3
-     nonlinearTemperatureObject,            # analysisCode=10,formatCode=1 sortCode=0 ???
+    #fluxObject,                            # analysisCode=1, formatCode=1 sortCode=3
+    #nonlinearTemperatureObject,            # analysisCode=10,formatCode=1 sortCode=0 ???
+     )
+
+from oug_displacements import (             # analysisCode=1, formatCode=1 sortCode=0
+     displacementObject,
+     )
+
+from oug_temperatures import (              # analysisCode=1, formatCode=1 sortCode=0
+     temperatureObject,
      )
 
 from oug_eigenvectors import (
