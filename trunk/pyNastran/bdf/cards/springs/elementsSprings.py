@@ -1,7 +1,7 @@
 import sys
 from numpy.linalg import norm
 
-from baseCard import Element
+from ..baseCard import Element
 
 class SpringElement(Element):
     def __init__(self,card,data):

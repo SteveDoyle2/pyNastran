@@ -1,7 +1,7 @@
 import sys
 
-from baseCard import Element
-from pyNastran.general.generalMath import Area
+from ..baseCard import Element
+from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
 
 class ShellElement(Element):
     def __init__(self,card,data):

@@ -6,8 +6,7 @@ from numpy.linalg import norm
 from pyNastran.bdf.cards.baseCard import Mid
 from pyNastran.bdf.errors import *
 
-
-from elements import Element
+from ..baseCard import Element,Mid
 
 class LineElement(Element):
     def __init__(self,card,data):
@@ -426,9 +425,9 @@ class CONROD(CROD):
         c   = self.setBlankIfDefault(self.c,  0.0)
         nsm = self.setBlankIfDefault(self.NSM,0.0)
         #print "nodes = ",self.nodeIDs()
-        #print "mid   = ",Mid(self)
+        #print "mid   = ",self.Mid()
         #print "eid   = ",self.eid
-        fields = ['CONROD',self.eid]+self.nodeIDs()+[Mid(self),self.A,self.J,self.c,nsm]
+        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.J,self.c,nsm]
         #print fields
         #print "----------------------------"
         return self.printCard(fields)
