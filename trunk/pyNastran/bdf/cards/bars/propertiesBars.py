@@ -322,6 +322,9 @@ class PTUBE(LineProperty):
             self.OD2 = self.OD1
             #self.OD2 = data[5]  ## @note quirk to this one...
 
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+
     def __repr__(self):
         t   = self.setBlankIfDefault(self.t,self.OD1/2.)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
@@ -329,7 +332,7 @@ class PTUBE(LineProperty):
         fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
         return self.printCard(fields)
     
-    def area(self):
+    def Area(self):
         """
         this shouldnt be so hard...
         """
@@ -427,6 +430,13 @@ class PBAR(LineProperty):
             self.i12 = data[18]
         ###
 
+    def MassPerLength(self):
+        #mass = L*(rho*A+nsm)
+        A   = self.Area()
+        rho = self.Rho()
+        nsm = self.Nsm()
+        return rho*A+nsm
+
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
@@ -512,10 +522,10 @@ class PBARL(LineProperty):
     def __init__(self,card=None,data=None):
         LineProperty.__init__(self,card,data)
         if card:
-            self.pid = card.field(1)
-            self.mid = card.field(2)
+            self.pid   = card.field(1)
+            self.mid   = card.field(2)
             self.group = card.field(3,'MSCBMLO')
-            self.Type = card.field(4)
+            self.Type  = card.field(4)
 
             #nDim = len(self.dim)-1
             nDim = self.validTypes[self.Type]
@@ -554,6 +564,16 @@ class PBARL(LineProperty):
 
     def Nsm(self):
         return self.nsm
+    
+    def MassPerLength(self):
+        """
+        mass = L*(Area*rho+nsm)
+        mass/L = Area*rho+nsm
+        """
+        rho  = self.Rho()
+        area = self.Area()
+        nsm  = self.Nsm()
+        return area*rho+nsm
 
     def __repr__(self):
         group = self.setBlankIfDefault(self.group,'MSCBMLO')
@@ -680,6 +700,18 @@ class PBEAM(IntegratedLineProperty):
     #    #raise Exception(self.nsm[0])
     #    return self.nsm[0]
 
+    def MassPerLength(self):
+        """
+        mass = L*(Area*rho+nsm)
+        mass/L = Area*rho+nsm
+        """
+        rho  = self.Rho()
+        massPerLs = []
+        for area,n in zip(self.A,self.nsm):
+            massPerLs.append(area*rho+nsm)
+        massPerL = integratePositiveLine(self.xxb,massPerLs)
+        return massPerL
+
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
@@ -756,10 +788,10 @@ class PBEAML(IntegratedLineProperty):
     def __init__(self,card=None,data=None):
         IntegratedLineProperty.__init__(self,card,data)
         if card:
-            self.pid = card.field(1)
-            self.mid = card.field(2)
+            self.pid   = card.field(1)
+            self.mid   = card.field(2)
             self.group = card.field(3,'MSCBMLO')
-            self.Type = card.field(4)
+            self.Type  = card.field(4)
 
             nDim = self.validTypes[self.Type]
             nAll = nDim+1
@@ -795,6 +827,19 @@ class PBEAML(IntegratedLineProperty):
                 self.nsm.append(card.field(i,    0.0))
             ###
     
+    def MassPerLength(self):
+        """
+        mass = L*(Area*rho+nsm)
+        mass/L = Area*rho+nsm
+        """
+        rho  = self.Rho()
+        massPerLs = []
+        for dim,n in zip(self.dim,self.nsm):
+            a = self.AreaL(dim)
+            massPerLs.append(a*rho+nsm)
+        massPerL = integratePositiveLine(self.xxb,massPerLs)
+        return massPerL
+
     def Area(self):
         Areas = []
         for dim in self.dim:
@@ -804,6 +849,9 @@ class PBEAML(IntegratedLineProperty):
 
     #def Mid(self):
     #    return self.mid
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
 
     def __repr__(self):
         fields = ['PBEAML',self.Pid,self.Mid(),self.group,self.Type,None,None,None,None]
@@ -832,7 +880,7 @@ class PBEAM3(LineProperty): # not done, cleanup
             self.iz  = card.field(4)
             self.iy  = card.field(5)
             self.iyz = card.field(6,0.0)
-            self.j   = card.field(7,self.Iy+self.iz)
+            self.j   = card.field(7,self.iy+self.iz)
             self.nsm = card.field(8,0.0)
 
             self.cy = card.field(9)

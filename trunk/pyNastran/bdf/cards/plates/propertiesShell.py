@@ -332,7 +332,7 @@ class PCOMP(ShellProperty):
     def Nsm(self):
         return self.nsm
 
-    def mid(self,iPly):
+    def Mid(self,iPly):
         Mid = self.material(iPly)
         if isinstance(Mid,int):
             return Mid
@@ -346,7 +346,7 @@ class PCOMP(ShellProperty):
         Sout = self.plies[iPly][3]
         return Sout
 
-    def massPerArea(self,iPly='all'):
+    def MassPerArea(self,iPly='all'):
         """
         mass = rho*A*t
         but area comes from the element
@@ -356,11 +356,11 @@ class PCOMP(ShellProperty):
         if iPly=='all': # get all layers
             massPerArea = 0.
             for (iply,ply) in enumerate(self.plies):
-                massPerArea += self.massPerArea(iply)
+                massPerArea += self.MassPerArea(iply)
             ###
             if self.isSymmetrical():
                 if self.isCoreLayer():
-                    massPerArea -= self.massPerArea(0)/2.  # cut out the thickness of half the core layer
+                    massPerArea -= self.MassPerArea(0)/2.  # cut out the thickness of half the core layer
                     
                 ###
                 return massPerArea*2.
@@ -408,7 +408,7 @@ class PCOMP(ShellProperty):
         #print "plies = ",self.plies
         for (iPly,ply) in enumerate(self.plies):
             (_mid,t,theta,sout) = ply
-            mid = self.mid(iPly)
+            mid = self.Mid(iPly)
             theta = self.setBlankIfDefault(theta,0.0)
             sout  = self.setBlankIfDefault(sout,'NO')
             fields += [mid,t,theta,sout]
@@ -475,13 +475,13 @@ class PSHELL(ShellProperty):
     def Nsm(self):
         return self.nsm
 
-    def massPerArea(self):
+    def MassPerArea(self):
         """
         calculates mass per area
         \f[ \large  \frac{mass}{A} = nsm + \rho t \f]
         """
-        mPerA = self.nsm + self.mid.rho*self.t
-        return mPerA
+        massPerArea = self.nsm + self.mid.rho*self.t
+        return massPerArea
 
     def crossReference(self,mesh):
         self.mid  = mesh.Material(self.mid)

@@ -1,6 +1,14 @@
 from numpy import dot, cross,matrix
 from elements import Element
 
+def Volume4(n1,n2,n3,n4):
+    """
+    V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
+    \f[ \large V = {(a-d) \dot \left( (b-d) \times (c-d) \right) }{6} \f]
+    """
+    V = dot((n1-n4),cross(n2-n4,n3-n4))/6.
+    return V
+
 class SolidElement(Element):
     def __init__(self,card,data):
         Element.__init__(self,card,data)
@@ -10,10 +18,10 @@ class SolidElement(Element):
         self.pid   = mesh.Property(self.pid)
 
     def Mass(self):
-        return self.Rho()*self.volume()
+        return self.Rho()*self.Volume()
     
     def Rho(self):
-        return self.pid.rho
+        return self.pid.mid.rho
 
 class CHEXA8(SolidElement):
     """
@@ -37,6 +45,16 @@ class CHEXA8(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==8
 
+    def Volume(self):
+        """@todo not done..."""
+        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
+        V1 = Volume4(n1,n2,n3,n5)
+        V2 = Volume4(n1,n2,n3,n6)
+        V3 = Volume4(n5,n1,n4,n6)
+        
+        V = V1+V2+V3
+        return V
+
 class CHEXA20(CHEXA8):
     """
     CHEXA EID PID G1 G2 G3 G4 G5 G6
@@ -59,6 +77,16 @@ class CHEXA20(CHEXA8):
         msg = 'len(nids)=%s nids=%s' %(len(nids),nids)
         assert len(self.nodes)<=20,msg
 
+    def Volume(self):
+        """@todo not done..."""
+        (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16,n17,n18,n19,n20) = self.nodePositions()
+        V1 = Volume4(n1,n2,n3,n5)
+        V2 = Volume4(n1,n2,n3,n6)
+        V3 = Volume4(n5,n1,n4,n6)
+        
+        V = V1+V2+V3
+        return V
+
 class CPENTA6(SolidElement):
     """
     CPENTA EID PID G1 G2 G3 G4 G5 G6
@@ -78,6 +106,15 @@ class CPENTA6(SolidElement):
             assert len(data)==8,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==6
+
+    def Volume(self):
+        """@todo not done..."""
+        n = self.nodePositions()
+        #print "len(nodes1)",len(n)
+        #print n[0]
+        (n1,n2,n3,n4,n5,n6) = n
+        V1 = Volume4(n1,n2,n3,n5)
+        return V1
 
 class CPENTA15(CPENTA6):
     """
@@ -101,6 +138,15 @@ class CPENTA15(CPENTA6):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=15
 
+    def Volume(self):
+        """@todo not done..."""
+        n = self.nodePositions()
+        #print "len(nodes)",len(n)
+        #print n[0]
+        (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15) = n
+        V1 = Volume4(n1,n2,n3,n5)
+        return V1
+
 class CTETRA4(SolidElement):
     """
     CTETRA EID PID G1 G2 G3 G4
@@ -121,14 +167,8 @@ class CTETRA4(SolidElement):
         assert len(self.nodes)==4
 
     def Volume(self):
-        """
-        V = (a-d) * ((b-d) x (c-d))/6   where x is cross and * is dot
-        
-        \f[ \large V = {(a-d) \dot \left( (b-d) \times (c-d) \right) }{6} \f]
-        """
         (n1,n2,n3,n4) = self.nodePositions()
-        V = dot((n1-n4),cross(n2-n4,n3-n4))/6.
-        return V
+        return Volume4(n1,n2,n3,n4)
 
     def Jacobian(self):
         """
@@ -176,3 +216,8 @@ class CTETRA10(CTETRA4):
             assert len(data)==12,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=10
+
+    def Volume(self):
+        (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = self.nodePositions()
+        return Volume4(n1,n2,n3,n4)
+

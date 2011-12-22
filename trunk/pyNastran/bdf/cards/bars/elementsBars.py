@@ -30,11 +30,11 @@ class LineElement(Element):
 
     def J(self):
         """returns the Polar Moment of Inertia.   \f$ J \f$"""
-        return self.pid.mid.J
+        return self.pid.J()
 
     def Izz(self):
         """returns the Moment of Inertia.   \f$ I \f$"""
-        return self.pid.mid.Izz
+        return self.pid.Izz()
 
     def Nu(self):
         """returns Poisson's Ratio  \f$ \nu \f$"""
@@ -49,6 +49,15 @@ class LineElement(Element):
     def Nsm(self):
         """Placeholder method for the non-structural mass"""
         raise NotImplementedMethodError('implement self.Area() for %s' %(self.type))
+
+
+    def MassPerLength(self):
+        """Returns the mass per unit length"""
+        return self.pid.MassPerLength()
+
+    #def MassPerLength(self):
+        """Returns the mass per unit length"""
+        #massPerLength = self.Rho()*self.Area() + self.Nsm()
 
     def Mass(self):
         """
@@ -203,6 +212,9 @@ class CROD(LineElement):
     def Nsm(self):
         return self.pid.nsm
 
+    def MassPerLength(self):
+        massPerLength = self.pid.mid.rho*self.pid.A + self.pid.nsm
+
     def __repr__(self):
         fields = ['CROD',self.eid,self.Pid()]+self.nodeIDs()
         return self.printCard(fields)
@@ -213,7 +225,7 @@ class CTUBE(CROD):
     def __init__(self,card=None,data=None):
         CROD.__init__(self,card,data)
     ###
-    def Area():
+    def Area(self):
         return self.pid.Area()
 
     def __repr__(self):
@@ -234,15 +246,15 @@ class CONROD(CROD):
             self.A   = float(card.field(5))
             self.J   = float(card.field(6,0.0))
             self.c   = float(card.field(7,0.0))
-            self.NSM = float(card.field(8,0.0))
+            self.nsm = float(card.field(8,0.0))
         else:
             self.eid = data[0]
             nids = data[1:3]
             self.mid = data[3]
             self.A   = data[4]
-            self.J   = data[5]
+            self.j   = data[5]
             self.c   = data[6]
-            self.NSM = data[7]
+            self.nsm = data[7]
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
@@ -259,6 +271,15 @@ class CONROD(CROD):
     def Area(self):
         return self.A
     
+    def J(self):
+        """returns the Polar Moment of Inertia.   \f$ J \f$"""
+        j/2
+        return self.j
+
+    def Nsm(self):
+        """Placeholder method for the non-structural mass"""
+        return self.nsm
+
     def E(self):
         """returns the Young's Modulus  \f$ E \f$"""
         return self.mid.E
@@ -267,13 +288,22 @@ class CONROD(CROD):
         """returns the Shear Modulus   \f$ G \f$"""
         return self.mid.G
 
-    def J(self):
-        """returns the Polar Moment of Inertia.   \f$ J \f$"""
-        return self.mid.J
+    def Iyy(self):
+        return self.Izz()
 
     def Izz(self):
         """returns the Moment of Inertia.   \f$ I \f$"""
-        return self.mid.Izz
+        r = self.Radius()
+        #A=piD2/4
+        #I = piR^4/4 = pi*D^4/16*4 = pi*D^4/64 = A*D^2/16 = A^2/pi
+        #  = A*R^2/4 = A^2/pi/4
+        I = self.A**2/(4*pi)
+        return I
+
+    def Radius(self):
+        """returns the Radius of the Rod.   \f$ R \f$"""
+        R = (A/pi)**0.5
+        return R
 
     def Nu(self):
         """returns Poisson's Ratio  \f$ \nu \f$"""
@@ -282,10 +312,6 @@ class CONROD(CROD):
     def Rho(self):
         """returns the material density  \f$ \rho \f$"""
         return self.mid.rho
-
-    def Nsm(self):
-        """Placeholder method for the non-structural mass"""
-        return self.nsm
 
     def Rmatrix(self,model):
         """
@@ -423,11 +449,11 @@ class CONROD(CROD):
 
     def __repr__(self):
         c   = self.setBlankIfDefault(self.c,  0.0)
-        nsm = self.setBlankIfDefault(self.NSM,0.0)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
         #print "nodes = ",self.nodeIDs()
         #print "mid   = ",self.Mid()
         #print "eid   = ",self.eid
-        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.J,self.c,nsm]
+        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,self.c,nsm]
         #print fields
         #print "----------------------------"
         return self.printCard(fields)
