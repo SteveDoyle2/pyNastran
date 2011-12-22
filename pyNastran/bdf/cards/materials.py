@@ -5,6 +5,7 @@
 
 # my code
 from baseCard import BaseCard
+#from thermal.materials import *
 
 class Material(BaseCard):
     """Base Material Class"""
@@ -26,7 +27,6 @@ class IsotropicMaterial(Material):
     """Isotropic Material Class"""
     def __init__(self,card,data):
         Material.__init__(self,card,data)
-
 
 class AnisotropicMaterial(Material):
     """Anisotropic Material Class"""
