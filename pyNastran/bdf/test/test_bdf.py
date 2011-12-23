@@ -5,6 +5,7 @@ numpy.seterr(all='raise')
 import traceback
 
 import pyNastran
+from pyNastran.bdf.errors import *
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
 
@@ -18,6 +19,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
     print "folder = ",folder
     filenames  = os.listdir(folder)
     filenames2 = []
+    diffCards = []
     for filename in filenames:
         if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas'):
             filenames2.append(filename)
@@ -26,7 +28,16 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
     for filename in filenames2:
         print "filename = ",filename
         try:
-            runBDF(folder,filename,debug=debug,xref=xref,isFolder=True)
+            (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,isFolder=True)
+            diffCards += diffCards
+        except KeyboardInterrupt:
+            sys.exit('KeyboardInterrupt...sys.exit()')
+        except TabCharacterError:
+            pass
+        except ScientificParseError:
+            pass
+        except ClosedBDFError:
+            pass
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
@@ -34,16 +45,24 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
         print '-'*80
     ###
     print '*'*80
+    try:
+        print "diffCards1 = ",list(set(diffCards))
+    except TypeError:
+        #print "type(diffCards) =",type(diffCards)
+        print "diffCards2 = ",diffCards
 ###
 
 def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
     bdfModel = str(bdfFilename)
+    print "bdfModel = ",bdfModel
     if isFolder:
         bdfModel = os.path.join(testPath,folder,bdfFilename)
     
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
     fem1 = BDF(debug=debug,log=None)
+    fem2 = None
+    diffCards = []
     try:
         #print "xref = ",xref
         fem1.readBDF(bdfModel,xref=xref)
@@ -60,11 +79,19 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         outModel2 = bdfModel+'_out2'
         fem2.writeBDFAsPatran(outModel2)
         #fem2.writeAsCTRIA3(outModel2)
-        compare(fem1,fem2,xref=xref)
+        diffCards = compare(fem1,fem2,xref=xref)
         os.remove(outModel2)
 
-    #except KeyboardInterrupt:
-    #    sys.exit()
+    except KeyboardInterrupt:
+        sys.exit('KeyboardInterrupt...sys.exit()')
+    except MissingFileError:
+        pass
+    except TabCharacterError:
+        pass
+    except ScientificParseError:
+        pass
+    except ClosedBDFError:
+        pass
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
@@ -74,7 +101,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         raise
     ###
     print "-"*80
-    return (fem1,fem2)
+    return (fem1,fem2,diffCards)
 
 def divide(value1,value2):
     if value1==value2:  # good for 0/0
@@ -91,7 +118,7 @@ def divide(value1,value2):
 def compareCardCount(fem1,fem2):
     cards1 = fem1.cardCount
     cards2 = fem2.cardCount
-    computeInts(cards1,cards2,fem1)
+    return computeInts(cards1,cards2,fem1)
 
 def computeInts(cards1,cards2,fem1):
     cardKeys1 = set(cards1.keys())
@@ -114,7 +141,7 @@ def computeInts(cards1,cards2,fem1):
         
         diff = abs(value1-value2)
         star = ' '
-        if diff:
+        if diff and key not in ['INCLUDE']:
             star = '*'
         if key not in fem1.cardsToRead:
             star = '-'
@@ -129,6 +156,7 @@ def computeInts(cards1,cards2,fem1):
         msg = msg.rstrip()
         print msg
     ###
+    return listKeys1+listKeys2
 
 def compute(cards1,cards2):
     cardKeys1 = set(cards1.keys())
@@ -148,7 +176,11 @@ def compute(cards1,cards2):
 
         if key in listKeys2: value2 = cards2[key]
         else:                value2 = 0
-        msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
+        
+        if key=='INCLUDE':
+            msg += '    key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
+        else:
+            msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
         msg = msg.rstrip()
         print msg
     ###
@@ -195,11 +227,12 @@ def getElementStats(fem1,fem2):
     ###
 
 def compare(fem1,fem2,xref=True):
-    compareCardCount(fem1,fem2)
+    diffCards = compareCardCount(fem1,fem2)
     if xref:
         getElementStats(fem1,fem2)
     #compareParams(fem1,fem2)
     #printPoints(fem1,fem2)
+    return diffCards
 
 
 def compareParams(fem1,fem2):
@@ -223,8 +256,8 @@ def main():
                        help='path to BDF/DAT file')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-q','--quiet', dest='quiet',action='store_true',  help='Prints   debug messages (default=False)')
-    parser.add_argument('-x','--xref',    dest='xref', action='store_true',help='Disables cross-referencing of the BDF')
+    group.add_argument( '-q','--quiet',  dest='quiet',action='store_true', help='Prints   debug messages (default=False)')
+    parser.add_argument('-x','--xref',   dest='xref', action='store_true', help='Disables cross-referencing of the BDF')
     parser.add_argument('-v','--version',action='version',version=ver)
     
     if len(sys.argv)==1:

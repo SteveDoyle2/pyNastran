@@ -190,6 +190,30 @@ class LineElement(Element):
         
         return M
 
+class CBEND(LineElement):
+    type = 'CBEND'
+    def __init__(self,card=None,data=None):
+        LineElement.__init__(self,card,data)
+        self.eid  = int(card.field(1))
+        self.pid  = card.field(2,self.eid)
+        self.ga = card.field(3)
+        self.gb = card.field(4)
+        x1Go = card.field(5)
+        if isinstance(x1Go,int):
+            self.g0 = x1Go
+            self.x1 = None
+            self.x2 = None
+            self.x3 = None
+        elif isinstance(x1Go,float):
+            self.g0 = None
+            self.x1 = x1Go
+            self.x2 = card.field(6)
+            self.x3 = card.field(7)
+        else:
+            raise Exception('invalid x1Go=|%s| on CBEND' %(x1Go))
+        self.geom = card.field(8)
+        assert self.geom in [1,2,3,4],'geom is invalid geom=|%s|' %(self.geom)
+
 class CROD(LineElement):
     type = 'CROD'
     def __init__(self,card=None,data=None):
@@ -215,10 +239,9 @@ class CROD(LineElement):
     def MassPerLength(self):
         massPerLength = self.pid.mid.rho*self.pid.A + self.pid.nsm
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CROD',self.eid,self.Pid()]+self.nodeIDs()
-        return self.printCard(fields)
-
+        return fields
 
 class CTUBE(CROD):
     type = 'CTUBE'
@@ -228,9 +251,9 @@ class CTUBE(CROD):
     def Area(self):
         return self.pid.Area()
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CTUBE',self.eid,self.Pid()]+self.nodeIDs()
-        return self.printCard(fields)
+        return fields
 ###
 
 class CONROD(CROD):
@@ -244,7 +267,7 @@ class CONROD(CROD):
 
             self.mid = int(card.field(4))
             self.A   = float(card.field(5))
-            self.J   = float(card.field(6,0.0))
+            self.j   = float(card.field(6,0.0))
             self.c   = float(card.field(7,0.0))
             self.nsm = float(card.field(8,0.0))
         else:
@@ -264,6 +287,9 @@ class CONROD(CROD):
         self.nodes = model.Nodes(self.nodes)
         self.mid   = model.Material(self.mid)
 
+    def Mid(self):
+        return Mid(self)
+
     def C(self):
         """torsional constant"""
         return self.c
@@ -273,7 +299,6 @@ class CONROD(CROD):
     
     def J(self):
         """returns the Polar Moment of Inertia.   \f$ J \f$"""
-        j/2
         return self.j
 
     def Nsm(self):
@@ -287,6 +312,10 @@ class CONROD(CROD):
     def G(self):
         """returns the Shear Modulus   \f$ G \f$"""
         return self.mid.G
+
+    def Iyz(self):
+        """the Iyz for a rod is 0"""
+        return 0.
 
     def Iyy(self):
         return self.Izz()
@@ -447,17 +476,19 @@ class CONROD(CROD):
         #print "K = \n",K
         return K
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,self.c,self.nsm]
+        return fields
+
+    def reprFields(self):
+        j   = self.setBlankIfDefault(self.j,  0.0)
         c   = self.setBlankIfDefault(self.c,  0.0)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
         #print "nodes = ",self.nodeIDs()
         #print "mid   = ",self.Mid()
         #print "eid   = ",self.eid
-        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,self.c,nsm]
-        #print fields
-        #print "----------------------------"
-        return self.printCard(fields)
-
+        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,c,nsm]
+        return fields
 
 class CBAR(LineElement):
     """

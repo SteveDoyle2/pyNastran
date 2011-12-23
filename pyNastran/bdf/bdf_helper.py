@@ -446,6 +446,12 @@ class addMethods(object):
         assert nlparm.nid>0
         self.nlparms[nlparm.nid] = nlparm
 
+    def addFREQ(self,freq):
+        key = freq.sid
+        assert key not in self.frequencies
+        assert key>0
+        self.frequencies[key] = freq
+
     def addTable(self,table):
         key = table.tid
         assert key not in self.tables

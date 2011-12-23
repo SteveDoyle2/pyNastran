@@ -47,10 +47,10 @@ class CDAMP1(DamperElement):
         self.nodes = model.Nodes(self.nodes)
         self.pid   = model.Property(self.pid)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP1',self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
-        return self.printCard(fields)
+        return fields
 
 class CDAMP2(DamperElement):
     type = 'CDAMP2'
@@ -84,10 +84,10 @@ class CDAMP2(DamperElement):
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP2',self.eid,self.b,nodes[0],self.c1,nodes[1],self.c2]
-        return self.printCard(fields)
+        return fields
 
 class CDAMP3(DamperElement):
     type = 'CDAMP3'
@@ -113,10 +113,10 @@ class CDAMP3(DamperElement):
         self.nodes = model.Nodes(self.nodes)
         self.pid   = model.Property(self.pid)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP3',self.eid,self.pid,nodes[0],nodes[1]]
-        return self.printCard(fields)
+        return fields
 
 class CDAMP4(DamperElement):
     type = 'CDAMP4'
@@ -142,10 +142,10 @@ class CDAMP4(DamperElement):
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP4',self.eid,self.b,nodes[0],nodes[1]]
-        return self.printCard(fields)
+        return fields
 
 class CDAMP5(DamperElement):
     type = 'CDAMP5'
@@ -169,10 +169,10 @@ class CDAMP5(DamperElement):
         self.nodes = model.Nodes(self.nodes)
         self.pid   = model.Property(self.pid)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP5',self.eid,self.Pid(),nodes[0],nodes[1]]
-        return self.printCard(fields)
+        return fields
 
 class CSHEAR(Element):
     type = 'CSHEAR'
@@ -210,9 +210,9 @@ class CRAC2D(Element):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==18
 
-    def __repr__(self):
-        fields = [self.type,self.eid,self.Pid()]+self.nodes
-        return self.printCard(fields)
+    def rawFields(self):
+        fields = ['CRAC2D',self.eid,self.Pid()]+self.nodes
+        return fields
 
 class CRAC3D(Element):
     type = 'CRAC3D'
@@ -230,9 +230,9 @@ class CRAC3D(Element):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==64
 
-    def __repr__(self):
-        fields = [self.type,self.eid,self.Pid()]+self.nodes
-        return self.printCard(fields)
+    def rawFields(self):
+        fields = ['CRAC3D',self.eid,self.Pid()]+self.nodes
+        return fields
         
 
 class CVISC(CROD):
@@ -324,10 +324,14 @@ class CMASS2(PointElement):
         #self.g2 = mesh.Node(self.g2)
         pass
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CMASS2',self.eid,self.mass,self.g1,self.c1,self.g2,self.c2]
+        return fields
+
+    def reprFields(self):
         mass = self.setBlankIfDefault(self.mass,0.0)
         fields = ['CMASS2',self.eid,mass,self.g1,self.c1,self.g2,self.c2]
-        return self.printCard(fields)
+        return fields
 
 class CMASS3(PointElement):
     """
@@ -361,9 +365,9 @@ class CMASS3(PointElement):
         #self.s2 = mesh.Node(self.s2)
         self.pid = mesh.Property(self.pid)
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CMASS3',self.eid,self.Pid(),self.s1,self.s2]
-        return self.printCard(fields)
+        return fields
 
 class CMASS4(PointElement):
     """
@@ -396,9 +400,9 @@ class CMASS4(PointElement):
         #self.s2 = mesh.Node(self.s2)
         pass
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CMASS4',self.eid,self.mass,self.s1,self.s2]
-        return self.printCard(fields)
+        return fields
 
    
 class CONM2(PointElement): # v0.1 not done
@@ -441,7 +445,11 @@ class CONM2(PointElement): # v0.1 not done
         #    raise Exception('CONM2 cid !=0 is not coded...')
         ###
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CONM2',self.eid,self.gid,self.cid,self.mass]+self.X+self.I
+        return fields
+
+    def reprFields(self):
         I = []
         for i in self.I:
             if i==0.:
@@ -458,5 +466,5 @@ class CONM2(PointElement): # v0.1 not done
         cid  = self.setBlankIfDefault(self.cid,0)
         mass = self.setBlankIfDefault(self.mass,0.0)
         fields = ['CONM2',self.eid,self.gid,cid,mass]+X+I
-        return self.printCard(fields)
+        return fields
 

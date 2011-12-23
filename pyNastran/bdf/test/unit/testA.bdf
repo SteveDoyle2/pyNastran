@@ -5,6 +5,6 @@ INCLUDE 'testB.bdf'
 $back from testB
 DISP(PLOT,PUNCH) = 5
 BEGIN BULK
-GRID 1,
+GRID,1,
 INCLUDE 'testC.bdf'
 ENDDATA

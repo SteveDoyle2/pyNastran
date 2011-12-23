@@ -57,7 +57,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
-        'CTRIA3','CTRIA6',#'CTRIAX6',
+        'CTRIA3','CTRIA6','CTRIAR','CTRIAX',#'CTRIAX6',
         'CQUAD4','CQUAD8','CQUADR','CQUADX',
         'CHEXA','CPENTA','CTETRA',
         'CSHEAR','CVISC','CRAC2D','CRAC3D',
@@ -99,6 +99,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PCONV','PCONVM','PHBDY',
         'RADBC','CONV',  #'RADM',
         
+        # freq
+        'FREQ','FREQ1','FREQ2',
+        
+        # direct matrix input
+        'DMIG',
+        
         # optimization
         'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
         
@@ -108,6 +114,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABLES1','TABLEST',
         'TABRND1',
         ])
+        
+        self.specialCards = ['DMIG',]
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
@@ -255,6 +263,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## stores GRAV
         self.gravs = {}
         
+        ## direct matrix input - DMIG
+        self.dmigs = {}
+        
+        ## frequencies
+        self.frequencies = {}
+
         # optimization
         self.dconstrs = {}
         self.desvars  = {}
@@ -449,6 +463,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             #print "*line = |%s|" %(line)
             if 'BEGIN BULK' in line.upper():
+                self.log.debug('found the end of the case control deck!')
                 #print "breaking"
                 break
             if i>600:
@@ -601,6 +616,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #self.log.debug('cardName = |%s|' %(cardName))
             
             #cardObj = BDF_Card(card,oldCardObj)
+            #if cardName in self.specialCards:
+            #    cardObj = card
+            #else:
+            #    cardObj = BDF_Card(card)
             cardObj = BDF_Card(card)
 
             nCards = 1
@@ -669,7 +688,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #if cardName != 'CQUAD4':
         #    print cardName
         #print "card = ",card
-        cardObj = BDF_Card(card,oldCardObj=None)
+
+        if cardName in self.specialCards:
+            pass #cardObj = card
+        else:
+            cardObj = BDF_Card(card,oldCardObj=None)
+
+        #cardObj = BDF_Card(card,oldCardObj=None)
         #if self.debug:
         #    self.log.debug("*oldCardObj = \n%s" %(oldCardObj))
         #    self.log.debug("*cardObj = \n%s" %(cardObj))
@@ -681,14 +706,16 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.rejectCards.append(card)
             elif card==[] or cardName=='':
                 pass
-            elif cardName=='PARAM':
-                param = PARAM(cardObj)
-                self.addParam(param)
-            elif cardName=='GRDSET':
-                self.gridSet = GRDSET(cardObj)
+            elif cardName=='DMIG':
+                dmig = DMIG(card)
+                #self.addParam(param)
+
             elif cardName=='GRID':
                 node = GRID(cardObj)
                 self.addNode(node)
+            elif cardName=='GRDSET':
+                self.gridSet = GRDSET(cardObj)
+
             #elif cardName=='RINGAX':
             #    node = RINGAX(cardObj)
             #    self.addNode(node)
@@ -702,17 +729,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CQUAD8':
                 elem = CQUAD8(cardObj)
                 self.addElement(elem)
-
-            elif cardName=='CTRIA3':
-                elem = CTRIA3(cardObj)
-                self.addElement(elem)
-            elif cardName=='CTRIA6':
-                elem = CTRIA6(cardObj)
-                self.addElement(elem)
-
-            #elif cardName=='CTRIAX6':
-            #    elem = CTRIAX6(cardObj)
-            #    self.addElement(elem)
             elif cardName=='CQUAD':
                 elem = CQUAD(cardObj)
                 self.addElement(elem)
@@ -722,6 +738,24 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CQUADX':
                 elem = CQUADX(cardObj)
                 self.addElement(elem)
+
+            elif cardName=='CTRIA3':
+                elem = CTRIA3(cardObj)
+                self.addElement(elem)
+            elif cardName=='CTRIA6':
+                elem = CTRIA6(cardObj)
+                self.addElement(elem)
+
+            elif cardName=='CTRIAR':
+                elem = CTRIAR(cardObj)
+                self.addElement(elem)
+            elif cardName=='CTRIAX':
+                elem = CTRIAX(cardObj)
+                self.addElement(elem)
+            elif cardName=='CTRIAX6':
+                elem = CTRIAX6(cardObj)
+                self.addElement(elem)
+
             elif cardName=='CVISC':
                 elem = CVISC(cardObj)
                 self.addElement(elem)
@@ -900,9 +934,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
 
-            #elif cardName=='CREEP': # not enabled
-            #    creep = CREEP(cardObj)
-            #    self.addCreepMaterial(material) # links up to MAT1, MAT2, MAT9 w/ same PID
+            elif cardName=='CREEP': # hasnt been verified
+                creep = CREEP(cardObj)
+                self.addCreepMaterial(material) # links up to MAT1, MAT2, MAT9 w/ same PID
             elif cardName=='MAT1':
                 material = MAT1(cardObj)
                 self.addMaterial(material)
@@ -1010,7 +1044,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             # thermal elements
             elif cardName=='CHBDYE':
                 element = CHBDYE(cardObj)
-                #self.addThermalElement(element)
+                self.addThermalElement(element)
             elif cardName=='CHBDYG':
                 element = CHBDYG(cardObj)
                 self.addThermalElement(element)
@@ -1123,6 +1157,26 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 grav = GRAV(cardObj)
                 self.addGrav(grav)
 
+            # frequencies
+            elif cardName=='FREQ':
+                freq = FREQ(cardObj)
+                self.addFREQ(freq)
+            elif cardName=='FREQ1':
+                freq = FREQ1(cardObj)
+                self.addFREQ(freq)
+            elif cardName=='FREQ2':
+                freq = FREQ2(cardObj)
+                self.addFREQ(freq)
+            #elif cardName=='FREQ3':
+            #    freq = FREQ3(cardObj)
+            #    self.addFREQ(freq)
+            #elif cardName=='FREQ4':
+            #    freq = FREQ4(cardObj)
+            #    self.addFREQ(freq)
+            #elif cardName=='FREQ5':
+            #    freq = FREQ5(cardObj)
+            #    self.addFREQ(freq)
+
             # optimization
             elif cardName=='DCONSTR':
                 flutter = DCONSTR(cardObj)
@@ -1215,6 +1269,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 table = TABRND1(cardObj)
                 self.addTable(table)
             
+            elif cardName=='PARAM':
+                param = PARAM(cardObj)
+                self.addParam(param)
             elif 'ENDDATA' in cardName:
                 self.foundEndData = True
                 #break
