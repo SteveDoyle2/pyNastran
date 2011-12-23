@@ -8,6 +8,7 @@ from constraints import *
 from coordinateSystems import *
 from aero import *
 from thermal.thermal import *
-from dyanmic import *
+from dynamic import *
 from optimization import *
 from tables import *
+from dmig import *

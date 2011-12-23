@@ -1,6 +1,9 @@
 class TabCharacterError(SyntaxError):
     pass
 
+class ClosedBDFError(RuntimeError):
+    pass
+
 class MissingFileError(RuntimeError):
     pass
 

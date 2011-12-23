@@ -807,7 +807,7 @@ class PBEAM(IntegratedLineProperty):
         """
         rho  = self.Rho()
         massPerLs = []
-        for area,n in zip(self.A,self.nsm):
+        for area,nsm in zip(self.A,self.nsm):
             massPerLs.append(area*rho+nsm)
         massPerL = integratePositiveLine(self.xxb,massPerLs)
         return massPerL

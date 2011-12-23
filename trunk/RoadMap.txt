@@ -530,12 +530,22 @@ CAERO1  (done)
 PAERO1  (not integrated)
 SPLINE1 (done)
 
+----Modal Cards----:
+FREQ  (done)
+FREQ1 (done)
+FREQ2 (done)
+
 ----Optimization----:
 DCONSTR  (done)
 DESVAR   (done)
 DDVAL    (done)
 DRESP1   (done)
+DRESP2
+DRESP3
 DVPREL1  (done)
+DLINK
+DMIG    (in progress)
+DEQUATN (v0.3)
 
 ---Tables---
 DTABLE
@@ -561,7 +571,6 @@ PARAM (done)
 
 -----------------------------------------------
 Missed v0.1
-
 
 nodes
 SPOINT (needs integration)
@@ -687,19 +696,12 @@ CORD1S
 CORD3G (partial)
 
 ----Optimization----:
-DEQATN
-DRESP2
-DRESP3
-DLINK
 
 ----Methods----:
 EIGR
 EIGRL
 
 ----Modal Cards----:
-FREQ
-FREQ1
-FREQ2
 FREQ3
 FREQ4
 FREQ5
@@ -770,7 +772,6 @@ RADSET
 ----Aero Cards----:
 
 ----Special----:
-DMIG
 GENEL
 DEQUATN
 

@@ -112,6 +112,9 @@ class bdfReader(object):
         activeFileName = self.activeFileNames.pop()
         linesPack = self.linesPack.pop()
         self.isOpened[activeFileName] = False
+        
+        if len(self.linesPack)==0:
+            raise ClosedBDFError('\nThe bdf closed unexpectedly...\n  a Executive and Case Control Decks are required')
         nlines = len(self.linesPack[-1])
         ## determines if self.activefilename should be closed at the next opportunity
         self.doneReading = False

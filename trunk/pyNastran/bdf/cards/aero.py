@@ -1,4 +1,4 @@
-from numpy import array
+from numpy import array,log,exp
 from baseCard import BaseCard
 
 class AEPARM(BaseCard):
@@ -356,6 +356,86 @@ class FLUTTER(BaseCard):
         fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
         return self.printCard(fields)
 
+class FREQ(BaseCard):
+    """
+    Defines a set of frequencies to be used in the solution of frequency response problems.
+    FREQ SID F1 F2 F3 F4 F5 F6 F7
+    F8 F9 F10
+    """
+    type = 'FREQ'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        self.freqs = card.fields(2)
+        self.freqs = list(set(self.freqs))
+
+    def getFreqs(self):
+        return self.freqs
+    
+    def rawFields(self):
+        fields = ['FREQ',self.sid]+self.freqs
+        return fields
+
+class FREQ1(FREQ):
+    """
+    Defines a set of frequencies to be used in the solution of frequency response problems
+    by specification of a starting frequency, frequency increment, and the number of
+    increments desired.
+    FREQ1 SID F1 DF NDF
+    @note this card rewrites as a FREQ card
+    """
+    type = 'FREQ1'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        f1  = card.field(2,0.0)
+        df  = card.field(3)
+        ndf = card.field(4,1)
+        
+        self.freqs = []
+        for i in range(ndf):
+            self.freqs.append(f1+i*df)
+        ###
+        self.freqs = list(set(self.freqs))
+
+class FREQ2(FREQ):
+    """
+    Defines a set of frequencies to be used in the solution of frequency response problems
+    by specification of a starting frequency, final frequency, and the number of
+    logarithmic increments desired.
+    FREQ2 SID F1 F2 NDF
+    @note this card rewrites as a FREQ card
+    """
+    type = 'FREQ2'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        f1 = card.field(2,0.0)
+        f2 = card.field(3)
+        nf = card.field(4,1)
+        
+        d = 1./nf*log(f2/f1)
+        self.freqs = []
+        for i in range(nf):
+            self.freqs.append(f1*exp(i*d)) # 0 based index
+        ###
+        self.freqs = list(set(self.freqs))
+
+#class FREQ3(FREQ):
+class FREQ4(FREQ):
+    """
+    Defines a set of frequencies used in the solution of modal frequency-response
+    problems by specifying the amount of 'spread' around each natural frequency and
+    the number of equally spaced excitation frequencies within the spread.
+    FREQ4 SID F1 F2 FSPD NFM
+    @note this card rewrites as a FREQ card
+    @todo not done...
+    """
+    type = 'FREQ4'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        f1 = card.field(2,0.0)
+        f2 = card.field(3,1.e20)
+        fspd = card.field(4,0.1)
+        nfm = card.field(5,3)
+        
 class GRAV(BaseCard):
     """
     Defines acceleration vectors for gravity or other acceleration loading
@@ -380,12 +460,13 @@ class GRAV(BaseCard):
             assert len(data)==7
         ###            
 
-    def __repr__(self):
+    def rawFields(self):
         N = []
         for n in self.N:
             N.append(self.setBlankIfDefault(n,0.0))
         fields = ['GRAV',self.sid,self.cid,self.a]+N+[self.mb]
-        return self.printCard(fields)
+        return fields
+#class FREQ5(FREQ):
 
 class GUST(BaseCard):
     """
@@ -435,9 +516,9 @@ class PAERO1(BaseCard): # aero panel property; not integrated
             #    pass
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PAERO1'] + self.Bi
-        return self.printCard(fields)
+        return fields
 
 class SPLINE1(BaseCard):
     """
@@ -477,12 +558,16 @@ class SPLINE1(BaseCard):
             assert len(data)==10,'data = %s' %(data)
         ###
 
-
         assert self.box2>=self.box1
         assert self.method in ['IPS','TPS','FPS']
         assert self.usage  in ['FORCE','DISP','BOTH']
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['SPLINE1',self.eid,self.caero,self.box1,self.box2,self.setg,self.dz,self.method,self.usage,
+                            self.nelements,self.melements]
+        return fields
+
+    def reprFields(self):
         method    = self.setBlankIfDefault(self.method,'IPS')
         usage     = self.setBlankIfDefault(self.usage,'BOTH')
         nelements = self.setBlankIfDefault(self.nelements,10)
