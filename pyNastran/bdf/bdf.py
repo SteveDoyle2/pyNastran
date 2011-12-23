@@ -149,7 +149,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                         'DESOPT'    : 200,
                         
                         # guessing
-                        'CTRAN'     : 115,
+                        #'CTRAN'     : 115,
                         'CFREQ'     : 118,
                         
                         # solution 200 names
@@ -243,8 +243,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.nlparms = {}
 
         # aero cards
-        ## stores CAERO1
+        ## stores CAEROx
         self.caeros   = {}  # can this be combined with self.elements???
+        ## stores PAEROx
+        self.paeros   = {}
         ## stores AERO
         self.aero  = {}
         ## stores AEROS
