@@ -10,3 +10,4 @@ from aero import *
 from thermal.thermal import *
 from dyanmic import *
 from optimization import *
+from tables import *

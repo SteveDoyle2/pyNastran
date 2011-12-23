@@ -216,12 +216,14 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
-        if key in self.elements and not allowOverwrites:
-            print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
-            #assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
-            pass
-        assert key>0,'eid=%s elem=%s' %(key,elem)
-        self.elements[key] = elem
+        if key in self.elements:
+            if not elem.isSameCard(self.elements[key]):
+                #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
+                assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
+        else:
+            assert key>0,'eid=%s elem=%s' %(key,elem)
+            self.elements[key] = elem
+        ###
 
     def addRigidElement(self,elem,allowOverwrites=False):
         key = elem.eid
@@ -443,3 +445,9 @@ class addMethods(object):
         assert nlparm.nid not in self.nlparms
         assert nlparm.nid>0
         self.nlparms[nlparm.nid] = nlparm
+
+    def addTable(self,table):
+        key = table.tid
+        assert key not in self.tables
+        assert key>0
+        self.tables[key] = table

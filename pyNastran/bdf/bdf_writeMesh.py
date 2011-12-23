@@ -56,6 +56,7 @@ class writeMesh(object):
 
         msg += self.writeConstraints()
         msg += self.writeOptimization()
+        msg += self.writeTables()
         msg += self.writeRejects()
         msg += self.writeCoords()
         return msg
@@ -288,7 +289,6 @@ class writeMesh(object):
         for suport in self.suports:
             msg += str(suport)
 
-
         if self.spcObject:
             msg += '$SPCs\n'
             msg += str(self.spcObject)
@@ -322,6 +322,15 @@ class writeMesh(object):
             msg += str(dresp)
         for ID,dvprel in sorted(self.dvprels.items()):
             msg += str(dvprel)
+        return msg
+
+    def writeTables(self):
+        msg = ''
+        if self.tables:
+            msg += '$TABLES\n'
+            
+        for ID,table in sorted(self.tables.items()):
+            msg += str(table)
         return msg
 
     def writeDynamic(self):
