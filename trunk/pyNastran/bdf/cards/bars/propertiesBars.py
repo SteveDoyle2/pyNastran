@@ -6,6 +6,66 @@ from pyNastran.general.generalMath import integrateLine,integratePositiveLine
 # pyNastran code
 from ..baseCard import Property
 
+
+def IyyBeam(b,h):
+    return 1/12.*b*h**3
+
+def IBeam(b,h):
+    f = 1/12.*b*h
+    
+    Iyy = f*h*h # 1/12.*b*h**3
+    Izz = f*b*b # 1/12.*h*b**3
+    Iyz = 0.
+    return (Iyy,Izz,Iyz)
+
+def IBeamOffset(b,h,y,z):
+    A = b*h
+    f = 1./12.*A
+    
+    Iyy = f*h*h # 1/12.*b*h**3
+    Izz = f*b*b # 1/12.*h*b**3
+    Iyz = 0.
+    
+    Iyy += A*y*y
+    Izz += A*z*z
+    Iyz += A*y*z
+    return (Iyy,Izz,Iyz)
+
+
+def getInertiaRectangular(sections):
+    """
+    calculates the moment of inertia for a section about the CG
+    @param sections [[b,h,y,z]_1,...] y,z is the centroid (x in the direction of the beam, y right, z up)
+    @retval Area,Iyy,Izz,Iyz
+    @ see http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
+    """
+    As = []
+    Ax=0.; Ay=0.
+    for section in sections:
+        (b,h,x,y) = section
+        A = b*h
+        As.append(A)
+        Ax += A*x
+        Ay += A*y
+
+    xCG = Ax/A
+    yCG = Ay/A
+    Axx=0; Ayy=0; Axy=0.
+    for i,section in enumerate(sections):
+        (b,h,x,y) = section
+        #A = b*h
+        #As.append(A)
+        Axx += As[i]*(x-xCG)**2
+        Ayy += As[i]*(y-yCG)**2
+        Axy += As[i]*(x-xCG)*(y-yCG)
+    Ixx = Axx/A
+    Iyy = Ayy/A
+    Ixy = Axy/A
+    return (A,Ixx,Iyy,Ixy)
+
+       
+
+
 class LineProperty(Property):
     type = 'LineProperty'
     def __init__(self,card,data):
@@ -50,6 +110,47 @@ class LineProperty(Property):
     def nu(self):
         return self.mid.nu
 
+    def IAreaL(self,dim):
+        if self.Type=='ROD':
+            R = dim[0]
+            A = pi*R**2
+            Iyy = A*R**2/4.
+            Izz = Iyy
+            Iyz = 0.
+        elif self.Type=='TUBE':
+            R1 = dim[0]
+            R2 = dim[1]
+            A1   = pi*R1**2
+            Iyy1 = A1*R1**2/4.
+            A2   = pi*R2**2
+            Iyy2 = A2*R2**2/4.
+            A   = A1-A2
+            Iyy = Iyy1-Iyy2
+            Izz = Iyy
+            Iyz = 0.
+
+        elif self.Type=='I':
+            h1 = dim[5]                      #        d2
+            w1 = dim[2]                      # |  ------------
+            y1 = dim[0]/2.-h1                # |  |    A     | d5
+            sections.append([w1,h1,0.,y1])   # |  ------------
+                                             # |      | |
+                                             # |     >| |<--d3
+            h3 = dim[4]                      # |      |B|
+            w3 = dim[1]                      # | d1   | |
+            y3 = -dim[0]/2.+h3               # |      | |
+            sections.append([w3,h3,0.,y1])   # |   ----------
+                                             # |   |   C    |  d5
+            h2 = dim[0]-h1-h3                # |   ----------
+            w2 = dim[3]                      #         d1
+            sections.append([w2,h2,0.,0.])   #
+
+            (A,Iyy,Izz,Iyz) = getInertiaRectangular(sections)
+            assert Iyz == 0.
+        else:
+            raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.type))
+        return (A,Iyy,Izz,Iyz)
+    
     def AreaL(self,dim):
         """
         Area method for the PBARL and PBEAML classes
@@ -237,10 +338,9 @@ class LineProperty(Property):
             w3 = dim[4]
             A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7 +h8*w8
         else:
-            raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.Type))
+            raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.type))
             
         return A
-
 
 class IntegratedLineProperty(LineProperty):
     type = 'IntegratedLineProperty'

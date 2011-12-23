@@ -43,6 +43,13 @@ class SpringElement(Element):
     def Mass(self):
         return 0.0
 
+    def reprFields(self):
+        return self.rawFields()
+
+    def __repr__(self):
+        fields = self.rawFields()
+        return self.printCard(fields)
+
 class CELAS1(SpringElement):
     type = 'CELAS1'
     def __init__(self,card=None,data=None):
@@ -74,10 +81,10 @@ class CELAS1(SpringElement):
         self.nodes = model.Nodes(self.nodes)
         self.pid   = model.Property(self.pid)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CELAS1',self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
-        return self.printCard(fields)
+        return fields
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
@@ -119,10 +126,10 @@ class CELAS2(SpringElement):
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
         
-    def __repr__(self):
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]
-        return self.printCard(fields)
+        return fields
 
 class CELAS3(SpringElement):
     type = 'CELAS3'
@@ -155,11 +162,11 @@ class CELAS3(SpringElement):
         pass
         #self.nodes = model.Nodes(self.nodes)
         self.pid   = model.Property(self.pid)
-        
-    def __repr__(self):
+    
+    def rawFields(self):
         #nodes = self.nodeIDs()
         fields = ['CELAS3',self.eid,self.Pid(),self.s1,self.s2]
-        return self.printCard(fields)
+        return fields
 
 class CELAS4(SpringElement):
     type = 'CELAS4'
@@ -193,7 +200,7 @@ class CELAS4(SpringElement):
         pass
         #self.nodes = model.Nodes(self.nodes)
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CELAS4',self.eid,self.k,self.s1,self.s2]
-        return self.printCard(fields)
+        return fields
 

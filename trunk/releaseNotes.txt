@@ -21,6 +21,10 @@ Overall BDF
 
 Added BDF
    - PBEAML
+   - TABLED1,TABLED2,TABLED3,
+     TABLEM1,TABLEM2,TABLEM3,TABLEM4,
+     TABLES1,TABLEST,TABRND1
+   - PAERO1
    - 
 
 -----------------------v0.2 released 2011/12/20-----------------------

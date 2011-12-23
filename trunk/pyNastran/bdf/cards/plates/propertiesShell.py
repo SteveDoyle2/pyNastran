@@ -206,7 +206,6 @@ class ShellProperty(Property):
         TinvT = numpy.transpose(Tinv)
         return (Tinv,TinvT)
 
-#class PCOMPG(ShellProperty): # not done...
 class PCOMP(ShellProperty):
     """
     PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
@@ -220,8 +219,7 @@ class PCOMP(ShellProperty):
         
         if card:
             #fields = card.fields(1)
-
-            self.pid = card.field(1)
+            self.pid  = card.field(1)
             self.nsm  = card.field(3,0.0)
             self.sb   = card.field(4,0.0)
             self.ft   = card.field(5)
@@ -298,7 +296,7 @@ class PCOMP(ShellProperty):
 
     def hasCoreLayer(self):
         """is there a center layer (matters most for a symmetrical ply)"""
-        return self.nPlies%2==1 # True if has a core, False otherwise
+        return self.nPlies()%2==1 # True if has a core, False otherwise
 
     def nPlies(self):
         """
@@ -314,6 +312,23 @@ class PCOMP(ShellProperty):
             return True
         return False
 
+    def isSameCard(self,prop):
+        if self.type!=mat.type:  return False
+        fields2 = [prop.nsm,prop.sb,prop.ft,prop.TRef,prop.ge,prop.lam]
+        fields1 = [self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam]
+
+        for ply in self.plies:
+            fields1 += ply
+        for ply in prop.plies:
+            fields2 += ply
+
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
+
     def crossReference(self,model):
         for iPly,ply in enumerate(self.plies):
             mid = self.plies[iPly][0]
@@ -321,24 +336,24 @@ class PCOMP(ShellProperty):
             self.plies[iPly][0] = model.Material(mid)  # mid
         ###
 
-    def material(self,iPly):
+    def Material(self,iPly):
         Mid = self.plies[iPly][0]
         return Mid
 
     #def Nsm(self,iPly):
-    #    material = self.material(iPly)
+    #    material = self.Material(iPly)
     #    return material.nsm
 
     def Nsm(self):
         return self.nsm
 
     def Mid(self,iPly):
-        Mid = self.material(iPly)
+        Mid = self.Material(iPly)
         if isinstance(Mid,int):
             return Mid
         return Mid.mid
 
-    def theta(self,iPly):
+    def Theta(self,iPly):
         Theta = self.plies[iPly][2]
         return Theta
 
@@ -374,7 +389,7 @@ class PCOMP(ShellProperty):
         ###
 
     def Rho(self,iPly):
-        mid = self.material(iPly)
+        mid = self.Material(iPly)
         return mid.rho
 
     def Thickness(self,iPly='all'):
@@ -395,13 +410,12 @@ class PCOMP(ShellProperty):
             return t
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         #print "t = ",self.Thickness()
-
-        nsm  = self.setBlankIfDefault(self.nsm,0.0)
-        sb   = self.setBlankIfDefault(self.sb,0.0)
+        nsm  = self.setBlankIfDefault(self.nsm, 0.0)
+        sb   = self.setBlankIfDefault(self.sb,  0.0)
         TRef = self.setBlankIfDefault(self.TRef,0.0)
-        ge   = self.setBlankIfDefault(self.ge,0.0)
+        ge   = self.setBlankIfDefault(self.ge,  0.0)
         z0 = self.setBlankIfDefault(self.z0,-0.5*self.Thickness())
 
         fields = ['PCOMP',self.pid,z0,nsm,sb,self.ft,TRef,ge,self.lam,]
@@ -412,6 +426,68 @@ class PCOMP(ShellProperty):
             theta = self.setBlankIfDefault(theta,0.0)
             sout  = self.setBlankIfDefault(sout,'NO')
             fields += [mid,t,theta,sout]
+        return fields
+
+    def __repr__(self):
+        fields = self.rawFields()
+        return self.printCard(fields)
+
+class PCOMPG(PCOMP):
+    type = 'PCOMPG'
+    def __init__(self,card=None,data=None):
+        ShellProperty.__init__(self,card,data) ## @todo doesnt support data
+        self.pid  = card.field(1)
+        #self.z0 = 
+        self.nsm  = card.field(3,0.0)
+        self.sb   = card.field(4,0.0)
+        self.ft   = card.field(5)
+        self.TRef = card.field(6,0.0)
+        self.ge   = card.field(7,0.0)
+        self.lam  = card.field(8)
+        fields = card.fields(9)
+
+        T = 0. # thickness
+        midLast = None
+        tLast = None
+        self.plies = []
+        for i in range(len(fields)):
+            gplyID    = card.field(i)
+            mid       = card.field(i+1,midLast)
+            thickness = card.field(i+2,tLast) # can be blank
+            theta     = card.field(i+3,0.0)
+            sout      = card.field(i+4,'NO')
+            self.plies.append([mid,thickness,theta,sout,gPlyID])
+            #[mid,t,theta,sout] # PCOMP
+            assert mid       is not None
+            assert thickness is not None
+            midLast = mid
+            tLast = thickness
+            T+=thickness
+        ###
+
+    def GlobalPlyID(self,iPly):
+        gPlyID = self.plies[iPly][4]
+        return gPlyID
+        
+    def rawFields(self):
+        nsm  = self.setBlankIfDefault(self.nsm, 0.0)
+        sb   = self.setBlankIfDefault(self.sb,  0.0)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge   = self.setBlankIfDefault(self.ge,  0.0)
+        z0 = self.setBlankIfDefault(self.z0,-0.5*self.Thickness())
+
+        fields = ['PCOMPG',self.pid,z0,nsm,sb,self.ft,TRef,ge,self.lam,]
+
+        for (iPly,ply) in enumerate(self.plies):
+            (_mid,t,theta,sout,gPlyID) = ply
+            mid = self.Mid(iPly)
+            theta = self.setBlankIfDefault(theta,0.0)
+            sout  = self.setBlankIfDefault(sout,'NO')
+            fields += [mid,t,theta,sout,gPlyID,None,None,None]
+        return fields
+
+    def __repr__(self):
+        fields = self.rawFields()
         return self.printCard(fields)
 
 class PSHELL(ShellProperty):
@@ -489,7 +565,7 @@ class PSHELL(ShellProperty):
         #self.mid3 = mesh.Material(self.mid3)
         #self.mid4 = mesh.Material(self.mid4)
 
-    def __repr__(self):
+    def rawFields(self):
         twelveIt3 = self.setBlankIfDefault(self.twelveIt3,1.0)
         tst       = self.setBlankIfDefault(self.tst,0.833333)
         nsm       = self.setBlankIfDefault(self.nsm,0.0)
@@ -501,5 +577,8 @@ class PSHELL(ShellProperty):
         fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,twelveIt3,self.mid3,tst,nsm,
                            z1,z2,self.mid4]
         #print fields
-        return self.printCard(fields)
+        return fields
 
+    def __repr__(self):
+        fields = self.rawFields()
+        return self.printCard(fields)

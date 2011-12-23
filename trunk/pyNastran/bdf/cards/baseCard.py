@@ -30,6 +30,7 @@ class BaseCard(BDF_Card):
 
     def printCard(self,fields):
         """prints a card object"""
+        #print "fields = ",fields
         return printCard(fields)
 
     def setDefaultIfBlank(self,value,default):
@@ -149,7 +150,6 @@ class BaseCard(BDF_Card):
             ###
         ###
 
-
     def collapseThru(self,fields):
         return fields
 
@@ -265,6 +265,14 @@ class BaseCard(BDF_Card):
         #sys.exit()
         return (out,i)
     ###
+        
+    def printRawFields(self):
+        fields = self.rawFields()
+        return self.printCard(fields)
+        
+    def __repr__(self):
+        fields = self.reprFields()
+        return self.printCard(fields)
 ###
 
 def Mid(self):
@@ -285,14 +293,13 @@ class Property(BaseCard):
     def Mid(self):
         return Mid(self)
 
+    def isSameCard(self,prop):
+        return False
+
     def crossReference(self,model):
         if self.mid:
             self.mid = model.Material(self.mid)
         ###
-        
-    def __repr__(self):
-        fields = [self.type,self.Pid()]
-        return self.printCard(fields)
 
 class Element(BaseCard):
     pid = 0 # CONM2, rigid
@@ -302,6 +309,9 @@ class Element(BaseCard):
         self.nodes = None
         #self.nids = []
         pass
+
+    def isSameCard(self,element):
+        return False
 
     def Pid(self):
         """returns the property ID of an element"""

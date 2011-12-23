@@ -443,6 +443,7 @@ MPC     (done)
 MPCADD  (done)
 
 ----Materials----:
+CREEP (not integrated...)
 MAT1  (done)
 MAT2  (done)
 MAT3  (done)
@@ -467,6 +468,7 @@ PTUBE   (done)
 
 PSHEAR
 PCOMP   (done)
+PCOMPG  (verify me...)
 PSHELL  (done)
 PSOLID  (done)
 PLSOLID (done)
@@ -535,6 +537,23 @@ DDVAL    (done)
 DRESP1   (done)
 DVPREL1  (done)
 
+---Tables---
+DTABLE
+TABLED1  (done)
+TABLED2  (done)
+TABLED3  (done)
+TABLED4
+TABLEHT
+TABLEH1
+TABLEM1  (done)
+TABLEM2  (done)
+TABLEM3  (done)
+TABLEM4  (done)
+TABLES1  (done)
+TABLEST  (done)
+TABRND1  (done)
+TABRNDG
+
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)
 PARAM (done)
@@ -565,7 +584,6 @@ CBEND
 
 properties
 PBEND
-PBARL
 
 loads
 LSEQ
@@ -588,8 +606,6 @@ BEAMOR
 CBARAO
 PBEAM3
 **************
-PCOMPG
-**************
 CORD1R
 CORD1C
 CORD1S
@@ -608,7 +624,6 @@ PGAP
 
 ----Patran Elements----:
 CONM1
-
 PLOTEL
 MBOLTUS
 
@@ -618,8 +633,6 @@ RSPLINE
 RTRPLT
 
 ----Patran Materials----:
-CREEP
-
 MATT1
 MATT2
 MATT3
@@ -644,14 +657,6 @@ TEMPRB
 
 VIEW
 VIEW3D
-
-----Patran Tables----:
-TABLED1
-TABLED2
-TABLED3
-TABLEM1
-TABLEM2
-TABLEM3
 
 ----Nodes----:
 MONPNT1
@@ -775,9 +780,6 @@ DLOAD  (needs integration)
 RLOAD1 (needs integration)
 RLOAD2 (needs integration)
 
-----Tables----:
-DTABLE
-
 ----Super Elements----:
 CSUPER
 CSUPEXT
@@ -799,6 +801,8 @@ SESUP
 ACSRCE
 CHACAB
 CHACBR
+
+---Tables---:
 
 ----Unsorted----:
 SET1

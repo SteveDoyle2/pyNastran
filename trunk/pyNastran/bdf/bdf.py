@@ -66,7 +66,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PMASS',
         'PELAS',
         'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PBEAM3',
-        'PSHELL','PCOMP', # 'PCOMPG',
+        'PSHELL','PCOMP','PCOMPG',
         'PSOLID','PLSOLID',
         'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9','MAT10',
          #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
@@ -101,6 +101,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         
         # optimization
         'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
+        
+        # tables
+        'TABLED1','TABLED2','TABLED3',
+        'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
+        'TABLES1','TABLEST',
+        'TABRND1',
         ])
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
@@ -255,6 +261,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.ddvals   = {}
         self.dresps   = {}
         self.dvprels  = {}
+        
+        # tables
+        self.tables = {}
 
     def _initThermalDefaults(self):
         # BCs
@@ -880,9 +889,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='PCOMP':
                 prop = PCOMP(cardObj)
                 self.addProperty(prop)
-            #elif cardName=='PCOMPG':
-            #    prop = PCOMPG(cardObj)
-            #    self.addProperty(prop)
+            elif cardName=='PCOMPG': # hasnt been verified
+                prop = PCOMPG(cardObj)
+                self.addProperty(prop)
 
             elif cardName=='PSOLID':
                 prop = PSOLID(cardObj)
@@ -1089,6 +1098,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='CAERO2':
             #    aero = CAERO2(cardObj)
             #    self.addCAero(aero)
+            elif cardName=='AEPARM':
+                aeparm = AEPARM(cardObj)
+                self.addAEParm(aeparm)
             elif cardName=='AERO':
                 aero = AERO(cardObj)
                 self.addAero(aero)
@@ -1101,16 +1113,17 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='FLFACT':
                 flfact = FLFACT(cardObj)
                 self.addFLFACT(flfact)
+            elif cardName=='FLUTTER':
+                flutter = FLUTTER(cardObj)
+                self.addFlutter(flutter)
             elif cardName=='GUST':
                 gust = GUST(cardObj)
                 self.addGust(gust)
             elif cardName=='GRAV':
                 grav = GRAV(cardObj)
                 self.addGrav(grav)
-            elif cardName=='FLUTTER':
-                flutter = FLUTTER(cardObj)
-                self.addFlutter(flutter)
 
+            # optimization
             elif cardName=='DCONSTR':
                 flutter = DCONSTR(cardObj)
                 self.addDConstr(flutter)
@@ -1164,7 +1177,44 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    coord = CORD3G(cardObj)
             #    self.addCoord(coord)
 
+            # tables
+            elif cardName=='TABLED1':
+                table = TABLED1(cardObj)
+                self.addTable(table)
+            elif cardName=='TABLED2':
+                table = TABLED2(cardObj)
+                self.addTable(table)
+            elif cardName=='TABLED3':
+                table = TABLED3(cardObj)
+                self.addTable(table)
+            #elif cardName=='TABLED4':
+            #    table = TABLED4(cardObj)
+            #    self.addTable(table)
 
+
+            elif cardName=='TABLEM1':
+                table = TABLEM1(cardObj)
+                self.addTable(table)
+            elif cardName=='TABLEM2':
+                table = TABLEM2(cardObj)
+                self.addTable(table)
+            elif cardName=='TABLEM3':
+                table = TABLEM3(cardObj)
+                self.addTable(table)
+            elif cardName=='TABLEM4':
+                table = TABLEM4(cardObj)
+                self.addTable(table)
+
+            elif cardName=='TABLES1':
+                table = TABLES1(cardObj)
+                self.addTable(table)
+            elif cardName=='TABLEST':
+                table = TABLEST(cardObj)
+                self.addTable(table)
+            elif cardName=='TABRND1':
+                table = TABRND1(cardObj)
+                self.addTable(table)
+            
             elif 'ENDDATA' in cardName:
                 self.foundEndData = True
                 #break
@@ -1177,6 +1227,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             print "cardName = |%r|" %(cardName)
             print "failed! Unreduced Card=%s\n" %(ListPrint(card))
             print "filename = %s\n" %(self.bdfFileName)
+            sys.stdout.flush()
             raise
         ### try-except block
 
