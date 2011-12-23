@@ -335,12 +335,14 @@ class writeMesh(object):
 
     def writeDynamic(self):
         msg = ''
-        if self.dareas or self.nlparms:
+        if self.dareas or self.nlparms or self.frequencies:
             msg += '$DYNAMIC\n'
         for ID,darea in sorted(self.dareas.items()):
             msg += str(darea)
         for ID,nlparm in sorted(self.nlparms.items()):
             msg += str(nlparm)
+        for ID,freq in sorted(self.frequencies.items()):
+            msg += str(freq)
         return msg
         
     def writeAero(self):
@@ -348,7 +350,7 @@ class writeMesh(object):
         #print "output aero cards..."
         msg = ''
         if (self.flfacts or self.aero or self.aeros or self.aestats
-                        or self.gusts or self.flutters):  msg = '$AERO\n'
+                        or self.gusts or self.flutters or self.caeros or self.paeros):  msg = '$AERO\n'
         #flfactKeys = self.flfacts.keys()
         #self.log.info("flfactKeys = %s" %(flfactKeys))
         for ID,flfact in sorted(self.flfacts.items()):
@@ -358,6 +360,8 @@ class writeMesh(object):
             msg += str(spline)
         for ID,caero in sorted(self.caeros.items()):
             msg += str(caero)
+        for ID,paero in sorted(self.paeros.items()):
+            msg += str(paero)
         for ID,aero in sorted(self.aero.items()):
             msg += str(aero)
         for ID,aero in sorted(self.aeros.items()):
