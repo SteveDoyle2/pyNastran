@@ -103,7 +103,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'FREQ','FREQ1','FREQ2',
         
         # direct matrix input
-        'DMIG',
+        #'DMIG',
+        'DEQATN',
         
         # optimization
         'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
@@ -115,7 +116,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABRND1',
         ])
         
-        self.specialCards = ['DMIG',]
+        self.specialCards = ['DEQATN',]
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
@@ -196,6 +197,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self._initStructuralDefaults()
         self._initThermalDefaults()
 
+    def isSpecialCard(self,cardName):
+        if cardName in self.specialCards:
+            return True
+        return False
+
     def _initStructuralDefaults(self):
         self.sol = None
         ## used in solution 600
@@ -267,6 +273,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         
         ## direct matrix input - DMIG
         self.dmigs = {}
+        self.dequations = {}
         
         ## frequencies
         self.frequencies = {}
@@ -591,7 +598,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 reject = '$ INCLUDE processed:  %s\n' %(filename)
                 self.rejects.append([reject])
                 continue
-
+            
+            passCard = False
+            #if self.isSpecialCard(cardName):
+            #    passCard = True
+            #print 'card = ',card
             if not self.isReject(cardName):
                 #print ""
                 #print "not a reject"
@@ -691,10 +702,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #    print cardName
         #print "card = ",card
 
-        if cardName in self.specialCards:
-            pass #cardObj = card
-        else:
-            cardObj = BDF_Card(card,oldCardObj=None)
+        #if cardName in self.specialCards:
+        #    pass #cardObj = card
+        #else:
+        cardObj = BDF_Card(card,oldCardObj=None)
 
         #cardObj = BDF_Card(card,oldCardObj=None)
         #if self.debug:
@@ -708,9 +719,14 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.rejectCards.append(card)
             elif card==[] or cardName=='':
                 pass
-            elif cardName=='DMIG':
-                dmig = DMIG(card)
-                #self.addParam(param)
+            #elif cardName=='DMIG':
+                #dmig = DMIG(cardObj)
+                #self.addDMIG(dmig)
+            elif cardName=='DEQATN':
+                #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
+                equation = DEQATN(cardObj)
+                self.addDEQATN(equation)
+                #sys.exit('filename=%s' %(self.bdfFileName))
 
             elif cardName=='GRID':
                 node = GRID(cardObj)
