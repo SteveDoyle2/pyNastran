@@ -241,6 +241,13 @@ class addMethods(object):
         #assert elem.eid>0
         #self.elements[elem.eid] = elem
 
+    def addDEQATN(self,deqatn,allowOverwrites=False):
+        key = deqatn.eqID
+        #if not allowOverwrites:
+        #    assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
+        assert key>0,'deqatn\n%s' %(key,deqatn)
+        self.dequations[key] = deqatn
+
     def addProperty(self,prop,allowOverwrites=False):
         if not allowOverwrites:
             assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)

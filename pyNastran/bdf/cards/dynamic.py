@@ -1,5 +1,85 @@
 from baseCard import BaseCard
 
+class FREQ(BaseCard):
+    """
+    Defines a set of frequencies to be used in the solution of frequency response problems.
+    FREQ SID F1 F2 F3 F4 F5 F6 F7
+    F8 F9 F10
+    """
+    type = 'FREQ'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        self.freqs = card.fields(2)
+        self.freqs = list(set(self.freqs))
+
+    def getFreqs(self):
+        return self.freqs
+    
+    def rawFields(self):
+        fields = ['FREQ',self.sid]+self.freqs
+        return fields
+
+class FREQ1(FREQ):
+    """
+    Defines a set of frequencies to be used in the solution of frequency response problems
+    by specification of a starting frequency, frequency increment, and the number of
+    increments desired.
+    FREQ1 SID F1 DF NDF
+    @note this card rewrites as a FREQ card
+    """
+    type = 'FREQ1'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        f1  = card.field(2,0.0)
+        df  = card.field(3)
+        ndf = card.field(4,1)
+        
+        self.freqs = []
+        for i in range(ndf):
+            self.freqs.append(f1+i*df)
+        ###
+        self.freqs = list(set(self.freqs))
+
+class FREQ2(FREQ):
+    """
+    Defines a set of frequencies to be used in the solution of frequency response problems
+    by specification of a starting frequency, final frequency, and the number of
+    logarithmic increments desired.
+    FREQ2 SID F1 F2 NDF
+    @note this card rewrites as a FREQ card
+    """
+    type = 'FREQ2'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        f1 = card.field(2,0.0)
+        f2 = card.field(3)
+        nf = card.field(4,1)
+        
+        d = 1./nf*log(f2/f1)
+        self.freqs = []
+        for i in range(nf):
+            self.freqs.append(f1*exp(i*d)) # 0 based index
+        ###
+        self.freqs = list(set(self.freqs))
+
+#class FREQ3(FREQ):
+class FREQ4(FREQ):
+    """
+    Defines a set of frequencies used in the solution of modal frequency-response
+    problems by specifying the amount of 'spread' around each natural frequency and
+    the number of equally spaced excitation frequencies within the spread.
+    FREQ4 SID F1 F2 FSPD NFM
+    @note this card rewrites as a FREQ card
+    @todo not done...
+    """
+    type = 'FREQ4'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        f1 = card.field(2,0.0)
+        f2 = card.field(3,1.e20)
+        fspd = card.field(4,0.1)
+        nfm = card.field(5,3)
+
 class RLOAD1(BaseCard): # not integrated
     """
     Defines a frequency-dependent dynamic load of the form
@@ -62,7 +142,6 @@ class RLOAD2(BaseCard): # not integrated
 class NLPARM(BaseCard):
     """
     Defines a set of parameters for nonlinear static analysis iteration strategy
-    
     NLPARM ID NINC DT KMETHOD KSTEP MAXITER CONV INTOUT
     EPSU EPSP EPSW MAXDIV MAXQN MAXLS FSTRESS LSTOL
     MAXBIS MAXR RTOLB
@@ -89,7 +168,7 @@ class NLPARM(BaseCard):
         self.maxR      = card.field(21,20.)
         self.rTolB     = card.field(23,20.)
 
-    def __repr__(self):
+    def rawFields(self):
         ninc      = self.setBlankIfDefault(self.ninc,10)
         dt        = self.setBlankIfDefault(self.dt,0.0)
         kMethod   = self.setBlankIfDefault(self.kMethod,'AUTO')
@@ -110,7 +189,32 @@ class NLPARM(BaseCard):
         rTolB     = self.setBlankIfDefault(self.rTolB,20.)
 
         fields = ['NLPARM',self.nid,self.ninc,self.dt,self.kMethod,self.kStep,self.maxIter,self.conv,self.intOut,self.epsU,self.epsP,self.epsW,self.maxDiv,self.maxQn,self.maxLs,self.fStress,self.lsTol,self.maxBisect,None,None,None,self.maxR,None,self.rTolB]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        ninc      = self.setBlankIfDefault(self.ninc,10)
+        dt        = self.setBlankIfDefault(self.dt,0.0)
+        kMethod   = self.setBlankIfDefault(self.kMethod,'AUTO')
+        kStep     = self.setBlankIfDefault(self.kStep,5)
+        maxIter   = self.setBlankIfDefault(self.maxIter,25)
+        conv      = self.setBlankIfDefault(self.conv,'PW')
+        intOut    = self.setBlankIfDefault(self.intOut,'NO')
+        epsU      = self.setBlankIfDefault(self.epsU,1e-2)
+        epsP      = self.setBlankIfDefault(self.epsP,1e-2)
+        epsW      = self.setBlankIfDefault(self.epsW,1e-2)
+        maxDiv    = self.setBlankIfDefault(self.maxDiv,3)
+        maxQn     = self.setBlankIfDefault(self.maxQn,self.maxIter)
+        maxLs     = self.setBlankIfDefault(self.maxLs,4)
+        fStress   = self.setBlankIfDefault(self.fStress,0.2)
+        lsTol     = self.setBlankIfDefault(self.lsTol,0.5)
+        maxBisect = self.setBlankIfDefault(self.maxBisect,5)
+        maxR      = self.setBlankIfDefault(self.maxR,20.)
+        rTolB     = self.setBlankIfDefault(self.rTolB,20.)
+
+        fields = ['NLPARM',self.nid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,
+            epsU,epsP,epsW,maxDiv,maxQn,maxLs,fStress,sTol,maxBisect,None,None,None,
+            maxR,None,rTolB]
+        return fields
 
 
 
