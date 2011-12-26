@@ -13,13 +13,47 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
         self.gridTypes    = {}
         self.translations = {}
         self.rotations    = {}
+        
         if dt is not None:
             self.addNewTransient()
             self.add = self.addTransient
+            self.addF = self.addTransientF
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
             #self.writeOp2 = self.writeOp2Transient
         ###
+        self.parseLength()
+
+    def parseLength(self):
+        self.mainHeaders = []
+        self.strFormat = ''
+        if self.analysisCode==6:
+            self.mainHeaders.append('Freq')
+            self.strFormat += 'fi'
+            self.add = self.addF
+        elif self.analysisCode==5:
+            self.mainHeaders.append('Time')
+            self.strFormat += 'fi'
+            self.add = self.addF
+        elif self.analysisCode in [1,2,3,4,7,8,9,11,12]:
+            self.mainHeaders.append('NodeID')
+            self.strFormat += 'ii'
+        else:
+            raise Exception('invalid analysisCode=%s' %(self.analysisCode))
+        self.mainHeaders.append('GridType')
+
+        if self.isImaginary():  # elif self.dataFormat==1:
+            self.strFormat += 'ffffffffffff'
+            self.headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
+            raise Exception('verify...add imaginary...')
+        else:
+            self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]:
+            self.headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
+        
+        self.mainHeaders = tuple(self.mainHeaders)
+
+    def getLength(self):
+        return (4*len(self.strFormat),self.strFormat)
 
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
@@ -51,7 +85,9 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
         self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
+    def add(self,out):
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
+        nodeID = (nodeID-self.deviceCode) // 10
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'velocityObject - static failure'
@@ -62,7 +98,22 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
         self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
+    def addF(self,out):
+        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
+        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],time,gridType,v1,v2,v3)
+        #print msg
+        #assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations,'velocityObject - static failure'
+        
+        gridType = self.recastGridType(gridType)
+        self.gridTypes[freq]    = gridType
+        self.translations[freq] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[freq]    = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
+    def addTransient(self,out):
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
+        nodeID = (nodeID-self.deviceCode) // 10
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
@@ -74,10 +125,15 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
         self.rotations[self.dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def __reprTransient__(self):
-        self.log.debug("Transient...")
-        raise Exception('this could be cool...')
-        return self.__repr__()
+    def addTransientF(self,out):
+        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
+        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],freq,gridType,v1,v2,v3)
+        #print msg
+        gridType = self.recastGridType(gridType)
+        self.gridTypes[freq]             = gridType
+        self.translations[self.dt][freq] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[self.dt][freq]    = array([v4,v5,v6]) # rx,ry,rz
+    ###
 
     def writeOp2(self,block3,deviceCode=1):
         """
@@ -117,15 +173,19 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
     #    ###
     #    return msg
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT ACCELERATIONS---\n'
-        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-10s %-8s ' %('NodeID','GridType')
+    def writeHeader(self):
+        (mainHeaders,headers) = self.getHeaders()
+        msg = '%-10s %-8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
+        return msg
 
+    def __reprTransient__(self):
+        msg = '---TRANSIENT ACCELERATIONS---\n'
+        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        msg += self.writeHeader()
+        
         for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for nodeID,translation in sorted(translations.items()):
@@ -146,16 +206,15 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
             ###
         return msg
 
+    def getHeaders(self):
+        return (self.mainHeaders,self.headers)
+
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()
 
         msg = '---ACCELERATIONS---\n'
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-10s %-8s ' %('NodeID','GridType')
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
+        msg += self.writeHeader()
 
         for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]

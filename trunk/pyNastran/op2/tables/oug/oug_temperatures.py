@@ -11,21 +11,52 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         
         #print "dt = ",self.dt
         if dt is not None:
+            self.addNewTransient()
             #assert dt>=0.
-            self.addNewTransient()
             self.isTransient = True
-            self.addNewTransient()
-            #self.temperatures = {self.dt:{}}
             self.add = self.addTransient
+            self.addF = self.addTransientF
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...            
         ###
+        self.parseLength()
+
+    def parseLength(self):
+        self.mainHeaders = []
+        self.strFormat = ''
+        if self.analysisCode==6:
+            self.mainHeaders.append('Freq')
+            self.strFormat += 'fi'
+            self.add = self.addF
+        elif self.analysisCode in[5,10]:
+            self.mainHeaders.append('Time')
+            self.strFormat += 'fi'
+            self.add = self.addF
+        elif self.analysisCode in [1,2,3,4,7,8,9,11,12]:
+            self.mainHeaders.append('NodeID')
+            self.strFormat += 'ii'
+        else:
+            raise Exception('invalid analysisCode=%s' %(self.analysisCode))
+        self.mainHeaders.append('GridType')
+
+        if self.isImaginary():  # elif self.dataFormat==1:
+            self.strFormat += 'ffffffffffff'
+            self.headers = ['Temperature']
+            raise Exception('verify...add imaginary...')
+        else:
+            self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]:
+            self.headers = ['Temperature']
+        
+        self.mainHeaders = tuple(self.mainHeaders)
+
+    def getLength(self):
+        return (4*len(self.strFormat),self.strFormat)
 
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.name,self.name,dt,self.iSubcase))
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
             self.dt = dt
             self.addNewTransient()
         ###
@@ -35,15 +66,32 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         if self.dt not in self.temperatures:
             self.temperatures[self.dt] = {}
 
-    def add(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+    def add(self,out):
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
+        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures
 
         gridType = self.recastGridType(gridType)
         self.gridTypes[nodeID] = gridType
         self.temperatures[nodeID] = v1
+    ###
 
-    def addTransient(self,nodeID,gridType,v1,v2=None,v3=None,v4=None,v5=None,v6=None):
+    def addF(self,out):
+        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
+        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],time,gridType,v1,v2,v3)
+        #print msg
+        #assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations,'temperatrueObject - static failure'
+        
+        gridType = self.recastGridType(gridType)
+        self.gridTypes[freq]    = gridType
+        self.temperatures[nodeID] = v1
+    ###
+
+    def addTransient(self,out):
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
+        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures[self.dt]
 
@@ -51,23 +99,14 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         self.gridTypes[nodeID] = gridType
         self.temperatures[self.dt][nodeID] = v1
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT TEMPERATURE---\n'
-        msg += '%-10s %8s %-8s\n' %('NodeID','GridType','Temperature')
-
-        for dt,temperatures in sorted(self.temperatures.items()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,T in sorted(temperatures.items()):
-                gridType = self.gridTypes[nodeID]
-                msg += '%10s %8s ' %(nodeID,gridType)
-
-                if abs(T)<1e-6:
-                    msg += '%10s\n' %(0)
-                else:
-                    msg += '%10g\n' %(T)
-                ###
-            ###
-        return msg
+    def addTransientF(self,out):
+        (freq,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
+        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],freq,gridType,v1,v2,v3)
+        #print msg
+        gridType = self.recastGridType(gridType)
+        self.gridTypes[freq]             = gridType
+        self.temperatures[self.dt][freq] = v1
+    ###
 
     def writeOp2(self,block3,deviceCode=1):
         """
@@ -100,12 +139,33 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         ###
         return msg
 
+    def __reprTransient__(self):
+        msg = '---TRANSIENT TEMPERATURE---\n'
+        msg += self.writeHeader()
+
+        for dt,temperatures in sorted(self.temperatures.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            for nodeID,T in sorted(temperatures.items()):
+                gridType = self.gridTypes[nodeID]
+                msg += '%10s %8s ' %(nodeID,gridType)
+
+                if abs(T)<1e-6:
+                    msg += '%10s\n' %(0)
+                else:
+                    msg += '%10g\n' %(T)
+                ###
+            ###
+        return msg
+
+    def getHeaders(self):
+        return (self.mainHeaders,self.headers)
+
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'
-        msg += '%-10s %8s %-8s\n' %('NodeID','GridType','Temperature')
+        msg += self.writeHeader()
         #print "self.dataCode=",self.dataCode
         #print "self.temperatures=",self.temperatures
         for nodeID,T in sorted(self.temperatures.items()):

@@ -13,7 +13,6 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
         self.gridTypes    = {}
         self.translations = {}
         self.rotations    = {}
-        self.mainHeaders = []
         
         if dt is not None:
             self.addNewTransient()
@@ -26,6 +25,7 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
         self.parseLength()
 
     def parseLength(self):
+        self.mainHeaders = []
         self.strFormat = ''
         if self.analysisCode==6:
             self.mainHeaders.append('Freq')
@@ -44,17 +44,17 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
 
         if self.isImaginary():  # elif self.dataFormat==1:
             self.strFormat += 'ffffffffffff'
-            self.headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+            self.headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
             raise Exception('verify...add imaginary...')
         else:
             self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]:
-            self.headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+            self.headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
         
         self.mainHeaders = tuple(self.mainHeaders)
-        
+
     def getLength(self):
         return (4*len(self.strFormat),self.strFormat)
-            
+
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
@@ -85,10 +85,10 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
         self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
+    def add(self,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         nodeID = (nodeID-self.deviceCode) // 10
+        msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'velocityObject - static failure'
         
@@ -111,7 +111,9 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
         self.rotations[freq]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
+    def addTransient(self,out):
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
+        nodeID = (nodeID-self.deviceCode) // 10
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
@@ -171,20 +173,21 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
     #    ###
     #    return msg
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT VELOCITY---\n'
-        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+    def writeHeader(self):
         (mainHeaders,headers) = self.getHeaders()
-        
-        msg += '%-10s %-8s ' %(mainHeaders)
+        msg = '%-10s %-8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
+        return msg
 
+    def __reprTransient__(self):
+        msg = '---TRANSIENT VELOCITY---\n'
+        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        msg += self.writeHeader()
+        
         for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            #print "dt =",dt
-            #print "translations =",translations
             for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -211,12 +214,7 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
             return self.__reprTransient__()
 
         msg = '---VELOCITIES---\n'
-        (mainHeaders,headers) = self.getHeaders()
-        
-        msg += '%-10s %-8s ' %(mainHeaders)
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
+        msg += self.writeHeader()
 
         for nodeID,translation in sorted(self.translations.items()):
             rotation = self.rotations[nodeID]

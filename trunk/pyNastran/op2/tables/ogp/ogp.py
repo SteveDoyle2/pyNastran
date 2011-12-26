@@ -243,7 +243,7 @@ class OGP(object):
             data = data[dn:]
             #sys.exit('asd')
         ###
-        print "***********"
+        #print "***********"
         #print self.obj
         #sys.exit('check...')
 
