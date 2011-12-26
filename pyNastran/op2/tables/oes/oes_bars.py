@@ -24,15 +24,26 @@ class barStressObject(stressObject):
             self.smin  = {}
             self.MS_tension = {}
             self.MS_compression = {}
+
+            if self.elementType==100:
+                self.getLength = self.getLength100_format1_sort0
+                self.addNewEid = self.addNewEid100
         else:
             raise InvalidCodeError('barStress - get the format/sort/stressCode=%s' %(self.code))
         ###
+        
         if dt is not None:
             self.dt = dt
             self.isTransient = True
             self.addNewTransient()
             self.addNewEid = self.addNewEidTransient
         ###
+
+    def getLength34_format1_sort0(self):
+        return (68,'iffffffffffffffff')
+
+    def getLength100_format1_sort0(self):
+        return (40,'ifffffffff')
 
     def addNewTransient(self):
         """
@@ -48,6 +59,39 @@ class barStressObject(stressObject):
             self.smin[self.dt]  = {}
             #self.MS_tension[self.dt]     = {}
             #self.MS_compression[self.dt] = {}
+
+    def addNewEid100(self,out):
+        print "out = ",out
+        #return
+        (eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc) = out
+        (eid-self.deviceCode) // 10
+        #print "Bar Stress add..."
+        self.eType[eid] = 'CBAR' #eType
+        #if self.dt not in self.s1:
+        if self.eid in self.s1:
+            self.s1[eid].append(s1)
+            self.s2[eid].append(s2)
+            self.s3[eid].append(s3)
+            self.s4[eid].append(s4)
+            self.axial[eid].append(axial)
+            self.smax[eid].append(smax)
+            self.smin[eid].append(smin)
+            #self.MS_tension[eid].append(MSt)
+            #self.MS_compression[eid].append(MSc)
+        else:
+            self.s1[eid]    = [s1]
+            self.s2[eid]    = [s2]
+            self.s3[eid]    = [s3]
+            self.s4[eid]    = [s4]
+            self.axial[eid] = axial
+            self.smax[eid]  = [smax]
+            self.smin[eid]  = [smin]
+            #self.MS_tension[eid]     = MSt
+            #self.MS_compression[eid] = MSc
+
+        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        #print msg
+        #if nodeID==0: raise Exception(msg)
 
     def addNewEid(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
                                  s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):

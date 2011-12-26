@@ -143,7 +143,7 @@ class OP2(BDF,
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
 
         ## OUG - temperatures
-        self.temperatures  = {}           # aCode=1 ------- ------- sortCode=0 thermal=1
+        self.temperatures  = {}            # aCode=1 ------- ------- sortCode=0 thermal=1
         #self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
         #self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
 
@@ -151,10 +151,10 @@ class OP2(BDF,
         self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
 
         ## OUG - velocity (not done)
-        #self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
+        self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
 
         ## OUG - acceleration (not done)
-        #self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
+        self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
 
         # OEF
         # rename to staticLoads/thermalLoads
@@ -201,6 +201,11 @@ class OP2(BDF,
         ## OES - composite CTRIA3/CQUAD4
         self.compositePlateStrain = {}
         
+        ## OES - CSHEAR
+        self.shearStress = {}
+        ## OES - CSHEAR
+        self.shearStrain = {}
+        
 
         # OQG
         #self.spcForces      = {}
@@ -219,8 +224,10 @@ class OP2(BDF,
         results = [
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
-                   self.displacements,self.temperatures,
+                   #self.displacements,self.temperatures,
                    self.eigenvectors,
+                   self.velocities,
+                   self.accelerations,
                    #self.nonlinearTemperatures,self.nonlinearDisplacements,
                    #self.forces,self.fluxes,
                    
@@ -235,13 +242,13 @@ class OP2(BDF,
                    self.appliedLoads,
 
                    # OES - Stress/Strain
-                   self.celasStress,self.celasStrain,
-                   self.rodStress,self.rodStrain,
-                   self.barStress,self.barStrain,
-                   self.beamStress,self.beamStrain,
-                   self.plateStress,self.plateStrain,
-                   self.solidStress,self.solidStrain,
-                   self.compositePlateStress,self.compositePlateStrain,
+                   #self.celasStress,self.celasStrain,
+                   #self.rodStress,self.rodStrain,
+                   #self.barStress,self.barStrain,
+                   #self.beamStress,self.beamStrain,
+                   #self.plateStress,self.plateStrain,
+                   #self.solidStress,self.solidStrain,
+                   #self.compositePlateStress,self.compositePlateStrain,
                    
                    # OEE - Strain Energy
                    self.strainEnergy,
@@ -470,7 +477,7 @@ class OP2(BDF,
         ## self variables into the result object
         self.dataCode = {'analysisCode': self.analysisCode,
                          'deviceCode'  : self.deviceCode,
-                         'tableCode'   : self.deviceCode,
+                         'tableCode'   : self.tableCode,
                          'sortCode'    : self.sortCode,
                          'dt'          : None,
                          'log'         : self.log,

@@ -135,8 +135,10 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
                 self.iTableMap[tableType](data)
             else:
                 if not(tableType[0]==tableType[1]==tableType[2]):
+                    msg = "skipping %s iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType)
+                    self.skippedCardsFile.write(msg+'\n')
                     if self.makeGeom:
-                        self.log.debug("skipping %s GEOMx iTable=%-3s with tableType=%s" %(self.tableName,iTable,tableType))
+                        self.log.debug(msg)
                     ###
                 ###
             ###

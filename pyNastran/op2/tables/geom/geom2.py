@@ -3,11 +3,11 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements      import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2
-from pyNastran.bdf.cards.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
-from pyNastran.bdf.cards.elementsBars  import CROD,CBAR,CTUBE,CONROD
-from pyNastran.bdf.cards.elementsSolid import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
-from pyNastran.bdf.cards.thermal       import CHBDYG,CHBDYP
+from pyNastran.bdf.cards.elements             import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2
+from pyNastran.bdf.cards.plates.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
+from pyNastran.bdf.cards.bars.elementsBars import CROD,CBAR,CTUBE,CONROD
+from pyNastran.bdf.cards.elementsSolid     import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
+from pyNastran.bdf.cards.thermal.thermal   import CHBDYG,CHBDYP
 
 class Geometry2(object):
     def readTable_Geom2(self):
@@ -68,9 +68,6 @@ class Geometry2(object):
                           #(5551,49,105):    self.readSPOINT,   # record 118 - not done
                           #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
                           #(2608, 26, 60)
-
-                           
-                           
                          }
         self.readRecordTable('GEOM2')
 

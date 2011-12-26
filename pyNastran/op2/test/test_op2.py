@@ -83,6 +83,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
 
 def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOnFailure=True):
     isPassed = False
+    stopOnFailure = False
     try:
         op2 = OP2(op2file,makeGeom=makeGeom,debug=debug)
         op2.setSubcases(iSubcases)
@@ -93,7 +94,7 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOn
         if writeBDF:
             op2.writeBDFAsPatran()
         #tableNamesF06 = parseTableNamesFromF06(op2.f06FileName)
-        tableNamesOP2 = op2.getTableNamesFromOP2()
+        #tableNamesOP2 = op2.getTableNamesFromOP2()
         print op2.printResults()
         #op2.printResults()
         #print "subcases = ",op2.subcases
@@ -110,8 +111,8 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOn
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' %(op2file))
         sys.exit('keyboard stop...')
-    except AddNewElementError:
-        raise
+    #except AddNewElementError:
+    #    raise
     except TapeCodeError: # the op2 is bad, not my fault
         #isPassed = True
         if stopOnFailure:

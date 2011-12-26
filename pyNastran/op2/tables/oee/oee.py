@@ -147,7 +147,7 @@ class OEE(object):
             pass
         ###
         if self.obj:
-            self.readScalars4o(debug=False)
+            self.readScalarsOut(debug=False)
         else:
             self.skipOES_Element()
         ###

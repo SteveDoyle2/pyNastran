@@ -23,6 +23,12 @@ class SolidElement(Element):
     def Rho(self):
         return self.pid.mid.rho
 
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid()]+self.nodes
+        fields2 = [elem.eid,elem.Pid()]+elem.nodes
+        return self.isSameFields(fields1,fields2)
+
 class CHEXA8(SolidElement):
     """
     CHEXA EID PID G1 G2 G3 G4 G5 G6

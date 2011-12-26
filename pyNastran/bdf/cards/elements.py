@@ -40,6 +40,12 @@ class CDAMP1(DamperElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.c1,self.c2]
+        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.c1,elem.c2]
+        return self.isSameFields(fields1,fields2)
+
     def B(self):
         return self.pid.b
 
@@ -357,6 +363,12 @@ class CMASS3(PointElement):
     def Mass(self):
         return self.pid.mass
 
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid(),self.s1,self.s2]
+        fields2 = [elem.eid,elem.Pid(),elem.s1,elem.s2]
+        return self.isSameFields(fields1,fields2)
+
     def crossReference(self,mesh):
         """
         links up the propertiy ID
@@ -392,6 +404,12 @@ class CMASS4(PointElement):
 
     def Mass(self):
         return self.mass
+
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid(),self.s1,self.s2]
+        fields2 = [elem.eid,elem.Pid(),elem.s1,elem.s2]
+        return self.isSameFields(fields1,fields2)
 
     def crossReference(self,mesh):
         """

@@ -313,7 +313,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,debug=False)
 
-    def readScalars4o(self,debug=False):
+    def readScalarsOut(self,debug=False):
         """
         reads len(strFormat) values and puts it into the result object
         the "o" in readScalars4o means "out" b/c it creates an out tuple
@@ -338,7 +338,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars4o,debug=False)
+        self.handleResultsBuffer(self.readScalarsOut,debug=False)
 
     def readScalarsX(self,strFormat,nTotal,debug=False):
         """

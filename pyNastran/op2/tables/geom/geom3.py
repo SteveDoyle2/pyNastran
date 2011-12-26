@@ -5,7 +5,7 @@ from struct import unpack
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.aero    import GRAV
 from pyNastran.bdf.cards.loads   import *
-from pyNastran.bdf.cards.thermal import *
+from pyNastran.bdf.cards.thermal.thermal import *
 
 class Geometry3(object):
 
@@ -87,7 +87,7 @@ class Geometry3(object):
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
-        print "reading FORCE2"
+        #print "reading FORCE2"
         n=0
         nEntries = len(data)//28  # 7*4
         for i in range(nEntries):

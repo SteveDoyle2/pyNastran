@@ -2,25 +2,59 @@ import sys
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
-class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
+class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
-        #print "displacementObject - self.dt=|%s|" %(self.dt)
+        #print "velocityObject - self.dt=|%s|" %(self.dt)
         ## this could get very bad very quick, but it could be great!
         ## basically it's a way to handle transients without making
         ## a whole new class
-        self.gridTypes     = {}
+        self.gridTypes    = {}
         self.translations = {}
-        self.rotations     = {}
+        self.rotations    = {}
+        self.mainHeaders = []
+        
         if dt is not None:
             self.addNewTransient()
-            self.add = self.addTransient
+            self.add  = self.addTransient
+            self.addF = self.addTransientF
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
             #self.writeOp2 = self.writeOp2Transient
         ###
+        self.parseLength()
 
+    def parseLength(self):
+        self.strFormat = ''
+        if self.analysisCode==6:
+            self.mainHeaders.append('Freq')
+            self.strFormat += 'fi'
+            self.add = self.addF
+        elif self.analysisCode==5:
+            self.mainHeaders.append('Time')
+            self.strFormat += 'fi'
+            self.add = self.addF
+        elif self.analysisCode in [1,2,3,4,7,8,9,11,12]:
+            self.mainHeaders.append('NodeID')
+            self.strFormat += 'ii'
+        else:
+            raise Exception('invalid analysisCode=%s' %(self.analysisCode))
+        self.mainHeaders.append('GridType')
+
+        if self.isImaginary():  # elif self.dataFormat==1:
+            self.strFormat += 'ffffffffffff'
+            self.headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+            raise Exception('verify...add imaginary...')
+        else:
+            self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]:
+            self.headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
+        
+        self.mainHeaders = tuple(self.mainHeaders)
+        
+    def getLength(self):
+        return (4*len(self.strFormat),self.strFormat)
+            
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
@@ -53,8 +87,10 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
+        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements,'displacementObject - static failure'
+        #assert nodeID not in self.translations,'velocityObject - static failure'
         
         gridType = self.recastGridType(gridType)
         self.gridTypes[nodeID] = gridType
@@ -62,22 +98,40 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
+    def addF(self,out):
+        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
+        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],time,gridType,v1,v2,v3)
+        #print msg
+        #assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations,'velocityObject - static failure'
+        
+        gridType = self.recastGridType(gridType)
+        self.gridTypes[freq]    = gridType
+        self.translations[freq] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[freq]    = array([v4,v5,v6]) # rx,ry,rz
+    ###
+
     def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
+        #assert nodeID not in self.translations[self.dt],'velocityObject - transient failure'
 
         gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID] = gridType
+        self.gridTypes[nodeID]             = gridType
         self.translations[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[self.dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def __reprTransient__(self):
-        self.log.debug("Transient...")
-        raise Exception('this could be cool...')
-        return self.__repr__()
+    def addTransientF(self,out):
+        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
+        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],freq,gridType,v1,v2,v3)
+        #print msg
+        gridType = self.recastGridType(gridType)
+        self.gridTypes[freq]             = gridType
+        self.translations[self.dt][freq] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[self.dt][freq]    = array([v4,v5,v6]) # rx,ry,rz
+    ###
 
     def writeOp2(self,block3,deviceCode=1):
         """
@@ -101,14 +155,14 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     #    @warning dt slot needs to be fixed...
     #    """
     #    msg = ''
-    #    for dt,displacements in sorted(self.displacements.items()):
+    #    for dt,translations in sorted(self.translations.items()):
     #        XXX = 50 ## this isnt correct... @todo update dt
     #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
     #        #msg += '%s = %g\n' %(self.dataCode['name'],dt)
     #
-    #        for nodeID,displacement in sorted(displacements.items()):
+    #        for nodeID,translation in sorted(tranlations.items()):
     #            rotation = self.rotations[nodeID]
-    #            (dx,dy,dz) = displacement
+    #            (dx,dy,dz) = translation
     #            (rx,ry,rz) = rotation
     #
     #            grid = nodeID*10+deviceCode
@@ -118,16 +172,19 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     #    return msg
 
     def __reprTransient__(self):
-        msg = '---TRANSIENT DISPLACEMENTS---\n'
+        msg = '---TRANSIENT VELOCITY---\n'
         #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-10s %-8s ' %('NodeID','GridType')
+        (mainHeaders,headers) = self.getHeaders()
+        
+        msg += '%-10s %-8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
         for dt,translations in sorted(self.translations.items()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            #print "dt =",dt
+            #print "translations =",translations
             for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -146,13 +203,17 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             ###
         return msg
 
+    def getHeaders(self):
+        return (self.mainHeaders,self.headers)
+
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()
 
-        msg = '---DISPLACEMENTS---\n'
-        headers = ['Dx','Dy','Dz','Rx','Ry','Rz']
-        msg += '%-10s %-8s ' %('NodeID','GridType')
+        msg = '---VELOCITIES---\n'
+        (mainHeaders,headers) = self.getHeaders()
+        
+        msg += '%-10s %-8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'

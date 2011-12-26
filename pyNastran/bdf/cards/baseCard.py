@@ -18,6 +18,14 @@ class BaseCard(BDF_Card):
             return True
         return False
 
+    def isSameFields(self,fields1,fields2):
+        for (field1,field2) in zip(fields1,fields2):
+            if not self.isSame(field1,field2):
+                return False
+            ###
+        ###
+        return True
+
     def Is(self,typeCheck):
         """retruns True if the card type is the same as the object"""
         if self.type==typeCheck:
