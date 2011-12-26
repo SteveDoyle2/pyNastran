@@ -276,10 +276,11 @@ class OUGV1(object):
             pass
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        if self.obj:
-            self.readScalars8(debug=False)
-        else:
-            self.skipOES_Element()
+        self.readScalarsOut(debug=False)
+        #if self.obj:
+        #    self.readScalars8(debug=False)
+        #else:
+        #    self.skipOES_Element()
         ###
         #print self.obj
         #return
@@ -333,11 +334,13 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        if self.obj:
-            self.readScalarsOut(debug=False)
-            #self.readScalars8(debug=False)
-        else:
-            self.skipOES_Element()
+        self.readScalarsOut(debug=False)
+
+        #if self.obj:
+        #    self.readScalarsOut(debug=False)
+        #    #self.readScalars8(debug=False)
+        #else:
+        #    self.skipOES_Element()
         ###
 
     def readOUGV1_Data_table11_format1_sort0(self): # acceleration
@@ -358,7 +361,7 @@ class OUGV1(object):
         else:
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8(debug=False)
+        self.readScalarsOut(debug=False)
 
     def readScalarsX1(n,sFormat,debug):
         #self.readScalarsX1(8,sFormat,debug=False)
@@ -469,7 +472,8 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8()
+        #self.readScalars8()
+        self.readScalarsOut(debug=False)
 
     def readOUGV1_Data_table1_format2_sort1(self): # displacement
         #assert self.formatCode==2 # Real/Imaginary
@@ -530,7 +534,8 @@ class OUGV1(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalars8()
+        #self.readScalars8()
+        self.readScalarsOut(debug=False)
 
     def readOUGV1_Data_table1_format3_sort1(self): # displacemnt
         #assert self.formatCode==3 # Magnitude/Phase

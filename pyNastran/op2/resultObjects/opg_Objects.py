@@ -76,7 +76,7 @@ class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
         headers = ['Fx','Fy','Fz','Mx','My','Mz']
         msg += '%-8s %-8s %8s ' %('nodeID','eID','source')
         for header in headers:
-            msg += '%10s ' %(header)
+            msg += '%11s ' %(header)
         msg += '\n'
 
         msg += '-'*100+'\n'
@@ -98,9 +98,9 @@ class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
                 vals = [Fx,Fy,Fz,Mx,My,Mz]
                 for val in vals:
                     if abs(val)<1e-6:
-                        msg += '%10s ' %(0)
+                        msg += '%11s ' %(0)
                     else:
-                        msg += '%10.3f ' %(val)
+                        msg += '%11.3f ' %(val)
                     ###
                 msg += '\n'
                 if '*TOTALS*' in source:

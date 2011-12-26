@@ -7,7 +7,7 @@ from pyNastran.op2.resultObjects.op2_Objects import spcForcesObject
 from pyNastran.op2.tables.oug.ougv1_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
      fluxObject,                            # analysisCode=1, sortCode=3
-     nonlinearTemperatureObject,            # analysisCode=10,sortCode=0
+     #nonlinearTemperatureObject,            # analysisCode=10,sortCode=0
      )
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (

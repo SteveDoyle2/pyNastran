@@ -473,6 +473,15 @@ class OP2(BDF,
         ## what solution was run (e.g. Static/Transient/Modal)
         self.analysisCode = (aCode-self.deviceCode) // 10
 
+        if self.deviceCode==3:
+            #sys.stderr.write('The op2 may be inconsistent...\n')
+            #sys.stderr.write("  print and plot can cause bad results...if there's a crash, try plot only\n")
+            self.deviceCode = 1
+            
+            self.log.info('The op2 may be inconsistent...')
+            self.log.info("  print and plot can cause bad results...if there's a crash, try plot only")
+            #pass
+
         ## dataCode stores the active variables; these pass important
         ## self variables into the result object
         self.dataCode = {'analysisCode': self.analysisCode,
@@ -484,10 +493,6 @@ class OP2(BDF,
                          }
         #print "iSubcase = ",self.iSubcase
         self.parseSortCode()
-        if self.deviceCode==3:
-            #sys.stderr.write('The op2 may be inconsistent...\n')
-            #sys.stderr.write('  print and plot can cause bad results...if there's a crash, try plot only\n')
-            self.deviceCode = 1
 
         #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase)
         self.log.debug(self.printTableCode(self.tableCode))
