@@ -6,6 +6,7 @@ from struct import unpack
 from pyNastran.op2.op2Errors import *
 from elementsStressStrain import ElementsStressStrain
 from oes_rods   import rodStressObject,rodStrainObject
+from oes_shear  import shearStressObject,shearStrainObject
 from oes_bars   import barStressObject,barStrainObject
 from oes_beams  import beamStressObject,beamStrainObject
 
@@ -51,7 +52,6 @@ class OES(ElementsStressStrain):
         #self.printBlock(data)
         if self.makeOp2Debug:
             self.op2Debug.write('block3header\n')
-
         
         self.parseApproachCode(data) # 3
         self.addDataParameter(data,'elementType', 'i',3,False)   ## element type
@@ -333,13 +333,22 @@ class OES(ElementsStressStrain):
                                 self.beamStrain,beamStrainObject)
             self.CBEAM_2()
 
+        elif self.elementType in [4]: # cshear
+            #print "    found crod_1"
+            #if self.elementType==1:    self.dataCode['elementName'] = 'CROD'
+            #if self.elementType==3:    self.dataCode['elementName'] = 'CTUBE'
+            #if self.elementType==10:   self.dataCode['elementName'] = 'CONROD'
+            
+            self.makeOES_Object(self.shearStress,shearStressObject,
+                                self.shearStrain,shearStrainObject)
+            self.basicElement()
         elif self.elementType in [11,12,13]:   # celas1/celas2/celas3
             #print "    found celas2_12"
             #if   self.elementType==11: self.dataCode['elementName'] = 'CELAS1'
             #elif self.elementType==12: self.dataCode['elementName'] = 'CELAS2'
             #elif self.elementType==13: self.dataCode['elementName'] = 'CELAS3'
             #else:  raise Exception('not implemented error')
-           
+            
             self.makeOES_Object(self.celasStress,celasStressObject,
                                 self.celasStrain,celasStrainObject)
             self.basicElement()
@@ -362,13 +371,13 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CTRIA3_74() # ctria3
-        #elif self.elementType in [64,144,70,75]: # cquad8/cquad4/ctriar/ctria6
-        elif self.elementType in [64,144]: # cquad8/cquad4
+        elif self.elementType in [64,144,70,75]: # cquad8/cquad4/ctriar/ctria6
+        #elif self.elementType in [64,144]: # cquad8/cquad4
             #print "    found cquad_144"
             if     self.elementType==64:  self.dataCode['elementName'] = 'CQUAD8'
             elif   self.elementType==144: self.dataCode['elementName'] = 'CQUAD4'
-            #elif   self.elementType==70:  self.dataCode['elementName'] = 'CTRIAR'
-            #elif   self.elementType==75:  self.dataCode['elementName'] = 'CTRIA6'
+            elif   self.elementType==70:  self.dataCode['elementName'] = 'CTRIAR'
+            elif   self.elementType==75:  self.dataCode['elementName'] = 'CTRIA6'
             else:  raise Exception('not implemented error')
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
@@ -400,7 +409,7 @@ class OES(ElementsStressStrain):
             self.CQUAD4_95()
             del self.eid2
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
-        #    self.skipOES_Element()
+            #self.skipOES_Element()
             #elementType=53  -> TRIAX6  is not supported
             #elementType=61  -> DUM9    is not supported
             #elementType=70  -> TRIAR   is not supported
@@ -411,6 +420,13 @@ class OES(ElementsStressStrain):
             #elementType=102 -> BUSH    is not supported
             #elementType=189 -> VUQUAD  is not supported
             #elementType=232 -> QUADRLC is not supported
+        #elif self.elementType in [100]:   # BARS
+        #    self.makeOES_Object(self.barStress,barStressObject,
+        #                        self.barStrain,barStrainObject)
+        #    self.basicElement()
+        #elif self.elementType in [75,89,90,92,93]:
+        #    msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #    raise AddNewElementError(msg)
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
@@ -418,12 +434,12 @@ class OES(ElementsStressStrain):
             self.log.debug(msg)
             #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             #raise RuntimeError(msg)
+            self.skippedCardsFile.write(msg)
         ###
-        self.skippedCardsFile.write(msg)
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (done)
         #elif self.elementType == 3:    # ctube    (done)
-        #elif self.elementType == 4:    # cshear
+        #elif self.elementType == 4:    # cshear   (done)
         #elif self.elementType == 10:   # conrod   (done)
 
         #elif self.elementType == 33:   # cquad4_33 (done)

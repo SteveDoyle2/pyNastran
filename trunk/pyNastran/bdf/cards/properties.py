@@ -50,6 +50,12 @@ class PMASS(PointProperty):
         self.pid  = card.field(1+nOffset)
         self.mass = card.field(2+nOffset,0.)
 
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = [self.pid,self.mass]
+        fields2 = [prop.pid,prop.mass]
+        return self.isSameFields(fields1,fields2)
+
     def Mass(self):
         return self.mass
 
@@ -76,6 +82,12 @@ class PDAMP(DamperProperty):
             self.pid = data[0]
             self.b   = data[1]
         ###
+
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = [self.pid,self.b]
+        fields2 = [prop.pid,prop.b]
+        return self.isSameFields(fields1,fields2)
 
     def __repr__(self):
         fields = ['PDAMP',self.pid,self.b]
@@ -117,6 +129,12 @@ class PLSOLID(SolidProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = [self.pid,self.mid,self.ge,self.str]
+        fields2 = [prop.pid,prop.mid,prop.ge,prop.str]
+        return self.isSameFields(fields1,fields2)
+
     def __repr__(self):
         stressStrain = self.setBlankIfDefault(self.str,'GRID')
         fields = ['PLSOLID',self.pid,self.Mid(),stressStrain]
@@ -152,6 +170,12 @@ class PSOLID(SolidProperty):
                 self.fctn = 'SMECH'
         ###
 
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = [self.pid,self.mid,self.cordm,self.integ,self.stress,self.isop,self.fctn]
+        fields2 = [prop.pid,prop.mid,prop.cordm,prop.integ,prop.stress,prop.isop,prop.fctn]
+        return self.isSameFields(fields1,fields2)
+
     def __repr__(self):
         cordm = self.setBlankIfDefault(self.cordm,0)
         fctn  = self.setBlankIfDefault(self.fctn,'SMECH')
@@ -174,6 +198,12 @@ class PCONEAX(Property): #not done
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
+
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = [self.pid,self.mid,self.group,self.Type]+self.dim
+        fields2 = [prop.pid,prop.mid,prop.group,self.Type]+prop.dim
+        return self.isSameFields(fields1,fields2)
 
     def __repr__(self):
         fields = ['PCONEAX',self.pid,self.Mid(),sefl.group,self.Type,]

@@ -199,9 +199,9 @@ class addMethods(object):
     def __init__(self):
         pass
 
-    def addParam(self,param):
+    def addParam(self,param,allowOverwrites=False):
         key = param.key
-        if key in self.params:
+        if key in self.params and allowOverwrites==False:
             if not param.isSameCard(self.params[key]):
                 assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
         else:
@@ -216,7 +216,7 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
-        if key in self.elements:
+        if key in self.elements and allowOverwrites==False:
             if not elem.isSameCard(self.elements[key]):
                 #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
                 assert elem.eid not in self.elements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.elements[elem.eid],elem)
@@ -263,7 +263,7 @@ class addMethods(object):
 
     def addStructuralMaterial(self,material,allowOverwrites=False):
         key = material.mid
-        if key in self.materials:
+        if key in self.materials and allowOverwrites==False:
             if not material.isSameCard(self.materials[key]):
                 assert key not in self.materials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.materials[key],material)
         else:
@@ -272,7 +272,7 @@ class addMethods(object):
 
     def addThermalMaterial(self,material,allowOverwrites=False):
         key = material.mid
-        if key in self.thermalMaterials:
+        if key in self.thermalMaterials and allowOverwrites==False:
             if not material.isSameCard(self.thermalMaterials[key]):
                 assert key not in self.thermalMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.thermalMaterials[key],material)
         else:
@@ -286,7 +286,7 @@ class addMethods(object):
             They have an MID, but reference structural materials.
         """
         key = material.mid
-        if key in self.thermalMaterials:
+        if key in self.thermalMaterials and allowOverwrites==False:
             if not material.isSameCard(self.creepMaterials[key]):
                 assert key not in self.creepMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.creepMaterials[key],material)
         else:
@@ -365,9 +365,9 @@ class addMethods(object):
     def addSUPORT(self,suport):
         self.suports.append(suport)
 
-    def addDArea(self,darea):
+    def addDArea(self,darea,allowOverwrites=False):
         key = (darea.sid,darea.p)
-        if key in self.dareas:
+        if key in self.dareas and allowOverwrites==False:
             if not darea.isSameCard(self.dareas[key]):
                 assert key not in self.dareas,'\ndarea=\n%s oldDArea=\n%s' %(darea,self.dareas[key])
         else:

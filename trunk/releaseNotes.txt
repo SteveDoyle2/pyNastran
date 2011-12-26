@@ -26,7 +26,16 @@ Added BDF
      TABLES1,TABLEST,TABRND1
    - PAERO1
    - FREQ,FREQ1,FREQ2
-   - DMIG
+   - DMIG, DEQATN
+
+Added OP2
+   - OES
+     - CSHEAR
+     - CTRIAR, CTRIA6
+   - OUG
+     - velocity
+     - accleration
+
 
 -----------------------v0.2 released 2011/12/20-----------------------
 

@@ -14,6 +14,9 @@ class scalarObject(Op2Codes):
     def name(self):
         return self.__class__.__name__
 
+    def isImaginary(self):
+        return bool(self.sortBits[1])
+
     def applyDataCode(self):
         self.log = self.dataCode['log']
         for key,value in self.dataCode.items():

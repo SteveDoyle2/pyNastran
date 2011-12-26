@@ -70,6 +70,12 @@ class CTRIA3(ShellElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
 
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3]
+        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.thetaMcid,elem.zOffset,elem.TFlag,elem.T1,elem.T2,elem.T3]
+        return self.isSameFields(fields1,fields2)
+
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -197,6 +203,12 @@ class CTRIAR(CTRIA3):
         self.T2 = card.field(12,1.0)
         self.T3 = card.field(13,1.0)
 
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3]
+        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.thetaMcid,elem.zOffset,elem.TFlag,elem.T1,elem.T2,elem.T3]
+        return self.isSameFields(fields1,fields2)
+
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -295,6 +307,12 @@ class CQUAD4(ShellElement):
             #print str(self)
             #sys.exit()
         
+    def isSameCard(self,elem):
+        if self.type!=elem.type:  return False
+        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
+        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.thetaMcid,elem.zOffset,elem.TFlag,elem.T1,elem.T2,elem.T3,elem.T4]
+        return self.isSameFields(fields1,fields2)
+
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -355,7 +373,7 @@ class CQUAD4(ShellElement):
         fields1 = ['CTRIA3',self.eid,self.mid]+nodes1+[self.thetaMcid,zOffset]
         fields2 = ['CTRIA3',newID,   self.mid]+nodes2+[self.thetaMcid,zOffset]
         return self.printCard(fields1)+printCard(fields2)
-    
+
     def Normal(self,nodes):
         (n1,n2,n3,n4) = self.nodePositions()
         a = n1-n3
