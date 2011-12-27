@@ -10,7 +10,8 @@ from pyNastran.op2.tables.geom.geom3 import Geometry3
 from pyNastran.op2.tables.geom.geom4 import Geometry4
 from pyNastran.op2.tables.ept import EPT
 from pyNastran.op2.tables.mpt import MPT
-#from pyNastran.op2.tables.dynamics import DYNAMICS
+from pyNastran.op2.tables.geom.dynamics import DYNAMICS
+from pyNastran.op2.tables.geom.dit import DIT
 
 class GeomObj(object):
     def __init__(self):
@@ -18,7 +19,7 @@ class GeomObj(object):
     def geomFunc(self,data):
         pass
 
-class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
+class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMICS):
 
     def readRecordTable(self,expectedTableName):
         """
@@ -168,39 +169,3 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT):
     def readTable_DUMMY_GEOM(self,tableName):
         self.iTableMap = {}
         self.readRecordTable(tableName)
-
-    def readTable_DIT(self):
-        self.iTableMap = {
-                            (1105,11,133): self.readFake,
-                            (105,  1, 93): self.readFake,
-                            (15, 21, 162): self.readFake,
-                            (56, 26, 303): self.readFake,
-                            (3105,31, 97): self.readFake,
-                         }
-        self.readRecordTable('DIT')
-
-    def readTable_DYNAMICS(self):
-        self.iTableMap = {
-                            (37, 18, 183): self.readFake,
-                            (57,   5,123): self.readFake,
-                            (107,  1, 86): self.readFake,
-                            (207,  2, 87): self.readFake,
-                            (307,  3, 85): self.readFake,
-                            (308,  8,348): self.readFake,
-                            (707,  7,124): self.readFake,
-                            (1007,10,125): self.readFake,
-                            (1307,13,126): self.readFake,
-                            (3107,31,127): self.readFake,
-                            (5107,51,131): self.readFake,
-                            (5207,52,132): self.readFake,
-                            (6207,62,136): self.readFake,
-                            (6607,66,137): self.readFake,
-                            (7107,71,138): self.readFake,
-                            (7207,72,139): self.readFake,
-                            (8307,83,142): self.readFake,
-                            (2107,21,195): self.readFake,
-                            (2207,22,196): self.readFake,
-                            
-                            
-                         }
-        self.readRecordTable('DYNAMICS')

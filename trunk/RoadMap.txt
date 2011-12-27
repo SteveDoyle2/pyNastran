@@ -28,7 +28,7 @@ For convenience, the last card is listed as well.
 
 OP2 Reader
 
-   - GEOM1
+   - GEOM1 (5/34)
      - CORD1C  (1, done)
      - CORD1R  (2, done)
      - CORD1S  (3, needs integration)
@@ -42,7 +42,7 @@ OP2 Reader
    - GEOM1N
      - ???
 
-   - GEOM2
+   - GEOM2 (19/125)
      - CBAR    (8,  done)
      - CDAMP1  (16, done)
      - CDAMP2  (17, done)
@@ -71,7 +71,7 @@ OP2 Reader
      - SPOINT  (118)
      - WELDP   (125)
 
-   - GEOM3
+   - GEOM3 (11/42)
      - FORCE   (3,done)
      - FORCE1  (4,done)
      - FORCE2  (5,done)
@@ -91,7 +91,8 @@ OP2 Reader
      - SPCADD
      - USET1   (63)
    
-   - EPT (properties may be created that are too large >100000000.  this is how
+   - EPT (7/63)
+   	 (properties may be created that are too large >100000000.  this is how
           properties created by the solution are identified)
      - NSM     (2, done)
      - PBAR    (11,buggy)
@@ -105,7 +106,8 @@ OP2 Reader
      - PTUBE   (56,done)
      - VIEW3D  (63)
 
-   - MPT / MPTS (materials may be created that are too large >100000000.  this is how
+   - MPT / MPTS (9/29)
+   		(materials may be created that are too large >100000000.  this is how
                  materials created by the solution are identified)
      - CREEP   (1,done)
      - MAT1    (2,done)
@@ -120,31 +122,43 @@ OP2 Reader
      - NLPARM
      - TSTEPNL (29)
 
+   - DIT (7/15)
+     - GUST    (1, done)
+     - TABLED1 (4, done)
+     - TABLED2 (5, done)
+     - TABLED3 (6, done)
+     - TABLEM1 (9, done)
+     - TABLEM2 (10,done)
+     - TABLEM3 (11,done)
+     - TABRNDG (15)
+
+
    - OES
    OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
       - all midside nodes must be included on elements (for example CQUAD8 have 6 nodes)
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
          - CROD    (1,  done)
          - CBEAM   (2,  done)
+         - CSHEAR  (4,  done)
          - CONROD  (10, done)
+         - CBAR    (34, done)
+
          - CELAS1  (11, done)
          - CELAS2  (12, done)
          - CELAS3  (13, done)
-         - CBAR    (34, done)
+         - CELAS4  (14, done)
          
-         - CTETRA  (39, done)
-         - CHEXA   (67, done)
-         - CPENTA  (68, done)
-         - CTRIA3  (74, done)
-         - CQUAD4  (144,done)
-         
-         - CQUAD4 (33,done)
-         - CQUAD8 (64,done)
-         - CTRIA6 (75)
-         - CELAS1 (11,done)
-         - CELAS2 (12,done)
-         - CELAS3 (13,done)
-         - CELAS4 (14,done)
+         - CTETRA  (39, done) - 4 nodes
+         - CHEXA   (67, done) - 8 nodes
+         - CPENTA  (68, done) - 6 nodes
+
+         - CTRIA3  (74, done) - 1 node
+         - CTRIAR  (70, done) - 4 nodes
+         - CTRIA6  (75, done) - 4 nodes
+
+         - CQUAD4  (33, done) - 1 node
+         - CQUAD8  (64, done) - 5 nodes
+         - CQUAD4  (144,done) - 5 nodes
 
        - OESNLXR
          # nonlinear
@@ -158,14 +172,14 @@ OP2 Reader
          - CBEAM  (94)
 
       - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
-         - CQUAD4 (95,done)
-         - CQUAD8 (96,done)
-         - CTRIA3 (97,done)
-         - CTRIA6 (98,done)
+         - CQUAD4 (95,done) - 1 node
+         - CQUAD8 (96,done) - 1 node
+         - CTRIA3 (97,done) - 1 node
+         - CTRIA6 (98,done) - 1 node
 
    - OUGV1 Table (displacement/velocity/acceleration)
-      - displacement           / temperature           (approachCode=1/6/10, sortCode=0, done)
-      - eigenvectors           /                       (approachCode=2,      sortCode=0, done)
+      - displacement / temperature (approachCode=1/6/10, sortCode=0, done)
+      - eigenvectors /             (approachCode=2,      sortCode=0, done)
 
 
    - OGP1 Table (grid point forces)
@@ -175,9 +189,6 @@ OP2 Reader
       - strain energy
 
 OP2 Backup
-   - DIT
-     - TABRNDG (15)
-
 
    - DYNAMIC / DYNAMICS
      - UNBALNC (40)
@@ -255,10 +266,10 @@ CBEAM_2 (2/6)
 
 CTUBE_3 (see CROD_1)
 
-CSHEAR_4 (None)
+CSHEAR_4 (2/6)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
-     numWide=3
+     numWide=3 (done)
    - tCode7=1 (Real/Imaginary)
      numWide=5
    - tCode7=2 (Random)
@@ -266,7 +277,7 @@ CSHEAR_4 (None)
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
-     numWide=4
+     numWide=4 (done)
    - tCode7=1 (Real/Imaginary)
      numWide=5
    - tCode7=2 (Random)
@@ -547,7 +558,7 @@ DRESP3
 DVPREL1  (done)
 DLINK
 DMIG    (in progress)
-DEQUATN (in progress)
+DEQATN  (in progress)
 
 ---Tables---
 DTABLE

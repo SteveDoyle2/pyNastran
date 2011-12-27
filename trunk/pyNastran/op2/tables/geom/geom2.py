@@ -15,10 +15,10 @@ class Geometry2(object):
                            (2408,24,180):    self.readCBAR,    # record 8
                            (4001,40,275):    self.readCBARAO,  # record 9  - not done
                            (5408,54,261):    self.readCBEAM,   # record 10 - not done
-                          #(11401,114,9016): self.readCBEAMP,  # record 11 - not done
-                          #(4601,46,298):    self.readCBEND,   # record 12 - not done
-                          #(5608,56,218):    self.readCBUSH1D, # record 14 - not done
-                          #(2315,23,146):    self.readCCONE,   # record 15 - not done
+                           (11401,114,9016): self.readCBEAMP,  # record 11 - not done
+                           (4601,46,298):    self.readCBEND,   # record 12 - not done
+                           (5608,56,218):    self.readCBUSH1D, # record 14 - not done
+                           (2315,23,146):    self.readCCONE,   # record 15 - not done
                            (201,2,69):       self.readCDAMP1,  # record 16
                            (301,3,70):       self.readCDAMP2,  # record 17
                            (401,4,71):       self.readCDAMP3,  # record 18
@@ -34,34 +34,34 @@ class Geometry2(object):
                            (1908,19,104):    self.readCGAP,    # record 39
 
                            (10808,108,406):  self.readCHBDYG,   # record 43
-                          #(10908,109,407):  self.readCHBDYP,   # record 44 - not done
+                           (10908,109,407):  self.readCHBDYP,   # record 44 - not done
                            (7308,73,253):    self.readCHEXA,    # record 45
                           #(1001,10,65):     self.readCMASS1,   # record 51 - not done
                           #(1101,11,66):     self.readCMASS2,   # record 52 - not done
                           #(1201,12,67):     self.readCMASS3,   # record 53 - not done
                           #(1301,13,68):     self.readCMASS4,   # record 54 - not done
-                          #(2508,25,0):      self.readCMFREE,   # record 55 - not done
-                          #(1401,14,63):     self.readCONM1,    # record 56 - not done
+                           (2508,25,0):      self.readCMFREE,   # record 55 - not done
+                           (1401,14,63):     self.readCONM1,    # record 56 - not done
                            (1501,15,64):     self.readCONM2,    # record 57
                            (1601,16,47):     self.readCONROD,   # record 58
                            (12701,127,408):  self.readCONV,     # record 59 - not tested
                            (8908,89,422):    self.readCONVM,    # record 60 - not tested
                            (4108,41,280):    self.readCPENTA,   # record 62
 
-                          #(9108,91,507):    self.readCQUAD,    # record 68 - not tested
+                           (9108,91,507):    self.readCQUAD,    # record 68 - not tested
                            (2958,51,177):    self.readCQUAD4,   # record 69 - maybe buggy on theta/Mcsid field
                            (13900,139,9989): self.readCQUAD4,   # record 70 - maybe buggy on theta/Mcsid field
                            (4701,47,326):    self.readCQUAD8,   # record 71 - maybe buggy on theta/Mcsid field
-                          #(8009,80,367):    self.readCQUADR,   # record 74 - not tested
-                          #(9008,90,508):    self.readCQUADX,   # record 75 - not tested
+                           (8009,80,367):    self.readCQUADR,   # record 74 - not tested
+                           (9008,90,508):    self.readCQUADX,   # record 75 - not tested
         
                            (3001,30,48):     self.readCROD,     # record 80
                           #(12201,122,9013): self.readCTETP,    # record 86 - not done
                            (5508,55,217):    self.readCTETRA,   # record 87
                            (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
-                          #(4801,48,327):    self.readCTRIA6,   # record 95 - buggy
-                          #(9200,92,385):     self.readCTRIAR,  # record 98 - not done
-                          #(6108,61,107):     self.readCTRIAX6, # record 100 - not done
+                           (4801,48,327):    self.readCTRIA6,   # record 95 - buggy
+                           (9200,92,385):    self.readCTRIAR,   # record 98 - not tested
+                           (6108,61,107):    self.readCTRIAX6,  # record 100 - not tested
                            (3701,37,49):     self.readCTUBE,    # record 103
                           #(3901,39, 50):     self.readCVISC,   # record 104 - not done
                           #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
@@ -121,6 +121,7 @@ class Geometry2(object):
         """
         CBARAO(4001,40,275) - the marker for Record 9
         """
+        self.skippedCardsFile.write('skipping CBARAO\n')
         pass
 
 
@@ -128,13 +129,43 @@ class Geometry2(object):
         """
         CBEAM(5408,54,261) - the marker for Record 10
         """
+        self.skippedCardsFile.write('skipping CBEAM\n')
         pass
 
-# CBEAMP
-# CBEND
-# CBUSH
-# CBUSH1D
-# CCONE
+    def readCBEAMP(self,data):
+        """
+        CBEAMP(11401,114,9016) - the marker for Record 11
+        """
+        self.skippedCardsFile.write('skipping CBEAMP\n')
+        pass
+
+    def readCBEND(self,data):
+        """
+        CBEND(4601,46,298) - the marker for Record 12
+        """
+        self.skippedCardsFile.write('skipping CBEND\n')
+        pass
+
+    def readCBUSH(self,data):
+        """
+        CBUSH(2608,26,60) - the marker for Record 13
+        """
+        self.skippedCardsFile.write('skipping CBUSH\n')
+        pass
+
+    def readCBUSH1D(self,data):
+        """
+        CBUSH1D(5608,56,218) - the marker for Record 14
+        """
+        self.skippedCardsFile.write('skipping CBUSH1D\n')
+        pass
+
+    def readCCONE(self,data):
+        """
+        CCONE(2315,23,0) - the marker for Record 15
+        """
+        self.skippedCardsFile.write('skipping CCONE\n')
+        pass
 
     def readCDAMP1(self,data):
         """
@@ -289,20 +320,6 @@ class Geometry2(object):
         ###
         data = data[n:]
 
-    def readCONM2(self,data):
-        """
-        CONM2(1501,15,64) - the marker for Record 32
-        """
-        #print "reading CONM2"
-        while len(data)>=52: # 13*4
-            eData = data[:52]
-            data  = data[52:]
-            out = unpack('iiiffffffffff',eData)
-            (eid,g,cid,m,x1,x2,x3,i1,i2a,i2b,i3a,i3b,i3c) = out
-            elem = CONM2(None,out)
-            self.addOp2Element(elem)
-        ###
-
 # CFAST
 # CFASTP
 # CFLUID2
@@ -321,10 +338,10 @@ class Geometry2(object):
             out = unpack('iiiifffii',eData)
             (eid,pid,ga,gb,g,cid,x1,x2,x3,f,cid) = out
             g0 = None
-            f2 = unpack('i',eData[28:32]
+            f2 = unpack('i',eData[28:32])
             assert f==f2
             if f==2:
-                g0 = unpack('i',eData[16:20]
+                g0 = unpack('i',eData[16:20])
                 x1 = None
                 x2 = None
                 x3 = None
@@ -359,6 +376,7 @@ class Geometry2(object):
         ###
 
     def readCHBDYP(self,data):
+        self.skippedCardsFile.write('skipping CHBDYP\n')
         pass
 
     def readCHEXA(self,data):
@@ -396,10 +414,43 @@ class Geometry2(object):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
-        pass
+        self.skippedCardsFile.write('skipping CMFREE\n')
 
-# CONM1
-# CONM2
+    def readCONM1(self,data):
+        """
+        CONM1(1401,14,63) - the marker for Record 56
+        """
+        #print "reading CONM1"
+        n=0
+        nEntries = len(data)//96
+        for i in range(nEntries):
+            eData = data[n:n+96] # 24*4
+            out = unpack('iiifffffffffffffffffffff',eData)
+            (eid,g,cid,m1, m2a,m2b, m3a,m3b,m3c, m4a,m4b,m4c,m4d,
+             m5a,m5b,m5c,m5d,m5e,  m6a,m6b,m6c,m6d,m6e,m6f) = out
+            elem = CONM1(None,out)
+            self.addOp2Element(elem)
+            n+=96
+        ###
+        data  = data[n:]
+
+        self.skippedCardsFile.write('skipping CONM1\n')
+        
+
+    def readCONM2(self,data):
+        """
+        CONM2(1501,15,64) - the marker for Record 57
+        """
+        #print "reading CONM2"
+        while len(data)>=52: # 13*4
+            eData = data[:52]
+            data  = data[52:]
+            out = unpack('iiiffffffffff',eData)
+            (eid,g,cid,m,x1,x2,x3,i1,i2a,i2b,i3a,i3b,i3c) = out
+            elem = CONM2(None,out)
+            self.addOp2Element(elem)
+        ###
+
 
     def readCONROD(self,data):
         """
@@ -719,11 +770,13 @@ class Geometry2(object):
 # CTRIAP
 
     def readCTRIAR(self,data): # 98
+        self.skippedCardsFile.write('skipping CTRIAR\n')
         pass
 
 # CTRIAX
 
     def readCTRIAX6(self,data): # 100
+        self.skippedCardsFile.write('skipping CTRIAX6\n')
         pass
 
 # CTRIX3FD
@@ -766,7 +819,8 @@ class Geometry2(object):
         (5551,49,105)    - the marker for Record 118
         @todo create object
         """
-        print "reading SPOINT"
+        self.skippedCardsFile.write('skipping SPOINT\n')
+        #print "reading SPOINT"
         while len(data)>=4: # 4*4
             eData = data[:4]
             data  = data[4:]
