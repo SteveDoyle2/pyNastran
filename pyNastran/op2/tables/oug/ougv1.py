@@ -272,11 +272,16 @@ class OUGV1(object):
                 raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
                 pass
             ###
+        elif self.thermal in [2,4,8]:
+            self.readThermal4()
         else:   # self.thermal>1:  ## @warning thermal>0!!!!
-            pass
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        self.readScalarsOut(debug=False)
+        
+        if self.obj:
+            self.readScalarsOut(debug=False)
+        else:
+            pass
         #if self.obj:
         #    self.readScalars8(debug=False)
         #else:
@@ -284,6 +289,21 @@ class OUGV1(object):
         ###
         #print self.obj
         #return
+
+    def readThermal4(self):
+        print self.codeInformation()
+        print self.printBlock(self.data)
+        n=0
+        nEntries = len(self.data)//32
+        for i in range(nEntries):
+            eData = self.data[n:n+32]
+            out = unpack('iiffffff',eData)
+            nid = (out[0]-self.deviceCode)//10
+
+            print out
+            n+=32
+            print "nid = ",nid
+        #sys.exit('thermal4...')
 
     def readOUGV1_Data_table7_format1_sort0(self):  # modes
         #assert self.formatCode==1 # Real

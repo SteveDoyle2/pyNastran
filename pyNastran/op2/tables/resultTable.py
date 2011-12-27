@@ -128,7 +128,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             n = self.n
             #print self.printSection(100)
             self.readMarkers([iTable,1,0],tableName)
-            self.log.debug("")
+            #self.log.debug("")
             #print "i read the markers!!!"
    
         ###
@@ -151,6 +151,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             self.op2Debug.write("***end of %s table***\n" %(tableName))
 
     def readTable4(self,table4Data,flag,iTable):
+        """loops over repeated table -4s"""
         #self.readMarkers([iTable,1,0])
         markerA = 4
         
@@ -183,6 +184,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         return isBlockDone
 
     def readTable4DataSetup(self,table4Data,iTable): # iTable=-4
+        """checks to see if table 4 is done, loads the data, and handles skipping"""
         isTable4Done = False
         isBlockDone  = False
 

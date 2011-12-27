@@ -86,8 +86,8 @@ class OP2(BDF,
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
-                             
-                             'DIT',  # some header table...
+                             'DIT',  # tables
+
                             'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC',#'EDOM',
                              'DESTAB',                # design variables
                              'OQG1','OQGV1','OQMG1',  # spc/mpc forces
@@ -348,8 +348,8 @@ class OP2(BDF,
                         self.readTable_MPTS()
                     elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
                         self.readTable_DYNAMICS()
-                    #elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
-                    #    self.readTable_DIT()
+                    elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
+                        self.readTable_DIT()
                     elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OMM2','OGPWG',]:
                         self.readTable_DUMMY_GEOM(tableName)
 
@@ -401,7 +401,7 @@ class OP2(BDF,
                     #elif tableName in []:
                     #    self.readTableB_DUMMY()
 
-                    elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','DIT','OVGPSD2']:
+                    elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OVGPSD2']:
                         self.readTable_DUMMY_GEOM(tableName)
                     elif tableName in ['OVGATO2','OVGRMS2','OVGNO2']:
                         self.readTable_DUMMY_GEOM(tableName)
