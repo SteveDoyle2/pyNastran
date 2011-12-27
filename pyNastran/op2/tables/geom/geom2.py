@@ -14,7 +14,7 @@ class Geometry2(object):
         self.iTableMap = {
                            (2408,24,180):    self.readCBAR,    # record 8
                            (4001,40,275):    self.readCBARAO,  # record 9  - not done
-                          #(5408,54,261):    self.readCBEAM,   # record 10 - not done
+                           (5408,54,261):    self.readCBEAM,   # record 10 - not done
                           #(11401,114,9016): self.readCBEAMP,  # record 11 - not done
                           #(4601,46,298):    self.readCBEND,   # record 12 - not done
                           #(5608,56,218):    self.readCBUSH1D, # record 14 - not done
@@ -31,7 +31,7 @@ class Geometry2(object):
                           #(8515,85,209):    self.readCFLUID2, # record 35 - not done
                           #(8615,86,210):    self.readCFLUID3, # record 36 - not done
                           #(8715,87,211):    self.readCFLUID4, # record 37 - not done
-                          #(1908,19,104):    self.readCGAP,    # record 39 - not done
+                           (1908,19,104):    self.readCGAP,    # record 39
 
                            (10808,108,406):  self.readCHBDYG,   # record 43
                           #(10908,109,407):  self.readCHBDYP,   # record 44 - not done
@@ -84,26 +84,16 @@ class Geometry2(object):
 # CAXIF2
 # CAXIF3
 # CAXIF4
-# CBAR
-# CBARAO
-# CBEAM
-# CBEAMP
-# CBEND
-# CBUSH
-# CBUSH1D
-# CCONE
-
-
-
 
     def readCBAR(self,data):
         """
         CBAR(2408,24,180) - the marker for Record 8
         """
         #print "reading CBAR"
-        while len(data)>=64: # 16*4
-            eData = data[:64]
-            data  = data[64:]
+        n=0
+        nEntries = len(data)//64
+        for i in range(nEntries):
+            eData = data[n:n+64] # 16*4
             f, = unpack('i',eData[28:32])
             #print "len(eData) = %s" %(len(eData))
             if   f==0:
@@ -123,7 +113,9 @@ class Geometry2(object):
             ###
             elem = CBAR(None,dataIn)
             self.addOp2Element(elem)
+            n+=64
         ###
+        data = data[n:]
 
     def readCBARAO(self,data):
         """
@@ -131,7 +123,13 @@ class Geometry2(object):
         """
         pass
 
-# CBEAM
+
+    def readCBEAM(self,data):
+        """
+        CBEAM(5408,54,261) - the marker for Record 10
+        """
+        pass
+
 # CBEAMP
 # CBEND
 # CBUSH
@@ -311,7 +309,33 @@ class Geometry2(object):
 # CFLUID3
 # CFLUID4
 # CINT
-# CGAP
+
+    def readCGAP(self,data):
+        """
+        CGAP(1908,19,104) - the marker for Record 39
+        """
+        #print "reading CGAP"
+        while len(data)>=36: # 9*4
+            eData = data[:36]
+            data  = data[36:]
+            out = unpack('iiiifffii',eData)
+            (eid,pid,ga,gb,g,cid,x1,x2,x3,f,cid) = out
+            g0 = None
+            f2 = unpack('i',eData[28:32]
+            assert f==f2
+            if f==2:
+                g0 = unpack('i',eData[16:20]
+                x1 = None
+                x2 = None
+                x3 = None
+            
+            dataIn = [eid,pid,ga,gb,g0,x1,x2,x3,cid]
+            elem = CGAP(None,dataIn)
+            self.addOp2Element(elem)
+            #n+=36
+        ###
+        #data = data[n:]
+
 # CHACAB
 # CHACBR
 # CHBDYE
@@ -575,7 +599,24 @@ class Geometry2(object):
 
 # CRROD
 # CSEAM
-# CSHEAR
+
+    def readCSHEAR(self,data):
+        """
+        CSHEAR(3101,31,61)    - the marker for Record 83
+        """
+        #print "reading CSHEAR"
+        n=0
+        nEntries = len(data)//24 # 6*4
+        for i in range(nEntries):
+            eData = data[n:n+24]
+            out = unpack('iiiiii',eData)
+            (eid,pid,n1,n2,n3,n4) = out
+            elem = CSHEAR(None,out)
+            self.addOp2Element(elem)
+            n+=24
+        ###
+        data = data[n:]
+
 # CSLOT3
 # CSLOT4
 

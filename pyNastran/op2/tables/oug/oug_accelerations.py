@@ -175,7 +175,7 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
 
     def writeHeader(self):
         (mainHeaders,headers) = self.getHeaders()
-        msg = '%-10s %-8s ' %(mainHeaders)
+        msg = '%-10s %8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -194,7 +194,7 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
 
-                msg += '%-10i %-8s ' %(nodeID,gridType)
+                msg += '%-10i %8s ' %(nodeID,gridType)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
@@ -223,7 +223,7 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
 
-            msg += '%-10i %-8s ' %(nodeID,gridType)
+            msg += '%-10i %8s ' %(nodeID,gridType)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:

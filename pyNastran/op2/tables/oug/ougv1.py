@@ -93,7 +93,7 @@ class OUGV1(object):
             self.addDataParameter(data,'freq','f',5)   ## frequency
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
-            self.log.debug("DT(5)=%s" %(self.dt))
+            #self.log.debug("DT(5)=%s" %(self.dt))
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
@@ -138,8 +138,8 @@ class OUGV1(object):
         # displacement
         if   tfsCode==[1,1,0]:
             self.readOUGV1_Data_table1_format1_sort0()
-        #elif tfsCode==[1,1,1]:
-        #    self.readOUGV1_Data_table1_format1_sort1()
+        elif tfsCode==[1,1,1]:
+            self.readOUGV1_Data_table1_format1_sort1()
         elif tfsCode==[1,2,0]:
             self.readOUGV1_Data_table1_format2_sort0()
         #elif tfsCode==[1,2,1]:
@@ -402,7 +402,9 @@ class OUGV1(object):
         ###
         #print "objName = ",self.obj.name()
         self.readScalars14(debug=False)
+        #print "---OBJ---"
         #print self.obj
+        #raise Exception('format1_sort1')
         #return
 
     def readOUGV1_Data_table7_format1_sort1(self): # modes
