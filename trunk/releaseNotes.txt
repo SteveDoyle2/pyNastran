@@ -13,11 +13,16 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 This code was written entirely in Python and should install easily.
 
 -----------------------v0.3 released 2012/01/??-----------------------
+BDF API Changes
+   - 
+
+BDF Bug Fixes
+   - 
+
 Overall BDF
    - reorganized code files
    - improved accuracy of PBEAM methods (Area, Nsm, etc.) by integrating instead
      of using the first value
-   - 
 
 Added BDF
    - PBEAML
@@ -26,9 +31,12 @@ Added BDF
      TABLES1,TABLEST,TABRND1
    - PAERO1
    - FREQ,FREQ1,FREQ2
-   - DMIG, DEQATN
+   - DMIG, DEQATN (not done)
+   - CGAP
 
 Added OP2
+   - GEOM2
+     - CGAP
    - OES
      - CSHEAR
      - CTRIAR, CTRIA6
@@ -36,26 +44,38 @@ Added OP2
      - velocity
      - accleration
 
+OP2 API Changes
+   - OUG
+      - displacementObject now has self.translations (no more self.displacements) & self.rotations
+        This is standard across displacement/velocity/acceleration
+
+Overall OP2
+   - 
+
+OP2 Bug Fixes
+   - deviceCode is now passed properly to result objects
 
 -----------------------v0.2 released 2011/12/20-----------------------
 
-Overall BDF
+OP2 API Changes
    - test_bdf can be called from the command line
    - renamed read method  to readBDF (it got confusing when the op2 object can 
      read the bdf b/c it needs to initialize the bdf cards for the geomX tables)
    - renamed write to writeBDF
    - renamed writeAsPatran to writeBDFAsPatran
-   - a few more cards
-   - added extra argument to all cards to set data directly from the 
-     OP2 (no data type setting as the OP2 is binary).
-   - max lines in executive & case control decks is now 600
-   - methods for Elements (Area, Nsm, Thicknesss)
    - thermal materials (MAT4, MAT5) pulled from self.materials and put into self.thermalMaterials
      new ThermalMaterial & StructuralMaterial methods
      Material method checks for either still
    - rigid elements (RBAR, RBE2, etc.) separated out of elements to avoid overwriting cards
      new RigidElement method
      Element method doesnt check for rigid elements anymore
+
+Overall BDF
+   - a few more cards
+   - added extra argument to all cards to set data directly from the 
+     OP2 (no data type setting as the OP2 is binary).
+   - max lines in executive & case control decks is now 600
+   - methods for Elements (Area, Nsm, Thicknesss)
      
 
 Overall OP2

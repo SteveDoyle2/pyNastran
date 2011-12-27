@@ -421,6 +421,7 @@ CMASS4 (done)
 
 CRAC2D (done)
 CRAC3D (done)
+CGAP   (in progress)
 
 ----Rigid Elements----:
 RBE1  (done)
@@ -472,6 +473,7 @@ PCOMPG  (verify me...)
 PSHELL  (done)
 PSOLID  (done)
 PLSOLID (done)
+PGAP
 
 ----Loads----:
 LOAD    (done)
@@ -545,7 +547,7 @@ DRESP3
 DVPREL1  (done)
 DLINK
 DMIG    (in progress)
-DEQUATN (v0.3)
+DEQUATN (in progress)
 
 ---Tables---
 DTABLE
@@ -627,9 +629,6 @@ PBCOMP
 CBUSH
 PBUSH
 PBUSHT
-
-CGAP
-PGAP
 
 ----Patran Elements----:
 CONM1
@@ -773,7 +772,6 @@ RADSET
 
 ----Special----:
 GENEL
-DEQUATN
 
 ----Dynamics/Nonlinear---:
 EPOINT

@@ -7,34 +7,35 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
         scalarObject.__init__(self,dataCode,iSubcase)
         self.freq = freq
         #print "complexDisplacementObject - self.freq=|%s|" %(self.freq)
-        self.gridType      = {}
-        self.displacements = {}
-        self.rotations     = {}
+        self.gridType     = {}
+        self.translations = {}
+        self.rotations    = {}
         self.addNewTransient()
 
     def updateDt(self,dataCode,freq):
         self.dataCode = dataCode
         self.applyDataCode()
         if freq is not None:
-            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],freq,self.iSubcase))
             self.freq = freq
             self.addNewTransient()
         ###
 
     def addNewTransient(self):
         """initializes the transient variables"""
-        if self.dt not in self.displacements:
-            self.displacements[self.freq] = {}
-            self.rotations[self.freq]     = {}
+        if self.dt not in self.translations:
+            self.translations[self.freq] = {}
+            self.rotations[self.freq]    = {}
 
     def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
-        #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        msg = ''
+        msg = "nodeID=%s v1r=%s v2r=%s v3r=%s" %(nodeID,v1r,v2r,v3r)
+        #print msg
+        #msg = ''
         assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements,'displacementObject - static failure'
+        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
-        self.displacements[self.freq][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
-        self.rotations[self.freq][nodeID]     = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
+        self.translations[self.freq][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
+        self.rotations[self.freq][nodeID]    = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
     ###
 
     def __repr__(self):
@@ -47,13 +48,13 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for freq,displacements in sorted(self.displacements.items()):
+        for freq,translations in sorted(self.translations.items()):
             msg += 'freq = %g\n' %(freq)
             #print "freq = ",freq
-            #print displacements
-            for nodeID,displacement in sorted(displacements.items()):
+            #print translations
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[freq][nodeID]
-                (dx,dy,dz) = displacement
+                (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
 
                 msg += '%-10i ' %(nodeID)

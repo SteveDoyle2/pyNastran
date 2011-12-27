@@ -139,6 +139,17 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         ###
         return msg
 
+    def writeHeader(self):
+        (mainHeaders,headers) = self.getHeaders()
+        msg = '%-10s %-8s ' %(mainHeaders)
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+        return msg
+
+    def getHeaders(self):
+        return (self.mainHeaders,self.headers)
+
     def __reprTransient__(self):
         msg = '---TRANSIENT TEMPERATURE---\n'
         msg += self.writeHeader()
@@ -156,9 +167,6 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                 ###
             ###
         return msg
-
-    def getHeaders(self):
-        return (self.mainHeaders,self.headers)
 
     def __repr__(self):
         if self.isTransient:

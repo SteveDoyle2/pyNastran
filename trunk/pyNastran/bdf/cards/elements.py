@@ -200,6 +200,55 @@ class CSHEAR(Element):
         fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
+class CGAP(Element):
+    type = 'CGAP'
+    def __init__(self,card=None,data=None):
+        Element.__init__(self,card,data)
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            self.ga = card.field(3)
+            self.gb = card.field(4)
+            x1G0    = card.field(5)
+            if isinstance(x1G0,int):
+                self.g0 = x1G0
+                self.x1 = None
+                self.x2 = None
+                self.x3 = None
+            elif isinstance(x1G0,float):
+                self.g0  = None
+                self.x1  = x1G0
+                self.x2  = card.field(6)
+                self.x3  = card.field(7)
+                self.cid = card.field(8)
+            else:
+                raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
+            ###
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            self.ga  = data[2]
+            self.gb  = data[3]
+            self.g0  = data[4]
+            self.x1  = data[5]
+            self.x2  = data[6]
+            self.x3  = data[7]
+            self.cid = data[8]
+        ###
+
+    def crossReference(self,mesh):
+        #self.g1 = mesh.Node(self.g1)
+        #self.g2 = mesh.Node(self.g2)
+        self.pid = mesh.Property(self.pid)
+
+    def __repr__(self):
+        if self.g0 is not None:
+            x = [self.g0,None,None]
+        else:
+            x = [self.x1,self.x2,self.x3]
+        fields = ['CGAP',self.eid,self.Pid(),self.ga,self.gb]+x+[self.cid]
+        return self.printCard(fields)
+
 class CRAC2D(Element):
     type = 'CRAC2D'
     def __init__(self,card=None,data=None):
@@ -286,8 +335,6 @@ class CMASS1(PointElement):
         return self.pid.mass
 
     def crossReference(self,mesh):
-        """
-        """
         #self.g1 = mesh.Node(self.g1)
         #self.g2 = mesh.Node(self.g2)
         self.pid = mesh.Property(self.pid)

@@ -194,7 +194,7 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
 
-                msg += '%-10i %-8s ' %(nodeID,gridType)
+                msg += '%-10i %8s ' %(nodeID,gridType)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
@@ -223,7 +223,7 @@ class velocityObject(scalarObject): # approachCode=10, sortCode=0, thermal=0
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
 
-            msg += '%-10i %-8s ' %(nodeID,gridType)
+            msg += '%-10i %8s ' %(nodeID,gridType)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:
