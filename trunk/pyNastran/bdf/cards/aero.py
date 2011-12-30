@@ -65,25 +65,28 @@ class Aero(BaseCard):
     def __init__(self,card,data):
         pass
 
-    def isSymmetricalXY(self):
+    def IsSymmetricalXY(self):
         if self.symXY==1:
             return True
         return False
 
-    def isSymmetricalXZ(self):
+    def IsSymmetricalXZ(self):
         if self.symXZ==1:
             return True
         return False
 
-    def setGroundEffect(self):
+    def EnableGroundEffect(self):
         self.symXY = -1
 
-    def isAntiSymmetricalXY(self):
+    def DisableGroundEffect(self):
+        self.symXY = 1
+
+    def IsAntiSymmetricalXY(self):
         if self.symXY==-1:
             return True
         return False
 
-    def isAntiSymmetricalXZ(self):
+    def IsAntiSymmetricalXZ(self):
         if self.symXY==-1:
             return True
         return False
@@ -246,15 +249,32 @@ class CAERO1(BaseCard): # add helper functions
         self.p4   =  array([card.field(13,0.0), card.field(14,0.0), card.field(15,0.0)])
         self.p3   =  self.p4+[card.field(16,0.0), 0., 0.]
 
-    def points(self):
-        raise Exception('not implemented in CAERO1')
+    def Pid(self):
+        if isinstance(self.pid,int):
+            return self.pid
+        return self.pid.pid
 
-    def __repr__(self):
+    def crossReference(self,model):
+        self.pid = model.PAero(self.pid)
+
+    def Points(self):
+        return [self.p1,self.p2,self.p3,self.p4]
+    
+    def SetPoints(self,points):
+        self.p1 = points[0]
+        self.p2 = points[1]
+        self.p3 = points[2]
+        self.p4 = points[3]
+
+    def rawFields(self):
         x12 = self.p2-self.p1
         x43 = self.p4-self.p3
-        fields = ['CAERO1',self.eid,self.pid,self.cp,self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
+        fields = ['CAERO1',self.eid,self.Pid(),self.cp,self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
                          ]+list(self.p1)+[x12[0]]+list(self.p4)+[x43[0]]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class DAREA(BaseCard):
     """
@@ -442,7 +462,7 @@ class GUST(BaseCard):
         fields = ['GUST',self.sid,self.dload,self.wg,self.x0,self.V]
         return self.printCard(fields)
 
-class PAERO1(BaseCard): # aero panel property; not integrated
+class PAERO1(BaseCard):
     """
     Defines associated bodies for the panels in the Doublet-Lattice method.
     PAERO1 PID B1 B2 B3 B4 B5 B6
@@ -462,9 +482,15 @@ class PAERO1(BaseCard): # aero panel property; not integrated
             #    pass
         ###
 
+    def Bodies(self):
+        return self.Bi
+
     def rawFields(self):
-        fields = ['PAERO1'] + self.Bi
+        fields = ['PAERO1',self.pid] + self.Bi
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class SPLINE1(BaseCard):
     """
@@ -515,11 +541,11 @@ class SPLINE1(BaseCard):
     def Set(self):
         if isinstance(self.setg,int):
             return self.setg
-        return self.setg.sid ## @todo not implemented...
+        return self.setg.sid
 
     def crossReference(self,model):
         self.caero = model.CAero(self.caero)
-        #self.setg  = model.Set(self.setg)
+        self.setg  = model.Set(self.setg)
 
     def rawFields(self):
         fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),self.dz,self.method,self.usage,

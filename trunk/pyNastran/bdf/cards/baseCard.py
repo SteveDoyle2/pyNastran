@@ -13,14 +13,16 @@ class BaseCard(BDF_Card):
 
     #def wipeEmptyFields(self,card): # BaseCard
 
-    def isSame(self,field1,field2):
-        if isSame(field1,field2):
-            return True
-        return False
+    def verify(self,model,iSubcase):
+        """
+        this method checks performs checks on the cards such as
+        that the PBEAML has a proper material type
+        """
+        pass
 
     def isSameFields(self,fields1,fields2):
         for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
+            if not isSame(field1,field2):
                 return False
             ###
         ###
@@ -50,8 +52,8 @@ class BaseCard(BDF_Card):
         """used to set default values for object repr functions"""
         return setBlankIfDefault(value,default)
 
-    def crossReference(self,mesh):
-        #self.mid = mesh.Material(self.mid)
+    def crossReference(self,model):
+        #self.mid = model.Material(self.mid)
         raise Exception('%s needs to implement this method' %(self.type))
 
    # def off_expandThru(self,fields):
@@ -116,7 +118,7 @@ class BaseCard(BDF_Card):
                 by = 1
                 if i+2<nFields and fields[i+2]=='BY':
                     by = fields[i+3]
-                    print "BY was found...untested..."
+                    self.log.warning("BY was found...untested...")
                 for j in range(fields[i-1],fields[i+1],by):
                     out.append(j)
                 ###
@@ -275,10 +277,15 @@ class BaseCard(BDF_Card):
     ###
         
     def printRawFields(self):
+        """A card's raw fields include all defaults for all fields"""
         fields = self.rawFields()
         return self.printCard(fields)
         
     def __repr__(self):
+        """
+        Prints a card in the simplest way possible
+        (default values are left blank).
+        """
         fields = self.reprFields()
         return self.printCard(fields)
 ###
@@ -292,10 +299,8 @@ def Mid(self):
     ###
 
 class Property(BaseCard):
-    mid = 0 # ???
     def __init__(self,card,data):
         assert card is None or data is None
-        #self.type = card[0]
         pass
 
     def Mid(self):
@@ -305,9 +310,7 @@ class Property(BaseCard):
         return False
 
     def crossReference(self,model):
-        if self.mid:
-            self.mid = model.Material(self.mid)
-        ###
+        self.mid = model.Material(self.mid)
 
 class Element(BaseCard):
     pid = 0 # CONM2, rigid

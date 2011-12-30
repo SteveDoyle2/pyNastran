@@ -61,6 +61,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
     fem1 = BDF(debug=debug,log=None)
+    fem1.log.info('starting fem1')
     fem2 = None
     diffCards = []
     try:
@@ -73,6 +74,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         #fem1.writeAsCTRIA3(outModel)
 
         fem2 = BDF(debug=debug,log=None)
+        fem2.log.info('starting fem2')
         fem2.readBDF(outModel,xref=xref)
         #fem2.sumForces()
         #fem2.sumMoments()

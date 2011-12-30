@@ -107,7 +107,7 @@ class LineProperty(Property):
     def G(self):
         return self.mid.G
 
-    def nu(self):
+    def Nu(self):
         return self.mid.nu
 
     def IAreaL(self,dim):
@@ -151,11 +151,12 @@ class LineProperty(Property):
             raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.type))
         return (A,Iyy,Izz,Iyz)
     
-    def AreaL(self,dim):
+    def areaL(self,dim):
         """
-        Area method for the PBARL and PBEAML classes
+        Area method for the PBARL and PBEAML classes (pronounced Area-L)
         @param self the object pointer
-        @param dim a list of the dimensions assosicated with self.Type
+        @param dim a list of the dimensions associated with self.Type
+        @retval Area of the given cross section
         """
         if   self.Type=='ROD':  A=pi*dim[0]**2
         elif self.Type=='TUBE': A=pi*(dim[0]**2-dim[1]**2)
@@ -482,13 +483,19 @@ class PBAR(LineProperty):
         """
         LineProperty.__init__(self,card,data)
         if card:
+            ## property ID -> use Pid()
             self.pid = card.field(1)
+            ## material ID -> use Mid()
             self.mid = card.field(2)
+            ## Area -> use Area()
             self.A   = card.field(3,0.0)
+            ## Izz -> use Izz()
             self.i1  = card.field(4,0.0)
+            ## Iyy -> use Iyy()
             self.i2  = card.field(5,0.0)
-            ## Polar Moment of Inertia J (renamed to not conflict with method)
-            self.j  = card.field(6,0.0) # default=1/2(I1+I2) for SOL=600, otherwise 0.0
+            ## Polar Moment of Inertia J -> use J()
+            self.j   = card.field(6,0.0) # default=1/2(I1+I2) for SOL=600, otherwise 0.0
+            ## nonstructral mass -> use Nsm()
             self.nsm = card.field(7,0.0)
 
             self.C1  = card.field(9, 0.0)
@@ -531,7 +538,9 @@ class PBAR(LineProperty):
         ###
 
     def MassPerLength(self):
-        #mass = L*(rho*A+nsm)
+        """
+        \f[ \frac{m}{L} = \rho A+nsm \f]
+        """
         A   = self.Area()
         rho = self.Rho()
         nsm = self.Nsm()
@@ -660,7 +669,7 @@ class PBARL(LineProperty):
         self.mid = model.Material(self.mid)
 
     def Area(self):
-        return self.AreaL(self.dim)
+        return self.areaL(self.dim)
 
     def Nsm(self):
         return self.nsm
@@ -935,7 +944,7 @@ class PBEAML(IntegratedLineProperty):
         rho  = self.Rho()
         massPerLs = []
         for dim,n in zip(self.dim,self.nsm):
-            a = self.AreaL(dim)
+            a = self.areaL(dim)
             massPerLs.append(a*rho+nsm)
         massPerL = integratePositiveLine(self.xxb,massPerLs)
         return massPerL
@@ -943,7 +952,7 @@ class PBEAML(IntegratedLineProperty):
     def Area(self):
         Areas = []
         for dim in self.dim:
-            Areas.append( self.AreaL(dim) )
+            Areas.append( self.areaL(dim) )
         A = integrateLine(self.xxb,Areas)
         return A
 
@@ -951,7 +960,19 @@ class PBEAML(IntegratedLineProperty):
     #    return self.mid
 
     def crossReference(self,model):
+        """
+        @warning For structural problems, PBEAML entries must reference a MAT1 material entry
+        @warning For heat-transfer problems, the MID must reference a MAT4 or MAT5 material entry.
+        @note what happens when there are 2 subcases?
+        """
         self.mid = model.Material(self.mid)
+    
+    def verify(self,model,iSubcase):
+        if self.IsThermalSolution(iSubcase):
+            assert self.mid.type in ['MAT4','MAT5']
+        else:
+            assert self.mid.type in ['MAT1']
+        ###
 
     def __repr__(self):
         fields = ['PBEAML',self.Pid,self.Mid(),self.group,self.Type,None,None,None,None]
@@ -991,6 +1012,8 @@ class PBEAM3(LineProperty): # not done, cleanup
             self.dz = card.field(14)
             self.fy = card.field(15)
             self.fz = card.field(16)
+            
+            
             # more...
         ###
         else:

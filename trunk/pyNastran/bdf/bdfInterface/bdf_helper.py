@@ -207,6 +207,9 @@ class getMethods(object):
     def Set(self,sid):
         return self.sets[sid]
 
+    def SetSuper(self,seid):
+        return self.setsSuper[seid]
+
     #--------------------
     # NONLINEAR CARDS
 
@@ -244,6 +247,19 @@ class addMethods(object):
         else:
             assert key>0,'eid=%s elem=%s' %(key,elem)
             self.elements[key] = elem
+        ###
+
+    def addDamperElement(self,elem,allowOverwrites=False):
+        """@warning can dampers have the same ID as a standard element?"""
+        return self.addElement(elem,allowOverwrites)
+        key = elem.eid
+        if key in self.damperElements and allowOverwrites==False:
+            if not elem.isSameCard(self.damperElements[key]):
+                #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
+                assert elem.eid not in self.damperElements,'eid=%s\noldDamperElement=\n%snewDamperElement=\n%s' %(elem.eid,self.damperElements[elem.eid],elem)
+        else:
+            assert key>0,'eid=%s elem=%s' %(key,elem)
+            self.damperElements[key] = elem
         ###
 
     def addRigidElement(self,elem,allowOverwrites=False):
@@ -418,20 +434,27 @@ class addMethods(object):
 
     def addAEParam(self,aeparam):
         key = aeparam.id
-        assert key not in self.aeparams,'\naeparam=%s oldAESTAT=\n%s' %(aeparam,self.aeparams[key])
+        assert key not in self.aeparams,'\naeparam=\n%s oldAESTAT=\n%s' %(aeparam,self.aeparams[key])
         assert key>=0
         self.aeparams[key] = aeparam
 
     def addAEStat(self,aestat):
         key = aestat.id
-        assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
+        assert key not in self.aestats,'\naestat=\n%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
         assert key>=0
         self.aestats[key] = aestat
 
     def addCAero(self,caero):
-        assert caero.eid not in self.caeros,'\nself.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
-        assert caero.eid>0
-        self.caeros[caero.eid] = caero
+        key = caero.eid
+        assert key not in self.caeros,'\ncaero=\n|%s| oldCAERO=\n|%s|' %(caero,self.caeros[key])
+        assert key>0
+        self.caeros[key] = caero
+
+    def addPAero(self,paero):
+        key = paero.pid
+        assert key not in self.paeros,'\npaero=\n|%s| oldPAERO=\n|%s|' %(paero,self.paeros[key])
+        assert key>0,'paero.pid = |%s|' %(key)
+        self.paeros[key] = paero
 
     def addGrav(self,grav):
         assert grav.sid not in self.gravs
@@ -507,6 +530,18 @@ class addMethods(object):
         else:
             self.frequencies[key] = freq
         #assert key not in self.frequencies,'\nfreq=\n%s oldFreq=\n%s' %(freq,self.frequencies[key])
+
+    def addSet(self,setObj):
+        key = setObj.sid
+        assert key not in self.sets,'\nSET=\n%s oldSET=\n%s' %(setObj,self.sets[key])
+        assert key>=0
+        self.sets[key] = setObj
+
+    def addSetSuper(self,setObj):
+        key = setObj.seid
+        assert key not in self.setsSuper,'\nSESET=\n%s oldSESET=\n%s' %(setObj,self.setsSuper[key])
+        assert key>=0
+        self.setsSuper[key] = setObj
 
     def addTable(self,table):
         key = table.tid

@@ -1,5 +1,5 @@
-See "RoadMap.txt" for a list of the BDF cards & OP2 features that
-are supported.  It's nice and long :)
+See the "bdf_xxx.txt" or "op2_xxx.txt" files for a list of the BDF/OP2 features that
+are supported.  They're nice and long :)
 
 This document discusses the major features (and limitations) added in each
 version of the software.  See the HTML documentation for more information.
@@ -12,15 +12,31 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 
 This code was written entirely in Python and should install easily.
 
+
 -----------------------v0.3 released 2012/01/??-----------------------
-BDF API Changes
+Overall Notes
+   - all user BDF card API methods will have the first letter capitalized
+     (not fully implemented)
    - 
+
+
+BDF API Changes
+   - standardizing methods for element/property cards
+     - Eid, Pid, Mid, Mass, NodeIDs
+     - Thickness, Area, Volume, Length
+     - J, Iyy, Iyz, Izz
+   - FREQx  methods
+   - CAERO1 methods
+   - SETx   methods
 
 BDF Bug Fixes
-   - 
+   - enabled PDAMP
+   - fixed issue with python <2.6 not supporting
+     argparse module (sys.argv used instead)
+   - BEGIN BULK may now have multiple spaces in it
 
 Overall BDF
-   - reorganized code files (bdf and op2 are in the same place)
+   - reorganized code files (main BDF class is in the same place)
    - improved accuracy of PBEAM methods (Area, Nsm, etc.) by integrating
      instead of using the first value
    - added cross referencing of SPLINE1
@@ -33,10 +49,11 @@ Added BDF
      TABLES1,TABLEST,TABRND1
    - PAERO1
    - FREQ,FREQ1,FREQ2
+   - CGAP, PGAP
+   - PDAMP5
+   - AEPARAM,AELINK,AESTAT
+   - SET1,SET3,SESET
    - DMIG, DEQATN (not done)
-   - CGAP
-   - AEPARAM
-   - AELINK
 
 Added OP2
    - GEOM2
@@ -54,14 +71,14 @@ OP2 API Changes
         This is standard across displacement/velocity/acceleration
 
 Overall OP2
-   - 
+   - reorganized code files (main OP2 class is in the same place)
 
 OP2 Bug Fixes
    - deviceCode is now passed properly to result objects
 
 -----------------------v0.2 released 2011/12/20-----------------------
 
-OP2 API Changes
+BDF API Changes
    - test_bdf can be called from the command line
    - renamed read method  to readBDF (it got confusing when the op2 object can 
      read the bdf b/c it needs to initialize the bdf cards for the geomX tables)

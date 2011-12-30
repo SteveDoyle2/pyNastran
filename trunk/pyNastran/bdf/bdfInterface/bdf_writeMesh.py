@@ -59,6 +59,7 @@ class writeMesh(object):
         msg += self.writeConstraints()
         msg += self.writeOptimization()
         msg += self.writeTables()
+        msg += self.writeSets()
         msg += self.writeRejects()
         msg += self.writeCoords()
         return msg
@@ -335,6 +336,17 @@ class writeMesh(object):
             
         for ID,table in sorted(self.tables.items()):
             msg += str(table)
+        return msg
+
+    def writeSets(self):
+        msg = ''
+        if self.sets or self.setsSuper:
+            msg += '$SETS\n'
+            
+        for ID,setObj in sorted(self.sets.items()):
+            msg += str(setObj)
+        for ID,setObj in sorted(self.setsSuper.items()):
+            msg += str(setObj)
         return msg
 
     def writeDynamic(self):

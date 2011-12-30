@@ -56,7 +56,7 @@ CMASS4 (done)
 
 CRAC2D (done)
 CRAC3D (done)
-CGAP   (in progress)
+CGAP   (done)
 
 ----Rigid Elements----:
 RBE1  (done)
@@ -79,7 +79,7 @@ MPC     (done)
 MPCADD  (done)
 
 ----Materials----:
-CREEP (not integrated...)
+CREEP (done)
 MAT1  (done)
 MAT2  (done)
 MAT3  (done)
@@ -97,18 +97,18 @@ PDAMP   (done)
 
 PROD    (done)
 PBEAM   (done)
-PBEAML  (verify me...)
+PBEAML  (done)
 PBAR    (done)
 PBARL   (done)
 PTUBE   (done)
 
 PSHEAR
 PCOMP   (done)
-PCOMPG  (verify me...)
+PCOMPG  (done)
 PSHELL  (done)
 PSOLID  (done)
 PLSOLID (done)
-PGAP
+PGAP    (done)
 
 ----Loads----:
 LOAD    (done)
@@ -166,8 +166,8 @@ FLFACT  (done)
 CAERO1  (done)
 PAERO1  (not integrated)
 SPLINE1 (done)
-AEPARM  (needs testing)
-AELINK  (needs testing)
+AEPARM  (done)
+AELINK  (done)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -203,10 +203,17 @@ TABLEST  (done)
 TABRND1  (done)
 TABRNDG
 
+----Sets----:
+SET1   (done)
+SET2
+SET3   (done)
+SESET  (done)
+SEQSEP (not integrated...is this a set)
+RADSET (not integrated)
+
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)
 PARAM (done)
-
 
 -----------------------------------------------
 Missed v0.1
@@ -440,9 +447,7 @@ CHACBR
 ---Tables---:
 
 ----Unsorted----:
-SET1
-SET2
-SET3
+
 
 -------------------------------------------
 
