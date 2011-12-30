@@ -33,7 +33,9 @@ class XrefMesh(object):
         ###
 
     def crossReference_Aero(self):
-        pass
+        for ID,spline in self.splines.items():
+            spline.crossReference(self)
+        ###
 
     def crossReference_Nodes(self):
         gridSet = self.gridSet

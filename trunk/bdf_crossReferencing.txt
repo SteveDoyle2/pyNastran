@@ -1,0 +1,146 @@
+------------------------------BDF Cross Referencing Info------------------------------
+
+For a card to meet the criteria of "done" in this list,
+it must Read/Write ALL fields AND link to interfacing cards.
+
+NOTE:  If a card interfaces with other cards, the other card doesn't
+       need to be linked for the first card to be considered "done".
+
+For example, an element (e.g. CQUAD4) links to 4 nodes, and a property (e.g. PSHELL).
+The nodes then link to coordinate systems (e.g. CORD2R).
+The property then links to a material (e.g. MAT1).
+
+
+===Unlabeled Cards (???)===
+ - GRDSET
+
+ - CDAMP2
+ - CDAMP1
+ - CDAMP3
+ - CDAMP4
+ - CDAMP5
+
+ - CGAP
+ - DEQATN
+ - DMIG
+ - CAERO
+ - PAERO
+
+ - PMASS
+
+ - RBAR
+ - RBAR1
+ - RBE1
+ - RBE2
+ - SUPORT
+ - SUPORT1
+ - DCONSTR
+ - DESVAR
+ - DDVAL
+ - DRESP1
+ - DVPREL1
+
+ - TEMP
+ - QBDY1
+ - QBDY2
+ - QBDY3
+ - QHBDY
+ - CHBDYE
+ - CHBDYG
+ - CHBDYP
+ - PCONV
+ - PCONVM
+ - PHBDY
+ - RADBC
+ - CONV
+ - PARAM
+ - DAREA
+ - NLPARM
+
+
+===To Cross Reference (not supported)===
+ - CORD2C
+ - CORD2S
+ - CORD1x
+ - TABLEx
+ - SPOINT
+ - SET
+ - RBE3
+
+
+===Cross Referenced Cards (done)===
+ - GRID
+ - CORD2R
+
+ - CTRIA3
+ - CQUAD4
+ - CSHEAR
+ - CQUAD
+ - CQUAD8
+ - CQUADR
+ - CQUADX
+ - CTRIAR
+ - CTRIAX
+ - CTRIAX6
+ - PSHELL
+ - PCOMP
+ - PCOMPG
+
+ - CONROD
+ - CTUBE
+ - CROD
+ - PROD
+
+ - CBEAM
+ - PBEAM
+ - PBEAML
+
+ - CBAR
+ - PBAR
+ - PBARL
+
+ - CTETRA
+ - CHEXA
+ - CPENTA
+ - PSOLID
+ - PLSOLID
+
+ - SPC
+ - SPC1
+ - SPCD
+ - SPCADD
+
+ - MPC
+ - MPC1
+ - MPCADD
+
+ - LOAD
+ - FORCE
+ - FORCE1
+ - FORCE2
+ - PLOAD
+ - PLOAD1
+ - PLOAD2
+ - PLOAD4
+ - MOMENT
+ - MOMENT1
+ - MOMENT2
+
+===Partially Cross Referenced (partial)===
+ - CONM2  (cid=0, requires COORDx support)
+ - SPLINE1 (requires SET)
+ - CELAS1 (done, no spoints)
+ - CELAS2 (done, no spoints)
+ - CELAS3 (done, no spoints)
+ - CELAS4 (done, no spoints)
+
+
+===Doesnt Cross Reference (NA)===
+ - MATx
+ - PELAS
+ - CONM1
+ - INCLUDE
+ - FREQ
+ - FREQ1
+ - FREQ2
+

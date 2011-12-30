@@ -86,11 +86,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
 
-        # dynamic
-        'DAREA','NLPARM',
-
         # aero
-        'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV','AESTAT',
+        'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
+        'AELINK','AEPARAM','AESTAT',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
 
@@ -104,6 +102,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PCONV','PCONVM','PHBDY',
         'RADBC','CONV',  #'RADM',
         
+        # dynamic
+        'DAREA','NLPARM',
+
         # freq
         'FREQ','FREQ1','FREQ2',
         
@@ -262,6 +263,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.aero  = {}
         ## stores AEROS
         self.aeros = {}
+        ## stores AEPARAM
+        self.aeparams = {}
+        ## stores AELINK
+        self.aelinks = {}
         
         ## stores AESTAT
         self.aestats = {}
@@ -272,7 +277,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## stores FLUTTER
         self.flutters = {}
         ## store SPLINE1
-        self.splines  = {} # maybe put into self.elements???
+        self.splines  = {}
         ## stores GRAV
         self.gravs = {}
         
@@ -450,33 +455,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             if lineIn==None: # file was closed and a 2nd readCaseControl was called
                 return
             line = lineIn.strip().split('$')[0].strip()
+            lineUpper = line.upper()
 
-            if line.upper().startswith('INCLUDE'):
-                nextLine = self.getNextLine().strip().split('$')[0].strip()
-                includeLines = [line]
-                #print "^&*1",nextLine
-                while '\\' in nextLine or '/' in nextLine: # more includes
-                    includeLines.append(nextLine)
-                    nextLine = self.getNextLine().strip().split('$')[0].strip()
-                    #print "^&*2",nextLine
-
-                    
-                #print "include lines = |%s|" %(includeLines)
-                filename = self.getIncludeFileName(includeLines,'INCLUDE')
-
-                self.addIncludeFile(filename)
-                #self.openFile(filename)
-                self.readCaseControlDeck(filename)
-                line = nextLine
-                #print "appending |%r|" %(nextLine)
-                self.caseControlLines.append(nextLine)
-            else:
-                #print "appending |%r|" %(lineIn)
-                self.caseControlLines.append(lineIn)
-            ###
+            (line,lineUpper) = self.checkForIncludeFile_CaseControlDeck(lineIn,line,lineUpper)
 
             #print "*line = |%s|" %(line)
-            if 'BEGIN BULK' in line.upper():
+            if 'BEGIN' in lineUpper and 'BULK' in lineUpper:
                 self.log.debug('found the end of the case control deck!')
                 #print "breaking"
                 break
@@ -496,6 +480,31 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #print "done w/ case control..."
         #print '***********************'
         return self.caseControlLines
+
+    def checkForIncludeFile_CaseControlDeck(self,lineIn,line,lineUpper):
+        if lineUpper.startswith('INCLUDE'):
+            nextLine = self.getNextLine().strip().split('$')[0].strip()
+            includeLines = [line]
+            #print "^&*1",nextLine
+            while '\\' in nextLine or '/' in nextLine: # more includes
+                includeLines.append(nextLine)
+                nextLine = self.getNextLine().strip().split('$')[0].strip()
+                #print "^&*2",nextLine
+
+            #print "include lines = |%s|" %(includeLines)
+            filename = self.getIncludeFileName(includeLines,'INCLUDE')
+
+            self.addIncludeFile(filename)
+            #self.openFile(filename)
+            self.readCaseControlDeck(filename)
+            line = nextLine
+            #print "appending |%r|" %(nextLine)
+            self.caseControlLines.append(nextLine)
+        else:
+            #print "appending |%r|" %(lineIn)
+            self.caseControlLines.append(lineIn)
+        ###
+        return (line,lineUpper)
 
     def Is(self,card,cardCheck):
         """
@@ -543,8 +552,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #print "*card = ",card
             #print "RcardName = |%s|" %(cardName)
             return False
-        if cardName.strip():
+        if cardName and cardName and cardName not in self.rejectCount:
             self.log.info("RejectCardName = |%s|" %(cardName))
+            self.rejectCount[cardName] = 0
+        self.rejectCount[cardName] +=1
         return True
 
     def getIncludeFileName(self,cardLines,cardName):
@@ -724,10 +735,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.rejectCards.append(card)
             elif card==[] or cardName=='':
                 pass
-            #elif cardName=='DMIG':
+            #elif cardName=='DMIG': # not done...
                 #dmig = DMIG(cardObj)
                 #self.addDMIG(dmig)
-            elif cardName=='DEQATN':
+            elif cardName=='DEQATN':  # buggy for commas
                 #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
                 equation = DEQATN(cardObj)
                 self.addDEQATN(equation)
@@ -792,7 +803,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CRAC3D':
                 elem = CRAC3D(cardObj)
                 self.addElement(elem)
-
 
             elif cardName=='CTETRA':
                 nFields = cardObj.nFields()
@@ -1127,23 +1137,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 constraint = SPCADD(cardObj)
                 assert not isinstance(constraint,MPCADD)
                 self.addConstraint_SPCADD(constraint)
-            elif cardName=='SUPORT':
+            elif cardName=='SUPORT':  # pseudo-constraint
                 suport = SUPORT(cardObj)
                 self.addSUPORT(suport)
-            elif cardName=='SUPORT1':
+            elif cardName=='SUPORT1': # pseudo-constraint
                 suport1 = SUPORT1(cardObj)
                 self.addConstraint(suport1)
-
-            # dynamic
-            elif cardName=='DAREA':
-                darea = DAREA(cardObj)
-                self.addDArea(darea)
-                if cardObj.field(5):
-                    darea = DAREA(cardObj,1)
-                    self.addDArea(darea)
-            elif cardName=='NLPARM':
-                nlparmObj = NLPARM(cardObj)
-                self.addNLParm(nlparmObj)
 
             # aero
             elif cardName=='SPLINE1':
@@ -1164,21 +1163,39 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='AEROS':
                 aeros = AEROS(cardObj)
                 self.addAeros(aeros)
+            elif cardName=='AELINK':
+                aelink = AELINK(cardObj)
+                self.addAELink(aelink)
+            elif cardName=='AEPARAM':
+                aeparam = AEPARAM(cardObj)
+                self.addAEParam(aeparam)
             elif cardName=='AESTAT':
                 aestat = AESTAT(cardObj)
                 self.addAEStat(aestat)
-            elif cardName=='FLFACT':
-                flfact = FLFACT(cardObj)
-                self.addFLFACT(flfact)
             elif cardName=='FLUTTER':
                 flutter = FLUTTER(cardObj)
                 self.addFlutter(flutter)
+
+            elif cardName=='FLFACT':
+                flfact = FLFACT(cardObj)
+                self.addFLFACT(flfact)
             elif cardName=='GUST':
                 gust = GUST(cardObj)
                 self.addGust(gust)
             elif cardName=='GRAV':
                 grav = GRAV(cardObj)
                 self.addGrav(grav)
+
+            # dynamic
+            elif cardName=='DAREA':
+                darea = DAREA(cardObj)
+                self.addDArea(darea)
+                if cardObj.field(5):
+                    darea = DAREA(cardObj,1)
+                    self.addDArea(darea)
+            elif cardName=='NLPARM':
+                nlparmObj = NLPARM(cardObj)
+                self.addNLParm(nlparmObj)
 
             # frequencies
             elif cardName=='FREQ':

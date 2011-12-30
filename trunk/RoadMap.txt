@@ -380,6 +380,7 @@ CQUAD4_144 (2/6 done; 4/6 not integrated)
 In order for a card to be supported, it must read AND write ALL fields.
 Important calculated parameters are nice, but not required.
 
+ 
 BDF Cards Supported Reading/Writing
 
 ----Nodes----:
@@ -542,6 +543,8 @@ FLFACT  (done)
 CAERO1  (done)
 PAERO1  (not integrated)
 SPLINE1 (done)
+AEPARM  (needs testing)
+AELINK  (needs testing)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -590,7 +593,6 @@ SPOINT (needs integration)
 RINGAX (needs integration)
 
 Aero
-AEPARM  (needs integration)
 AESTAT  (needs integration)
 AESURFS (needs integration)
 

@@ -157,4 +157,6 @@ class bdfReader(object):
         ## list of all read in cards - useful in determining if
         ## entire BDF was read & really useful in debugging
         self.cardCount = {}
+        ## stores the cardCount of cards that have been rejected
+        self.rejectCount = {}
 
