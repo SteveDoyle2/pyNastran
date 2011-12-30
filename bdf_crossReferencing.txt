@@ -9,22 +9,24 @@ NOTE:  If a card interfaces with other cards, the other card doesn't
 For example, an element (e.g. CQUAD4) links to 4 nodes, and a property (e.g. PSHELL).
 The nodes then link to coordinate systems (e.g. CORD2R).
 The property then links to a material (e.g. MAT1).
-
+The CQUAD4 must link to the nodes and the property to be considered done.
 
 ===Unlabeled Cards (???)===
- - GRDSET
+ - SESET
+ - SEQSEP
+ - RADSET
+ - SET1
+ - SET3
 
+ 
  - CDAMP2
  - CDAMP1
  - CDAMP3
  - CDAMP4
  - CDAMP5
 
- - CGAP
  - DEQATN
  - DMIG
- - CAERO
- - PAERO
 
  - PMASS
 
@@ -66,6 +68,7 @@ The property then links to a material (e.g. MAT1).
  - SPOINT
  - SET
  - RBE3
+ - SET1
 
 
 ===Cross Referenced Cards (done)===
@@ -126,21 +129,26 @@ The property then links to a material (e.g. MAT1).
  - MOMENT1
  - MOMENT2
 
+ - CAERO1
+ - SPLINE1
+
 ===Partially Cross Referenced (partial)===
  - CONM2  (cid=0, requires COORDx support)
- - SPLINE1 (requires SET)
- - CELAS1 (done, no spoints)
- - CELAS2 (done, no spoints)
- - CELAS3 (done, no spoints)
- - CELAS4 (done, no spoints)
+ - CGAP   (spoints?)
+ - CELAS1 (no spoints)
+ - CELAS2 (no spoints)
+ - CELAS3 (no spoints)
+ - CELAS4 (no spoints)
 
 
 ===Doesnt Cross Reference (NA)===
- - MATx
- - PELAS
- - CONM1
  - INCLUDE
+ - GRDSET
+ - CONM1
+ - PELAS
+ - MATx
  - FREQ
  - FREQ1
  - FREQ2
+ - PAERO
 

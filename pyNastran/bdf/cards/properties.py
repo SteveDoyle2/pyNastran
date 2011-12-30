@@ -93,6 +93,91 @@ class PDAMP(DamperProperty):
         fields = ['PDAMP',self.pid,self.b]
         return self.printCard(fields)
 
+class PDAMP(DamperProperty):
+    type = 'PDAMP5'
+    def __init__(self,card=None,data=None):
+        """
+        Defines the damping multiplier and references the material properties for damping. CDAMP5 is intended
+        for heat transfer analysis only.
+        """
+        DamperProperty.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid = card.field(1)
+            ## Material ID
+            self.mid = card.field(2)
+            ## Damping multiplier. (Real > 0.0)
+            ## B is the mass that multiplies the heat capacity CP on the MAT4 or MAT5 entry.
+            self.b   = card.field(3)
+        else:
+            self.pid = data[0]
+            self.mid = data[1]
+            self.b   = data[2]
+        ###
+
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = [self.pid,self.Mid(),self.b]
+        fields2 = [prop.pid,prop.Mid(),prop.b]
+        return self.isSameFields(fields1,fields2)
+
+    def __repr__(self):
+        fields = ['PDAMP5',self.pid,self.Mid(),self.b]
+        return self.printCard(fields)
+
+class PGAP(Property):
+    type = 'PGAP'
+    def __init__(self,card=None,data=None):
+        """
+        Defines the properties of the gap element (CGAP entry).
+        """
+        Property.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid   = card.field(1)
+            ## initial gap opening
+            self.u0    = card.field(2,0.)
+            ## preload
+            self.f0    = card.field(3,0.)
+            ## axial stiffness of closed gap
+            self.ka    = card.field(4)
+            ## axial stiffness of open gap
+            self.kb    = card.field(5,1e-14*ka)
+            ## transverse stiffness of closed gap
+            self.kt    = card.field(6,self.mu1*self.ka)
+            ## static friction coeff
+            self.mu1   = card.field(7,0.)
+            ## kinetic friction coeff
+            self.mu2   = card.field(8,self.mu1)
+            self.tmax  = card.field(9,0.)
+            self.mar   = card.field(10,100.)
+            self.trmin = card.field(11,0.001)
+        else:
+            self.pid   = data[0]
+            self.u0    = data[1]
+            self.f0    = data[2]
+            self.ka    = data[3]
+            self.kb    = data[4]
+            self.kt    = data[5]
+            self.mu1   = data[6]
+            self.mu2   = data[7]
+            self.tmax  = data[8]
+            self.mar   = data[9]
+            self.trmin = data[10]
+        ###
+
+    def isSameCard(self,prop):
+        return False
+        #if self.type!=prop.type:  return False
+        #fields1 = [self.pid,self.Mid(),self.b]
+        #fields2 = [prop.pid,prop.Mid(),prop.b]
+        #return self.isSameFields(fields1,fields2)
+
+    def __repr__(self):
+        fields = ['PGAP',self.pid,self.u0,self.f0,self.ka,self.kb,self.kt,self.mu1,self.mu2,
+                         self.tmax,self.mar,self.trmin]
+        return self.printCard(fields)
+
 class SolidProperty(Property):
     type = 'SolidProperty'
     def __init__(self,card,data):

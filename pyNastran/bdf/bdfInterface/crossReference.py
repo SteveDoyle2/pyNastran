@@ -33,6 +33,9 @@ class XrefMesh(object):
         ###
 
     def crossReference_Aero(self):
+        for ID,caero in self.caeros.items():
+            caero.crossReference(self)
+        ###
         for ID,spline in self.splines.items():
             spline.crossReference(self)
         ###

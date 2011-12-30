@@ -62,14 +62,20 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD',
-        'CTRIA3','CTRIA6','CTRIAR','CTRIAX',#'CTRIAX6',
+        'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
         'CQUAD4','CQUAD8','CQUADR','CQUADX',
         'CHEXA','CPENTA','CTETRA',
         'CSHEAR','CVISC','CRAC2D','CRAC3D',
+        'CGAP',
+        
+        # rigid elements
         'RBAR','RBAR1','RBE1','RBE2',#'RBE3',
 
+        # properties
+        'PGAP',
         'PMASS',
         'PELAS',
+        'PDAMP','PDAMP5',
         'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PBEAM3',
         'PSHELL','PCOMP','PCOMPG',
         'PSOLID','PLSOLID',
@@ -77,6 +83,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
          #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
          #'MATS1',
 
+        # spc/mpc constraints
         'SPC','SPC1','SPCD','SPCADD','SPCAX',
         'MPC','MPCADD',
         'SUPORT','SUPORT1',
@@ -90,8 +97,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
         'AELINK','AEPARAM','AESTAT',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
+        'PAERO1',
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
 
+        # coords
         #'CORD1R','CORD1C','CORD1S',
         'CORD2R',#'CORD2C','CORD2S',
         'ENDDATA',
@@ -120,11 +129,21 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
         'TABLES1','TABLEST',
         'TABRND1',
+        
+        # sets
+        'SET1','SET3',
+        
+        # super-element sets
+        'SESET',
         ])
         
         self.specialCards = ['DEQATN',]
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
+
+    def IsThermalSolution():
+        return False
+        #self.caseControlDeck.IsThermalSolution()
 
     def _initSolution(self):
         self.bdfFileName = None
@@ -295,7 +314,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.dresps   = {}
         self.dvprels  = {}
         
-        # tables
+        ## SETx
+        self.sets = {}
+        ## SESETx
+        self.setsSuper = {}
+        ## tables
         self.tables = {}
 
     def _initThermalDefaults(self):
@@ -790,20 +813,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 elem = CTRIAX6(cardObj)
                 self.addElement(elem)
 
-            elif cardName=='CVISC':
-                elem = CVISC(cardObj)
-                self.addElement(elem)
-            elif cardName=='CSHEAR':
-                elem = CSHEAR(cardObj)
-                self.addElement(elem)
-
-            elif cardName=='CRAC2D':
-                elem = CRAC2D(cardObj)
-                self.addElement(elem)
-            elif cardName=='CRAC3D':
-                elem = CRAC3D(cardObj)
-                self.addElement(elem)
-
             elif cardName=='CTETRA':
                 nFields = cardObj.nFields()
                 if   nFields==7:    elem = CTETRA4(cardObj)  # 4+3
@@ -851,19 +860,19 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             elif cardName=='CDAMP1':
                 (elem) = CDAMP1(cardObj)
-                self.addElement(elem)
+                self.addDamperElement(elem)
             elif cardName=='CDAMP2':
                 (elem) = CDAMP2(cardObj)
-                self.addElement(elem)
+                self.addDamperElement(elem)
             elif cardName=='CDAMP3':
                 (elem) = CDAMP3(cardObj)
-                self.addElement(elem)
+                self.addDamperElement(elem)
             elif cardName=='CDAMP4':
                 (elem) = CDAMP4(cardObj)
-                self.addElement(elem)
+                self.addDamperElement(elem)
             elif cardName=='CDAMP5':
                 (elem) = CDAMP5(cardObj)
-                self.addElement(elem)
+                self.addDamperElement(elem)
 
             elif cardName=='CONM2': # not done...
                 elem = CONM2(cardObj)
@@ -882,7 +891,25 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 elem = CMASS4(cardObj)
                 self.addElement(elem)
 
+            elif cardName=='CVISC':
+                elem = CVISC(cardObj)
+                self.addElement(elem)
+            elif cardName=='CSHEAR':
+                elem = CSHEAR(cardObj)
+                self.addElement(elem)
+            elif cardName=='CGAP':
+                elem = CGAP(cardObj)
+                self.addElement(elem)
 
+            elif cardName=='CRAC2D':
+                elem = CRAC2D(cardObj)
+                self.addElement(elem)
+            elif cardName=='CRAC3D':
+                elem = CRAC3D(cardObj)
+                self.addElement(elem)
+
+
+            # rigid elements
             elif cardName=='RBAR':
                 (elem) = RBAR(cardObj)
                 self.addRigidElement(elem)
@@ -899,22 +926,19 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    (elem) = RBE3(cardObj)
             #    self.addRigidElement(elem)
 
-            elif cardName=='PELAS':
-                prop = PELAS(cardObj)
+            elif cardName=='PSHELL':
+                prop = PSHELL(cardObj)
                 self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PELAS(cardObj,1) # makes 2nd PELAS card
-                    self.addProperty(prop)
-            elif cardName=='PDAMP':
-                prop = PDAMP(cardObj)
+            elif cardName=='PCOMP':
+                prop = PCOMP(cardObj)
                 self.addProperty(prop)
-                if cardObj.field(3):
-                    prop = PDAMP(cardObj,1) # makes 2nd PDAMP card
-                    self.addProperty(prop)
-                if cardObj.field(5):
-                    prop = PDAMP(cardObj,1) # makes 3rd PDAMP card
-                    self.addProperty(prop)
+            elif cardName=='PCOMPG': # hasnt been verified
+                prop = PCOMPG(cardObj)
+                self.addProperty(prop)
 
+            elif cardName=='PSOLID':
+                prop = PSOLID(cardObj)
+                self.addProperty(prop)
             elif cardName=='PBAR':
                 prop = PBAR(cardObj)
                 self.addProperty(prop)
@@ -930,6 +954,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='PBEAML':   # hasnt been verified...
                 prop = PBEAML(cardObj)
                 self.addProperty(prop)
+            elif cardName=='PELAS':
+                prop = PELAS(cardObj)
+                self.addProperty(prop)
+                if cardObj.field(5):
+                    prop = PELAS(cardObj,1) # makes 2nd PELAS card
+                    self.addProperty(prop)
+
             elif cardName=='PROD':
                 prop = PROD(cardObj)
                 self.addProperty(prop)
@@ -950,22 +981,26 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                     prop = PMASS(cardObj,nOffset=3)
                     self.addProperty(prop)
                 ###
-            elif cardName=='PSHELL':
-                prop = PSHELL(cardObj)
-                self.addProperty(prop)
-            elif cardName=='PCOMP':
-                prop = PCOMP(cardObj)
-                self.addProperty(prop)
-            elif cardName=='PCOMPG': # hasnt been verified
-                prop = PCOMPG(cardObj)
-                self.addProperty(prop)
-
-            elif cardName=='PSOLID':
-                prop = PSOLID(cardObj)
-                self.addProperty(prop)
             elif cardName=='PLSOLID':
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
+
+            elif cardName=='PDAMP':
+                prop = PDAMP(cardObj)
+                self.addProperty(prop)
+                if cardObj.field(3):
+                    prop = PDAMP(cardObj,1) # makes 2nd PDAMP card
+                    self.addProperty(prop)
+                if cardObj.field(5):
+                    prop = PDAMP(cardObj,1) # makes 3rd PDAMP card
+                    self.addProperty(prop)
+
+            elif cardName=='PDAMP5':
+                prop = PDAMP5(cardObj)
+                self.addProperty(prop)
+            elif cardName=='PGAP':
+                elem = PGAP(cardObj)
+                self.addProperty(elem)
 
             elif cardName=='CREEP': # hasnt been verified
                 creep = CREEP(cardObj)
@@ -1154,6 +1189,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='CAERO2':
             #    aero = CAERO2(cardObj)
             #    self.addCAero(aero)
+            elif cardName=='PAERO1':
+                aero = PAERO1(cardObj)
+                self.addPAero(aero)
             elif cardName=='AEPARM':
                 aeparm = AEPARM(cardObj)
                 self.addAEParm(aeparm)
@@ -1216,6 +1254,21 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='FREQ5':
             #    freq = FREQ5(cardObj)
             #    self.addFREQ(freq)
+
+            # SETx
+            elif cardName=='SET1':
+                setObj = SET1(cardObj)
+                self.addSet(setObj)
+            #elif cardName=='SET2':
+            #    setObj = SET2(cardObj)
+            #    self.addSet(setObj)
+            elif cardName=='SET3':
+                setObj = SET3(cardObj)
+                self.addSet(setObj)
+
+            elif cardName=='SESET':
+                setObj = SESET(cardObj)
+                self.addSetSuper(setObj)
 
             # optimization
             elif cardName=='DCONSTR':

@@ -4,7 +4,6 @@ from numpy import allclose,isinf
 def isSame(value1,value2):
     """
     checks to see if 2 values are the same
-    @warning doesnt support None
     """
     #print "value=%s default=%s" %(value1,value2)
     if isinstance(value1,str) or isinstance(value1,NoneType):
@@ -30,6 +29,10 @@ def setDefaultIfBlank(value,default):
     return value
 
 def printScientific(value):
+    """
+    prints a value in 8-character scientific notation
+    @see printFloat for a better method
+    """
     #print "scientific...%s" %(value)
     pythonValue = '%8.6e' %(value)
     #print "pythonValue = ",pythonValue
@@ -75,6 +78,7 @@ def printScientific(value):
 
 def printScientific16(value):
     """
+    prints a value in 16-character scientific notation
     @warning not tested...
     """
     pythonValue = '%16.14e' %(value)
@@ -105,7 +109,11 @@ def printScientific16(value):
     return field
 
 def printFloat(value,tol=1e-8):
-    """bad for small loads...positive or negative..."""
+    """
+    prints a float in nastran 8-character width syntax
+    using the highest precision possbile.
+    @todo bad for small values...positive or negative...
+    """
     #print "float...%s" %value
     if abs(value)<tol:  # tol=1e-8
         field = "%8s" %('0.')
@@ -236,7 +244,7 @@ def printFloat(value,tol=1e-8):
 
 def printFloat16(value,tol=1e-8):
     """
-    @todo preliminary print method uses 8 character width...
+    @todo preliminary print method uses 8-character width...
     """
     strVal = printFloat(value,tol)
     return '%16s' %(strVal)
@@ -259,7 +267,7 @@ def printField(value):
 
 def printField16(value):
     """
-    prints a single 8-character width field
+    prints a single 16-character width field
     """
     if isinstance(value,float):
         #print "float..."
@@ -270,8 +278,19 @@ def printField16(value):
         field = "                "
     else:
         field = "%16s" %(value)
-    assert len(field)==16,'field=|%s| is not 8 characters long...rawValue=|%s|' %(field,value)
+    assert len(field)==16,'field=|%s| is not 16 characters long...rawValue=|%s|' %(field,value)
     return field
+
+#def printCard(fields,size=8):
+    #"""
+    #prints a nastran-style card with 8 or 16-character width fields
+    #@warning 8 or 16 is required, but 16 is not checked for
+    #"""
+    #if size==8:
+    #    return self.printCard_8(fields)
+    #else:
+    #    return self.printCard_16(fields)
+    ###
 
 def printCard(fields):
     """
@@ -290,7 +309,7 @@ def printCard(fields):
         except AssertionError:
             print "bad fields = ",fields
             raise
-        if i%8==0:
+        if i%8==0: # allow 1+8 fields per line
             out = out.rstrip()
             out += '\n%8s' %('')
         ###
@@ -316,7 +335,7 @@ def printCard_16(fields):
         except AssertionError:
             print "bad fields = ",fields
             raise
-        if i%4==0:
+        if i%4==0: # allow 1+4 fields per line
             out = out.rstrip()
             out += '\n%8s' %('')
         ###
@@ -326,7 +345,7 @@ def printCard_16(fields):
 
 def displayCard(fields):
     """
-    prints a cards fields in an easy to read format
+    prints a cards fields in an easy to read/debug format
     """
     for i,field in enumerate(fields):
         print "field[%s] = %s" %(i,field)

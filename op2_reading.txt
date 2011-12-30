@@ -135,7 +135,7 @@ OP2 Reader
 
    - OES
    OES1X,OES1X1,OSTR1X,OES1C,OSTR1C,
-      - all midside nodes must be included on elements (for example CQUAD8 have 6 nodes)
+      - all midside nodes must be included on elements (for example CQUAD8 can have 6 nodes)
       - OES1X1/OES1C Table (Isotropic Stresses/Strain)
          - CROD    (1,  done)
          - CBEAM   (2,  done)
