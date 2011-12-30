@@ -157,23 +157,37 @@ class getMethods(object):
     def Aeros(self,acsid):
         return self.aeros[acsid]
 
-    def AEStat(self,eid):
-        return self.aestats[eid]
+    def Spline(self,eid):
+        return self.splines[eid]
 
     def CAero(self,eid):
         return self.caeros[eid]
+
+    def PAero(self,pid):
+        return self.paeros[pid]
+
+    def Gust(self,sid):
+        return self.gusts[sid]
+
+    #--------------------
+    # AERO CONTROL SURFACE CARDS
+    def AEStat(self,aid):
+        return self.aestats[aid]
+
+    def AELink(self,linkID):
+        return self.aelinks[linkID]
+
+    def AEParam(self,aid):
+        return self.aeparams[aid]
+
+    #--------------------
+    # FLUTTER CARDS
 
     def Flfact(self,sid):
         return self.flfacts[sid]
 
     def Flutter(self,fid):
         return self.flutters[fid]
-
-    def Gust(self,sid):
-        return self.gusts[sid]
-
-    def Spline(self,eid):
-        return self.splines[eid]
 
     #--------------------
     # OPTIMIZATION CARDS
@@ -188,11 +202,19 @@ class getMethods(object):
         return self.ddvals[oid]
 
     #--------------------
+    # SET CARDS
+
+    def Set(self,sid):
+        return self.sets[sid]
+
+    #--------------------
     # NONLINEAR CARDS
 
     def NLParm(self,nid):
         return self.nlparms[nid]
     ###
+
+    #--------------------
 
 class addMethods(object):
     def __init__(self):
@@ -375,19 +397,36 @@ class addMethods(object):
         ###
 
     def addAero(self,aero):
-        assert aero.acsid not in self.aero,'\naero=\n%s oldAERO=\n%s' %(aero,self.aero[aero.acsid])
-        assert aero.acsid>=0
-        self.aero[aero.acsid] = aero
+        key = aero.acsid
+        assert key not in self.aero,'\naero=\n%s oldAERO=\n%s' %(aero,self.aero[key])
+        assert key>=0
+        self.aero[key] = aero
 
     def addAeros(self,aero):
-        assert aero.acsid not in self.aeros,'\naeros=\n%s oldAEROS=\n%s' %(aero,self.aeros[aero.acsid])
-        assert aero.acsid>=0
-        self.aeros[aero.acsid] = aero
+        key = aero.acsid
+        assert key not in self.aeros,'\naeros=\n%s oldAEROS=\n%s' %(aero,self.aeros[key])
+        assert key>=0
+        self.aeros[key] = aero
+
+    def addAELink(self,aelink):
+        key = aelink.id
+        assert key>=0
+        if key not in self.aelinks:
+            self.aelinks[key] = []
+        self.aelinks[key].append(aelink)
+        #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
+
+    def addAEParam(self,aeparam):
+        key = aeparam.id
+        assert key not in self.aeparams,'\naeparam=%s oldAESTAT=\n%s' %(aeparam,self.aeparams[key])
+        assert key>=0
+        self.aeparams[key] = aeparam
 
     def addAEStat(self,aestat):
-        assert aestat.id not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[aestat.id])
-        assert aestat.id>=0
-        self.aestats[aestat.id] = aestat
+        key = aestat.id
+        assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
+        assert key>=0
+        self.aestats[key] = aestat
 
     def addCAero(self,caero):
         assert caero.eid not in self.caeros,'\nself.caeros=|%s| caero.eid=|%s|' %(self.caeros,caero.eid)
@@ -405,19 +444,22 @@ class addMethods(object):
         self.splines[spline.eid] = spline
 
     def addGust(self,gust):
-        assert gust.sid not in self.gusts
-        assert gust.sid>0
-        self.gusts[gust.sid] = gust
+        key = gust.sid
+        assert key not in self.gusts
+        assert key>0
+        self.gusts[key] = gust
 
     def addFlutter(self,flutter):
-        assert flutter.sid not in self.flutters
-        assert flutter.sid>0
-        self.flutters[flutter.sid] = flutter
+        key = flutter.sid
+        assert key not in self.flutters
+        assert key>0
+        self.flutters[key] = flutter
 
     def addFLFACT(self,flfact):
-        #assert flfact.sid not in self.flfacts
-        assert flfact.sid>0
-        self.flfacts[flfact.sid] = flfact # set id...
+        key = flfact.sid
+        #assert key not in self.flfacts
+        assert key>0
+        self.flfacts[key] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact
 
     def addDConstr(self,dconstr):
@@ -428,35 +470,43 @@ class addMethods(object):
         self.dconstrs[key] = dconstr
 
     def addDesvar(self,desvar):
-        assert desvar.oid not in self.desvars
-        assert desvar.oid>0
-        self.desvars[desvar.oid] = desvar
+        key = desvar.oid
+        assert key not in self.desvars
+        assert key>0
+        self.desvars[key] = desvar
 
     def addDDVal(self,ddval):
-        assert ddval.oid not in self.ddvals
-        assert ddval.oid>0
-        self.ddvals[ddval.oid] = ddval
+        key = ddval.oid
+        assert key not in self.ddvals
+        assert key>0
+        self.ddvals[key] = ddval
 
     def addDResp(self,dresp):
-        assert dresp.oid not in self.dresps
-        assert dresp.oid>0
-        self.dresps[dresp.oid] = dresp
+        key = dresp.oid
+        assert key not in self.dresps
+        assert key>0
+        self.dresps[key] = dresp
 
     def addDvprel(self,dvprel):
-        assert dvprel.oid not in self.dvprels
-        assert dvprel.oid>0
-        self.dvprels[dvprel.oid] = dvprel
+        key = dvprel.oid
+        assert key not in self.dvprels
+        assert key>0
+        self.dvprels[key] = dvprel
 
     def addNLParm(self,nlparm):
-        assert nlparm.nid not in self.nlparms
-        assert nlparm.nid>0
-        self.nlparms[nlparm.nid] = nlparm
+        key = nlparm.nid
+        assert key not in self.nlparms
+        assert key>0
+        self.nlparms[key] = nlparm
 
     def addFREQ(self,freq):
         key = freq.sid
-        assert key not in self.frequencies
         assert key>0
-        self.frequencies[key] = freq
+        if key in self.frequencies:
+            self.frequencies[key].addFrequencyObject(freq)
+        else:
+            self.frequencies[key] = freq
+        #assert key not in self.frequencies,'\nfreq=\n%s oldFreq=\n%s' %(freq,self.frequencies[key])
 
     def addTable(self,table):
         key = table.tid

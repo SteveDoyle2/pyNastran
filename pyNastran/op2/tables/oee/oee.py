@@ -1,16 +1,10 @@
 import sys
 import copy
 from struct import unpack
-from pyNastran.op2.op2Errors import *
-from oee_objects import *
 
 # pyNastran
-#from pyNastran.op2.resultObjects.ougv1_Objects import (
-#     temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
-#     eigenVectorObject,                     # analysisCode=2, sortCode=0
-#     fluxObject,                            # analysisCode=1, sortCode=3
-#     nonlinearTemperatureObject,            # analysisCode=10,sortCode=0
-#     )
+from pyNastran.op2.op2Errors import *
+from oee_objects import *
 
 class OEE(object):
     """Table of energy"""

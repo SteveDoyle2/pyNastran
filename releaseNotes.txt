@@ -20,9 +20,11 @@ BDF Bug Fixes
    - 
 
 Overall BDF
-   - reorganized code files
-   - improved accuracy of PBEAM methods (Area, Nsm, etc.) by integrating instead
-     of using the first value
+   - reorganized code files (bdf and op2 are in the same place)
+   - improved accuracy of PBEAM methods (Area, Nsm, etc.) by integrating
+     instead of using the first value
+   - added cross referencing of SPLINE1
+   - test_bdf only prints a reject message once per card type now
 
 Added BDF
    - PBEAML
@@ -33,6 +35,8 @@ Added BDF
    - FREQ,FREQ1,FREQ2
    - DMIG, DEQATN (not done)
    - CGAP
+   - AEPARAM
+   - AELINK
 
 Added OP2
    - GEOM2

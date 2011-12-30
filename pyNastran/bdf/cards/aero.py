@@ -1,21 +1,54 @@
 from numpy import array,log,exp
 from baseCard import BaseCard
 
+class AELINK(BaseCard):
+    """
+    Defines relationships between or among AESTAT and AESURF entries, such that:
+    \f[ u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0\f]
+    AELINK ID LABLD LABL1 C1 LABL2 C2 LABL3 C3
+           LABL4 C4 -etc.-
+    AELINK 10 INBDA OTBDA -2.0
+    """
+    type = 'AELINK'
+    def __init__(self,card=None,data=None): ## @todo doesnt support data
+        ## an ID=0 is applicable to the global subcase, ID=1 only subcase 1
+        self.ID = card.field(1)
+        ## defines the dependent variable name (string)
+        self.dependentLabels = []
+        ## defines the independent variable name (string)
+        self.independentLabels = []
+        ## linking coefficient (real)
+        self.Cis = []
+
+        fields = card.fields(2)
+        assert len(fields)%2==0,'fields=%s' %(fields)
+        for i in range(len(fields),2):
+            dependentLabel   = fields[i]
+            independentLabel = fields[i+1]
+            Ci               = fields[i+2]
+            self.dependentLabels.append(dependentLabel)
+            self.independentLabels.append(independentLabel)
+            self.Cis.append(Ci)
+        ###
+
+    def __repr__(self):
+        fields = ['AELINK',self.id,self.label,self.units]
+        return self.printCard(fields)
+
 class AEPARM(BaseCard):
     """
-    Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic extra
-    point). The forces associated with this controller will be derived from AEDW,
-    AEFORCE and AEPRESS input data.
+    Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic
+    extra point). The forces associated with this controller will be derived
+    from AEDW, AEFORCE and AEPRESS input data.
     AEPARM ID LABEL UNITS
     AEPARM 5 THRUST LBS
     """
     type = 'AEPARM'
     def __init__(self,card=None,data=None):
-        #Material.__init__(self,card)
         if card:
             self.id    = card.field(1)
             self.label = card.field(2)
-            self.units = card.fiedl(3)
+            self.units = card.fiedl(3,'')
         else:
             self.id    = data[0]
             self.label = data[1]
@@ -131,7 +164,6 @@ class AESTAT(BaseCard): # not integrated
     """
     type = 'AESTAT'
     def __init__(self,card=None,data=None):
-        #Material.__init__(self,card)
         if card:
             self.id    = card.field(1)
             self.label = card.field(2)
@@ -157,7 +189,6 @@ class AESURFS(BaseCard): # not integrated
     """
     type = 'AESURFS'
     def __init__(self,card=None,data=None):
-        #Material.__init__(self,card)
         if card:
             self.id    = card.field(1)
             self.label = card.field(2)
@@ -234,7 +265,6 @@ class DAREA(BaseCard):
     """
     type = 'DAREA'
     def __init__(self,card=None,nOffset=0,data=None):
-        #Material.__init__(self,card)
         if card:
             nOffset *= 3
             self.sid   = card.field(1)
@@ -275,7 +305,6 @@ class FLFACT(BaseCard):
     """
     type = 'FLFACT'
     def __init__(self,card=None,data=None):
-        #Material.__init__(self,card)
         if card:
             self.sid     = card.field(1)
             self.factors = card.fields(2)
@@ -302,7 +331,6 @@ class FLUTTER(BaseCard):
     """
     type = 'FLUTTER'
     def __init__(self,card=None,data=None):
-        #BaseCard.__init__(self,card)
         if card:
             self.sid      = card.field(1)
             self.method   = card.field(2)
@@ -364,7 +392,6 @@ class GRAV(BaseCard):
     """
     type = 'GRAV'
     def __init__(self,card=None,data=None):
-        #BaseCard.__init__(self,card)
         if card:
             self.sid = card.field(1)
             self.cid = card.field(2,0)
@@ -386,7 +413,6 @@ class GRAV(BaseCard):
             N.append(self.setBlankIfDefault(n,0.0))
         fields = ['GRAV',self.sid,self.cid,self.a]+N+[self.mb]
         return fields
-#class FREQ5(FREQ):
 
 class GUST(BaseCard):
     """
@@ -452,7 +478,6 @@ class SPLINE1(BaseCard):
     """
     type = 'SPLINE1'
     def __init__(self,card=None,data=None):
-        #Material.__init__(self,card)
         if card:
             self.eid    = card.field(1)
             self.caero  = card.field(2)
@@ -481,9 +506,23 @@ class SPLINE1(BaseCard):
         assert self.box2>=self.box1
         assert self.method in ['IPS','TPS','FPS']
         assert self.usage  in ['FORCE','DISP','BOTH']
+    
+    def CAero(self):
+        if isinstance(self.caero,int):
+            return self.caero
+        return self.caero.eid
+
+    def Set(self):
+        if isinstance(self.setg,int):
+            return self.setg
+        return self.setg.sid ## @todo not implemented...
+
+    def crossReference(self,model):
+        self.caero = model.CAero(self.caero)
+        #self.setg  = model.Set(self.setg)
 
     def rawFields(self):
-        fields = ['SPLINE1',self.eid,self.caero,self.box1,self.box2,self.setg,self.dz,self.method,self.usage,
+        fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),self.dz,self.method,self.usage,
                             self.nelements,self.melements]
         return fields
 
@@ -492,7 +531,7 @@ class SPLINE1(BaseCard):
         usage     = self.setBlankIfDefault(self.usage,'BOTH')
         nelements = self.setBlankIfDefault(self.nelements,10)
         melements = self.setBlankIfDefault(self.melements,10)
-        fields = ['SPLINE1',self.eid,self.caero,self.box1,self.box2,self.setg,self.dz,method,usage,
+        fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),self.dz,method,usage,
                             nelements,melements]
         fields = self.wipeEmptyFields(fields)
-        return self.printCard(fields)
+        return fields

@@ -51,6 +51,8 @@ class writeMesh(object):
         msg += self.writeLoads()
         msg += self.writeDynamic()
         msg += self.writeAero()
+        msg += self.writeAeroControl()
+        msg += self.writeFlutter()
         msg += self.writeThermal()
         msg += self.writeThermalMaterials()
 
@@ -351,32 +353,50 @@ class writeMesh(object):
         """writes the aero cards"""
         #print "output aero cards..."
         msg = ''
-        if (self.flfacts or self.aero or self.aeros or self.aestats
-                        or self.gusts or self.flutters or self.caeros or self.paeros):  msg = '$AERO\n'
+        if (self.aero or self.aeros or self.gusts or self.caeros 
+        or self.paeros):  msg = '$AERO\n'
         #flfactKeys = self.flfacts.keys()
         #self.log.info("flfactKeys = %s" %(flfactKeys))
-        for ID,flfact in sorted(self.flfacts.items()):
-            #if ID!=0:
-            msg += str(flfact)
-        for ID,spline in sorted(self.splines.items()):
-            msg += str(spline)
         for ID,caero in sorted(self.caeros.items()):
             msg += str(caero)
         for ID,paero in sorted(self.paeros.items()):
             msg += str(paero)
+        for ID,spline in sorted(self.splines.items()):
+            msg += str(spline)
+
         for ID,aero in sorted(self.aero.items()):
             msg += str(aero)
         for ID,aero in sorted(self.aeros.items()):
             msg += str(aero)
-        for ID,aestat in sorted(self.aestats.items()):
-            msg += str(aestat)
+        
         for ID,gust in sorted(self.gusts.items()):
             msg += str(gust)
         for ID,grav in sorted(self.gravs.items()):
             msg += str(grav)
+        return msg
+
+    def writeAeroControl(self):
+        """writes the aero control surface cards"""
+        msg = ''
+        if (self.aestats or self.aeparams or self.aelinks):  msg = '$AERO CONTROL SURFACES\n'
+        for ID,aelinks in sorted(self.aelinks.items()):
+            for aelink in aelinks:
+                msg += str(aelink)
+        for ID,aeparam in sorted(self.aeparams.items()):
+            msg += str(aeparam)
+        for ID,aestat in sorted(self.aestats.items()):
+            msg += str(aestat)
+        return msg
+
+    def writeFlutter(self):
+        """writes the flutter cards"""
+        msg = ''
+        if (self.flfacts or self.flutters):  msg = '$FLUTTER\n'
+        for ID,flfact in sorted(self.flfacts.items()):
+            #if ID!=0:
+            msg += str(flfact)
         for ID,flutter in sorted(self.flutters.items()):
             msg += str(flutter)
-
         return msg
 
     def writeThermal(self):

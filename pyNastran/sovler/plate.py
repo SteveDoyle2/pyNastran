@@ -44,7 +44,7 @@ class CTRIA3(FEM):
         #N3 = c
         # N1+N2+N3 = 1
         #N3 = 1-a-b
-        N3 = k3*(1-N1+N2)
+        N3 = k3*(1-N1-N2)
         
         print "CTRIA3"
         print "N1 = %s" %(N1)
@@ -462,12 +462,12 @@ class CQUAD9(FEM): # really a CQUAD8
 
 
 
-#obj = CTRIA3()
+obj = CTRIA3()
 #obj = CTRIA6()
 #obj.N()
 #obj = CQUAD4()
 #obj = CQUAD9()
 
 #obj = CTRIA4()
-obj = CTRIA5()
+#obj = CTRIA5()
 obj.N()

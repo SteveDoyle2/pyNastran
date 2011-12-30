@@ -10,7 +10,11 @@ class FREQ(BaseCard):
     def __init__(self,card=None,data=None):
         self.sid = card.field(1)
         self.freqs = card.fields(2)
+        self.cleanFreqs()
+    
+    def cleanFreqs(self):
         self.freqs = list(set(self.freqs))
+        self.freqs.sort()
 
     def getFreqs(self):
         return self.freqs
@@ -18,6 +22,30 @@ class FREQ(BaseCard):
     def rawFields(self):
         fields = ['FREQ',self.sid]+self.freqs
         return fields
+
+    def addFrequencies(self,freqs):
+        """
+        Combines the frequencies from 1 FREQx object with another.
+        All FREQi entries with the same frequency set identification numbers will be used. Duplicate
+        frequencies will be ignored.
+        @param self the object pointer
+        @param freqs the frequencies for a FREQx object
+        """
+        #print "self.freqs = ",self.freqs
+        #print "freqs = ",freqs
+        self.freqs += freqs
+        self.cleanFreqs()
+
+    def addFrequencyObject(self,freq):
+        """
+        @see addFrequencies
+        @param self the object pointer
+        @param freq a FREQx object
+        """
+        self.addFrequencies(freq.freqs)
+
+    def reprFields(self):
+        return self.rawFields()
 
 class FREQ1(FREQ):
     """
@@ -38,7 +66,7 @@ class FREQ1(FREQ):
         for i in range(ndf):
             self.freqs.append(f1+i*df)
         ###
-        self.freqs = list(set(self.freqs))
+        self.cleanFreqs()
 
 class FREQ2(FREQ):
     """
@@ -60,9 +88,10 @@ class FREQ2(FREQ):
         for i in range(nf):
             self.freqs.append(f1*exp(i*d)) # 0 based index
         ###
-        self.freqs = list(set(self.freqs))
+        self.cleanFreqs()
 
 #class FREQ3(FREQ):
+
 class FREQ4(FREQ):
     """
     Defines a set of frequencies used in the solution of modal frequency-response
@@ -75,10 +104,12 @@ class FREQ4(FREQ):
     type = 'FREQ4'
     def __init__(self,card=None,data=None):
         self.sid = card.field(1)
-        f1 = card.field(2,0.0)
-        f2 = card.field(3,1.e20)
+        f1   = card.field(2,0.0)
+        f2   = card.field(3,1.e20)
         fspd = card.field(4,0.1)
-        nfm = card.field(5,3)
+        nfm  = card.field(5,3)
+
+#class FREQ5(FREQ):
 
 class RLOAD1(BaseCard): # not integrated
     """
