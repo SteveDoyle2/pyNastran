@@ -58,8 +58,7 @@ It's broken into 3 sections:
  * Section 2 - uses the output of Section 1 to test again (helps to verifies fields weren't shifted; not a perfect test)
  * Section 3 - prints out the cards that were found in the BDF along with the number of each.  
  * A star indicates a cards was not written out and you should be careful of using the code on the example.  The CTRIA3 card was lost.  Most likely the CTRIA3 shares an elementID with another element.  Note that INCLUDE files always have stars by them.
- * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card 
-was ignored in both cases.
+ * A dash indicates the cards was rejected and will be echoed to the output BDF.  Looking in Sections 1 & 2, tells us that the TEMPD card was ignored in both cases.
 
 
 You can also test the code without using cross-Referencing
