@@ -31,7 +31,7 @@ def db(p,pref):
     """
     return 20.*log(p/pref)
 
-class DEQATN(BaseCard):
+class DEQATN(BaseCard):# needs work...
     type = 'DEQATN'
     def __init__(self,card=None,data=None):
         newCard = ''
@@ -74,7 +74,7 @@ class DEQATN(BaseCard):
             fields += ['        '+eqLine]
         return ''.join(fields)
 
-class DMIG(BaseCard):
+class DMIG(BaseCard):  # not done...
     """
     Defines direct input matrices related to grid, extra, and/or scalar points. The matrix
     is defined by a single header entry and one or more column entries. A column entry

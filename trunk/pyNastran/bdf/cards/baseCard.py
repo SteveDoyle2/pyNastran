@@ -3,9 +3,9 @@ import sys
 import pyNastran
 import pyNastran.bdf
 
-from pyNastran.bdf.errors      import *
-from pyNastran.bdf.fieldWriter import printCard,setBlankIfDefault,setDefaultIfBlank,isSame
-from pyNastran.bdf.BDF_Card    import BDF_Card
+from pyNastran.bdf.errors                import *
+from pyNastran.bdf.fieldWriter           import printCard,setBlankIfDefault,setDefaultIfBlank,isSame
+from pyNastran.bdf.bdfInterface.BDF_Card import BDF_Card
 
 class BaseCard(BDF_Card):
     #def __init__(self,card):

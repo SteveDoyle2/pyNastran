@@ -4,7 +4,7 @@ from numpy.linalg import norm
 
 # my code
 from pyNastran.bdf.errors import *
-from pyNastran.bdf.BDF_Card import BDF_Card
+#from pyNastran.bdf.BDF_Card import BDF_Card
 from baseCard import BaseCard
 
 class Coord(BaseCard):
