@@ -7,11 +7,16 @@ from pyNastran.general.general import ListPrint
 from pyNastran.bdf.errors import *
 
 from cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
-from BDF_Card        import BDF_Card
-from bdf_Reader      import bdfReader
-from bdf_helper      import getMethods,addMethods,writeMesh,cardMethods,XrefMesh,bdfMethods
 from caseControlDeck import CaseControlDeck
 from fieldWriter     import printCard
+from bdf_Methods     import bdfMethods
+
+from bdfInterface.bdf_helper import getMethods,addMethods
+from bdfInterface.BDF_Card   import BDF_Card
+from bdfInterface.bdf_Reader import bdfReader
+from bdfInterface.bdf_writeMesh   import writeMesh
+from bdfInterface.bdf_cardMethods import cardMethods
+from bdfInterface.crossReference  import XrefMesh
 
 
 class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefMesh):
