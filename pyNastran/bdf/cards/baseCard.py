@@ -281,11 +281,15 @@ class BaseCard(BDF_Card):
         fields = self.rawFields()
         return self.printCard(fields)
         
+    def reprFields(self):
+        return self.rawFields()
+
     def __repr__(self):
         """
         Prints a card in the simplest way possible
         (default values are left blank).
         """
+        self.rawFields()
         fields = self.reprFields()
         return self.printCard(fields)
 ###
@@ -307,7 +311,10 @@ class Property(BaseCard):
         return Mid(self)
 
     def isSameCard(self,prop):
-        return False
+        if self.type!=prop.type:  return False
+        fields1 = self.rawFields()
+        fields2 = prop.rawFields()
+        return self.isSameFields(fields1,fields2)
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)

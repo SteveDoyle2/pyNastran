@@ -13,15 +13,14 @@ class Material(BaseCard):
         pass
         #self.type = card[0]
 
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = self.rawFields()
+        fields2 = mat.rawFields
+        return self.isSameFields(fields1,fields2)
+
     def crossReference(self,mesh):
         pass
-
-    def isSameCard(self,mat):
-        return False
-
-    def __repr__(self):
-        fields = [self.type,self.mid]
-        return self.printCard(fields)
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -77,13 +76,18 @@ class CREEP(Material):
             self.f = data[14]
         ###
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CREEP',self.mid,self.T0,self.exp,self.form,self.tidkp,self.tidcp,self.tidcs,self.thresh,
+        self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
+        return fields
+
+    def reprFields(self):
         thresh = self.setBlankIfDefault(self.thresh,1e-5)
         exp    = self.setBlankIfDefault(self.exp,4.1e-9)
         T0     = self.setBlankIfDefault(self.T0,0.0)
         fields = ['CREEP',self.mid,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
         self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
-        return self.printCard(fields)
+        return fields
 
 class MAT1(Material):
     """
@@ -118,17 +122,6 @@ class MAT1(Material):
             self.Sc    = data[9]
             self.Ss    = data[10]
             self.Mcsid = data[11]
-
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid, self.E,self.G,self.nu,self.rho,self.a,self.TRef,self.ge,self.St,self.Sc,self.Ss,self.Mcsid]
-        fields2 = [ mat.mid,  mat.E, mat.G, mat.nu, mat.rho, mat.a, mat.TRef, mat.ge, mat.St, mat.Sc, mat.Ss, mat.Mcsid]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
 
     #def G(self):
     #    return self.G
@@ -176,7 +169,12 @@ class MAT1(Material):
         #print "G  = ",G
         #print "nu = ",nu
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['MAT1',self.mid,self.E,self.G,self.nu,self.rho,self.a,self.TRef,self.ge,
+                  self.St,self.Sc,self.Ss,self.Mcsid]
+        return fields
+
+    def reprFields(self):
         TRef = self.setBlankIfDefault(self.TRef,0.0)
         
         #print "MAT1 - self.E=%s self.nu=%s" %(self.E,self.nu)
@@ -193,7 +191,7 @@ class MAT1(Material):
         #G = self.G
         fields = ['MAT1',self.mid,self.E,G,self.nu,rho,a,TRef,ge,
                   St,Sc,Ss,Mcsid]
-        return self.printCard(fields)
+        return fields
 
 class MAT2(AnisotropicMaterial):
     """
@@ -248,18 +246,13 @@ class MAT2(AnisotropicMaterial):
             self.Mcsid = data[16]
         ###
 
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid,self.G11,self.G12,self.G13,self.G22,self.G23,self.G33,self.rho,self.a1,self.a2,self.a3,self.TRef,self.ge,self.St,self.Sc,self.Ss,self.Mcsid]
-        fields2 = [ mat.mid, mat.G11, mat.G12, mat.G13, mat.G22, mat.G23, mat.G33, mat.rho, mat.a1, mat.a2, mat.a3, mat.TRef, mat.ge, mat.St, mat.Sc, mat.Ss, mat.Mcsid]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
+    def rawFields(self):
+        fields = ['MAT2',self.mid,self.G11,self.G12,self.G13,self.G22,self.G23,self.G33,self.rho,
+                  self.a1,self.a2,self.a3,self.Tref,self.ge,self.St,self.Sc,self.Ss,
+                  self.Mcsid]
+        return fields
 
-    def __repr__(self):
+    def reprFields(self):
         G11 = self.setBlankIfDefault(self.G11,0.0)
         G12 = self.setBlankIfDefault(self.G12,0.0)
         G13 = self.setBlankIfDefault(self.G13,0.0)
@@ -270,7 +263,7 @@ class MAT2(AnisotropicMaterial):
         fields = ['MAT2',self.mid,G11,G12,G13,G22,G23,G33,self.rho,
                   self.a1,self.a2,self.a3,Tref,self.ge,self.St,self.Sc,self.Ss,
                   self.Mcsid]
-        return self.printCard(fields)
+        return fields
 
 class MAT3(AnisotropicMaterial):
     """
@@ -314,11 +307,16 @@ class MAT3(AnisotropicMaterial):
             self.TRef = data[12]
             self.ge   = data[13]
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
+                         None,None,self.gzx,self.ax,self.ath,self.az,self.Tref,self.ge]
+        return fields
+
+    def reprFields(self):
         Tref = self.setBlankIfDefault(self.TRef,0.0)
         fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
                          None,None,self.gzx,self.ax,self.ath,self.az,Tref,self.ge]
-        return self.printCard(fields)
+        return fields
 
 class MAT4(ThermalMaterial):
     """
@@ -369,13 +367,18 @@ class MAT4(ThermalMaterial):
         ###
         return True
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['MAT4',self.mid,self.k,self.cp,self.rho,self.H,self.mu,self.hgen,self.refEnthalpy,
+                         self.tch,self.tdelta,self.qlat]
+        return fields
+
+    def reprFields(self):
         rho  = self.setBlankIfDefault(self.rho,1.0)
         hgen = self.setBlankIfDefault(self.hgen,1.0)
         cp   = self.setBlankIfDefault(self.cp,0.0)
         fields = ['MAT4',self.mid,self.k,cp,rho,self.H,self.mu,hgen,self.refEnthalpy,
                          self.tch,self.tdelta,self.qlat]
-        return self.printCard(fields)
+        return fields
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
     """
@@ -411,24 +414,18 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.hgen = data[9]
         ###
 
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,self.cp,self.rho,self.hgen]
-        fields2 = [ mat.mid, mat.kxx, mat.kxy, mat.kxz, mat.kyy, mat.kyz, mat.kzz, mat.cp, mat.rho, mat.hgen]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
+    def rawFields(self):
+        fields = ['MAT5',self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,self.cp,
+                         self.rho,self.hgen]
+        return fields
 
-    def __repr__(self):
+    def reprFields(self):
         rho  = self.setBlankIfDefault(self.rho, 1.0)
         hgen = self.setBlankIfDefault(self.hgen,1.0)
         cp   = self.setBlankIfDefault(self.cp,  0.0)
         fields = ['MAT5',self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,cp,
                          rho,hgen]
-        return self.printCard(fields)
+        return fields
 
 class MAT8(AnisotropicMaterial):
     """
@@ -492,7 +489,13 @@ class MAT8(AnisotropicMaterial):
         ###
         return True
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,self.G12,self.G1z,self.G2z,self.rho,
+                  self.a1,self.a2,self.Tref,self.Xt,self.Xc,self.Yt,self.Yc,self.S,
+                  ge,F12,strn]
+        return fields
+
+    def reprFields(self):
         G12  = self.setBlankIfDefault(self.G12,0.)
         G1z  = self.setBlankIfDefault(self.G1z,1e8)
         G2z  = self.setBlankIfDefault(self.G2z,1e8)
@@ -516,8 +519,7 @@ class MAT8(AnisotropicMaterial):
         fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,G12,G1z,G2z,rho,
                   a1,a2,Tref,Xt,Xc,Yt,Yc,S,
                   ge,F12,strn]
-        #print fields
-        return self.printCard(fields)
+        return fields
 
 class MAT9(AnisotropicMaterial):
     """
@@ -589,29 +591,24 @@ class MAT9(AnisotropicMaterial):
         ###
         assert len(self.A)==6
             
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid,self.G11,self.G12,self.G13,self.G14,self.G15,self.G16,self.G22,self.G23,self.G24,self.G25,self.G26,self.G33,self.G34,self.G35,self.G36,self.G44,self.G45,self.G46,self.G55,self.G56,self.G66,self.rho,self.A,self.TRef,self.ge,]
-        fields2 = [ mat.mid, mat.G11, mat.G12, mat.G13, mat.G14, mat.G15, mat.G16, mat.G22, mat.G23, mat.G24, mat.G25, mat.G26, mat.G33, mat.G34, mat.G35, mat.G36, mat.G44, mat.G45, mat.G46, mat.G55, mat.G56, mat.G66, mat.rho, mat.A, mat.TRef, mat.ge,]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
+    def rawFields(self):
+        fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
+                         self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
+                         self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+self.A+[self.TRef,self.ge]
+        return fields
 
-    def __repr__(self):
+    def reprFields(self):
         A = []
         for a in self.A:
             a = self.setBlankIfDefault(a, 0.0)
             A.append(a)
         TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge = self.ge
         
         fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                         self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+A+[
-                                                                                 TRef,self.ge]
-        return self.printCard(fields)
+                         self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+A+[TRef,ge]
+        return fields
 
 class MAT10(Material):
     """
@@ -633,17 +630,6 @@ class MAT10(Material):
             self.ge   = data[4]
         ###
 
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid, self.bulk,self.rho,self.c,self.ge]
-        fields2 = [ mat.mid,  mat.bulk, mat.rho, mat.c, mat.ge]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
-
     def getBulkRhoC(self,card):
         """
         \f[ \large bulk = c^2 \rho \f]
@@ -652,7 +638,7 @@ class MAT10(Material):
         rho  = card.field(3)
         c    = card.field(4)
 
-        if c is not None:    
+        if c is not None:
             if rho is not None:
                 bulk = c**2.*rho
             elif bulk is not None:
@@ -670,7 +656,7 @@ class MAT10(Material):
         ###
         return(bulk,rho,c)
             
-    def __repr__(self):
+    def rawFields(self):
         fields = ['MAT10',self.mid,self.bulk,self.rho,self.c,self.ge]
-        return self.printCard(fields)
+        return fields
 
