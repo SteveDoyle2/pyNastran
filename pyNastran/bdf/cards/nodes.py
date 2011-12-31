@@ -30,9 +30,6 @@ class Node(BaseCard): # base class
         else:
             return self.cd.cid
         ###
-        
-    def __repr__(self):
-        raise Exception('%s hasnt implemented a __repr__ method' %(self.type))
 
 class RINGAX(Ring):
     """
@@ -54,9 +51,9 @@ class RINGAX(Ring):
     def Position(self):
         return array(0.,0.,0.)
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['RINGAX',self.nid,None,self.R,self.z,None,None,self.ps]
-        return self.printCard(fields)
+        return fields
         
     
 class SPOINT(Node):
@@ -88,10 +85,12 @@ class SPOINT(Node):
     def Position(self):
         return array(0.,0.,0.)
 
-    def __repr__(self):
-        ## @todo support THRU in output
+    def rawFields(self):
+        """
+        @todo support THRU in output
+        """
         fields = ['SPOINT']+self.spoints
-        return self.printCard(fields)
+        return fields
         
 
 class GRDSET(Node):
@@ -117,13 +116,17 @@ class GRDSET(Node):
         cd = mesh.Coord(self.cd)
         #seid = mesh.Super(self.seid)
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['GRDSET',None,self.cp,None,None,None,self.cd,self.ps,self.seid]
+        return fields
+
+    def reprFields(self):
         cp   = self.setBlankIfDefault(self.cp,  0)
         cd   = self.setBlankIfDefault(self.cd,  0)
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.seid,0)
         fields = ['GRDSET',None,cp,None,None,None,cd,ps,seid]
-        return self.printCard(fields)
+        return fields
 
 class GRIDB(Node):
     type = 'GRIDB'
@@ -150,14 +153,14 @@ class GRIDB(Node):
         assert self.ps  >= 0, 'ps=%s'   %(self.ps)
         assert self.idf >= 0, 'idf=%s'  %(self.idf)
 
-    def __repr__(self):
+    def reprFields(self):
         #phi = self.setBlankIfDefault(self.phi,0.0)
         cd  = self.setBlankIfDefault(self.cd, 0)
         ps  = self.setBlankIfDefault(self.ps, 0)
         idf = self.setBlankIfDefault(self.idf,0)
         fields = ['GRIDB',self.nid,None,None,self.phi,None,cd,ps,idf]
         #print "fields = ",fields
-        return self.printCard(fields)
+        return fields
 
 class GRID(Node):
     type = 'GRID'
@@ -228,15 +231,17 @@ class GRID(Node):
         self.cp = mesh.Coord(self.cp)
         self.cd = mesh.Coord(self.cd)
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
-        #return self.
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['GRID',self.nid,self.cp]+list(self.xyz)+[self.cd,self.ps,self.seid]
+        return fields
+
+    def reprFields(self):
         cp   = self.setBlankIfDefault(self.Cp(), 0)
         cd   = self.setBlankIfDefault(self.Cd(), 0)
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.seid,0)
         fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
-        #print "fields = ",fields
-        return self.printCard(fields)
+        return fields
 
 #class RINGAX

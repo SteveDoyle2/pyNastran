@@ -19,10 +19,6 @@ class FREQ(BaseCard):
     def getFreqs(self):
         return self.freqs
     
-    def rawFields(self):
-        fields = ['FREQ',self.sid]+self.freqs
-        return fields
-
     def addFrequencies(self,freqs):
         """
         Combines the frequencies from 1 FREQx object with another.
@@ -44,8 +40,9 @@ class FREQ(BaseCard):
         """
         self.addFrequencies(freq.freqs)
 
-    def reprFields(self):
-        return self.rawFields()
+    def rawFields(self):
+        fields = ['FREQ',self.sid]+self.freqs
+        return fields
 
 class FREQ1(FREQ):
     """
@@ -120,7 +117,7 @@ class RLOAD1(BaseCard): # not integrated
     RLOAD1 5   3                     1
     """
     type = 'RLOAD1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.sid      = card.field(1)
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
@@ -135,10 +132,14 @@ class RLOAD1(BaseCard): # not integrated
         elif self.Type in [3,'A','AC','ACC','ACCE']: self.Type = 'ACCE'
         else: raise RuntimeError('invalid RLOADi type  Type=|%s|' %(self.Type))
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['RLOAD1',self.sid,self.exciteID,self.delay,self.dphase,self.tc,self.td,self.Type]
+        return fields
+
+    def reprFields(self):
         Type = self.setBlankIfDefault(self.Type,'LOAD')
         fields = ['RLOAD1',self.sid,self.exciteID,self.delay,self.dphase,self.tc,self.td,Type]
-        return self.printCard(fields)
+        return fields
 
 class RLOAD2(BaseCard): # not integrated
     """
@@ -150,7 +151,7 @@ class RLOAD2(BaseCard): # not integrated
     RLOAD2 5   3                     1
     """
     type = 'RLOAD2'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.sid      = card.field(1)
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
@@ -165,10 +166,14 @@ class RLOAD2(BaseCard): # not integrated
         elif self.Type in [3,'A','AC','ACC','ACCE']: self.Type = 'ACCE'
         else: raise RuntimeError('invalid RLOADi type  Type=|%s|' %(self.Type))
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['RLOAD2',self.sid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,self.Type]
+        return fields
+
+    def reprFields(self):
         Type = self.setBlankIfDefault(self.Type,0.0)
         fields = ['RLOAD2',self.sid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,Type]
-        return self.printCard(fields)
+        return fields
 
 class NLPARM(BaseCard):
     """
@@ -178,7 +183,7 @@ class NLPARM(BaseCard):
     MAXBIS MAXR RTOLB
     """
     type = 'NLPARM'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.nid       = card.field(1)
         self.ninc      = card.field(2,10)
         self.dt        = card.field(3,0.0)

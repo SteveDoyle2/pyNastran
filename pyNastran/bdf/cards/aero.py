@@ -31,7 +31,7 @@ class AELINK(BaseCard):
             self.Cis.append(Ci)
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['AELINK',self.id,self.label,self.units]
         return self.printCard(fields)
 
@@ -56,7 +56,7 @@ class AEPARM(BaseCard):
             assert len(data)==3,'data = %s' %(data)
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['AEPARM',self.id,self.label,self.units]
         return self.printCard(fields)
 
@@ -119,11 +119,15 @@ class AERO(Aero):
         ###
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular function
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['AERO',self.acsid,self.velocity,self.cRef,self.rhoRef,self.symXZ,self.symXY]
+        return fields
+
+    def reprFields(self):
         symXZ = self.setBlankIfDefault(self.symXZ,0)
         symXY = self.setBlankIfDefault(self.symXY,0)
         fields = ['AERO',self.acsid,self.velocity,self.cRef,self.rhoRef,symXZ,symXY]
-        return self.printCard(fields)
+        return fields
 
 class AEROS(Aero):
     """
@@ -153,13 +157,17 @@ class AEROS(Aero):
             assert len(data)==7,'data = %s' %(data)
         ###
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['AEROS',self.acsid,self.rcsid,self.cRef,self.bRef,self.Sref,self.symXZ,self.symXY]
+        return fields
+
+    def reprFields(self):
         symXZ = self.setBlankIfDefault(self.symXZ,0)
         symXY = self.setBlankIfDefault(self.symXY,0)
         fields = ['AEROS',self.acsid,self.rcsid,self.cRef,self.bRef,self.Sref,symXZ,symXY]
-        return self.printCard(fields)
+        return fields
 
-class AESTAT(BaseCard): # not integrated
+class AESTAT(BaseCard):
     """
     Specifies rigid body motions to be used as trim variables in static aeroelasticity.
     AESTAT ID   LABEL
@@ -176,9 +184,9 @@ class AESTAT(BaseCard): # not integrated
             assert len(data)==2,'data = %s' %(data)
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['AESTAT',self.id,self.label]
-        return self.printCard(fields)
+        return fields
 
 class AESURFS(BaseCard): # not integrated
     """
@@ -205,9 +213,9 @@ class AESURFS(BaseCard): # not integrated
             assert len(data)==4,'data = %s' %(data)
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['AESURFS',self.id,self.label,None,self.list1,None,self.list2]
-        return self.printCard(fields)
+        return fields
 
 class CAERO1(BaseCard): # add helper functions
     """
@@ -309,9 +317,9 @@ class DAREA(BaseCard):
         ###
         return True
         
-    def __repr__(self):
+    def rawFields(self):
         fields = ['DAREA',self.sid, self.p,self.c,self.a]
-        return self.printCard(fields)
+        return fields
 
 class FLFACT(BaseCard):
     """
@@ -339,9 +347,9 @@ class FLFACT(BaseCard):
             self.factors = data[1:]
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['FLFACT',self.sid]+self.factors
-        return self.printCard(fields)
+        return fields
 
 class FLUTTER(BaseCard):
     """
@@ -388,6 +396,16 @@ class FLUTTER(BaseCard):
 
         self.epsilon = card.field(8) # no default listed...
 
+    def _rawNValueOMax(self):
+        if self.method in ['K','KE']:
+            return (self.imethod,self.nValue)
+            assert self.imethod in ['L','S']
+        elif self.method in ['PKS','PKNLS']:
+            return(self.imethod,self.omax)
+        else:
+            return(self.imethod,self.nValue)
+        ###
+
     def _reprNValueOMax(self):
         if self.method in ['K','KE']:
             imethod = self.setBlankIfDefault(self.imethod,'L')
@@ -397,12 +415,17 @@ class FLUTTER(BaseCard):
             return(self.imethod,self.omax)
         else:
             return(self.imethod,self.nValue)
-        raise Exception('unsupported...FLUTTER...')
+        ###
 
-    def __repr__(self):
+    def rawFields(self):
+        (imethod,nValue) = self._rawNValueOMax()
+        fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
+        return fields
+
+    def reprFields(self):
         (imethod,nValue) = self._reprNValueOMax()
         fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
-        return self.printCard(fields)
+        return fields
         
 class GRAV(BaseCard):
     """
@@ -458,9 +481,9 @@ class GUST(BaseCard):
         ###
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular function
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['GUST',self.sid,self.dload,self.wg,self.x0,self.V]
-        return self.printCard(fields)
+        return fields
 
 class PAERO1(BaseCard):
     """
@@ -488,9 +511,6 @@ class PAERO1(BaseCard):
     def rawFields(self):
         fields = ['PAERO1',self.pid] + self.Bi
         return fields
-
-    def reprFields(self):
-        return self.rawFields()
 
 class SPLINE1(BaseCard):
     """
