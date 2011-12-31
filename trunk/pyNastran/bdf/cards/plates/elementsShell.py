@@ -70,12 +70,6 @@ class CTRIA3(ShellElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
 
-    def isSameCard(self,elem):
-        if self.type!=elem.type:  return False
-        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3]
-        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.thetaMcid,elem.zOffset,elem.TFlag,elem.T1,elem.T2,elem.T3]
-        return self.isSameFields(fields1,fields2)
-
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -177,11 +171,16 @@ class CTRIA6(CTRIA3):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CTRIA6',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,None]+[
+        None,self.TFlag,self.T1,self.T2,self.T3]
+        return fields
+
+    def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
         fields = ['CTRIA6',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None]+[
         None,TFlag,T1,T2,T3]
-        return self.printCard(fields)
+        return fields
 
 class CTRIAR(CTRIA3):
     type = 'CTRIAR'
@@ -203,20 +202,18 @@ class CTRIAR(CTRIA3):
         self.T2 = card.field(12,1.0)
         self.T3 = card.field(13,1.0)
 
-    def isSameCard(self,elem):
-        if self.type!=elem.type:  return False
-        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3]
-        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.thetaMcid,elem.zOffset,elem.TFlag,elem.T1,elem.T2,elem.T3]
-        return self.isSameFields(fields1,fields2)
-
     def Thickness(self):
         return self.pid.Thickness()
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3]
+        return fields
+
+    def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
         fields = ['CTRIAR',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None,
                   None,TFlag,T1,T2,T3]
-        return self.printCard(fields)
+        return fields
 
 class CTRIAX(CTRIA3):
     type = 'CTRIAX'
@@ -229,9 +226,9 @@ class CTRIAX(CTRIA3):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(nids)==6,'error on CTRIAX'
 
-    def __repr__(self):
+    def reprFields(self):
         fields = ['CTRIAX',self.eid,self.Pid()]+self.nodeIDs()
-        return self.printCard(fields)
+        return fields
 
 class CTRIAX6(CTRIA3):
     type = 'CTRIAX6'
@@ -249,11 +246,16 @@ class CTRIAX6(CTRIA3):
     def Thickness(self):
         return self.pid.th
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CTRIAX6',self.eid,self.Pid()]+self.nodeIDs()+[
+                  self.th]
+        return fields
+
+    def reprFields(self):
         th = self.th
         fields = ['CTRIAX6',self.eid,self.Pid()]+self.nodeIDs()+[
                   th]
-        return self.printCard(fields)
+        return fields
 
 class CQUAD4(ShellElement):
     type = 'CQUAD4'
@@ -307,12 +309,6 @@ class CQUAD4(ShellElement):
             #print str(self)
             #sys.exit()
         
-    def isSameCard(self,elem):
-        if self.type!=elem.type:  return False
-        fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
-        fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.thetaMcid,elem.zOffset,elem.TFlag,elem.T1,elem.T2,elem.T3,elem.T4]
-        return self.isSameFields(fields1,fields2)
-
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -343,12 +339,15 @@ class CQUAD4(ShellElement):
             print "T4 = ",T4
         return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CQUAD4',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
+        return fields
+
+    def reprFields(self):
         debug = False
         #if self.id==20020:
         #    debug = True
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults(debug=debug)
-
 
         fields = ['CQUAD4',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
                   None,TFlag,T1,T2,T3,T4]
@@ -360,7 +359,7 @@ class CQUAD4(ShellElement):
         #    print fields
         #    sys.exit()
 
-        return self.printCard(fields)
+        return fields
 
     def writeAsCTRIA3(self,newID):
         """
@@ -446,11 +445,11 @@ class CQUADR(CQUAD4):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CQUADR',self.eid,self.Pid()]+self.nodeIDs()+[
                   self.T1,self.T2,self.T3,self.T4,self.thetaMcid,self.zOffset,
                   self.TFlag]
-        return self.printCard(fields)
+        return fields
 
 class CQUAD(CQUAD4):
     type = 'CQUAD'
@@ -476,7 +475,12 @@ class CQUAD(CQUAD4):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,
+                  None,self.TFlag,self.T1,self.T2,self.T3,self.T4]
+        return self.printCard(fields)
+
+    def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
         fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
                   None,TFlag,T1,T2,T3,T4]
@@ -522,12 +526,18 @@ class CQUAD8(CQUAD4):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['CQUAD8',self.eid,self.Pid()]+self.nodeIDs()+[
+                  self.T1,self.T2,self.T3,self.T4,self.thetaMcid,self.zOffset,
+                  self.TFlag]
+        return fields
+
+    def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
         fields = ['CQUAD8',self.eid,self.Pid()]+self.nodeIDs()+[
                   T1,T2,T3,T4,thetaMcid,zOffset,
                   TFlag]
-        return self.printCard(fields)
+        return fields
 
 class CQUADX(CQUAD4):
     type = 'CQUADX'
@@ -544,6 +554,6 @@ class CQUADX(CQUAD4):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CQUADX',self.eid,self.Pid()]+self.nodeIDs()
-        return self.printCard(fields)
+        return fields
