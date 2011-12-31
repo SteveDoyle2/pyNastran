@@ -2,6 +2,9 @@
 
 For a card to meet the criteria of "done" in this list,
 it must Read/Write ALL fields AND link to interfacing cards.
+This prevents cards like the CORD1x cards from being listed
+as done despite not being supported.
+
 
 NOTE:  If a card interfaces with other cards, the other card doesn't
        need to be linked for the first card to be considered "done".
@@ -19,8 +22,8 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - SET3
 
  
- - CDAMP2
  - CDAMP1
+ - CDAMP2
  - CDAMP3
  - CDAMP4
  - CDAMP5
@@ -29,6 +32,7 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - DMIG
 
  - PMASS
+ - PGAP
 
  - RBAR
  - RBAR1
@@ -63,7 +67,8 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 ===To Cross Reference (not supported)===
  - CORD2C
  - CORD2S
- - CORD1x
+ - CORD1C
+ - CORD1S
  - TABLEx
  - SPOINT
  - SET
@@ -73,6 +78,7 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 
 ===Cross Referenced Cards (done)===
  - GRID
+ - CORD1R
  - CORD2R
 
  - CTRIA3
@@ -88,6 +94,8 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - PSHELL
  - PCOMP
  - PCOMPG
+
+ - CGAP   (no spoints)
 
  - CONROD
  - CTUBE
@@ -134,7 +142,6 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 
 ===Partially Cross Referenced (partial)===
  - CONM2  (cid=0, requires COORDx support)
- - CGAP   (spoints?)
  - CELAS1 (no spoints)
  - CELAS2 (no spoints)
  - CELAS3 (no spoints)

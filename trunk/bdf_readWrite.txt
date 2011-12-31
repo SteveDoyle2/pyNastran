@@ -11,8 +11,8 @@ GRID   (done)
 GRDSET (done)
 
 ----Coordinates----:
-CORD1R (in progress)
-CORD2R (in progress)
+CORD1R (done)
+CORD2R (done)
 CORD1C
 CORD2C (partial)
 CORD1S

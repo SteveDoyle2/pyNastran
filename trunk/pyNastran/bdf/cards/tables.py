@@ -125,7 +125,7 @@ class TABLED2(Table):
             fields   = data[2:]
         self.parseFields(fields,nRepeated=2,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLED2',self.tid,self.x1,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
@@ -165,7 +165,7 @@ class TABLEM1(Table):
             isDadta = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLEM1',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
@@ -207,7 +207,7 @@ class TABLEM3(Table):
             isData = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLEM3',self.tid,self.x1,self.x2,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
@@ -251,7 +251,7 @@ class TABLES1(Table):
             isData = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLES1',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 

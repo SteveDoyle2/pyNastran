@@ -45,22 +45,16 @@ class NSM(PointProperty):
 class PMASS(PointProperty):
     def __init__(self,card=None,nOffset=0,data=None):
         PointProperty.__init__(self,card,data)
-        
         nOffset *= 2
         self.pid  = card.field(1+nOffset)
         self.mass = card.field(2+nOffset,0.)
 
-    def isSameCard(self,prop):
-        if self.type!=prop.type:  return False
-        fields1 = [self.pid,self.mass]
-        fields2 = [prop.pid,prop.mass]
-        return self.isSameFields(fields1,fields2)
-
     def Mass(self):
         return self.mass
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PMASS',self.pid,self.Mass]
+        return fields
 
 class DamperProperty(Property):
     type = 'DamperProperty'
@@ -83,15 +77,9 @@ class PDAMP(DamperProperty):
             self.b   = data[1]
         ###
 
-    def isSameCard(self,prop):
-        if self.type!=prop.type:  return False
-        fields1 = [self.pid,self.b]
-        fields2 = [prop.pid,prop.b]
-        return self.isSameFields(fields1,fields2)
-
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PDAMP',self.pid,self.b]
-        return self.printCard(fields)
+        return fields
 
 class PDAMP5(DamperProperty):
     type = 'PDAMP5'
@@ -115,13 +103,7 @@ class PDAMP5(DamperProperty):
             self.b   = data[2]
         ###
 
-    def isSameCard(self,prop):
-        if self.type!=prop.type:  return False
-        fields1 = [self.pid,self.Mid(),self.b]
-        fields2 = [prop.pid,prop.Mid(),prop.b]
-        return self.isSameFields(fields1,fields2)
-
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PDAMP5',self.pid,self.Mid(),self.b]
         return self.printCard(fields)
 
@@ -166,14 +148,7 @@ class PGAP(Property):
             self.trmin = data[10]
         ###
 
-    def isSameCard(self,prop):
-        return False
-        #if self.type!=prop.type:  return False
-        #fields1 = [self.pid,self.Mid(),self.b]
-        #fields2 = [prop.pid,prop.Mid(),prop.b]
-        #return self.isSameFields(fields1,fields2)
-
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PGAP',self.pid,self.u0,self.f0,self.ka,self.kb,self.kt,self.mu1,self.mu2,
                          self.tmax,self.mar,self.trmin]
         return self.printCard(fields)
@@ -214,13 +189,7 @@ class PLSOLID(SolidProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def isSameCard(self,prop):
-        if self.type!=prop.type:  return False
-        fields1 = [self.pid,self.mid,self.ge,self.str]
-        fields2 = [prop.pid,prop.mid,prop.ge,prop.str]
-        return self.isSameFields(fields1,fields2)
-
-    def __repr__(self):
+    def rawFields(self):
         stressStrain = self.setBlankIfDefault(self.str,'GRID')
         fields = ['PLSOLID',self.pid,self.Mid(),stressStrain]
         return self.printCard(fields)
@@ -255,17 +224,15 @@ class PSOLID(SolidProperty):
                 self.fctn = 'SMECH'
         ###
 
-    def isSameCard(self,prop):
-        if self.type!=prop.type:  return False
-        fields1 = [self.pid,self.mid,self.cordm,self.integ,self.stress,self.isop,self.fctn]
-        fields2 = [prop.pid,prop.mid,prop.cordm,prop.integ,prop.stress,prop.isop,prop.fctn]
-        return self.isSameFields(fields1,fields2)
+    def rawFields(self):
+        fields = ['PSOLID',self.pid,self.Mid(),self.cordm,self.integ,self.stress,self.isop,self.fctn]
+        return fields
 
-    def __repr__(self):
+    def reprFields(self):
         cordm = self.setBlankIfDefault(self.cordm,0)
         fctn  = self.setBlankIfDefault(self.fctn,'SMECH')
         fields = ['PSOLID',self.pid,self.Mid(),cordm,self.integ,self.stress,self.isop,fctn]
-        return self.printCard(fields)
+        return fields
 
 class PCONEAX(Property): #not done
     type = 'PCONEAX'
@@ -284,13 +251,7 @@ class PCONEAX(Property): #not done
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def isSameCard(self,prop):
-        if self.type!=prop.type:  return False
-        fields1 = [self.pid,self.mid,self.group,self.Type]+self.dim
-        fields2 = [prop.pid,prop.mid,prop.group,self.Type]+prop.dim
-        return self.isSameFields(fields1,fields2)
-
-    def __repr__(self):
-        fields = ['PCONEAX',self.pid,self.Mid(),sefl.group,self.Type,]
-        return self.printCard(fields)
+    def rawFields(self):
+        fields = ['PCONEAX',self.pid,self.Mid(),self.group,self.Type,]
+        return fields
     

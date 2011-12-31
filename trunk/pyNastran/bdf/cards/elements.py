@@ -212,14 +212,13 @@ class CGAP(Element):
             x1G0    = card.field(5)
             if isinstance(x1G0,int):
                 self.g0 = x1G0
-                self.x1 = None
-                self.x2 = None
-                self.x3 = None
+                self.x = None
             elif isinstance(x1G0,float):
                 self.g0  = None
-                self.x1  = x1G0
-                self.x2  = card.field(6)
-                self.x3  = card.field(7)
+                x1  = x1G0
+                x2  = card.field(6)
+                x3  = card.field(7)
+                self.x   = [x1,x2,x3]
                 self.cid = card.field(8)
             else:
                 raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
@@ -230,22 +229,26 @@ class CGAP(Element):
             self.ga  = data[2]
             self.gb  = data[3]
             self.g0  = data[4]
-            self.x1  = data[5]
-            self.x2  = data[6]
-            self.x3  = data[7]
+            x1  = data[5]
+            x2  = data[6]
+            x3  = data[7]
+            self.x   = [x1,x2,x3]
             self.cid = data[8]
         ###
 
     def crossReference(self,mesh):
-        #self.g1 = mesh.Node(self.g1)
-        #self.g2 = mesh.Node(self.g2)
+        self.ga = mesh.Node(self.ga)
+        self.gb = mesh.Node(self.gb)
+        if self.g0:
+            self.g0 = mesh.Node(self.g0)
+            self.x  = self.g0.Position()
         self.pid = mesh.Property(self.pid)
 
     def __repr__(self):
         if self.g0 is not None:
             x = [self.g0,None,None]
         else:
-            x = [self.x1,self.x2,self.x3]
+            x = self.x
         fields = ['CGAP',self.eid,self.Pid(),self.ga,self.gb]+x+[self.cid]
         return self.printCard(fields)
 
