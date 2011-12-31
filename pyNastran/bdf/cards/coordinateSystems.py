@@ -12,52 +12,147 @@ class Coord(BaseCard):
         self.isCrossReferenced = False
         self.isResolved = False
 
-        #self.type = card[0]
-        #print "cid = ",self.cid
-
     def setup(self):
-        assert len(self.eo)==3,self.eo
-        assert len(self.ez)==3,self.ez
-        assert len(self.ex)==3,self.ex
-        
-        #print "eo = ",self.eo
-        #print "ez = ",self.ez
-        #print "ex = ",self.ex
+        """
+        \f[ e_{13}  = e_3 - e_1                \f]
+        \f[ e_{12}  = e_2 - e_1                \f]
+        \f[ k       = \frac{e_{12}}{|e_{12}|}  \f]
+        \f[ j_{dir} = k \cross e_{13}          \f]
+        \f[ j = \frac{j_{dir}}{|j_{dir}|}      \f]
+        \f[ i = j \cross k                     \f]
+        """
         try:
-            ## the normalized version of self.ez
-            self.ez0 = self.normalize(self.ez-self.eo)
-            ## the normalized version of self.ex
-            self.ex0 = self.normalize(self.ex-self.eo)
+            assert len(self.e1)==3,self.e1
+            assert len(self.e2)==3,self.e2
+            assert len(self.e3)==3,self.e3
         except TypeError:
-            msg  = 'There is a problem handling these lines:\n'
-            msg += '    self.ez0 = self.normalize(self.ez-self.eo)\n'
-            msg += '    self.ex0 = self.normalize(self.ex-self.eo)\n'
-            msg += 'eo=%s Type=%s\n' %(self.eo,type(self.eo))
-            msg += 'ex=%s Type=%s\n' %(self.ex,type(self.ex))
-            msg += 'ez=%s Type=%s\n' %(self.ez,type(self.ez))
-            #print msg
-            raise CoordTypeError(msg)
-        ## the normalized version of self.ey
-        self.ey0 = cross(self.ez0,self.ex0)
+            msg = ''
+            msg += "\ntype = %s\n" %(self.type)
+            msg += "e1 = %s\n" %(self.e1)
+            msg += "e2 = %s\n" %(self.e2)
+            msg += "e3 = %s\n" %(self.e3)
+            raise TypeError(msg)
+        
+        #print "e1 = ",self.e1
+        #print "e2 = ",self.e2
+        #print "e3 = ",self.e3
+        
+        #try:
+        ## e_{13}
+        e13 = self.e3-self.e1
+        ## e_{12}
+        e12 = self.e2-self.e1
+        ## k = (G3 cross G1) normalized
+        self.k = self.normalize(e12)
+        #print "k = %s" %(self.k)
+        #print "e13 = %s" %(e13)
+        ## j = (k cross e13) normalized
+        self.j = self.normalize(cross(self.k,e13))
+        ## i = j cross k
+        self.i = cross(self.j,self.k)
+        #except TypeError:
+        #    msg  = 'There is a problem handling these lines:\n'
+        #    msg += '    self.k = self.normalize(self.e3-self.e1)\n'
+        #    msg += '    self.ex0 = self.normalize(self.e2-self.e1)\n'
+        #    msg += 'e1=%s Type=%s\n' %(self.e1,type(self.e1))
+        #    msg += 'e2=%s Type=%s\n' %(self.e2,type(self.e2))
+        #    msg += 'e3=%s Type=%s\n' %(self.e3,type(self.e3))
+        #    #print msg
+        #    raise CoordTypeError(msg)
 
     def normalize(self,v):
         #print "v = ",v
-        return v/norm(v)
+        normV = norm(v)
+        assert normV>0.,'v=%s norm(v)=%s' %(v,normV)
+        #print "normV = ",normV
+        return v/normV
 
-    def __repr__(self):
-        fields = [self.type,self.cid]
-        return self.printCard(fields)
+    def reprFields(self):
+        return self.rawFields()
 
+    #def resolveCid(self):
+        #pass
+
+class RectangularCoord(object):
+    def _transformGlobalToSelf(self):
+        """
+        this function takes a point in the global XYZ coordinate system with
+        type=rectangular and puts it in the rectangular coordinate system.
+        """
+        pass
+
+class CylindricalCoord(object):
+    """
+    \f[ r        = \sqrt(x^2+y^2)      \f]
+    \f[ \theta   = tan^-1(\frac{y}{x}) \f]
+    \f[ z = z\f]
+
+    \f[ x = r cos(\theta) \f]
+    \f[ y = r sin(\theta) \f]
+    \f[ z = z             \f]
+    http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
+    @note \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be consistent with nastran's documentation
+    @see refman.pdf
+    """
+    def _transformGlobalToSelf(self):
+        """
+        this function takes a point in the global XYZ coordinate system with
+        type=rectangular and puts it in the cylindrical coordinate system.
+        """
+        raise Exception('not done...')
+
+class SphericalCoord(object):
+    """
+    \f[ r = \rho = \sqrt(x^2+y^2+z^2)  \f]
+    \f[ \theta   = tan^-1(\frac{y}{x}) \f]
+    \f[ \phi     = cos^-1(\frac{z}{r}) \f]
+
+    \f[ x = r cos(\theta)sin(\phi) \f]
+    \f[ y = r sin(\theta)sin(\phi) \f]
+    \f[ z = r cos(\phi)            \f]
+    http://en.wikipedia.org/wiki/Spherical_coordinate_system
+    @note \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be consistent with nastran's documentation
+    @see refman.pdf
+    """
+    def _transformGlobalToSelf(self):
+        """
+        this function takes a point in the global XYZ coordinate system with
+        type=rectangular and puts it in the spherical coordinate system.
+        """
+        raise Exception('not done...')
+    
 class Cord2x(Coord):
     def __init__(self,card,data):
+        self.isResolved = False
         Coord.__init__(self,card,data)
-    
-    def Rid(self):
-        """Returns the reference coordinate system self.rid"""
-        if isinstance(self.rid,int):
-            return self.rid
-        return self.rid.cid
 
+        if card:
+            ## coordinate system ID
+            self.cid  = card.field(1)
+            ## reference coordinate system ID
+            self.rid = card.field(2,0)
+
+            ## origin in a point relative to the rid coordinate system
+            self.e1 = array( card.fields(3,6 ,[0.,0.,0.]) )
+            ## z-axis in a point relative to the rid coordinate system
+            self.e2 = array( card.fields(6,9 ,[0.,0.,0.]) )
+            ## a point on the xz-plane relative to the rid coordinate system
+            self.e3 = array( card.fields(9,12,[0.,0.,0.]) )
+        else:
+            self.cid = data[0]
+            self.rid = data[1]
+            self.e1  = array(data[2:5])
+            self.e2  = array(data[5:8])
+            self.e3  = array(data[8:11])
+            assert len(data)==11,'data = %s' %(data)
+        ###
+        assert len(self.e1)==3
+        assert len(self.e2)==3
+        assert len(self.e3)==3
+        if self.rid==0:
+            self.isResolved = True
+        self.setup()
+    
     def resolveCid(self):
         """
         Turns the coordinate system from being a coordinate system of
@@ -80,32 +175,187 @@ class Cord2x(Coord):
             self.rid.resolveCid()
         
         ## rid coordinate system is now resolved, time to resolve the cid coordinate system
-        ## rid may be in a different coordinate system than 
-        self.eo = self.transformToGlobal(self.eo)
+        ## rid may be in a different coordinate system than ???
+        self.e1 = self.transformToGlobal(self.e1)
         self.isResolved = True
         
         ## the axes are normalized, so we just assume they're points and resolve them
-        self.eo  = self.rid.transformToGlobal(self.eo )
-        self.ex0 = self.rid.transformToGlobal(self.ex0)
-        self.ey0 = self.rid.transformToGlobal(self.ey0)
-        self.ez0 = self.rid.transformToGlobal(self.ez0)
+        self.e1 = self.rid.transformToGlobal(self.e1)
+        self.i  = self.rid.transformToGlobal(self.i)
+        self.j  = self.rid.transformToGlobal(self.j)
+        self.k  = self.rid.transformToGlobal(self.k)
+        self._transformGlobalToSelf()
+
+    def crossReference(self,model):
+        """
+        Links self.rid to a coordinate system.
+        @param self  the object pointer
+        @param model the BDF object
+        @warning
+            Doesn't set rid to the coordinate system if it's in the global.
+            This isn't a problem, it's meant to speed up the code in order
+            to resolve extra coordinate systems.
+        """
+        self.isCrossReferenced = True
+        if self.rid != 0:
+            self.rid = model.Coord(self.rid)
+        ###
+
+    def transformToGlobal(self,p,debug=False):
+        """
+        Transforms a point from the local coordinate system to the reference coordinate
+        frames "global" coordinate system.  
+        @note that this doesn't transform it from a coordinate system 
+        \f[ \large [p_{global}]_{1x3} = [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}    \f]
         
-        self._transformGlobalToSelf(self)
+        where   \f$ [\Beta]_{ij} \f$ is the tranformation matrix
+        \f[ \large  [\Beta]_{ij} \left[ 
+          \begin{array}{ccc}
+              g_x \dot i  &  g_x \dot j  &  g_x \dot k    \\
+              g_y \dot i  &  g_y \dot j  &  g_y \dot k    \\
+              g_z \dot i  &  g_z \dot j  &  g_z \dot k
+          \end{array} \right]
+        \f] 
+        
+        \f$ g   \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$ 
+        \f$ ijk \f$ is the ith direction in the local coordinate system
+        """
+        if not self.isResolved:
+            self.resolveCid()
+        if self.cid==0:
+            return p
+
+        #p2 = p-self.eo
+        
+        # Bij = Bip*j
+        i = self.i
+        j = self.j
+        k = self.k
+        if isinstance(self.rid,int):
+            gx = array([1.,0.,0.])
+            gy = array([0.,1.,0.])
+            gz = array([0.,0.,1.])
+        else:
+            gx = self.rid.i
+            gy = self.rid.j
+            gz = self.rid.k
+        ###
+        
+        print "gx = ",gx
+        print "gy = ",gy
+        print "gz = ",gz
+        matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
+                        [dot(gy,i),dot(gy,j),dot(gy,k)],
+                        [dot(gz,i),dot(gz,j),dot(gz,k)]])
+        print "p = ",p
+        print "matrix = \n",matrix
+        p2 = dot(p+self.e1,matrix)
+        p3 = p2#+self.eo
+        print "e1 = ",self.e1
+        print "p2 = ",p2
+        print '------------------------'
+        print "p3 = ",p3
+        
+        #print str(self)
+        if isinstance(self.rid,int):
+            return p2
+        else:
+            return self.rid.transformToGlobal(p3)
+        ###
+
+    def Rid(self):
+        """Returns the reference coordinate system self.rid"""
+        if isinstance(self.rid,int):
+            return self.rid
+        return self.rid.cid
 
 
 class Cord1x(Coord):
-    def __init__(self,card,data):
+    def __init__(self,card,nCoord,data):
         Coord.__init__(self,card,data)
 
-    def resolveCid(self):
-        ## the origin
-        self.eo = self.g1.Position()
-        ## a point on the z-axis
-        self.ez = self.g2.Position()
-        ## a point on the xz-plane
-        self.ex = self.g3.Position()
+        self.isResolved = False
+        if nCoord is not None:
+            assert nCoord==0 or nCoord==1,'nCoord=|%s|' %(nCoord)
+            nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
 
+            ## the coordinate ID
+            self.cid = card.field(1+nCoord)
+            ## a Node at the origin
+            self.g1  = card.field(2+nCoord)
+            ## a Node on the z-axis
+            self.g2  = card.field(3+nCoord)
+            ## a Node on the xz-plane
+            self.g3  = card.field(4+nCoord)
+        else:
+            self.cid = data[0]
+            self.g1  = data[1]
+            self.g2  = data[2]
+            self.g3  = data[3]
+            assert len(data)==4,'data = %s' %(data)
+        ###
+        assert self.g1 != self.g2
+        assert self.g1 != self.g3
+        assert self.g2 != self.g3
+
+        self.e1=None; self.e2=None; self.e3=None
+        self.i=None;  self.j=None;  self.k=None
+
+    def crossReference(self,model):
+        """
+        Links self.rid to a coordinate system.
+        @param self  the object pointer
+        @param model the BDF object
+        @warning
+            Doesn't set rid to the coordinate system if it's in the global.
+            This isn't a problem, it's meant to speed up the code in order
+            to resolve extra coordinate systems.
+        """
+        self.isCrossReferenced = True
+        self.g1 = model.Node(self.g1)
+        self.g2 = model.Node(self.g2)
+        self.g3 = model.Node(self.g3)
+
+        ## the origin
+        self.e1 = self.g1.Position()
+        ## a point on the z-axis
+        self.e2 = self.g2.Position()
+        ## a point on the xz-plane
+        self.e3 = self.g3.Position()
+
+    #def crossReference():
+    #    ## the origin
+    #    self.e1 = self.g1.Position()
+    #    ## a point on the z-axis
+    #    self.e2 = self.g2.Position()
+    #    ## a point on the xz-plane
+    #    self.e3 = self.g3.Position()
+    #    self.setup()
+
+    def resolveCid(self):
         self.setup()
+
+    def G1(self):
+        if isinstance(self.g1,int):
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2,int):
+            return self.g2
+        return self.g2.nid
+
+    def G3(self):
+        if isinstance(self.g3,int):
+            return self.g3
+        return self.g3.nid
+
+    def GridIDs(self):
+        """
+        returns [g1,g2,g3]
+        """
+        grids = [self.G1(),self.G2(),self.G3()]
+        return grids
 
 class CORD3G(Coord):
     """
@@ -134,11 +384,10 @@ class CORD3G(Coord):
         self.methodInt = int(method[1:])
         assert self.ESmethod in ['E','S']
         assert 0 < self.methodInt < 1000
-        
+
         self.form   = card.field(3,'EQN')
-        self.theta1 = card.field(4)
-        self.theta2 = card.field(5)
-        self.theta3 = card.field(6)
+        self.thetas = card.field(4,7)
+        assert len(thetas)==3,'thetas=%s' %(self.thetas)
         self.cidRef = card.field(7)
 
         assert self.form in ['EQN','TABLE'] # EQN for DEQATN, TABLE for TABLE3D
@@ -181,404 +430,122 @@ class CORD3G(Coord):
                         [  0., 0., 1.]])
 
     def __repr__(self):
-        fields = ['CORD3G',self.g1,self.g2,self.g3]
+        method = self.methodES+str(self.methodInt)
+        fields = ['CORD3G',self.cid,method,self.form]+self.thetas+[self.cidRef]
         return self.printCard(fields)
 
-class CORD1R(Cord1x):
+class CORD1R(Cord1x,RectangularCoord):
     type = 'CORD1R'
     """
     CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
     @todo not done
     """
-    isResolved = True
-    def __init__(self,nCoord=0,card=[0,0,0,0],data=None):
+
+    def __init__(self,card=None,nCoord=0,data=None):
         """
         Intilizes the CORD1R
         @param self   the object pointer
         @param nCoord the coordinate location on the line (there are possibly 2 coordinates on 1 card)
         @param card   a list version of the fields (1 CORD1R only)
         """
-        if isinstance(card,list):
-            assert len(card)==4,'data = %s' %(card)
-            card = BDF_Card(card)
-        Cord1x.__init__(self,card,data)
+        Cord1x.__init__(self,card,nCoord,data)
 
-        if nCoord is not None:
-            assert nCoord==0 or nChord==1
-        
-            nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
+    def rawFields(self):
+        fields = ['CORD1R',self.cid]+self.GridIDs()
+        return fields
 
-            ## the coordinate ID
-            self.cid = card.field(1+nCoord)
-            ## a Node at the origin
-            self.g1  = card.field(2+nCoord)
-            ## a Node on the z-axis
-            self.g2  = card.field(3+nCoord)
-            ## a Node on the xz-plane
-            self.g3  = card.field(4+nCoord)
-        else:
-            self.cid = data[0]
-            self.g1  = data[1]
-            self.g2  = data[2]
-            self.g3  = data[3]
-            assert len(data)==4,'data = %s' %(data)
-        ###
-        assert self.g1 != self.g2
-        assert self.g1 != self.g3
-        assert self.g2 != self.g3
-
-    def __repr__(self):
-        fields = ['CORD1R',self.cid,self.g1,self.g2,self.g3]
-        return self.printCard(fields)
-
-    def crossReference(self,model):
-        """
-        Links self.rid to a coordinate system.
-        @param self  the object pointer
-        @param model the BDF object
-        @warning
-            Doesn't set rid to the coordinate system if it's in the global.
-            This isn't a problem, it's meant to speed up the code in order
-            to resolve extra coordinate systems.
-        """
-        self.isCrossReferenced = True
-        self.g1 = model.Node(self.g1)
-        self.g2 = model.Node(self.g2)
-        self.g3 = model.Node(self.g3)
-
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with type=rectangular 
-        and puts it in the rectangular coordinate system.
-        """
-        pass
-
-    def resolveCid():
-        self.setup()
-
-class CORD1C(Cord1x):
+class CORD1C(Cord1x,CylindricalCoord):
     type = 'CORD1C'
     """
     CORD1C CIDA G1A G2A G3A CIDB G1B G2B G3B
     @todo not done
     """
-    isResolved = True
-    def __init__(self,nCoord=0,card=[0,0,0,0],data=None):
+    def __init__(self,card=None,nCoord=0,data=None):
         """
         Intilizes the CORD1R
         @param self   the object pointer
         @param nCoord the coordinate location on the line (there are possibly 2 coordinates on 1 card)
         @param card   a list version of the fields (1 CORD1R only)
         """
-        if isinstance(card,list):
-            assert len(card)==4,'data = %s' %(card)
-            card = BDF_Card(card)
-        Cord1x.__init__(self,card,data)
+        Cord1x.__init__(self,card,nCoord,data)
 
-        if nCoord is not None:
-            assert nCoord==0 or nChord==1
-        
-            nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
+    def rawFields(self):
+        fields = ['CORD1C',self.cid]+self.GridIDs()
+        return fields
 
-            ## the coordinate ID
-            self.cid = card.field(1+nCoord)
-            ## a Node at the origin
-            self.g1  = card.field(2+nCoord)
-            ## a Node on the z-axis
-            self.g2  = card.field(3+nCoord)
-            ## a Node on the xz-plane
-            self.g3  = card.field(4+nCoord)
-        else:
-            self.cid = data[0]
-            self.g1  = data[1]
-            self.g2  = data[2]
-            self.g3  = data[3]
-            assert len(data)==4,'data = %s' %(data)
-        ###
-        assert self.g1 != self.g2
-        assert self.g1 != self.g3
-        assert self.g2 != self.g3
-
-    def __repr__(self):
-        fields = ['CORD1C',self.cid,self.g1,self.g2,self.g3]
-        return self.printCard(fields)
-
-    def crossReference(self,model):
-        """
-        Links self.rid to a coordinate system.
-        @param self  the object pointer
-        @param model the BDF object
-        @warning
-            Doesn't set rid to the coordinate system if it's in the global.
-            This isn't a problem, it's meant to speed up the code in order
-            to resolve extra coordinate systems.
-        """
-        self.isCrossReferenced = True
-        self.g1 = model.Node(self.g1)
-        self.g2 = model.Node(self.g2)
-        self.g3 = model.Node(self.g3)
-
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with type=rectangular 
-        and puts it in the rectangular coordinate system.
-        """
-        pass
-
-    def resolveCid():
-        self.setup()
-
-class CORD1S(Cord1x):
+class CORD1S(Cord1x,SphericalCoord):
     type = 'CORD1S'
     """
     CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
     @todo not done
     """
-    isResolved = True
-    def __init__(self,nCoord=0,card=[0,0,0,0],data=None):
+    def __init__(self,card=None,nCoord=0,data=None):
         """
-        Intilizes the CORD1R
+        Intilizes the CORD1S
         @param self   the object pointer
         @param nCoord the coordinate location on the line (there are possibly 2 coordinates on 1 card)
-        @param card   a list version of the fields (1 CORD1R only)
+        @param data   a list version of the fields (1 CORD1S only)
         """
-        if isinstance(card,list):
-            assert len(card)==4,'data = %s' %(card)
-            card = BDF_Card(card)
-        Cord1x.__init__(self,card,data)
+        Cord1x.__init__(self,card,nCoord,data)
 
-        if nCoord is not None:
-            assert nCoord==0 or nChord==1
-        
-            nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
-
-            ## the coordinate ID
-            self.cid = card.field(1+nCoord)
-            ## a Node at the origin
-            self.g1  = card.field(2+nCoord)
-            ## a Node on the z-axis
-            self.g2  = card.field(3+nCoord)
-            ## a Node on the xz-plane
-            self.g3  = card.field(4+nCoord)
-        else:
-            self.cid = data[0]
-            self.g1  = data[1]
-            self.g2  = data[2]
-            self.g3  = data[3]
-            assert len(data)==4,'data = %s' %(data)
-        ###
-        assert self.g1 != self.g2
-        assert self.g1 != self.g3
-        assert self.g2 != self.g3
-
-    def __repr__(self):
-        fields = ['CORD1S',self.cid,self.g1,self.g2,self.g3]
-        return self.printCard(fields)
-
-    def crossReference(self,model):
-        """
-        Links self.rid to a coordinate system.
-        @param self  the object pointer
-        @param model the BDF object
-        @warning
-            Doesn't set rid to the coordinate system if it's in the global.
-            This isn't a problem, it's meant to speed up the code in order
-            to resolve extra coordinate systems.
-        """
-        self.isCrossReferenced = True
-        self.g1 = model.Node(self.g1)
-        self.g2 = model.Node(self.g2)
-        self.g3 = model.Node(self.g3)
-
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with type=rectangular 
-        and puts it in the rectangular coordinate system.
-        """
-        pass
-
-    def resolveCid():
-        self.setup()
-
+    def rawFields(self):
+        fields = ['CORD1S',self.cid]+self.GridIDs()
+        return fields
 
 
 class CORD2R(Cord2x):  # working for simple cases...
     type = 'CORD2R'
     def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
-        #if isinstance(card,list):
-        #    card = BDF_Card(card)
         Cord2x.__init__(self,card,data)
-        #self.isResolved = False
         
-        if card:
-            ## coordinate system ID
-            self.cid  = card.field(1)
-            ## reference coordinate system ID
-            self.rid = card.field(2,0)
-
-            ## origin in a point relative to the rid coordinate system
-            self.eo = array( card.fields(3,6 ,[0.,0.,0.]) )
-            ## z-axis in a point relative to the rid coordinate system
-            self.ez = array( card.fields(6,9 ,[0.,0.,0.]) )
-            ## a point on the xz-plane relative to the rid coordinate system
-            self.ex = array( card.fields(9,12,[0.,0.,0.]) )
-        else:
-            self.cid = data[0]
-            self.rid = data[1]
-            self.eo  = array(data[2:5])
-            self.ez  = array(data[5:8])
-            self.ex  = array(data[8:11])
-            assert len(data)==11,'data = %s' %(data)
-        ###
-        assert len(self.eo)==3
-        assert len(self.ez)==3
-        assert len(self.ex)==3
-        if self.rid==0:
-            self.isResolved = True
-        self.setup()
-        
-    def crossReference(self,model):
-        """
-        Links self.rid to a coordinate system.
-        @param self  the object pointer
-        @param model the BDF object
-        @warning
-            Doesn't set rid to the coordinate system if it's in the global.
-            This isn't a problem, it's meant to speed up the code in order
-            to resolve extra coordinate systems.
-        """
-        self.isCrossReferenced = True
-        if self.rid != 0:
-            self.rid = model.Coord(self.rid)
-        ###
-
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with type=rectangular 
-        and puts it in the rectangular coordinate system.
-        """
-        pass
-
-    def transformToGlobal(self,p,debug=False):
-        """
-        Transforms a point from the local coordinate system to the reference coordinate
-        frames "global" coordinate system.  
-        @note that this doesn't transform it from a coordinate system 
-        \f[ \large [p_{global}]_{1x3} = [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}    \f]
-        
-        where   \f$ [\Beta]_{ij} \f$ is the tranformation matrix
-        \f[ \large  [\Beta]_{ij} \left[ 
-          \begin{array}{ccc}
-              g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
-              g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
-              g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
-          \end{array} \right]
-        \f] 
-        
-        \f$ g \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$ 
-        \f$ e \f$ is the ith direction in the local coordinate system
-        """
-        if not self.isResolved:
-            self.resolveCid()
-        if self.cid==0:
-            return p
-
-        #p2 = p-self.eo
-        
-        # Bij = Bip*j
-        ex = self.ex0
-        ey = self.ey0
-        ez = self.ez0
-        if isinstance(self.rid,int):
-            gx = array([1.,0.,0.])
-            gy = array([0.,1.,0.])
-            gz = array([0.,0.,1.])
-        else:
-            gx = self.rid.ex0
-            gy = self.rid.ey0
-            gz = self.rid.ez0
-        ###
-        
-        print "gx = ",gx
-        print "gy = ",gy
-        print "gz = ",gz
-        matrix = array([[dot(gx,ex),dot(gx,ey),dot(gx,ez)],
-                        [dot(gy,ex),dot(gy,ey),dot(gy,ez)],
-                        [dot(gz,ex),dot(gz,ey),dot(gz,ez)]])
-        print "p = ",p
-        print "matrix = \n",matrix
-        p2 = dot(p+self.eo,matrix)
-        p3 = p2#+self.eo
-        print "eo = ",self.eo
-        print "p2 = ",p2
-        print '------------------------'
-        print "p3 = ",p3
-        
-        #print str(self)
-        if isinstance(self.rid,int):
-            return p2
-        else:
-            return self.rid.transformToGlobal(p3)
-        ###
-
-    def __repr__(self):
-        #eo = self.eo
-        #ez = self.ez
-        #ex = self.ex
+    def rawFields(self):
         rid = self.setBlankIfDefault(self.Rid(),0)
-        fields = ['CORD2R',self.cid,rid] +list(self.eo)+list(self.ez)+list(self.ex)
-
-        #print "z1=%s z2=%s z3=%s" %(self.z1,self.z2,self.z3)
-        #print "fields = ",fields
-        return self.printCard(fields)
+        fields = ['CORD2R',self.cid,rid] +list(self.e1)+list(self.e2)+list(self.e3)
+        return fields
 
 
-class CORD2C(Cord2x):  # not done...
-    type = 'CORD2C'
+class CORD2S(Cord2x,SphericalCoord):  # not done...
+    type = 'CORD2S'
     def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
-        #if isinstance(card,list):
-        #    card = BDF_Card(card)
+        Cord2x.__init__(self,card,data)
 
+    def rawFields(self):
+        rid = self.setBlankIfDefault(self.Rid(),0)
+        fields = ['CORD2R',self.cid,rid] +list(self.e1)+list(self.e2)+list(self.e3)
+        return fields
+
+class CORD2C(Cord2x,CylindricalCoord):  # not done...
+    type = 'CORD2C'
+
+    def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
         Cord2x.__init__(self,card,data)
         if card:
-            self.cid  = card.field(1)
+            self.cid = card.field(1)
             self.rid = card.field(2,0)
 
             #print card
-            self.eo = array( card.fields(3,6 ,[0.,0.,0.]) )
-            self.ez = array( card.fields(6,9 ,[0.,0.,0.]) )
-            self.ex = array( card.fields(9,12,[0.,0.,0.]) )
+            self.e1 = array( card.fields(3,6 ,[0.,0.,0.]) )
+            self.e2 = array( card.fields(6,9 ,[0.,0.,0.]) )
+            self.e3 = array( card.fields(9,12,[0.,0.,0.]) )
         else:
             self.cid = data[0]
             self.rid = data[1]
-            self.eo  = array(data[2:5])
-            self.ez  = array(data[5:8])
-            self.ex  = array(data[8:11])
+            self.e1  = array(data[2:5])
+            self.e2  = array(data[5:8])
+            self.e3  = array(data[8:11])
             assert len(data)==11,'data = %s' %(data)
         ###
         
-        assert len(self.eo)==3,self.eo
-        assert len(self.ez)==3,self.ez
-        assert len(self.ex)==3,self.ex
+        assert len(self.e1)==3,self.e1
+        assert len(self.e2)==3,self.e2
+        assert len(self.e3)==3,self.e3
         
-        #print "eo = ",self.eo
-        #print "ez = ",self.ez
-        #print "ex = ",self.ex
-
-        self.ez0 = self.normalize(self.ez-self.eo)
-        self.ex0 = self.normalize(self.ex-self.eo)
-        self.ey0 = cross(self.ez0,self.ex0)
-
+        #print "e1 = ",self.e1
+        #print "e2 = ",self.e2
+        #print "e3 = ",self.e3
+        self.setup()
         #print card
         #print str(self)
-
-        
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with type=rectangular 
-        and puts it in a cylindrical coordinate system.
-        """
-        pass
 
     def xyz_To_RThetaZ(ex,ey,ez):
         """
@@ -611,43 +578,35 @@ class CORD2C(Cord2x):  # not done...
         Rct = R*cos(theta)
         Rst = R*sin(theta)
         originXYZ = point_RThetaZ_To_xyz(p,Rct,Rst)
-        x2 = originXYZ[0] + (self.ex-self.eo[0])*Rct + (self.ey-self.eo[1])*Rst
-        y2 = originXYZ[1] + (self.ex-self.eo[0])*Rst + (self.ey-self.eo[1])*Rct
-        z2 = originXYZ[2]                                                       + (self.ez-self.eo[2])*z
+        i = self.i
+        j = self.j
+        k = self.k
+        x2 = originXYZ[0] + (i-self.e1[0])*Rct + (j-self.e1[1])*Rst
+        y2 = originXYZ[1] + (i-self.e1[0])*Rst + (j-self.e1[1])*Rct
+        z2 = originXYZ[2]                                           + (k-self.e1[2])*z
         #return array([x2,y2,z2])
         
         p = array(x2,y2,z2)
-        p2 = p-self.eo
+        p2 = p-self.e1
         
         #Bij = Bip*j
-        ex = self.ex0
-        ey = self.ey0
-        ez = self.ez0
         gx = array([1.,0.,0.])
         gy = array([0.,1.,0.])
         gz = array([0.,0.,1.])
         
-        matrix = array([[dot(gx,ex),dot(gx,ey),dot(gx,ez)],
-                        [dot(gy,ex),dot(gy,ey),dot(gy,ez)],
-                        [dot(gz,ex),dot(gz,ey),dot(gz,ez)]])
+        matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
+                        [dot(gy,i),dot(gy,j),dot(gy,k)],
+                        [dot(gz,i),dot(gz,j),dot(gz,k)]])
         print "p = ",p
         print "matrix = ",matrix
         p2 = dot(p,matrix)
-        p3 = p2+self.eo
+        p3 = p2+self.e1
         print "p2 = ",p2
         
         #print str(self)
         return p
 
-    def __repr__(self):
-        eo = self.eo
-        ez = self.ez
-        ex = self.ex
+    def rawFields(self):
         rid = self.setBlankIfDefault(self.Rid(),0)
-        fields = ['CORD2C',self.cid,rid] +list(eo)+list(ez) +list(ex)
-        #print "fields = ",fields
-        return self.printCard(fields)
-        #raise Exception('not coded...')
-
-        #print "z1=%s z2=%s z3=%s" %(self.z1,self.z2,self.z3)
-        return self.printCard(fields)
+        fields = ['CORD2C',self.cid,rid] +list(self.e1)+list(self.e2)+list(self.e3)
+        return fields

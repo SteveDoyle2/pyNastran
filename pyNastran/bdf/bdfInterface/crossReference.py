@@ -25,12 +25,14 @@ class XrefMesh(object):
         ###
 
     def crossReference_Coordinates(self):
-        for cid,c in self.coords.items():
-            c.crossReference(self)
+        for cid,c in self.coords.items(): # CORD2x: links the rid to coordinate systems
+            c.crossReference(self)        # CORD1x: links g1,g2,g3 to grid points
         ###
-        for cid,c in self.coords.items():
-            c.resolveCid()
-        ###
+        for cid,c in self.coords.items(): # CORD1x: Since the grid points were already referenced,
+            c.resolveCid()                # we can now resolve the coordinate systems.
+        ###                               # We couldnt do it in the previous step b/c
+                                          # the grid's coordinate system might have been
+                                          # unresolved
 
     def crossReference_Aero(self):
         for ID,caero in self.caeros.items():

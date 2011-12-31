@@ -200,26 +200,9 @@ class NLPARM(BaseCard):
         self.rTolB     = card.field(23,20.)
 
     def rawFields(self):
-        ninc      = self.setBlankIfDefault(self.ninc,10)
-        dt        = self.setBlankIfDefault(self.dt,0.0)
-        kMethod   = self.setBlankIfDefault(self.kMethod,'AUTO')
-        kStep     = self.setBlankIfDefault(self.kStep,5)
-        maxIter   = self.setBlankIfDefault(self.maxIter,25)
-        conv      = self.setBlankIfDefault(self.conv,'PW')
-        intOut    = self.setBlankIfDefault(self.intOut,'NO')
-        epsU      = self.setBlankIfDefault(self.epsU,1e-2)
-        epsP      = self.setBlankIfDefault(self.epsP,1e-2)
-        epsW      = self.setBlankIfDefault(self.epsW,1e-2)
-        maxDiv    = self.setBlankIfDefault(self.maxDiv,3)
-        maxQn     = self.setBlankIfDefault(self.maxQn,self.maxIter)
-        maxLs     = self.setBlankIfDefault(self.maxLs,4)
-        fStress   = self.setBlankIfDefault(self.fStress,0.2)
-        lsTol     = self.setBlankIfDefault(self.lsTol,0.5)
-        maxBisect = self.setBlankIfDefault(self.maxBisect,5)
-        maxR      = self.setBlankIfDefault(self.maxR,20.)
-        rTolB     = self.setBlankIfDefault(self.rTolB,20.)
-
-        fields = ['NLPARM',self.nid,self.ninc,self.dt,self.kMethod,self.kStep,self.maxIter,self.conv,self.intOut,self.epsU,self.epsP,self.epsW,self.maxDiv,self.maxQn,self.maxLs,self.fStress,self.lsTol,self.maxBisect,None,None,None,self.maxR,None,self.rTolB]
+        fields = ['NLPARM',self.nid,self.ninc,self.dt,self.kMethod,self.kStep,self.maxIter,self.conv,self.intOut,
+                           self.epsU,self.epsP,self.epsW,self.maxDiv,self.maxQn,self.maxLs,self.fStress,self.lsTol,
+                           self.maxBisect,None,None,None,self.maxR,None,self.rTolB]
         return fields
 
     def reprFields(self):
@@ -243,8 +226,8 @@ class NLPARM(BaseCard):
         rTolB     = self.setBlankIfDefault(self.rTolB,20.)
 
         fields = ['NLPARM',self.nid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,
-            epsU,epsP,epsW,maxDiv,maxQn,maxLs,fStress,sTol,maxBisect,None,None,None,
-            maxR,None,rTolB]
+                           epsU,epsP,epsW,maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,None,None,None,
+                           maxR,None,rTolB]
         return fields
 
 

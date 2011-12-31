@@ -10,6 +10,15 @@ BDF Cards Supported Reading/Writing
 GRID   (done)
 GRDSET (done)
 
+----Coordinates----:
+CORD1R (in progress)
+CORD2R (in progress)
+CORD1C
+CORD2C (partial)
+CORD1S
+CORD2S
+CORD3G (partial)
+
 ----Elements----:
 CONM2  (cid=0)
 
@@ -148,9 +157,6 @@ PCONV  (done)
 PCONVM (done)
 PHBDY  (done)
 
-----Coordinates----:
-CORD2R (done)
-
 ----Dynamic----:
 DAREA   (done)
 NLPARM  (done)
@@ -164,10 +170,12 @@ FLUTTER (done)
 FLFACT  (done)
 
 CAERO1  (done)
-PAERO1  (not integrated)
+PAERO1  (done)
 SPLINE1 (done)
 AEPARM  (done)
 AELINK  (done)
+AESTAT  (done)
+AESURFS (needs integration)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -221,14 +229,6 @@ Missed v0.1
 nodes
 SPOINT (needs integration)
 RINGAX (needs integration)
-
-Aero
-AESTAT  (needs integration)
-AESURFS (needs integration)
-
-Coords
-CORD2C (partial???)
-CORD2S
 
 Temperature
 TEMPD  (needs integration)
@@ -331,12 +331,6 @@ PCONEAX
 ----Loads----:
 FORCEAX
 
-----Coordinates----:
-CORD1R (partial)
-CORD1C
-CORD1S
-CORD3G (partial)
-
 ----Optimization----:
 
 ----Methods----:
@@ -436,7 +430,6 @@ SEQGP
 SEQSEP
 SEQSET
 SEQSET1
-SESET
 SESUP
 
 ----Acoustic----:

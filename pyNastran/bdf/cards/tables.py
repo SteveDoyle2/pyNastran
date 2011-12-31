@@ -28,7 +28,7 @@ class TableObj(object):
 
         if not isData:
             if nFields%nRepeated!=0:
-                self.crashFields(fields,nFields)
+                self.crashFields(fields,nRepeated,nFields)
             assert nFields%nRepeated==0,'invalid table length nRepeat=%s fields=%s' %(nRepeated,ListPrint(fields))
             assert nFields%nRepeated==0,msg
         
@@ -42,7 +42,7 @@ class TableObj(object):
             self.table.append(pack)
         ###
 
-    def crashFields(self,fields,nFields):
+    def crashFields(self,fields,nRepeated,nFields):
         try:
             msg = ''
             k = 0

@@ -340,10 +340,6 @@ class PCOMP(ShellProperty):
         Mid = self.plies[iPly][0]
         return Mid
 
-    #def Nsm(self,iPly):
-    #    material = self.Material(iPly)
-    #    return material.nsm
-
     def Nsm(self):
         return self.nsm
 
@@ -411,6 +407,15 @@ class PCOMP(ShellProperty):
         ###
 
     def rawFields(self):
+        fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,TRef,self.ge,self.lam,]
+        #print "plies = ",self.plies
+        for (iPly,ply) in enumerate(self.plies):
+            (_mid,t,theta,sout) = ply
+            mid = self.Mid(iPly)
+            fields += [mid,t,theta,sout]
+        return fields
+
+    def reprFields(self):
         #print "t = ",self.Thickness()
         nsm  = self.setBlankIfDefault(self.nsm, 0.0)
         sb   = self.setBlankIfDefault(self.sb,  0.0)
@@ -427,10 +432,6 @@ class PCOMP(ShellProperty):
             sout  = self.setBlankIfDefault(sout,'NO')
             fields += [mid,t,theta,sout]
         return fields
-
-    def __repr__(self):
-        fields = self.rawFields()
-        return self.printCard(fields)
 
 class PCOMPG(PCOMP):
     type = 'PCOMPG'
@@ -470,6 +471,14 @@ class PCOMPG(PCOMP):
         return gPlyID
         
     def rawFields(self):
+        fields = ['PCOMPG',self.pid,self.z0,self.nsm,self.sb,self.ft,TRef,self.ge,self.lam,]
+        for (iPly,ply) in enumerate(self.plies):
+            (_mid,t,theta,sout,gPlyID) = ply
+            mid = self.Mid(iPly)
+            fields += [mid,t,theta,sout,gPlyID,None,None,None]
+        return fields
+
+    def reprFields(self):
         nsm  = self.setBlankIfDefault(self.nsm, 0.0)
         sb   = self.setBlankIfDefault(self.sb,  0.0)
         TRef = self.setBlankIfDefault(self.TRef,0.0)
@@ -486,8 +495,40 @@ class PCOMPG(PCOMP):
             fields += [mid,t,theta,sout,gPlyID,None,None,None]
         return fields
 
-    def __repr__(self):
-        fields = self.rawFields()
+class PSHEAR(ShellProperty):
+    type = 'PSHEAR'
+    def __init__(self,card=None,nPDAMP=0,data=None):
+        """
+        Defines the properties of a shear panel (CSHEAR entry).
+        PSHEAR PID MID T NSM F1 F2
+        """
+        ShellProperty.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid = card.field(1)
+            ## Material ID
+            self.mid = card.field(2)
+            self.t   = card.field(3)
+            self.nsm = card.field(4,0.0)
+            self.f1  = card.field(5,0.0)
+            self.f2  = card.field(6,0.0)
+        else:
+            self.pid = data[0]
+            self.b   = data[1]
+            self.t   = data[2]
+            self.nsm = data[3]
+            self.f1  = data[4]
+            self.f2  = data[5]
+        ###
+
+    def isSameCard(self,prop):
+        if self.type!=prop.type:  return False
+        fields1 = self.rawFields()
+        fields2 = prop.rawFields()
+        return self.isSameFields(fields1,fields2)
+
+    def rawFields(self):
+        fields = ['PSHEAR',self.pid,self.Mid(),self.t,self.nsm,self.f1,self.f2]
         return self.printCard(fields)
 
 class PSHELL(ShellProperty):
@@ -566,6 +607,11 @@ class PSHELL(ShellProperty):
         #self.mid4 = mesh.Material(self.mid4)
 
     def rawFields(self):
+        fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
+                           self.z1,self.z2,self.mid4]
+        return fields
+
+    def reprFields(self):
         twelveIt3 = self.setBlankIfDefault(self.twelveIt3,1.0)
         tst       = self.setBlankIfDefault(self.tst,0.833333)
         nsm       = self.setBlankIfDefault(self.nsm,0.0)
@@ -579,6 +625,3 @@ class PSHELL(ShellProperty):
         #print fields
         return fields
 
-    def __repr__(self):
-        fields = self.rawFields()
-        return self.printCard(fields)
