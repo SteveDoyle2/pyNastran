@@ -38,7 +38,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         ## useful in debugging errors in input
         self.debug = debug
-
         self._initSolution()
 
         ## lines that were rejected b/c they were for a card
@@ -50,13 +49,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.executiveControlLines = []
         ## list of case control deck lines
         self.caseControlLines = []
-        ## the analysis type
 
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
-        'PARAM','INCLUDE',  # '='
+        'PARAM',
         'GRID','GRDSET', #'RINGAX',
 
+        # elements
         'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
         'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
@@ -79,21 +78,30 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PBEAM3',
         'PSHELL','PCOMP','PCOMPG',
         'PSOLID','PLSOLID',
-        'MAT1','MAT2','MAT3','MAT4','MAT5','MAT8','MAT9','MAT10',
-         #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
-         #'MATS1',
+        
+        # creep materials
+        'CREEP',
+
+        # materials
+        'MAT1','MAT2','MAT3','MAT8','MAT9','MAT10',
+        #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
+        #'MATS1',
+         
+        # thermal materials
+        'MAT4','MAT5',
 
         # spc/mpc constraints
         'SPC','SPC1','SPCD','SPCADD','SPCAX',
         'MPC','MPCADD',
         'SUPORT','SUPORT1',
 
+        # loads
         'LOAD',
         'FORCE','FORCE1','FORCE2',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
 
-        # aero
+        # aero cards
         'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
         'AELINK','AEPARAM','AESTAT',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
@@ -101,40 +109,44 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
 
         # coords
-        #'CORD1R','CORD1C','CORD1S',
+        'CORD1R',#'CORD1C','CORD1S',
         'CORD2R',#'CORD2C','CORD2S',
-        'ENDDATA',
         
+        # temperature cards
         'TEMP',#'TEMPD',
         'QBDY1','QBDY2','QBDY3','QHBDY',
         'CHBDYE','CHBDYG','CHBDYP',
         'PCONV','PCONVM','PHBDY',
         'RADBC','CONV',  #'RADM',
         
-        # dynamic
+        # dynamic cards
         'DAREA','NLPARM',
 
-        # freq
+        # frequencies
         'FREQ','FREQ1','FREQ2',
         
-        # direct matrix input
+        # direct matrix input cards
         #'DMIG',
         'DEQATN',
         
-        # optimization
+        # optimization cards
         'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
-        
-        # tables
-        'TABLED1','TABLED2','TABLED3',
-        'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
-        'TABLES1','TABLEST',
-        'TABRND1',
         
         # sets
         'SET1','SET3',
         
         # super-element sets
         'SESET',
+
+        # tables
+        'TABLED1','TABLED2','TABLED3',
+        'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
+        'TABLES1','TABLEST',
+        'TABRND1',
+        
+        # other
+        'INCLUDE',  # '='
+        'ENDDATA',
         ])
         
         self.specialCards = ['DEQATN',]
@@ -228,9 +240,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         return False
 
     def _initStructuralDefaults(self):
+        ## the analysis type
         self.sol = None
-        ## used in solution 600
+        ## used in solution 600, method
         self.solMethod = None
+        ## the line with SOL on it, marks ???
         self.iSolLine  = None
         self.caseControlDeck = CaseControlDeck([],self.log)
         #self.executiveControlLines = [self.sol]
@@ -429,7 +443,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                     #msg = 'updateSolution failed...sline2=%s sline=%s' %(sline2,sline)
                     #raise RuntimeError(msg)
                     raise
-
+                ###
             ###
         ###
 
@@ -533,12 +547,14 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         """
         a method for determining the cardName
         """
+        raise Exception('is this method used....')
         #print "card=%s" %(card)
         #return cardCheck in card[0][0:8]
         return any([cardCheck in field[0:8].lstrip().rstrip(' *') for field in card])
 
     def isPrintable(self,cardName):
         """can the card be printed"""
+        raise Exception('is this method used....')
         #cardName = self.getCardName(card)
         
         if cardName in self.cardsToWrite:
@@ -1299,13 +1315,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    coord = CORD2S(cardObj)
             #    self.addCoord(coord)
 
-            #elif cardName=='CORD1R':
-            #    coord = CORD1R(cardObj)
-            #    self.addCoord(coord)
-            #    if cardObj.field(5):
-            #        coord = CORD1R(cardObj,nCoord=1)
-            #        self.addCoord(coord)
-            #    ###
+            elif cardName=='CORD1R':
+                coord = CORD1R(cardObj)
+                self.addCoord(coord)
+                if cardObj.field(5):
+                    coord = CORD1R(cardObj,nCoord=1)
+                    self.addCoord(coord)
+                ###
             #elif cardName=='CORD1C':
             #    coord = CORD1C(cardObj)
             #    self.addCoord(coord)

@@ -93,7 +93,7 @@ class PDAMP(DamperProperty):
         fields = ['PDAMP',self.pid,self.b]
         return self.printCard(fields)
 
-class PDAMP(DamperProperty):
+class PDAMP5(DamperProperty):
     type = 'PDAMP5'
     def __init__(self,card=None,data=None):
         """

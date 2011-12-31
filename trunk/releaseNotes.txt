@@ -13,25 +13,28 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 This code was written entirely in Python and should install easily.
 
 
+*** Not done....
+
 -----------------------v0.3 released 2012/01/??-----------------------
 Overall Notes
    - all user BDF card API methods will have the first letter capitalized
      (not fully implemented)
-   - 
+*  - coordinate systems!!!  (finish)
 
 
 BDF API Changes
    - standardizing methods for element/property cards
      - Eid, Pid, Mid, Mass, NodeIDs
      - Thickness, Area, Volume, Length
-     - J, Iyy, Iyz, Izz
+*    - J, I11, I12, I22 (need to update names...)
    - FREQx  methods
    - CAERO1 methods
    - SETx   methods
 
 BDF Bug Fixes
-   - enabled PDAMP
-   - fixed issue with python <2.6 not supporting
+   - enabled PDAMP, CREEP
+   - bug in NLPARM
+*  - fixed issue with python <2.6 not supporting
      argparse module (sys.argv used instead)
    - BEGIN BULK may now have multiple spaces in it
 
@@ -51,9 +54,10 @@ Added BDF
    - FREQ,FREQ1,FREQ2
    - CGAP, PGAP
    - PDAMP5
+   - PSHEAR
    - AEPARAM,AELINK,AESTAT
    - SET1,SET3,SESET
-   - DMIG, DEQATN (not done)
+*  - DMIG, DEQATN (not done)
 
 Added OP2
    - GEOM2
