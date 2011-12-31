@@ -23,17 +23,21 @@ class DCONSTR(OptConstraint):
             self.highfq = data[5]
         ###
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['DCONSTR',self.oid,self.rid,self.lid,self.uid,self.lowfq,self.highfq]
+        return fields
+
+    def reprFields(self):
         lid    = self.setBlankIfDefault(self.lid,-1e20)
         uid    = self.setBlankIfDefault(self.uid, 1e20)
         lowfq  = self.setBlankIfDefault(self.lowfq,0.0)
         highfq = self.setBlankIfDefault(self.highfq,1e20)
         fields = ['DCONSTR',self.oid,self.rid,lid,uid,lowfq,highfq]
-        return self.printCard(fields)
+        return fields
 
 class DESVAR(OptConstraint):
     type = 'DESVAR'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.oid = card.field(1)
         self.label = card.field(2)
         self.xinit = card.field(3)
@@ -42,16 +46,21 @@ class DESVAR(OptConstraint):
         self.delx  = card.field(6, 1e20)
         self.ddval = card.field(7)
     
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['DESVAR',self.oid,self.label,self.xinit,self.xlb,self.xub,
+        self.delx,self.ddval]
+        return fields
+
+    def reprFields(self):
         xlb = self.setBlankIfDefault(self.xlb,-1e20)
         xub = self.setBlankIfDefault(self.xub, 1e20)
         fields = ['DESVAR',self.oid,self.label,self.xinit,xlb,xub,
         self.delx,self.ddval]
-        return self.printCard(fields)
+        return fields
 
 class DDVAL(OptConstraint):
     type = 'DDVal'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         self.oid = card.field(1)
         self.dval1 = card.field(2)
         self.dval2 = card.field(3)
@@ -61,14 +70,14 @@ class DDVAL(OptConstraint):
         self.dval6 = card.field(7)
         self.dval7 = card.field(8)
     
-    def __repr__(self):
+    def rawFields(self):
         fields = ['DDVAL',self.oid,self.dval1,self.dval2,self.dval3,
                   self.dval4,self.dval5,self.dval6,self.dval7]
         return self.printCard(fields)
 
 class DRESP1(OptConstraint):
     type = 'DRESP1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
         """
@@ -86,14 +95,14 @@ class DRESP1(OptConstraint):
         #    print str(self)
         #assert len(self.others)==0
     
-    def __repr__(self):
+    def rawFields(self):
         fields = ['DRESP1',self.oid,self.label,self.rtype,self.ptype,self.region,self.atta,self.attb,self.atti
                            ]+self.others
-        return self.printCard(fields)
+        return fields
 
 class DVPREL1(OptConstraint):
     type = 'DVPREL1'
-    def __init__(self,card):
+    def __init__(self,card=None,data=None):
         """
         DVPREL1   200000   PCOMP    2000      T2
                   200000     1.0
@@ -125,10 +134,10 @@ class DVPREL1(OptConstraint):
             print str(self)
             raise Exception('invalid DVPREL1...')
     
-    def __repr__(self):
+    def rawFields(self):
         fields = ['DVPREL1',self.oid,self.Type,self.pid,self.pNameFid,self.pMin,self.pMax,self.c0]
         for dvid,coeff in zip(self.dvids,self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
-        return self.printCard(fields)
+        return fields
 

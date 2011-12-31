@@ -37,10 +37,11 @@ class NSM(PointProperty):
             self.id    = data[2]
             self.value = data[3]
         ###
-    def __repr__(self):
+
+    def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['NSM',self.sid,self.Type,self.id,self.value]
-        return self.printCard(fields)
+        return fields
 
 class PMASS(PointProperty):
     def __init__(self,card=None,nOffset=0,data=None):

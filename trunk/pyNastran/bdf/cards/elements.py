@@ -196,7 +196,7 @@ class CSHEAR(Element):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==4
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
         return self.printCard(fields)
 
@@ -219,7 +219,7 @@ class CGAP(Element):
                 x2  = card.field(6)
                 x3  = card.field(7)
                 self.x   = [x1,x2,x3]
-                self.cid = card.field(8)
+                self.cid = card.field(8,0)
             else:
                 raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
             ###
@@ -243,13 +243,19 @@ class CGAP(Element):
             self.g0 = mesh.Node(self.g0)
             self.x  = self.g0.Position()
         self.pid = mesh.Property(self.pid)
+        self.cid = mesh.Coord(self.cid)
 
-    def __repr__(self):
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    def rawFields(self):
         if self.g0 is not None:
             x = [self.g0,None,None]
         else:
             x = self.x
-        fields = ['CGAP',self.eid,self.Pid(),self.ga,self.gb]+x+[self.cid]
+        fields = ['CGAP',self.eid,self.Pid(),self.ga,self.gb]+x+[self.Cid()]
         return self.printCard(fields)
 
 class CRAC2D(Element):
@@ -298,7 +304,7 @@ class CVISC(CROD):
     def __init__(self,card=None,data=None):
         CROD.__init__(self,card,data)
     ###
-    def __repr__(self):  # not done...
+    def rawFields(self):  # not done...
         fields = ['CVISC',self.eid]
 ###
 
@@ -342,7 +348,7 @@ class CMASS1(PointElement):
         #self.g2 = mesh.Node(self.g2)
         self.pid = mesh.Property(self.pid)
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['CMASS1',self.eid,self.Pid(),self.g1,self.c1,self.g2,self.c2]
         return self.printCard(fields)
 

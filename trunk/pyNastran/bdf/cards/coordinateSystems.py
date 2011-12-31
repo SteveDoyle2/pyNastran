@@ -429,10 +429,10 @@ class CORD3G(Coord):
                         [-st, ct,  0.],
                         [  0., 0., 1.]])
 
-    def __repr__(self):
+    def rawFields(self):
         method = self.methodES+str(self.methodInt)
         fields = ['CORD3G',self.cid,method,self.form]+self.thetas+[self.cidRef]
-        return self.printCard(fields)
+        return fields
 
 class CORD1R(Cord1x,RectangularCoord):
     type = 'CORD1R'
