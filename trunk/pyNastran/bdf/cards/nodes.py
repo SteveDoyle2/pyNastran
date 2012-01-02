@@ -14,7 +14,7 @@ class Node(BaseCard): # base class
     def __init__(self,card,data):
         assert card is None or data is None
 
-    def crossReference(self,mesh):
+    def crossReference(self,model):
         raise Exception('%s hasnt implemented a crossReference method' %(self.type))
 
     def Cp(self):
@@ -45,14 +45,11 @@ class RINGAX(Ring):
     RINGAX 3  2.0 -10.0 162
     """
     type = 'RINGAX'
-    def __init__(self,card):
-        Node.__init__(self,card)
+    def __init__(self,card=None,data=None): # note this card has missing fields
+        Node.__init__(self,card,data)
         self.nid = card.field(1)
-        #2
         self.R   = card.field(3)
         self.z   = card.field(4)
-        #5
-        #6
         self.ps  = card.field(7)
 
     def Position(self):
@@ -100,7 +97,8 @@ class SPOINT(Node):
         """
         @todo support THRU in output
         """
-        fields = ['SPOINT']+self.spoints
+        spoints = self.collapseThru(self.spoints)
+        fields = ['SPOINT']+spoints
         return fields
         
 
@@ -122,10 +120,10 @@ class GRDSET(Node):
         ## Superelement ID
         self.seid = card.field(8,0)
 
-    def crossReference(self):
-        cp = mesh.Coord(self.cp)
-        cd = mesh.Coord(self.cd)
-        #seid = mesh.SuperElement(self.seid)
+    def crossReference(self,model):
+        cp = model.Coord(self.cp)
+        cd = model.Coord(self.cd)
+        #seid = model.SuperElement(self.seid)
 
     def rawFields(self):
         fields = ['GRDSET',None,self.Cp(),None,None,None,self.Cd(),self.ps,self.Seid()]
@@ -229,24 +227,43 @@ class GRID(Node):
     def nDOF(self):
         return 6
 
-    def UpdatePosition(self,mesh,xyz,cid=0):
+    def UpdatePosition(self,model,xyz,cid):
         self.xyz = xyz
-        self.cp = mesh.Coord(cid)
+        self.cp = model.Coord(cid)
         #assert cid == 0
         
     def Position(self,debug=False):
-        """returns the point in the global XYZ coordinate system"""
-        return self.cp.transformToGlobal(self.xyz,debug=debug)
+        """
+        returns the point in the global XYZ coordinate system
+        @param self the object pointer
+        @param debug developer debug
+        """
+        p,matrix = self.cp.transformToGlobal(self.xyz,debug=debug)
+        return p
 
-    def PositionWRT(self,mesh,cid,debug=False):
-        coordA = mesh.Coord(cid)
-        p      = self.cp.transformToGlobal(self.xyz,debug=debug)
-
-        coordB = mesh.Coord(cid)
-        p2      = coordB.transformToLocal(p,debug=debug)
+    def PositionWRT(self,model,cid,debug=False):
+        """
+        returns the point which started in some arbitrary local coordinate system
+        and returns it in the desired coordinate system
+        @param self the object pointer
+        @param model the BDF model object
+        @param cid the desired coordinate ID (int)
+        @param debug developer debug
+        """
+        if cid==self.Cp:
+            return self.xyz
+        #coordA = model.Coord(cid)
+        # converting the xyz point arbitrary->global
+        p,matrix = self.cp.transformToGlobal(self.xyz,debug=debug)
+        #print "wrt = ",p
+        coordB = model.Coord(cid)
+        
+        # a dummy matrix global->local matrix is found
+        pdum,matrix = coordB.transformToGlobal(array([1.,0.,0]),debug=debug)
+        p2          = coordB.transformToLocal(p,matrix,debug=debug)
         return p2
 
-    def crossReference(self,mesh,grdset=None):
+    def crossReference(self,model,grdset=None):
         """
         the gridset object will only update the fields that have not been set
         """
@@ -256,8 +273,8 @@ class GRID(Node):
             if not self.cd:   self.cd   = grdset.cd
             if not self.ps:   self.ps   = grdset.ps
             if not self.seid: self.seid = grdset.seid
-        self.cp = mesh.Coord(self.cp)
-        self.cd = mesh.Coord(self.cd)
+        self.cp = model.Coord(self.cp)
+        self.cd = model.Coord(self.cd)
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):

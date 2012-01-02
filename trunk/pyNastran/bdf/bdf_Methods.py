@@ -31,14 +31,32 @@ class bdfMethods(object):
             
     def resolveGrids(self,cid=0):
         """
-        puts all nodes in a common coordinate system (mainly for testing)
+        puts all nodes in a common coordinate system (mainly for cid testing)
+        @param self the object pointer
+        @param cid the cid to resolve the node to
+        @note loses association with previous coordinate systems so to go back
+        requires another fem
         """
-        cid = 1
-        for nid,node in self.nodes.items():
+        assert cid in self.coords,'cannot resolve nodes to cid=|%s| b/c it doesnt exist' %(cid)
+        for nid,node in sorted(self.nodes.items()):
             p = node.PositionWRT(self,cid)
             #p = node.Position(self)
             #print "p = ",p
             node.UpdatePosition(self,p,cid)
+        ###
+
+    def unresolveGrids(self,femOld):
+        """
+        puts all nodes back to original coordinate system
+        @param self the object pointer
+        @param femOld the old model that hasnt lost it's connection to the node cids
+        @warning hasnt been tested...
+        """
+        for nid,nodeOld in femOld.nodes.items():
+            coord = femOld.node.cp
+            p,matrix  = coord.transformToGlobal(self.xyz,debug=debug)
+            p2 = coord.transformToLocal(p,matrix,debug=debug)
+            node.UpdatePosition(self,p2,cid)
         ###
 
     def sumForces(self):
