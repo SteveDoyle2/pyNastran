@@ -229,13 +229,22 @@ class GRID(Node):
     def nDOF(self):
         return 6
 
+    def UpdatePosition(self,mesh,xyz,cid=0):
+        self.xyz = xyz
+        self.cp = mesh.Coord(cid)
+        #assert cid == 0
+        
     def Position(self,debug=False):
         """returns the point in the global XYZ coordinate system"""
         return self.cp.transformToGlobal(self.xyz,debug=debug)
 
     def PositionWRT(self,mesh,cid,debug=False):
-        coord = mesh.Coord(cid)
-        return coord.transformToGlobal(self.xyz,debug=debug)
+        coordA = mesh.Coord(cid)
+        p      = self.cp.transformToGlobal(self.xyz,debug=debug)
+
+        coordB = mesh.Coord(cid)
+        p2      = coordB.transformToLocal(p,debug=debug)
+        return p2
 
     def crossReference(self,mesh,grdset=None):
         """
@@ -261,5 +270,9 @@ class GRID(Node):
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.Seid(),0)
         fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
+        #if self.nid==2:
+        #    import sys
+        #    print self.printCard(fields)
+        #    sys.exit('asdf')
         return fields
 

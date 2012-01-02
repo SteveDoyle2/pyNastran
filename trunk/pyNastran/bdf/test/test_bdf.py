@@ -70,6 +70,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
+        fem1.resolveGrids(cid=0)
         fem1.writeBDFAsPatran(outModel)
         #fem1.writeAsCTRIA3(outModel)
 
