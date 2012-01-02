@@ -29,6 +29,18 @@ class bdfMethods(object):
         ###
         return I
             
+    def resolveGrids(self,cid=0):
+        """
+        puts all nodes in a common coordinate system (mainly for testing)
+        """
+        cid = 1
+        for nid,node in self.nodes.items():
+            p = node.PositionWRT(self,cid)
+            #p = node.Position(self)
+            #print "p = ",p
+            node.UpdatePosition(self,p,cid)
+        ###
+
     def sumForces(self):
         for key,loadCase in self.loads.items():
             F = array([0.,0.,0.])

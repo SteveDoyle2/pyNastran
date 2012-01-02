@@ -1,5 +1,6 @@
 #import sys
-from numpy import array,cross,dot,sqrt,degrees,radians,atan2,acos
+from math import sqrt,degrees,radians,atan2,acos,sin,cos
+from numpy import array,cross,dot
 from numpy.linalg import norm
 
 # my code
@@ -63,6 +64,12 @@ class Coord(BaseCard):
         #print "k = %s" %(self.k)
         #print "e13 = %s" %(e13)
 
+    def transformToLocal(self,p,debug=False):
+        #pGlobal = self.transformToGlobal(p,debug=False)
+        pLocal = self.XYZtoCoord(p)
+        return pLocal
+        #return pGlobal
+
     def normalize(self,v):
         #print "v = ",v
         normV = norm(v)
@@ -109,8 +116,8 @@ class CylindricalCoord(object):
         """
         raise Exception('not done...')
 
-    def xyz_To_RThetaZ(ex,ey,ez):
-        pass
+    #def xyz_To_RThetaZ(ex,ey,ez):
+    #    pass
 
     #def RThetaZ_To_xyz(er,et,ez):
     #    pass
@@ -128,14 +135,17 @@ class CylindricalCoord(object):
         \f[ \large x = R \cos(\theta) \f]
         \f[ \large y = R \sin(\theta) \f]
         """
-        r = p[0]
+        R = p[0]
         theta = radians(p[1])
         x = R*cos(theta)
         y = R*sin(theta)
         return array([x,y,p[2]])
 
     def XYZtoCoord(self,p):
-        theta = degrees(atan2(y/x))
+        #e1 = self.e1
+        e1 = zeros(3)
+        x=p[0]-e1[0]; y=p[1]-e1[1]; z=p[2]-e1[2]
+        theta = degrees(atan2(y,x))
         R = sqrt(x*x+y*y)
         return array([R,theta,z])
 
@@ -333,7 +343,7 @@ class Cord2x(Coord):
         if self.cid==0:
             return p
         if resolveAltCoord:  # the ijk axes arent resolved as R-theta-z
-            p = self.pointToXYZ(p)
+            p = self.coordToXYZ(p)
         #p2 = p-self.eo
         
         # Bij = Bip*j
@@ -603,7 +613,7 @@ class CORD1S(Cord1x,SphericalCoord):
         return fields
 
 
-class CORD2R(Cord2x):
+class CORD2R(Cord2x,RectangularCoord):
     type = 'CORD2R'
     def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
         Cord2x.__init__(self,card,data)
