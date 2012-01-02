@@ -144,9 +144,9 @@ class writeMesh(object):
         msg = '$EXECUTIVE CONTROL DECK\n'
         
         if self.sol==600:
-            newSol = 'SOL 600,%s\n' %(self.solMethod)
+            newSol = 'SOL 600,%s' %(self.solMethod)
         else:
-            newSol = 'SOL %s\n' %(self.sol)
+            newSol = 'SOL %s' %(self.sol)
         
         if self.iSolLine is not None:
             self.executiveControlLines[self.iSolLine] = newSol

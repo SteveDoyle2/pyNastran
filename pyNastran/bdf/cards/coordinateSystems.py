@@ -1,19 +1,22 @@
 #import sys
 from math import sqrt,degrees,radians,atan2,acos,sin,cos
-from numpy import array,cross,dot
+from numpy import array,cross,dot,transpose
 from numpy.linalg import norm
 
 # my code
 from pyNastran.bdf.errors import *
-#from pyNastran.bdf.BDF_Card import BDF_Card
 from baseCard import BaseCard
+from pyNastran.general.general import ListPrint
 
 class Coord(BaseCard):
     def __init__(self,card,data):
         self.isCrossReferenced = False
         self.isResolved = False
+    
+    def Cid(self):
+        return self.cid
 
-    def setup(self):
+    def setup(self,debug=False):
         """
         \f[ e_{13}  = e_3 - e_1                \f]
         \f[ e_{12}  = e_2 - e_1                \f]
@@ -50,6 +53,18 @@ class Coord(BaseCard):
         self.j = self.normalize(cross(self.k,e13))
         ## i = j cross k
         self.i = cross(self.j,self.k)
+        
+        if debug:
+            print "Cp = ",self.Cid()
+            print "e1 = ",self.e1
+            print "e2 = ",self.e2
+            print "e3 = ",self.e3
+            print "e13 = ",e13
+            print "e12 = ",e12
+            print "i   = ",self.i
+            print "j   = ",self.j
+            print "k   = ",self.k,'\n'
+        
 
         #except TypeError:
         #    msg  = 'There is a problem handling these lines:\n'
@@ -64,9 +79,14 @@ class Coord(BaseCard):
         #print "k = %s" %(self.k)
         #print "e13 = %s" %(e13)
 
-    def transformToLocal(self,p,debug=False):
+    def transformToLocal(self,p,matrix,debug=False):
         #pGlobal = self.transformToGlobal(p,debug=False)
-        pLocal = self.XYZtoCoord(p)
+        pCoord = dot(p-self.e1,transpose(matrix))
+        pLocal = self.XYZtoCoord(pCoord)
+        if debug:
+            print "p = ",p-self.e1
+            print "pLocal = ",pLocal,'\n'
+            print "pCoord = ",pCoord
         return pLocal
         #return pGlobal
 
@@ -84,17 +104,10 @@ class Coord(BaseCard):
         #pass
 
 class RectangularCoord(object):
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with
-        type=rectangular and puts it in the rectangular coordinate system.
-        """
-        pass
-
     def coordtoXYZ(self,p):
-        return p
+        return p#+self.e1
     def XYZtoCoord(self,p):
-        return p
+        return p#-self.e1
 
 class CylindricalCoord(object):
     """
@@ -109,19 +122,6 @@ class CylindricalCoord(object):
     @note \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be consistent with nastran's documentation
     @see refman.pdf
     """
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with
-        type=rectangular and puts it in the cylindrical coordinate system.
-        """
-        raise Exception('not done...')
-
-    #def xyz_To_RThetaZ(ex,ey,ez):
-    #    pass
-
-    #def RThetaZ_To_xyz(er,et,ez):
-    #    pass
-
     def coordToXYZ(self,p):
         """
         @code
@@ -139,56 +139,13 @@ class CylindricalCoord(object):
         theta = radians(p[1])
         x = R*cos(theta)
         y = R*sin(theta)
-        return array([x,y,p[2]])
+        return array([x,y,p[2]])+self.e1
 
     def XYZtoCoord(self,p):
-        #e1 = self.e1
-        e1 = zeros(3)
-        x=p[0]-e1[0]; y=p[1]-e1[1]; z=p[2]-e1[2]
+        (x,y,z) = p
         theta = degrees(atan2(y,x))
         R = sqrt(x*x+y*y)
         return array([R,theta,z])
-
-    #def point_RThetaZ_To_xyz(p,Rct,Rst):
-        #p2 = copy.deepcopy(p)
-        #p2[0] = p[0]*Rct+p[1]*Rst
-        #p2[1] = p[0]*Rst+p[1]*Rct
-        #return p2
-
-    def old_transformToGlobal(self,p):
-        (R,theta,z) = p
-        raise Exception('cylindrical coordinate system...point R=%s theta=%s z=%s' %(R,theta,z))
-        assert R!=0.0
-        Rct = R*cos(theta)
-        Rst = R*sin(theta)
-        originXYZ = point_RThetaZ_To_xyz(p,Rct,Rst)
-        i = self.i
-        j = self.j
-        k = self.k
-        x2 = originXYZ[0] + (i-self.e1[0])*Rct + (j-self.e1[1])*Rst
-        y2 = originXYZ[1] + (i-self.e1[0])*Rst + (j-self.e1[1])*Rct
-        z2 = originXYZ[2]                                           + (k-self.e1[2])*z
-        #return array([x2,y2,z2])
-        
-        p = array(x2,y2,z2)
-        p2 = p-self.e1
-        
-        #Bij = Bip*j
-        gx = array([1.,0.,0.])
-        gy = array([0.,1.,0.])
-        gz = array([0.,0.,1.])
-        
-        matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
-                        [dot(gy,i),dot(gy,j),dot(gy,k)],
-                        [dot(gz,i),dot(gz,j),dot(gz,k)]])
-        print "p = ",p
-        print "matrix = ",matrix
-        p2 = dot(p,matrix)
-        p3 = p2+self.e1
-        print "p2 = ",p2
-        
-        #print str(self)
-        return p
 
 
 class SphericalCoord(object):
@@ -211,9 +168,10 @@ class SphericalCoord(object):
         x = R*cos(theta)*sin(phi)
         y = R*sin(theta)*sin(phi)
         z = R*cos(phi)
-        return array([x,y,p[2]])
+        return array([x,y,p[2]])+self.e1
 
     def XYZtoCoord(self,p):
+        (x,y,z) = p
         R = sqrt(x*x+y*y+z*z)
         theta = degrees(atan2(y,x))
         if r>0:
@@ -221,20 +179,6 @@ class SphericalCoord(object):
         else:
             phi = 0.
         return array([R,theta,z])
-
-    def _transformGlobalToSelf(self):
-        """
-        this function takes a point in the global XYZ coordinate system with
-        type=rectangular and puts it in the spherical coordinate system.
-        """
-        raise Exception('not done...')
-
-def acos2(x,y):
-    """
-    returns acos(x/y) but handles y=0
-    @is this required?
-    """
-    pass
 
 class Cord2x(Coord):
     def __init__(self,card,data):
@@ -291,18 +235,17 @@ class Cord2x(Coord):
         
         ## rid coordinate system is now resolved, time to resolve the cid coordinate system
         ## rid may be in a different coordinate system than ???
-        self.e1 = self.transformToGlobal(self.e1)
+        self.e1,m = self.transformToGlobal(self.e1)
         self.isResolved = True
         
         ## the axes are normalized, so assume they're points and resolve them in the XYZ system
-        self.e1 = self.rid.transformToGlobal(self.e1) # origin
-        i  = self.rid.transformToGlobal(self.i,False)
-        j  = self.rid.transformToGlobal(self.j,False)
-        k  = self.rid.transformToGlobal(self.k,False)
+        self.e1,m = self.rid.transformToGlobal(self.e1) # origin
+        i,m  = self.rid.transformToGlobal(self.i,False)
+        j,m  = self.rid.transformToGlobal(self.j,False)
+        k,m  = self.rid.transformToGlobal(self.k,False)
 
         ## the axes are global, so now we put them in the cid
         self.i=i; self.j=j; self.k=k
-        #self._transformGlobalToSelf()
 
     def crossReference(self,model):
         """
@@ -339,10 +282,12 @@ class Cord2x(Coord):
         \f$ ijk \f$ is the ith direction in the local coordinate system
         """
         if not self.isResolved:
-            self.resolveCid()
+            self.resolveCid(),None
         if self.cid==0:
-            return p
-        if resolveAltCoord:  # the ijk axes arent resolved as R-theta-z
+            return p,array([[1.,0.,0.],
+                            [0.,1.,0.],
+                            [0.,0.,1.]])
+        if resolveAltCoord:  # the ijk axes arent resolved as R-theta-z, only points
             p = self.coordToXYZ(p)
         #p2 = p-self.eo
         
@@ -360,26 +305,30 @@ class Cord2x(Coord):
             gz = self.rid.k
         ###
         
-        print "gx = ",gx
-        print "gy = ",gy
-        print "gz = ",gz
         matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
                         [dot(gy,i),dot(gy,j),dot(gy,k)],
                         [dot(gz,i),dot(gz,j),dot(gz,k)]])
-        print "p = ",p
-        print "matrix = \n",matrix
-        p2 = dot(p+self.e1,matrix)
-        p3 = p2#+self.e1
-        print "e1 = ",self.e1
-        print "p2 = ",p2
-        print '------------------------'
-        print "p3 = ",p3
+        p2 = dot(p-self.e1,matrix)
+        #p2 = dot(p,matrix)
+        p3 = p2+self.e1
+        
+        if debug:
+            print "Cp = ",self.Cid()
+            print "gx = ",gx
+            print "gy = ",gy
+            print "gz = ",gz
+            print "p = ",ListPrint(p)
+            print "matrix = \n",matrix
+            print "e1 = ",ListPrint(self.e1)
+            print "p2 = ",ListPrint(p2)
+            print '------------------------'
+            print "p3 = %s\n" %(ListPrint(p3))
         
         #print str(self)
         if isinstance(self.rid,int):
-            return p3
+            return p3,matrix
         else:
-            return self.rid.transformToGlobal(p3)
+            return self.rid.transformToGlobal(p3),matrix
         ###
 
     def Rid(self):
@@ -512,8 +461,13 @@ class CORD3G(Coord):
 
         assert self.form in ['EQN','TABLE'] # EQN for DEQATN, TABLE for TABLE3D
     
-    def crossReference(self):
-        pass
+    def crossReference(self,model):
+        self.cidRef = model.Coord(self.cidRef)
+    
+    def CidRef(self):
+        if isinstance(self.cidRef,int):
+            return self.cidRef
+        return self.cidRef.cid
 
     def transformToGlobal(self,p,debug=False):
         """
@@ -551,7 +505,7 @@ class CORD3G(Coord):
 
     def rawFields(self):
         method = self.methodES+str(self.methodInt)
-        fields = ['CORD3G',self.cid,method,self.form]+self.thetas+[self.cidRef]
+        fields = ['CORD3G',self.cid,method,self.form]+self.thetas+[self.CidRef()]
         return fields
 
 class CORD1R(Cord1x,RectangularCoord):

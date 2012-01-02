@@ -114,6 +114,7 @@ def printFloat(value,tol=1e-8):
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
     """
+    #value = round(value,4)
     #print "float...%s" %value
     if abs(value)<tol:  # tol=1e-8
         field = "%8s" %('0.')
@@ -186,12 +187,12 @@ def printFloat(value,tol=1e-8):
             ###
         ###
         else:
-            print "negative"
+            #print "negative"
             if value>-5e-7:
-                print "really small"
+                #print "really small"
                 field = printScientific(value)
             elif value>-0.01:  # -0.001
-                print "tiny"
+                #print "tiny"
                 field = printScientific(value)
                 field2 = "%8.6f" %(value) # small value
                 field2 = field2.strip('0 ')
@@ -219,11 +220,11 @@ def printFloat(value,tol=1e-8):
             #    field = "%8.8f" %(value)   # -0.001>x>-0.01..should be 4
             #    field = '-'+field[2:]
             elif value>-0.1:
-                print "B"
+                #print "B"
                 field = "%8.6f" %(value)   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
                 field = field.replace('-0.','-.')
             elif value>-1.:
-                print "C"
+                #print "C"
                 field = "%8.6f" %(value)   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
                 field = field.replace('-0.','-.')
             elif value>-10.:   field = "%8.5f" %(value)   # -1    >x>-10
@@ -240,7 +241,7 @@ def printFloat(value,tol=1e-8):
         field = '%8s' %(field)
     ###
     #print len(field)
-    print "value=|%s| field=|%s|\n" %(value,field)
+    #print "value=|%s| field=|%s|\n" %(value,field)
     assert len(field)==8,'value=|%s| field=|%s| is not 8 characters long, its %s' %(value,field,len(field))
     return field
 

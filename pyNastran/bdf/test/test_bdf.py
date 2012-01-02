@@ -14,7 +14,7 @@ import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
 #print "testPath = ",testPath
 
-def runAllFilesInFolder(folder,debug=False,xref=True):
+def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
     debug = True
     print "folder = ",folder
     filenames  = os.listdir(folder)
@@ -28,7 +28,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
     for filename in filenames2:
         print "filename = ",filename
         try:
-            (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,isFolder=True)
+            (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,cid=cid,isFolder=True)
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
@@ -52,7 +52,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True):
         print "diffCards2 = ",diffCards
 ###
 
-def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
+def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
     bdfModel = str(bdfFilename)
     print "bdfModel = ",bdfModel
     if isFolder:
@@ -70,7 +70,8 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,isFolder=False):
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
-        fem1.resolveGrids(cid=0)
+        if cid is not None:
+            fem1.resolveGrids(cid=cid)
         fem1.writeBDFAsPatran(outModel)
         #fem1.writeAsCTRIA3(outModel)
 

@@ -19,7 +19,7 @@ This code was written entirely in Python and should install easily.
 Overall Notes
    - all user BDF card API methods will have the first letter capitalized
      (not fully implemented)
-*  - coordinate systems!!!  (cord2r and cord1r)
+*  - coordinate systems!!!  (cord2r,cord1r,cord2c)
 
 
 BDF API Changes
@@ -33,11 +33,14 @@ BDF API Changes
 
 BDF Bug Fixes
    - enabled PDAMP, CREEP
-   - bug fix in NLPARM, MAT9
+   - bug fix in NLPARM, MAT9,GRDSET
 *  - fixed issue with python <2.6 not supporting
      argparse module (sys.argv used instead)
    - BEGIN BULK may now have multiple spaces in it
    - CORD2Rs can have axes that arent ijk!
+   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and -0.0999) to be written out
+     as (-.)  They were assumed to not round up to -1.0 and -0.1 respectively so the 
+     leading -0. could be replaced by (-.) to save field width.
 
 Overall BDF
    - reorganized code files (main BDF class is in the same place)
