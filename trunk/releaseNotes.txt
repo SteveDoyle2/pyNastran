@@ -19,7 +19,7 @@ This code was written entirely in Python and should install easily.
 Overall Notes
    - all user BDF card API methods will have the first letter capitalized
      (not fully implemented)
-*  - coordinate systems!!!  (finish)
+*  - coordinate systems!!!  (cord2r and cord1r)
 
 
 BDF API Changes
