@@ -16,11 +16,14 @@ class Material(BaseCard):
     def isSameCard(self,mat):
         if self.type!=mat.type:  return False
         fields1 = self.rawFields()
-        fields2 = mat.rawFields
+        fields2 = mat.rawFields()
         return self.isSameFields(fields1,fields2)
 
-    def crossReference(self,mesh):
+    def crossReference(self,model):
         pass
+
+    def Mid(self):
+        return self.mid
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
@@ -75,9 +78,17 @@ class CREEP(Material):
             self.e = data[13]
             self.f = data[14]
         ###
+    
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+
+    def Mid(self): # links up to MAT1, MAT2, MAT9 or same mid
+        if isinstance(self.mid):
+            return self.mid
+        return self.mid.mid
 
     def rawFields(self):
-        fields = ['CREEP',self.mid,self.T0,self.exp,self.form,self.tidkp,self.tidcp,self.tidcs,self.thresh,
+        fields = ['CREEP',self.Mid(),self.T0,self.exp,self.form,self.tidkp,self.tidcp,self.tidcs,self.thresh,
         self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
         return fields
 
@@ -85,7 +96,7 @@ class CREEP(Material):
         thresh = self.setBlankIfDefault(self.thresh,1e-5)
         exp    = self.setBlankIfDefault(self.exp,4.1e-9)
         T0     = self.setBlankIfDefault(self.T0,0.0)
-        fields = ['CREEP',self.mid,T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
+        fields = ['CREEP',self.Mid(),T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
         self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
         return fields
 
@@ -96,7 +107,7 @@ class MAT1(Material):
     """
     type = 'MAT1'
     def __init__(self,card=None,data=None):
-        Material.__init__(self,card,data) #mid
+        Material.__init__(self,card,data)
 
         if card:
             self.mid  = card.field(1)
@@ -175,20 +186,19 @@ class MAT1(Material):
         return fields
 
     def reprFields(self):
-        TRef = self.setBlankIfDefault(self.TRef,0.0)
-        
         #print "MAT1 - self.E=%s self.nu=%s" %(self.E,self.nu)
         G_default = self.E/2./(1+self.nu)
         G    = self.setBlankIfDefault(self.G,G_default)
-        rho  = self.setBlankIfDefault(self.rho,1e-8)
 
-        a   = self.setBlankIfDefault(self.a,0.)
-        ge  = self.setBlankIfDefault(self.ge,0.)
-        St  = self.setBlankIfDefault(self.St,0.)
-        Sc  = self.setBlankIfDefault(self.Sc,0.)
-        Ss  = self.setBlankIfDefault(self.Ss,0.)
+        rho  = self.setBlankIfDefault(self.rho,1e-8)
+        a    = self.setBlankIfDefault(self.a,0.)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge   = self.setBlankIfDefault(self.ge,0.)
+        St   = self.setBlankIfDefault(self.St,0.)
+        Sc   = self.setBlankIfDefault(self.Sc,0.)
+        Ss   = self.setBlankIfDefault(self.Ss,0.)
         Mcsid = self.setBlankIfDefault(self.Mcsid,0)
-        #G = self.G
+
         fields = ['MAT1',self.mid,self.E,G,self.nu,rho,a,TRef,ge,
                   St,Sc,Ss,Mcsid]
         return fields
@@ -356,17 +366,6 @@ class MAT4(ThermalMaterial):
             self.qlat   = data[10]
         ###
 
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid,self.k,self.cp,self.rho,self.H,self.mu,self.hgen,self.refEnthalpy,self.tch,self.tdelta,self.qlat]
-        fields2 = [ mat.mid, mat.k, mat.cp, mat.rho, mat.H, mat.mu, mat.hgen, mat.refEnthalpy, mat.tch, mat.tdelta, mat.qlat]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
-
     def rawFields(self):
         fields = ['MAT4',self.mid,self.k,self.cp,self.rho,self.H,self.mu,self.hgen,self.refEnthalpy,
                          self.tch,self.tdelta,self.qlat]
@@ -477,17 +476,6 @@ class MAT8(AnisotropicMaterial):
             self.ge   = data[16]
             self.F12  = data[17]
             self.strn = data[18]
-
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = [self.mid,self.E11,self.E22,self.nu12,self.G12,self.G1z,self.G2z,self.a1,self.a2,self.TRef,self.Xt,self.Xc,self.Yt,self.Yc,self.S,self.ge,self.F12,self.strn]
-        fields2 = [ mat.mid, mat.E11, mat.E22, mat.nu12, mat.G12, mat.G1z, mat.G2z, mat.a1, mat.a2, mat.TRef, mat.Xt, mat.Xc, mat.Yt, mat.Yc, mat.S, mat.ge, mat.F12, mat.strn]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
 
     def rawFields(self):
         fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,self.G12,self.G1z,self.G2z,self.rho,

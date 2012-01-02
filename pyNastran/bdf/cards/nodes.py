@@ -24,6 +24,13 @@ class Node(BaseCard): # base class
             return self.cp.cid
         ###
 
+    def Seid(self):
+        if isinstance(self.seid,int):
+            return self.seid
+        else:
+            return self.seid.seid
+        ###
+        
     def Cd(self):
         if isinstance(self.cd,int):
             return self.cd
@@ -64,24 +71,28 @@ class SPOINT(Node):
     SPOINT 5   THRU 649
     """
     type = 'SPOINT'
-    nDOF = 1
     def __init__(self,card=None,data=None):
         Node.__init__(self,card,data)
-        fields  = card.fields(1)
-        nFields = card.nFields()
+        #nFields = card.nFields()
         
-        self.spoints = []
-        self.dof = '23456'  # the constrained DOF
-        i = 0
-        while i<nFields: # =1 ???
-            if fields[i]=='THRU':
-                self.spoints += [fields[i-1],fields[i]+1]
-                i+=1
-            else:
-                self.spoints.append(fields[i])
-            i+=1
+        fields  = card.fields(1)
+        self.spoints = self.expandThru(fields)
+        #i = 0
+        #while i<nFields: # =1 ???
+        #    if fields[i]=='THRU':
+        #        self.spoints += [fields[i-1],fields[i]+1]
+        #        i+=1
+        #    else:
+        #        self.spoints.append(fields[i])
+        #    i+=1
         ###
 
+    def nDOF(self):
+        return len(self.spoints)
+
+    def addSPoints(self,sList):
+        self.spoints = list(set(self.spoints+sList))
+        
     def Position(self):
         return array(0.,0.,0.)
 
@@ -114,17 +125,17 @@ class GRDSET(Node):
     def crossReference(self):
         cp = mesh.Coord(self.cp)
         cd = mesh.Coord(self.cd)
-        #seid = mesh.Super(self.seid)
+        #seid = mesh.SuperElement(self.seid)
 
     def rawFields(self):
-        fields = ['GRDSET',None,self.cp,None,None,None,self.cd,self.ps,self.seid]
+        fields = ['GRDSET',None,self.Cp(),None,None,None,self.Cd(),self.ps,self.Seid()]
         return fields
 
     def reprFields(self):
-        cp   = self.setBlankIfDefault(self.cp,  0)
-        cd   = self.setBlankIfDefault(self.cd,  0)
-        ps   = self.setBlankIfDefault(self.ps,  0)
-        seid = self.setBlankIfDefault(self.seid,0)
+        cp   = self.setBlankIfDefault(self.Cp(),  0)
+        cd   = self.setBlankIfDefault(self.Cd(),  0)
+        ps   = self.setBlankIfDefault(self.ps,    0)
+        seid = self.setBlankIfDefault(self.Seid(),0)
         fields = ['GRDSET',None,cp,None,None,None,cd,ps,seid]
         return fields
 
@@ -153,9 +164,13 @@ class GRIDB(Node):
         assert self.ps  >= 0, 'ps=%s'   %(self.ps)
         assert self.idf >= 0, 'idf=%s'  %(self.idf)
 
+    def rawFields(self):
+        fields = ['GRIDB',self.nid,None,None,self.phi,None,self.Cd(),self.ps,self.idf]
+        return fields
+
     def reprFields(self):
         #phi = self.setBlankIfDefault(self.phi,0.0)
-        cd  = self.setBlankIfDefault(self.cd, 0)
+        cd  = self.setBlankIfDefault(self.Cd(),0)
         ps  = self.setBlankIfDefault(self.ps, 0)
         idf = self.setBlankIfDefault(self.idf,0)
         fields = ['GRIDB',self.nid,None,None,self.phi,None,cd,ps,idf]
@@ -164,7 +179,6 @@ class GRIDB(Node):
 
 class GRID(Node):
     type = 'GRID'
-    nDOF = 6
     def __init__(self,card=None,data=None):
         """
         if coming from a BDF object, card is used
@@ -212,16 +226,21 @@ class GRID(Node):
         assert self.ps   >=  0,  'ps=%s'  %(self.ps)
         assert self.seid >=  0,'seid=%s'  %(self.seid)
 
+    def nDOF(self):
+        return 6
+
     def Position(self,debug=False):
-        #print type(self.cp)
+        """returns the point in the global XYZ coordinate system"""
         return self.cp.transformToGlobal(self.xyz,debug=debug)
 
     def PositionWRT(self,mesh,cid,debug=False):
-        #print type(self.cp)
         coord = mesh.Coord(cid)
         return coord.transformToGlobal(self.xyz,debug=debug)
 
     def crossReference(self,mesh,grdset=None):
+        """
+        the gridset object will only update the fields that have not been set
+        """
         #print str(self)
         if grdset: # update using a gridset object
             if not self.cp:   self.cp   = grdset.cp
@@ -233,15 +252,14 @@ class GRID(Node):
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):
-        fields = ['GRID',self.nid,self.cp]+list(self.xyz)+[self.cd,self.ps,self.seid]
+        fields = ['GRID',self.nid,self.Cp()]+list(self.xyz)+[self.Cd(),self.ps,self.Seid()]
         return fields
 
     def reprFields(self):
-        cp   = self.setBlankIfDefault(self.Cp(), 0)
-        cd   = self.setBlankIfDefault(self.Cd(), 0)
+        cp   = self.setBlankIfDefault(self.Cp(),0)
+        cd   = self.setBlankIfDefault(self.Cd(),0)
         ps   = self.setBlankIfDefault(self.ps,  0)
-        seid = self.setBlankIfDefault(self.seid,0)
+        seid = self.setBlankIfDefault(self.Seid(),0)
         fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
         return fields
 
-#class RINGAX

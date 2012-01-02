@@ -109,8 +109,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
 
         # coords
-        'CORD1R',#'CORD1C','CORD1S',
-        'CORD2R',#'CORD2C','CORD2S',
+        'CORD1R','CORD1C','CORD1S',
+        'CORD2R','CORD2C','CORD2S',
         
         # temperature cards
         'TEMP',#'TEMPD',
@@ -1020,7 +1020,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             elif cardName=='CREEP': # hasnt been verified
                 creep = CREEP(cardObj)
-                self.addCreepMaterial(material) # links up to MAT1, MAT2, MAT9 w/ same PID
+                self.addCreepMaterial(material) # links up to MAT1, MAT2, MAT9 w/ same MID
             elif cardName=='MAT1':
                 material = MAT1(cardObj)
                 self.addMaterial(material)
@@ -1308,12 +1308,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CORD2R':
                 coord = CORD2R(cardObj)
                 self.addCoord(coord)
-            #elif cardName=='CORD2C':
-            #    coord = CORD2C(cardObj)
-            #    self.addCoord(coord)
-            #elif cardName=='CORD2S':
-            #    coord = CORD2S(cardObj)
-            #    self.addCoord(coord)
+            elif cardName=='CORD2C':
+                coord = CORD2C(cardObj)
+                self.addCoord(coord)
+            elif cardName=='CORD2S':
+                coord = CORD2S(cardObj)
+                self.addCoord(coord)
 
             elif cardName=='CORD1R':
                 coord = CORD1R(cardObj)
@@ -1322,20 +1322,20 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                     coord = CORD1R(cardObj,nCoord=1)
                     self.addCoord(coord)
                 ###
-            #elif cardName=='CORD1C':
-            #    coord = CORD1C(cardObj)
-            #    self.addCoord(coord)
-            #    if cardObj.field(5):
-            #        coord = CORD1C(cardObj,nCoord=1)
-            #        self.addCoord(coord)
-            #    ###
-            #elif cardName=='CORD1S':
-            #    coord = CORD1S(cardObj)
-            #    self.addCoord(coord)
-            #    if cardObj.field(5):
-            #        coord = CORD1S(cardObj,nCoord=1)
-            #        self.addCoord(coord)
-            #    ###
+            elif cardName=='CORD1C':
+                coord = CORD1C(cardObj)
+                self.addCoord(coord)
+                if cardObj.field(5):
+                    coord = CORD1C(cardObj,nCoord=1)
+                    self.addCoord(coord)
+                ###
+            elif cardName=='CORD1S':
+                coord = CORD1S(cardObj)
+                self.addCoord(coord)
+                if cardObj.field(5):
+                    coord = CORD1S(cardObj,nCoord=1)
+                    self.addCoord(coord)
+                ###
             #elif cardName=='CORD3G':
             #    coord = CORD3G(cardObj)
             #    self.addCoord(coord)
