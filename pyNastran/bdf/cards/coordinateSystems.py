@@ -105,8 +105,10 @@ class Coord(BaseCard):
 
 class RectangularCoord(object):
     def coordtoXYZ(self,p):
-        return p#+self.e1
+        """@todo is this correct..."""
+        return p+self.e1
     def XYZtoCoord(self,p):
+        """@todo is this correct..."""
         return p#-self.e1
 
 class CylindricalCoord(object):
@@ -175,7 +177,7 @@ class SphericalCoord(object):
         R = sqrt(x*x+y*y+z*z)
         theta = degrees(atan2(y,x))
         if r>0:
-            phi   = degrees(acos(z/r))
+            phi = degrees(acos(z/r))
         else:
             phi = 0.
         return array([R,theta,z])
@@ -215,7 +217,7 @@ class Cord2x(Coord):
     def resolveCid(self):
         """
         Turns the coordinate system from being a coordinate system of
-        type 1 depending on a type 2 to a type 1 depending on a type 1.
+        type 1 depending on a type 2 to a type 1 depending on nothing.
 
         More generally, takes a coordinate system that depends on multiple
         levels of coordinate systems and resolves them in order to resolve
@@ -234,18 +236,19 @@ class Cord2x(Coord):
             self.rid.resolveCid()
         
         ## rid coordinate system is now resolved, time to resolve the cid coordinate system
-        ## rid may be in a different coordinate system than ???
-        self.e1,m = self.transformToGlobal(self.e1)
-        self.isResolved = True
+        ## rid may be in a different coordinate system than cid
+        self.e1,matrix  = self.transformToGlobal(self.e1)
         
-        ## the axes are normalized, so assume they're points and resolve them in the XYZ system
-        self.e1,m = self.rid.transformToGlobal(self.e1) # origin
-        i,m  = self.rid.transformToGlobal(self.i,False)
-        j,m  = self.rid.transformToGlobal(self.j,False)
-        k,m  = self.rid.transformToGlobal(self.k,False)
+        ## the axes are normalized, so assume they're points and
+        ## resolve them in the XYZ system, but dont subtract e1 off
+        self.e1,matrix = self.rid.transformToGlobal(self.e1) # origin
+        i,matrix       = self.rid.transformToGlobal(self.i,False)
+        j,matrix       = self.rid.transformToGlobal(self.j,False)
+        k,matrix       = self.rid.transformToGlobal(self.k,False)
 
         ## the axes are global, so now we put them in the cid
         self.i=i; self.j=j; self.k=k
+        self.isResolved = True
 
     def crossReference(self,model):
         """
@@ -280,9 +283,11 @@ class Cord2x(Coord):
         
         \f$ g   \f$ is the global directional vector (e.g. \f$ g_x = [1,0,0]\f$  )
         \f$ ijk \f$ is the ith direction in the local coordinate system
+        @warning make sure you cross-reference before calling this
+        @warning you probably shouldnt call this, call the Node methods Position and PositionWRT
         """
         if not self.isResolved:
-            self.resolveCid(),None
+            self.resolveCid()
         if self.cid==0:
             return p,array([[1.,0.,0.],
                             [0.,1.,0.],
@@ -295,7 +300,7 @@ class Cord2x(Coord):
         i = self.i
         j = self.j
         k = self.k
-        if isinstance(self.rid,int):
+        if isinstance(self.rid,int): # rid=0
             gx = array([1.,0.,0.])
             gy = array([0.,1.,0.])
             gz = array([0.,0.,1.])
@@ -375,33 +380,23 @@ class Cord1x(Coord):
         Links self.rid to a coordinate system.
         @param self  the object pointer
         @param model the BDF object
-        @warning
-            Doesn't set rid to the coordinate system if it's in the global.
-            This isn't a problem, it's meant to speed up the code in order
-            to resolve extra coordinate systems.
         """
         self.isCrossReferenced = True
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
         self.g3 = model.Node(self.g3)
 
+    def resolveCid(self):
+        """
+        finds the position of the nodes used define the coordinate system
+        and sets the ijk vectors
+        """
         ## the origin
         self.e1 = self.g1.Position()
         ## a point on the z-axis
         self.e2 = self.g2.Position()
         ## a point on the xz-plane
         self.e3 = self.g3.Position()
-
-    #def crossReference():
-    #    ## the origin
-    #    self.e1 = self.g1.Position()
-    #    ## a point on the z-axis
-    #    self.e2 = self.g2.Position()
-    #    ## a point on the xz-plane
-    #    self.e3 = self.g3.Position()
-    #    self.setup()
-
-    def resolveCid(self):
         self.setup()
 
     def G1(self):
@@ -419,7 +414,7 @@ class Cord1x(Coord):
             return self.g3
         return self.g3.nid
 
-    def GridIDs(self):
+    def NodeIDs(self):
         """
         returns [g1,g2,g3]
         """
@@ -525,7 +520,7 @@ class CORD1R(Cord1x,RectangularCoord):
         Cord1x.__init__(self,card,nCoord,data)
 
     def rawFields(self):
-        fields = ['CORD1R',self.cid]+self.GridIDs()
+        fields = ['CORD1R',self.cid]+self.NodeIDs()
         return fields
 
 class CORD1C(Cord1x,CylindricalCoord):
@@ -538,13 +533,15 @@ class CORD1C(Cord1x,CylindricalCoord):
         """
         Intilizes the CORD1R
         @param self   the object pointer
+        @param card   a BDF_Card object
         @param nCoord the coordinate location on the line (there are possibly 2 coordinates on 1 card)
-        @param card   a list version of the fields (1 CORD1R only)
+        @param data   a list version of the fields (1 CORD1R only)
+        
         """
         Cord1x.__init__(self,card,nCoord,data)
 
     def rawFields(self):
-        fields = ['CORD1C',self.cid]+self.GridIDs()
+        fields = ['CORD1C',self.cid]+self.NodeIDs()
         return fields
 
 class CORD1S(Cord1x,SphericalCoord):
@@ -557,19 +554,26 @@ class CORD1S(Cord1x,SphericalCoord):
         """
         Intilizes the CORD1S
         @param self   the object pointer
+        @param card   a BDF_Card object
         @param nCoord the coordinate location on the line (there are possibly 2 coordinates on 1 card)
         @param data   a list version of the fields (1 CORD1S only)
         """
         Cord1x.__init__(self,card,nCoord,data)
 
     def rawFields(self):
-        fields = ['CORD1S',self.cid]+self.GridIDs()
+        fields = ['CORD1S',self.cid]+self.NodeIDs()
         return fields
 
 
 class CORD2R(Cord2x,RectangularCoord):
     type = 'CORD2R'
     def __init__(self,card=None,data=[0,0,  0.,0.,0.,  0.,0.,1., 1.,0.,0.]):
+        """
+        Intilizes the CORD2R
+        @param self   the object pointer
+        @param card   a BDF_Card object
+        @param data   a list version of the fields (1 CORD2R only)
+        """
         Cord2x.__init__(self,card,data)
         
     def rawFields(self):
@@ -581,6 +585,12 @@ class CORD2R(Cord2x,RectangularCoord):
 class CORD2S(Cord2x,SphericalCoord):
     type = 'CORD2S'
     def __init__(self,card=None,data=None):
+        """
+        Intilizes the CORD2R
+        @param self   the object pointer
+        @param card   a BDF_Card object
+        @param data   a list version of the fields (1 CORD2S only)
+        """
         Cord2x.__init__(self,card,data)
 
     def rawFields(self):
@@ -591,6 +601,12 @@ class CORD2S(Cord2x,SphericalCoord):
 class CORD2C(Cord2x,CylindricalCoord):
     type = 'CORD2C'
     def __init__(self,card=None,data=None):
+        """
+        Intilizes the CORD2C
+        @param self   the object pointer
+        @param card   a BDF_Card object
+        @param data   a list version of the fields (1 CORD2C only)
+        """
         Cord2x.__init__(self,card,data)
 
     def rawFields(self):

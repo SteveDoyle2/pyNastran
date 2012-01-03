@@ -323,6 +323,7 @@ class CQUAD4(ShellElement):
         T4 = self.setBlankIfDefault(self.T4,1.0)
         if debug:
         #if 1:
+            print "eid       = ",self.eid
             print "nodes     = ",self.nodes
 
             print "self.zOffset   = ",self.zOffset
@@ -336,7 +337,7 @@ class CQUAD4(ShellElement):
             print "T1 = ",T1
             print "T2 = ",T2
             print "T3 = ",T3
-            print "T4 = ",T4
+            print "T4 = ",T4,'\n'
         return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
 
     def rawFields(self):
@@ -358,7 +359,6 @@ class CQUAD4(ShellElement):
         #    #print str(self)
         #    print fields
         #    sys.exit()
-
         return fields
 
     def writeAsCTRIA3(self,newID):
