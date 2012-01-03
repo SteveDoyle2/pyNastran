@@ -206,11 +206,11 @@ def printFloat(value,tol=1e-8):
             elif value>-0.1:
                 #print "B"
                 field = "%8.6f" %(value)   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
-                field = '-'+field[2:]
+                field = field.replace('-0.','-.')
             elif value>-1.:
                 #print "C"
                 field = "%8.6f" %(value)   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
-                field = '-'+field[2:]
+                field = field.replace('-0.','-.')
             elif value>-10.:   field = "%8.5f" %(value)   # -1    >x>-10
             elif value>-100:   field = "%8.4f" %(value)   # -10   >x>-100
             elif value>-1000:  field = "%8.3f" %(value)   # -100  >x>-1000
