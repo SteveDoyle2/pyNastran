@@ -32,15 +32,15 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        #except TabCharacterError:
-        #    pass
-        #except ScientificParseError:
-        #    pass
-        #except ClosedBDFError:
-        #    pass
+        except TabCharacterError:
+            pass
+        except ScientificParseError:
+            pass
+        except ClosedBDFError:
+            pass
         except:
             traceback.print_exc(file=sys.stdout)
-            raise
+            #raise
         ###
         print '-'*80
     ###

@@ -149,6 +149,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'ENDDATA',
         ])
         
+        caseControlCards = set(['FREQ','GUST','MPC','SPC','NLPARM','NSM','TEMP','TSTEPNL','INCLUDE'])
+        self.uniqueBulkDataCards = self.cardsToRead.difference(caseControlCards)
+        
         self.specialCards = ['DEQATN',]
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
@@ -475,6 +478,21 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
     def isCaseControlDeck(self,line):
         """@todo not done..."""
+        lineUpper = line.upper().strip()
+        #print "line = |%s|" %(lineUpper)
+        if 'CEND' in line.upper():
+            raise Exception('invalid Case Control Deck card...CEND...')
+        if '=' in lineUpper or ' ' in lineUpper:
+            #print "True1"
+            return True
+        for card in self.uniqueBulkDataCards:
+            lenCard = len(card)
+            if card in lineUpper[:lenCard]:
+                #print "*card = |%s|" %(card)
+                #print "False1"
+                return False
+            #print "card = |%s|" %(card)
+        #print "True2"
         return True
 
     def readCaseControlDeck(self,infilename):
@@ -488,6 +506,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         while len(self.activeFileNames)>0: # keep going until finished
         #while 'BEGIN BULK' not in line:
             lineIn = self.getNextLine()
+            if not self.isCaseControlDeck(lineIn):
+                self.linesPack = [lineIn]+self.linesPack
             #print "lineIn = ",lineIn
             if lineIn==None: # file was closed and a 2nd readCaseControl was called
                 return
@@ -730,7 +750,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #for eid,element in self.elements.items():
             #    print element
             
-            self.log.debug("\n$REJECTS")
+            #self.log.debug("\n$REJECTS")
             #for reject in self.rejects:
                 #print printCard(reject)
                 #print ''.join(reject)
@@ -891,7 +911,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 (elem) = CDAMP5(cardObj)
                 self.addDamperElement(elem)
 
-            elif cardName=='CONM2':
+            elif cardName=='CONM2': # cid=0 not supported...
                 elem = CONM2(cardObj)
                 self.addElement(elem)
 

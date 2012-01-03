@@ -209,6 +209,7 @@ class PSOLID(SolidProperty):
             self.mid    = card.field(2)
             self.cordm  = card.field(3,0)
             self.integ  = card.field(4)
+            #validIntegration = ['THREE','TWO','FULL','BUBBLE',2,3,None,'REDUCED']
             self.stress = card.field(5)
             self.isop   = card.field(6)
             self.fctn   = card.field(7,'SMECH')
