@@ -76,7 +76,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PELAS',
         'PDAMP','PDAMP5',
         'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PBEAM3',
-        'PSHELL','PCOMP','PCOMPG',
+        'PSHELL','PCOMP','PCOMPG','PSHEAR',
         'PSOLID','PLSOLID',
         
         # creep materials
@@ -972,6 +972,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='PCOMPG': # hasnt been verified
                 prop = PCOMPG(cardObj)
                 self.addProperty(prop)
+            elif cardName=='PSHEAR':
+                prop = PSHEAR(cardObj)
+                self.addProperty(prop)
 
             elif cardName=='PSOLID':
                 prop = PSOLID(cardObj)
@@ -1041,7 +1044,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             elif cardName=='CREEP': # hasnt been verified
                 creep = CREEP(cardObj)
-                self.addCreepMaterial(material) # links up to MAT1, MAT2, MAT9 w/ same MID
+                self.addCreepMaterial(creep) # links up to MAT1, MAT2, MAT9 w/ same MID
             elif cardName=='MAT1':
                 material = MAT1(cardObj)
                 self.addMaterial(material)

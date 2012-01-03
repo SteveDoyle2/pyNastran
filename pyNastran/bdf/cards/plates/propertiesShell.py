@@ -242,13 +242,15 @@ class PCOMP(ShellProperty):
 
             iPly = 1
             plies = []
+            midLast = None
             for i in range(9,nplies*4,4):  # doesnt support single ply per line
-                defaults = [None,None,0.0,'NO']
+                defaults = [midLast,None,0.0,'NO']
                 (mid,t,theta,sout) = card.fields(i,i+4,defaults)
                 ply = [mid,t,theta,sout]
                 assert t>0.,'thickness of PCOMP layer is invalid iLayer=%s t=%s' %(iPly,t)
                 if ply!=defaults: # if they're not all defaults...
                     plies.append(ply)
+                midLast = mid
                 iPly +=1
             #print "nplies = ",nplies
 
@@ -452,7 +454,7 @@ class PCOMPG(PCOMP):
         tLast = None
         self.plies = []
         for i in range(len(fields)):
-            gplyID    = card.field(i)
+            gPlyID    = card.field(i)
             mid       = card.field(i+1,midLast)
             thickness = card.field(i+2,tLast) # can be blank
             theta     = card.field(i+3,0.0)

@@ -274,7 +274,7 @@ class TABLEST(Table):
             isData = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLEST',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 

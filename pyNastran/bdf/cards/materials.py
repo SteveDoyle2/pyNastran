@@ -258,7 +258,7 @@ class MAT2(AnisotropicMaterial):
 
     def rawFields(self):
         fields = ['MAT2',self.mid,self.G11,self.G12,self.G13,self.G22,self.G23,self.G33,self.rho,
-                  self.a1,self.a2,self.a3,self.Tref,self.ge,self.St,self.Sc,self.Ss,
+                  self.a1,self.a2,self.a3,self.TRef,self.ge,self.St,self.Sc,self.Ss,
                   self.Mcsid]
         return fields
 
@@ -269,9 +269,9 @@ class MAT2(AnisotropicMaterial):
         G22 = self.setBlankIfDefault(self.G22,0.0)
         G23 = self.setBlankIfDefault(self.G23,0.0)
         G33 = self.setBlankIfDefault(self.G33,0.0)
-        Tref = self.setBlankIfDefault(self.TRef,0.0)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
         fields = ['MAT2',self.mid,G11,G12,G13,G22,G23,G33,self.rho,
-                  self.a1,self.a2,self.a3,Tref,self.ge,self.St,self.Sc,self.Ss,
+                  self.a1,self.a2,self.a3,TRef,self.ge,self.St,self.Sc,self.Ss,
                   self.Mcsid]
         return fields
 

@@ -70,6 +70,9 @@ class CHBDYE(ThermalElement):
 
     def __init__(self,card=None,data=None):
         ThermalElement.__init__(self,card,data)
+        ## Surface element ID number for a side of an
+        ## element. (0 < Integer < 100,000,000)
+        self.eid  = card.field(1)
         
         ## A heat conduction element identification
         self.eid2 = card.field(2)

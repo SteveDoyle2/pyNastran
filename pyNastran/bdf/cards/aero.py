@@ -306,16 +306,6 @@ class DAREA(BaseCard):
             self.a     = data[3]
             assert len(data)==4,'data = %s' %(data)
         ###
-
-    def isSameCard(self,darea):
-        fields1 = [self.sid, self.p, self.c, self.a ]
-        fields2 = [darea.sid,darea.p,darea.c,darea.a]
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
-                return False
-            ###
-        ###
-        return True
         
     def rawFields(self):
         fields = ['DAREA',self.sid, self.p,self.c,self.a]

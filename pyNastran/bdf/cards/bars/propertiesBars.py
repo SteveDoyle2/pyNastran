@@ -946,6 +946,7 @@ class PBEAML(IntegratedLineProperty):
             j=0
             self.xxb = [0.]
             self.so = ['YES']
+            self.nsm = []
             
             n = 0
             for i,dim in dimAll:
@@ -966,7 +967,7 @@ class PBEAML(IntegratedLineProperty):
             ###
             if j<nDim: # if the last field is blank
                 self.dim.append(Dim)
-                self.nsm.append(card.field(i,    0.0))
+                self.nsm.append(card.field(i,0.0))
             ###
     
     def MassPerLength(self):
