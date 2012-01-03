@@ -29,9 +29,14 @@ class Coord(BaseCard):
             assert len(self.e1)==3,self.e1
             assert len(self.e2)==3,self.e2
             assert len(self.e3)==3,self.e3
+            ## e_{13}
+            e13 = self.e3-self.e1
+            ## e_{12}
+            e12 = self.e2-self.e1
         except TypeError:
             msg = ''
             msg += "\ntype = %s\n" %(self.type)
+            msg += "\ncid  = %s\n" %(self.Cid())
             msg += "e1 = %s\n" %(self.e1)
             msg += "e2 = %s\n" %(self.e2)
             msg += "e3 = %s\n" %(self.e3)
@@ -43,10 +48,6 @@ class Coord(BaseCard):
         
         #try:
 
-        ## e_{13}
-        e13 = self.e3-self.e1
-        ## e_{12}
-        e12 = self.e2-self.e1
         ## k = (G3 cross G1) normalized
         self.k = self.normalize(e12)
         ## j = (k cross e13) normalized

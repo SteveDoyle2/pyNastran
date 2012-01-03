@@ -48,7 +48,12 @@ class TableObj(object):
             k = 0
             for i in range(nFields):
                 for j in range(nRepeated):
-                    msg += '%-8g ' %(fields[i*nRepeated+j])
+                    try:
+                        msg += '%-8g ' %(fields[i*nRepeated+j])
+                    except TypeError:
+                        msg += '*%-8s ' %(fields[i*nRepeated+j])
+                    except IndexError:
+                        msg += 'IndexError'
                     k+=1
                 ###
                 msg += '\n'

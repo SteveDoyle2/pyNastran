@@ -212,8 +212,6 @@ def printFloat(value,tol=1e-8):
                     #print "field1 = ",field1
                     #print "field2 = ",field2
                 #print ""
-                #if field=='-.':
-                #    field = '0.'
                 ###
             #elif value>-0.01:
             #    #print "A"

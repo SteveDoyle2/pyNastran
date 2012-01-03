@@ -905,6 +905,28 @@ class PBEAM(IntegratedLineProperty):
         
 class PBEAML(IntegratedLineProperty):
     type = 'PBEAML'
+    validTypes = {
+        "ROD"   : 1, 
+        "TUBE"  : 2,
+        "I"     : 6,
+        "CHAN"  : 4,
+        "T"     : 4,
+        "BOX"   : 4,
+        "BAR"   : 2,
+        "CROSS" : 4,
+        "H"     : 4,
+        "T1"    : 4,
+        "I1"    : 4,
+        "CHAN1" : 4,
+        "Z"     : 4,
+        "CHAN2" : 4,
+        "T2"    : 4,
+        "BOX1"  : 6,
+        "HEXA"  : 3,
+        "HAT"   : 4,
+        "HAT1"  : 5,
+        "DBOX"  : 10, # was 12
+        } # for GROUP="MSCBML0"
     def __init__(self,card=None,data=None):
         IntegratedLineProperty.__init__(self,card,data)
         if card:

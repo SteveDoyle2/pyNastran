@@ -29,7 +29,7 @@ class cardMethods(object):
 
     def getCard(self,debug=False):
         """gets a single unparsed card"""
-        #debug = False
+        #debug = True
         
         linesPack = self.makeLinesPack(debug=debug)
         tempcard = [linesPack[0]]
@@ -67,6 +67,7 @@ class cardMethods(object):
         #print "|%s|" %(cardName)
         #if cardName=='CTRIA3':
         if debug:
+        #if 1:
             self.log.debug("cardName  = |%s|" %(cardName))
             self.log.debug("upperCard = |%s|" %(upperCard))
             self.log.debug("tempcard  = |%s|" %(tempcard))
@@ -102,8 +103,8 @@ class cardMethods(object):
         isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
         if debug:
             self.log.debug("  len(iline) = |%s|" %(len(iline)))
-            print "  iline[0] = |%s|" %(iline[0])
-            self.log.debug("  sCardName = |%s|" %(sCardName))
+            self.log.debug("  iline[0]   = |%s|" %(iline[0]  ))
+            self.log.debug("  sCardName  = |%s|" %(sCardName ))
             self.log.debug("  iline = |%s|" %(iline))
             print ""
             print "isNotDone A = %s" %(isNotDone)
@@ -128,12 +129,12 @@ class cardMethods(object):
             sCardName = iline[0:8].strip()  # trying to find if it's blank...
             isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
             if debug:
-                print "CRITERIA"
-                print "iline       = |%r|" %(iline)
-                print "sCardName   = ",sCardName
-                print "len(iline)  = ",len(iline)
-                print "iline[0]    = ",iline[0]
-                print "isNotDone B = ",isNotDone
+                self.log.debug("CRITERIA")
+                self.log.debug("iline       = |%r|" %(iline))
+                self.log.debug("sCardName   = %s" %sCardName)
+                self.log.debug("len(iline)  = %s" %len(iline))
+                self.log.debug("iline[0]    = %s" %iline[0])
+                self.log.debug("isNotDone B = %s" %isNotDone)
         ###
         #if debug:
         #self.log.debug("tempcard2 = |%s|" %(tempcard))
@@ -202,7 +203,8 @@ class cardMethods(object):
                 self.log.debug("  line2 = |%r|" %(sline))
 
             if ',' in sline:  #CSV
-                sline = sline.split(',')
+                sline = sline.split(',')[0:9]
+                self.log.debug("sline = %s" %(sline))
             else: # standard
                 sline = self.nastranSplit(sline,isLargeField,debug=debug)
             #name = sline[0]
