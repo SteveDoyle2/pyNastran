@@ -381,10 +381,6 @@ class Element(BaseCard):
         centroid = (n1+n2+n3)/3.
         return centroid
 
-    def __repr__(self):
-        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()
-        return self.printCard(fields)
-
     def Centroid(self):
         raise NotImplementedMethodError('Centroid not implemented in the %s class' %(self.__class__.__name__))
     def Length(self):

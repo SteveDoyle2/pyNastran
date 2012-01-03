@@ -29,6 +29,10 @@ class SolidElement(Element):
         fields2 = [elem.eid,elem.Pid()]+elem.nodes
         return self.isSameFields(fields1,fields2)
 
+    def rawFields(self):
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()
+        return fields
+
 class CHEXA8(SolidElement):
     """
     CHEXA EID PID G1 G2 G3 G4 G5 G6
