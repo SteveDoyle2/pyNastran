@@ -92,13 +92,13 @@ class LineProperty(Property):
     def J(self):
         return self.j
 
-    def Izz(self):
+    def I11(self):
         return self.i1
 
-    def Iyy(self):
+    def I22(self):
         return self.i2
 
-    def Iyz(self):
+    def I12(self):
         return self.i12
 
     def E(self):
@@ -356,15 +356,15 @@ class IntegratedLineProperty(LineProperty):
         J = integratePositiveLine(self.xxb,self.j)
         return J
 
-    def Izz(self):
+    def I11(self):
         i1 = integratePositiveLine(self.xxb,self.i1)
         return i1
 
-    def Iyy(self):
+    def I22(self):
         i2 = integratePositiveLine(self.xxb,self.i2)
         return i2
 
-    def Iyz(self):
+    def I12(self):
         i12 = integrateLine(self.xxb,self.i12)
         return i12
 
@@ -396,6 +396,17 @@ class PROD(LineProperty):
 
     def crossReference(self,mesh):
         self.mid = mesh.Material(self.mid)
+
+    def I11(self):
+        """@todo whats the proper formula to use for a ROD"""
+        return self.j/2.
+
+    def I22(self):
+        """@todo whats the proper formula to use for a ROD"""
+        return self.j/2.
+
+    def I12(self):
+        return 0.
 
     def __repr__(self):
         c   = self.setBlankIfDefault(self.c,0.0)

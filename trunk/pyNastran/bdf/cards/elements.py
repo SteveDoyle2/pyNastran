@@ -492,35 +492,57 @@ class CONM2(PointElement): # v0.1 not done
             #del self.nids
             #self.pid = None
             self.eid  = card.field(1)
-            self.gid  = card.field(2)
+            self.nid  = card.field(2)
             self.cid  = card.field(3,0)
             self.mass = card.field(4,0.0)
             self.X    = array(card.fields(5,8,[0.,0.,0.]))
             self.I    = card.fields(9,15,[0.]*6)
         else:
             self.eid  = data[0]
-            self.gid  = data[1]
+            self.nid  = data[1]
             self.cid  = data[2]
             self.mass = data[3]
             self.X    = data[4:7]
             self.I    = data[7:]
         ###
-            
+
     def Mass(self):
+        if self.cid==0:
+            raise NotImplementedError('cid=0 is not supported for CONM2...')
         return self.mass
 
-    def crossReference(self,mesh):
+    def Centroid(self):
+        if self.cid==0:
+            raise NotImplementedError('cid=0 is not supported for CONM2...')
+        if self.cid==-1:
+            return self.X
+        else:
+            dx,matrix = self.cid.transformToGlobal(self.X)
+            #print "dx = ",dx
+            #print "X  = ",self.nid.Position()
+            X2  = self.nid.Position()+dx
+        return X2
+
+    def crossReference(self,model):
         """
         @warning only supports cid=0
         """
-        if self.cid==0:
-            pass
-        #else:
-        #    raise Exception('CONM2 cid !=0 is not coded...')
-        ###
+        if self.cid!=-1:
+            self.cid = model.Coord(self.cid)
+        self.nid = model.Node(self.nid)
+
+    def Nid(self):
+        if isinstance(self.nid,int):
+            return self.nid
+        return self.nid.nid
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
 
     def rawFields(self):
-        fields = ['CONM2',self.eid,self.gid,self.cid,self.mass]+self.X+self.I
+        fields = ['CONM2',self.eid,self.Nid(),self.Cid(),self.mass]+list(self.X)+list(self.I)
         return fields
 
     def reprFields(self):
@@ -537,8 +559,8 @@ class CONM2(PointElement): # v0.1 not done
             X.append(None)
         ###
 
-        cid  = self.setBlankIfDefault(self.cid,0)
+        cid  = self.setBlankIfDefault(self.Cid(),0)
         mass = self.setBlankIfDefault(self.mass,0.0)
-        fields = ['CONM2',self.eid,self.gid,cid,mass]+X+I
+        fields = ['CONM2',self.eid,self.Nid(),cid,mass]+X+I
         return fields
 

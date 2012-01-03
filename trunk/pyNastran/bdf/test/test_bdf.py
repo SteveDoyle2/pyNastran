@@ -62,6 +62,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
 
     fem1 = BDF(debug=debug,log=None)
     fem1.log.info('starting fem1')
+    sys.stdout.flush()
     fem2 = None
     diffCards = []
     try:
@@ -77,6 +78,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
 
         fem2 = BDF(debug=debug,log=None)
         fem2.log.info('starting fem2')
+        sys.stdout.flush()
         fem2.readBDF(outModel,xref=xref)
         #fem2.sumForces()
         #fem2.sumMoments()
@@ -198,15 +200,22 @@ def getElementStats(fem1,fem2):
                 nsm = e.Nsm()
                 mA  = e.MassPerArea()
                 m   = e.Mass()
+                c   = e.Centroid()
             elif isinstance(e,SolidElement):
                 v = e.Volume()
                 m = e.Mass()
+                c   = e.Centroid()
             elif isinstance(e,LineElement): # ROD/BAR/BEAM
                 L   = e.Length()
                 nsm = e.Nsm()
                 A   = e.Area()
                 mL  = e.MassPerLength()
                 m   = e.Mass()
+                I22 = e.I22()
+                I11 = e.I11()
+                I12 = e.I12()
+                J   = e.J()
+                c   = e.Centroid()
             elif isinstance(e,RigidElement):
                 pass
             elif isinstance(e,DamperElement):
@@ -216,6 +225,7 @@ def getElementStats(fem1,fem2):
                 K = e.K()
             elif isinstance(e,PointElement):
                 m = e.Mass()
+                c = e.Centroid()
             else:
                 print "statistics skipped - e.type = ",e.type
                 #try:

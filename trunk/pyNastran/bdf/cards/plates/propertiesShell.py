@@ -407,7 +407,7 @@ class PCOMP(ShellProperty):
         ###
 
     def rawFields(self):
-        fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,TRef,self.ge,self.lam,]
+        fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
         #print "plies = ",self.plies
         for (iPly,ply) in enumerate(self.plies):
             (_mid,t,theta,sout) = ply

@@ -421,8 +421,9 @@ class CQUAD4(ShellElement):
         return(area,centroid)
     ###
 
-    def Centroid(self,nodes,debug=False):
-        (area,centroid) = self.AreaCentroid(nodes,debug)
+    def Centroid(self,debug=False):
+        nodes = self.nodePositions()
+        (area,centroid) = self.AreaCentroid(debug)
         return centroid
 
     def Area(self):

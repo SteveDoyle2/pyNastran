@@ -26,6 +26,8 @@ class PELAS(SpringProperty):
             self.ge  = data[2]
             self.s   = data[3]
         ###
+    def crossReference(self,model):
+        pass
 
     def __repr__(self):
         fields = ['PELAS',self.pid,self.k,self.ge,self.s]

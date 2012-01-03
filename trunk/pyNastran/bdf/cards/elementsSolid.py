@@ -1,5 +1,8 @@
-from numpy import dot, cross,matrix
+from numpy import dot,cross,matrix
+
+# pyNastran
 from elements import Element
+from pyNastran.general.generalMath import Area
 
 def Volume4(n1,n2,n3,n4):
     """
@@ -55,15 +58,34 @@ class CHEXA8(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==8
 
-    def Volume(self):
-        """@todo not done..."""
-        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
-        V1 = Volume4(n1,n2,n3,n5)
-        V2 = Volume4(n1,n2,n3,n6)
-        V3 = Volume4(n5,n1,n4,n6)
+    def areaCentroid(self,n1,n2,n3,n4):
+        a = n1-n2
+        b = n2-n4
+        area1 = Area(a,b)
+        c1 = (n1+n2+n4)/3.
+
+        a = n2-n4
+        b = n2-n3
+        area2 = Area(a,b)
+        c2 = (n2+n3+n4)/3.
         
-        V = V1+V2+V3
-        return V
+        area = area1+area2
+        centroid = (c1*area1+c2*area2)/area
+        return(area,centroid)
+
+    def Centroid(self):
+        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
+        A1,c1 = self.areaCentroid(n1,n2,n3,n4)
+        A2,c2 = self.areaCentroid(n5,n6,n7,n8)
+        c = (c1+c2)/2.
+        return c
+
+    def Volume(self):
+        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
+        A1,c1 = self.areaCentroid(n1,n2,n3,n4)
+        A2,c2 = self.areaCentroid(n5,n6,n7,n8)
+        V = (A1+A2)/2.*(c1-c2)
+        return abs(V)
 
 class CHEXA20(CHEXA8):
     """
@@ -87,19 +109,30 @@ class CHEXA20(CHEXA8):
         msg = 'len(nids)=%s nids=%s' %(len(nids),nids)
         assert len(self.nodes)<=20,msg
 
-    def Volume(self):
-        """@todo not done..."""
+    def Centroid(self):
         (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16,n17,n18,n19,n20) = self.nodePositions()
-        V1 = Volume4(n1,n2,n3,n5)
-        V2 = Volume4(n1,n2,n3,n6)
-        V3 = Volume4(n5,n1,n4,n6)
-        
-        V = V1+V2+V3
-        return V
+        A1,c1 = self.areaCentroid(n1,n2,n3,n4)
+        A2,c2 = self.areaCentroid(n5,n6,n7,n8)
+        c = (c1+c2)/2.
+        return c
+
+    def Volume(self):
+        (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16,n17,n18,n19,n20) = self.nodePositions()
+        A1,c1 = self.areaCentroid(n1,n2,n3,n4)
+        A2,c2 = self.areaCentroid(n5,n6,n7,n8)
+        V = (A1+A2)/2.*(c1-c2)
+        return abs(V)
+
 
 class CPENTA6(SolidElement):
     """
     CPENTA EID PID G1 G2 G3 G4 G5 G6
+      *----------*
+     / \        / \
+    / A \      / c \
+    *---*-----*-----*
+    V = (A1+A2)/2  * (c1-c2)
+    C = (c1-c2)/2
     """
     type = 'CPENTA'
     def __init__(self,card=None,data=None):
@@ -117,14 +150,24 @@ class CPENTA6(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==6
 
-    def Volume(self):
-        """@todo not done..."""
+    def Centroid(self):
         n = self.nodePositions()
-        #print "len(nodes1)",len(n)
-        #print n[0]
         (n1,n2,n3,n4,n5,n6) = n
-        V1 = Volume4(n1,n2,n3,n5)
-        return V1
+        c1 = (n1+n2+n3)/3.
+        c2 = (n4+n5+n6)/3.
+        c = (c1+c2)/2.
+        return c
+
+    def Volume(self):
+        n = self.nodePositions()
+        (n1,n2,n3,n4,n5,n6) = n
+        A1 = Area(n3-n1,n2-n1)
+        A2 = Area(n6-n4,n5-n4)
+        c1 = (n1+n2+n3)/3.
+        c2 = (n4+n5+n6)/3.
+       
+        V = (A1+A2)/2. * (c1-c2)
+        return abs(V)
 
 class CPENTA15(CPENTA6):
     """
@@ -148,14 +191,24 @@ class CPENTA15(CPENTA6):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=15
 
-    def Volume(self):
-        """@todo not done..."""
+    def Centroid(self):
         n = self.nodePositions()
-        #print "len(nodes)",len(n)
-        #print n[0]
         (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15) = n
-        V1 = Volume4(n1,n2,n3,n5)
-        return V1
+        c1 = (n1+n2+n3)/3.
+        c2 = (n4+n5+n6)/3.
+        c = (c1-c2)/2.
+        return c
+
+    def Volume(self):
+        n = self.nodePositions()
+        (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15) = n
+        A1 = Area(n3-n1,n2-n1)
+        A2 = Area(n6-n4,n5-n4)
+        c1 = (n1+n2+n3)/3.
+        c2 = (n4+n5+n6)/3.
+       
+        V = (A1+A2)/2. * (c1-c2)
+        return abs(V)
 
 class CTETRA4(SolidElement):
     """
@@ -179,6 +232,10 @@ class CTETRA4(SolidElement):
     def Volume(self):
         (n1,n2,n3,n4) = self.nodePositions()
         return Volume4(n1,n2,n3,n4)
+
+    def Centroid(self):
+        (n1,n2,n3,n4) = self.nodePositions()
+        return (n1+n2+n3+n4)/4.
 
     def Jacobian(self):
         """
@@ -231,3 +288,6 @@ class CTETRA10(CTETRA4):
         (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = self.nodePositions()
         return Volume4(n1,n2,n3,n4)
 
+    def Centroid(self):
+        (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = self.nodePositions()
+        return (n1+n2+n3+n4)/4.

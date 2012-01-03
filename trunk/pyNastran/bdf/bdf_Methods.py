@@ -14,6 +14,13 @@ class bdfMethods(object):
     # METHODS
 
     def MassProperties(self):
+        """
+        Caclulates mass properties in the global system about 0,0,0
+        I = mass*centroid*centroid
+        Ixx = mass*x*x
+        Iyz = mass*y*z
+        @warning centroid isnt coded across the board
+        """
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
         I = array(0., 0., 0.,  0.,  0., 0.,)
         for element in self.elements:
