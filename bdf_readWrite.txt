@@ -1,4 +1,4 @@
-------------------------------BDF Info------------------------------
+W------------------------------BDF Info------------------------------
 
 In order for a card to be supported, it must read AND write ALL fields.
 Important calculated parameters are nice, but not required.
@@ -13,14 +13,14 @@ GRDSET (done)
 ----Coordinates----:
 CORD1R (done)
 CORD2R (done)
-CORD1C
-CORD2C (partial)
-CORD1S
-CORD2S
+CORD1C (done)
+CORD2C (done)
+CORD1S (done)
+CORD2S (done)
 CORD3G (partial)
 
 ----Elements----:
-CONM2  (cid=0)
+CONM2  (cid!=0)
 
 CDAMP1 (done)
 CDAMP2 (done)

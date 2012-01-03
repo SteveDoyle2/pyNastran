@@ -479,8 +479,8 @@ class MAT8(AnisotropicMaterial):
 
     def rawFields(self):
         fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,self.G12,self.G1z,self.G2z,self.rho,
-                  self.a1,self.a2,self.Tref,self.Xt,self.Xc,self.Yt,self.Yc,self.S,
-                  ge,F12,strn]
+                  self.a1,self.a2,self.TRef,self.Xt,self.Xc,self.Yt,self.Yc,self.S,
+                  self.ge,self.F12,self.strn]
         return fields
 
     def reprFields(self):
@@ -491,7 +491,7 @@ class MAT8(AnisotropicMaterial):
         rho  = self.setBlankIfDefault(self.rho, 0.0)
         a1   = self.setBlankIfDefault(self.a1,  0.0)
         a2   = self.setBlankIfDefault(self.a2,  0.0)
-        Tref = self.setBlankIfDefault(self.TRef,0.0)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
 
         Xt   = self.setBlankIfDefault(self.Xt, 0.)
         Yt   = self.setBlankIfDefault(self.Yt, 0.)
@@ -505,7 +505,7 @@ class MAT8(AnisotropicMaterial):
         strn = self.setBlankIfDefault(self.strn,0.0)
         
         fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,G12,G1z,G2z,rho,
-                  a1,a2,Tref,Xt,Xc,Yt,Yc,S,
+                  a1,a2,TRef,Xt,Xc,Yt,Yc,S,
                   ge,F12,strn]
         return fields
 

@@ -32,9 +32,17 @@ class LineElement(Element):
         """returns the Polar Moment of Inertia.   \f$ J \f$"""
         return self.pid.J()
 
-    def Izz(self):
-        """returns the Moment of Inertia.   \f$ I \f$"""
-        return self.pid.Izz()
+    def I11(self):
+        """returns the Moment of Inertia.   \f$ I_{11} \f$"""
+        return self.pid.I11()
+
+    def I22(self):
+        """returns the Moment of Inertia.   \f$ I_{22} \f$"""
+        return self.pid.I22()
+
+    def I12(self):
+        """returns the Moment of Inertia.   \f$ I_{12} \f$"""
+        return self.pid.I12()
 
     def Nu(self):
         """returns Poisson's Ratio  \f$ \nu \f$"""
@@ -49,7 +57,6 @@ class LineElement(Element):
     def Nsm(self):
         """Placeholder method for the non-structural mass"""
         raise NotImplementedMethodError('implement self.Area() for %s' %(self.type))
-
 
     def MassPerLength(self):
         """Returns the mass per unit length"""
@@ -230,6 +237,9 @@ class CROD(LineElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
 
+    def Centroid(self):
+        return (self.nodes[0].Position()+self.nodes[1].Position())/2.
+
     def Area(self):
         return self.pid.A
 
@@ -313,14 +323,14 @@ class CONROD(CROD):
         """returns the Shear Modulus   \f$ G \f$"""
         return self.mid.G
 
-    def Iyz(self):
-        """the Iyz for a rod is 0"""
+    def I12(self):
+        """the I12 for a rod is 0"""
         return 0.
 
-    def Iyy(self):
-        return self.Izz()
+    def I22(self):
+        return self.I11()
 
-    def Izz(self):
+    def I11(self):
         """returns the Moment of Inertia.   \f$ I \f$"""
         r = self.Radius()
         #A=piD2/4
@@ -578,6 +588,9 @@ class CBAR(LineElement):
         nsm = self.pid.Nsm()
         assert isinstance(nsm,float)
         return nsm
+
+    def Centroid(self):
+        return (self.ga.Position()+self.gb.Position())/2.
 
     def initX_G0(self,card):
         field5 = card.field(5)

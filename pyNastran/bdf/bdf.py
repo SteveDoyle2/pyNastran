@@ -591,10 +591,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #print "*card = ",card
             #print "RcardName = |%s|" %(cardName)
             return False
-        if cardName and cardName and cardName not in self.rejectCount:
-            self.log.info("RejectCardName = |%s|" %(cardName))
-            self.rejectCount[cardName] = 0
-        self.rejectCount[cardName] +=1
+        if cardName:
+            if cardName not in self.rejectCount:
+                self.log.info("RejectCardName = |%s|" %(cardName))
+                self.rejectCount[cardName] = 0
+            self.rejectCount[cardName] +=1
         return True
 
     def getIncludeFileName(self,cardLines,cardName):
@@ -890,7 +891,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 (elem) = CDAMP5(cardObj)
                 self.addDamperElement(elem)
 
-            elif cardName=='CONM2': # not done...
+            elif cardName=='CONM2':
                 elem = CONM2(cardObj)
                 self.addElement(elem)
 

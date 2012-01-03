@@ -20,7 +20,6 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - RADSET
  - SET1
  - SET3
-
  
  - CDAMP1
  - CDAMP2
@@ -65,10 +64,6 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 
 
 ===To Cross Reference (not supported)===
- - CORD2C
- - CORD2S
- - CORD1C
- - CORD1S
  - TABLEx
  - SPOINT
  - SET
@@ -79,7 +74,11 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 ===Cross Referenced Cards (done)===
  - GRID
  - CORD1R
+ - CORD1C
+ - CORD1S
  - CORD2R
+ - CORD2C
+ - CORD2S
 
  - CTRIA3
  - CQUAD4
@@ -141,7 +140,7 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - SPLINE1
 
 ===Partially Cross Referenced (partial)===
- - CONM2  (cid=0, requires COORDx support)
+ - CONM2  (cid!=0, cid=0 requires CG location...)
  - CELAS1 (no spoints)
  - CELAS2 (no spoints)
  - CELAS3 (no spoints)

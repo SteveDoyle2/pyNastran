@@ -104,7 +104,7 @@ class Coord(BaseCard):
         #pass
 
 class RectangularCoord(object):
-    def coordtoXYZ(self,p):
+    def coordToXYZ(self,p):
         """@todo is this correct..."""
         return p+self.e1
     def XYZtoCoord(self,p):
