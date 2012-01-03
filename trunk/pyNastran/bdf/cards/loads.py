@@ -401,14 +401,15 @@ class PLOAD(Load):
         if card:
             self.lid   = card.field(1)
             self.p     = card.field(2)
-            self.nodes = card.fields(3,8)
+            nodes      = card.fields(3,7)
+            self.nodes = self.wipeEmptyFields(nodes)
         else:
             self.lid   = data[0]
             self.p     = data[1]
             self.nodes = data[2:]
-            print "PLOAD2 = ",data
+            print "PLOAD = ",data
             raise Exception('not supported')
-        assert len(self.nodes)==4
+        assert len(self.nodes) in [3,4],'nodes=%s' %(self.nodes)
     
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -419,7 +420,7 @@ class PLOAD(Load):
         return self.printCard(fields)
 
 class PLOAD1(Load):
-    type = 'PLOAD'
+    type = 'PLOAD1'
     validTypes = ['FX','FY','FZ','FXE','FYE','FZE',
                   'MX','MY','MZ','MXE','MYE','MZE']
     validScales = ['LE','FR','LEPR','FRPR']

@@ -123,13 +123,13 @@ class PGAP(Property):
             ## preload
             self.f0    = card.field(3,0.)
             ## axial stiffness of closed gap
-            self.ka    = card.field(4)
+            self.ka    = card.field(4,1.e8)
             ## axial stiffness of open gap
-            self.kb    = card.field(5,1e-14*ka)
-            ## transverse stiffness of closed gap
-            self.kt    = card.field(6,self.mu1*self.ka)
+            self.kb    = card.field(5,1e-14*self.ka)
             ## static friction coeff
             self.mu1   = card.field(7,0.)
+            ## transverse stiffness of closed gap
+            self.kt    = card.field(6,self.mu1*self.ka)
             ## kinetic friction coeff
             self.mu2   = card.field(8,self.mu1)
             self.tmax  = card.field(9,0.)
@@ -152,7 +152,23 @@ class PGAP(Property):
     def rawFields(self):
         fields = ['PGAP',self.pid,self.u0,self.f0,self.ka,self.kb,self.kt,self.mu1,self.mu2,
                          self.tmax,self.mar,self.trmin]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        u0 = self.setBlankIfDefault(self.u0,0.)
+        f0 = self.setBlankIfDefault(self.f0,0.)
+        ka = self.setBlankIfDefault(self.ka,1.e8)
+        kb = self.setBlankIfDefault(self.kb,1e-14*self.ka)
+        kt = self.setBlankIfDefault(self.kt,self.mu1*self.ka)
+        mu1 = self.setBlankIfDefault(self.mu1,0.)
+        mu2 = self.setBlankIfDefault(self.mu2,self.mu1)
+        tmax  = self.setBlankIfDefault(self.tmax,0.)
+        mar   = self.setBlankIfDefault(self.mar,100.)
+        trmin = self.setBlankIfDefault(self.mrmin,0.001)
+        
+        fields = ['PGAP',self.pid,u0,f0,ka,kb,kt,mu1,mu2,
+                         tmax,mar,trmin]
+        return fields
 
 class SolidProperty(Property):
     type = 'SolidProperty'

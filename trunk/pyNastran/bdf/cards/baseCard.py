@@ -276,6 +276,11 @@ class BaseCard(BDF_Card):
         return (out,i)
     ###
         
+    def isSameCard(self,card):
+        fields1 = self.rawFields()
+        fields2 = card.rawFields()
+        return self.isSameFields(fields1,fields2)
+
     def printRawFields(self):
         """A card's raw fields include all defaults for all fields"""
         fields = self.rawFields()

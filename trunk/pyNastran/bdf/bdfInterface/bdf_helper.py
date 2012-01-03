@@ -240,6 +240,9 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
+        self.elements[key] = elem  ## temporary
+        return                     ## temporary
+
         if key in self.elements and allowOverwrites==False:
             if not elem.isSameCard(self.elements[key]):
                 #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
@@ -285,11 +288,15 @@ class addMethods(object):
         assert key>0,'deqatn\n%s' %(key,deqatn)
         self.dequations[key] = deqatn
 
-    def addProperty(self,prop,allowOverwrites=False):
+    def addProperty(self,prop,allowOverwrites=False):   
+        key = prop.pid
+        self.properties[key] = prop  ## temporary
+        return                       ## temporary
+
         if not allowOverwrites:
-            assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
-        assert prop.pid>0,'property=\n%s' %(prop.pid,prop)
-        self.properties[prop.pid] = prop
+            assert key not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
+        assert key>0,'property=\n%s' %(key,prop)
+        self.properties[key] = prop
 
     def addMaterial(self,material,allowOverwrites=False):
         """

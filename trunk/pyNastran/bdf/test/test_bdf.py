@@ -15,7 +15,7 @@ testPath = pyNastran.bdf.test.__path__[0]
 #print "testPath = ",testPath
 
 def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
-    debug = True
+    #debug = True
     print "folder = ",folder
     filenames  = os.listdir(folder)
     filenames2 = []
@@ -94,10 +94,10 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
     #    pass
     #except TabCharacterError:
     #    pass
-    #except ScientificParseError:
-    #    pass
-    #except ClosedBDFError:
-    #    pass
+    except ScientificParseError:
+        pass
+    except ClosedBDFError:
+        pass
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
