@@ -373,7 +373,7 @@ class CQUAD4(ShellElement):
         fields2 = ['CTRIA3',newID,   self.mid]+nodes2+[self.thetaMcid,zOffset]
         return self.printCard(fields1)+printCard(fields2)
 
-    def Normal(self,nodes):
+    def Normal(self):
         (n1,n2,n3,n4) = self.nodePositions()
         a = n1-n3
         b = n2-n4

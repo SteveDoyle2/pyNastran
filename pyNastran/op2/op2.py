@@ -7,12 +7,10 @@ from op2Codes import Op2Codes
 from op2Errors import *
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf_helper import getMethods,addMethods,writeMesh
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 
-class OP2(BDF,
-#class Op2(getMethods,addMethods,writeMesh, # BDF methods
+class OP2(BDF,  # BDF methods
           FortranFile,Op2Codes,GeometryTables,ResultTable):
 
     def setSubcases(self,iSubcases=[]):
