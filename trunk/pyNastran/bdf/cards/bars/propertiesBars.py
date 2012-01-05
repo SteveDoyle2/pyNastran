@@ -949,6 +949,7 @@ class PBEAML(IntegratedLineProperty):
             self.nsm = []
             
             n = 0
+            i=0
             for i,dim in dimAll:
                 if j<nDim:
                     Dim.append(dim)

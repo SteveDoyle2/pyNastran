@@ -20,6 +20,7 @@ Overall Notes
    - coordinate systems!!!
    - all user BDF card API methods will have the first letter capitalized
      (not fully implemented)
+   - added OP2 demo program that calculates solidStress & displacement margins
 
 
 BDF API Changes

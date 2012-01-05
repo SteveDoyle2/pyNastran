@@ -51,11 +51,11 @@ class MarginChecker(object):
         #                    [4.,5.,]]
         self.cases = {}
 
-        self.solidStressResults = {}
         self.displacementResults = {}
-        #self.solidStrainResults = {}
+        self.solidStressResults  = {}
+        self.plateStressResults  = {}
 
-        #self.plateStressResults = {}
+        #self.solidStrainResults = {}
         #self.plateStrainResults = {}
 
         #self.compositePlateStressResults = {}
@@ -88,29 +88,50 @@ class MarginChecker(object):
                 print "subcaseID = ",subcaseID
                 print "i = ",i
                 self.displacementResults[i] = op2.displacements[subcaseID]
-                self.solidStressResults[i] = op2.solidStress[subcaseID]
-                #self.solidStrainResults[i] = op2.solidStrain
 
-                #self.plateStressResults[i] = op2.plateStress
+                #self.solidStrainResults[i] = op2.solidStrain
                 #self.plateStrainResults[i] = op2.plateStrain
 
                 #self.compositePlateStressResults[i] = op2.compositePlateStress
                 #self.compositePlateStrainResults[i] = op2.compositePlateStrain
 
-                #self.cleanSolidStress(op2.solidStress[subcaseID])
+                self.cleanStress(i,op2,subcaseID)
                 i +=1
                 ###
             del op2 # makes sure that unneeded data is not stored to save memory
         ###
 
-    def cleanSolidStress(self,stress):
-        del stress.oxx
-        del stress.oyy
-        del stress.ozz
-        del stress.txy
-        del stress.tyz
-        del stress.txz
-        del stress.ovmShear
+    def cleanStress(self,i,op2,subcaseID):
+        self.cleanSolidStress(i,op2,subcaseID)
+        self.cleanPlateStress(i,op2,subcaseID)
+
+    def cleanPlateStress(self,i,op2,subcaseID):
+        if subcaseID in op2.plateStress:
+            self.plateStressResults[i] = op2.plateStress[subcaseID]
+            stress = op2.plateStress[subcaseID]
+            del stress.fiberCurvature
+            #del stress.oxx
+            #del stress.oyy
+            #del stress.txy
+            del stress.majorP
+            del stress.minorP
+            del stress.angle
+            del stress.ovmShear
+
+    def cleanSolidStress(self,i,op2,subcaseID):
+        if subcaseID in op2.solidStress:
+            self.solidStressResults[i] = op2.solidStress[subcaseID]
+            stress = op2.solidStress[subcaseID]
+            del stress.o1
+            del stress.o2
+            del stress.o3
+            #del stress.oxx
+            #del stress.oyy
+            #del stress.ozz
+            #del stress.txy
+            #del stress.tyz
+            #del stress.txz
+            del stress.ovmShear
 
     def checkDeflections(self,maxDeflection):
         """
@@ -121,7 +142,6 @@ class MarginChecker(object):
         deflect = self.displacementResults[0] # gets the tension case
         nodesList = deflect.translations.keys()
         
-        #deflections = {}
         deflectionDict = {}
         for icase,vmFactor in enumerate(self.vmFactors):
             deflectionDict[icase] = {}
@@ -171,19 +191,110 @@ class MarginChecker(object):
 
         print "vmFactors = ",self.vmFactors
         print "caseNames = ",self.caseNames
+        (stressP,eidList) = self.processSolidStress()
+        (stressP,eidList) = self.processPlateStress()
+        #print stressP
+        self.stressP = stressP
+        
+        Fty = self.Fty # ksi
+        minMargins = {}
+        for eid in eidList:
+            margins = []
+            for icase,vmFactor in enumerate(self.vmFactors):
+                margin = stressP[icase][eid]/Fty-1
+                margins.append(margin)
+            minMargin = min(margins)
+            minMargins[eid] = minMargin
+            case = margins.index(minMargin)
+            print "case=%-6s minMargin[%s] = %g" %(self.caseNames[case],eid,minMargin)
+
+
+    def processPlateStress(self):
+        """
+        \f[ \sigma_v = \sqrt{\sigma_1^2- \sigma_1\sigma_2+ \sigma_2^2 + 3\sigma_{12}^2} \f]
+        ovm^2 = o1^2 - o1*o2 + o2^2 + 3*o12^2
+        """
+        stressP = []
+        eidList=[]
+        for icase,vmFactor in enumerate(self.vmFactors):
+            StressPrincipal = [] # stores cases
+            for jfact,factor in enumerate(vmFactor):
+                stressPrincipal = {} # stores eid
+                if jfact not in self.plateStressResults:
+                    continue
+                stress = self.plateStressResults[jfact] # gets the tension case
+                eidList = stress.o1.keys()
+                for eid in eidList:
+                    stress_principal = {}
+                    nodeList = stress.o1[eid].keys()
+                    for nid in sorted(nodeList):
+                        stress_principal[nid] = array([0.,0.,0.])
+                    ###
+                    stressPrincipal[eid] = stress_principal # gets all the nodes
+                ###
+                StressPrincipal = stressPrincipal # stores all the eids
+                break
+            stressP.append(StressPrincipal)
+
+        if eidList==[]:
+            return None,[]
+        for icase,vmFactor in enumerate(self.vmFactors):
+            for jfact,factor in enumerate(vmFactor):
+                stress = self.plateStressResults[jfact] # gets the tension case
+                #print str(stress)[0:600]
+                #print "eidList = ",eidList
+                for eid in eidList:
+                    nodeList = stress.o1[eid].keys()
+                    for nid in sorted(nodeList):
+                        oxx = stress.oxx[eid][nid]
+                        oyy = stress.oyy[eid][nid]
+                        txy = stress.txy[eid][nid]
+                        #print "s[%s][%s][%s][%s]" %(icase,jfact,eid,nid)
+                        #print "vmFactor = ",vmFactor
+                        #print "s[%s][%s][%s] = %s" %(icase,eid,nid,stressP[icase][eid][nid])
+                        o = array([oxx,oyy,txy])*factor
+                        stressP[icase][eid][nid] += o  # @todo is this legal...check with oxx, oyy, ozz, txy... ???
+
+                        #ov = sqrt((o1-o2)**2+(o2-o3)**2+(o1-o3)**2)
+                        #ov = sqrt((o[0]-o[1])**2+(o[1]-o[2])**2+(o[0]-o[2])**2)
+                    ###
+                ###
+
+        for icase,vmFactor in enumerate(self.vmFactors):
+            print "icase = ",icase
+            #print "vmFactor = ",vmFactor
+            for eid in eidList:
+                #print "eid = ",eid
+                eidResults = []
+                nodeList = stress.oxx[eid].keys()
+                #nodeList = stress[icase][eid].keys()
+                for nid in sorted(nodeList):
+                    #print "nid = ",nid
+                    #print "o = ",o
+                    #o = stressP[icase][eid]#[nid]
+                    (oxx,oyy,txy) = stressP[icase][eid][nid]
+                    #print o.keys()
+                    #ovm^2 = o1^2 - o1*o2 + o2^2 + 3*o12^2
+                    ovm = sqrt(oxx**2+oyy**2 - oxx*oyy + 3*txy**2) # 2d stress
+                    eidResults.append(ov)
+                stressP[icase][eid] = min(eidResults)
+            ###
+        ###
+        return (stressP,eidList)
+
+    def processSolidStress(self):#  stressP[icase][eid] = min(eidResults)
         stressP = []
         for icase,vmFactor in enumerate(self.vmFactors):
             StressPrincipal = [] # stores cases
             for jfact,factor in enumerate(vmFactor):
                 stressPrincipal = {} # stores eid
                 stress = self.solidStressResults[jfact] # gets the tension case
-                eidList = stress.o1.keys()
+                eidList = stress.oxx.keys()
                 for eid in eidList:
                     stress_principal = {}
-                    nodeList = stress.o1[eid].keys()
+                    nodeList = stress.oxx[eid].keys()
                     for nid in sorted(nodeList):
-                        #stressNode = {}
-                        stress_principal[nid] = array([0.,0.,0.])
+                        stress_principal[nid] = array([0.,0.,0.,0.,0.,0.])
                     ###
                     stressPrincipal[eid] = stress_principal # gets all the nodes
                 ###
@@ -197,16 +308,20 @@ class MarginChecker(object):
                 #print str(stress)[0:600]
                 #print "eidList = ",eidList
                 for eid in eidList:
-                    nodeList = stress.o1[eid].keys()
+                    nodeList = stress.oxx[eid].keys()
                     for nid in sorted(nodeList):
-                        o1 = stress.o1[eid][nid]
-                        o2 = stress.o2[eid][nid]
-                        o3 = stress.o3[eid][nid]
+                        oxx = stress.oxx[eid][nid]
+                        oyy = stress.oyy[eid][nid]
+                        ozz = stress.ozz[eid][nid]
+                        txy = stress.txy[eid][nid]
+                        tyz = stress.tyz[eid][nid]
+                        txz = stress.txz[eid][nid]
+                        
                         #print "s[%s][%s][%s][%s]" %(icase,jfact,eid,nid)
                         #print "vmFactor = ",vmFactor
                         #print "s[%s][%s][%s] = %s" %(icase,eid,nid,stressP[icase][eid][nid])
-                        o = array([o1,o2,o3])*factor
-                        stressP[icase][eid][nid] += o
+                        o = array([oxx,oyy,ozz,txy,tyz,txz])*factor
+                        stressP[icase][eid][nid] += o  # @todo is this legal...check with oxx, oyy, ozz, txy... ???
 
                         #ov = sqrt((o1-o2)**2+(o2-o3)**2+(o1-o3)**2)
                         #ov = sqrt((o[0]-o[1])**2+(o[1]-o[2])**2+(o[0]-o[2])**2)
@@ -220,55 +335,82 @@ class MarginChecker(object):
             for eid in eidList:
                 #print "eid = ",eid
                 eidResults = []
-                nodeList = stress.o1[eid].keys()
+                nodeList = stress.oxx[eid].keys()
                 #nodeList = stress[icase][eid].keys()
                 for nid in sorted(nodeList):
                     #print "nid = ",nid
                     #print "o = ",o
                     #o = stressP[icase][eid]#[nid]
-                    o = stressP[icase][eid]['C']
+                    (oxx,oyy,ozz,txy,tyz,txz) = stressP[icase][eid][nid]
                     #print o.keys()
-                    ov = sqrt((o[0]-o[1])**2+(o[1]-o[2])**2+(o[0]-o[2])**2)
-                    eidResults.append(ov)
+                    ovm = sqrt((oxx-oyy)**2+(oyy-ozz)**2+(oxx-ozz)**2 + 6*(txy**2+tyz**2+txz**2)) # 3d stress
+                    print "ovm = %s" %(ovm)
+                    sys.exit()
+                    eidResults.append(ovm)
                 stressP[icase][eid] = min(eidResults)
             ###
         ###
-        #print stressP
-        self.stressP = stressP
+        return (stressP,eidList)
         
-        Ftu = 150. # ksi
-        minMargins = {}
-        for eid in eidList:
-            margins = []
-            for icase,vmFactor in enumerate(self.vmFactors):
-                margin = stressP[icase][eid]/Ftu-1
-                margins.append(margin)
-            minMargin = min(margins)
-            minMargins[eid] = minMargin
-            case = margins.index(minMargin)
-            print "case=%-6s minMargin[%s] = %g" %(self.caseNames[case],eid,minMargin)
-
     def rainflow(self):
+        """required for fatigue"""
         pass
 
+    def damageCount(self):
+        """required for fatigue"""
+        # 1.  get principal stresses at different loading combinations
+        # 2.  rainflow count
+        # 3.  find damage caused by each load case
+        # 4.  sum damage (Miner's Rule)
+        # 5.  find equivalent stress
+        # 6.  get damage margin per ratio of life used
+        pass
+
+    def SNcurve(stress):
+        """
+        stress amplitude = fatigue strength coefficient* (2 N(f))^b
+        N(f) is the cycles to failure
+        2N(f) is the number of load reversals to failure
+        b is the fatigue strength exponent
+        For an AISI Type 1015 steel
+        b= -0.11
+        fatigue strength coefficient where 2N(f) =1,120 Ksi
+
+        
+        Log Sf = Log a + b Log N = Log (1.62 Sut) + Log N-0.0851
+        a = (0.9 Sut)2 / Se = 1.62 Sut
+        b = -(Log (0.9 Sut / Se)) / 3 (= -0.0851 when Se = .5 Sut)
+        Se = 0.5 Ftu  = Endurance Limit = Stress corresponding to 'infinite' life of 1,000,000 or more cycles.
+        Sf = Stress corresponding to a fatigue life, N, of 1000 to 1,000,000 cycles inclusive.
+        """
+        Sut = 120.   # ksi
+        Se = 0.5*Sut # ksi
+        a = (0.9*Sut)*2/Se
+        b = -(log10(0.9*Sut/Se))/3.
+        #logSf = log10(a) + b*log10(N)
+        #logN = (logSf-log10(a) )/b
+        Ncycles = 10.**logN
+
+        return Ncycles
 
 def main():
-    filenames = ['fem.op2','fem.op2']
+    #filenames = ['fem.op2','fem.op2']
     subcases  = [1,2]
     Fty = 150. # ksi
     IDs = ['tension','compression']
 
-    vmFactors =   [[1.,0.,],  # tension
-                   [0.,1.,],  # bending
-                   [0.,-1.,], # minus bending
-                   [-1.,0.],  # compression
-                   [-1.,1.],  # compression+bend
-                   [1.,1.,],  # tension + bending
-                   [-1.,-1.], # compression+mbend
+    vmFactors =   [#[1.,0.,],  # tension
+                   #[0.,1.,],  # bending
+                   #[0.,-1.,], # minus bending
+                   #[-1.,0.],  # compression
+                   #[-1.,1.],  # compression+bend
+                   #[1.,1.,],  # tension + bending
+                   #[-1.,-1.], # compression+mbend
                    [1.,-1.,],]# tension + mbending
 
 
-    caseNames = ['tens','bend','mBend','comp','cBend','tBend','cmBend','tmBend']
+    #caseNames = ['tens','bend','mBend','comp','cBend','tBend','cmBend','tmBend']
+    caseNames = ['tmBend']
     a = MarginChecker(filenames,subcases,IDs)
     a.readFiles()
     a.checkVonMises(vmFactors,caseNames,Fty)

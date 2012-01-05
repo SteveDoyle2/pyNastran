@@ -372,7 +372,7 @@ class PCOMP(ShellProperty):
                 massPerArea += self.MassPerArea(iply)
             ###
             if self.isSymmetrical():
-                if self.isCoreLayer():
+                if self.hasCoreLayer():
                     massPerArea -= self.MassPerArea(0)/2.  # cut out the thickness of half the core layer
                     
                 ###
@@ -397,7 +397,7 @@ class PCOMP(ShellProperty):
                 t += self.Thickness(iply)
             ###
             if self.isSymmetrical():
-                if self.isCoreLayer():
+                if self.hasCoreLayer():
                     t -= self.Thickness(0)/2.  # cut out the thickness of half the core layer
                 return t*2.
             return t

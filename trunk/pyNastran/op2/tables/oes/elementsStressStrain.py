@@ -269,9 +269,9 @@ class ElementsStressStrain(object):
                 cCos = []
                 if nodeID==0:
                     #print "adding new eid"
-                    self.obj.addNewEid(ElementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                    self.obj.addNewEid(ElementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
                 else:
-                    self.obj.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,aCos,bCos,cCos,pressure,svm)
+                    self.obj.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 #self.printBlock(data)

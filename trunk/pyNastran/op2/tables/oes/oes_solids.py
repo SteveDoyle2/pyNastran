@@ -34,6 +34,9 @@ class solidStressObject(stressObject):
         self.txy = {}
         self.tyz = {}
         self.txz = {}
+        self.o1 = {}
+        self.o2 = {}
+        self.o3 = {}
         self.ovmShear = {}
         if self.code == [1,0,0]:  # not done...
             pass
@@ -70,6 +73,9 @@ class solidStressObject(stressObject):
         self.txy[self.dt] = {}
         self.tyz[self.dt] = {}
         self.txz[self.dt] = {}
+        self.o1[self.dt] = {}
+        self.o2[self.dt] = {}
+        self.o3[self.dt] = {}
         
         #self.aCos[self.dt] = {}
         #self.bCos[self.dt] = {}
@@ -77,7 +83,7 @@ class solidStressObject(stressObject):
         #self.pressure[self.dt] = {}
         self.ovmShear[self.dt]  = {}
 
-    def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
+    def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
         #assert eid not in self.oxx
         assert cid >= 0
@@ -90,6 +96,9 @@ class solidStressObject(stressObject):
         self.txy[eid]  = {nodeID: txy}
         self.tyz[eid]  = {nodeID: tyz}
         self.txz[eid]  = {nodeID: txz}
+        self.o1[eid]   = {nodeID: o1}
+        self.o2[eid]   = {nodeID: o2}
+        self.o3[eid]   = {nodeID: o3}
         #self.aCos[eid] = {nodeID: aCos}
         #self.bCos[eid] = {nodeID: bCos}
         #self.cCos[eid] = {nodeID: cCos}
@@ -99,7 +108,7 @@ class solidStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
+    def addNewEidTransient(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add transient..."
         assert cid >= 0
         assert eid >= 0
@@ -113,6 +122,11 @@ class solidStressObject(stressObject):
         self.txy[dt][eid]  = {nodeID: txy}
         self.tyz[dt][eid]  = {nodeID: tyz}
         self.txz[dt][eid]  = {nodeID: txz}
+        
+        self.o1[dt][eid]  = {nodeID: o1}
+        self.o2[dt][eid]  = {nodeID: o2}
+        self.o3[dt][eid]  = {nodeID: o3}
+
         #self.aCos[dt][eid] = {nodeID: aCos}
         #self.bCos[dt][eid] = {nodeID: bCos}
         #self.cCos[dt][eid] = {nodeID: cCos}
@@ -122,7 +136,7 @@ class solidStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
+    def add(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
@@ -136,6 +150,10 @@ class solidStressObject(stressObject):
         self.tyz[eid][nodeID] = tyz
         self.txz[eid][nodeID] = txz
 
+        self.o1[eid][nodeID] = o1
+        self.o2[eid][nodeID] = o2
+        self.o3[eid][nodeID] = o3
+
         #self.aCos[eid][nodeID] = aCos
         #self.bCos[eid][nodeID] = bCos
         #self.cCos[eid][nodeID] = cCos
@@ -143,7 +161,7 @@ class solidStressObject(stressObject):
         self.ovmShear[eid][nodeID] = ovm
         if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,aCos,bCos,cCos,pressure,ovm):
+    def addTransient(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
@@ -157,6 +175,10 @@ class solidStressObject(stressObject):
         self.txy[dt][eid][nodeID] = txy
         self.tyz[dt][eid][nodeID] = tyz
         self.txz[dt][eid][nodeID] = txz
+
+        self.o1[dt][eid][nodeID] = o1
+        self.o2[dt][eid][nodeID] = o2
+        self.o3[dt][eid][nodeID] = o3
 
         #self.aCos[dt][eid][nodeID] = aCos
         #self.bCos[dt][eid][nodeID] = bCos
@@ -192,6 +214,11 @@ class solidStressObject(stressObject):
                     txy = self.txy[dt][eid][nid]
                     tyz = self.tyz[dt][eid][nid]
                     txz = self.txz[dt][eid][nid]
+
+                    #o1 = self.o1[dt][eid][nid]
+                    #o2 = self.o2[dt][eid][nid]
+                    #o3 = self.o3[dt][eid][nid]
+
                     ovm = self.ovmShear[dt][eid][nid]
                     msg += '%-6i %6s %8s ' %(eid,eType,nid)
                     vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
@@ -227,6 +254,11 @@ class solidStressObject(stressObject):
                 txy = self.txy[eid][nid]
                 tyz = self.tyz[eid][nid]
                 txz = self.txz[eid][nid]
+
+                #o1 = self.o1[eid][nid]
+                #o2 = self.o2[eid][nid]
+                #o3 = self.o3[eid][nid]
+
                 ovm = self.ovmShear[eid][nid]
                 msg += '%-6i %6s %8s ' %(eid,eType,nid)
                 vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
@@ -315,7 +347,7 @@ class solidStrainObject(strainObject):
         #self.pressure[self.dt] = {}
         self.evmShear[self.dt]      = {}
 
-    def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
+    def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
         assert eid not in self.exx
         assert cid >= 0
@@ -337,7 +369,7 @@ class solidStrainObject(strainObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
+    def addNewEidTransient(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
         assert cid >= 0
         assert eid >= 0
@@ -360,7 +392,7 @@ class solidStrainObject(strainObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
+    def add(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
         #print msg
@@ -382,7 +414,7 @@ class solidStrainObject(strainObject):
 
         if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,aCos,bCos,cCos,pressure,evm):
+    def addTransient(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
         #print msg
