@@ -652,6 +652,9 @@ class CBAR(LineElement):
             return (self.x1,self.x2,self.x3)
         ###
 
+    def nodeIDs(self):
+        return [self.Ga(),self.Gb()]
+
     def __repr__(self):
         pa = self.setBlankIfDefault(self.pa,0)
         pb = self.setBlankIfDefault(self.pb,0)
