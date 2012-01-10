@@ -50,7 +50,7 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
     def OnKeyPress(self,obj,event):
         rwi = obj
         key = rwi.GetKeySym()
-        print "*Pressed %s" %(key)
+        #print "*Pressed %s" %(key)
         
         #renderer = self.ren
         camera = self.getActiveCamera()
@@ -61,6 +61,25 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         elif key=='M': # zooming out
             camera.Zoom(0.9)
             self.Update()
+        elif key=='d': # draw edges
+            if self.pipeline.isEdges==False:
+                return
+            prop = self.pipeline.edgeActor.GetProperty()
+            #print '\n'.join(dir(prop))
+            if self.pipeline.isEdges:
+                #prop.SetLineWidth(0.0)
+                prop.EdgeVisibilityOff()
+            else:
+                #prop.SetLineWidth(1.0)
+                prop.EdgeVisibilityOn()
+            #prop.Update()
+            #prop.Modified()
+            #prop.SetVisibility(False)
+            self.pipeline.isEdges = not(self.pipeline.isEdges)
+            self.pipeline.edgeMapper.Modified()
+            self.pipeline.edgeMapper.Update()
+            self.pipeline.edgeActor.Modified()
+
         elif key=='o': # counter-clockwise
             camera.Roll(5.)
             self.Update()
@@ -108,7 +127,7 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
             self.pipeline.rend.ResetCamera()
             self.Update()
 
-        #elif key=='i':
+        #elif key=='i': # picture taking doesnt work
             #self.pipeline.takePicture()
 
         # Panning doesnt work
