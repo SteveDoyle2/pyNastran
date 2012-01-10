@@ -2,18 +2,18 @@
 
 = Introduction =
 
-The Graphical User Interface (GUI) was first introduced in version 0.3.0.
+The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is only capable of displaying a BDF.
 
 The current GUI looks like:
 
 https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 
 = Supported Elements =
- * CQUAD4
- * CTRIA3
- * CTETRA
- * CHEXA
- * CPENTA
+ * CQUAD4 / CQUAD8 (CQUAD5/6/7 represented as CQUAD4)
+ * CTRIA3 / CTRIA6
+ * CTETRA4 / CTETRA10
+ * CHEXA8 / CHEXA20
+ * CPENTA6 / CPENTA15
  * CBAR/CBEAM/CROD/CONROD/CELASx (displayed as lines)
  * CAERO1 (shown in yellow)
  * CONM2 (shown in yellow as points)
@@ -27,14 +27,16 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 = Limitations =
  * No buttons
  * Edges may be displayed with command line option, but may not be switched once the GUI is loaded
+ * No results
+
 
 = Controls =
 
 || *Command* || *Purpose* ||
 || Left Mouse Button || Rotate in 3D ||
-|| Right Mouse Button || Zoom in/Out ||
+|| Right Mouse Button || Zoom In/Out ||
 || Middle Mouse Button || Pan ||
-|| f      || Set rotation center (zoom out to avoid clipping) ||
+|| f      || Set rotation center (zoom out before pressing to avoid clipping) ||
 || e/E/q/Q || Exit/quit the program  ||
 || m/M || Increase/decrease magnification 1.1 times ||
 || o/O || Rotate clockwise/counter-clockwise 5 degrees ||
