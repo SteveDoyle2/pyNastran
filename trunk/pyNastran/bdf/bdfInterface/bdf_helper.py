@@ -151,6 +151,9 @@ class getMethods(object):
     #--------------------
     # AERO CARDS
 
+    def nCAeros(self):
+        return len(self.caeros)
+
     def Aero(self,acsid):
         return self.aero[acsid]
 
