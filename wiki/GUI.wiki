@@ -11,16 +11,22 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 = Supported Elements =
  * CQUAD4
  * CTRIA3
- * CONM2 (displayed as points)
  * CTETRA
  * CHEXA
  * CPENTA
  * CBAR/CBEAM/CROD/CONROD/CELASx (displayed as lines)
- * CAERO1 (*todo*)
+ * CAERO1 (shown in yellow)
+ * CONM2 (shown in yellow as points)
+ 
 
 = Requirements =
- * Entire Model can be cross-referenced
+ * Entire model can be cross-referenced
  * No SPOINTs
+ * Same requirements as BDF
+
+= Limitations =
+ * No buttons
+ * Edges may be displayed with command line option, but may not be switched once the GUI is loaded
 
 = Controls =
 
@@ -36,12 +42,13 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 || w   || Display wireframe mode  ||
 || x/X || Snap to x/-x axis ||
 || y/Y || Snap to y/-y axis ||
-|| z/Z || Snap to z/-x axis ||
+|| z/Z || Snap to z/-z axis ||
 
 
 == Desired Controls ==
 || Left/Right/Up/Down Arrow || Pan ||
-|| i || Take a Picture (image) ||
+|| i || Take a Picture (Image) ||
 || p || Pick a point ||
 || e || Pick an element ||
+|| d || Display element edges ||
 || E/q/Q || Nothing ||
