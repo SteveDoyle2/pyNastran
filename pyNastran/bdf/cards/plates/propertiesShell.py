@@ -219,7 +219,9 @@ class PCOMP(ShellProperty):
         
         if card:
             #fields = card.fields(1)
+            ## Property ID
             self.pid  = card.field(1)
+            ## Non-Structural Mass
             self.nsm  = card.field(3,0.0)
             self.sb   = card.field(4,0.0)
             self.ft   = card.field(5)
@@ -266,7 +268,6 @@ class PCOMP(ShellProperty):
             #    self.plies = pliesLower+plies
             #    #print str(self)
             ###
-            #sys.exit()
             self.z0 = card.field(2,-0.5*self.Thickness())
         else:
             #print "len(data) = ",len(data)
@@ -309,7 +310,7 @@ class PCOMP(ShellProperty):
         return len(self.plies)
 
     def isSymmetrical(self):
-        """is the ply a symmetrical ply"""
+        """is the laminate symmetrical laminate"""
         if self.lam=='SYM':
             return True
         return False
@@ -332,26 +333,78 @@ class PCOMP(ShellProperty):
         return True
 
     def crossReference(self,model):
+        """
+        links the material ID to the materials
+        @param self the object pointer
+        @param model a BDF object
+        """
         for iPly,ply in enumerate(self.plies):
             mid = self.plies[iPly][0]
             #print mid
             self.plies[iPly][0] = model.Material(mid)  # mid
         ###
 
-    def Material(self,iPly):
-        Mid = self.plies[iPly][0]
-        return Mid
-
     def Nsm(self):
         return self.nsm
 
     def Mid(self,iPly):
+        """
+        gets the material ID of the ith ply
+        @param self the object pointer
+        @param iPly the ply ID (starts from 0)
+        """
         Mid = self.Material(iPly)
         if isinstance(Mid,int):
             return Mid
         return Mid.mid
 
+    def Rho(self,iPly):
+        """
+        gets the density of the ith ply
+        @param self the object pointer
+        @param iPly the ply ID (starts from 0)
+        """
+        mid = self.Material(iPly)
+        return mid.rho
+
+    def Material(self,iPly):
+        """
+        gets the material of the ith ply (not the ID unless it's not cross-referenced)
+        @param self the object pointer
+        @param iPly the ply ID (starts from 0)
+        """
+        Mid = self.plies[iPly][0]
+        return Mid
+
+    def Thickness(self,iPly='all'):
+        """
+        gets the thickness of the ith ply
+        @param self the object pointer
+        @param iPly the string 'all' (default) or the mass per area of the ith ply
+        """
+        if iPly=='all': # get all layers
+            t = 0.
+            for (iply,ply) in enumerate(self.plies):
+                t += self.Thickness(iply)
+            ###
+            if self.isSymmetrical():
+                if self.hasCoreLayer():
+                    t -= self.Thickness(0)/2.  # cut out the thickness of half the core layer
+                return t*2.
+            return t
+            ###
+        ###
+        else:
+            t = self.plies[iPly][1]
+            return t
+        ###
+
     def Theta(self,iPly):
+        """
+        gets the ply angle of the ith ply (not the ID)
+        @param self the object pointer
+        @param iPly the ply ID (starts from 0)
+        """
         Theta = self.plies[iPly][2]
         return Theta
 
@@ -365,6 +418,8 @@ class PCOMP(ShellProperty):
         but area comes from the element
         mass/A = rho*t for the various layers
         the final mass calculation will be done later
+        @param self the object pointer
+        @param iPly the string 'all' (default) or the mass per area of the ith ply
         """
         if iPly=='all': # get all layers
             massPerArea = 0.
@@ -384,28 +439,6 @@ class PCOMP(ShellProperty):
             rho = self.Rho(iPly)
             t = self.plies[iPly][1]
             return rho*t+self.nsm
-        ###
-
-    def Rho(self,iPly):
-        mid = self.Material(iPly)
-        return mid.rho
-
-    def Thickness(self,iPly='all'):
-        if iPly=='all': # get all layers
-            t = 0.
-            for (iply,ply) in enumerate(self.plies):
-                t += self.Thickness(iply)
-            ###
-            if self.isSymmetrical():
-                if self.hasCoreLayer():
-                    t -= self.Thickness(0)/2.  # cut out the thickness of half the core layer
-                return t*2.
-            return t
-            ###
-        ###
-        else:
-            t = self.plies[iPly][1]
-            return t
         ###
 
     def rawFields(self):

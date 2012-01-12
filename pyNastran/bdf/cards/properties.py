@@ -30,7 +30,7 @@ class NSM(PointProperty):
             self.value = card.field(4+nOffset)
         else:
             self.sid   = data[0]
-            #sid=9 propSet=PBEA ID=538976333 value=0.0
+            #sid=9  propSet=PBEA ID=538976333 value=0.0
             #sid=10 propSet=PDUM ID=538976312 value=2.80259692865e-45
             #sid=10 propSet=ELEM ID=542395973 value=0.0
             self.Type  = data[1]
@@ -47,6 +47,7 @@ class PMASS(PointProperty):
     def __init__(self,card=None,nOffset=0,data=None):
         PointProperty.__init__(self,card,data)
         nOffset *= 2
+        ## Property ID
         self.pid  = card.field(1+nOffset)
         self.mass = card.field(2+nOffset,0.)
 
@@ -155,13 +156,13 @@ class PGAP(Property):
         return fields
 
     def reprFields(self):
-        u0 = self.setBlankIfDefault(self.u0,0.)
-        f0 = self.setBlankIfDefault(self.f0,0.)
-        ka = self.setBlankIfDefault(self.ka,1.e8)
-        kb = self.setBlankIfDefault(self.kb,1e-14*self.ka)
-        kt = self.setBlankIfDefault(self.kt,self.mu1*self.ka)
-        mu1 = self.setBlankIfDefault(self.mu1,0.)
-        mu2 = self.setBlankIfDefault(self.mu2,self.mu1)
+        u0    = self.setBlankIfDefault(self.u0,0.)
+        f0    = self.setBlankIfDefault(self.f0,0.)
+        ka    = self.setBlankIfDefault(self.ka,1.e8)
+        kb    = self.setBlankIfDefault(self.kb,1e-14*self.ka)
+        kt    = self.setBlankIfDefault(self.kt,self.mu1*self.ka)
+        mu1   = self.setBlankIfDefault(self.mu1,0.)
+        mu2   = self.setBlankIfDefault(self.mu2,self.mu1)
         tmax  = self.setBlankIfDefault(self.tmax,0.)
         mar   = self.setBlankIfDefault(self.mar,100.)
         trmin = self.setBlankIfDefault(self.mrmin,0.001)
@@ -190,7 +191,9 @@ class PLSOLID(SolidProperty):
     def __init__(self,card=None,data=None):
         SolidProperty.__init__(self,card,data)
         if card:
+            ## Property ID
             self.pid = card.field(1)
+            ## Material ID
             self.mid = card.field(2)
             self.ge  = card.field(3)
             self.str = card.field(4,'GRID')
@@ -221,7 +224,9 @@ class PSOLID(SolidProperty):
     def __init__(self,card=None,data=None):
         SolidProperty.__init__(self,card,data)
         if card:
+            ## Property ID
             self.pid    = card.field(1)
+            ## Material ID
             self.mid    = card.field(2)
             self.cordm  = card.field(3,0)
             self.integ  = card.field(4)
@@ -257,11 +262,13 @@ class PCONEAX(Property): #not done
     def __init__(self,card=None,data=None):
         Property.__init__(self,card,data)
         if card:
-            self.pid = card.field(1)
-            self.mid = card.field(2)
+            ## Property ID
+            self.pid   = card.field(1)
+            ## Material ID
+            self.mid   = card.field(2)
             self.group = card.field(3,'MSCBMLO')
-            self.Type = card.field(4)
-            self.dim = [] # confusing entry...
+            self.Type  = card.field(4)
+            self.dim   = [] # confusing entry...
         else:
             raise Exception('not supported')
         ###

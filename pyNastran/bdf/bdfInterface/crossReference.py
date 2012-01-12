@@ -5,6 +5,9 @@ class XrefMesh(object):
         pass
 
     def crossReference(self,xref=True):
+        """
+        links up all the cards to the cards they reference
+        """
         if xref:
             #print "cross Reference is a temp function"
             #for key,e in self.elements.items():
@@ -25,6 +28,9 @@ class XrefMesh(object):
         ###
 
     def crossReference_Coordinates(self):
+        """
+        links up all the coordinate cards to other coordinate cards and nodes
+        """
         for cid,c in self.coords.items(): # CORD2x: links the rid to coordinate systems
             c.crossReference(self)        # CORD1x: links g1,g2,g3 to grid points
         ###
@@ -35,6 +41,9 @@ class XrefMesh(object):
                                           # unresolved
 
     def crossReference_Aero(self):
+        """
+        links up all the aero cards
+        """
         for ID,caero in self.caeros.items():
             caero.crossReference(self)
         ###
@@ -43,11 +52,11 @@ class XrefMesh(object):
         ###
 
     def crossReference_Nodes(self):
+        """
+        links the nodes to coordinate systems
+        """
         gridSet = self.gridSet
         for nid,n in self.nodes.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
             try:
                 n.crossReference(self,gridSet)
             except:
@@ -56,10 +65,10 @@ class XrefMesh(object):
         ###
 
     def crossReference_Elements(self):
+        """
+        links the elements to nodes, properties (and materials depending on the card)
+        """
         for eid,e in self.elements.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
             try:
                 e.crossReference(self)
             except:
@@ -68,10 +77,10 @@ class XrefMesh(object):
         ###
 
     def crossReference_Properties(self):
+        """
+        links the properties to materials
+        """
         for pid,p in self.properties.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
             #print p
             try:
                 p.crossReference(self)
@@ -81,10 +90,11 @@ class XrefMesh(object):
         ###
 
     def crossReference_Materials(self):
+        """
+        links the materials to materials (e.g. CREEP)
+        often this is a pass statement
+        """
         for mid,m in self.materials.items():
-            #print "n.cid = ",n.cid
-            #coord = self.Coord(n.cid)
-            #print "*",str(coord)
             try:
                 m.crossReference(self)
             except:
@@ -93,10 +103,14 @@ class XrefMesh(object):
         ###
 
     def crossReference_Loads(self):
+        """
+        links the loads to nodes, coordinate systems, and other loads
+        """
         for lid,sid in self.loads.items():
-        #    #print "n.cid = ",n.cid
-        #    #coord = self.Coord(n.cid)
-        #    #print "*",str(coord)
-            l.crossReference(self)
+            try:
+                l.crossReference(self)
+            except:
+                sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
+                raise
         ###
 

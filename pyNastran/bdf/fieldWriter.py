@@ -4,6 +4,7 @@ from numpy import allclose,isinf
 def isSame(value1,value2):
     """
     checks to see if 2 values are the same
+    @note this method is used by almost every card when printing
     """
     #print "value=%s default=%s" %(value1,value2)
     if isinstance(value1,str) or isinstance(value1,NoneType):
@@ -17,20 +18,25 @@ def isSame(value1,value2):
     return False
 
 def setBlankIfDefault(value,default):
-    """used when setting the output data of a card to clear default values"""
+    """
+    used when setting the output data of a card to clear default values
+    @note this method is used by almost every card when printing
+    """
     if isSame(value,default):
         return None
     return value
 
 def setDefaultIfBlank(value,default):
     """used when initializing a card and the default value isnt set"""
+    raise Exception('is this used')
     if value is None or value=='':
         return default
     return value
 
-def printScientific(value):
+def printScientific8(value):
     """
-    prints a value in 8-character scientific notation
+    Prints a value in 8-character scientific notation.
+    This is a sub-method and shouldnt typically be called
     @see printFloat for a better method
     """
     #print "scientific...%s" %(value)
@@ -78,7 +84,8 @@ def printScientific(value):
 
 def printScientific16(value):
     """
-    prints a value in 16-character scientific notation
+    Prints a value in 16-character scientific notation.
+    This is a sub-method and shouldnt typically be called
     @warning not tested...
     """
     pythonValue = '%16.14e' %(value)
@@ -108,11 +115,12 @@ def printScientific16(value):
     field = "%16s" %(svalue4 + sign +sExp2)
     return field
 
-def printFloat(value,tol=1e-8):
+def printFloat8(value,tol=1e-8):
     """
-    prints a float in nastran 8-character width syntax
+    Prints a float in nastran 8-character width syntax.
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
+    @warning hasnt really be tested for tolerancing
     """
     #value = round(value,4)
     #print "float...%s" %value
@@ -122,8 +130,8 @@ def printFloat(value,tol=1e-8):
         if value>0.:  # positive, not perfect...
             #print "positive"
 
-            if value<5e-8:
-                field = printScientific(value)
+            if value<5e-8:  ## @todo does this work properly with tol
+                field = printScientific8(value)
             elif value<0.0001:
                 #print "A"
                 if 1:
@@ -158,7 +166,7 @@ def printFloat(value,tol=1e-8):
                     if len(field)<8:
                         assert '.' == field[0],field
                     else:
-                        field = printScientific(value)
+                        field = printScientific8(value)
                     ###
                     print "field = ",field
                 ###
@@ -182,18 +190,18 @@ def printFloat(value,tol=1e-8):
                     field = field[0:8]
                     assert '.' != field[0],field
                 else:
-                    field = printScientific(value)
+                    field = printScientific8(value)
                 ###
             ###
         ###
         else:
             #print "negative"
-            if value>-5e-7:
+            if value>-5e-7:  ## @todo does this work properly with tol
                 #print "really small"
-                field = printScientific(value)
+                field = printScientific8(value)
             elif value>-0.01:  # -0.001
                 #print "tiny"
-                field = printScientific(value)
+                field = printScientific8(value)
                 field2 = "%8.6f" %(value) # small value
                 field2 = field2.strip('0 ')
 
@@ -231,7 +239,7 @@ def printFloat(value,tol=1e-8):
             elif value>-10000: field = "%8.2f" %(value)   # -1000 >x>-10000
             elif value>-100000:field = "%8.1f" %(value)   # -10000>x>-100000
             else:
-                field = printScientific(value)
+                field = printScientific8(value)
                 #field2 = 
             ###
         ###
@@ -245,20 +253,24 @@ def printFloat(value,tol=1e-8):
 
 def printFloat16(value,tol=1e-8):
     """
-    @todo preliminary print method uses 8-character width...
+    @todo preliminary print method uses 16-character width...
+    @see printFloat8
     """
-    strVal = printFloat(value,tol)
+    strVal = printFloat8(value,tol)
     return '%16s' %(strVal)
 
-def printField(value):
+def printField(value,tol=1e-8):
     """
     prints a single 8-character width field
+    @param value the value to print
+    @param tol the abs(tol) to consider value=0 (default=1e-8)
+    @retval field an 8-character (tested) string
     """
-    if isinstance(value,float):
-        #print "float..."
-        field = printFloat(value)
-    elif isinstance(value,int):
+    if isinstance(value,int):
         field = "%8s" %(value)
+    elif isinstance(value,float):
+        #print "float..."
+        field = printFloat8(value)
     elif isinstance(value,NoneType):
         field = "        "
     else:
@@ -266,15 +278,18 @@ def printField(value):
     assert len(field)==8,'field=|%s| is not 8 characters long...rawValue=|%s|' %(field,value)
     return field
 
-def printField16(value):
+def printField16(value,tol=1e-8):
     """
     prints a single 16-character width field
+    @param value the value to print
+    @param tol the abs(tol) to consider value=0 (default=1e-8)
+    @retval field an 16-character (tested) string
     """
-    if isinstance(value,float):
+    if isinstance(value,int):
+        field = "%16s" %(value)
+    elif isinstance(value,float):
         #print "float..."
         field = printFloat16(value)
-    elif isinstance(value,int):
-        field = "%16s" %(value)
     elif isinstance(value,NoneType):
         field = "                "
     else:
@@ -295,7 +310,13 @@ def printField16(value):
 
 def printCard(fields):
     """
-    prints a nastran-style card with 8-character width fields
+    Prints a nastran-style card with 8-character width fields.
+    
+    @note A small field format follows the  8-8-8-8-8-8-8-8 = 80
+    format where the first 8 is the card name or blank (continuation).
+    The last 8-character field indicates an optional continuation,
+    but because it's a left-justified unneccessary field,
+    printCard doesnt use it.
     """
     try:
         out = '%-8s' %(fields[0])
@@ -306,7 +327,7 @@ def printCard(fields):
     for i in range(1,len(fields)):
         field = fields[i]
         try:
-            out += printField(field) #+'  '
+            out += printField(field)
         except AssertionError:
             print "bad fields = ",fields
             raise
@@ -320,8 +341,13 @@ def printCard(fields):
 
 def printCard_16(fields):
     """
-    prints a nastran-style card with 16-character width fields
-    @todo not implemented...
+    Prints a nastran-style card with 16-character width fields.
+    
+    @note A large field format follows the  8-16-16-16-16-8 = 80.
+    format where the first 8 is the card name or blank (continuation).
+    The last 8-character field indicates an optional continuation,
+    but because it's a left-justified unneccessary field,
+    printCard doesnt use it.
     """
     try:
         out = '%-8s' %(fields[0])
@@ -332,7 +358,7 @@ def printCard_16(fields):
     for i in range(1,len(fields)):
         field = fields[i]
         try:
-            out += printField16(field) #+'  '
+            out += printField16(field)
         except AssertionError:
             print "bad fields = ",fields
             raise
@@ -346,7 +372,10 @@ def printCard_16(fields):
 
 def displayCard(fields):
     """
-    prints a cards fields in an easy to read/debug format
+    Prints a cards fields in an easy to read/debug format.
+    @param fields the fields to "print" to standard out.
+    @note this method has been made obsolete by the maturation
+    of card printing methods, but it's still useful.
     """
     for i,field in enumerate(fields):
         print "field[%s] = %s" %(i,field)
