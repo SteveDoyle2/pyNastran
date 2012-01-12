@@ -1,0 +1,61 @@
+#summary Description of the transformation equations and how to use them
+
+= Introduction =
+
+Coordinate Systems were added in pyNastran v0.3.0 (still in development).
+
+pyNastran supports standard CORD1x and CORD2x coordinate systems, but not CORD3Gs (hardly ever used).
+
+== Local to Global Transform in Rectangular Coordinates ==
+The Global Frame (CORD2R=0) is easy:
+\f[ origin     = [0,0,0] \f]
+\f[ i_{Global} = [1,0,0] \f]
+\f[ j_{Global} = [0,1,0] \f]
+\f[ k_{Global} = [0,0,1] \f]
+
+A CORD2R is defined as follows:
+{{{
+cid, rid, A1, A2, A3, B1, B2, B3,
+     C1, C2, C3
+
+or using numbers:
+CORD2R         1              .5      .5      .5     1.5      .5      .5
+              .5      .5     1.5
+}}}
+
+This example is pretty easy, but let's pretend it's hard and the vectors are NOT perpendicular.
+
+Basically just a rename:
+\f[ e_1 = origin = [A_1,A_2,A_3] \f]
+\f[ e_2 = [B_1,B_2,B_3] \f]
+\f[ e_3 = [C_1,C_2,C_3] \f]
+
+Find the ijk vectors:
+\f[ e_{13}  = e_3 - e_1                \f]
+\f[ e_{12}  = e_2 - e_1                \f]
+\f[ k       = \frac{e_{12}}{|e_{12}|}  \f]
+\f[ j_{dir} = k \cross e_{13}          \f]
+\f[ j = \frac{j_{dir}}{|j_{dir}|}      \f]
+\f[ i = j \cross k                     \f]
+
+Now that we have our unit vectors i, j, k, we can transform a point \f$ p \f$ from a local coordinate system to the origin.
+
+The origin of the local coordinate system is in the global frame (verify), so:
+
+        \f[ \large [p_{global} -p_{origin} ]_{1x3} = [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}    \f]
+        
+        where   \f$ [\Beta]_{ij} \f$ is the tranformation matrix
+        \f[ \large  [\Beta]_{ij} \left[ 
+          \begin{array}{ccc}
+              g_x \dot i  &  g_x \dot j  &  g_x \dot k    \\
+              g_y \dot i  &  g_y \dot j  &  g_y \dot k    \\
+              g_z \dot i  &  g_z \dot j  &  g_z \dot k
+          \end{array} \right]
+        \f] 
+
+
+== Differences between CORD1x and CORD2x ==
+Other than the number of fields, and the fact that CORD1x cards reference points, which can have their own unique coordinate system, there really is no difference.  Origins are defined in the global frame regardless of the coordinate system and vectors do NOT need to be perpendicular.
+
+= Details =
+
