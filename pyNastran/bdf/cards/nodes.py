@@ -254,11 +254,11 @@ class GRID(Node):
             return self.xyz
         #coordA = model.Coord(cid)
         # converting the xyz point arbitrary->global
-        p,matrix = self.cp.transformToGlobal(self.xyz,debug=debug)
+        p,matrixDum = self.cp.transformToGlobal(self.xyz,debug=debug)
         #print "wrt = ",p
         coordB = model.Coord(cid)
         
-        # a dummy matrix global->local matrix is found
+        # a matrix global->local matrix is found
         pdum,matrix = coordB.transformToGlobal(array([1.,0.,0]),debug=debug)
         p2          = coordB.transformToLocal(p,matrix,debug=debug)
         return p2
@@ -287,9 +287,5 @@ class GRID(Node):
         ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.Seid(),0)
         fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
-        #if self.nid==2:
-        #    import sys
-        #    print self.printCard(fields)
-        #    sys.exit('asdf')
         return fields
 

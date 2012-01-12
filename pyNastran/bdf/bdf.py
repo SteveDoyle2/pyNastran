@@ -27,6 +27,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
     #    pass
 
     def __init__(self,debug=True,log=None):
+        """
+        Initializes the BDF object
+        @param self the object pointer
+        @param debug used to set the logger if no logger is passed in
+        @param log a python logging module object
+        """
         ## allows the BDF variables to be scoped properly (i think...)
         bdfReader.__init__(self,debug,log)
         getMethods.__init__(self)
@@ -238,11 +244,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self._initThermalDefaults()
 
     def isSpecialCard(self,cardName):
+        """these cards are listed in the case control and the bulk data deck"""
         if cardName in self.specialCards:
             return True
         return False
 
     def _initStructuralDefaults(self):
+        """initializes some bdf parameters"""
         ## the analysis type
         self.sol = None
         ## used in solution 600, method
@@ -339,6 +347,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.tables = {}
 
     def _initThermalDefaults(self):
+        """initializes some bdf parameters"""
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
         self.bcs   = {}  # e.g. RADBC
@@ -622,8 +631,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         """parses an INCLUDE file split into multiple lines (as a list)
         @param self the object poitner
         @param cardLines the list of lines in the include card (all the lines!)
-        @param cardName
-            INCLUDE or include (needed to strip it off without converting the case
+        @param cardName INCLUDE or include (needed to strip it off without converting the case)
+        @retval filename the INCLUDE filename
         """
         cardLines2 = []
         for line in cardLines:
@@ -642,6 +651,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         """
         This method must be called before opening an INCLUDE file.
         Identifies the new file as being opened.
+        @param self the object pointer
+        @param infileName the new INCLUDE file
+        @note isOpened[fileName] is really initialized to False
         """
         self.isOpened[infileName] = False
 
@@ -773,6 +785,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             or CQUAD4 object.  It's a BDF_Card Object.  However, you know the type (assuming a GRID),
             so just call the mesh.Node(nid) to get the Node object that was just created.
         @warning cardObject is not returned
+        @todo this method is 600+ lines long...refactor time...
         """
         #if cardName != 'CQUAD4':
         #    print cardName
@@ -850,17 +863,17 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 elem = CTRIAX6(cardObj)
                 self.addElement(elem)
 
-            elif cardName=='CTETRA':
+            elif cardName=='CTETRA': # 4/10 nodes
                 nFields = cardObj.nFields()
                 if   nFields==7:    elem = CTETRA4(cardObj)  # 4+3
                 else:               elem = CTETRA10(cardObj) # 10+3
                 self.addElement(elem)
-            elif cardName=='CHEXA':
+            elif cardName=='CHEXA': # 8/20 nodes
                 nFields = cardObj.nFields()
                 if   nFields==11: elem = CHEXA8(cardObj)   # 8+3
                 else:             elem = CHEXA20(cardObj)  # 20+3
                 self.addElement(elem)
-            elif cardName=='CPENTA': # 6/15
+            elif cardName=='CPENTA': # 6/15 nodes
                 nFields = cardObj.nFields()
                 if   nFields==9:  elem = CPENTA6(cardObj)   # 6+3
                 else:             elem = CPENTA15(cardObj)  # 15+3
@@ -991,7 +1004,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='PBEAM3':
             #    prop = PBEAM3(cardObj)
             #    self.addProperty(prop)
-            elif cardName=='PBEAML':   # hasnt been verified...
+            elif cardName=='PBEAML':
                 prop = PBEAML(cardObj)
                 self.addProperty(prop)
             elif cardName=='PELAS':

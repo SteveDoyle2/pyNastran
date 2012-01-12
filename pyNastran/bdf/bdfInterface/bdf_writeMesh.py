@@ -45,6 +45,8 @@ class writeMesh(object):
     def writeCommon(self):
         """
         method to write the common outputs so none get missed...
+        @param self the object pointer
+        @retval msg part of the bdf
         """
         msg = ''
         msg += self.writeRigidElements()
@@ -64,11 +66,14 @@ class writeMesh(object):
         msg += self.writeCoords()
         return msg
 
-    def writeBDFAsPatran(self,outfilename='fem.out.bdf',debug=False):
+    def writeBDFAsPatran(self,outFileName='fem.out.bdf',debug=False):
         """
         Writes a bdf with properties & elements interspersed like how
         Patran writes the bdf.  This takes longer than the write method
         but makes it easier to compare to a Patran-formatted bdf.
+        @param self the object pointer
+        @param outFileName the name to call the output bdf
+        @param debug developer debug (unused)
         """
         msg  = self.writeHeader()
         msg += self.writeParams()
@@ -80,18 +85,21 @@ class writeMesh(object):
         msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        fname = self.printFileName(outfilename)
+        fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
         
-        outfile = open(outfilename,'wb')
+        outfile = open(outFileName,'wb')
         outfile.write(msg)
         outfile.close()
     
-    def writeBDF(self,outfilename='fem.out.bdf',debug=False):
+    def writeBDF(self,outFileName='fem.out.bdf',debug=False):
         """
         Writes the bdf.  It groups the various sections together to make it
         easy to find cards.  This method is slightly more stable than 
         writeAsPatran due to the properties sometimes being a little funny.
+        @param self the object pointer
+        @param outFileName the name to call the output bdf
+        @param debug developer debug (unused)
         """
         msg  = self.writeHeader()
         msg += self.writeParams()
@@ -104,16 +112,20 @@ class writeMesh(object):
         msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        fname = self.printFileName(outfilename)
+        fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
 
-        outfile = open(outfilename,'wb')
+        outfile = open(outFileName,'wb')
         outfile.write(msg)
         outfile.close()
 
-    def writeAsCTRIA3(self,outfilename='fem.out.bdf',debug=False):
+    def writeAsCTRIA3(self,outFileName='fem.out.bdf',debug=False):
         """
         Writes a series of CQUAD4s as CTRIA3s.  All other cards are echoed.
+        @param self the object pointer
+        @param outFileName the name to call the output bdf
+        @param debug developer debug (unused)
+        @warning not tested in a long time
         """
         msg  = self.writeHeader()
         msg += self.writeParams()
@@ -125,22 +137,27 @@ class writeMesh(object):
         msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        fname = self.printFileName(outfilename)
+        fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
 
-        outfile = open(outfilename,'wb')
+        outfile = open(outFileName,'wb')
         outfile.write(msg)
         outfile.close()
 
     def writeHeader(self):
         """
         Writes the executive and case control decks.
+        @param self the object pointer
         """
         msg  = self.writeExecutiveControlDeck()
         msg += self.writeCaseControlDeck()
         return msg
 
     def writeExecutiveControlDeck(self):
+        """
+        Writes the executive control deck.
+        @param self the object pointer
+        """
         msg = '$EXECUTIVE CONTROL DECK\n'
         
         if self.sol==600:
@@ -156,6 +173,10 @@ class writeMesh(object):
         return msg
 
     def writeCaseControlDeck(self):
+        """
+        Writes the case control deck.
+        @param self the object pointer
+        """
         msg = ''
         if self.caseControlDeck:
             msg += '$CASE CONTROL DECK\n'
@@ -197,8 +218,8 @@ class writeMesh(object):
         msg = ''
         if self.elements:
             msg += '$ELEMENTS\n'
-        for eid,element in sorted(self.elements.items()):
-            msg += str(element)
+            for eid,element in sorted(self.elements.items()):
+                msg += str(element)
         return msg
 
     def writeRigidElements(self):
@@ -206,8 +227,8 @@ class writeMesh(object):
         msg = ''
         if self.rigidElements:
             msg += '$RIGID ELEMENTS\n'
-        for eid,element in sorted(self.rigidElements.items()):
-            msg += str(element)
+            for eid,element in sorted(self.rigidElements.items()):
+                msg += str(element)
         return msg
 
     def writeProperties(self):
@@ -215,14 +236,12 @@ class writeMesh(object):
         msg = ''
         if self.properties:
             msg += '$PROPERTIES\n'
-        for pid,prop in sorted(self.properties.items()):
-            msg += str(prop)
+            for pid,prop in sorted(self.properties.items()):
+                msg += str(prop)
         return msg
 
     def writeElementsProperties(self):
-        """
-        writes the elements and properties in and interspersed order
-        """
+        """writes the elements and properties in and interspersed order"""
         msg = ''
         missingProperties = []
         if self.properties:
@@ -268,16 +287,17 @@ class writeMesh(object):
         msg = ''
         if self.materials:
             msg += '$MATERIALS\n'
-        for key,material in sorted(self.materials.items()):
-            msg += str(material)
+            for key,material in sorted(self.materials.items()):
+                msg += str(material)
         return msg
 
     def writeThermalMaterials(self):
+        """writes the thermal materials in a sorted order"""
         msg = ''
         if self.thermalMaterials:
             msg += '$THERMAL MATERIALS\n'
-        for key,material in sorted(self.thermalMaterials.items()):
-            msg += str(material)
+            for key,material in sorted(self.thermalMaterials.items()):
+                msg += str(material)
         return msg
 
     def writeConstraints(self):
@@ -315,50 +335,48 @@ class writeMesh(object):
         msg = ''
         if self.dconstrs or self.desvars or self.ddvals or self.dresps or self.dvprels:
             msg += '$OPTIMIZATION\n'
-        for ID,dconstr in sorted(self.dconstrs.items()):
-            msg += str(dconstr)
-        for ID,desvar in sorted(self.desvars.items()):
-            msg += str(desvar)
-        for ID,ddval in sorted(self.ddvals.items()):
-            msg += str(ddval)
-        for ID,dresp in sorted(self.dresps.items()):
-            msg += str(dresp)
-        for ID,dvprel in sorted(self.dvprels.items()):
-            msg += str(dvprel)
-        for ID,equation in sorted(self.dequations.items()):
-            msg += str(equation)
+            for ID,dconstr in sorted(self.dconstrs.items()):
+                msg += str(dconstr)
+            for ID,desvar in sorted(self.desvars.items()):
+                msg += str(desvar)
+            for ID,ddval in sorted(self.ddvals.items()):
+                msg += str(ddval)
+            for ID,dresp in sorted(self.dresps.items()):
+                msg += str(dresp)
+            for ID,dvprel in sorted(self.dvprels.items()):
+                msg += str(dvprel)
+            for ID,equation in sorted(self.dequations.items()):
+                msg += str(equation)
         return msg
 
     def writeTables(self):
         msg = ''
         if self.tables:
             msg += '$TABLES\n'
-            
-        for ID,table in sorted(self.tables.items()):
-            msg += str(table)
+            for ID,table in sorted(self.tables.items()):
+                msg += str(table)
         return msg
 
     def writeSets(self):
         msg = ''
         if self.sets or self.setsSuper:
             msg += '$SETS\n'
-            
-        for ID,setObj in sorted(self.sets.items()):
-            msg += str(setObj)
-        for ID,setObj in sorted(self.setsSuper.items()):
-            msg += str(setObj)
+            for ID,setObj in sorted(self.sets.items()):
+                msg += str(setObj)
+            for ID,setObj in sorted(self.setsSuper.items()):
+                msg += str(setObj)
         return msg
 
     def writeDynamic(self):
         msg = ''
         if self.dareas or self.nlparms or self.frequencies:
             msg += '$DYNAMIC\n'
-        for ID,darea in sorted(self.dareas.items()):
-            msg += str(darea)
-        for ID,nlparm in sorted(self.nlparms.items()):
-            msg += str(nlparm)
-        for ID,freq in sorted(self.frequencies.items()):
-            msg += str(freq)
+            for ID,darea in sorted(self.dareas.items()):
+                msg += str(darea)
+            for ID,nlparm in sorted(self.nlparms.items()):
+                msg += str(nlparm)
+            for ID,freq in sorted(self.frequencies.items()):
+                msg += str(freq)
         return msg
         
     def writeAero(self):
@@ -367,48 +385,48 @@ class writeMesh(object):
         msg = ''
         if (self.aero or self.aeros or self.gusts or self.caeros 
         or self.paeros):  msg = '$AERO\n'
-        #flfactKeys = self.flfacts.keys()
-        #self.log.info("flfactKeys = %s" %(flfactKeys))
-        for ID,caero in sorted(self.caeros.items()):
-            msg += str(caero)
-        for ID,paero in sorted(self.paeros.items()):
-            msg += str(paero)
-        for ID,spline in sorted(self.splines.items()):
-            msg += str(spline)
+            for ID,caero in sorted(self.caeros.items()):
+                msg += str(caero)
+            for ID,paero in sorted(self.paeros.items()):
+                msg += str(paero)
+            for ID,spline in sorted(self.splines.items()):
+                msg += str(spline)
 
-        for ID,aero in sorted(self.aero.items()):
-            msg += str(aero)
-        for ID,aero in sorted(self.aeros.items()):
-            msg += str(aero)
-        
-        for ID,gust in sorted(self.gusts.items()):
-            msg += str(gust)
-        for ID,grav in sorted(self.gravs.items()):
-            msg += str(grav)
+            for ID,aero in sorted(self.aero.items()):
+                msg += str(aero)
+            for ID,aero in sorted(self.aeros.items()):
+                msg += str(aero)
+
+            for ID,gust in sorted(self.gusts.items()):
+                msg += str(gust)
+            for ID,grav in sorted(self.gravs.items()):
+                msg += str(grav)
         return msg
 
     def writeAeroControl(self):
         """writes the aero control surface cards"""
         msg = ''
-        if (self.aestats or self.aeparams or self.aelinks):  msg = '$AERO CONTROL SURFACES\n'
-        for ID,aelinks in sorted(self.aelinks.items()):
-            for aelink in aelinks:
-                msg += str(aelink)
-        for ID,aeparam in sorted(self.aeparams.items()):
-            msg += str(aeparam)
-        for ID,aestat in sorted(self.aestats.items()):
-            msg += str(aestat)
+        if (self.aestats or self.aeparams or self.aelinks):
+            msg = '$AERO CONTROL SURFACES\n'
+            for ID,aelinks in sorted(self.aelinks.items()):
+                for aelink in aelinks:
+                    msg += str(aelink)
+            for ID,aeparam in sorted(self.aeparams.items()):
+                msg += str(aeparam)
+            for ID,aestat in sorted(self.aestats.items()):
+                msg += str(aestat)
         return msg
 
     def writeFlutter(self):
         """writes the flutter cards"""
         msg = ''
-        if (self.flfacts or self.flutters):  msg = '$FLUTTER\n'
-        for ID,flfact in sorted(self.flfacts.items()):
-            #if ID!=0:
-            msg += str(flfact)
-        for ID,flutter in sorted(self.flutters.items()):
-            msg += str(flutter)
+        if (self.flfacts or self.flutters):
+            msg = '$FLUTTER\n'
+            for ID,flfact in sorted(self.flfacts.items()):
+                #if ID!=0:
+                msg += str(flfact)
+            for ID,flutter in sorted(self.flutters.items()):
+                msg += str(flutter)
         return msg
 
     def writeThermal(self):
@@ -418,20 +436,20 @@ class writeMesh(object):
         if self.phbdys or self.convectionProperties or self.bcs:  # self.thermalProperties or
             msg = '$THERMAL\n'
 
-        for key,phbdy in sorted(self.phbdys.items()):
-            msg += str(phbdy)
+            for key,phbdy in sorted(self.phbdys.items()):
+                msg += str(phbdy)
 
-        #for key,prop in sorted(self.thermalProperties.items()):
-        #    msg += str(prop)
-        for key,prop in sorted(self.convectionProperties.items()):
-            msg += str(prop)
+            #for key,prop in sorted(self.thermalProperties.items()):
+            #    msg += str(prop)
+            for key,prop in sorted(self.convectionProperties.items()):
+                msg += str(prop)
 
-        # BCs
-        for key,bcs in sorted(self.bcs.items()):
-            for bc in bcs: # list
-                msg += str(bc)
+            # BCs
+            for key,bcs in sorted(self.bcs.items()):
+                for bc in bcs: # list
+                    msg += str(bc)
+                ###
             ###
-        ###
         return msg
 
     def writeCoords(self):
@@ -455,10 +473,8 @@ class writeMesh(object):
         msg = ''
         if self.rejectCards:
             msg += '$REJECTS\n'
-        for rejectCard in self.rejectCards:
-            #print "rejectCard = ",rejectCard
-            #print ""
-            msg += printCard(rejectCard)
+            for rejectCard in self.rejectCards:
+                msg += printCard(rejectCard)
 
         if self.rejects:
             msg += '$REJECT_LINES\n'
