@@ -1,17 +1,24 @@
 #summary Description of the transformation equations and how to use them
 
+= NOTE = 
+This page is ugly because I can't figure out LaTeX in Google Code...check the documentation if you cant understand LaTeX in order to see things properly rendered.
+
 = Introduction =
 
 Coordinate Systems were added in pyNastran v0.3.0 (still in development).
 
 pyNastran supports standard CORD1x and CORD2x coordinate systems, but not CORD3Gs (hardly ever used).
 
+
+
 == Local to Global Transform in Rectangular Coordinates ==
 The Global Frame (CORD2R=0) is easy:
-\f[ origin     = [0,0,0] \f]
-\f[ i_{Global} = [1,0,0] \f]
-\f[ j_{Global} = [0,1,0] \f]
-\f[ k_{Global} = [0,0,1] \f]
+`!bt`
+origin     = [0,0,0] 
+i_{Global} = [1,0,0] 
+j_{Global} = [0,1,0] 
+k_{Global} = [0,0,1] 
+`!et`
 
 A CORD2R is defined as follows:
 {{{
@@ -34,6 +41,9 @@ Find the ijk vectors:
 \f[ e_{13}  = e_3 - e_1                \f]
 \f[ e_{12}  = e_2 - e_1                \f]
 \f[ k       = \frac{e_{12}}{|e_{12}|}  \f]
+
+<a href="http://www.codecogs.com/eqnedit.php?latex=k = \frac{e_{12}}{|e_{12}|}" target="_blank"><img src="http://latex.codecogs.com/gif.latex?k = \frac{e_{12}}{|e_{12}|}" title="k = \frac{e_{12}}{|e_{12}|}" /></a>
+
 \f[ j_{dir} = k \cross e_{13}          \f]
 \f[ j = \frac{j_{dir}}{|j_{dir}|}      \f]
 \f[ i = j \cross k                     \f]
@@ -44,7 +54,7 @@ The origin of the local coordinate system is in the global frame (verify), so:
 
         \f[ \large [p_{global} -p_{origin} ]_{1x3} = [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}    \f]
         
-        where   \f$ [\Beta]_{ij} \f$ is the tranformation matrix
+        where   \f$ [\Beta]_{ij} \f$ is the transformation matrix
         \f[ \large  [\Beta]_{ij} \left[ 
           \begin{array}{ccc}
               g_x \dot i  &  g_x \dot j  &  g_x \dot k    \\
@@ -54,8 +64,11 @@ The origin of the local coordinate system is in the global frame (verify), so:
         \f] 
 
 
+<a href="http://www.codecogs.com/eqnedit.php?latex=\sum \alpha ^{\beta }"
+target="_blank"><img src="http://latex.codecogs.com/gif.latex?\sum \alpha ^{\beta
+}%.png" title="\sum \alpha ^{\beta }" /></a>
+
 == Differences between CORD1x and CORD2x ==
 Other than the number of fields, and the fact that CORD1x cards reference points, which can have their own unique coordinate system, there really is no difference.  Origins are defined in the global frame regardless of the coordinate system and vectors do NOT need to be perpendicular.
 
 = Details =
-
