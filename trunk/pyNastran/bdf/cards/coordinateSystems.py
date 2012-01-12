@@ -91,12 +91,22 @@ class Coord(BaseCard):
 
     def transformToLocal(self,p,matrix,debug=False):
         """
-        transforms the point p to the local coordinate system
+        Transforms the global point p to the local coordinate system
         @param self the object pointer
         @param p    the point to transform
-        @param matrix the transformation matrix to apply
+        @param matrix the transformation matrix to apply - created by transformToGlobal
         @param debug developer debug
         @note uses the matrix as there is no linking from a global coordinate system to the local
+        @note the matrix that comes in is the local to global, so we need to invert the matrix.
+        Luckily the inverse of a tranformation matrix \f$ [\phi] \f$ is the transpose of the matrix.
+        
+        \f[ p_{Global} = (p_{Local}-e_1 )[\phi]+e_1 \f]
+        \f[ [phi]^{-1} = [phi]^T \f]
+        (pc-e1) =(pG-e1)mT
+        (pc-e1)*m = pG-e1
+        (pc-e1)*m+e1 = pG
+        @note be very careful of when you apply e1.  It gets removed whenever
+        rotations are applied.  These equations need some TLC, but the methods are ok.
         """
         #pGlobal = self.transformToGlobal(p,debug=False)
         pCoord = dot(p-self.e1,transpose(matrix))
@@ -260,7 +270,7 @@ class Cord2x(Coord):
         system types assuming there is no circular references.
         """
         #print str(self)
-        #pritn self.rid
+        #print self.rid
         if self.cid==0 or isinstance(self.rid,int) or self.rid.isResolved:  # rid=0
             return
         elif self.rid.isResolved==False: # rid
@@ -272,7 +282,7 @@ class Cord2x(Coord):
         self.e1,matrix  = self.transformToGlobal(self.e1)
         
         ## the axes are normalized, so assume they're points and
-        ## resolve them in the XYZ system, but dont subtract e1 off
+        ## resolve them in the XYZ system, but dont subtract e1 off (hence the False)
         self.e1,matrix = self.rid.transformToGlobal(self.e1) # origin
         i,matrix       = self.rid.transformToGlobal(self.i,False)
         j,matrix       = self.rid.transformToGlobal(self.j,False)
@@ -301,15 +311,15 @@ class Cord2x(Coord):
         """
         Transforms a point from the local coordinate system to the reference coordinate
         frames "global" coordinate system.  
-        @note that this doesn't transform it from a coordinate system 
+
         \f[ \large [p_{global}]_{1x3} = [p_{local} -p_{origin}]_{1x3}[\Beta_{ij}]_{3x3}    \f]
         
-        where   \f$ [\Beta]_{ij} \f$ is the tranformation matrix
+        where   \f$ [\Beta]_{ij} \f$ is the transformation matrix
         \f[ \large  [\Beta]_{ij} \left[ 
           \begin{array}{ccc}
-              g_x \dot i  &  g_x \dot j  &  g_x \dot k    \\
-              g_y \dot i  &  g_y \dot j  &  g_y \dot k    \\
-              g_z \dot i  &  g_z \dot j  &  g_z \dot k
+              g_x \cdot i  &  g_x \cdot j  &  g_x \cdot k    \\
+              g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
+              g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
           \end{array} \right]
         \f] 
         
@@ -346,7 +356,6 @@ class Cord2x(Coord):
                         [dot(gy,i),dot(gy,j),dot(gy,k)],
                         [dot(gz,i),dot(gz,j),dot(gz,k)]])
         p2 = dot(p-self.e1,matrix)
-        #p2 = dot(p,matrix)
         p3 = p2+self.e1
         
         if debug:
@@ -414,8 +423,11 @@ class Cord1x(Coord):
         @param model the BDF object
         """
         self.isCrossReferenced = True
+        ## grid point 1
         self.g1 = model.Node(self.g1)
+        ## grid point 2
         self.g2 = model.Node(self.g2)
+        ## grid point 3
         self.g3 = model.Node(self.g3)
 
     def resolveCid(self):
