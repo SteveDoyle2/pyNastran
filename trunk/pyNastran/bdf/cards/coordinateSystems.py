@@ -10,10 +10,19 @@ from pyNastran.general.general import ListPrint
 
 class Coord(BaseCard):
     def __init__(self,card,data):
+        """
+        defines a general CORDxx object
+        @param self the object pointer
+        @param card a BDF_Card object
+        @param data a list analogous to the card
+        """
+        ## has the coordinate system been linked yet
         self.isCrossReferenced = False
+        ## have all the transformation matricies been determined
         self.isResolved = False
     
     def Cid(self):
+        """returns the coordinate ID"""
         return self.cid
 
     def setup(self,debug=False):
@@ -81,6 +90,14 @@ class Coord(BaseCard):
         #print "e13 = %s" %(e13)
 
     def transformToLocal(self,p,matrix,debug=False):
+        """
+        transforms the point p to the local coordinate system
+        @param self the object pointer
+        @param p    the point to transform
+        @param matrix the transformation matrix to apply
+        @param debug developer debug
+        @note uses the matrix as there is no linking from a global coordinate system to the local
+        """
         #pGlobal = self.transformToGlobal(p,debug=False)
         pCoord = dot(p-self.e1,transpose(matrix))
         pLocal = self.XYZtoCoord(pCoord)
@@ -92,6 +109,12 @@ class Coord(BaseCard):
         #return pGlobal
 
     def normalize(self,v):
+        """
+        normalizes v into a unit vector
+        @param self the object pointer
+        @param v the vector to normalize
+        @retval nNorm v has been normalized
+        """
         #print "v = ",v
         normV = norm(v)
         assert normV>0.,'v=%s norm(v)=%s' %(v,normV)
@@ -116,11 +139,12 @@ class CylindricalCoord(object):
     """
     \f[ r        = \sqrt(x^2+y^2)      \f]
     \f[ \theta   = tan^-1(\frac{y}{x}) \f]
-    \f[ z = z\f]
+    \f[ z        = z                   \f]
 
     \f[ x = r cos(\theta) \f]
     \f[ y = r sin(\theta) \f]
     \f[ z = z             \f]
+    \f[ p = [x,y,z] + e_1 \f]
     http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
     @note \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be consistent with nastran's documentation
     @see refman.pdf
@@ -160,6 +184,7 @@ class SphericalCoord(object):
     \f[ x = r cos(\theta)sin(\phi) \f]
     \f[ y = r sin(\theta)sin(\phi) \f]
     \f[ z = r cos(\phi)            \f]
+    \f[ p = [x,y,z] + e_1          \f]
     http://en.wikipedia.org/wiki/Spherical_coordinate_system
     @note \f$ \phi \f$ and \f$ \theta \f$ are flipped per wikipedia to be consistent with nastran's documentation
     @see refman.pdf
@@ -185,6 +210,12 @@ class SphericalCoord(object):
 
 class Cord2x(Coord):
     def __init__(self,card,data):
+        """
+        defines the CORD2x class
+        @param self the object pointer
+        @param card a BDF_Card object
+        @param data a list analogous to the card
+        """
         self.isResolved = False
         Coord.__init__(self,card,data)
 
@@ -422,7 +453,7 @@ class Cord1x(Coord):
         grids = [self.G1(),self.G2(),self.G3()]
         return grids
 
-class CORD3G(Coord):
+class CORD3G(Coord):  # not done
     """
     Defines a general coordinate system using three rotational angles as functions of
     coordinate values in the reference coordinate system. The CORD3G entry is used with
@@ -508,7 +539,6 @@ class CORD1R(Cord1x,RectangularCoord):
     type = 'CORD1R'
     """
     CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
-    @todo not done
     """
 
     def __init__(self,card=None,nCoord=0,data=None):
@@ -528,7 +558,6 @@ class CORD1C(Cord1x,CylindricalCoord):
     type = 'CORD1C'
     """
     CORD1C CIDA G1A G2A G3A CIDB G1B G2B G3B
-    @todo not done
     """
     def __init__(self,card=None,nCoord=0,data=None):
         """
@@ -549,7 +578,6 @@ class CORD1S(Cord1x,SphericalCoord):
     type = 'CORD1S'
     """
     CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
-    @todo not done
     """
     def __init__(self,card=None,nCoord=0,data=None):
         """

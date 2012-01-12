@@ -41,11 +41,23 @@ class BDF_Card(object):
         #print "made card"
 
     def Is(self,cardName):
+        """
+        Returns True if the card is of type cardName
+        @param self the object pointer
+        @param cardName the cardName to compare against
+        @retval IsACardName True/False
+        """
         if card.field(0)==cardName.upper():
             return True
         return False
 
     def wipeEmptyFields(self,card):
+        """
+        Removes an trailing Nones from the card.  Also converts empty strings to None.
+        @param self the object pointer
+        @param card the fields on the card as a list
+        @retval shortCard the card with no trailing blank fields
+        """
         #print "cardA = ",card
         cardB = []
         for field in card:
@@ -69,12 +81,31 @@ class BDF_Card(object):
         return cardB[:iMax+1]
 
     def __repr__(self):
+        """
+        prints the card as a list
+        @param self the object pointer
+        @retval msg the string representation of the card
+        """
         return str(self.card)
 
     def nFields(self):
+        """
+        gets how many fields are on the card
+        @param self the object pointer
+        @retval nFields the number of fields on the card
+        """
         return self.nfields
 
     def fields(self,i=0,j=None,defaults=[],debug=False):
+        """
+        gets multiple fields on the card
+        @param self the object pointer
+        @param i the ith field on the card (following list notation)
+        @param j the jth field on the card (None means till the end of the card)
+        @param defaults the default value for the field (as a list) len(defaults)=i-j-1
+        @param debug prints out the values at intermediate steps
+        @retval the values on the ith-jth fields
+        """
         if j is None:
             if self.nfields==None:
                 return [None]
@@ -100,6 +131,13 @@ class BDF_Card(object):
         return out
 
     def field(self,i,default=None):
+        """
+        gets the ith field on the card
+        @param self the object pointer
+        @param i the ith field on the card (following list notation)
+        @param default the default value for the field
+        @retval the value on the ith field
+        """
         if i<self.nfields and self.card[i] is not None and self.card[i] is not '':
             #print "self.card[%s] = %s"%(i,str(self.card[i]))
             return self.card[i]
@@ -109,6 +147,7 @@ class BDF_Card(object):
     ###
 
     def replaceExpression(self,fieldNew,fieldOld,replaceChar='=',replaceChar2=''):
+        """used for nastran = format"""
         fieldNew = fieldNew.replace(replaceChar,str(fieldOld)+replaceChar2)
         typeOld = type(fieldOld)
         if isinstance(fieldOld,int) or isinstance(fieldOld,float):
@@ -119,11 +158,13 @@ class BDF_Card(object):
         return fieldNew
 
     def isSameName(self):
+        """used for nastran = format"""
         if '=' in self.card[0]:
             return True
         return False
 
     def applyOldFields(self,cardCount=0):
+        """used for nastran = format"""
         if not self.isSameName():
            return
 
@@ -209,4 +250,5 @@ class BDF_Card(object):
             sys.exit("asdfasdf")
 
     def getOldField(i):
+        """used for nastran = format"""
         return self.oldCard.field(i)

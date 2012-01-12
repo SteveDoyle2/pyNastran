@@ -22,6 +22,13 @@ class bdfReader(object):
         self.log = log
 
     def printFileName(self,filename):
+        """
+        Takes a path such as C:/work/fem.bdf and locates the file using relative paths
+        If it's on another drive, the path is not modified.
+        @param self the object pointer
+        @param filename a filename string
+        @retval filenameString a shortened representation of the filename
+        """
         driveLetter = os.path.splitdrive(filename)[0]
         if driveLetter==os.path.splitdrive(os.curdir)[0] and self.relpath:
             return os.path.relpath(filename)
@@ -55,7 +62,6 @@ class bdfReader(object):
         """
         gets information about the active BDF file being read
         @param self the object pointer
-        @param  bdfFileName   the active BDF filename
         @retval lineNumber the active file's line number
         """
         filename   = self.activeFileNames[-1]
@@ -63,12 +69,20 @@ class bdfReader(object):
 
     def getLineNumber(self):
         """
+        Gets the line number of the active BDF (used for debugging).
+        @param self the object pointer
         @retval returns the line number of the active BDF filename
         """
         lineNumber = self.lineNumbers[-1]
         return lineNumber
 
     def getNextLine(self,debug=False):
+        """
+        Gets the next line in the BDF
+        @param self the object pointer
+        @param debug developer debug
+        @retval line the next line in the BDF or None if it's the end of a the current file
+        """
         self.lineNumbers[-1]+=1
         linesPack = self.makeLinesPack(debug=False)
         #print "len(linesPack) = ",len(linesPack)
@@ -98,6 +112,8 @@ class bdfReader(object):
         Closes the active file object.
         If no files are open, the function is skipped.
         This method is used in order to support INCLUDE files.
+        @param self the object pointer
+        @param debug developer debug
         """
         if len(self.infilesPack)==0:
             return
@@ -129,6 +145,9 @@ class bdfReader(object):
     def _setInfile(self,bdfFileName,includeDir=None):
         """
         sets up the basic file/lines/cardCounting operations
+        @param self the object pointer
+        @param bdfFileName  the input BDF filename
+        @param includeDir   the location of include files if a absolute/relative path is not used (not supported in Nastran)
         """
         ## automatically rejects every parsable card (default=False)
         self.autoReject   = False
