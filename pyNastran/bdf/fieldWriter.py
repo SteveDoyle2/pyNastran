@@ -27,8 +27,10 @@ def setBlankIfDefault(value,default):
     return value
 
 def setDefaultIfBlank(value,default):
-    """used when initializing a card and the default value isnt set"""
-    raise Exception('is this used')
+    """
+    used when initializing a card and the default value isnt set
+    used on PBARL
+    """
     if value is None or value=='':
         return default
     return value

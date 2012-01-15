@@ -28,7 +28,7 @@ version = pyNastran.__version__
 bdfFileName = sys.argv[1]
 
 
-class Pipeline(object):
+class FrameVTK(object):
     def __init__(self,isEdges):
         self.isEdges = isEdges # surface wireframe
         self.loadGeometry(bdfFileName)
@@ -400,7 +400,7 @@ class Pipeline(object):
 
 def main():
     isEdges = False
-    p = Pipeline(isEdges)
+    p = FrameVTK(isEdges)
 
 if __name__=='__main__':
     main()
