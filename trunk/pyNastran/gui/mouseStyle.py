@@ -8,6 +8,7 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.cam = ren['camera']
 
     def Update(self):
+        self.pipeline.widget.Modified()
         self.cam.Modified()
         self.cam.UpdateViewport(self.pipeline.rend)
         self.pipeline.renWin.Render()
@@ -47,10 +48,10 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.OnMiddleButtonUp()
         return
 
-    def OnKeyPress(self,obj,event):
+    def OnChar(self,obj,event):
         rwi = obj
         key = rwi.GetKeySym()
-        #print "*Pressed %s" %(key)
+        print "*Pressed %s" %(key)
         
         #renderer = self.ren
         camera = self.getActiveCamera()
