@@ -27,6 +27,8 @@ version = pyNastran.__version__
 class pyWidget(wxVTKRenderWindow):
     def __init__(self,*args,**kwargs):
         wxVTKRenderWindow.__init__(self, *args, **kwargs)
+        #self.parent = parent
+        self.dirname = ""
         self.OnChar = self.onChar2
 
     def ResetCamera(self):
@@ -84,30 +86,54 @@ class pyWidget(wxVTKRenderWindow):
             self.ResetCamera()
 
         elif code == ord('i'): # picture taking doesnt work
-            self.takePicture()
+            self.TakePicture(event)
 
         self.Update()
         self.Render()
         ###
 
-    def takePicture(self):
+    def TakePicture(self,event):
         renderLarge = vtk.vtkRenderLargeImage()
         renderLarge.SetInput(self.getRenderer())
         renderLarge.SetMagnification(4)
 
-        # We write out the image which causes the rendering to occur. If you
-        # watch your screen you might see the pieces being rendered right
-        # after one another.
-        writer = vtk.vtkPNGWriter()
-        writer.SetInputConnection(renderLarge.GetOutputPort())
-        writer.SetFileName("largeImage.png")
-        writer.Write()
+        wildcard = "PNG (*.png)|*.png|" \
+         "JPEG (*.jpeg; *.jpeg; *.jpg; *.jfif)|*.jpg;*.jpeg;*.jpe;*.jfif|" \
+         "TIFF (*.tif; *.tiff)|*.tif;*.tiff|" \
+         "BMP (*.bmp)|*.bmp|" \
+         "PostScript (*.ps)|*.ps|" \
+         "All files (*.*)|*.*"
+        
+        dlg = wx.FileDialog(None, "Choose a file", self.dirname, "", wildcard, wx.SAVE | wx.OVERWRITE_PROMPT)
+        if dlg.ShowModal() == wx.ID_OK:
+            fname        = dlg.GetFilename()
+            self.dirname = dlg.GetDirectory()
+            fname = os.path.join(self.dirname,fname)
+
+            print "fname = ",fname
+
+            # We write out the image which causes the rendering to occur. If you
+            # watch your screen you might see the pieces being rendered right
+            # after one another.
+            lfname = fname.lower()
+            if lfname.endswith('.png'):
+                writer = vtk.vtkPNGWriter()
+            elif lfname.endswith('.jpeg'):
+                writer = vtk.vtkJPEGWriter()
+            elif lfname.endswith('.tiff'):
+                writer = vtk.vtkTIFFWriter()
+            elif lfname.endswith('.ps'):
+                writer = vtk.vtkPostScriptWriter()
+            else:
+                writer = vtk.vtkPNGWriter()
+
+            writer.SetInputConnection(renderLarge.GetOutputPort())
+            writer.SetFileName(fname)
+            writer.Write()
+        dlg.Destroy()
 
     def getRenderer(self):
         return self.GetCurrentRenderer()
-        window = self.GetRenderWindow()
-        renderers = window.GetRenderers()
-        return renderers[0]
 
 class Pan(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -115,11 +141,64 @@ class Pan(wx.Panel):
         isEdges = False
         self.isEdges = isEdges # surface wireframe
         self.widget = pyWidget(self, -1)
-        
 
         window = self.widget.GetRenderWindow()
         iren = vtk.vtkRenderWindowInteractor()
         iren.SetRenderWindow(window)
+
+    def SetToWireframe(self,event):
+        if self.bdfFileName is not None:
+            self.widget.Wireframe()
+            self.widget.Update()
+
+    def SetToSurface(self,event):
+        if self.bdfFileName is not None:
+            self.widget.Surface()
+            self.widget.Update()
+
+    def SetToFlatShading(self,event): # Flat
+        if self.bdfFileName is not None:
+            actors = self.widget._CurrentRenderer.GetActors()
+            numActors = actors.GetNumberOfItems()
+            actors.InitTraversal()
+            for i in range(0,numActors):
+                actor = actors.GetNextItem()
+                actor.GetProperty().SetInterpolationToFlat()
+            self.widget.Render()
+        ###
+
+    def SetToGouraudShading(self,event): # Gouraud
+        if self.bdfFileName is not None:
+            actors = self.widget._CurrentRenderer.GetActors()
+            numActors = actors.GetNumberOfItems()
+            actors.InitTraversal()
+            for i in range(0,numActors):
+                actor = actors.GetNextItem()
+                actor.GetProperty().SetInterpolationToGouraud()
+            self.widget.Render()
+        ###
+
+    def SetToPhongShading(self,event): # Phong
+        if self.bdfFileName is not None:
+            actors = self.widget._CurrentRenderer.GetActors()
+            numActors = actors.GetNumberOfItems()
+            actors.InitTraversal()
+            for i in range(0,numActors):
+                actor = actors.GetNextItem()
+                actor.GetProperty().SetInterpolationToPhong()
+            self.widget.Render()
+        ###
+
+    def WireframeTemp(self):
+        """Sets the current actor representation as wireframe.
+        """
+        actors = self.widget._CurrentRenderer.GetActors()
+        numActors = actors.GetNumberOfItems()
+        actors.InitTraversal()
+        for i in range(0,numActors):
+            actor = actors.GetNextItem()
+            actor.GetProperty().SetRepresentationToWireframe()
+        self.Render()
 
     def getColors(self):
         pass
@@ -525,13 +604,13 @@ class AppFrame( wx.Frame ) :
         wx.Frame.__init__( self, None, -1, title='pyNastran' )
         self.bdfFileName = None
         self.dirname = ''
+        self.setupFrame()
 
-        #bdfFileName = 'box_cylindrical_coord_sys.bdf'
-
+    def setupFrame(self):
         self.vbox = wx.BoxSizer(wx.VERTICAL)
 
         # Must call before any event handler is referenced.
-        self.eventsHandler = EventsHandler( self )
+        self.eventsHandler = EventsHandler(self)
 
         self.buildMenuBar()
         #self.buildToolBar()
@@ -549,8 +628,6 @@ class AppFrame( wx.Frame ) :
 
 
         #self.vbox.Add(self.frmPanel.widget, 0, wx.EXPAND)
-        #self.frmPanel.BackgroundColour = (200, 240, 250)    # light blue
-        #-----
 
         # Add them to sizer.
         hbox = wx.BoxSizer( wx.HORIZONTAL )
@@ -573,27 +650,13 @@ class AppFrame( wx.Frame ) :
 
         # SetSizer both sizers in the most senior control that has sizers in it.
         self.vbox.AddStretchSpacer()
-        #self.vbox.Add(hbox, 0, wx.EXPAND|wx.ALL, 5 )
+        #self.vbox.Add(hbox, 0, wx.EXPAND|wx.ALL, 5)
         self.vbox.Add(hbox)
-        #self.frmPanel.SetSizer( self.vbox )
-        self.frmPanel.SetSizer( hbox )
+        #self.frmPanel.SetSizer(self.vbox)
+        self.frmPanel.SetSizer(hbox)
         self.frmPanel.Layout()
         #self.toolbar1.Realize()
 
-
-        #-----
-
-        if 0:
-            # Bind event handlers to all controls that have one.
-            self.redBtn.  Bind( wx.EVT_BUTTON, self.eventsHandler.OnRedBtn )
-            self.greenBtn.Bind( wx.EVT_BUTTON, self.eventsHandler.OnGreenBtn )
-            self.exitBtn. Bind( wx.EVT_BUTTON, self.eventsHandler.OnExit )
-
-            # Create more convenient ways to close this app.
-            # Adding these makes a total of 5 separate ways to exit.
-            self.frmPanel .Bind( wx.EVT_LEFT_DCLICK, self.eventsHandler.OnExit )
-            self.colourPnl.Bind( wx.EVT_LEFT_DCLICK, self.eventsHandler.OnExit )
-        ###
         
         events = self.eventsHandler
         # Bind Controls
@@ -603,16 +666,22 @@ class AppFrame( wx.Frame ) :
         self.Bind(wx.EVT_MENU, events.OnExit, self.exitButton)
         
         # Bind View Menu
+        self.Bind(wx.EVT_MENU, self.frmPanel.widget.TakePicture, self.screenshot)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe,     self.wireframeModel)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,       self.surfaceModel)
+
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToFlatShading,    self.flatShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToGouraudShading, self.gouraudShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToPhongShading,   self.phongShading)
+
         self.Bind(wx.EVT_MENU, events.OnBackgroundColor, self.bkgColorView)
-        self.Bind(wx.EVT_MENU, events.ToggleStatusBar, self.showStatusBar)
-        self.Bind(wx.EVT_MENU, events.ToggleToolBar, self.showToolBar)
+        #self.Bind(wx.EVT_MENU, events.ToggleStatusBar, self.showStatusBar)
+        #self.Bind(wx.EVT_MENU, events.ToggleToolBar, self.showToolBar)
         
         # Bind Help Menu
         self.Bind(wx.EVT_MENU, events.OnAbout, id=ID_ABOUT)
-
-
-
     #end __init__
+
 
     def UpdateWindowName(self,bdfFileName):
         self.bdfFileName = bdfFileName
@@ -670,10 +739,10 @@ class AppFrame( wx.Frame ) :
 
         
         # dummy import submenu
-        imp = wx.Menu()
-        imp.Append(wx.ID_ANY, 'Import newsfeed list...')
-        imp.Append(wx.ID_ANY, 'Import bookmarks...')
-        imp.Append(wx.ID_ANY, 'Import mail...')
+        #imp = wx.Menu()
+        #imp.Append(wx.ID_ANY, 'Import newsfeed list...')
+        #imp.Append(wx.ID_ANY, 'Import bookmarks...')
+        #imp.Append(wx.ID_ANY, 'Import mail...')
 
         #fileMenu.AppendMenu(wx.ID_ANY, 'I&mport', imp)
 
@@ -684,11 +753,22 @@ class AppFrame( wx.Frame ) :
         # view menu
         # status bar at bottom - toggles
         viewMenu = wx.Menu()
+        self.screenshot    = viewMenu.Append(wx.ID_ANY, 'Take a Screenshot','Take a Screenshot')
+        viewMenu.AppendSeparator()
+        self.wireframeModel = viewMenu.Append(wx.ID_ANY, 'Wireframe Model','Show Model as a Wireframe Model')
+        self.surfaceModel   = viewMenu.Append(wx.ID_ANY, 'Surface Model',  'Show Model as a Surface Model')
+        #viewMenu.AppendSeparator()
+
+        #self.flatShading    = viewMenu.Append(wx.ID_ANY, 'Flat Shading',           'Flat Shading')
+        #self.gouraudShading = viewMenu.Append(wx.ID_ANY, 'Mid (Gouraud) Shading',  'Mid (Gouraud) Shading')
+        #self.phongShading   = viewMenu.Append(wx.ID_ANY, 'Smooth (Phong) Shading', 'Smooth (Phong) Shading')
+
+        viewMenu.AppendSeparator()
         self.bkgColorView  = viewMenu.Append(wx.ID_ANY, 'Change Background Color','Change Background Color')
-        self.showStatusBar = viewMenu.Append(wx.ID_ANY, 'Show statusbar', 'Show Statusbar', kind=wx.ITEM_CHECK)
-        self.showToolBar   = viewMenu.Append(wx.ID_ANY, 'Show toolbar',   'Show Toolbar',   kind=wx.ITEM_CHECK)
-        viewMenu.Check(self.showStatusBar.GetId(), True)
-        viewMenu.Check(self.showToolBar.GetId(), True)
+        #self.showStatusBar = viewMenu.Append(wx.ID_ANY, 'Show statusbar', 'Show Statusbar', kind=wx.ITEM_CHECK)
+        #self.showToolBar   = viewMenu.Append(wx.ID_ANY, 'Show toolbar',   'Show Toolbar',   kind=wx.ITEM_CHECK)
+        #viewMenu.Check(self.showStatusBar.GetId(), True)
+        #viewMenu.Check(self.showToolBar.GetId(),   True)
 
         self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=wx.ID_OPEN)
         # help/about menu
@@ -753,15 +833,25 @@ class EventsHandler(object) :
         if dlg.ShowModal() == wx.ID_OK:
             data = dlg.GetColourData()
             #print 'You selected: %s\n' % str(data.GetColour().Get())
-            self.ShowColourAndDialog(data.GetColour().Get())
+            dlg.Destroy()
+            self.SetColor(data.GetColour().Get())
+            return
         dlg.Destroy()
 
-    def ShowColourAndDialog(self,pnlColor):
+    def SetColor(self,bkgColor):
+        """
+        @warning if the model is not loaded and the color is not "clicked"
+        on, then rend will return None
+        """
         rend = self.parent.frmPanel.widget.GetCurrentRenderer()
-        if not rend:
+        if not rend: # rend doesnt exist at first
+            print 'Try again to change the color (you didnt "click" on the color; one time bug)'
+            return
             rend = self.parent.frmPanel.widget.GetCurrentRenderer()
-        
-        color = [pnlColor[0]/255.,pnlColor[1]/255.,pnlColor[2]/255.]
+
+        ## bkgColor range from 0 to 255
+        ## color ranges from 0 to 1
+        color = [bkgColor[0]/255.,bkgColor[1]/255.,bkgColor[2]/255.]
         rend.SetBackground(color)
         self.parent.frmPanel.widget.Render()
 
@@ -770,11 +860,6 @@ class EventsHandler(object) :
             self.parent.statusbar.Show()
         else:
             self.parent.statusbar.Hide()
-
-    def OnKeyPress(self,obj,event):
-        rwi = obj
-        key = rwi.GetKeySym()
-        print "*Pressed %s" %(key)
 
     def ToggleToolBar(self, e):
         if self.parent.showToolBar.IsChecked():
