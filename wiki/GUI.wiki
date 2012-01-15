@@ -4,7 +4,7 @@
 
 The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is only capable of displaying a BDF.
 
-The current GUI looks like:
+An early version of the GUI looks like:
 
 https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 
@@ -19,13 +19,16 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
  * CONM2 (shown in yellow as points)
  
 
-= Requirements =
+= BDF Requirements =
  * Entire model can be cross-referenced
  * No SPOINTs
  * Same requirements as BDF
 
+= Features =
+ * Load BDF file window
+ * Change Background Color
+
 = Limitations =
- * No buttons
  * Edges may be displayed with command line option, but may not be switched once the GUI is loaded
  * No results
 
@@ -36,8 +39,7 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 || Left Mouse Button || Rotate in 3D ||
 || Right Mouse Button || Zoom In/Out ||
 || Middle Mouse Button || Pan ||
-|| f      || Set rotation center (zoom out before pressing to avoid clipping) ||
-|| e/E/q/Q || Exit/quit the program  ||
+|| i || Take a Picture (Image) ||
 || m/M || Increase/decrease magnification 1.1 times ||
 || o/O || Rotate clockwise/counter-clockwise 5 degrees ||
 || s   || Display surface mode    ||
@@ -49,8 +51,7 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 
 == Desired Controls ==
 || Left/Right/Up/Down Arrow || Pan ||
-|| i || Take a Picture (Image) ||
+|| f || Set rotation center (zoom out before pressing to avoid clipping )||
 || p || Pick a point ||
 || e || Pick an element ||
 || d || Display element edges ||
-|| E/q/Q || Nothing ||
