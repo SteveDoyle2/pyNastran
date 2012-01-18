@@ -6,7 +6,9 @@ The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is
 
 An early version of the GUI looks like:
 
-https://pynastran.googlecode.com/svn/wiki/guiDemo.png
+https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
+
+The plan is to replace the right hand side with OP2 results...
 
 = Supported Elements =
  * CQUAD4 / CQUAD8 (CQUAD5/6/7 represented as CQUAD4)
@@ -25,15 +27,19 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
  * Same requirements as BDF
 
 = Features =
- * Load BDF file window
- * Change Background Color
+ * Load BDF file window (button)
+ * Wireframe Mode (button/keyboard)
+ * Surface/Solid Mode (button/keyboard)
+ * Take a Screenshot (button/keyboard)
+ * Snap to Axis (keyboard)
+ * Change Background Color (button)
 
 = Limitations =
  * Edges may be displayed with command line option, but may not be switched once the GUI is loaded
  * No results
 
 
-= Controls =
+= Keyboard Controls =
 
 || *Command* || *Purpose* ||
 || Left Mouse Button || Rotate in 3D ||
@@ -49,7 +55,7 @@ https://pynastran.googlecode.com/svn/wiki/guiDemo.png
 || z/Z || Snap to z/-z axis ||
 
 
-== Desired Controls ==
+== Desired Keyboard Controls ==
 || Left/Right/Up/Down Arrow || Pan ||
 || f || Set rotation center (zoom out before pressing to avoid clipping )||
 || p || Pick a point ||
