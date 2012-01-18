@@ -248,6 +248,7 @@ class Pan(wx.Panel):
         geometryActor.GetProperty().SetDiffuseColor(1, 0, 0) # red
         #geometryActor.GetProperty().SetBackfaceProperty(1, 0, 0) # red
         #geometryActor.GetProperty().BackfaceCullingOn()  # hidges elements that have normals not facing camera
+        #geometryActor.GetProperty().SetLineWidth(0.5)
         self.rend.AddActor(geometryActor)
 
     def addAltGeometry(self):

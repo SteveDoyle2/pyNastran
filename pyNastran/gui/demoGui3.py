@@ -11,6 +11,12 @@ from guiPanel import Pan
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
+ID_SURFACE   = 901
+ID_WIREFRAME = 902
+ID_HIDDEN    = 903
+
+ID_CAMERA    = 910
+
 #------------------------------------------------------------------------------
 
 class AppFrame( wx.Frame ) :
@@ -23,16 +29,16 @@ class AppFrame( wx.Frame ) :
         self.setupFrame()
 
     def setupFrame(self):
-        self.vbox = wx.BoxSizer(wx.VERTICAL)
 
         # Must call before any event handler is referenced.
         self.eventsHandler = EventsHandler(self)
 
+        self.frmPanel = Pan(self)
+
         self.buildMenuBar()
-        #self.buildToolBar()
+        self.buildToolBar()
         #self.buildToolBar2()
         self.buildStatusBar()
-        self.frmPanel = Pan(self)
         
         self.SetMenuBar(self.menubar)
 
@@ -41,9 +47,6 @@ class AppFrame( wx.Frame ) :
 
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
-
-
-        #self.vbox.Add(self.frmPanel.widget, 0, wx.EXPAND)
 
         # Add them to sizer.
         hbox = wx.BoxSizer( wx.HORIZONTAL )
@@ -65,6 +68,10 @@ class AppFrame( wx.Frame ) :
             hbox.Add( buttonSizer, 0, wx.EXPAND| wx.ALL, 5 )
 
         # SetSizer both sizers in the most senior control that has sizers in it.
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        #self.vbox.AddStretchSpacer()
+        #self.vbox.Add(self.frmPanel.widget, 0, wx.EXPAND)
+        #self.vbox.Add(self.toolbar1, 0, wx.EXPAND)
         self.vbox.AddStretchSpacer()
         #self.vbox.Add(hbox, 0, wx.EXPAND|wx.ALL, 5)
         self.vbox.Add(hbox)
@@ -78,13 +85,11 @@ class AppFrame( wx.Frame ) :
         # Bind Controls
         #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
 
-        # Bind File Menu
-        self.Bind(wx.EVT_MENU, events.OnExit, self.exitButton)
         
         # Bind View Menu
-        self.Bind(wx.EVT_MENU, self.frmPanel.widget.TakePicture, self.screenshot)
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe,     self.wireframeModel)
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,       self.surfaceModel)
+        self.Bind(wx.EVT_MENU, self.frmPanel.widget.TakePicture, id=ID_CAMERA)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe,     id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,       id=ID_SURFACE)
 
         #self.Bind(wx.EVT_MENU, self.frmPanel.SetToFlatShading,    self.flatShading)
         #self.Bind(wx.EVT_MENU, self.frmPanel.SetToGouraudShading, self.gouraudShading)
@@ -113,7 +118,7 @@ class AppFrame( wx.Frame ) :
         self.toolbar1 = wx.ToolBar(self)
         topen = self.toolbar1.AddLabelTool(wx.ID_OPEN, '', wx.Bitmap('icons/topen.png'))
         qtool = self.toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.Bitmap('icons/texit.png'))
-        self.vbox.Add(self.toolbar1)
+        #self.vbox.Add(self.toolbar1)
 
     def buildToolBar(self):
         events = self.eventsHandler
@@ -126,17 +131,29 @@ class AppFrame( wx.Frame ) :
         #tredo = toolbar1.AddLabelTool(wx.ID_REDO, '', wx.Bitmap('icons/tredo.png'))
 
         # toolbar at top - toggles
-        toolbar1 = wx.ToolBar(self)
+        toolbar1 = self.CreateToolBar()
         topen = toolbar1.AddLabelTool(wx.ID_OPEN, '', wx.Bitmap('icons/topen.png'))
-        qtool = toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.Bitmap('icons/texit.png'))
-        toolbar1.EnableTool(wx.ID_REDO, False)
+        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap('icons/twireframe.png'))
+        surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap('icons/tsolid.png'))
+        camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap('icons/tcamera.png'))
+        etool = toolbar1.AddLabelTool(wx.ID_EXIT,       '',                       wx.Bitmap('icons/texit.png'))
+        #toolbar1.EnableTool(wx.ID_REDO, False)
+        toolbar1.Realize()
 
-        self.frmPanel.toolbar1 = toolbar1
+        self.toolbar1 = toolbar1
 
-        self.vbox.Add(self.toolbar1, 0, wx.EXPAND)
 
+        # Bind File Menu
         self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=wx.ID_OPEN)
-        self.Bind(wx.EVT_TOOL, events.OnExit,     qtool)
+
+        self.Bind(wx.EVT_MENU, events.OnExit,     id=wx.ID_EXIT)
+        #self.Bind(wx.EVT_TOOL, events.OnExit,     id=wx.ID_EXIT)
+
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe, id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,   id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,   id=ID_CAMERA)
+
+
         #self.Bind(wx.EVT_TOOL, events.OnSaveAsFile, id=ID_SAVEAS)
         #self.Bind(wx.EVT_TOOL, events.OnUndo, tundo)
         #self.Bind(wx.EVT_TOOL, events.OnRedo, tredo)
@@ -148,7 +165,9 @@ class AppFrame( wx.Frame ) :
         # file menu
         fileMenu = wx.Menu()
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        fileMenu.Append(wx.ID_OPEN, '&Load BDF','Loads a BDF')
+        loadBDF = fileMenu.Append(wx.ID_OPEN, '&Load BDF','Loads a BDF')
+        loadBDF.SetBitmap(   wx.Image('icons/topen.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+
         #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
         #fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
         fileMenu.AppendSeparator()
@@ -161,23 +180,32 @@ class AppFrame( wx.Frame ) :
         #imp.Append(wx.ID_ANY, 'Import mail...')
 
         #fileMenu.AppendMenu(wx.ID_ANY, 'I&mport', imp)
-
-        self.exitButton = wx.MenuItem(fileMenu, wx.ID_EXIT, 'Exit','Exits pyNastran')
-        self.exitButton.SetBitmap(wx.Image('icons/texit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-        fileMenu.AppendItem(self.exitButton)
+        exitButton = wx.MenuItem(fileMenu, wx.ID_EXIT, 'Exit','Exits pyNastran')
+        exitButton.SetBitmap(wx.Image('icons/texit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        fileMenu.AppendItem(exitButton)
 
         # view menu
         # status bar at bottom - toggles
         viewMenu = wx.Menu()
-        self.screenshot    = viewMenu.Append(wx.ID_ANY, 'Take a Screenshot','Take a Screenshot')
+        camera    = viewMenu.Append(ID_CAMERA, 'Take a Screenshot','Take a Screenshot')
         viewMenu.AppendSeparator()
-        self.wireframeModel = viewMenu.Append(wx.ID_ANY, 'Wireframe Model','Show Model as a Wireframe Model')
-        self.surfaceModel   = viewMenu.Append(wx.ID_ANY, 'Surface Model',  'Show Model as a Surface Model')
+        wireframe = viewMenu.Append(ID_WIREFRAME, 'Wireframe Model','Show Model as a Wireframe Model')
+        surface   = viewMenu.Append(ID_SURFACE, 'Surface Model',  'Show Model as a Surface Model')
         #viewMenu.AppendSeparator()
 
         #self.flatShading    = viewMenu.Append(wx.ID_ANY, 'Flat Shading',           'Flat Shading')
         #self.gouraudShading = viewMenu.Append(wx.ID_ANY, 'Mid (Gouraud) Shading',  'Mid (Gouraud) Shading')
         #self.phongShading   = viewMenu.Append(wx.ID_ANY, 'Smooth (Phong) Shading', 'Smooth (Phong) Shading')
+
+        # view images
+        wireframe.SetBitmap(wx.Image('icons/twireframe.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        surface.SetBitmap(  wx.Image('icons/tsolid.png',     wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        camera.SetBitmap(   wx.Image('icons/tcamera.png',    wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+
+        #wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap('icons/twireframe.png'))
+        #surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap('icons/tsolid.png'))
+        #camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap('icons/tcamera.png'))
+
 
         viewMenu.AppendSeparator()
         self.bkgColorView  = viewMenu.Append(wx.ID_ANY, 'Change Background Color','Change Background Color')
@@ -186,7 +214,6 @@ class AppFrame( wx.Frame ) :
         #viewMenu.Check(self.showStatusBar.GetId(), True)
         #viewMenu.Check(self.showToolBar.GetId(),   True)
 
-        self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=wx.ID_OPEN)
         # help/about menu
         helpMenu = wx.Menu()
         helpMenu.Append(ID_ABOUT, '&About', 'About pyNastran')
