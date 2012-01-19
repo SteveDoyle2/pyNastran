@@ -2,13 +2,18 @@
 
 = Introduction =
 
-The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is only capable of displaying a BDF.
+The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
 
 An early version of the GUI looks like:
 
 https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 
-The plan is to replace the right hand side with OP2 results...
+== TODO ==
+ * Add a legend so you can see the value ranges/result name/subcase ID
+ * Add a bar on the right hand side with OP2 results so you can select one
+ * display the values un-normalized (the values are normalized so the colors can be seen; default range is 0 to 1)
+ * support non-solid elements
+ * allow edges to be shown from without passing in a command line argument
 
 = Supported Elements =
  * CQUAD4 / CQUAD8 (CQUAD5/6/7 represented as CQUAD4)
@@ -33,10 +38,6 @@ The plan is to replace the right hand side with OP2 results...
  * Take a Screenshot (button/keyboard)
  * Snap to Axis (keyboard)
  * Change Background Color (button)
-
-= Limitations =
- * Edges may be displayed with command line option, but may not be switched once the GUI is loaded
- * No results
 
 
 = Keyboard Controls =
