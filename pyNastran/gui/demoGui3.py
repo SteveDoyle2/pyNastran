@@ -7,7 +7,6 @@ import vtk
 
 from guiPanel import Pan
 
-#ID_OPEN = 801
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
@@ -16,6 +15,11 @@ ID_WIREFRAME = 902
 ID_HIDDEN    = 903
 
 ID_CAMERA    = 910
+
+ID_BDF = 920
+ID_OP2 = 921
+
+
 
 #------------------------------------------------------------------------------
 
@@ -29,7 +33,29 @@ class AppFrame( wx.Frame ) :
         self.setupFrame()
 
     def setupFrame(self):
-
+        """
+        --------------------------------
+        |        VERTICAL(VMAIN)       |
+        |   -------------------------  |
+        |   |                       |  |
+        |   |        toolbar        |  |
+        |   |                       |  |
+        |   -------------------------  |
+        |   |       HORIZ           |  |
+        |   |         |  VERTICAL   |  |
+        |   |         |             |  |
+        |   |   GUI   |  sidewindow |  |
+        |   |         |             |  |
+        |   |         |             |  |
+        |   |         |             |  |
+        |   -------------------------  |
+        |   |                       |  |
+        |   |       statusbar       |  |
+        |   |                       |  |
+        |   -------------------------  |
+        |                              |
+        --------------------------------
+        """
         # Must call before any event handler is referenced.
         self.eventsHandler = EventsHandler(self)
 
@@ -53,30 +79,49 @@ class AppFrame( wx.Frame ) :
         hbox.Add( self.frmPanel.widget, 1, wx.EXPAND|wx.ALL, 1 )
 
         # Add buttons in their own sizer
-        if 1:
+        if 0:
             self.redBtn   = wx.Button( self.frmPanel, label='Red' )
             self.greenBtn = wx.Button( self.frmPanel, label='Green' )
             self.exitBtn  = wx.Button( self.frmPanel, label='Exit' )
 
-            buttonSizer = wx.BoxSizer( wx.VERTICAL )
-            buttonSizer.AddStretchSpacer()
-            buttonSizer.Add( self.redBtn,   proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
-            buttonSizer.Add( self.greenBtn, proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
-            buttonSizer.Add( self.exitBtn,  proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
-            buttonSizer.AddStretchSpacer()
+            #self.tree  = wx.Button( self.frmPanel, label='Tree' )
 
-            hbox.Add( buttonSizer, 0, wx.EXPAND| wx.ALL, 5 )
+            vRight = wx.BoxSizer( wx.VERTICAL)
+            #vRight.AddStretchSpacer()
+            #vRight.Add( self.greenBtn, proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            #vRight.Add( self.exitBtn,  proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            #vRight.Add( self.redBtn,   proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            #vRight.AddStretchSpacer()
 
-        # SetSizer both sizers in the most senior control that has sizers in it.
-        self.vbox = wx.BoxSizer(wx.VERTICAL)
-        #self.vbox.AddStretchSpacer()
-        #self.vbox.Add(self.frmPanel.widget, 0, wx.EXPAND)
-        #self.vbox.Add(self.toolbar1, 0, wx.EXPAND)
-        self.vbox.AddStretchSpacer()
-        #self.vbox.Add(hbox, 0, wx.EXPAND|wx.ALL, 5)
-        self.vbox.Add(hbox)
-        #self.frmPanel.SetSizer(self.vbox)
+            scroll = wx.ScrolledWindow( self, -1 )
+            panelRight = wx.Panel( scroll, -1 )
+
+            panelRight = wx.Panel(self, wx.EXPAND)
+            tree = self.buildTree(panelRight)
+            vRight.Add( tree,   flag=wx.EXPAND|wx.ALL)
+            #vRight.Add(tree, 1, wx.EXPAND)
+            #hbox.Add(panel1, 1, wx.EXPAND)
+            
+            vRight.Add(scroll, 1, wx.EXPAND | wx.ALL)
+            #panelRight.SetSizer(vRight)
+            panelRight.Layout()
+
+            
+
+            hbox.Add( vRight, 1, wx.EXPAND)
+            #hbox.Add(panelRight, 1, wx.EXPAND | wx.ALL)
+
+            # SetSizer both sizers in the most senior control that has sizers in it.
+            self.vMain = wx.BoxSizer(wx.VERTICAL | wx.EXPAND)
+            self.vMain.Add(hbox,1,wx.EXPAND,5)
+
+        #self.vMain.AddStretchSpacer()
+        #self.vMain.Add(self.frmPanel.widget, 0, wx.EXPAND)
+        #self.vMain.Add(self.toolbar1, 0, wx.EXPAND)
+        #self.vMain.AddStretchSpacer()
+        #self.vMain.Add(hbox, 0, wx.EXPAND|wx.ALL, 5)
         self.frmPanel.SetSizer(hbox)
+        #self.frmPanel.SetSizer(self.vMain)
         self.frmPanel.Layout()
         #self.toolbar1.Realize()
 
@@ -84,7 +129,6 @@ class AppFrame( wx.Frame ) :
         events = self.eventsHandler
         # Bind Controls
         #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
-
         
         # Bind View Menu
         self.Bind(wx.EVT_MENU, self.frmPanel.widget.TakePicture, id=ID_CAMERA)
@@ -103,6 +147,40 @@ class AppFrame( wx.Frame ) :
         self.Bind(wx.EVT_MENU, events.OnAbout, id=ID_ABOUT)
     #end __init__
 
+    def buildTree(self,panel1):
+        tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1,-1), wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS)
+        root = tree.AddRoot('Programmer')
+        os   = tree.AppendItem(root, 'Operating Systems')
+        tree.AppendItem(os, 'Linux')
+        tree.AppendItem(os, 'FreeBSD')
+        tree.AppendItem(os, 'OpenBSD')
+        tree.AppendItem(os, 'NetBSD')
+        tree.AppendItem(os, 'Solaris')
+        pl = tree.AppendItem(root, 'Programming Languages')
+        cl = tree.AppendItem(pl, 'Compiled languages')
+        sl = tree.AppendItem(pl, 'Scripting languages')
+        tree.AppendItem(cl, 'Java')
+        tree.AppendItem(cl, 'C++')
+        tree.AppendItem(cl, 'C')
+        tree.AppendItem(cl, 'Pascal')
+        tree.AppendItem(sl, 'Python')
+        tree.AppendItem(sl, 'Ruby')
+        tree.AppendItem(sl, 'Tcl')
+        tree.AppendItem(sl, 'PHP')
+
+        tk = tree.AppendItem(root, 'Toolkits')
+        tree.AppendItem(tk, 'Qt')
+        tree.AppendItem(tk, 'MFC')
+        tree.AppendItem(tk, 'wxPython')
+        tree.AppendItem(tk, 'GTK+')
+        tree.AppendItem(tk, 'Swing')
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe, id=ID_WIREFRAME)
+        #tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, id=1)
+        return tree
+
+    def OnSelChanged(self, event):
+        item =  event.GetItem()
+        self.display.SetLabel(tree.GetItemText(item))
 
     def UpdateWindowName(self,bdfFileName):
         self.bdfFileName = bdfFileName
@@ -116,9 +194,9 @@ class AppFrame( wx.Frame ) :
 
     def buildToolBar2(self):
         self.toolbar1 = wx.ToolBar(self)
-        topen = self.toolbar1.AddLabelTool(wx.ID_OPEN, '', wx.Bitmap('icons/topen.png'))
+        topen = self.toolbar1.AddLabelTool(ID_BDF,     '', wx.Bitmap('icons/topen.png'))
         qtool = self.toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.Bitmap('icons/texit.png'))
-        #self.vbox.Add(self.toolbar1)
+        #self.vMain.Add(self.toolbar1)
 
     def buildToolBar(self):
         events = self.eventsHandler
@@ -132,7 +210,7 @@ class AppFrame( wx.Frame ) :
 
         # toolbar at top - toggles
         toolbar1 = self.CreateToolBar()
-        topen = toolbar1.AddLabelTool(wx.ID_OPEN, '', wx.Bitmap('icons/topen.png'))
+        topen     = toolbar1.AddLabelTool(ID_BDF,       '',                       wx.Bitmap('icons/topen.png'))
         wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap('icons/twireframe.png'))
         surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap('icons/tsolid.png'))
         camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap('icons/tcamera.png'))
@@ -144,7 +222,8 @@ class AppFrame( wx.Frame ) :
 
 
         # Bind File Menu
-        self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=wx.ID_OPEN)
+        self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=ID_BDF)
+        self.Bind(wx.EVT_TOOL, events.OnLoadOP2,  id=ID_OP2)
 
         self.Bind(wx.EVT_MENU, events.OnExit,     id=wx.ID_EXIT)
         #self.Bind(wx.EVT_TOOL, events.OnExit,     id=wx.ID_EXIT)
@@ -165,7 +244,8 @@ class AppFrame( wx.Frame ) :
         # file menu
         fileMenu = wx.Menu()
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        loadBDF = fileMenu.Append(wx.ID_OPEN, '&Load BDF','Loads a BDF')
+        loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
+        loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
         loadBDF.SetBitmap(   wx.Image('icons/topen.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
 
         #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
@@ -255,7 +335,7 @@ class EventsHandler(object) :
         wildcard = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
          "All files (*.*)|*.*"
 
-        dlg = wx.FileDialog(None, "Choose a file", self.parent.dirname, "", wildcard, wx.OPEN)
+        dlg = wx.FileDialog(None, "Choose a Nastran Input Deck to Load ", self.parent.dirname, "", wildcard, wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             bdfFileName         = dlg.GetFilename()
             self.parent.dirname = dlg.GetDirectory()
@@ -263,6 +343,36 @@ class EventsHandler(object) :
             print "fname = ",fname
             self.parent.UpdateWindowName(bdfFileName)
             self.parent.frmPanel.loadGeometry(bdfFileName)
+            self.parent.frmPanel.Update()
+        dlg.Destroy()
+
+    def OnLoadOP2(self, event):
+        """ Open a file"""
+        #print "OnOpen..."
+
+        if 1:
+            bdf = self.parent.bdfFileName
+            bdfBase = os.path.basename(bdf)
+            dirname = os.path.dirname(bdf)
+            op2name,op2 = bdfBase.split('.')
+            op2 = os.path.join(dirname,op2name+'.op2')
+            
+            self.parent.op2FileName = op2
+            self.parent.frmPanel.loadResults(op2)
+            self.parent.frmPanel.Update()
+            return
+        
+        wildcard = "Nastran OP2 (*.op2)|*.op2|" \
+         "All files (*.*)|*.*"
+
+        dlg = wx.FileDialog(None, "Choose a Nastran Output File to Load (OP2 only)", self.parent.dirname, "", wildcard, wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:
+            op2FileName         = dlg.GetFilename()
+            self.parent.dirname = dlg.GetDirectory()
+            oname = os.path.join(self.parent.dirname, op2FileName)
+            print "oname = ",oname
+            self.parent.UpdateWindowName(bdfFileName)
+            self.parent.frmPanel.loadResults(op2FileName)
             self.parent.frmPanel.Update()
         dlg.Destroy()
 
