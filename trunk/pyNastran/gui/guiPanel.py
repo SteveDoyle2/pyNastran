@@ -9,6 +9,7 @@ import pyNastran
 version = pyNastran.__version__
 
 from pyNastran.bdf.bdf import *
+from pyNastran.op2.op2 import OP2
 from mouseStyle import MouseStyle
 
 
@@ -297,11 +298,43 @@ class Pan(wx.Panel):
 
     def getWindowName(self,winName=''):
         return "pyNastran v%s - %s" %(version,self.bdfFileName)
+        #return "pyNastran v%s - %s" %(version,'solid.bdf')
 
     def setWindowName(self,winName=''):
         window = self.getWindow()
         window.SetWindowName("pyNastran v%s - %s" %(version,self.bdfFileName))
     
+    def loadResults(self,op2FileName):
+        self.gridResult = vtk.vtkFloatArray()
+        #self.gridResult.Reset()
+        #self.gridResult.Allocate(self.nNodes,1000)
+        self.gridResult.Allocate(self.nElements,1000)
+
+        op2 = OP2(op2FileName)
+        op2.readOP2()
+        
+        #case = op2.displacements[1]
+        #print "case = ",case
+        #for nodeID,translation in sorted(case.translations.items()):
+        #    print "nodeID=%s t=%s" %(nodeID,translation)
+        
+        case = op2.solidStress[1]
+        
+        maxOVM = 0.
+        for eid,ovmNodes in sorted(case.ovmShear.items()):
+            maxOVM = max(ovmNodes['C'],maxOVM)
+
+        for eid,ovmNodes in sorted(case.ovmShear.items()):
+            ovm = ovmNodes['C']
+            self.gridResult.InsertNextValue(ovm/maxOVM)
+
+        
+    #def cycleResults(self):
+        self.grid.GetCellData().SetScalars(self.gridResult)
+        #self.grid.GetPointData().SetScalars(self.gridResult)
+        self.grid.Modified()
+        
+        
     def loadGeometry(self,bdfFileName):
 
         if bdfFileName is None:
@@ -321,6 +354,8 @@ class Pan(wx.Panel):
         nNodes    = model.nNodes()
         nElements = model.nElements()
         nCAeros   = model.nCAeros()
+        self.nNodes = nNodes
+        self.nElements = nElements
 
         #print "nNodes = ",nNodes
         print "nElements = ",nElements
@@ -338,7 +373,7 @@ class Pan(wx.Panel):
         points.SetNumberOfPoints(nNodes)
         self.gridResult.Allocate(nNodes,1000)
         #vectorReselt.SetNumberOfComponents(3)
-        nidMap = {}
+        self.nidMap = {}
         i=0
         #elem.SetNumberOfPoints(nNodes)
         fraction = 1./nNodes
@@ -358,7 +393,7 @@ class Pan(wx.Panel):
             #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
-            nidMap[nid] = i
+            self.nidMap[nid] = i
             i+=1
 
         j = 0
@@ -378,10 +413,13 @@ class Pan(wx.Panel):
                 points2.InsertPoint(j+3, *cpoints[3])
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j+=4
-        self.mapElements(points,points2,nidMap,model,j)
+        self.mapElements(points,points2,self.nidMap,model,j)
 
     def mapElements(self,points,points2,nidMap,model,j):
+        self.eidMap = {}
+        i = 0
         for eid,element in sorted(model.elements.items()):
+            self.eidMap[eid] = i
             if isinstance(element,CTRIA3):
                 #print "ctria3"
                 elem = vtkTriangle()
@@ -551,7 +589,7 @@ class Pan(wx.Panel):
         ###
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
-        self.grid.GetPointData().SetScalars(self.gridResult)
+        #self.grid.GetPointData().SetScalars(self.gridResult)
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid2.Modified()
@@ -575,11 +613,11 @@ class Pan(wx.Panel):
         cam = self.rend.GetActiveCamera()
         mouseArgs = {'pipeline':self,'camera':cam}
 
-        xSize = 500
-        ySize = 400
+        xSize = 800
+        ySize = 600
         (x,y) = getScreenCorner(xSize,ySize)
-        #renWin.SetSize(xSize,ySize)
-        #renWin.SetPosition(x,y)
+        #window.SetSize(xSize,ySize)
+        #window.SetPosition(x,y)
 
 
         #iren = wxVTKRenderWindowInteractor(self,-1)
