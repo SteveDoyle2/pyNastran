@@ -44,12 +44,16 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
  * Change Background Color (button)
 
 
-= Keyboard Controls =
-
+= Mouse Controls =
 || *Command* || *Purpose* ||
 || Left Mouse Button || Rotate in 3D ||
 || Right Mouse Button || Zoom In/Out ||
-|| Middle Mouse Button || Pan ||
+|| Middle Mouse Button || Pan/Recenter Rotation Point ||
+|| Shift + Left Mouse Button || Pan/Recenter Rotation Point ||
+
+= Keyboard Controls =
+
+|| *Key* || *Purpose* ||
 || i || Take a Picture (Image) ||
 || L   || Cycle through OP2 results ||
 || m/M || Increase/decrease magnification 1.1 times ||
@@ -62,8 +66,6 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 
 
 == Desired Keyboard Controls ==
-|| Left/Right/Up/Down Arrow || Pan ||
-|| f || Set rotation center (zoom out before pressing to avoid clipping )||
 || p || Pick a point ||
 || e || Pick an element ||
 || d || Display element edges ||
