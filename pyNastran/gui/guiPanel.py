@@ -4,6 +4,7 @@ import vtk
 from vtk.wx.wxVTKRenderWindow import wxVTKRenderWindow
 from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
                  vtkQuadraticTriangle,vtkQuadraticQuad,vtkQuadraticTetra,vtkQuadraticWedge,vtkQuadraticHexahedron)
+from numpy import zeros
 
 import pyNastran
 version = pyNastran.__version__
@@ -24,7 +25,7 @@ def getScreenCorner(x,y):
 class pyWidget(wxVTKRenderWindow):
     def __init__(self,*args,**kwargs):
         wxVTKRenderWindow.__init__(self, *args, **kwargs)
-        #self.parent = parent
+        self.parent = args[0]
         self.dirname = ""
         self.OnChar = self.onChar2
 
@@ -35,7 +36,7 @@ class pyWidget(wxVTKRenderWindow):
         return self._CurrentCamera
 
     def onChar2(self,event):
-        #print "onChar2 = ",event.GetKeyCode()
+        print "onChar2 = ",event.GetKeyCode()
         camera = self.GetCamera()
         code = event.GetKeyCode()
         if code == ord('m'): # zooming in
@@ -84,6 +85,9 @@ class pyWidget(wxVTKRenderWindow):
 
         elif code == ord('i'): # picture taking doesnt work
             self.TakePicture(event)
+
+        elif code == ord('L'): # picture taking doesnt work
+            self.parent.cycleResults()
 
         self.Update()
         self.Render()
@@ -304,12 +308,12 @@ class Pan(wx.Panel):
         window = self.getWindow()
         window.SetWindowName("pyNastran v%s - %s" %(version,self.bdfFileName))
     
+    def isStress(self,op2,ID):
+        if ID in op2.solidStress or ID in op2.plateStress or ID in op2.compositePlateStress or ID in op2.barStress  or ID in op2.beamStress or ID in op2.rodStress:
+            return True
+        return False
+        
     def loadResults(self,op2FileName):
-        self.gridResult = vtk.vtkFloatArray()
-        #self.gridResult.Reset()
-        #self.gridResult.Allocate(self.nNodes,1000)
-        self.gridResult.Allocate(self.nElements,1000)
-
         op2 = OP2(op2FileName)
         op2.readOP2()
         
@@ -317,24 +321,139 @@ class Pan(wx.Panel):
         #print "case = ",case
         #for nodeID,translation in sorted(case.translations.items()):
         #    print "nodeID=%s t=%s" %(nodeID,translation)
-        
-        case = op2.solidStress[1]
-        
-        maxOVM = 0.
-        for eid,ovmNodes in sorted(case.ovmShear.items()):
-            maxOVM = max(ovmNodes['C'],maxOVM)
+        #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
-        for eid,ovmNodes in sorted(case.ovmShear.items()):
-            ovm = ovmNodes['C']
-            self.gridResult.InsertNextValue(ovm/maxOVM)
-
+        cases = {}
+        subcaseIDs = op2.iSubcaseNameMap.keys()
+        self.iSubcaseNameMap = op2.iSubcaseNameMap
         
-    #def cycleResults(self):
+        eidsSet = False
+        for ID in subcaseIDs:
+            if not eidsSet:
+                eids = zeros(self.nElements)
+                for eid,eid2 in self.eidMap.items():
+                    eids[eid2] = float(eid)
+                cases[(ID,'Element_ID',1,'centroid')] = eids
+                eidsSet = True
+
+            if ID in op2.displacements:
+                case = op2.displacements[ID]
+                key = (ID,'DisplacementX',3,'node')
+                cases[key] = case.translations
+
+            if self.isStress(op2,ID):
+                cases = self.fillStressCase(cases,op2,ID)
+            ###
+            
+        ###
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        print "caseKeys = ",self.caseKeys
+        #print "type(caseKeys) = ",type(self.caseKeys)
+        self.iCase = -1
+        self.nCases = len(self.resultCases)-1 # number of keys in dictionary
+        self.cycleResults() # start at nCase=0
+
+    def fillStressCase(self,cases,op2,ID):
+        oxx = zeros(self.nElements)
+        oyy = zeros(self.nElements)
+        ozz = zeros(self.nElements)
+
+        o1  = zeros(self.nElements)
+        o2  = zeros(self.nElements)
+        o3  = zeros(self.nElements)
+        ovm = zeros(self.nElements)
+
+        if ID in op2.solidStress:
+            case = op2.solidStress[ID]
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+            for eid in case.o1:
+                oxxi = case.oxx[eid]['C']
+                oyyi = case.oyy[eid]['C']
+                ozzi = case.ozz[eid]['C']
+                o1i = case.o1[eid]['C']
+                o2i = case.o2[eid]['C']
+                o3i = case.o3[eid]['C']
+                ovmi = case.ovmShear[eid]['C']
+                #if ID==1:
+                #    print "ovm[%s] = %s" %(eid,ovmi)
+                eid2 = self.eidMap[eid]
+                oxx[eid2] = oxxi
+                oyy[eid2] = oyyi
+                ozz[eid2] = ozzi
+
+                o1[eid2] = o1i
+                o2[eid2] = o2i
+                o3[eid2] = o3i
+                ovm[eid2] = ovmi
+            ###
+
+        cases[(ID,'StressXX',1,'centroid')] = oxx
+        cases[(ID,'StressYY',1,'centroid')] = oyy
+        cases[(ID,'StressZZ',1,'centroid')] = ozz
+
+        cases[(ID,'Stress1',1,'centroid')] = o1
+        cases[(ID,'Stress2',1,'centroid')] = o2
+        cases[(ID,'Stress3',1,'centroid')] = o3
+        cases[(ID,vmWord   ,1,'centroid')] = ovm
+        return cases
+
+    def incrementCycle(self):
+        if self.iCase is not self.nCases:
+            self.iCase +=1
+        else:
+            self.iCase = 0
+        key = self.caseKeys[self.iCase]
+        if key[2] ==3: # vector size=3 -> vector
+            self.incrementCycle()
+        
+        #print "next key = ",key
+        return
+
+    def cycleResults(self):
+        self.incrementCycle()
+        self.gridResult = vtk.vtkFloatArray()
+        #self.gridResult.Reset()
+
+        #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
+        #self.gridResult.Allocate(self.nNodes,1000)
+
+        #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
+        self.gridResult.Allocate(self.nElements,1000)
+
+        key = self.caseKeys[self.iCase]
+        case = self.resultCases[key]
+
+        (subcaseID,resultType,vectorSize,location) = key
+
+        #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
+        caseName = self.iSubcaseNameMap[subcaseID]
+        subtitle,label = caseName
+
+        print "subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
+
+        for value in case:
+            maxValue = value
+            minValue = value
+            break
+
+        for value in case:
+            maxValue = max(value,maxValue)
+            minValue = min(value,minValue)
+        
+        normValue = maxValue-minValue
+        #print "case = ",case
+        for value in case:
+            self.gridResult.InsertNextValue((value-minValue)/normValue)
+        print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
+
         self.grid.GetCellData().SetScalars(self.gridResult)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         self.grid.Modified()
-        
-        
+
     def loadGeometry(self,bdfFileName):
 
         if bdfFileName is None:
@@ -585,7 +704,7 @@ class Pan(wx.Panel):
                 j+=1
             else:
                 print "skipping %s" %(element.type)
-
+            i+=1
         ###
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
