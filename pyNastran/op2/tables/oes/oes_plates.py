@@ -36,10 +36,10 @@ class plateStressObject(stressObject):
         if self.code == [1,0,1]:
             #self.isVonMises = True
             assert self.isFiberDistance() == False,self.stressBits
-            assert self.isVonMises()      == False,self.stressBits
+            assert self.isVonMises()      == True,self.stressBits
         elif self.code == [1,0,0]:
             assert self.isFiberDistance() == False,self.stressBits
-            assert self.isVonMises()      == False,self.stressBits
+            assert self.isVonMises()      == True,self.stressBits
         else:
             raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
@@ -326,21 +326,21 @@ class plateStrainObject(strainObject):
             #self.isVonMises = False
             self.isBilinear = True
             assert self.isFiberDistance() == False
-            assert self.isVonMises()      == False
+            assert self.isVonMises()      == True
 
         elif self.code == [1,0,11]:
             #self.isFiberDistance = False
             #self.isVonMises = True
             self.isBilinear = True
             assert self.isFiberDistance() == False
-            assert self.isVonMises()      == False
+            assert self.isVonMises()      == True
 
         elif self.code == [1,0,15]:
             #self.isFiberDistance = True
             #self.isVonMises = True
             self.isBilinear = False
             assert self.isFiberDistance() == True
-            assert self.isVonMises()      == False
+            assert self.isVonMises()      == True
         else:
             raise InvalidCodeError('plateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
