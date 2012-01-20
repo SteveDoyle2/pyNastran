@@ -4,7 +4,7 @@ import vtk
 from vtk.wx.wxVTKRenderWindow import wxVTKRenderWindow
 from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
                  vtkQuadraticTriangle,vtkQuadraticQuad,vtkQuadraticTetra,vtkQuadraticWedge,vtkQuadraticHexahedron)
-from numpy import zeros
+from numpy import zeros,ones
 
 import pyNastran
 version = pyNastran.__version__
@@ -12,7 +12,6 @@ version = pyNastran.__version__
 from pyNastran.bdf.bdf import *
 from pyNastran.op2.op2 import OP2
 from mouseStyle import MouseStyle
-
 
 
 def getScreenCorner(x,y):
@@ -36,12 +35,12 @@ class pyWidget(wxVTKRenderWindow):
         return self._CurrentCamera
 
     def onChar2(self,event):
-        print "onChar2 = ",event.GetKeyCode()
+        #print "onChar2 = ",event.GetKeyCode()
         camera = self.GetCamera()
         code = event.GetKeyCode()
-        if code == ord('m'): # zooming in
+        if   code == ord('m'): # zooming in
             camera.Zoom(1.1)
-        elif code == ord('M'):  # zooming out
+        elif code == ord('M'): # zooming out
             camera.Zoom(0.9)
 
         elif code == ord('o'): # counter-clockwise
@@ -83,10 +82,13 @@ class pyWidget(wxVTKRenderWindow):
             camera.SetPosition( 0., 0.,-1.)
             self.ResetCamera()
 
-        elif code == ord('i'): # picture taking doesnt work
+        elif code == ord('i'):
             self.TakePicture(event)
 
-        elif code == ord('L'): # picture taking doesnt work
+        elif code == ord('e'): # edges dont work right yet
+            self.parent.DisplayEdges(event)
+
+        elif code == ord('L'):
             self.parent.cycleResults()
 
         self.Update()
@@ -147,6 +149,48 @@ class Pan(wx.Panel):
         window = self.widget.GetRenderWindow()
         iren = vtk.vtkRenderWindowInteractor()
         iren.SetRenderWindow(window)
+
+    def DisplayEdges(self,event):
+        self.isEdges = not(self.isEdges)
+        if 0:
+            self.getEdges()
+
+        if 1:
+            prop = self.edgeActor.GetProperty()
+            print "dir(prop) = ",dir(prop)
+            print "visible = ",prop.GetEdgeVisibility()
+            if self.isEdges:
+                prop.EdgeVisibilityOn()
+                print "edges are now on\n"
+            else:
+                prop.EdgeVisibilityOff()
+                print "edges are now off\n"
+            prop.Modified()
+            #prop.Update()
+            #self.edgeActor.Modified()
+            #self.edgeActor.Update()
+        if 0:
+            print "dir(widget) = ",dir(self.widget)
+
+            actors = self.widget._CurrentRenderer.GetActors()
+            numActors = actors.GetNumberOfItems()
+            actors.InitTraversal()
+            for i in range(0,numActors):
+                print "iactor = ",i
+                actor = actors.GetNextItem()
+                
+                try:
+                    if self.isEdges:
+                        actor.getProperty().EdgeVisibilityOn()
+                    else:
+                        actor.getProperty().EdgeVisibilityOff()
+                    print "set the edges..."
+                except:
+                    pass
+                #actor.GetProperty().SetLineWidth(0.0)
+        self.widget.Render()
+        self.widget.Update()
+
 
     def SetToWireframe(self,event):
         if self.bdfFileName is not None:
@@ -316,6 +360,7 @@ class Pan(wx.Panel):
     def loadResults(self,op2FileName):
         op2 = OP2(op2FileName)
         op2.readOP2()
+        #print op2.printResults()
         
         #case = op2.displacements[1]
         #print "case = ",case
@@ -330,10 +375,13 @@ class Pan(wx.Panel):
         eidsSet = False
         for ID in subcaseIDs:
             if not eidsSet:
-                eids = zeros(self.nElements)
+                eids = zeros(self.nElements,'d')
                 for eid,eid2 in self.eidMap.items():
                     eids[eid2] = float(eid)
+               
+                eKey = (ID,'isElementOn',1,'centroid')
                 cases[(ID,'Element_ID',1,'centroid')] = eids
+                cases[eKey] = ones(self.nElements) # is the element supported
                 eidsSet = True
 
             if ID in op2.displacements:
@@ -342,7 +390,7 @@ class Pan(wx.Panel):
                 cases[key] = case.translations
 
             if self.isStress(op2,ID):
-                cases = self.fillStressCase(cases,op2,ID)
+                cases = self.fillStressCase(cases,op2,ID,eKey)
             ###
             
         ###
@@ -354,7 +402,7 @@ class Pan(wx.Panel):
         self.nCases = len(self.resultCases)-1 # number of keys in dictionary
         self.cycleResults() # start at nCase=0
 
-    def fillStressCase(self,cases,op2,ID):
+    def fillStressCase(self,cases,op2,ID,eKey):
         oxx = zeros(self.nElements)
         oyy = zeros(self.nElements)
         ozz = zeros(self.nElements)
@@ -364,13 +412,89 @@ class Pan(wx.Panel):
         o3  = zeros(self.nElements)
         ovm = zeros(self.nElements)
 
+        if ID in op2.rodStress:
+            case = op2.rodStress[ID]
+            for eid in case.axial:
+                print "bar eid=%s" %(eid)
+                axial   = case.axial[eid]
+                torsion = case.torsion[eid]
+
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 0.
+                oxx[eid2] = axial
+                oyy[eid2] = torsion
+
+                o1[eid2]  = max(axial,torsion)  # not really
+                #oyy[eid2] = torsion
+                #o2[eid2] = 0.  #(o1i+o3i)/2.
+                o3[eid2] = min(axial,torsion)
+
+        if ID in op2.barStress:
+            #self.s1    = {}
+            #self.s2    = {}
+            #self.s3    = {}
+            #self.s4    = {}
+            case = op2.barStress[ID]
+            for eid in case.axial:
+                print "bar eid=%s" %(eid)
+                oxxi = case.axial[eid]
+                o1i  = max(case.smax[eid])
+                o3i  = min(case.smin[eid])
+                
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 0.
+
+                oxx[eid2] = oxxi
+                #oyy[eid2] = oyyi
+                #ozz[eid2] = ozzi
+
+                o1[eid2] = o1i
+                #o2[eid2] = 0.  #(o1i+o3i)/2.
+                o3[eid2] = o3i
+                #ovm[eid2] = ovmi
+
+        if ID in op2.plateStress:
+            #self.txy    = {}
+
+            case = op2.plateStress[ID]
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+            for eid in case.ovmShear:
+                print "plate eid=%s" %(eid)
+                oxxi = case.oxx[eid]['C']
+                #self.oyy[eid][nid][iLayer]
+
+                oxxi = max(case.oxx[eid]['C'])
+                oyyi = max(case.oyy[eid]['C'])
+                ozzi = min(case.oxx[eid]['C'],min(case.oyy[eid]['C']))
+
+                o1i = max(case.majorP[eid]['C'])
+                o2i = max(case.minorP[eid]['C'])
+                o3i = min(case.majorP[eid]['C'],min(case.minorP[eid]['C']))
+                ovmi = max(case.ovmShear[eid]['C'])
+
+
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 0.
+                oxx[eid2] = oxxi
+                oyy[eid2] = oyyi
+                #ozz[eid2] = ozzi
+
+                o1[eid2] = o1i
+                o2[eid2] = 0.  #(o1i+o3i)/2.
+                o3[eid2] = o3i
+                ovm[eid2] = ovmi
+
         if ID in op2.solidStress:
             case = op2.solidStress[ID]
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
                 vmWord = 'maxShear'
-            for eid in case.o1:
+            for eid in case.ovmShear:
+                print "solid eid=%s" %(eid)
                 oxxi = case.oxx[eid]['C']
                 oyyi = case.oyy[eid]['C']
                 ozzi = case.ozz[eid]['C']
@@ -381,6 +505,7 @@ class Pan(wx.Panel):
                 #if ID==1:
                 #    print "ovm[%s] = %s" %(eid,ovmi)
                 eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 0.
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
                 ozz[eid2] = ozzi
@@ -416,7 +541,6 @@ class Pan(wx.Panel):
     def cycleResults(self):
         self.incrementCycle()
         self.gridResult = vtk.vtkFloatArray()
-        #self.gridResult.Reset()
 
         #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
         #self.gridResult.Allocate(self.nNodes,1000)
@@ -444,8 +568,11 @@ class Pan(wx.Panel):
             maxValue = max(value,maxValue)
             minValue = min(value,minValue)
         
+        # flips sign to make colors go from blue -> red
         normValue = maxValue-minValue
-        #print "case = ",case
+        print "case = ",case
+        if normValue==0.: # avoids division by 0.
+            normValue = 1.
         for value in case:
             self.gridResult.InsertNextValue((value-minValue)/normValue)
         print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
@@ -454,7 +581,7 @@ class Pan(wx.Panel):
         #self.grid.GetPointData().SetScalars(self.gridResult)
         self.grid.Modified()
 
-    def loadGeometry(self,bdfFileName):
+    def loadGeometry(self,bdfFileName,dirname):
 
         if bdfFileName is None:
             self.grid       = vtk.vtkUnstructuredGrid()
@@ -465,10 +592,20 @@ class Pan(wx.Panel):
         else:
             self.grid.Reset()
             self.gridResult.Reset()
+            
             self.grid2.Reset()
+            try:
+                del self.resultCases
+                del self.caseKeys
+                del self.iCase
+                del self.nCases
+                del self.iSubcaseNameMap
+            except:
+                print "cant cleanup..."
+            ###
 
         model = BDF()
-        model.readBDF(bdfFileName)
+        model.readBDF(bdfFileName,includeDir=dirname)
 
         nNodes    = model.nNodes()
         nElements = model.nElements()
@@ -721,9 +858,9 @@ class Pan(wx.Panel):
         key = rwi.GetKeySym()
         print "*Pressed %s" %(key)
 
-    def buildVTK(self,bdfFileName=None):
+    def buildVTK(self,bdfFileName=None,dirname=None):
         self.bdfFileName = bdfFileName
-        self.loadGeometry(self.bdfFileName)
+        self.loadGeometry(self.bdfFileName,dirname)
         self.main()
 
         #self.renWin = vtk.vtkRenderWindow()
@@ -737,7 +874,6 @@ class Pan(wx.Panel):
         (x,y) = getScreenCorner(xSize,ySize)
         #window.SetSize(xSize,ySize)
         #window.SetPosition(x,y)
-
 
         #iren = wxVTKRenderWindowInteractor(self,-1)
         iren = vtk.vtkRenderWindowInteractor()

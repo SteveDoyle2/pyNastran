@@ -342,7 +342,7 @@ class EventsHandler(object) :
             fname = os.path.join(self.parent.dirname, bdfFileName)
             print "fname = ",fname
             self.parent.UpdateWindowName(bdfFileName)
-            self.parent.frmPanel.loadGeometry(bdfFileName)
+            self.parent.frmPanel.loadGeometry(fname,self.parent.dirname)
             self.parent.frmPanel.Update()
         dlg.Destroy()
 
@@ -353,9 +353,9 @@ class EventsHandler(object) :
         if 1:
             bdf = self.parent.bdfFileName
             bdfBase = os.path.basename(bdf)
-            dirname = os.path.dirname(bdf)
+            #dirname = os.path.dirname(bdf)
             op2name,op2 = bdfBase.split('.')
-            op2 = os.path.join(dirname,op2name+'.op2')
+            op2 = os.path.join(self.parent.dirname,op2name+'.op2')
             
             self.parent.op2FileName = op2
             self.parent.frmPanel.loadResults(op2)
@@ -371,7 +371,7 @@ class EventsHandler(object) :
             self.parent.dirname = dlg.GetDirectory()
             oname = os.path.join(self.parent.dirname, op2FileName)
             print "oname = ",oname
-            self.parent.UpdateWindowName(bdfFileName)
+            #self.parent.UpdateWindowName(op2FileName)
             self.parent.frmPanel.loadResults(op2FileName)
             self.parent.frmPanel.Update()
         dlg.Destroy()
