@@ -2,7 +2,7 @@
 
 = Introduction =
 
-The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
+The Graphical User Interface (GUI) was first introduced in version 0.3.0 (unreleased).  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
 
 An early version of the GUI looks like:
 
