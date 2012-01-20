@@ -116,14 +116,14 @@ class OES(ElementsStressStrain):
         bits = [0,0,0,0,0]
         
         sCode = self.sCode
-        i=4
+        i=0
         while sCode>0:
             value = sCode%2
             sCode = (sCode - value)//2
             bits[i] = value
             #print "    *bit = ",value
             #print "    sCode = ",sCode
-            i-=1
+            i+=1
         #bits.reverse()
         #print "stressBits = ",bits
         self.stressBits = bits
