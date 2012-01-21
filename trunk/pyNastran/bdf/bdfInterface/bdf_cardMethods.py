@@ -204,7 +204,7 @@ class cardMethods(object):
 
             if ',' in sline:  #CSV
                 sline = sline.split(',')[0:9]
-                self.log.debug("sline = %s" %(sline))
+                #self.log.debug("sline = %s" %(sline))
             else: # standard
                 sline = self.nastranSplit(sline,isLargeField,debug=debug)
             #name = sline[0]

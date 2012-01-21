@@ -358,8 +358,9 @@ class EventsHandler(object) :
             op2 = os.path.join(self.parent.dirname,op2name+'.op2')
             
             self.parent.op2FileName = op2
-            self.parent.frmPanel.loadResults(op2)
-            self.parent.frmPanel.Update()
+            if os.path.exists(op2):
+                self.parent.frmPanel.loadResults(op2)
+                self.parent.frmPanel.Update()
             return
         
         wildcard = "Nastran OP2 (*.op2)|*.op2|" \
