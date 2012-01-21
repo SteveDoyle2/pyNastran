@@ -1,7 +1,6 @@
 import os
 import wx
 import vtk
-from vtk.wx.wxVTKRenderWindow import wxVTKRenderWindow
 from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
                  vtkQuadraticTriangle,vtkQuadraticQuad,vtkQuadraticTetra,vtkQuadraticWedge,vtkQuadraticHexahedron)
 from numpy import zeros,ones
@@ -12,7 +11,7 @@ version = pyNastran.__version__
 from pyNastran.bdf.bdf import *
 from pyNastran.op2.op2 import OP2
 from mouseStyle import MouseStyle
-
+from actionsControl import pyWidget
 
 def getScreenCorner(x,y):
     #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
@@ -20,124 +19,6 @@ def getScreenCorner(x,y):
     xCorner = (xScreen-x)//2
     yCorner = (yScreen-y)//2
     return(xCorner,yCorner)
-
-class pyWidget(wxVTKRenderWindow):
-    def __init__(self,*args,**kwargs):
-        wxVTKRenderWindow.__init__(self, *args, **kwargs)
-        self.parent = args[0]
-        self.dirname = ""
-        self.OnChar = self.onChar2
-
-    def ResetCamera(self):
-        self.Reset()
-
-    def GetCamera(self):
-        return self._CurrentCamera
-
-    def onChar2(self,event):
-        #print "onChar2 = ",event.GetKeyCode()
-        camera = self.GetCamera()
-        code = event.GetKeyCode()
-        if   code == ord('m'): # zooming in
-            camera.Zoom(1.1)
-        elif code == ord('M'): # zooming out
-            camera.Zoom(0.9)
-
-        elif code == ord('o'): # counter-clockwise
-            camera.Roll(5.)
-        elif code == ord('O'): # clockwise
-            camera.Roll(-5.)
-
-        elif code == ord('x'): # set x-axis
-            camera.SetFocalPoint(0.,0., 0.)
-            camera.SetViewUp(    0.,0., 1.)
-            camera.SetPosition(  1.,0., 0.)
-            self.ResetCamera()
-        elif code == ord('X'): # set x-axis
-            camera.SetFocalPoint(0.,0., 0.)
-            camera.SetViewUp(    0.,0.,-1.)
-            camera.SetPosition( -1.,0., 0.)
-            self.ResetCamera()
-
-
-        elif code == ord('y'): # set y-axis
-            camera.SetFocalPoint(0.,0.,0.)
-            camera.SetViewUp(    0.,0.,1.)
-            camera.SetPosition(  0.,1.,0.)
-            self.ResetCamera()
-        elif code == ord('Y'): # set y-axis
-            camera.SetFocalPoint(0., 0., 0.)
-            camera.SetViewUp(    0., 0.,-1.)
-            camera.SetPosition(  0.,-1., 0.)
-            self.ResetCamera()
-
-        elif code == ord('z'): # set z-axis
-            camera.SetFocalPoint(0.,0.,0.)
-            camera.SetViewUp(    0.,1.,0.)
-            camera.SetPosition(  0.,0.,1.)
-            self.ResetCamera()
-        elif code == ord('Z'): # set z-axis
-            camera.SetFocalPoint(0.,0., 0.)
-            camera.SetViewUp(   0., -1.,0.)
-            camera.SetPosition( 0., 0.,-1.)
-            self.ResetCamera()
-
-        elif code == ord('i'):
-            self.TakePicture(event)
-
-        elif code == ord('e'): # edges dont work right yet
-            self.parent.DisplayEdges(event)
-
-        elif code == ord('L'):
-            self.parent.cycleResults()
-
-        self.Update()
-        self.Render()
-        ###
-
-    def TakePicture(self,event):
-        renderLarge = vtk.vtkRenderLargeImage()
-        renderLarge.SetInput(self.getRenderer())
-        renderLarge.SetMagnification(4)
-
-        wildcard = "PNG (*.png)|*.png|" \
-         "JPEG (*.jpeg; *.jpeg; *.jpg; *.jfif)|*.jpg;*.jpeg;*.jpe;*.jfif|" \
-         "TIFF (*.tif; *.tiff)|*.tif;*.tiff|" \
-         "BMP (*.bmp)|*.bmp|" \
-         "PostScript (*.ps)|*.ps|" \
-         "All files (*.*)|*.*"
-        
-        dlg = wx.FileDialog(None, "Choose a file", self.dirname, "", wildcard, wx.SAVE | wx.OVERWRITE_PROMPT)
-        if dlg.ShowModal() == wx.ID_OK:
-            fname        = dlg.GetFilename()
-            self.dirname = dlg.GetDirectory()
-            fname = os.path.join(self.dirname,fname)
-
-            print "fname = ",fname
-
-            # We write out the image which causes the rendering to occur. If you
-            # watch your screen you might see the pieces being rendered right
-            # after one another.
-            lfname = fname.lower()
-            if lfname.endswith('.png'):
-                writer = vtk.vtkPNGWriter()
-            elif lfname.endswith('.jpeg'):
-                writer = vtk.vtkJPEGWriter()
-            elif lfname.endswith('.tiff'):
-                writer = vtk.vtkTIFFWriter()
-            elif lfname.endswith('.ps'):
-                writer = vtk.vtkPostScriptWriter()
-            else:
-                writer = vtk.vtkPNGWriter()
-
-            writer.SetInputConnection(renderLarge.GetOutputPort())
-            writer.SetFileName(fname)
-            writer.Write()
-        dlg.Destroy()
-
-    def getRenderer(self):
-        return self.GetCurrentRenderer()
-
 
 class Pan(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -149,6 +30,8 @@ class Pan(wx.Panel):
         window = self.widget.GetRenderWindow()
         iren = vtk.vtkRenderWindowInteractor()
         iren.SetRenderWindow(window)
+        self.iText = 0
+        self.textActors = {}
 
     def DisplayEdges(self,event):
         self.isEdges = not(self.isEdges)
@@ -313,6 +196,101 @@ class Pan(wx.Panel):
         self.rend.AddActor(geometryActor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
+    def buildLookupTable2(self):
+
+        scalarBar = vtkScalarBarActor()
+        scalarBar.SetLookupTable(mapper.GetLookupTable())
+        scalarBar.SetTitle("Title")
+        scalarBar.SetNumberOfLabels(4)
+ 
+        # Create a lookup table to share between the mapper and the scalarbar
+        hueLut =vtkLookupTable()
+
+        hueLut.SetTableRange(0, 1)
+        hueLut.SetHueRange(0, 1)
+        hueLut.SetSaturationRange(1, 1)
+        hueLut.SetValueRange(1, 1)
+        hueLut.Build()
+        mapper.SetLookupTable(hueLut)
+        scalarBar.SetLookupTable(hueLut)
+        mapper.ScalarVisibilityOn()
+        mapper.SetScalarModeToUsePointData()
+        mapper.SetColorModeToMapScalars()
+
+    def buildLookupTable(self):
+        self.colorFunction = vtk.vtkColorTransferFunction()
+        self.colorFunction.SetColorSpaceToHSV()
+        self.colorFunction.HSVWrapOff()
+        
+        drange = [10.,20.]
+        self.colorFunction.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
+        self.colorFunction.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
+
+        self.scalarBar = vtk.vtkScalarBarActor()
+        self.scalarBar.SetTitle("Title1")
+        self.scalarBar.SetLookupTable(self.colorFunction)
+        self.scalarBar.SetOrientationToVertical()
+
+        self.scalarBar.SetHeight(0.9)
+        self.scalarBar.SetWidth(0.20) # the width is set first
+        self.scalarBar.SetPosition(0.77, 0.1) # after the width is set, this is adjusted
+        #self.scalarBar.SetPosition2(0.1, 0.3)
+        print self.scalarBar.GetPosition()
+
+        propTitle = vtk.vtkTextProperty()
+        propTitle.SetFontFamilyToArial()
+        #propTitle.ItalicOff()
+        propTitle.BoldOn()
+        propTitle.ShadowOn()
+
+        propLabel = vtk.vtkTextProperty()
+        propLabel.BoldOff()
+        propLabel.ShadowOn()
+
+        #self.scalarBar.SetTitleTextProperty(propTitle);
+        #self.scalarBar.SetLabelTextProperty(propLabel);
+        self.scalarBar.SetLabelFormat("%i")
+        
+        # allows 0-1 to be nice number when ranging values (gotta pick something)
+        self.scalarBar.SetNumberOfLabels(11)
+        self.scalarBar.SetMaximumNumberOfColors(11)
+        
+        visibility = True
+        if visibility:
+            self.scalarBar.VisibilityOn()
+        else:
+            self.scalarBar.VisibilityOff()
+        #self.scalarBar.ShadowOn()
+        #self.scalarBar.RepositionableOn()
+        self.rend.AddActor(self.scalarBar)
+        #return scalarBar
+
+    def UpdateScalarBar(self,Title,minValue,maxValue,dataFormat):
+        """
+        @param Title the scalar bar title
+        @param minValue the blue value
+        @param maxValue the red value
+        @param dataFormat '%g','%f','%i',etc.
+        """
+        #drange = [10.,20.]
+        self.colorFunction.RemoveAllPoints()
+        self.colorFunction.AddRGBPoint(minValue, 0.0, 0.0, 1.0)
+        self.colorFunction.AddRGBPoint(maxValue, 1.0, 0.0, 0.0)
+        #self.scalarBar.SetLookupTable(self.colorFunction)
+
+        self.scalarBar.SetTitle(Title)
+        self.scalarBar.SetLabelFormat(dataFormat)
+        
+        nValues = 11
+        if Title=='Element_ID' and (maxValue-minValue+1)<11:
+            nValues = int(maxValue-minValue)+1
+            #print "need to adjust axes...maxValue=%s" %(maxValue)
+        #if dataFormat=='%.0f' and maxValue>
+
+        self.scalarBar.SetNumberOfLabels(nValues)
+        self.scalarBar.SetMaximumNumberOfColors(nValues)
+        self.scalarBar.Modified()
+
     def Update(self):
         #print '\n'.join(dir(self.widget))
         window = self.widget.GetRenderWindow()
@@ -325,11 +303,16 @@ class Pan(wx.Panel):
     def main(self):
         print "main builder"
         window = self.widget.GetRenderWindow()
-        self.rend = vtk.vtkRenderer()
         window.AddRenderer(self.rend)
 
         self.addGeometry()
         self.addAltGeometry()
+        
+        textSize = 15
+        self.createText([5,35],'Max: ', textSize) # text actor 0
+        self.createText([5,20],'Min: ', textSize) # text actor 1
+        self.createText([5,5 ],'Word: ',textSize) # text actor 2
+        #self.createText([5,35],'Yet Again',  textSize)
 
         # Create the usual rendering stuff.
         if self.isEdges:
@@ -341,6 +324,26 @@ class Pan(wx.Panel):
 
         #iren.Start()
 
+    def createText(self,position,label,textSize=18,movable=False):
+        # create a text actor
+        txt = vtk.vtkTextActor()
+        txt.SetInput(label)
+        txtprop=txt.GetTextProperty()
+        #txtprop.SetFontFamilyToArial()
+        txtprop.SetFontSize(textSize)
+        txtprop.SetColor(1,1,1)
+        txt.SetDisplayPosition(*position)
+        #txt.SetDisplayPosition(5,5) # bottom left
+        #txt.SetDisplayPosition(5,95)
+
+        #print dir(txt)
+        #txt.SetPosition(0.1,0.5)
+
+        # assign actor to the renderer
+        self.rend.AddActor(txt)
+        self.textActors[self.iText] = txt
+        self.iText+=1
+        
     def getWindow(self):
         return self.widget.GetRenderWindow()
 
@@ -358,6 +361,9 @@ class Pan(wx.Panel):
         return False
         
     def loadResults(self,op2FileName):
+        self.scalarBar.VisibilityOn()
+        self.scalarBar.Modified()
+
         op2 = OP2(op2FileName)
         op2.readOP2()
         #print op2.printResults()
@@ -377,16 +383,16 @@ class Pan(wx.Panel):
             if not eidsSet:
                 eids = zeros(self.nElements,'d')
                 for eid,eid2 in self.eidMap.items():
-                    eids[eid2] = float(eid)
+                    eids[eid2] = eid
                
-                eKey = (ID,'isElementOn',1,'centroid')
-                cases[(ID,'Element_ID',1,'centroid')] = eids
-                cases[eKey] = ones(self.nElements) # is the element supported
+                eKey = (ID,'isElementOn',1,'centroid','%.0g')
+                cases[(ID,'Element_ID',1,'centroid','%.0f')] = eids
+                cases[eKey] = zeros(self.nElements) # is the element supported
                 eidsSet = True
 
             if ID in op2.displacements:
                 case = op2.displacements[ID]
-                key = (ID,'DisplacementX',3,'node')
+                key = (ID,'DisplacementX',3,'node','%g')
                 cases[key] = case.translations
 
             if self.isStress(op2,ID):
@@ -412,15 +418,17 @@ class Pan(wx.Panel):
         o3  = zeros(self.nElements)
         ovm = zeros(self.nElements)
 
+        vmWord = 'N/A'
         if ID in op2.rodStress:
             case = op2.rodStress[ID]
             for eid in case.axial:
-                print "bar eid=%s" %(eid)
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 1.
+                #print "bar eid=%s" %(eid)
+
                 axial   = case.axial[eid]
                 torsion = case.torsion[eid]
 
-                eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 0.
                 oxx[eid2] = axial
                 oyy[eid2] = torsion
 
@@ -436,14 +444,14 @@ class Pan(wx.Panel):
             #self.s4    = {}
             case = op2.barStress[ID]
             for eid in case.axial:
-                print "bar eid=%s" %(eid)
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 1.
+
+                #print "bar eid=%s" %(eid)
                 oxxi = case.axial[eid]
                 o1i  = max(case.smax[eid])
                 o3i  = min(case.smin[eid])
                 
-                eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 0.
-
                 oxx[eid2] = oxxi
                 #oyy[eid2] = oyyi
                 #ozz[eid2] = ozzi
@@ -455,14 +463,16 @@ class Pan(wx.Panel):
 
         if ID in op2.plateStress:
             #self.txy    = {}
-
             case = op2.plateStress[ID]
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
-                print "plate eid=%s" %(eid)
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 1.
+
+                #print "plate eid=%s" %(eid)
                 oxxi = case.oxx[eid]['C']
                 #self.oyy[eid][nid][iLayer]
 
@@ -476,8 +486,6 @@ class Pan(wx.Panel):
                 ovmi = max(case.ovmShear[eid]['C'])
 
 
-                eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 0.
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
                 #ozz[eid2] = ozzi
@@ -494,7 +502,10 @@ class Pan(wx.Panel):
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
-                print "solid eid=%s" %(eid)
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 1.
+
+                #print "solid eid=%s" %(eid)
                 oxxi = case.oxx[eid]['C']
                 oyyi = case.oyy[eid]['C']
                 ozzi = case.ozz[eid]['C']
@@ -504,8 +515,6 @@ class Pan(wx.Panel):
                 ovmi = case.ovmShear[eid]['C']
                 #if ID==1:
                 #    print "ovm[%s] = %s" %(eid,ovmi)
-                eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 0.
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
                 ozz[eid2] = ozzi
@@ -516,14 +525,14 @@ class Pan(wx.Panel):
                 ovm[eid2] = ovmi
             ###
 
-        cases[(ID,'StressXX',1,'centroid')] = oxx
-        cases[(ID,'StressYY',1,'centroid')] = oyy
-        cases[(ID,'StressZZ',1,'centroid')] = ozz
+        cases[(ID,'StressXX',1,'centroid','%.3f')] = oxx
+        cases[(ID,'StressYY',1,'centroid','%.3f')] = oyy
+        cases[(ID,'StressZZ',1,'centroid','%.3f')] = ozz
 
-        cases[(ID,'Stress1',1,'centroid')] = o1
-        cases[(ID,'Stress2',1,'centroid')] = o2
-        cases[(ID,'Stress3',1,'centroid')] = o3
-        cases[(ID,vmWord   ,1,'centroid')] = ovm
+        cases[(ID,'Stress1',1,'centroid','%.3f')] = o1
+        cases[(ID,'Stress2',1,'centroid','%.3f')] = o2
+        cases[(ID,'Stress3',1,'centroid','%.3f')] = o3
+        cases[(ID,vmWord   ,1,'centroid','%.3f')] = ovm
         return cases
 
     def incrementCycle(self):
@@ -551,7 +560,7 @@ class Pan(wx.Panel):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
 
-        (subcaseID,resultType,vectorSize,location) = key
+        (subcaseID,resultType,vectorSize,location,dataFormat) = key
 
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
         caseName = self.iSubcaseNameMap[subcaseID]
@@ -577,6 +586,11 @@ class Pan(wx.Panel):
             self.gridResult.InsertNextValue((value-minValue)/normValue)
         print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
 
+        self.textActors[0].SetInput('Max:  %g' %(maxValue)) # max
+        self.textActors[1].SetInput('Min:  %g' %(minValue)) # min
+        self.textActors[2].SetInput('subcase=%s subtitle=%s' %(subcaseID,subtitle)) # info
+        self.UpdateScalarBar(resultType,minValue,maxValue,dataFormat)
+
         self.grid.GetCellData().SetScalars(self.gridResult)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         self.grid.Modified()
@@ -588,11 +602,11 @@ class Pan(wx.Panel):
             self.gridResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.grid2      = vtk.vtkUnstructuredGrid()
+            self.scalarBar.VisibilityOff()
             return
         else:
             self.grid.Reset()
             self.gridResult.Reset()
-            
             self.grid2.Reset()
             try:
                 del self.resultCases
@@ -603,6 +617,8 @@ class Pan(wx.Panel):
             except:
                 print "cant cleanup..."
             ###
+        self.scalarBar.VisibilityOff()
+        self.scalarBar.Modified()
 
         model = BDF()
         model.readBDF(bdfFileName,includeDir=dirname)
@@ -860,6 +876,9 @@ class Pan(wx.Panel):
 
     def buildVTK(self,bdfFileName=None,dirname=None):
         self.bdfFileName = bdfFileName
+
+        self.rend = vtk.vtkRenderer()
+        self.buildLookupTable()
         self.loadGeometry(self.bdfFileName,dirname)
         self.main()
 
