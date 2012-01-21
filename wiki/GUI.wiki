@@ -8,11 +8,24 @@ An early version of the GUI looks like:
 
 https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 
+= Features =
+ * Load BDF file window (menu/button)
+ * Load OP2 file window (menu)
+ * Multiple Results Outputs
+   * Centroidal Results Only (e.g. StressXX, StressYY, vonMisesStress)
+   * Cycle through Results with 'L' key
+   * Contour Plots
+   * Words that displays subcase ID, subtitle, max value, and the min value
+ * Wireframe Mode (button/keyboard)
+ * Surface/Solid Mode (menu/button/keyboard)
+ * Take a Screenshot (menu/button/keyboard)
+ * Snap to Axis (keyboard)
+ * Change Background Color (menu)
+
 == TODO ==
- * Add a legend so you can see the value ranges/result name/subcase ID
  * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
- * display the values un-normalized (the values are normalized so the colors can be seen; default range is 0 to 1)
- * support non-solid elements
+ * display the values un-normalized (the values are normalized so the colors can be seen; default range is 0 to 1; this might not be a problem)
+ * support composite elements
  * allow edges to be shown from without passing in a command line argument
 
 = Supported Elements =
@@ -30,19 +43,6 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
  * Entire model can be cross-referenced
  * No SPOINTs
  * Same requirements as BDF
-
-= Features =
- * Load BDF file window (menu/button)
- * Load OP2 file window (menu)
- * Multiple Results Outputs
-   * Centroidal Results Only (e.g. StressXX, StressYY, vonMisesStress)
-   * Cycle through Results with 'L' key
- * Wireframe Mode (button/keyboard)
- * Surface/Solid Mode (button/keyboard)
- * Take a Screenshot (button/keyboard)
- * Snap to Axis (keyboard)
- * Change Background Color (button)
-
 
 = Mouse Controls =
 || *Command* || *Purpose* ||
