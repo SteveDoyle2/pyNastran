@@ -23,7 +23,7 @@ def getScreenCorner(x,y):
 class Pan(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
-        isEdges = False
+        isEdges = True
         self.isEdges = isEdges # surface wireframe
         self.widget = pyWidget(self, -1)
 
@@ -349,7 +349,7 @@ class Pan(wx.Panel):
 
     def getWindowName(self,winName=''):
         return "pyNastran v%s - %s" %(version,self.bdfFileName)
-        #return "pyNastran v%s - %s" %(version,'solid.bdf')
+        return "pyNastran v%s - %s" %(version,'solid.bdf')
 
     def setWindowName(self,winName=''):
         window = self.getWindow()
@@ -378,8 +378,16 @@ class Pan(wx.Panel):
         subcaseIDs = op2.iSubcaseNameMap.keys()
         self.iSubcaseNameMap = op2.iSubcaseNameMap
         
+        nidsSet = False # set to True to disable nodeIDs
         eidsSet = False
         for ID in subcaseIDs:
+            if not nidsSet:
+                nids = zeros(self.nNodes,'d')
+                for nid,nid2 in self.nidMap.items():
+                    nids[nid2] = nid
+                cases[(ID,'Node_ID',1,'node','%.0f')] = nids
+                nidsSet = True
+
             if not eidsSet:
                 eids = zeros(self.nElements,'d')
                 for eid,eid2 in self.eidMap.items():
@@ -390,15 +398,25 @@ class Pan(wx.Panel):
                 cases[eKey] = zeros(self.nElements) # is the element supported
                 eidsSet = True
 
-            if ID in op2.displacements:
+            if ID in op2.displacements: # not correct?
                 case = op2.displacements[ID]
                 key = (ID,'DisplacementX',3,'node','%g')
                 cases[key] = case.translations
 
+            if ID in op2.temperatures:
+                case = op2.temperatures[ID]
+                print case
+                temps = zeros(self.nNodes)
+                key = (ID,'Temperature',1,'node','%g')
+                for nid,T in case.temperatures.items():
+                    print T
+                    nid2 = self.nidMap[nid]
+                    temps[nid2] = T
+                cases[key] = temps
+
             if self.isStress(op2,ID):
                 cases = self.fillStressCase(cases,op2,ID,eKey)
             ###
-            
         ###
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -551,16 +569,16 @@ class Pan(wx.Panel):
         self.incrementCycle()
         self.gridResult = vtk.vtkFloatArray()
 
-        #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
-        #self.gridResult.Allocate(self.nNodes,1000)
-
-        #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
-        self.gridResult.Allocate(self.nElements,1000)
-
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
-
         (subcaseID,resultType,vectorSize,location,dataFormat) = key
+
+        if location=='centroid':
+            #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
+            self.gridResult.Allocate(self.nElements,1000)
+        else: # node
+            #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
+            self.gridResult.Allocate(self.nNodes,1000)
 
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
         caseName = self.iSubcaseNameMap[subcaseID]
@@ -591,8 +609,13 @@ class Pan(wx.Panel):
         self.textActors[2].SetInput('subcase=%s subtitle=%s' %(subcaseID,subtitle)) # info
         self.UpdateScalarBar(resultType,minValue,maxValue,dataFormat)
 
-        self.grid.GetCellData().SetScalars(self.gridResult)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
+        # @todo results can only go from centroid->node and not back to centroid
+        if location=='centroid':
+            self.grid.GetCellData().SetScalars(self.gridResult)
+            #self.grid.GetPointData().SetScalars(self.emptyResult) # causes a crash
+        else:
+            #self.grid.GetCellData().SetScalars(self.emptyResult)
+            self.grid.GetPointData().SetScalars(self.gridResult)
         self.grid.Modified()
 
     def loadGeometry(self,bdfFileName,dirname):
@@ -600,6 +623,7 @@ class Pan(wx.Panel):
         if bdfFileName is None:
             self.grid       = vtk.vtkUnstructuredGrid()
             self.gridResult = vtk.vtkFloatArray()
+            self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.grid2      = vtk.vtkUnstructuredGrid()
             self.scalarBar.VisibilityOff()
