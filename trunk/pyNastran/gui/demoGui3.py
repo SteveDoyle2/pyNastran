@@ -63,7 +63,6 @@ class AppFrame( wx.Frame ) :
 
         self.buildMenuBar()
         self.buildToolBar()
-        #self.buildToolBar2()
         self.buildStatusBar()
         
         self.SetMenuBar(self.menubar)
@@ -86,14 +85,29 @@ class AppFrame( wx.Frame ) :
             self.greenBtn = wx.Button( self.frmPanel, label='Green' )
             self.exitBtn  = wx.Button( self.frmPanel, label='Exit' )
 
+            vRight = wx.BoxSizer( wx.VERTICAL)
+            vRight.AddStretchSpacer()
+            vRight.Add( self.greenBtn, proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.Add( self.exitBtn,  proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.Add( self.redBtn,   proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.AddStretchSpacer()
+            hbox.Add(vRight,1,wx.EXPAND)
+
+        if 0:
+
+            tree = self.buildTree(self.frmPanel)
+            vRight = wx.BoxSizer( wx.VERTICAL)
+            vRight.AddStretchSpacer()
+            vRight.Add( tree, proportion=1, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.AddStretchSpacer()
+            hbox.Add(vRight,1,wx.EXPAND)
+
+
+        # best guess at tree
+        if 0:
             #self.tree  = wx.Button( self.frmPanel, label='Tree' )
 
             vRight = wx.BoxSizer( wx.VERTICAL)
-            #vRight.AddStretchSpacer()
-            #vRight.Add( self.greenBtn, proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
-            #vRight.Add( self.exitBtn,  proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
-            #vRight.Add( self.redBtn,   proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
-            #vRight.AddStretchSpacer()
 
             scroll = wx.ScrolledWindow( self, -1 )
             panelRight = wx.Panel( scroll, -1 )
@@ -193,12 +207,6 @@ class AppFrame( wx.Frame ) :
     def buildStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetStatusText('Ready')
-
-    def buildToolBar2(self):
-        self.toolbar1 = wx.ToolBar(self)
-        topen = self.toolbar1.AddLabelTool(ID_BDF,     '', wx.Bitmap('icons/topen.png'))
-        qtool = self.toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.Bitmap('icons/texit.png'))
-        #self.vMain.Add(self.toolbar1)
 
     def buildToolBar(self):
         events = self.eventsHandler
@@ -436,26 +444,30 @@ class EventsHandler(object) :
               'Shift + Left Click - Pan/Recenter Rotation Point',
               'Right Mouse - Zoom',
             '',
-            'Controls',
+            'Keyboard Controls',
               'X/x - snap to x axis',
               'Y/y - snap to y axis',
               'Z/z - snap to z axis',
               '',
-              'm/M scale up/scale down',
-              'o/O rotate counter-clockwise/clockwise 5 degrees',
-              'w   wireframe',
-              's   surface',
-              'i   take a screenshot (image)',]
+              'h   - show/hide legend & info'
+              'i   - take a screenshot (image)',
+              'L   - cycle op2 results',
+              'm/M - scale up/scale down by 1.1 times',
+              'o/O - rotate counter-clockwise/clockwise 5 degrees',
+              's   - surface',
+              'w   - wireframe',
+              ]
         
         # not done
               #'',
-              #'left arrow  - pan left  (not done)',
-              #'right arrow - pan right (not done)',
-              #'up arrow    - pan up    (not done)',
-              #'down arrow  - pan down  (not done)',
+              #'left arrow  - pan left',
+              #'right arrow - pan right',
+              #'up arrow    - pan up',
+              #'down arrow  - pan down',
               #'',
-              #'p   project point (not done)',
-              #'f   fly to rotation point (not done)',
+              #'e  - show/hide edges',
+              #'f   fly to rotation point',
+              #'p   project point',
 
         dlg = wx.MessageDialog(None, '\n'.join(about), 'About',
                  wx.OK | wx.ICON_INFORMATION)
