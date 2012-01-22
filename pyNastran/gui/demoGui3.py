@@ -73,6 +73,8 @@ class AppFrame( wx.Frame ) :
 
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
+        self.SetSize([600,600])
+        self.Centre()
 
         # Add them to sizer.
         hbox = wx.BoxSizer( wx.HORIZONTAL )
