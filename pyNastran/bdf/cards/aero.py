@@ -12,28 +12,34 @@ class AELINK(BaseCard):
     type = 'AELINK'
     def __init__(self,card=None,data=None): ## @todo doesnt support data
         ## an ID=0 is applicable to the global subcase, ID=1 only subcase 1
-        self.ID = card.field(1)
+        self.id = card.field(1)
         ## defines the dependent variable name (string)
-        self.dependentLabels = []
+        self.label = card.field(2)
         ## defines the independent variable name (string)
         self.independentLabels = []
         ## linking coefficient (real)
         self.Cis = []
 
-        fields = card.fields(2)
+        fields = card.fields(3)
+        #print "aelink fields = ",fields
         assert len(fields)%2==0,'fields=%s' %(fields)
-        for i in range(len(fields),2):
-            dependentLabel   = fields[i]
-            independentLabel = fields[i+1]
-            Ci               = fields[i+2]
-            self.dependentLabels.append(dependentLabel)
+        #print "len(fields) = ",len(fields)
+        for i in range(0,len(fields),2):
+            independentLabel = fields[i]
+            Ci               = fields[i+1]
             self.independentLabels.append(independentLabel)
             self.Cis.append(Ci)
         ###
+        #print self
 
     def rawFields(self):
-        fields = ['AELINK',self.id,self.label,self.units]
-        return self.printCard(fields)
+        fields = ['AELINK',self.id,self.label]
+        #print "self.independentLabels = ",self.independentLabels
+        #print "self.Cis = ",self.Cis
+        for ivar,ival in zip(self.independentLabels,self.Cis):
+            fields += [ivar,ival]
+        #print "AELINK fields = ",fields
+        return fields
 
 class AEPARM(BaseCard):
     """
@@ -58,7 +64,7 @@ class AEPARM(BaseCard):
 
     def rawFields(self):
         fields = ['AEPARM',self.id,self.label,self.units]
-        return self.printCard(fields)
+        return fields
 
 class Aero(BaseCard):
     """Base class for AERO and AEROS cards."""
@@ -252,10 +258,17 @@ class CAERO1(BaseCard): # add helper functions
         self.igid =  card.field(8)
 
         self.p1   =  array([card.field(9, 0.0), card.field(10,0.0), card.field(11,0.0)])
-        self.p2   =  self.p1+[card.field(12,0.0), 0., 0.]
+        self.x12 = card.field(12,0.)
+        #self.p2   =  self.p1+array([card.field(12,0.0), 0., 0.])
 
         self.p4   =  array([card.field(13,0.0), card.field(14,0.0), card.field(15,0.0)])
-        self.p3   =  self.p4+[card.field(16,0.0), 0., 0.]
+        self.x43 = card.field(16,0.)
+        #self.p3   =  self.p4+array([card.field(16,0.0), 0., 0.])
+
+    def Cp(self):
+        if isinstance(self.cp,int):
+            return self.cp
+        return self.cp.cid
 
     def Pid(self):
         if isinstance(self.pid,int):
@@ -264,25 +277,39 @@ class CAERO1(BaseCard): # add helper functions
 
     def crossReference(self,model):
         self.pid = model.PAero(self.pid)
+        self.cp  = model.Coord(self.cp)
 
     def Points(self):
-        return [self.p1,self.p2,self.p3,self.p4]
+        p1,matrix = self.cp.transformToGlobal(self.p1)
+        p4,matrix = self.cp.transformToGlobal(self.p4)
+
+        p2 = self.p1+array([self.x12,0.,0.])
+        p3 = self.p4+array([self.x43,0.,0.])
+
+        print "x12 = ",self.x12
+        print "x43 = ",self.x43
+        print "pcaero[%s] = %s" %(self.eid,[p1,p2,p3,p4])
+        return [p1,p2,p3,p4]
     
     def SetPoints(self,points):
         self.p1 = points[0]
         self.p2 = points[1]
         self.p3 = points[2]
         self.p4 = points[3]
+        self.x12 = self.p2-self.p1
+        self.x43 = self.p4-self.p3
 
     def rawFields(self):
-        x12 = self.p2-self.p1
-        x43 = self.p4-self.p3
-        fields = ['CAERO1',self.eid,self.Pid(),self.cp,self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
+        #x12 = self.p2-self.p1
+        #x43 = self.p4-self.p3
+        x12 = self.x12
+        x43 = self.x43
+        fields = ['CAERO1',self.eid,self.Pid(),self.Cp(),self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
                          ]+list(self.p1)+[x12[0]]+list(self.p4)+[x43[0]]
         return fields
 
-    def reprFields(self):
-        return self.rawFields()
+    #def reprFields(self):
+    #    return self.rawFields()
 
 class DAREA(BaseCard):
     """
@@ -412,10 +439,10 @@ class FLUTTER(BaseCard):
         fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
         return fields
 
-    def reprFields(self):
-        (imethod,nValue) = self._reprNValueOMax()
-        fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
-        return fields
+    #def reprFields(self):
+    #    (imethod,nValue) = self._reprNValueOMax()
+    #    fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
+    #    return fields
         
 class GRAV(BaseCard):
     """

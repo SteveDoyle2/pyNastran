@@ -138,7 +138,7 @@ def printFloat8(value,tol=1e-8):
                 #print "A"
                 if 1:
                     #print value
-                    field = printScientific(value)
+                    field = printScientific8(value)
                     field2 = "%8.7f" %(value) # small value
                     field2 = field2.strip('0 ')
 

@@ -100,7 +100,7 @@ class cardMethods(object):
         #    iline = self.lines[i].rstrip()
 
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
-        isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
+        isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
         if debug:
             self.log.debug("  len(iline) = |%s|" %(len(iline)))
             self.log.debug("  iline[0]   = |%s|" %(iline[0]  ))
@@ -271,6 +271,11 @@ class cardMethods(object):
             if debug:
                 print "BLANK!"
             return None
+
+        if valueIn[0].isalpha():
+            if debug:
+                print "STRING!"
+            return valueIn
 
         if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
             if debug:

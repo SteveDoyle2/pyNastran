@@ -8,6 +8,9 @@ from pyNastran.bdf.errors import *
 from baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
+class InvalidUnitVectorError(Exception):
+    pass
+
 class Coord(BaseCard):
     def __init__(self,card,data):
         """
@@ -42,6 +45,8 @@ class Coord(BaseCard):
             e13 = self.e3-self.e1
             ## e_{12}
             e12 = self.e2-self.e1
+            #print "e13 = %s" %(e13)
+            #print "e12 = %s" %(e12)
         except TypeError:
             msg = ''
             msg += "\ntype = %s\n" %(self.type)
@@ -51,18 +56,31 @@ class Coord(BaseCard):
             msg += "e3 = %s\n" %(self.e3)
             raise TypeError(msg)
         
+        #print self
         #print "e1 = ",self.e1
         #print "e2 = ",self.e2
         #print "e3 = ",self.e3
         
-        #try:
+        try:
 
-        ## k = (G3 cross G1) normalized
-        self.k = self.normalize(e12)
-        ## j = (k cross e13) normalized
-        self.j = self.normalize(cross(self.k,e13))
-        ## i = j cross k
-        self.i = cross(self.j,self.k)
+            ## k = (G3 cross G1) normalized
+            self.k = self.normalize(e12)
+            ## j = (k cross e13) normalized
+            self.j = self.normalize(cross(self.k,e13))
+            ## i = j cross k
+            self.i = cross(self.j,self.k)
+        except InvalidUnitVectorError:
+            print "Cp = ",self.Cid()
+            print "e1 = ",self.e1
+            print "e2 = ",self.e2
+            print "e3 = ",self.e3
+            print "e13 = ",e13
+            print "e12 = ",e12
+            print "k = norm(e12)"
+            print "k   = ",self.k,'\n'
+            print "j = norm(cross(k,e13))"
+            print "j   = ",self.j
+            raise
         
         if debug:
             print "Cp = ",self.Cid()
@@ -127,7 +145,8 @@ class Coord(BaseCard):
         """
         #print "v = ",v
         normV = norm(v)
-        assert normV>0.,'v=%s norm(v)=%s' %(v,normV)
+        if not normV>0.:
+            raise InvalidUnitVectorError('v=%s norm(v)=%s' %(v,normV))
         #print "normV = ",normV
         return v/normV
 
@@ -615,6 +634,7 @@ class CORD2R(Cord2x,RectangularCoord):
         @param card   a BDF_Card object
         @param data   a list version of the fields (1 CORD2R only)
         """
+        #print card
         Cord2x.__init__(self,card,data)
         
     def rawFields(self):
