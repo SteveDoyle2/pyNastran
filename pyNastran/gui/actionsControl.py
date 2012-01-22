@@ -72,9 +72,24 @@ class pyWidget(wxVTKRenderWindow):
         elif code == ord('L'):
             self.parent.cycleResults()
 
+        elif code == ord('h'):
+            self.ShowHideScalarBar()
+
         self.Update()
         self.Render()
         ###
+
+    def ShowHideScalarBar(self):
+        if self.parent.nCases==0:
+            return
+        isOn = self.parent.scalarBar.GetVisibility()
+        if isOn:
+            self.parent.scalarBar.VisibilityOff()
+            self.parent.TurnTextOff()
+        else:
+            self.parent.scalarBar.VisibilityOn()
+            self.parent.TurnTextOn()
+        self.parent.scalarBar.Modified()
 
     def TakePicture(self,event):
         renderLarge = vtk.vtkRenderLargeImage()
