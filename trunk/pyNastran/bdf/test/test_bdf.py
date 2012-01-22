@@ -32,14 +32,14 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        except MissingFileError:
-            pass
-        except TabCharacterError:
-            pass
-        except ScientificParseError:
-            pass
-        except ClosedBDFError:
-            pass
+        #except MissingFileError:
+        #    pass
+        #except TabCharacterError:
+        #    pass
+        #except ScientificParseError:
+        #    pass
+        #except ClosedBDFError:
+        #    pass
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
@@ -92,14 +92,14 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except MissingFileError:
-        pass
-    except TabCharacterError:
-        pass
-    except ScientificParseError:
-        pass
-    except ClosedBDFError:
-        pass
+    #except MissingFileError:
+    #    pass
+    #except TabCharacterError:
+    #    pass
+    #except ScientificParseError:
+    #    pass
+    #except ClosedBDFError:
+    #    pass
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
@@ -274,7 +274,7 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument( '-q','--quiet',  dest='quiet',action='store_true', help='Prints   debug messages (default=False)')
     parser.add_argument('-x','--xref',   dest='xref', action='store_true', help='Disables cross-referencing of the BDF')
-    parser.add_argument('-v','--version',action='version',version=ver)
+    parser.add_argument('-v','--version',action='version',version=ver,help="Shows pyNastran's version number and exits")
     
     if len(sys.argv)==1:
         parser.print_help()
