@@ -350,7 +350,7 @@ class ConstraintADD(Constraint):
 
         #print "repr---mpcadd"
         #print self.sets
-        for spcsets in self.sets:
+        for spcsets in sorted(self.sets):
             #print "*spcsets",spcsets
             if isinstance(spcsets,int):  # spcset wasnt found
                 #print "int unfound...%s" %(spcsets)
@@ -365,7 +365,7 @@ class ConstraintADD(Constraint):
             else:
                 #print 'dict'
                 #outSPCs += str(spcsets.cid)
-                for key,spcset in spcsets.items():
+                for key,spcset in sorted(spcsets.items()):
                     fieldSets.append(spcsets.cid)
 
         return self.printCard(fields+list(set(fieldSets)))+outSPCs  # SPCADD

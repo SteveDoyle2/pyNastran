@@ -74,7 +74,7 @@ class LOAD(Load):
         @todo parse the loads data to have scale factor and load
         """
         if card:
-            fields   = card.fields()
+            #fields   = card.fields()
 
             ## load ID
             self.lid = card.field(1)
@@ -83,13 +83,13 @@ class LOAD(Load):
             ## overall scale factor
             self.s  = card.field(2)
 
-            nFields = len(fields)-2
-            nLoads  = nFields/2
             #print "nFields = ",nFields
             #print "nLoads  = ",nLoads
 
             loads = card.fields(3) # temp list
-            assert len(loads)%2==0
+            nLoadFields = len(loads)
+            nLoads  = nLoadFields/2
+            assert nLoadFields%2==0
 
             ## individual scale factors (corresponds to loadIDs)
             self.scaleFactors = []
@@ -97,7 +97,7 @@ class LOAD(Load):
             ## individual loadIDs (corresponds to scaleFactors)
             self.loadIDs = []
 
-            for i in range(0,nLoads,2):   # alternating of scale factor & load set ID
+            for i in range(0,nLoadFields,2):   # alternating of scale factor & load set ID
                 self.scaleFactors.append(loads[i  ])
                 self.loadIDs.append(     loads[i+1])
         else:

@@ -482,6 +482,13 @@ class addMethods(object):
         assert key>0
         self.gusts[key] = gust
 
+    def addTrim(self,trim,allowOverwrites=False):
+        key = trim.sid
+        if not allowOverwrites:
+            assert key not in self.trims,'trim=%s oldTrim=\n%snewProperty=\n%s' %(key,self.trims[key],trim)
+        assert key>0,'trim=\n%s' %(key,trim)
+        self.trims[key] = trim
+
     def addFlutter(self,flutter):
         key = flutter.sid
         assert key not in self.flutters

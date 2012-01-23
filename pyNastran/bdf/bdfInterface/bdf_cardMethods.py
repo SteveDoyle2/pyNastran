@@ -11,7 +11,7 @@ class cardMethods(object):
         if not self.linesPack:
             return ['']
 
-        while len(self.linesPack[-1])<40:
+        while len(self.linesPack[-1])<1000:
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0].rstrip('\n\r\t ')
             if '\t' in line:
@@ -127,7 +127,7 @@ class cardMethods(object):
             #    iline = ''
 
             sCardName = iline[0:8].strip()  # trying to find if it's blank...
-            isNotDone = len(iline)>0 and (iline[0] in ['*','+',','] or sCardName=='')
+            isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
             if debug:
                 self.log.debug("CRITERIA")
                 self.log.debug("iline       = |%r|" %(iline))

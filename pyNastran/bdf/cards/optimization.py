@@ -133,11 +133,27 @@ class DVPREL1(OptConstraint):
             print "coeffs = ",self.coeffs
             print str(self)
             raise Exception('invalid DVPREL1...')
+
+    def crossReference(self,model):
+        self.pid = model.Property(self.pid)
     
+    def Pid(self):
+        if isinstance(self.pid,int):
+            return self.pid
+        return self.pid.pid
+
     def rawFields(self):
-        fields = ['DVPREL1',self.oid,self.Type,self.pid,self.pNameFid,self.pMin,self.pMax,self.c0]
+        fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,self.pMax,self.c0]
         for dvid,coeff in zip(self.dvids,self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
 
+    def reprFields(self):
+        pMax = self.setBlankIfDefault(self.pMax,1e20)
+        c0   = self.setBlankIfDefault(self.c0,0.)
+        fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0]
+        for dvid,coeff in zip(self.dvids,self.coeffs):
+            fields.append(dvid)
+            fields.append(coeff)
+        return fields

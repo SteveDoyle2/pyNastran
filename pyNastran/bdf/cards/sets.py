@@ -11,6 +11,7 @@ class Set(BaseCard):
 
     def cleanIDs(self):
         self.IDs = list(set(self.IDs))
+        self.IDs.sort()
 
     def SetIDs(self):
         return self.IDs

@@ -445,9 +445,6 @@ class PTUBE(LineProperty):
         return self.printCard(fields)
     
     def Area(self):
-        """
-        this shouldnt be so hard...
-        """
         A = (self.area1()+self.area2())/2.
         
         #A1 = pi*D1^2/4 - pi*((D1-2t)^2)/4

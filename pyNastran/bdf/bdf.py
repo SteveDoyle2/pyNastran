@@ -113,7 +113,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'PAERO1',
         'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
-
+        'TRIM',
+        
         # coords
         'CORD1R','CORD1C','CORD1S',
         'CORD2R','CORD2C','CORD2S',
@@ -324,6 +325,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.splines  = {}
         ## stores GRAV
         self.gravs = {}
+        self.trims = {}
         
         ## direct matrix input - DMIG
         self.dmigs = {}
@@ -1263,6 +1265,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='AESTAT':
                 aestat = AESTAT(cardObj)
                 self.addAEStat(aestat)
+
+            elif cardName=='TRIM':
+                trim = TRIM(cardObj)
+                self.addTrim(trim)
+
             elif cardName=='FLUTTER':
                 flutter = FLUTTER(cardObj)
                 self.addFlutter(flutter)
