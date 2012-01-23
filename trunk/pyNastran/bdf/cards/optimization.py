@@ -52,10 +52,11 @@ class DESVAR(OptConstraint):
         return fields
 
     def reprFields(self):
-        xlb = self.setBlankIfDefault(self.xlb,-1e20)
-        xub = self.setBlankIfDefault(self.xub, 1e20)
+        xlb  = self.setBlankIfDefault(self.xlb, -1e20)
+        xub  = self.setBlankIfDefault(self.xub,  1e20)
+        delx = self.setBlankIfDefault(self.delx, 1e20)
         fields = ['DESVAR',self.oid,self.label,self.xinit,xlb,xub,
-        self.delx,self.ddval]
+        delx,self.ddval]
         return fields
 
 class DDVAL(OptConstraint):
@@ -110,7 +111,7 @@ class DVPREL1(OptConstraint):
         self.oid    = card.field(1)
         self.Type   = card.field(2)
         self.pid    = card.field(3)
-        self.pNameFid  = card.field(4)
+        self.pNameFid = card.field(4)
         self.pMin   = card.field(5)
         self.pMax   = card.field(6,1e20)
         self.c0     = card.field(7,0.0)
@@ -118,15 +119,15 @@ class DVPREL1(OptConstraint):
         self.dvids  = []
         self.coeffs = []
         endFields = card.fields(9)
+        #print "endFields = ",endFields
         nFields = len(endFields)-1
         if nFields%2==1:
             endFields.append(None)
             nFields+=1
         i = 0
-        for i in range(nFields):
+        for i in range(0,nFields,2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
-            i+=2
         if nFields%2==1:
             print card
             print "dvids = ",self.dvids
@@ -143,7 +144,7 @@ class DVPREL1(OptConstraint):
         return self.pid.pid
 
     def rawFields(self):
-        fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,self.pMax,self.c0]
+        fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,self.pMax,self.c0,None]
         for dvid,coeff in zip(self.dvids,self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
@@ -152,7 +153,7 @@ class DVPREL1(OptConstraint):
     def reprFields(self):
         pMax = self.setBlankIfDefault(self.pMax,1e20)
         c0   = self.setBlankIfDefault(self.c0,0.)
-        fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0]
+        fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0,None]
         for dvid,coeff in zip(self.dvids,self.coeffs):
             fields.append(dvid)
             fields.append(coeff)

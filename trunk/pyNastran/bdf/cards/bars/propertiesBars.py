@@ -595,7 +595,10 @@ class PBAR(LineProperty):
         F1  = self.setBlankIfDefault(self.F1,0.0)
         F2  = self.setBlankIfDefault(self.F2,0.0) # must have 1 on line, if line3 is not empty
         
-        line3 = [self.K1,self.K2,i12]
+        K1  = self.setBlankIfDefault(self.K1,1e8)
+        K2  = self.setBlankIfDefault(self.K2,1e8)
+
+        line3 = [K1,K2,i12]
         #print "line3 = ",line3
         
         line1 = ['PBAR',self.pid,self.Mid(),self.A,i1,i2,j,nsm,None]

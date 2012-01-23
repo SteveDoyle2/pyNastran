@@ -124,6 +124,7 @@ def printFloat8(value,tol=1e-8):
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
     @warning hasnt really be tested for tolerancing
+    @todo doesnt handle .000192 properly, returns .192E-03
     """
     #value = round(value,4)
     #print "float...%s" %value
