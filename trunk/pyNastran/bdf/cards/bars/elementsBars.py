@@ -497,7 +497,7 @@ class CONROD(CROD):
         #print "nodes = ",self.nodeIDs()
         #print "mid   = ",self.Mid()
         #print "eid   = ",self.eid
-        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,c,nsm]
+        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,j,c,nsm]
         return fields
 
 class CBAR(LineElement):

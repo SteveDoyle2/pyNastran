@@ -384,7 +384,7 @@ class writeMesh(object):
         #print "output aero cards..."
         msg = ''
         if (self.aero or self.aeros or self.gusts or self.caeros 
-        or self.paeros):
+        or self.paeros or self.trims):
             msg = '$AERO\n'
             for ID,caero in sorted(self.caeros.items()):
                 msg += str(caero)
@@ -392,6 +392,8 @@ class writeMesh(object):
                 msg += str(paero)
             for ID,spline in sorted(self.splines.items()):
                 msg += str(spline)
+            for ID,trim in sorted(self.trims.items()):
+                msg += str(trim)
 
             for ID,aero in sorted(self.aero.items()):
                 msg += str(aero)

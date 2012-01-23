@@ -23,7 +23,7 @@ class RBAR(RigidElement):
             self.cnb   = card.field(5)
             self.cma   = card.field(6)
             self.cmb   = card.field(7)
-            self.alpha = card.field(8)
+            self.alpha = card.field(8,0.0)
         else:
             self.eid   = data[0]
             self.ga    = data[1]
@@ -36,7 +36,7 @@ class RBAR(RigidElement):
         ###
 
     def __repr__(self):
-        alpha = self.setDefaultIfBlank(self.alpha,0.0)
+        alpha = self.setBlankIfDefault(self.alpha,0.0)
         fields = ['RBAR',self.eid,self.ga,self.gb,self.cna,self.cnb,self.cma,self.cmb,alpha]
         return self.printCard(fields)
 
@@ -52,17 +52,19 @@ class RBAR1(RigidElement):
             self.eid   = card.field(1)
             self.ga    = card.field(2)
             self.gb    = card.field(3)
-            self.alpha = card.field(4)
+            self.cb    = card.field(4)
+            self.alpha = card.field(5)
         else:
             self.eid   = data[0]
             self.ga    = data[1]
             self.gb    = data[2]
-            self.alpha = data[3]
+            self.cb    = data[3]
+            self.alpha = data[4]
         ###
 
     def __repr__(self):
-        alpha = self.setDefaultIfBlank(self.alpha,0.0)
-        fields = ['RBAR1',self.eid,self.ga,self.gb,alpha]
+        alpha = self.setBlankIfDefault(self.alpha,0.0)
+        fields = ['RBAR1',self.eid,self.ga,self.gb,self.cb,alpha]
         return self.printCard(fields)
 
 class RBE1(RigidElement):  # maybe not done, needs testing

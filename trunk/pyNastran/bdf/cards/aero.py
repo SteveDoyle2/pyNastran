@@ -286,9 +286,9 @@ class CAERO1(BaseCard): # add helper functions
         p2 = self.p1+array([self.x12,0.,0.])
         p3 = self.p4+array([self.x43,0.,0.])
 
-        print "x12 = ",self.x12
-        print "x43 = ",self.x43
-        print "pcaero[%s] = %s" %(self.eid,[p1,p2,p3,p4])
+        #print "x12 = ",self.x12
+        #print "x43 = ",self.x43
+        #print "pcaero[%s] = %s" %(self.eid,[p1,p2,p3,p4])
         return [p1,p2,p3,p4]
     
     def SetPoints(self,points):
@@ -296,16 +296,14 @@ class CAERO1(BaseCard): # add helper functions
         self.p2 = points[1]
         self.p3 = points[2]
         self.p4 = points[3]
-        self.x12 = self.p2-self.p1
-        self.x43 = self.p4-self.p3
+        x12 = self.p2-self.p1
+        x43 = self.p4-self.p3
+        self.x12 = x12[0]
+        self.x43 = x43[0]
 
     def rawFields(self):
-        #x12 = self.p2-self.p1
-        #x43 = self.p4-self.p3
-        x12 = self.x12
-        x43 = self.x43
         fields = ['CAERO1',self.eid,self.Pid(),self.Cp(),self.nspan,self.nchord,self.lspan,self.lchord,self.igid,
-                         ]+list(self.p1)+[x12[0]]+list(self.p4)+[x43[0]]
+                         ]+list(self.p1)+[self.x12]+list(self.p4)+[self.x43]
         return fields
 
     #def reprFields(self):
@@ -597,4 +595,47 @@ class SPLINE1(BaseCard):
         fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),self.dz,method,usage,
                             nelements,melements]
         fields = self.wipeEmptyFields(fields)
+        return fields
+
+class TRIM(BaseCard):
+    type = 'TRIM'
+    def __init__(self,card=None,data=None):
+        if card:
+            ## Trim set identification number. (Integer > 0)
+            self.sid  = card.field(1)
+            ## Mach number. (Real > 0.0 and != 1.0)
+            self.mach = card.field(2)
+            ## Dynamic pressure. (Real > 0.0)
+            self.q    = card.field(3)
+            ## The label identifying aerodynamic trim variables defined on an AESTAT or AESURF entry.
+            self.labels = []
+            ## The magnitude of the aerodynamic extra point degree-of-freedom. (Real)
+            self.uxs    = []
+            ## Flag to request a rigid trim analysis (Real > 0.0 and < 1.0, Default =1.0. A value of 0.0 provides a rigid trim analysis,
+            ## not supported
+            self.aeqr = 1.0
+            fields = card.fields(4)
+
+            i=0
+            nFields = len(fields)-1
+            while i<nFields: ## @todo doesnt support aeqr
+                label = fields[i]
+                ux = fields[i+1]
+                assert isinstance(label,str),'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
+                self.labels.append(label)
+                self.uxs.append(ux)
+                if i==2:
+                    self.aeqr = card.field(4+i+2,1.0)
+                    i+=1
+                i+=2
+            ###
+        else:
+            raise Exception('not supported')
+            
+    def rawFields(self):
+        fields = ['TRIM',self.sid,self.mach,self.q]
+        for i,(label,ux) in enumerate(zip(self.labels,self.uxs)):
+            fields += [label,ux]
+            if i==1:
+                fields += [self.aeqr]
         return fields

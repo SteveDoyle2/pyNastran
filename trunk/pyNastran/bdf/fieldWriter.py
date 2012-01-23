@@ -53,6 +53,7 @@ def printScientific8(value):
     else:
         sign = '+'
     sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
+    #print "sExp2 = ",sExp2
 
     value2 = float(svalue)
     #lenSValue = len(svalue)
@@ -170,7 +171,7 @@ def printFloat8(value,tol=1e-8):
                     else:
                         field = printScientific8(value)
                     ###
-                    print "field = ",field
+                    #print "field = ",field
                 ###
             elif value<0.1:
                 #print "B*"
@@ -193,6 +194,7 @@ def printFloat8(value,tol=1e-8):
                     assert '.' != field[0],field
                 else:
                     field = printScientific8(value)
+                    return field
                 ###
             ###
         ###
@@ -242,7 +244,7 @@ def printFloat8(value,tol=1e-8):
             elif value>-100000:field = "%8.1f" %(value)   # -10000>x>-100000
             else:
                 field = printScientific8(value)
-                #field2 = 
+                return field
             ###
         ###
         field = field.strip(' 0')
@@ -384,6 +386,7 @@ def displayCard(fields):
     ###
 
 if __name__=='__main__':
+    #print printField(1e20)
     #printField(-0.021004)
     #print printField(-4.21704e-6)
     #print printField(4.21704e-6)
@@ -392,6 +395,7 @@ if __name__=='__main__':
     #print printField(-10300000.0)
     #printField(-0.021004)
     
+    field = printField(1e20);       assert '   1.+20' == field,'|%s|' %(field)
     field = printField(-.723476);   assert '-.723476' == field,'|%s|' %(field)
     field = printField(125000. );   assert ' 125000.' == field,'|%s|' %(field)
     field = printField(12500000.);  assert '  1.25+7' == field,'|%s|' %(field)
