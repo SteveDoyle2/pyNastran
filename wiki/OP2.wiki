@@ -27,6 +27,7 @@ This is how the version 0.2 OP2 reading software works.  Make sure you install t
  * no applied/spc/mpc forces
 
 = Making an OP2 =
+If you cant make an op2, check your bdf:
 {{{
 CEND
 $ case control deck...
@@ -35,7 +36,7 @@ $PARAM,POST,0      $ makes an xdb for Patran
 PARAM,POST,-1      $ the line that makes an op2
 $NODES
 GRID,1,0,1.,2.,3.
-$ rest of bulkd data deck
+$ rest of bulk data deck
 }}}
 
 
