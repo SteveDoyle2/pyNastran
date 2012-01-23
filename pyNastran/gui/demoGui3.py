@@ -72,7 +72,7 @@ class AppFrame( wx.Frame ) :
 
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
-        self.SetSize([600,600])
+        #self.SetSize([600,600])
         self.Centre()
 
         # Add them to sizer.
@@ -94,7 +94,6 @@ class AppFrame( wx.Frame ) :
             hbox.Add(vRight,1,wx.EXPAND)
 
         if 0:
-
             tree = self.buildTree(self.frmPanel)
             vRight = wx.BoxSizer( wx.VERTICAL)
             vRight.AddStretchSpacer()
@@ -364,7 +363,7 @@ class EventsHandler(object) :
             bdf = self.parent.bdfFileName
             bdfBase = os.path.basename(bdf)
             #dirname = os.path.dirname(bdf)
-            op2name,op2 = bdfBase.split('.')
+            op2name,op2 = os.path.splitext(bdfBase)
             op2 = os.path.join(self.parent.dirname,op2name+'.op2')
             
             self.parent.op2FileName = op2

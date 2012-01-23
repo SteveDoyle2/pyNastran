@@ -3,7 +3,6 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.aero    import GRAV
 from pyNastran.bdf.cards.loads   import *
 from pyNastran.bdf.cards.thermal.thermal import *
 
