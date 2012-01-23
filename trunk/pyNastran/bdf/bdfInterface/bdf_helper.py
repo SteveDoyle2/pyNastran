@@ -143,7 +143,14 @@ class getMethods(object):
     # LOADS/CONSTRAINTS/COORDINATES CARDS
 
     def Load(self,lid):
-        return self.loads[lid]
+        if lid in self.loads:
+            load = self.loads[lid]
+        if lid in self.gravs:
+            return self.Grav(lid)
+        raise Exception('cannot find LoadID=%s' %(lid))
+
+    def Grav(self,sid):
+        return self.gravs[sid]
 
     def Coord(self,cid):
         return self.coords[cid]

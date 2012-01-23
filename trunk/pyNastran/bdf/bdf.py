@@ -112,7 +112,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'AELINK','AEPARAM','AESTAT',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'PAERO1',
-        'SPLINE1',#'SPLINE2','SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
+        'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
         'TRIM',
         
         # coords
@@ -163,7 +163,20 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
+    def removeCards(cards):
+        """
+        Method for removing broken cards from the reader
+        @param self the object pointer
+        @param cards a list/set of cards that should not be read
+        """
+        removeSet = set(cards)
+        self.cardsToRead.difference(removeSet)
+
     def IsThermalSolution():
+        """
+        @todo implement case control deck checker
+        @warning dont use this...returns False
+        """
         return False
         #self.caseControlDeck.IsThermalSolution()
 
@@ -216,7 +229,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                         'SAERO'    : 146,
                        }
 
-
         self.rsolmap_toStr = {
                          101 : 'SESTSTATIC',
                          103 : 'SEMODES'   ,
@@ -242,6 +254,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                          200 : 'DESOPT'    ,
                        }
         self._initStructuralDefaults()
+        self._initAeroDefaults()
         self._initThermalDefaults()
 
     def isSpecialCard(self,cardName):
@@ -278,15 +291,20 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.materials = {} 
         ## stores the CREEP card
         self.creepMaterials = {}
+
+        # loads
         ## stores LOAD,FORCE,MOMENT
         self.loads = {}
+        ## stores GRAV
+        self.gravs = {}
+
         ## stores coordinate systems
         self.coords = {0: CORD2R() }
 
         # constraints
         ## stores SUPORT1s
         self.constraints = {} # suport1, anything else???
-        self.suports = [] # suport
+        self.suports = [] # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject = constraintObject()
@@ -299,6 +317,28 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## stores NLPARM
         self.nlparms = {}
 
+        ## direct matrix input - DMIG
+        self.dmigs = {}
+        self.dequations = {}
+        
+        ## frequencies
+        self.frequencies = {}
+
+        # optimization
+        self.dconstrs = {}
+        self.desvars  = {}
+        self.ddvals   = {}
+        self.dresps   = {}
+        self.dvprels  = {}
+        
+        ## SETx
+        self.sets = {}
+        ## SESETx
+        self.setsSuper = {}
+        ## tables
+        self.tables = {}
+
+    def _initAeroDefaults(self):
         # aero cards
         ## stores CAEROx
         self.caeros   = {}  # can this be combined with self.elements???
@@ -323,31 +363,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.flutters = {}
         ## store SPLINE1
         self.splines  = {}
-        ## stores GRAV
-        self.gravs = {}
+        ## stores TRIM
         self.trims = {}
         
-        ## direct matrix input - DMIG
-        self.dmigs = {}
-        self.dequations = {}
-        
-        ## frequencies
-        self.frequencies = {}
-
-        # optimization
-        self.dconstrs = {}
-        self.desvars  = {}
-        self.ddvals   = {}
-        self.dresps   = {}
-        self.dvprels  = {}
-        
-        ## SETx
-        self.sets = {}
-        ## SESETx
-        self.setsSuper = {}
-        ## tables
-        self.tables = {}
-
     def _initThermalDefaults(self):
         """initializes some bdf parameters"""
         # BCs
@@ -1207,7 +1225,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addConstraint_MPC(constraint)
             elif cardName=='MPCADD':
                 constraint = MPCADD(cardObj)
-                assert not isinstance(constraint,SPCADD)
+                #assert not isinstance(constraint,SPCADD)
                 self.addConstraint_MPCADD(constraint)
 
             # constraints
@@ -1225,7 +1243,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addConstraint_SPC(constraint)
             elif cardName=='SPCADD':
                 constraint = SPCADD(cardObj)
-                assert not isinstance(constraint,MPCADD)
+                #assert not isinstance(constraint,MPCADD)
                 self.addConstraint_SPCADD(constraint)
             elif cardName=='SUPORT':  # pseudo-constraint
                 suport = SUPORT(cardObj)
@@ -1237,6 +1255,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             # aero
             elif cardName=='SPLINE1':
                 aero = SPLINE1(cardObj)
+                self.addSpline(aero)
+            elif cardName=='SPLINE2':
+                aero = SPLINE2(cardObj)
                 self.addSpline(aero)
             elif cardName=='CAERO1':
                 aero = CAERO1(cardObj)

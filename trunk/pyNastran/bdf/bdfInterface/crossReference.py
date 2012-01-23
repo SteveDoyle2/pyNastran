@@ -9,7 +9,7 @@ class XrefMesh(object):
         links up all the cards to the cards they reference
         """
         if xref:
-            #print "cross Reference is a temp function"
+            self.log.info("cross Referencing...")
             #for key,e in self.elements.items():
             #    print(e)
 
@@ -22,8 +22,8 @@ class XrefMesh(object):
 
             self.crossReference_Aero()
             #self.crossReference_Loads()
-            self.spcObject.crossReference(self)
-            #self.mpcObject.crossReference(self)
+            #self.spcObject.crossReference(self)  # enable to output SPCs
+            #self.mpcObject.crossReference(self)  # enable to output MPCs
             #self.caseControlDeck.crossReference(self)
         ###
 
@@ -107,10 +107,12 @@ class XrefMesh(object):
         links the loads to nodes, coordinate systems, and other loads
         """
         for lid,sid in self.loads.items():
-            try:
-                l.crossReference(self)
-            except:
-                sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
-                raise
+            print "lid=%s sid=%s" %(lid,sid)
+            for load in sid:
+                try:
+                    load.crossReference(self)
+                except:
+                    sys.stderr.write('couldnt cross reference\n%s' %(str(load)))
+                    raise
         ###
 
