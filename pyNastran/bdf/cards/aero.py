@@ -441,36 +441,6 @@ class FLUTTER(BaseCard):
     #    (imethod,nValue) = self._reprNValueOMax()
     #    fields = ['FLUTTER',self.sid,self.method,self.density,self.mach,self.rfreqVel,imethod,nValue,self.epsilon]
     #    return fields
-        
-class GRAV(BaseCard):
-    """
-    Defines acceleration vectors for gravity or other acceleration loading
-    GRAV SID CID A     N1  N2 N3    MB
-    GRAV 1   3   32.2 0.0 0.0 -1.0
-    """
-    type = 'GRAV'
-    def __init__(self,card=None,data=None):
-        if card:
-            self.sid = card.field(1)
-            self.cid = card.field(2,0)
-            self.a   = card.field(3)
-            self.N   = card.fields(4,7,[0.,0.,0.]) # measured in cid
-            self.mb  = card.field(7,0)
-        else:
-            self.sid = data[0]
-            self.cid = data[1]
-            self.a   = data[2]
-            self.N   = data[3:6]
-            self.mb  = data[6]
-            assert len(data)==7
-        ###            
-
-    def rawFields(self):
-        N = []
-        for n in self.N:
-            N.append(self.setBlankIfDefault(n,0.0))
-        fields = ['GRAV',self.sid,self.cid,self.a]+N+[self.mb]
-        return fields
 
 class GUST(BaseCard):
     """
@@ -595,6 +565,67 @@ class SPLINE1(BaseCard):
         fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),self.dz,method,usage,
                             nelements,melements]
         fields = self.wipeEmptyFields(fields)
+        return fields
+
+class SPLINE2(BaseCard):
+    """
+    Defines a surface spline for interpolating motion and/or forces for aeroelastic
+    problems on aerodynamic geometries defined by regular arrays of aerodynamic
+    points
+    SPLINE2 EID CAERO ID1 ID2 SETG DZ DTOR CID
+    DTHX DTHY None USAGE
+    SPLINE2 5 8 12 24 60 0. 1.0 3
+    1.
+    """
+    type = 'SPLINE2'
+    def __init__(self,card=None,data=None):
+        if card:
+            self.eid   = card.field(1)
+            self.caero = card.field(2)
+            self.id1   = card.field(3)
+            self.id2   = card.field(4)
+            self.setg  = card.field(5)
+            self.dz    = card.field(6,0.0)
+            self.dtor  = card.field(7,1.0)
+            self.cid   = card.field(8,0)
+            self.thx   = card.field(9)
+            self.thy   = card.field(10)
+            
+            self.usage = card.field(12,'BOTH')
+            #print self
+            #raise Exception(str(self))
+        else:
+            raise Exception('not supported')
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    def CAero(self):
+        if isinstance(self.caero,int):
+            return self.caero
+        return self.caero.eid
+
+    def Set(self):
+        if isinstance(self.setg,int):
+            return self.setg
+        return self.setg.sid
+
+    def crossReference(self,model):
+        self.caero = model.CAero(self.caero)
+        self.setg  = model.Set(self.setg)
+
+    def rawFields(self):
+        usage     = self.setBlankIfDefault(self.usage,'BOTH')
+        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
+                            self.thx,self.thy,None,self.usage]
+        return fields
+
+    def reprFields(self):
+        usage  = self.setBlankIfDefault(self.usage,'BOTH')
+        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
+                            self.thx,self.thy,None,usage]
         return fields
 
 class TRIM(BaseCard):

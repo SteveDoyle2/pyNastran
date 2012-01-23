@@ -1,6 +1,6 @@
 import sys
 
-from numpy import matrix,zeros,ones,array,transpose,dot
+from numpy import pi,matrix,zeros,ones,array,transpose,dot
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.baseCard import Mid
@@ -247,6 +247,7 @@ class CROD(LineElement):
         return self.pid.nsm
 
     def MassPerLength(self):
+        #print "self.type = ",self.type
         massPerLength = self.pid.mid.rho*self.pid.A + self.pid.nsm
 
     def rawFields(self):
@@ -300,6 +301,12 @@ class CONROD(CROD):
     def Mid(self):
         return Mid(self)
 
+    def Pid(self):
+        return None
+
+    def MassPerLength(self):
+        massPerLength = self.mid.rho*self.A + self.nsm
+
     def C(self):
         """torsional constant"""
         return self.c
@@ -341,7 +348,7 @@ class CONROD(CROD):
 
     def Radius(self):
         """returns the Radius of the Rod.   \f$ R \f$"""
-        R = (A/pi)**0.5
+        R = (self.A/pi)**0.5
         return R
 
     def Nu(self):

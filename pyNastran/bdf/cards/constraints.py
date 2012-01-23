@@ -5,7 +5,7 @@ from baseCard import BaseCard
 
 class constraintObject(object):
     """
-    todo rename constraint id from cid b/c thats the coordinate system id
+    @todo rename constraint id from cid b/c thats the coordinate system id
     """
     def __init__(self):
         self.constraints    = {} # SPC, SPC1, SPCD, etc...
@@ -85,6 +85,7 @@ class constraintObject(object):
     #    ###
 
     def getConstraint(self,cid):
+        print "cid=%s" %(cid)
         if cid in self.addConstraints:
             return self.addConstraints[cid]
         elif cid in self.constraints:
@@ -122,7 +123,7 @@ class constraintObject(object):
         return msg
 
 class Constraint(BaseCard):
-    def __init__(self,card):
+    def __init__(self,card,data):
         self.cid  = card.field(1)
     
     def __repr__(self):
@@ -134,8 +135,8 @@ class SUPORT1(Constraint):
     SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
     """
     type = 'SUPORT1'
-    def __init__(self,card):
-        Constraint.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Constraint.__init__(self,card,data)
         self.cid = card.field(1)  # really a support id sid
         fields   = card.fields(2)
         
@@ -163,8 +164,8 @@ class SUPORT(Constraint):
     SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
     """
     type = 'SUPORT'
-    def __init__(self,card):
-        Constraint.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Constraint.__init__(self,card,data)
         fields   = card.fields(1)
         
         self.IDs = []
@@ -187,8 +188,8 @@ class SUPORT(Constraint):
 
 class MPC(Constraint):
     type = 'MPC'
-    def __init__(self,card):
-        Constraint.__init__(self,card)    # defines self.cid
+    def __init__(self,card=None,data=None):
+        Constraint.__init__(self,card,data)    # defines self.cid
         self.gids        = [card.field(2),card.field(5,None)]
         self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
         self.enforced    = [card.field(4),card.field(7,None)]
@@ -215,8 +216,8 @@ class SPC(Constraint):
     SPC 2   32 3  -2.6  5
     """
     type = 'SPC'
-    def __init__(self,card):
-        Constraint.__init__(self,card)    # defines self.cid
+    def __init__(self,card=None,data=None):
+        Constraint.__init__(self,card,data)    # defines self.cid
         self.gids        = [card.field(2),card.field(5,None)]
         self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
         self.enforced    = [card.field(4),card.field(7,None)]
@@ -261,8 +262,8 @@ class SPCD(SPC):
     SPCD 100 32 436 -2.6  5    2.9
     """
     type = 'SPCD'
-    def __init__(self,card):
-        SPC.__init__(self,card)  # defines everything :) at least until cross-referencing methods are implemented
+    def __init__(self,card=None,data=None):
+        SPC.__init__(self,card,data)  # defines everything :) at least until cross-referencing methods are implemented
 
     def __repr__(self): # SPC
         fields = ['SPCD',self.cid]
@@ -278,8 +279,8 @@ class SPCAX(Constraint):
     SPCAX 2   3     4 13 6.0
     """
     type = 'SPCAX'
-    def __init__(self,card):
-        SPC.__init__(self,card)  # defines everything :) at least until cross-referencing methods are implemented
+    def __init__(self,card=None,data=None):
+        SPC.__init__(self,card,data)  # defines everything :) at least until cross-referencing methods are implemented
 
         ## Identification number of a single-point constraint set.
         self.cid = card.field(1)
@@ -314,12 +315,12 @@ class SPC1(Constraint):
     SPC1 313 12456 6 THRU 32
     """
     type = 'SPC1'
-    def __init__(self,card):
-        Constraint.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        Constraint.__init__(self,card,data)
         self.constraints = card.field(2)  # 246 = y; dx, dz dir
         nodes = card.fields(3)
         self.nodes = self.expandThru(nodes)
-        #print "nodes = ",nodes
+        self.nodes.sort()
 
     def crossReference(self,i,node):
         self.nodes[i] = node
@@ -337,11 +338,12 @@ class SPC1(Constraint):
         return self.printCard(fields)
 
 class ConstraintADD(Constraint):
-    def __init__(self,card):
-        Constraint.__init__(self,card)
+    def __init__(self,card,data):
+        Constraint.__init__(self,card,data)
 
     def crossReference(self,i,node):
         dofCount = 0
+        self.sets.sort()
         self.sets[i] = node
 
     def _reprSpcMpcAdd(self,fields):
@@ -358,16 +360,17 @@ class ConstraintADD(Constraint):
                 fields.append(spcsets)
             elif isinstance(spcsets,list):
                 #print 'list'
-                for spcset in spcsets:
+                for spcset in sorted(spcsets):
                     fieldSets.append(spcset.cid)
                     outSPCs += str(spcset)
-                
+                ###
             else:
                 #print 'dict'
                 #outSPCs += str(spcsets.cid)
                 for key,spcset in sorted(spcsets.items()):
                     fieldSets.append(spcsets.cid)
-
+                ###
+            ###
         return self.printCard(fields+list(set(fieldSets)))+outSPCs  # SPCADD
 
 
@@ -378,12 +381,11 @@ class SPCADD(ConstraintADD):
     SPCADD   2       1       3
     """
     type = 'SPCADD'
-    def __init__(self,card):
-        ConstraintADD.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ConstraintADD.__init__(self,card,data)
         sets = card.fields(2)
-        
         self.sets = self.expandThru(sets)
-        #print "self.nodes = ",self.nodes
+        self.sets.sort()
 
     def crossReference(self,i,node):
         dofCount = 0
@@ -400,12 +402,11 @@ class MPCADD(ConstraintADD):
     mPCADD   2       1       3
     """
     type = 'MPCADD'
-    def __init__(self,card):
-        ConstraintADD.__init__(self,card)
+    def __init__(self,card=None,data=None):
+        ConstraintADD.__init__(self,card,data)
         sets = card.fields(2)
-        
         self.sets = self.expandThru(sets)
-        #print "self.nodes = ",self.nodes
+        self.sets.sort()
 
     def __repr__(self):
         #outSPCs = ''

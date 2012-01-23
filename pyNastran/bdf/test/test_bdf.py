@@ -272,8 +272,8 @@ def main():
                        help='path to BDF/DAT file')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument( '-q','--quiet',  dest='quiet',action='store_true', help='Prints   debug messages (default=False)')
-    parser.add_argument('-x','--xref',   dest='xref', action='store_true', help='Disables cross-referencing of the BDF')
+    group.add_argument( '-q','--quiet',  dest='quiet',action='store_true',  help='Prints   debug messages (default=False)')
+    parser.add_argument('-x','--xref',   dest='xref', action='store_false', help='Disables cross-referencing of the BDF')
     parser.add_argument('-v','--version',action='version',version=ver,help="Shows pyNastran's version number and exits")
     
     if len(sys.argv)==1:

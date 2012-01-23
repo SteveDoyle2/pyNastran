@@ -38,10 +38,62 @@ class Load(BaseCard):
         fields = [self.type,self.lid]
         return self.printCard(fields)
 
+class GRAV(BaseCard):
+    """
+    Defines acceleration vectors for gravity or other acceleration loading
+    GRAV SID CID A     N1  N2 N3    MB
+    GRAV 1   3   32.2 0.0 0.0 -1.0
+    """
+    type = 'GRAV'
+    def __init__(self,card=None,data=None):
+        if card:
+            ## Set identification number
+            self.sid = card.field(1)
+            ## Coordinate system identification number.
+            self.cid = card.field(2,0)
+            ## scale factor
+            self.a   = card.field(3)
+            ## Acceleration vector components measured in coordinate system CID
+            self.N   = array(card.fields(4,7,[0.,0.,0.]))
+            ## Indicates whether the CID coordinate system is defined in the main Bulk
+            ## Data Section (MB = -1) or the partitioned superelement Bulk Data
+            ## Section (MB = 0). Coordinate systems referenced in the main Bulk Data
+            ## Section are considered stationary with respect to the assembly basic
+            ## coordinate system. See Remark 10. (Integer; Default = 0)
+            self.mb  = card.field(7,0)
+        else:
+            self.sid = data[0]
+            self.cid = data[1]
+            self.a   = data[2]
+            self.N   = data[3:6]
+            self.mb  = data[6]
+            assert len(data)==7
+        ###
 
-class LSEQ(BaseCard):  # how does this work...
+    def crossReference(self,model):
+        self.cid = model.Cid(self.cid)
+    
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    def GravityVector(self):
+        """returns the gravity vector in absolute coordinates"""
+        p,matrix = self.cid.transformToGlobal(self.N)
+        return p
+
+    def rawFields(self):
+        N = []
+        for n in self.N:
+            N.append(self.setBlankIfDefault(n,0.0))
+        fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[self.mb]
+        return fields
+
+class LSEQ(BaseCard):
     """
     Defines a sequence of static load sets
+    @todo how does this work...
     """
     type = 'LSEQ'
     def __init__(self,card=None,data=None):
@@ -49,7 +101,6 @@ class LSEQ(BaseCard):  # how does this work...
         self.exciteID = card.field(2)
         self.lid = card.field(3)
         self.tid = card.field(4)
-
 
     def nodeIDs(self,nodes=None):
         """returns nodeIDs for repr functions"""
@@ -107,10 +158,22 @@ class LOAD(Load):
             self.loadIDs      = data[3]
         ###
 
+    def crossReference(self,model):
+        loadIDs2 = []
+        for loadID in self.loadIDs:
+            loadID2 = model.Load(loadID)
+            loadIDs2.append(loadID2)
+        self.loadIDs = loadIDs2
+    
+    def LoadID(self,ID):
+        if isinstance(ID,int):
+            return ID
+        return ID.lid
+
     def __repr__(self):
         fields = ['LOAD',self.lid,self.s]
         for scaleFactor,loadID in zip(self.scaleFactors,self.loadIDs):
-            fields += [scaleFactor,loadID]
+            fields += [scaleFactor,self.LoadID(loadID)]
         return self.printCard(fields)
 
 
@@ -146,7 +209,6 @@ class Moment(OneDeeLoad):
     def M(self):
         return self.xyz*self.mag
 
-
 class FORCE(Force):
     type = 'FORCE'
     def __init__(self,card=None,data=None):
@@ -159,7 +221,6 @@ class FORCE(Force):
             self.node = card.field(2)
             self.cid  = card.field(3,0)
             self.mag  = card.field(4)
-
             xyz = card.fields(5,8,[0.,0.,0.])
         else:
             self.lid  = data[0]
@@ -170,6 +231,11 @@ class FORCE(Force):
 
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
 
     def F(self):
         return {self.node:  self.mag*self.xyz}
@@ -182,7 +248,7 @@ class FORCE(Force):
         pass
 
     def __repr__(self):
-        cid = self.setBlankIfDefault(self.cid,0)
+        cid = self.setBlankIfDefault(self.Cid(),0)
         fields = ['FORCE',self.lid,self.node,cid,self.mag] + list(self.xyz)
         return self.printCard(fields)
 
@@ -211,19 +277,31 @@ class FORCE1(Force):
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
         self.node = mdodel.Node(self.node)
-
-        self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
+        self.g1 = model.Node(self.g1)
+        self.g2 = model.Node(self.g2)
+        self.xyz = self.g2.Position()-self.g1.Position()
+        #self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.Normalize()
+    
+    def G1(self):
+        if isinstance(self.g1,int):
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2,int):
+            return self.g2
+        return self.g2.nid
 
     def NodeID(self):
         if isinstance(self.node,int):
             return self.node
         return self.node.nid
 
-    def __repr__(self):
-        (node,g1,g2) = self.nodeIDs([self.node,self.g1,self.g2])
+    def rawFields(self):
+        (node,g1,g2) = self.nodeIDs([self.node,self.G1(),self.G2()])
         fields = ['FORCE1',self.lid,node,self.mag,g1,g2]
-        return self.printCard(fields)
+        return fields
 
 class FORCE2(Force):
     """
@@ -275,7 +353,7 @@ class FORCE2(Force):
         fields = ['FORCE2',self.lid,node,self.mag,g1,g2,g3,g4]
         return self.printCard(fields)
 
-class MOMENT(Moment):    # can i copy the force init without making the MOMENT a FORCE ???
+class MOMENT(Moment):  # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
     def __init__(self,card=None,data=None):
         """
@@ -294,6 +372,11 @@ class MOMENT(Moment):    # can i copy the force init without making the MOMENT a
         xyz = card.fields(5,8,[0.,0.,0.])
         assert len(xyz)==3,'xyz=%s' %(xyz)
         self.xyz = array(xyz)
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
 
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -474,7 +557,6 @@ class PLOAD2(Load):  # todo:  support THRU
             print "PLOAD2 = ",data
         ###
         assert len(self.nodes)==6
-        
     
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
@@ -533,6 +615,11 @@ class PLOAD4(Load):
             self.eids = []
         ###
 
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
     def crossReference(self,model):
         self.cid = model.Coord(self.cid)
         if self.g1: self.g1 = model.Node(self.g1)
@@ -542,7 +629,7 @@ class PLOAD4(Load):
             self.eids = model.Elements(self.eids)
 
     def __repr__(self):
-        cid  = self.setBlankIfDefault(self.cid,0)
+        cid  = self.setBlankIfDefault(self.Cid(),0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
         p2 = self.setBlankIfDefault(self.p[1],self.p[0])
         p3 = self.setBlankIfDefault(self.p[2],self.p[0])

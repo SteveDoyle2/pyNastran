@@ -324,11 +324,15 @@ class writeMesh(object):
     def writeLoads(self):
         """writes the load cards sorted by ID"""
         msg = ''
-        if self.loads:
+        if self.loads or self.gravs:
             msg += '$LOADS\n'
-        for key,loadcase in sorted(self.loads.items()):
-            for load in loadcase:
-                msg += str(load)
+            for key,loadcase in sorted(self.loads.items()):
+                for load in loadcase:
+                    msg += str(load)
+            for ID,grav in sorted(self.gravs.items()):
+                msg += str(grav)
+            ###
+        ###
         return msg
 
     def writeOptimization(self):
@@ -402,8 +406,6 @@ class writeMesh(object):
 
             for ID,gust in sorted(self.gusts.items()):
                 msg += str(gust)
-            for ID,grav in sorted(self.gravs.items()):
-                msg += str(grav)
         return msg
 
     def writeAeroControl(self):
