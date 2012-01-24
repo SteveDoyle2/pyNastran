@@ -3,7 +3,7 @@ import sys
 
 from pyNastran.bdf.cards.baseCard import BaseCard
 
-from math import sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,asinh,atanh #,atanh2
+from math import sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2 #,acosh,acos,asin,asinh,atanh #,atanh2
 from numpy import average
 
 def ssq(*listA):
