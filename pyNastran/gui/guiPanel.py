@@ -26,10 +26,14 @@ class Pan(wx.Panel,NastranIO):
         self.widget = pyWidget(self, -1)
 
         window = self.widget.GetRenderWindow()
-        iren = vtk.vtkRenderWindowInteractor()
-        #iren.SetRenderWindow(window)
+        self.iren = vtk.vtkRenderWindowInteractor()
+        self.iren.SetRenderWindow(window)
+        
         self.iText = 0
         self.textActors = {}
+
+    def createTriAxes(self):
+        pass
 
     def DisplayEdges(self,event):
         self.isEdges = not(self.isEdges)
@@ -327,6 +331,7 @@ class Pan(wx.Panel,NastranIO):
         self.addAltGeometry()
         self.buildLookupTable()
         #self.startWireframeLight()
+        self.createTriAxes()
         
         textSize = 15
         self.createText([5,35],'Max: ', textSize) # text actor 0

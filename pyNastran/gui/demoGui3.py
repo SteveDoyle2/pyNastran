@@ -219,11 +219,15 @@ class AppFrame( wx.Frame ) :
 
         # toolbar at top - toggles
         toolbar1 = self.CreateToolBar()
-        topen     = toolbar1.AddLabelTool(ID_BDF,       '',                       wx.Bitmap('icons/topen.png'))
-        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap('icons/twireframe.png'))
-        surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap('icons/tsolid.png'))
-        camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap('icons/tcamera.png'))
-        etool = toolbar1.AddLabelTool(wx.ID_EXIT,       '',                       wx.Bitmap('icons/texit.png'))
+        #toolbar.AddLabelTool(self.id, '', bitmap, wx.NullBitmap, self.kind, 
+        #                     shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
+        #             longHelp=self.helpText)
+
+        topen     = toolbar1.AddLabelTool(ID_BDF,       '' ,wx.Bitmap('icons/topen.png'),     longHelp='Loads a BDF')
+        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.Bitmap('icons/twireframe.png'),longHelp='Set to Wireframe Model')
+        surface   = toolbar1.AddLabelTool(ID_SURFACE,   '', wx.Bitmap('icons/tsolid.png'),    longHelp='Set to Surface/Solid Model')
+        camera    = toolbar1.AddLabelTool(ID_CAMERA,    '', wx.Bitmap('icons/tcamera.png'),   longHelp='Take a Screenshot')
+        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.Bitmap('icons/texit.png'),     longHelp='Set to Surface Model')
         #toolbar1.EnableTool(wx.ID_REDO, False)
         toolbar1.Realize()
 
