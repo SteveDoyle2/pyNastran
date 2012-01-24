@@ -5,8 +5,8 @@ import wx
 import vtk
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
+import pyNastran
 from guiPanel import Pan
-
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
@@ -27,7 +27,7 @@ class AppFrame( wx.Frame ) :
 
     def __init__( self) :
         
-        wx.Frame.__init__( self, None, -1, title='pyNastran' )
+        wx.Frame.__init__( self, None, -1, size=wx.Size(800, 600),title='pyNastran' )
         self.bdfFileName = None
         self.dirname = ''
         self.setupFrame()
@@ -433,7 +433,7 @@ class EventsHandler(object) :
     # Help Menu
     def OnAbout(self, event):
         about = [
-            'pyNastran v0.3.0',
+            'pyNastran v%s'%(pyNastran.__version__), 
             'Copyright Steven P. Doyle 2011-2012\n',
             'code.google.com/p/pynastran/',
             '',
@@ -448,7 +448,7 @@ class EventsHandler(object) :
               'Y/y - snap to y axis',
               'Z/z - snap to z axis',
               '',
-              'h   - show/hide legend & info'
+              'h   - show/hide legend & info',
               'i   - take a screenshot (image)',
               'L   - cycle op2 results',
               'm/M - scale up/scale down by 1.1 times',
@@ -480,7 +480,7 @@ class EventsHandler(object) :
 def Main():
     app = wx.App( redirect=False )
     appFrm = AppFrame()
-    appFrm.Show()
+    #appFrm.Show()
     app.MainLoop()
 
 #end class

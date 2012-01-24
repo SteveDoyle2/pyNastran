@@ -27,7 +27,7 @@ class Pan(wx.Panel,NastranIO):
 
         window = self.widget.GetRenderWindow()
         iren = vtk.vtkRenderWindowInteractor()
-        iren.SetRenderWindow(window)
+        #iren.SetRenderWindow(window)
         self.iText = 0
         self.textActors = {}
 
@@ -176,7 +176,10 @@ class Pan(wx.Panel,NastranIO):
         geometryActor.SetMapper(aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0) # red
+        prop = geometryActor.GetProperty()
+        prop.SetDiffuseColor(1, 0, 0) # red
+        prop = geometryActor.SetBackfaceProperty(prop)
+        
         #geometryActor.GetProperty().SetBackfaceProperty(1, 0, 0) # red
         #geometryActor.GetProperty().BackfaceCullingOn()  # hidges elements that have normals not facing camera
         #geometryActor.GetProperty().SetLineWidth(0.5)
@@ -465,20 +468,20 @@ class Pan(wx.Panel,NastranIO):
         #window.SetPosition(x,y)
 
         #iren = wxVTKRenderWindowInteractor(self,-1)
-        iren = vtk.vtkRenderWindowInteractor()
-        mouseStyle = MouseStyle(mouseArgs,iren)
-        iren.SetInteractorStyle(mouseStyle)
-        window = self.widget.GetRenderWindow()
-        iren.SetRenderWindow(window)
+        #iren = vtk.vtkRenderWindowInteractor()
+        #mouseStyle = MouseStyle(mouseArgs,iren)
+        #iren.SetInteractorStyle(mouseStyle)
+        #window = self.widget.GetRenderWindow()
+        #iren.SetRenderWindow(window)
 
-        iren.AddObserver("KeyPressEvent", self.OnKeyPress)
+        #iren.AddObserver("KeyPressEvent", self.OnKeyPress)
 
         #print "type(ren) = ",type(self.rend)
         #self.rend.GetActiveCamera().Zoom(2.0)
 
         #self.setWindowName()
         # Render the scene and start interaction.
-        iren.Initialize()
+        #iren.Initialize()
         #iren.Start()
         #window.Render()
 
