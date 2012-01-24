@@ -1,3 +1,20 @@
+#VTK_TRIANGLE = 5
+#VTK_QUADRATIC_TRIANGLE = 22
+
+#VTK_QUAD = 9
+#VTK_QUADRATIC_QUAD = 23
+
+#VTK_TETRA = 10
+#VTK_QUADRATIC_TETRA = 24
+
+#VTK_WEDGE = 13
+#VTK_QUADRATIC_WEDGE = 26
+
+#VTK_HEXAHEDRON = 12
+#VTK_QUADRATIC_HEXAHEDRON = 25
+
+
+
 import vtk
 from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
                  vtkQuadraticTriangle,vtkQuadraticQuad,vtkQuadraticTetra,vtkQuadraticWedge,vtkQuadraticHexahedron)
@@ -261,6 +278,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             ###
             elif isinstance(element,CONM2): # not perfectly located
+                del self.eidMap[eid]; i-=1
                 nid  = element.Nid()
                 c    = element.Centroid()
                 elem = vtk.vtkVertex()
@@ -274,6 +292,7 @@ class NastranIO(object):
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j+=1
             else:
+                del self.eidMap[eid]; i-=1
                 print "skipping %s" %(element.type)
             i+=1
         ###
@@ -293,7 +312,7 @@ class NastranIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        op2 = OP2(op2FileName)
+        op2 = OP2(op2FileName,debug=False)
         op2.readOP2()
         #print op2.printResults()
         
@@ -307,6 +326,8 @@ class NastranIO(object):
         subcaseIDs = op2.iSubcaseNameMap.keys()
         self.iSubcaseNameMap = op2.iSubcaseNameMap
         
+        nElements = len(self.eidMap)
+        print "***nElements = ",nElements
         nidsSet = True # set to True to disable nodeIDs
         eidsSet = False
         for ID in subcaseIDs:
@@ -318,13 +339,13 @@ class NastranIO(object):
                 nidsSet = True
 
             if not eidsSet:
-                eids = zeros(self.nElements,'d')
+                eids = zeros(nElements,'d')
                 for eid,eid2 in self.eidMap.items():
                     eids[eid2] = eid
                
                 eKey = (ID,'isElementOn',1,'centroid','%.0g')
                 cases[(ID,'Element_ID',1,'centroid','%.0f')] = eids
-                cases[eKey] = zeros(self.nElements) # is the element supported
+                cases[eKey] = zeros(nElements) # is the element supported
                 eidsSet = True
 
             if ID in op2.displacements: # not correct?
@@ -344,7 +365,7 @@ class NastranIO(object):
                 cases[key] = temps
 
             if self.isStress(op2,ID):
-                cases = self.fillStressCase(cases,op2,ID,eKey)
+                cases = self.fillStressCase(cases,op2,ID,eKey,nElements)
             ###
         ###
         self.resultCases = cases
@@ -355,15 +376,15 @@ class NastranIO(object):
         self.nCases = len(self.resultCases)-1 # number of keys in dictionary
         self.cycleResults() # start at nCase=0
 
-    def fillStressCase(self,cases,op2,ID,eKey):
-        oxx = zeros(self.nElements)
-        oyy = zeros(self.nElements)
-        ozz = zeros(self.nElements)
+    def fillStressCase(self,cases,op2,ID,eKey,nElements):
+        oxx = zeros(nElements)
+        oyy = zeros(nElements)
+        ozz = zeros(nElements)
 
-        o1  = zeros(self.nElements)
-        o2  = zeros(self.nElements)
-        o3  = zeros(self.nElements)
-        ovm = zeros(self.nElements)
+        o1  = zeros(nElements)
+        o2  = zeros(nElements)
+        o3  = zeros(nElements)
+        ovm = zeros(nElements)
 
         vmWord = 'N/A'
         if ID in op2.rodStress:
@@ -438,7 +459,7 @@ class NastranIO(object):
                 #ozz[eid2] = ozzi
 
                 o1[eid2] = o1i
-                o2[eid2] = 0.  #(o1i+o3i)/2.
+                #o2[eid2] = 0.  #(o1i+o3i)/2.
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 

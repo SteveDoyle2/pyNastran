@@ -21,7 +21,7 @@ class Pan(wx.Panel,NastranIO):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
-        isEdges = True
+        isEdges = False
         self.isEdges = isEdges # surface wireframe
         self.widget = pyWidget(self, -1)
 
@@ -165,25 +165,34 @@ class Pan(wx.Panel,NastranIO):
 
     def addGeometry(self):
         print "addGeometry"
-        aQuadMapper = vtk.vtkDataSetMapper()
-        aQuadMapper.SetInput(self.grid)
+        self.aQuadMapper = vtk.vtkDataSetMapper()
+        self.aQuadMapper.SetInput(self.grid)
         
         #lut = vtk.vtkLookupTable()
         #aQuadMapper.SetLookupTable(lut)
 
         #aQuadMapper.SetInput(Filter.GetOutput())
         geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(aQuadMapper)
+        geometryActor.SetMapper(self.aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
         prop = geometryActor.GetProperty()
+        #prop = geometryActor.GetProperty()
+        #prop.SetColor(0.9,0.9,0.9)
+        #prop.SetColor(1.,1.,1.)
+        #prop.SetAmbient(0.9)
+        #prop.SetDiffuse(0.1)
+        #prop.SetSpecular(0.1)
+
         prop.SetDiffuseColor(1, 0, 0) # red
-        prop = geometryActor.SetBackfaceProperty(prop)
+        #prop = geometryActor.SetBackfaceProperty(prop)
         
         #geometryActor.GetProperty().SetBackfaceProperty(1, 0, 0) # red
         #geometryActor.GetProperty().BackfaceCullingOn()  # hidges elements that have normals not facing camera
         #geometryActor.GetProperty().SetLineWidth(0.5)
         self.rend.AddActor(geometryActor)
+        #self.rend.TwoSidedLightingOn()
+        #self.rend.LightFollowCameraOn()
 
     def addAltGeometry(self):
         print "addAltGeometry"
@@ -199,7 +208,6 @@ class Pan(wx.Panel,NastranIO):
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
     def buildLookupTable2(self):
-
         scalarBar = vtkScalarBarActor()
         scalarBar.SetLookupTable(mapper.GetLookupTable())
         scalarBar.SetTitle("Title")
@@ -228,7 +236,6 @@ class Pan(wx.Panel,NastranIO):
         self.colorFunction.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
         self.colorFunction.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
 
-        self.scalarBar = vtk.vtkScalarBarActor()
         self.scalarBar.SetTitle("Title1")
         self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetOrientationToVertical()
@@ -249,6 +256,10 @@ class Pan(wx.Panel,NastranIO):
         propLabel.BoldOff()
         propLabel.ShadowOn()
 
+        scalar_range = self.grid.GetScalarRange()
+        self.aQuadMapper.SetScalarRange(scalar_range)
+        self.aQuadMapper.SetLookupTable(self.colorFunction)
+
         #self.scalarBar.SetTitleTextProperty(propTitle);
         #self.scalarBar.SetLabelTextProperty(propLabel);
         self.scalarBar.SetLabelFormat("%i")
@@ -257,11 +268,7 @@ class Pan(wx.Panel,NastranIO):
         self.scalarBar.SetNumberOfLabels(11)
         self.scalarBar.SetMaximumNumberOfColors(11)
         
-        visibility = True
-        if visibility:
-            self.scalarBar.VisibilityOn()
-        else:
-            self.scalarBar.VisibilityOff()
+        #self.scalarBar.VisibilityOff()  # first load -> scalar bar off
         #self.scalarBar.ShadowOn()
         #self.scalarBar.RepositionableOn()
         self.rend.AddActor(self.scalarBar)
@@ -301,7 +308,16 @@ class Pan(wx.Panel,NastranIO):
         self.widget.Update()
         #self.rend.Update()
         #self.renWin.Render()
-        
+
+    def startWireframeLight(self):
+        #light = vtk.vtkLight()
+        #light.SetFocalPoint(self.grid.GetOutput().GetCenter())
+        #self.rend.AddLight(light)
+        sphere1.GetProperty().SetColor(1,1,1)
+        sphere1.GetProperty().SetAmbient(1.0)
+        sphere1.GetProperty().SetDiffuse(0)
+        sphere1.GetProperty().SetSpecular(0)
+
     def main(self):
         print "main builder"
         window = self.widget.GetRenderWindow()
@@ -309,6 +325,8 @@ class Pan(wx.Panel,NastranIO):
 
         self.addGeometry()
         self.addAltGeometry()
+        self.buildLookupTable()
+        #self.startWireframeLight()
         
         textSize = 15
         self.createText([5,35],'Max: ', textSize) # text actor 0
@@ -402,7 +420,8 @@ class Pan(wx.Panel,NastranIO):
             self.gridResult.Allocate(self.nElements,1000)
         else: # node
             #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
-            self.gridResult.Allocate(self.nNodes,1000)
+            self.gridResult.Allocate(self.nNodes*vectorSize,1000)
+            self.gridResult.SetNumberOfComponents(vectorSize)
 
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
         caseName = self.iSubcaseNameMap[subcaseID]
@@ -422,10 +441,18 @@ class Pan(wx.Panel,NastranIO):
         # flips sign to make colors go from blue -> red
         normValue = maxValue-minValue
         print "case = ",case
-        if normValue==0.: # avoids division by 0.
-            normValue = 1.
-        for value in case:
-            self.gridResult.InsertNextValue((value-minValue)/normValue)
+        #if normValue==0.: # avoids division by 0.
+        #    normValue = 1.
+        
+        if vectorSize==1:
+            for value in case:
+                self.gridResult.InsertNextValue(value)
+            ###
+        else: # vectorSize=3
+            for value in case:
+                self.gridResult.InsertNextTuple3(value)  # x,y,z
+            ###
+        ###
         print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
 
         self.textActors[0].SetInput('Max:  %g' %(maxValue)) # max
@@ -439,7 +466,10 @@ class Pan(wx.Panel,NastranIO):
             #self.grid.GetPointData().SetScalars(self.emptyResult) # causes a crash
         else:
             #self.grid.GetCellData().SetScalars(self.emptyResult)
-            self.grid.GetPointData().SetScalars(self.gridResult)
+            if vectorSize==1:
+                self.grid.GetPointData().SetScalars(self.gridResult)
+            else:
+                self.grid.GetPointData().SetScalars(self.gridResult)
         self.grid.Modified()
 
     def OnKeyPress(self,obj,event):
@@ -451,7 +481,7 @@ class Pan(wx.Panel,NastranIO):
         self.bdfFileName = bdfFileName
 
         self.rend = vtk.vtkRenderer()
-        self.buildLookupTable()
+        self.scalarBar = vtk.vtkScalarBarActor()
         self.loadGeometry(self.bdfFileName,dirname)
         self.main()
 
