@@ -467,6 +467,18 @@ class addMethods(object):
         assert key>=0
         self.aeros[key] = aero
 
+    def addAESurf(self,aesurf):
+        key = aesurf.aesid
+        assert key not in self.aesurfs,'\naesurf=\n%s oldAESURF=\n%s' %(aesurf,self.aesurfs[key])
+        assert key>=0
+        self.aesurfs[key] = aesurf
+
+    def addAEList(self,aelist):
+        key = aelist.sid
+        assert key not in self.aelists,'\naelist=\n%s oldAELIST=\n%s' %(aelist,self.aelists[key])
+        assert key>=0
+        self.aelists[key] = aelist
+
     def addAELink(self,aelink):
         key = aelink.id
         assert key>=0

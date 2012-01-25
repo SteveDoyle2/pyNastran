@@ -172,9 +172,12 @@ FLFACT  (done)
 CAERO1  (done)
 PAERO1  (done)
 SPLINE1 (done)
+SPLINE2 (done)
 AEPARM  (done)
 AELINK  (done)
 AESTAT  (done)
+AELIST  (done)
+AESURF  (done)
 AESURFS (needs integration)
 
 ----Modal Cards----:
@@ -353,7 +356,6 @@ PAERO3
 PAERO4
 PAERO5
 
-SPLINE2
 SPLINE3
 SPLINE4
 SPLINE5

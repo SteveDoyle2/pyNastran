@@ -20,7 +20,7 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - RADSET
  - SET1
  - SET3
- 
+
  - CDAMP1
  - CDAMP2
  - CDAMP3
@@ -61,6 +61,10 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - PARAM
  - DAREA
  - NLPARM
+
+ - AELIST
+ - AESURF
+ - SPLINE2
 
 
 ===To Cross Reference (not supported)===
