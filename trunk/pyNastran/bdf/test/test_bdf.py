@@ -69,7 +69,11 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
     diffCards = []
     try:
         #print "xref = ",xref
-        fem1.readBDF(bdfModel,xref=xref)
+        try:
+            fem1.readBDF(bdfModel,xref=xref)
+        except:
+            print "failed reading |%s|" %(bdfModel)
+            raise
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
@@ -81,7 +85,12 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
         fem2 = BDF(debug=debug,log=None)
         fem2.log.info('starting fem2')
         sys.stdout.flush()
-        fem2.readBDF(outModel,xref=xref)
+        try:
+            fem2.readBDF(outModel,xref=xref)
+        except:
+            print "failed reading |%s|" %(outModel)
+            raise
+        
         #fem2.sumForces()
         #fem2.sumMoments()
         outModel2 = bdfModel+'_out2'

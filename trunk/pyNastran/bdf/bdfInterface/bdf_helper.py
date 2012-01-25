@@ -140,7 +140,7 @@ class getMethods(object):
         return materials
 
     #--------------------
-    # LOADS/CONSTRAINTS/COORDINATES CARDS
+    # LOADS/CONSTRAINTS
 
     def Load(self,lid):
         if lid in self.loads:
@@ -152,6 +152,8 @@ class getMethods(object):
     def Grav(self,sid):
         return self.gravs[sid]
 
+    #--------------------
+    # COORDINATES CARDS
     def Coord(self,cid):
         return self.coords[cid]
 
@@ -393,15 +395,32 @@ class addMethods(object):
     def addConstraint_MPCADD(self,constraint):
         self.mpcObject.add(constraint)
 
+        if constraint.conid in self.mpcadds:
+            raise Exception('must have unique MPCADD IDs')
+        self.mpcadds[constraint.conid] = constraint
+
     def addConstraint_MPC(self,constraint):
         self.mpcObject.append(constraint)
+        if constraint.conid in self.mpcs:
+            self.mpcs[constraint.conid].append(constraint)
+        else:
+            self.mpcs[constraint.conid] = [constraint]
+        
 
     def addConstraint_SPCADD(self,constraint):
         self.spcObject.add(constraint)
+        if constraint.conid in self.spcadds:
+            raise Exception('must have unique SPCADD IDs')
+        self.spcadds[constraint.conid] = constraint
 
     def addConstraint_SPC(self,constraint):
         self.spcObject.append(constraint)
-        #key = constraint.cid
+
+        if constraint.conid in self.spcs:
+            self.spcs[constraint.conid].append(constraint)
+        else:
+            self.spcs[constraint.conid] = [constraint]
+        #key = constraint.conid
         #if self.constraints.has_key(key):
         #    self.constraints[key].append(constraint)
         #else:
@@ -409,7 +428,14 @@ class addMethods(object):
 
     def addConstraint(self,constraint):
         #self.spcObject.append(constraint)
-        key = constraint.cid
+        key = constraint.conid
+
+        if constraint.conid in self.spcs:
+            self.spcs[constraint.conid].append(constraint)
+        else:
+            self.spcs[constraint.conid] = [constraint]
+        #key = constraint.conid
+
         assert key>0
         if self.constraints.has_key(key):
             self.constraints[key].append(constraint)

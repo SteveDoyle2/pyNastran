@@ -310,6 +310,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.spcObject = constraintObject()
         ## stores MPCADD,MPC
         self.mpcObject = constraintObject()
+        
+        self.spcs = {}
+        self.spcadds = {}
+
+        self.mpcs = {}
+        self.mpcadds = {}
 
         # dynamic cards
         ## stores DAREA
@@ -623,6 +629,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             pulls off any spaces or asterisks and returns what is left.
         """
         #self.log.debug("getting cardName...")
+        #print 'cardLines[0] = ',cardLines
         cardName = cardLines[0][0:8].strip()
         if ',' in cardName:
             cardName = cardName.split(',')[0].strip()
@@ -759,7 +766,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             for iCard in range(nCards):
                 #print "----------------------------"
                 #if special:
-                #    print "iCard = ",iCard
+                    #print "iCard = ",iCard
                 self.addCard(card,cardName,iCard=0,oldCardObj=None)
                 #if self.foundEndData:
                 #    break
@@ -778,9 +785,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #self.debug = True
         if self.debug:
             #for nid,node in self.nodes.items():
-            #    print node
+                #print node
             #for eid,element in self.elements.items():
-            #    print element
+                #print element
             
             #self.log.debug("\n$REJECTS")
             #for reject in self.rejects:
@@ -808,7 +815,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         @todo this method is 600+ lines long...refactor time...
         """
         #if cardName != 'CQUAD4':
-        #    print cardName
+            #print cardName
         #print "card = ",card
 
         #if cardName in self.specialCards:
