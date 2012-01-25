@@ -109,7 +109,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # aero cards
         'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
-        'AELINK','AEPARAM','AESTAT',
+        'AELINK','AEPARAM','AESTAT','AELIST','AESURF',
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'PAERO1',
         'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
@@ -347,20 +347,25 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
     def _initAeroDefaults(self):
         # aero cards
         ## stores CAEROx
-        self.caeros   = {}  # can this be combined with self.elements???
+        self.caeros = {}  # can this be combined with self.elements???
         ## stores PAEROx
-        self.paeros   = {}
+        self.paeros = {}
         ## stores AERO
-        self.aero  = {}
+        self.aero   = {}
         ## stores AEROS
-        self.aeros = {}
+        self.aeros  = {}
         ## stores AEPARAM
         self.aeparams = {}
         ## stores AELINK
-        self.aelinks = {}
+        self.aelinks  = {}
+        
+        ## stores AELIST
+        self.aelists = {}
+        ## stores AESURF
+        self.aesurfs = {}
         
         ## stores AESTAT
-        self.aestats = {}
+        self.aestats  = {}
         ## stores GUST cards
         self.gusts    = {}  # can this be simplified ???
         ## stores FLFACT
@@ -1284,9 +1289,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='AEROS':
                 aeros = AEROS(cardObj)
                 self.addAeros(aeros)
-            elif cardName=='AELINK':
-                aelink = AELINK(cardObj)
-                self.addAELink(aelink)
+            elif cardName=='AELIST':
+                aelist = AELIST(cardObj)
+                self.addAEList(aelist)
             elif cardName=='AEPARAM':
                 aeparam = AEPARAM(cardObj)
                 self.addAEParam(aeparam)
@@ -1294,6 +1299,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 aestat = AESTAT(cardObj)
                 self.addAEStat(aestat)
 
+            elif cardName=='AELINK':
+                aelink = AELINK(cardObj)
+                self.addAELink(aelink)
+            elif cardName=='AESURF':
+                aesurf = AESURF(cardObj)
+                self.addAESurf(aesurf)
             elif cardName=='TRIM':
                 trim = TRIM(cardObj)
                 self.addTrim(trim)
