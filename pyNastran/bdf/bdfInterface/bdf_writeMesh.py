@@ -306,6 +306,11 @@ class writeMesh(object):
         #msg += '$ where are my constraints...\n'
         if self.constraints:
             msg += '$CONSTRAINTS\n'
+        
+        msg += str(self.spcObject2)
+        msg += str(self.mpcObject2)
+        return msg
+
         for key,loadcase in sorted(self.constraints.items()):
             for constraint in loadcase:
                 msg += str(constraint)

@@ -1,4 +1,5 @@
 import sys
+#import copy
 #from BDF_Card import collapse
 from pyNastran.bdf.errors import *
 
@@ -192,6 +193,7 @@ class cardMethods(object):
 
         #print "tempcard = ",tempcard
         for i,line in enumerate(tempcard):
+            #print "line = ",line
             isLargeField = self.isLargeField(line)
             #print "i = ",i
             if debug:
@@ -202,8 +204,9 @@ class cardMethods(object):
             if debug:
                 self.log.debug("  line2 = |%r|" %(sline))
 
-            if ',' in sline:  #CSV
-                sline = sline.split(',')[0:9]
+            if ',' in sline:  #CSV - doesnt support large field CSV cards which I'd never used...
+                sline = self.parseCSV(sline)
+                #print "sline  = ",sline
                 #self.log.debug("sline = %s" %(sline))
             else: # standard
                 sline = self.nastranSplit(sline,isLargeField,debug=debug)
@@ -213,15 +216,16 @@ class cardMethods(object):
             
             for (fieldCounter,valueIn) in enumerate(sline):
                 #if fieldCounter==8:
-                #    print "**type(value) = ",type(value)
-                #    break
+                    #print "**type(value) = ",type(value)
+                    #break
                     #sys.exit(12131)
                 #if debug:
-                #    print "type(value) = ",type(value)
-                #    print ""
+                    #print "type(value) = ",type(value)
+                    #print ""
                 if i>0 and fieldCounter==0: # blank leading field
                     pass
                 else:
+                    #debug = True
                     value = self.getValue(valueIn,debug=debug)
                     card.append(value)
                     #print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
@@ -230,12 +234,26 @@ class cardMethods(object):
             #print "cardEnd temp = ",card
         ###
         #print "cardOut&& = ",card
-        if debug:
-            self.log.debug("  sline2 = %s" %(card))
+        #if debug:
+            #self.log.debug("  sline2 = %s" %(card))
             #self.log.debug("  sline2 = %s" %(collapse(card)))
         #return self.makeSingleStreamedCard(card)
         return card
         
+    def parseCSV(self,sline):
+        #if 1:
+        slineA = sline.split(',')
+        sline2 = ['']*9
+        for i,s in enumerate(slineA):
+            #print i,s
+            sline2[i] = s
+        #sline = sline2
+        #print "sline2 = ",sline2
+        #sline = sline2
+        #sline = sline.split(',')[0:9]  # doesnt fill all fields on line
+        #sline = copy.deepcopy(sline2)
+        return sline2
+
     def makeSingleStreamedCard(self,card,debug=False):
         """
         takes a card that has been split b/c it's a multiline card

@@ -1,4 +1,5 @@
 import sys
+from pyNastran.bdf.cards.constraints import constraintObject2
 
 class XrefMesh(object):
     def __init__(self):
@@ -21,11 +22,38 @@ class XrefMesh(object):
             self.crossReference_Materials()
 
             self.crossReference_Aero()
+            self.crossReference_Constraints()
             #self.crossReference_Loads()
-            #self.spcObject.crossReference(self)  # enable to output SPCs
-            #self.mpcObject.crossReference(self)  # enable to output MPCs
             #self.caseControlDeck.crossReference(self)
         ###
+    
+    def crossReference_Constraints(self):
+        #self.spcObject.crossReference(self)  # enable to output SPCs
+        #self.mpcObject.crossReference(self)  # enable to output MPCs
+        pass
+        
+        self.spcObject2 = constraintObject2()
+        for key,spcadd in sorted(self.spcadds.items()):
+            self.spcObject2.Add(spcadd)
+
+        for key,spcs in sorted(self.spcs.items()):
+            #print spcs
+            for spc in spcs:
+                self.spcObject2.append(spc)
+        ###
+
+
+        self.mpcObject2 = constraintObject2()
+        for key,mpcadd in sorted(self.mpcadds.items()):
+            self.mpcObject2.Add(mpcadd)
+
+        for key,mpcs in sorted(self.mpcs.items()):
+            #print spcs
+            for mpc in mpcs:
+                self.mpcObject2.append(mpc)
+        ###
+        #self.spcObject.crossReference(self)
+
 
     def crossReference_Coordinates(self):
         """
