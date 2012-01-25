@@ -59,7 +59,7 @@ class AppFrame( wx.Frame ) :
         # Must call before any event handler is referenced.
         self.eventsHandler = EventsHandler(self)
 
-        self.frmPanel = Pan(self)
+        self.frmPanel = Pan(self,size=(100,200))
 
         self.buildMenuBar()
         self.buildToolBar()
