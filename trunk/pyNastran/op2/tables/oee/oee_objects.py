@@ -136,9 +136,9 @@ class StrainEnergyObject(scalarObject):
 
     def __reprTransient__(self):
         msg  = '---Transient Strain Energy Object---\n'
-        msg += "%-10s %-14s% -14s% -14s\n" %('EID','Energy','PercentTotal','Density')
         for dt,Energy in sorted(self.energy.items()):
             msg += "%s = %s\n" %(self.dataCode['name'],dt)
+            msg += "%-10s %-14s% -14s% -14s\n" %('EID','Energy','PercentTotal','Density')
             #print "dt=%s Energy=%s" %(dt,Energy)
             for eid,energy in sorted(Energy.items()):
                 percent = self.percent[dt][eid]
