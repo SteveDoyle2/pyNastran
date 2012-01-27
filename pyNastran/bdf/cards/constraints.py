@@ -27,22 +27,103 @@ class constraintObject2(object):
             self.constraints[key] = [constraint]
         ###
 
-    def _spc(self,spcID): #  could be an spcadd/mpcadd or spc/mpc,spc1,spcd,spcax,suport1
+    def _spc(self,spcID):
+        """could be an spcadd/mpcadd or spc/mpc,spc1,spcd,spcax,suport1"""
         if spcID in self.addConstraints:
             return self.addConstraints[spcID]
         return self.constraints[spcID]
 
     def crossReference(self,model):
         return
+        #addConstraints2 = {}
         for key,addConstraint in sorted(self.addConstraints.items()):
             for i,spcID in enumerate(addConstraint.sets):
                 addConstraint.sets[i] = self._spc(spcID)
             ###
+            self.addConstraints[key] = addConstraint
         ###
-        for key,constraint in sorted(self.constraints.items()):
-            constraint.crossReference(model)
+        #self.addConstraints = addConstraints2
+
+        constraints2 = {}
+        for key,constraints in sorted(self.constraints.items()):
+            constraints2[key] = []
+            for constraint in constraints:
+                constraints2[key].append( constraint.crossReference(model) )
+            ###
         ###
+        self.constraints = constraints2
     
+    def createConstraintsForID(self):
+        """
+        This function returns all the constraints with an given constraint ID.
+        For example an MPCADD that references 2 MPCADDs which reference 4 MPCs should
+        return 4 MPCs (or rather the IDs of those MPCs).
+        @todo This function *should* also find unassociated constraints.
+
+        not really done yet, idea needs to be integrated/separated from cross-referencing
+        no point in doing it twice
+        """
+        constraints2 = {}
+        referencedConstraints = {}
+        # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
+        for key,addConstraint in sorted(self.addConstraints.items()):
+            constraints = []
+            for i,spcID in enumerate(addConstraint.sets):
+                constraintIDs = addConstraint.getConstraintIDs()
+                constraints[spcID] = constraintIDs
+                constraints += constraintIDs
+                #constraints.append(spcID)
+                constraints2[key] = [spcID]
+            ###
+            constraints2[key] = constraints
+
+        ## not needed b/c there are no MPCADD/SPCADD
+        #for key,constraints in sorted(self.constraints.items()):
+            #for constraint in constraints:
+                #conID = constraint.ConID()
+                #constraints2[conID] 
+        constraints3 = remapSPCs(constraints2)
+
+    def remapSPCs(self,constraints):    
+        """not really done yet"""
+        ## takes the MPCADDs that reference MPCADDs and makes them reference MPCs
+        
+        constraints2 = {}
+        Keys = constraints.keys()
+        nKeys = len(Keys)-1
+        for i in range(nKeys):
+            Key = Keys[i]
+            constraints2[Key]
+            for j in range(nKeys):
+                if i > j:                    
+                    constraints2[Key].append(constraints[Key])
+                ###
+            ###
+        ###
+        return constraints2
+
+    def ConstraintID(self):
+        if isinstance(self.conid,int):
+            return self.conid
+        return self.conid.conid
+
+    def getConstraintIDs(self):
+        IDs = []
+        for key,constraints in sorted(self.addConstraints.items()):
+            conID = constraint.ConID()
+            IDs.append(conID)
+        ###
+
+        for key,constraints in sorted(self.constraints.items()):
+            for constraint in constraints:
+                conID = constraint.ConID()
+                IDs.append(conID)
+            ###
+        ###
+        IDs = list(set(IDs))
+        IDs.sort()
+        return IDs
+
     def __repr__(self):
         msg = ''
         # write the SPCADD/MPCADD cards
@@ -444,14 +525,13 @@ class SPC1(Constraint):
         fields = ['SPC1',self.conid,self.constraints]+nodes
         return self.printCard(fields)
 
+#class ADDConstraint(Constraint):
+#    def __init__(self,card,data):
+#        self.__init__(Constraint)
+
 class ConstraintADD(Constraint):
     def __init__(self,card,data):
         Constraint.__init__(self,card,data)
-
-    def crossReference(self,i,node):
-        dofCount = 0
-        self.sets.sort()
-        self.sets[i] = node
 
     def _reprSpcMpcAdd(self,fields):
         outSPCs = ''
@@ -497,6 +577,7 @@ class SPCADD(ConstraintADD):
 
     def crossReference(self,i,node):
         dofCount = 0
+        self.sets.sort()
         self.sets[i] = node
 
     def __repr__(self):
@@ -520,6 +601,11 @@ class MPCADD(ConstraintADD):
         sets       = card.fields(2)
         self.sets = self.expandThru(sets)
         self.sets.sort()
+
+    def crossReference(self,i,node):
+        dofCount = 0
+        self.sets.sort()
+        self.sets[i] = node
 
     def __repr__(self):
         #outSPCs = ''

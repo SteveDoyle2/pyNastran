@@ -407,21 +407,21 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self._setInfile(infilename,includeDir)
 
         fname = self.printFileName(self.bdfFileName)
-        self.log.debug('---starting BDF.read of %s---' %(fname))
+        self.log.debug('---starting BDF.readBDF of %s---' %(fname))
         sys.stdout.flush()
 
         #self.debug = True
         if self.debug:
-            self.log.debug("*BDF.read")
+            self.log.debug("*BDF.readBDF")
         self.readExecutiveControlDeck()
         self.readCaseControlDeck(self.bdfFileName)
         self.readBulkDataDeck()
         #self.closeFile()
         self.crossReference(xref=xref)
         if self.debug:
-            self.log.debug("***BDF.read")
+            self.log.debug("***BDF.readBDF")
 
-        self.log.debug('---finished BDF.read of %s---' %(fname))
+        self.log.debug('---finished BDF.readBDF of %s---' %(fname))
         sys.stdout.flush()
 
         isDone = self.foundEndData
@@ -518,6 +518,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
     def isCaseControlDeck(self,line):
         """@todo not done..."""
+        #print "line = |%r|" %(line)
         lineUpper = line.upper().strip()
         #print "line = |%s|" %(lineUpper)
         if 'CEND' in line.upper():
@@ -546,11 +547,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         while len(self.activeFileNames)>0: # keep going until finished
         #while 'BEGIN BULK' not in line:
             lineIn = self.getNextLine()
-            if not self.isCaseControlDeck(lineIn):
-                self.linesPack = [lineIn]+self.linesPack
+            #print "lineIn = |%r|" %(lineIn)
             #print "lineIn = ",lineIn
             if lineIn==None: # file was closed and a 2nd readCaseControl was called
                 return
+            if not self.isCaseControlDeck(lineIn):
+                self.linesPack = [lineIn]+self.linesPack
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
 
