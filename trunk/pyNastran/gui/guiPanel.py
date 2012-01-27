@@ -27,7 +27,7 @@ class Pan(wx.Panel,NastranIO):
 
         window = self.widget.GetRenderWindow()
         self.iren = vtk.vtkRenderWindowInteractor()
-        #self.iren.SetRenderWindow(window)
+        self.iren.SetRenderWindow(window)
         
         self.iText = 0
         self.textActors = {}

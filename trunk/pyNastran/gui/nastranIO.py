@@ -312,7 +312,7 @@ class NastranIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        op2 = OP2(op2FileName,debug=False)
+        op2 = OP2(op2FileName,debug=True)
         op2.readOP2()
         #print op2.printResults()
         
