@@ -11,31 +11,35 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
         2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
-    def __init__(self,dataCode,iSubcase,eigReal):
+    def __init__(self,dataCode,iSubcase,mode):
         scalarObject.__init__(self,dataCode,iSubcase)
-        #self.eigReal = int(eigReal)
-        self.eigReal = eigReal
-        self.updateDt = self.updateEigReal
-        #print "eigReal = %s" %(eigReal)
-        
-        #assert eigReal>=0.
-        self.gridTypes = {}
-        self.displacements = {self.eigReal: {}}
-        self.rotations     = {self.eigReal: {}}
+        #self.mode = int(mode)
+        self.mode = mode
+        self.updateDt = self.updateMode
+        #print "mode = %s" %(mode)
 
-    def updateEigReal(self,dataCode,eigReal):
+        self.appendDataMember('modes','mode')
+        self.appendDataMember('eigrs','eigr')
+        self.appendDataMember('eigis','eigi')
+        
+        #assert mode>=0.
+        self.gridTypes = {}
+        self.translations = {self.mode: {}}
+        self.rotations    = {self.mode: {}}
+
+    def updateMode(self,dataCode,mode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
-        #assert eigReal>=0.
-        #self.eigReal = int(eigReal)
+        #assert mode>=0.
+        #self.mode = int(mode)
         self.dataCode = dataCode
         self.applyDataCode()
-        self.eigReal = eigReal
-        #print "eigReal = %s" %(str(eigReal))
-        self.displacements[self.eigReal] = {}
-        self.rotations[self.eigReal] = {}
+        self.mode = mode
+        #print "mode = %s" %(str(mode))
+        self.translations[self.mode] = {}
+        self.rotations[self.mode] = {}
 
         self.appendDataMember('modes','mode')
         self.appendDataMember('eigrs','eigr')
@@ -44,7 +48,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements
+        #assert nodeID not in self.translations
 
         #if gridType==0:
         #    Type = 'S'
@@ -58,35 +62,43 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        #print 'self.eigReal = %s' %(self.eigReal),type(self.eigReal)
-        #print "d = ",self.displacements
-        self.displacements[self.eigReal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[self.eigReal][nodeID]     = array([v4,v5,v6]) # rx,ry,rz
+        #print 'self.model = %s' %(self.mode),type(self.mode)
+        #print "d = ",self.translations
+        self.translations[self.mode][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[self.mode][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
     def eigenvalues(self):
-        return sorted(self.displacements.keys())
+        return self.eigrs
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
-        msg += '-eigenvalues-\n'
-        for i,eigenvalue in enumerate(self.eigenvalues()):
-            msg += '%-2s %f\n' %(i,eigenvalue)
+        msg += '-i,mode,eigenvalue-\n'
+        #print "eigrs = ",self.eigrs
+        #print "eigis = ",self.eigis
+        #print "len(translations) = ",len(self.translations),len(self.eigrs)
+        for i,mode in enumerate(self.translations):
+            eigenvalue = self.eigrs[i]
+            #cycle      = self.eigis[i]
+            msg += '%-2s %i %g\n' %(i,mode,eigenvalue)
         msg += '\n'
 
-        #if self.eigReal is not None:
-        #    msg += 'eigReal = %g\n' %(self.eigReal)
+        #if self.mode is not None:
+        #    msg += 'mode = %g\n' %(self.mode)
         headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
         headerLine = '%-8s %8s ' %('nodeID','GridType',)
         for header in headers:
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for freq,eigVals in sorted(self.displacements.items()):
-            msg += 'eigenvalueReal = %f\n' %(freq)
+        for i,(mode,eigVals) in enumerate(sorted(self.translations.items())):
+            freq = self.eigrs[i]
+            msg += 'mode = %g\n' %(mode)
+            msg += 'eigenvalueReal = %g\n' %(freq)
+            #msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
             for nodeID,displacement in sorted(eigVals.items()):
-                rotation = self.rotations[freq][nodeID]
+                rotation = self.rotations[mode][nodeID]
                 Type = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
@@ -102,6 +114,8 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
                 msg += '\n'
             ###
             msg += '\n'
+            #print msg
+            #return msg
         return msg
 
 class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
@@ -111,15 +125,15 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
              1      G      0.0            0.0            0.0            0.0            1.260264E-01   0.0
              7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
-    def __init__(self,dataCode,iSubcase,eigReal):
+    def __init__(self,dataCode,iSubcase,mode):
         scalarObject.__init__(self,dataCode,iSubcase)
-        #self.eigReal = int(eigReal)
-        self.eigReal = eigReal
-        #print "eigReal = %s" %(eigReal)
+        #self.mode = int(mode)
+        self.mode = mode
+        #print "mode = %s" %(mode)
         
-        #assert eigReal>=0.
+        #assert mode>=0.
         self.gridTypes = {}
-        self.T = {self.eigReal: {}}
+        self.translations = {self.mode: {}}
 
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
@@ -131,7 +145,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements
+        #assert nodeID not in self.translations
 
         if gridType==1:
             Type = 'G'
@@ -143,30 +157,34 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        #print 'self.eigReal = %s' %(self.eigReal),type(self.eigReal)
-        #print "d = ",self.displacements
-        self.T[self.eigReal][nodeID] = v1
+        #print 'self.mode = %s' %(self.mode),type(self.mode)
+        #print "d = ",self.translations
+        self.translations[self.mode][nodeID] = v1
     ###
 
+    def modes(self):
+        return sorted(self.translations.keys())
+
     def eigenvalues(self):
-        return sorted(self.T.keys())
+        return self.eigrs
 
     def __repr__(self):
         msg = '---REAL EIGENVECTORS---\n'
         msg += '-eigenvalues-\n'
-        for i,eigenvalue in enumerate(self.eigenvalues()):
-            msg += '%-2s %f\n' %(i,eigenvalue)
+        for i,mode in enumerate(self.translations):
+            eigenvalue = self.eigrs[i]
+            msg += '%-2s %i %f\n' %(i,mode,eigenvalue)
         msg += '\n'
 
-        #if self.eigReal is not None:
-        #    msg += 'eigReal = %g\n' %(self.eigReal)
+        #if self.mode is not None:
+        #    msg += 'mode = %g\n' %(self.mode)
         headers = ['T']
         headerLine = '%-8s %8s ' %('nodeID','GridType',)
         for header in headers:
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for freq,eigVals in sorted(self.T.items()):
+        for mode,eigVals in sorted(self.translations.items()):
             msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
             for nodeID,T in sorted(eigVals.items()):
@@ -188,40 +206,40 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
     """
     @todo add table data
     """
-    def __init__(self,dataCode,iSubcase,eigReal):
+    def __init__(self,dataCode,iSubcase,mode):
         scalarObject.__init__(self,dataCode,iSubcase)
-        #self.eigReal = int(eigReal)
-        self.eigReal = eigReal
-        self.updateDt = self.updateEigReal
-        #print "eigReal = %s" %(eigReal)
+        #self.mode = int(mode)
+        self.mode = mode
+        self.updateDt = self.updateMode
+        #print "mode = %s" %(mode)
         
-        #assert eigReal>=0.
+        #assert mode>=0.
         self.gridTypes = {}
-        self.displacements = {self.eigReal: {}}
-        self.rotations     = {self.eigReal: {}}
+        self.translations = {self.mode: {}}
+        self.rotations    = {self.mode: {}}
 
-    def updateEigReal(self,dataCode,eigReal):
+    def updateMode(self,dataCode,mode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
-        #assert eigReal>=0.
-        #self.eigReal = int(eigReal)
-        self.eigReal = eigReal
+        #assert mode>=0.
+        #self.mode = int(mode)
+        self.mode = mode
         self.dataCode = dataCode
         self.applyDataCode()
-        #print "eigReal = %s" %(str(eigReal))
-        self.displacements[self.eigReal] = {}
-        self.rotations[self.eigReal] = {}
+        #print "mode = %s" %(str(mode))
+        self.translations[self.mode] = {}
+        self.rotations[self.mode] = {}
 
-        #self.appendDataMember('modes','mode')
-        #self.appendDataMember('eigrs','eigr')
-        #self.appendDataMember('eigis','eigi')
+        self.appendDataMember('modes','mode')
+        self.appendDataMember('eigrs','eigr')
+        self.appendDataMember('eigis','eigi')
 
     def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
         #msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
         #assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements
+        #assert nodeID not in self.translations
 
         #if gridType==0:
         #    Type = 'S??'
@@ -233,35 +251,37 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        #print 'self.eigReal = %s' %(self.eigReal),type(self.eigReal)
-        #print "d = ",self.displacements
-        self.displacements[self.eigReal][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
-        self.rotations[self.eigReal][nodeID]     = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
+        #print 'self.mode = %s' %(self.mode),type(self.mode)
+        #print "d = ",self.translations
+        self.translations[self.mode][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
+        self.rotations[self.mode][nodeID]    = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
     ###
 
     def eigenvalues(self):
-        return sorted(self.displacements.keys())
+        return sorted(self.translations.keys())
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'
         msg += '-eigenvalues-\n'
-        for i,eigenvalue in enumerate(self.eigenvalues()):
-            msg += '%-2s %f\n' %(i,eigenvalue)
+        for i,mode in enumerate(self.translations()):
+            eigenvalue = self.eigrs[i]
+            msg += '%-2s %f\n' %(i,mode,eigenvalue)
         msg += '\n'
 
-        #if self.eigReal is not None:
-        #    msg += 'eigReal = %g\n' %(self.eigReal)
+        #if self.mode is not None:
+        #    msg += 'mode = %g\n' %(self.mode)
         headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
         headerLine = '%-8s %8s ' %('nodeID','GridType',)
         for header in headers:
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for freq,eigVals in sorted(self.displacements.items()):
-            msg += 'eigenvalueReal = %f\n' %(freq)
+        for i,(mode,eigVals) in enumerate(sorted(self.translations.items())):
+            msg += 'mode           = %g\n' %(mode)
+            msg += 'eigenvalueReal = %g\n' %(self.eigrs[i])
             msg += headerLine
             for nodeID,displacement in sorted(eigVals.items()):
-                rotation = self.rotations[freq][nodeID]
+                rotation = self.rotations[mode][nodeID]
                 Type = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
