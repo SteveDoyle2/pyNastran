@@ -240,13 +240,13 @@ class OP2(BDF,  # BDF methods
                    self.appliedLoads,
 
                    # OES - Stress/Strain
-                   #self.celasStress,self.celasStrain,
-                   #self.rodStress,self.rodStrain,
-                   #self.barStress,self.barStrain,
-                   #self.beamStress,self.beamStrain,
-                   #self.plateStress,self.plateStrain,
-                   #self.solidStress,self.solidStrain,
-                   #self.compositePlateStress,self.compositePlateStrain,
+                   self.celasStress,self.celasStrain,
+                   self.rodStress,self.rodStrain,
+                   self.barStress,self.barStrain,
+                   self.beamStress,self.beamStrain,
+                   self.plateStress,self.plateStrain,
+                   self.solidStress,self.solidStrain,
+                   self.compositePlateStress,self.compositePlateStrain,
                    
                    # OEE - Strain Energy
                    self.strainEnergy,
@@ -268,8 +268,48 @@ class OP2(BDF,  # BDF methods
         """
         #self.printSection(500)
         #sys.exit('op2-readTapeCode')
+
+        if 0:
+            marker = 0
+            print self.printSection(200)
+            sys.exit()
+            while marker != -1:
+                ints = self.readIntBlock()
+                marker = ints[0]
+                print "ints1 = ",ints
+            print ""
+
+            while marker != -2:
+                ints = self.readIntBlock()
+                marker = ints[0]
+                print "ints2 = ",ints
+            print ""
+            while marker != -3:
+                ints = self.readIntBlock()
+                marker = ints[0]
+                print "ints3 = ",ints
+            print ""
+            while marker != -4:
+                ints = self.readIntBlock()
+                marker = ints[0]
+                print "ints4 = ",ints
+            print ""
+            #while marker != -1:
+            #    ints = self.readIntBlock()
+            #    marker = ints[0]
+            #    print "ints1 = ",ints
+            #print ""
+            self.readMarkers([2])
+
+            print self.printSection(200)
+            ints2 = self.readIntBlock()
+            ints3 = self.readIntBlock()
+            print "ints2 = ",ints2
+            print "ints3 = ",ints3
+            sys.exit('stopping...')
+
         self.readMarkers([3])
-        #self.printSection(20)
+        self.printSection(20)
         ints = self.readIntBlock()
         if self.makeOp2Debug:
             self.op2Debug.write('%s\n' %(str(ints)))
@@ -301,10 +341,13 @@ class OP2(BDF,  # BDF methods
         ## the byte position in the OP2
         self.n = self.op2.tell()
 
+        #self.readTapeCode()
         try:
             self.readTapeCode()
         except:
-            raise TapeCodeError('when this happens, the analysis failed...check the F06')
+            msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
+            msg += '  If the F06 is OK, try running the problem on a different Operating System'
+            raise TapeCodeError(msg)
         ###
 
         isAnotherTable = True

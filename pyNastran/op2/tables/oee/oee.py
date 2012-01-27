@@ -90,9 +90,9 @@ class OEE(object):
         
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
         #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
-        if self.numWide==5:
-            print self.codeInformation()
-
+        #if self.numWide==5:
+            #print self.codeInformation()
+        print self.codeInformation()
         #self.printBlock(data)
         self.readTitle()
 
@@ -121,9 +121,9 @@ class OEE(object):
         if self.analysisCode==1: # displacement
             #print "isStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        #elif self.analysisCode==2: # buckling modes
+        elif self.analysisCode==2: # buckling modes
             #print "isBucklingStrainEnergy"
-            #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
+            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         #elif self.analysisCode==5: # freq
             #print "isFreqStrainEnergy"
             #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
