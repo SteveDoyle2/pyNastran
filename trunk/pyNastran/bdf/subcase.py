@@ -309,6 +309,7 @@ class Subcase(object):
         elif paramName.startswith('DESS'):  paramName = 'DESSUB'
         elif paramName.startswith('DISP'):  paramName = 'DISPLACEMENT'
         elif paramName.startswith('EXPO'):  paramName = 'EXPORTLID'
+        elif paramName.startswith('ELFO'):  paramName = 'FORCE'
         elif paramName.startswith('FORC'):  paramName = 'FORCE'
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
         elif paramName.startswith('GPFO'):  paramName = 'GPFORCE'

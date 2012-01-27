@@ -369,6 +369,8 @@ class IntegratedLineProperty(LineProperty):
         return i12
 
     def Nsm(self):
+        #print "xxb = ",self.xxb
+        #print "nsm = ",self.nsm
         nsm = integratePositiveLine(self.xxb,self.nsm)
         return nsm
 
@@ -695,6 +697,15 @@ class PBARL(LineProperty):
         nsm  = self.Nsm()
         return area*rho+nsm
 
+    def I11(self):
+        return None
+    def I12(self):
+        return None
+    def J(self):
+        return None
+    def I22(self):
+        return None
+
     def __repr__(self):
         group = self.setBlankIfDefault(self.group,'MSCBMLO')
         fields = ['PBARL',self.pid,self.Mid(),group,self.Type,None,None,None,None,
@@ -950,16 +961,20 @@ class PBEAML(IntegratedLineProperty):
             
             n = 0
             i=0
-            for i,dim in dimAll:
+            #print "dimAll = ",dimAll
+            for i,dim in enumerate(dimAll):
                 if j<nDim:
                     Dim.append(dim)
                     j+=1
                 else:
+                    #print "dim = ",Dim
                     self.nsm.append(dim)
                     if n>0:
-                        self.so.append( card.field(i+1,'YES')) # dimAll[i+1]
-                        self.xxb.append(card.field(i+2,1.0  ))  #dimAll[i+2]
-                    j = 0
+                        so  = card.field(i+1,'YES')
+                        xxb = card.field(i+2,1.0  )
+                        self.so.append( so) # dimAll[i+1]
+                        self.xxb.append(xxb)  #dimAll[i+2]
+                    #j = 
                     n+=1
                     i+=2
                     self.dim.append(Dim)
@@ -970,6 +985,9 @@ class PBEAML(IntegratedLineProperty):
                 self.dim.append(Dim)
                 self.nsm.append(card.field(i,0.0))
             ###
+            #print "nsm = ",self.nsm
+            #print self
+            #sys.exit()
     
     def MassPerLength(self):
         """
@@ -978,7 +996,7 @@ class PBEAML(IntegratedLineProperty):
         """
         rho  = self.Rho()
         massPerLs = []
-        for dim,n in zip(self.dim,self.nsm):
+        for dim,nsm in zip(self.dim,self.nsm):
             a = self.areaL(dim)
             massPerLs.append(a*rho+nsm)
         massPerL = integratePositiveLine(self.xxb,massPerLs)
@@ -1008,20 +1026,48 @@ class PBEAML(IntegratedLineProperty):
         else:
             assert self.mid.type in ['MAT1']
         ###
+    
+    def _J(self):
+        j = []
+        for dims in self.dim:
+            pass
+            #print "dims = ",dims
+            #IAreaL()
+        return j
+
+    def J(self):
+        Js = self._J()
+        #j = integratePositiveLine(self.xxb,Js)
+        j = None
+        return j
+
+    def I11(self):
+        #i1 = integratePositiveLine(self.xxb,self.i1)
+        i1 = None
+        return i1
+
+    def I22(self):
+        #i2 = integratePositiveLine(self.xxb,self.i2)
+        i2 = None
+        return i2
+
+    def I12(self):
+        #i12 = integrateLine(self.xxb,self.i12)
+        i12 = None
+        return i12
 
     def __repr__(self):
-        fields = ['PBEAML',self.Pid,self.Mid(),self.group,self.Type,None,None,None,None]
-        
-        for i,(xxb,so,dim) in enumerate(zip(self.xxb,self.so,self.dim)):
+        fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]
+        #print "self.nsm = ",self.nsm
+        for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
             if i==0:
-                fields += dim
+                fields += dim+[nsm]
             else:
-                fields += [xxb,so]+dim
+                fields += [xxb,so]+dim+[nsm]
             ###
         ###
-        print self.printCard(fields)
-        
-        raise Exception('verify PBEAML...')
+        #print self.printCard(fields)
+        #raise Exception('verify PBEAML...')
         return self.printCard(fields)
 
 class PBEAM3(LineProperty): # not done, cleanup

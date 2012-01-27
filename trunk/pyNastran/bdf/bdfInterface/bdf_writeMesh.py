@@ -307,8 +307,15 @@ class writeMesh(object):
         if self.constraints:
             msg += '$CONSTRAINTS\n'
         
-        msg += str(self.spcObject2)
-        msg += str(self.mpcObject2)
+        strSPC = str(self.spcObject2)
+        if strSPC:
+            msg += '$SPCs\n'
+            msg += strSPC
+        
+        strMPC = str(self.mpcObject2)
+        if strMPC:
+            msg += '$MPCs\n'
+            msg += strMPC
         return msg
 
         for key,loadcase in sorted(self.constraints.items()):

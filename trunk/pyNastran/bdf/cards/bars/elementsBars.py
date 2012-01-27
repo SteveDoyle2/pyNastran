@@ -831,7 +831,7 @@ class CBEAM(CBAR):
         w3b = self.setBlankIfDefault(self.w3b,0.0)
         (x1,x2,x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
-        ga,gb = self.nodeIDs([self.ga,self.gb])
+        ga,gb = self.nodeIDs()
         fields = ['CBEAM',self.eid,self.Pid(),ga,gb,x1,x2,x3,offt,
                   self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b,
                   self.sa,self.sb]
