@@ -393,14 +393,13 @@ class addMethods(object):
             self.loads[key] = [load]
 
     def addConstraint_MPCADD(self,constraint):
-        self.mpcObject.add(constraint)
-
+        #self.mpcObject.add(constraint)
         if constraint.conid in self.mpcadds:
             raise Exception('must have unique MPCADD IDs')
         self.mpcadds[constraint.conid] = constraint
 
     def addConstraint_MPC(self,constraint):
-        self.mpcObject.append(constraint)
+        #self.mpcObject.append(constraint)
         if constraint.conid in self.mpcs:
             self.mpcs[constraint.conid].append(constraint)
         else:
@@ -408,14 +407,13 @@ class addMethods(object):
         
 
     def addConstraint_SPCADD(self,constraint):
-        self.spcObject.add(constraint)
+        #self.spcObject.add(constraint)
         if constraint.conid in self.spcadds:
             raise Exception('must have unique SPCADD IDs')
         self.spcadds[constraint.conid] = constraint
 
     def addConstraint_SPC(self,constraint):
-        self.spcObject.append(constraint)
-
+        #self.spcObject.append(constraint)
         if constraint.conid in self.spcs:
             self.spcs[constraint.conid].append(constraint)
         else:
@@ -431,10 +429,9 @@ class addMethods(object):
         key = constraint.conid
 
         if constraint.conid in self.spcs:
-            self.spcs[constraint.conid].append(constraint)
+            self.spcs[key].append(constraint)
         else:
-            self.spcs[constraint.conid] = [constraint]
-        #key = constraint.conid
+            self.spcs[key] = [constraint]
 
         assert key>0
         if self.constraints.has_key(key):

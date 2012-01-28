@@ -410,11 +410,11 @@ class PROD(LineProperty):
     def I12(self):
         return 0.
 
-    def __repr__(self):
+    def reprFields(self):
         c   = self.setBlankIfDefault(self.c,0.0)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
         fields = ['PROD',self.pid,self.Mid(),self.A,self.j,c,nsm]
-        return self.printCard(fields)
+        return fields
 
 class PTUBE(LineProperty):
     type = 'PTUBE'
@@ -439,12 +439,12 @@ class PTUBE(LineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def __repr__(self):
+    def reprFields(self):
         t   = self.setBlankIfDefault(self.t,self.OD1/2.)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
         OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
         fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
-        return self.printCard(fields)
+        return fields
     
     def Area(self):
         A = (self.area1()+self.area2())/2.
@@ -577,7 +577,15 @@ class PBAR(LineProperty):
     #def Iyz(self):
     #    return self.i12
 
-    def __repr__(self):
+    def rawFields(self):
+        line1 = ['PBAR',self.pid,self.Mid(),self.A,self.i1,self.i2,self.j,self.nsm,None]
+        line2 = [self.C1,self.C2,self.D1,self.D2,self.E1,self.E2,self.F1,self.F2]
+        line3 = [self.K1,self.K2,self.i12]
+        fields = line1+line2+line3
+
+        return fields
+
+    def reprFields(self):
         A   = self.setBlankIfDefault(self.A,0.0)
         i1  = self.setBlankIfDefault(self.i1,0.0)
         i2  = self.setBlankIfDefault(self.i2,0.0)
@@ -611,7 +619,7 @@ class PBAR(LineProperty):
             line2 = [C1,C2,D1,D2,E1,E2,F1,self.F2]
         fields = line1+line2+line3
 
-        return self.printCard(fields)
+        return fields
 
 class PBARL(LineProperty):
     """
@@ -706,11 +714,11 @@ class PBARL(LineProperty):
     def I22(self):
         return None
 
-    def __repr__(self):
+    def reprFields(self):
         group = self.setBlankIfDefault(self.group,'MSCBMLO')
         fields = ['PBARL',self.pid,self.Mid(),group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
-        return self.printCard(fields)
+        return fields
 
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
@@ -846,7 +854,7 @@ class PBEAM(IntegratedLineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def __repr__(self):
+    def reprFields(self):
         fields = ['PBEAM',self.pid,self.Mid()]
         #print "fieldsA = ",fields
         
@@ -912,7 +920,7 @@ class PBEAM(IntegratedLineProperty):
         #    footer = []
         fields+=footer
         #print fields
-        return self.printCard(fields)
+        return fields
         
 class PBEAML(IntegratedLineProperty):
     type = 'PBEAML'
@@ -1056,7 +1064,7 @@ class PBEAML(IntegratedLineProperty):
         i12 = None
         return i12
 
-    def __repr__(self):
+    def reprFields(self):
         fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]
         #print "self.nsm = ",self.nsm
         for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
@@ -1068,7 +1076,7 @@ class PBEAML(IntegratedLineProperty):
         ###
         #print self.printCard(fields)
         #raise Exception('verify PBEAML...')
-        return self.printCard(fields)
+        return fields
 
 class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'
@@ -1109,7 +1117,7 @@ class PBEAM3(LineProperty): # not done, cleanup
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def __repr__(self):
+    def reprFields(self):
         raise Exception('not done...')
         fields = ['PBEAM3',self.pid,self.Mid(),] # other
-        return self.printCard(fields)
+        return fields

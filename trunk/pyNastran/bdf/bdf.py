@@ -134,7 +134,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         
         # direct matrix input cards
         #'DMIG',
-        'DEQATN',
+        #'DEQATN',
         
         # optimization cards
         'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
@@ -307,9 +307,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.suports = [] # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
-        self.spcObject = constraintObject()
+        self.spcObject2 = constraintObject2()
         ## stores MPCADD,MPC
-        self.mpcObject = constraintObject()
+        self.mpcObject2 = constraintObject2()
         
         self.spcs = {}
         self.spcadds = {}

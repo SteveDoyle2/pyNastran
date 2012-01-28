@@ -33,6 +33,10 @@ class cardMethods(object):
         #debug = True
         
         linesPack = self.makeLinesPack(debug=debug)
+        if linesPack == []:
+            self.closeFile()
+            linesPack = self.makeLinesPack(debug=debug)
+        
         tempcard = [linesPack[0]]
         #if 'CQUAD4' in tempcard[0]:
         #    debug = True
@@ -205,7 +209,11 @@ class cardMethods(object):
                 self.log.debug("  line2 = |%r|" %(sline))
 
             if ',' in sline:  #CSV - doesnt support large field CSV cards which I'd never used...
-                sline = self.parseCSV(sline)
+                try:
+                    sline = self.parseCSV(sline)
+                except:
+                    print "cant parse sline=%s" %(sline)
+                    raise
                 #print "sline  = ",sline
                 #self.log.debug("sline = %s" %(sline))
             else: # standard
@@ -242,7 +250,7 @@ class cardMethods(object):
         
     def parseCSV(self,sline):
         #if 1:
-        slineA = sline.split(',')
+        slineA = sline.split(',')[:9]
         sline2 = ['']*9
         for i,s in enumerate(slineA):
             #print i,s

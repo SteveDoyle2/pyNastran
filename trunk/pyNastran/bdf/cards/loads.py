@@ -594,6 +594,7 @@ class PLOAD4(Load):
 
             ## Coordinate system identification number. See Remark 2. (Integer >= 0;Default=0)
             self.cid     = card.field(9,0)
+            #print "PLOAD4 cid = ",self.cid
             self.NVector = card.fields(10,13,[0.,0.,0.])
             self.sorl    = card.field(13,'SURF')
         else:
@@ -631,10 +632,10 @@ class PLOAD4(Load):
     def __repr__(self):
         cid  = self.setBlankIfDefault(self.Cid(),0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
-        p2 = self.setBlankIfDefault(self.p[1],self.p[0])
-        p3 = self.setBlankIfDefault(self.p[2],self.p[0])
-        p4 = self.setBlankIfDefault(self.p[3],self.p[0])
-        fields = ['PLOAD4',self.lid,self.p[0],p2,p3,p4]
+        p2   = self.setBlankIfDefault(self.p[1],self.p[0])
+        p3   = self.setBlankIfDefault(self.p[2],self.p[0])
+        p4   = self.setBlankIfDefault(self.p[3],self.p[0])
+        fields = ['PLOAD4',self.lid,self.eid,self.p[0],p2,p3,p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
         if self.g3 is not None:
@@ -643,7 +644,13 @@ class PLOAD4(Load):
             fields.append(g4)
         else:
             fields.append('THRU')
-            eid = self.eids[-1]
+            try:
+                eid = self.eids[-1]
+            except:
+                print "g3 = ",self.g3
+                print "g4 = ",self.g4
+                print "self.eids = ",self.eids
+                raise
             fields.append(self.getElementIDs([eid]) )
         fields.append(cid)
         fields += list(self.NVector)

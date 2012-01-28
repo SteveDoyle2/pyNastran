@@ -219,7 +219,11 @@ class writeMesh(object):
         if self.elements:
             msg += '$ELEMENTS\n'
             for eid,element in sorted(self.elements.items()):
-                msg += str(element)
+                try:
+                    msg += str(element)
+                except:
+                    raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                ###
         return msg
 
     def writeRigidElements(self):
@@ -228,7 +232,11 @@ class writeMesh(object):
         if self.rigidElements:
             msg += '$RIGID ELEMENTS\n'
             for eid,element in sorted(self.rigidElements.items()):
-                msg += str(element)
+                try:
+                    msg += str(element)
+                except:
+                    raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                ###
         return msg
 
     def writeProperties(self):
@@ -257,7 +265,11 @@ class writeMesh(object):
                 for eid in eids:
                     element = self.Element(eid)
                     #print "e.type = ",element.type
-                    msg += str(element)
+                    try:
+                        msg += str(element)
+                    except:
+                        raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    ###
                 ###
                 eidsWritten+=eids
             else:
@@ -304,33 +316,42 @@ class writeMesh(object):
         """writes the constraint cards sorted by ID"""
         msg = ''
         #msg += '$ where are my constraints...\n'
-        if self.constraints:
+        if self.constraints or self.suports:
             msg += '$CONSTRAINTS\n'
-        
-        strSPC = str(self.spcObject2)
-        if strSPC:
+            for key,loadcase in sorted(self.constraints.items()):
+                for constraint in loadcase:
+                    msg += str(constraint)
+            for suport in self.suports:
+                msg += str(suport)
+            ###
+        ###
+        if self.spcs or self.spcadds:
             msg += '$SPCs\n'
-            msg += strSPC
+            strSPC = str(self.spcObject2)
+            if strSPC:
+                msg += strSPC
+            else:
+                for spcadd in self.spcadds:
+                    msg += str(spcadd)
+                for spc in self.spcs:
+                    msg += str(spc)
+                ###
+            ###
+        ###
         
-        strMPC = str(self.mpcObject2)
-        if strMPC:
+        if self.mpcs or self.mpcadds:
             msg += '$MPCs\n'
-            msg += strMPC
-        return msg
-
-        for key,loadcase in sorted(self.constraints.items()):
-            for constraint in loadcase:
-                msg += str(constraint)
-        for suport in self.suports:
-            msg += str(suport)
-
-        if self.spcObject:
-            msg += '$SPCs\n'
-            msg += str(self.spcObject)
-
-        if self.mpcObject:
-            msg += '$MPCs\n'
-            msg += str(self.mpcObject)
+            strMPC = str(self.mpcObject2)
+            if strMPC:
+                msg += strMPC
+            else:
+                for mpcadd in self.mpcadds:
+                    msg += str(mpcadd)
+                for mpc in self.mpcs:
+                    msg += str(mpc)
+                ###
+            ###
+        ###
         return msg
 
     def writeLoads(self):
@@ -340,7 +361,11 @@ class writeMesh(object):
             msg += '$LOADS\n'
             for key,loadcase in sorted(self.loads.items()):
                 for load in loadcase:
-                    msg += str(load)
+                    try:
+                        msg += str(load)
+                    except:
+                        raise Exception('failed printing element...type=%s key=%s' %(loadcase.type,key))
+                    ###
             for ID,grav in sorted(self.gravs.items()):
                 msg += str(grav)
             ###

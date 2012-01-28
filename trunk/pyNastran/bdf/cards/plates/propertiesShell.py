@@ -564,7 +564,7 @@ class PSHEAR(ShellProperty):
 
     def rawFields(self):
         fields = ['PSHEAR',self.pid,self.Mid(),self.t,self.nsm,self.f1,self.f2]
-        return self.printCard(fields)
+        return fields
 
 class PSHELL(ShellProperty):
     """
@@ -575,8 +575,8 @@ class PSHELL(ShellProperty):
     def __init__(self,card=None,data=None):
         ShellProperty.__init__(self,card,data)
         if card:
-            self.pid  = card.field(1)
-            self.mid  = card.field(2)
+            self.pid  = int(card.field(1))
+            self.mid  = int(card.field(2))
             self.t    = card.field(3)
 
             ## Material identification number for bending
