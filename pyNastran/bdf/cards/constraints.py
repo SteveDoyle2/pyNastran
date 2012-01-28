@@ -278,9 +278,9 @@ class Constraint(BaseCard):
     def __init__(self,card,data):
         pass
     
-    def __repr__(self):
+    def rawFields(self):
         fields = [self.type,self.conid]
-        return self.printCard(fields)
+        return fields
 
 class SUPORT1(Constraint):
     """
@@ -304,11 +304,11 @@ class SUPORT1(Constraint):
             ###
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['SUPORT1',self.conid]
         for ID,c in zip(self.IDs,self.Cs):
             fields += [ID,c]
-        return self.printCard(fields)
+        return fields
 
 class SUPORT(Constraint):
     """
@@ -332,11 +332,11 @@ class SUPORT(Constraint):
             ###
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['SUPORT']
         for ID,c in zip(self.IDs,self.Cs):
             fields += [ID,c]
-        return self.printCard(fields)
+        return fields
 
 class MPC(Constraint):
     type = 'MPC'
@@ -384,7 +384,7 @@ class MPC(Constraint):
         #self.constraints = self.constraints[0:nConstraints]
         #self.enforced    = self.enforced[   0:nConstraints]
 
-    def __repr__(self): # MPC
+    def rawFields(self): # MPC
         fields = ['MPC',self.conid]
         for i,(gid,constraint,enforced) in enumerate(zip(self.gids,self.constraints,self.enforced)):
             #print [gid,constraint,enforced]
@@ -392,7 +392,7 @@ class MPC(Constraint):
             if i%2==1 and i>0:
                 fields.append(None)
                 fields.append(None)
-        return self.printCard(fields)
+        return fields
     
 class SPC(Constraint):
     """
@@ -435,11 +435,11 @@ class SPC(Constraint):
         #    ###
         return dofCount
 
-    def __repr__(self): # SPC
+    def rawFields(self): # SPC
         fields = ['SPC',self.conid]
         for (gid,constraint,enforced) in zip(self.gids,self.constraints,self.enforced):
             fields += [gid,constraint,enforced]
-        return self.printCard(fields)
+        return fields
 
 class SPCD(SPC):
     """
@@ -452,11 +452,11 @@ class SPCD(SPC):
     def __init__(self,card=None,data=None):
         SPC.__init__(self,card,data)  # defines everything :) at least until cross-referencing methods are implemented
 
-    def __repr__(self): # SPC
+    def rawFields(self): # SPC
         fields = ['SPCD',self.conid]
         for (gid,constraint,enforced) in zip(self.gids,self.constraints,self.enforced):
             fields += [gid,constraint,enforced]
-        return self.printCard(fields)
+        return fields
 
 class SPCAX(Constraint):
     """
@@ -484,9 +484,9 @@ class SPCAX(Constraint):
     def crossReference(self,i,node):
         pass
 
-    def __repr__(self): # SPCAX
+    def rawFields(self): # SPCAX
         fields = ['SPCAX',self.conid,self.rid,self.hid,self.c,self.d]
-        return self.printCard(fields)
+        return fields
 
 class SPC1(Constraint):
     """
@@ -513,7 +513,7 @@ class SPC1(Constraint):
     def crossReference(self,i,node):
         self.nodes[i] = node
 
-    def __repr__(self): # SPC1
+    def rawFields(self): # SPC1
         #test = [i for i in range(self.nodes[0],self.nodes[-1]+1)]
         #print "self.nodes = ",self.nodes
         #print "test       = ",test
@@ -523,7 +523,7 @@ class SPC1(Constraint):
         #print "SPC1 self.nodes = ",self.nodes
         nodes = [int(i) for i in self.nodes] # SPC1
         fields = ['SPC1',self.conid,self.constraints]+nodes
-        return self.printCard(fields)
+        return fields
 
 #class ADDConstraint(Constraint):
 #    def __init__(self,card,data):
@@ -580,12 +580,12 @@ class SPCADD(ConstraintADD):
         self.sets.sort()
         self.sets[i] = node
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['SPCADD',self.conid] #+self.sets
         for setID in self.sets:
             #print "setID = ",setID
             fields.append(setID)
-        return self.printCard(fields)
+        return fields
         #return self._reprSpcMpcAdd(fields)
 
 class MPCADD(ConstraintADD):
@@ -607,11 +607,11 @@ class MPCADD(ConstraintADD):
         self.sets.sort()
         self.sets[i] = node
 
-    def __repr__(self):
+    def rawFields(self):
         #outSPCs = ''
         fields = ['MPCADD',self.conid] #+self.sets
         for setID in self.sets:
             fields.append(setID)
-        return self.printCard(fields)
+        return fields
         #return self._reprSpcMpcAdd(fields)
 

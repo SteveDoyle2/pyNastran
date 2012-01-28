@@ -180,26 +180,6 @@ class CDAMP5(DamperElement):
         fields = ['CDAMP5',self.eid,self.Pid(),nodes[0],nodes[1]]
         return fields
 
-class CSHEAR(Element):
-    type = 'CSHEAR'
-    def __init__(self,card=None,data=None):
-        Element.__init__(self,card,data)
-        if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3,7)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:]
-        ###
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==4
-
-    def rawFields(self):
-        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
-        return self.printCard(fields)
-
 class CGAP(Element):
     type = 'CGAP'
     def __init__(self,card=None,data=None):
@@ -256,7 +236,7 @@ class CGAP(Element):
         else:
             x = self.x
         fields = ['CGAP',self.eid,self.Pid(),self.ga,self.gb]+x+[self.Cid()]
-        return self.printCard(fields)
+        return fields
 
 class CRAC2D(Element):
     type = 'CRAC2D'
@@ -350,7 +330,7 @@ class CMASS1(PointElement):
 
     def rawFields(self):
         fields = ['CMASS1',self.eid,self.Pid(),self.g1,self.c1,self.g2,self.c2]
-        return self.printCard(fields)
+        return fields
 
 class CMASS2(PointElement):
     """

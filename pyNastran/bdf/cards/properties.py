@@ -107,7 +107,7 @@ class PDAMP5(DamperProperty):
 
     def rawFields(self):
         fields = ['PDAMP5',self.pid,self.Mid(),self.b]
-        return self.printCard(fields)
+        return fields
 
 class PGAP(Property):
     type = 'PGAP'
@@ -165,7 +165,7 @@ class PGAP(Property):
         mu2   = self.setBlankIfDefault(self.mu2,self.mu1)
         tmax  = self.setBlankIfDefault(self.tmax,0.)
         mar   = self.setBlankIfDefault(self.mar,100.)
-        trmin = self.setBlankIfDefault(self.mrmin,0.001)
+        trmin = self.setBlankIfDefault(self.trmin,0.001)
         
         fields = ['PGAP',self.pid,u0,f0,ka,kb,kt,mu1,mu2,
                          tmax,mar,trmin]
@@ -212,7 +212,7 @@ class PLSOLID(SolidProperty):
     def rawFields(self):
         stressStrain = self.setBlankIfDefault(self.str,'GRID')
         fields = ['PLSOLID',self.pid,self.Mid(),stressStrain]
-        return self.printCard(fields)
+        return fields
 
 class PSOLID(SolidProperty):
     """

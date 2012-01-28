@@ -134,6 +134,9 @@ class TABLED2(Table):
         fields = ['TABLED2',self.tid,self.x1,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
+    def reprFields(self):
+        return self.rawFields()
+
 class TABLED3(Table):
     type = 'TABLED3'
     def __init__(self,card=None,data=None):
@@ -152,9 +155,12 @@ class TABLED3(Table):
             isData = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLED3',self.tid,self.x1,self.x2,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class TABLEM1(Table):
     type = 'TABLEM1'
@@ -190,9 +196,13 @@ class TABLEM2(Table):
             isData = True
         self.parseFields(fields,nRepeated=2)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLEM2',self.tid,self.x1,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
+    
+    def reprFields(self):
+        return self.rawFields()
+
 
 class TABLEM3(Table):
     type = 'TABLEM3'
@@ -216,6 +226,9 @@ class TABLEM3(Table):
         fields = ['TABLEM3',self.tid,self.x1,self.x2,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
+    def reprFields(self):
+        return self.rawFields()
+
 class TABLEM4(Table):
     type = 'TABLEM4'
     def __init__(self,card=None,data=None):
@@ -238,9 +251,12 @@ class TABLEM4(Table):
             isData = True
         self.parseFields(fields,nRepeated=1,isData=isData)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['TABLEM4',self.tid,self.x1,self.x2,self.x3,self.x4,None,None,None]+self.table.fields()+['ENDT']
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class TABLES1(Table):
     type = 'TABLES1'
@@ -260,6 +276,9 @@ class TABLES1(Table):
         fields = ['TABLES1',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
+    def reprFields(self):
+        return self.rawFields()
+
 class TABLEST(Table):
     type = 'TABLEST'
     def __init__(self,card=None,data=None):
@@ -277,6 +296,9 @@ class TABLEST(Table):
     def rawFields(self):
         fields = ['TABLEST',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class TABRND1(Table):
     type = 'TABRND1'

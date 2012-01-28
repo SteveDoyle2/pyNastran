@@ -90,7 +90,7 @@ class CTRIA3(ShellElement):
 
     def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
-        fields = ['CTRIA3',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None]+[
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None]+[
         None,TFlag,T1,T2,T3]
         return fields
 
@@ -192,7 +192,7 @@ class CTRIAR(CTRIA3):
 
         nids = card.fields(3,6)
         self.prepareNodeIDs(nids)
-        assert len(self.nodes)==4
+        assert len(self.nodes)==3
 
         self.thetaMcid = card.field(6,0.0)
         self.zOffset   = card.field(7,0.0)
@@ -256,6 +256,92 @@ class CTRIAX6(CTRIA3):
         fields = ['CTRIAX6',self.eid,self.Pid()]+self.nodeIDs()+[
                   th]
         return fields
+
+class CSHEAR(ShellElement):
+    type = 'CSHEAR'
+    def __init__(self,card=None,data=None):
+        Element.__init__(self,card,data)
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            nids = card.fields(3,7)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:]
+        ###
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==4
+
+    def Normal(self):
+        (n1,n2,n3,n4) = self.nodePositions()
+        a = n1-n3
+        b = n2-n4
+        return Normal(a,b)
+
+    def AreaCentroidNormal(self):
+        (n1,n2,n3,n4) = self.nodePositions()
+        (area,centroid) = self.AreaCentroid(nodes)
+        normal = self.Normal(nodes)
+        return (area,centroid,normal)
+
+    def AreaCentroid(self,debug=False):
+        """
+        1-----2
+        |    /|
+        | A1/ |
+        |  /  |
+        |/ A2 |
+        4-----3
+        
+        centroid
+           c = sum(ci*Ai)/sum(A)
+           where:
+             c=centroid
+             A=area
+        """
+        #if debug:
+        #    print "nodes = ",self.nodes
+        (n1,n2,n3,n4) = self.nodePositions()
+        a = n1-n2
+        b = n2-n4
+        area1 = Area(a,b)
+        c1 = self.CentroidTriangle(n1,n2,n4)
+
+        a = n2-n4
+        b = n2-n3
+        area2 = Area(a,b)
+        c2 = self.CentroidTriangle(n2,n3,n4)
+        
+        area = area1+area2
+        centroid = (c1*area1+c2*area2)/area
+        if debug:
+            print "c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2)
+            print "type(centroid=%s centroid=%s \n" %(type(centroid),centroid)
+        return(area,centroid)
+    ###
+
+    def Centroid(self,debug=False):
+        nodes = self.nodePositions()
+        (area,centroid) = self.AreaCentroid(debug)
+        return centroid
+
+    def Area(self):
+        """
+        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        where a and b are the quad's cross node point vectors
+        """
+        (n1,n2,n3,n4) = self.nodePositions()
+        a = n1-n3
+        b = n2-n4
+        area = Area(a,b)
+        return area
+    ###
+
+    def rawFields(self):
+        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
+        return fields
+
 
 class CQUAD4(ShellElement):
     type = 'CQUAD4'
@@ -341,7 +427,7 @@ class CQUAD4(ShellElement):
         return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
 
     def rawFields(self):
-        fields = ['CQUAD4',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
         return fields
 
     def reprFields(self):
@@ -452,6 +538,9 @@ class CQUADR(CQUAD4):
                   self.TFlag]
         return fields
 
+    #def reprFields(self):
+        #return self.rawFields()
+
 class CQUAD(CQUAD4):
     type = 'CQUAD'
     def __init__(self,card=None,data=None):
@@ -479,13 +568,13 @@ class CQUAD(CQUAD4):
     def rawFields(self):
         fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,
                   None,self.TFlag,self.T1,self.T2,self.T3,self.T4]
-        return self.printCard(fields)
+        return fields
 
     def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
         fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
                   None,TFlag,T1,T2,T3,T4]
-        return self.printCard(fields)
+        return fields
 
 class CQUAD8(CQUAD4):
     type = 'CQUAD8'

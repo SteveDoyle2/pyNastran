@@ -227,6 +227,8 @@ def getElementStats(fem1,fem2):
                 I12 = e.I12()
                 J   = e.J()
                 c   = e.Centroid()
+                if J is None:
+                    print "Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid)
             elif isinstance(e,RigidElement):
                 pass
             elif isinstance(e,DamperElement):
@@ -238,7 +240,7 @@ def getElementStats(fem1,fem2):
                 m = e.Mass()
                 c = e.Centroid()
             else:
-                print "statistics skipped - e.type = ",e.type
+                print "statistics not available - e.type=%s e.eid=%s" %(e.type,e.eid)
                 #try:
                 #    print "e.type = ",e.type
                 #except:
