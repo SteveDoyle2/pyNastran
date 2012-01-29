@@ -1,0 +1,37 @@
+This directory contains source code for matlab mex functions that can read 
+and write Nastran op4 files.  The first implementations of loadop4() and 
+saveop4() were written by Kevin Nguyen several years ago
+(ftp://ftp.mathworks.com/pub/contrib/v4/tools/op4.tar).
+
+Kevin's matlab functions inspired me to write similar functions (words)
+for tops.  The tops loadop4/saveop4 code duplicates the original
+functionality and adds features I needed:  support for sparse matrices, 
+complex matrices, little/big endian transparency, and text matrices with 
+arbitrary DIGITS values.  I then added new mexFunction()'s to call the tops 
+op4 code from matlab.  The loadop4.c and saveop4.c files in this directory
+are extracts from the file admin/templates/op4_master.c.  See the Makefile
+in that directory for details.
+
+Installation
+------------
+To build the mex functions with matlab version 5:
+  mex loadop4.c
+  mex saveop4.c
+
+To build the mex functions with matlab versions 6 and 7:
+  mex loadop4.c
+  mex -V5 saveop4.c
+
+The -V5 switch is needed because with version 6 of matlab, The MathWorks 
+did away with the mxGetName() function (see
+http://www.mathworks.com/access/helpdesk/help/techdoc/apiref/mxgetname.shtml).
+The function returns a string containing the name of a matlab variable which
+means the name of the matlab variable could be saved inside the .op4 file.
+For example, if you saved matlab variables A and B to an .op4 file,
+the .op4 the header lines for the matrices would contain A and B for the 
+matrix names.  Thus Nastran would also know the matrices as A and B.  If
+mxGetName() were not used, the code would not know what the matrix names
+are and so would have to use dummy names like 'mat_01' and 'mat_02' in
+place of 'A' and 'B'.
+
+Albert Danial December 2002

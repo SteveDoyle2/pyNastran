@@ -1,0 +1,18 @@
+loadop4/saveop4
+Introduction
+
+Loadop4 and saveop4 are MATLAB mex functions that allow one to read matrices from any type of NASTRAN .op4 file into a MATLAB session and, conversely, write MATLAB matrices to .op4 files which NASTRAN can read. The mex functions are written in C and require an ANSI C compiler to build. Sorry, that excludes the Microsoft family of Visual C/C++ compilers. The following compilers are known to work: GCC (any version), Portland Group C compiler, Intel C compiler, Sun Workshop Pro C compiler.
+
+The .op4 reading and writing code was originally written for the tops computing environment. The MATLAB interface was an easy add-on to the tops code and was inspired by functions of the same name written by Kevin Nguyen in the mid 1990's.
+
+License
+The tops computing environment is available under terms of the GPL v2 license. As loadop4 and saveop4 mex code code are derived from tops, they are also licensed by the GPL v2 license.
+Download
+load_save_op4.tar.gz
+Build
+
+mex loadop4.c
+mex -V5 saveop4.c
+
+Author
+Al Danial 
