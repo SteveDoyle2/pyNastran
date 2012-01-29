@@ -858,6 +858,20 @@ class PBEAM(IntegratedLineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
+    def rawFields(self):
+        fields = ['PBEAM',self.pid,self.Mid()]
+
+        for (so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
+            self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.j,self.nsm,
+            self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
+                fields += [so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
+            ###
+        ###
+        footer = [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
+                  self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
+        fields+=footer
+        return fields
+
     def reprFields(self):
         fields = ['PBEAM',self.pid,self.Mid()]
         #print "fieldsA = ",fields
