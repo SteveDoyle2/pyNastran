@@ -97,7 +97,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def addF(self,out):
         (freq,gridType,v1,v2,v3,v4,v5,v6) = out
         msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],time,gridType,v1,v2,v3)
-        print msg
+        #print msg
         #assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'displacementObject - static failure'
         
@@ -112,7 +112,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         nodeID = (nodeID-self.deviceCode) // 10
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
-        print msg
+        #print msg
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
 
