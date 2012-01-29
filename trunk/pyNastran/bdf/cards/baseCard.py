@@ -118,7 +118,7 @@ class BaseCard(BDF_Card):
                 by = 1
                 if i+2<nFields and fields[i+2]=='BY':
                     by = fields[i+3]
-                    self.stderr.write("BY was found...untested...")
+                    sys.stderr.write("BY was found...untested...")
                 for j in range(fields[i-1],fields[i+1],by):
                     out.append(j)
                 ###

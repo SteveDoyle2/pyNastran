@@ -239,7 +239,6 @@ class PCONV(ThermalProperty):
     surface element used for heat transfer analysis.
     """
     type = 'PCONV'
-
     def __init__(self,card=None,data=None):
         ## Convection property identification number. (Integer > 0)
         self.pconid = card.field(1)
@@ -288,7 +287,6 @@ class PCONVM(ThermalProperty):
     surface element used for heat transfer analysis.
     """
     type = 'PCONVM'
-
     def __init__(self,card=None,data=None):
         ## Convection property identification number. (Integer > 0)
         self.pconid = card.field(1)
@@ -483,7 +481,7 @@ class QBDY1(ThermalLoad):
     def __repr__(self):
         eids = self.collapseThruBy(self.eids)
         fields = ['QBDY1',self.sid]+list(eids)+[self.qFlux]
-        print "FIELDS = ",fields
+        #print "FIELDS = ",fields
         return self.printCard(fields)
 
 class QBDY2(ThermalLoad): # not tested

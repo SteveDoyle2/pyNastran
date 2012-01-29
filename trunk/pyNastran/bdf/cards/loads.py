@@ -303,6 +303,9 @@ class FORCE1(Force):
         fields = ['FORCE1',self.lid,node,self.mag,g1,g2]
         return fields
 
+    def reprFields(self):
+        return self.rawFields()
+
 class FORCE2(Force):
     """
     Defines a static concentrated force at a grid point by specification of a magnitude and

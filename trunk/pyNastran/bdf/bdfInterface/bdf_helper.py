@@ -451,7 +451,7 @@ class addMethods(object):
         #else:
         #    self.constraints[key] = [constraint]
 
-    def addSUPORT(self,suport):
+    def addSuport(self,suport):
         self.suports.append(suport)
 
     def addDArea(self,darea,allowOverwrites=False):

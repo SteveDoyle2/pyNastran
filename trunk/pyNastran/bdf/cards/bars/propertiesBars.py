@@ -1082,7 +1082,7 @@ class PBEAML(IntegratedLineProperty):
         i12 = None
         return i12
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]
         #print "self.nsm = ",self.nsm
         for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
@@ -1095,6 +1095,9 @@ class PBEAML(IntegratedLineProperty):
         #print self.printCard(fields)
         #raise Exception('verify PBEAML...')
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'

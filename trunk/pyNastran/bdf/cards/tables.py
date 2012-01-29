@@ -124,10 +124,12 @@ class TABLED2(Table):
             self.tid = card.field(1)
             self.x1  = card.field(2)
             fields = card.fields(9)
+            isData = False
         else:
             self.tid = data[0]
             self.x1  = data[1]
             fields   = data[2:]
+            isData = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
     def rawFields(self):
