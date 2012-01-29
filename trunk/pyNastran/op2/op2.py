@@ -222,7 +222,7 @@ class OP2(BDF,  # BDF methods
         results = [
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
-                   #self.displacements,self.temperatures,
+                   self.displacements,self.temperatures,
                    self.eigenvectors,
                    self.velocities,
                    self.accelerations,

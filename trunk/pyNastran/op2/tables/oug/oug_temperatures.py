@@ -11,6 +11,8 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         
         #print "dt = ",self.dt
         if dt is not None:
+        #if 0:
+            #raise Exception('potential test of temperature bug...')
             self.addNewTransient()
             #assert dt>=0.
             self.isTransient = True
@@ -24,15 +26,16 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     def parseLength(self):
         self.mainHeaders = []
         self.strFormat = ''
-        if self.analysisCode==6:
+        print "analysisCode = %s" %(self.analysisCode)
+        if 0: #self.analysisCode==6:  # disabled
             self.mainHeaders.append('Freq')
             self.strFormat += 'fi'
             self.add = self.addF
-        elif self.analysisCode in[5,10]:
+        elif self.analysisCode in[5]:
             self.mainHeaders.append('Time')
             self.strFormat += 'fi'
             self.add = self.addF
-        elif self.analysisCode in [1,2,3,4,7,8,9,11,12]:
+        elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
             self.mainHeaders.append('NodeID')
             self.strFormat += 'ii'
         else:

@@ -43,12 +43,19 @@ class scalarObject(Op2Codes):
         #print "append..."
         hasList = self.startDataMember(varName,valueName)
         if hasList:
-            #print "has %s" %(varName)
             listA = self.getVar(varName)
-            value = self.getVar(valueName)
-            n = len(listA)
-            listA.append(value)
-            assert len(listA)==n+1
+            if listA is not None:
+                print "has %s" %(varName)
+                value = self.getVar(valueName)
+                try:
+                    n = len(listA)
+                except:
+                    print "listA = ",listA
+                    raise
+                listA.append(value)
+                assert len(listA)==n+1
+            ###
+        ###
             
     def printDataMember(word,selfVarName):
         msg = ''
