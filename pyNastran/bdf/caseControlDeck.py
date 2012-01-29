@@ -11,6 +11,7 @@ class CaseControlDeck(object):
         @param log   a logger object
         """
         if log is None:
+        #if 1:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
             log = loggerObj.startLog('debug') # or info
@@ -300,7 +301,7 @@ class CaseControlDeck(object):
         ### = in line
         elif lineUpper.startswith('BEGIN'): # begin bulk
             try:
-                (key,value) = line.split(' ')
+                (key,value) = lineUpper.split(' ')
             except:
                 msg = 'excepted "BEGIN BULK" found=|%r|' %(line)
                 raise RuntimeError(msg)

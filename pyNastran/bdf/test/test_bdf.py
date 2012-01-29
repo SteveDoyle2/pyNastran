@@ -77,7 +77,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
         #fem1.sumForces()
         #fem1.sumMoments()
         outModel = bdfModel+'_out'
-        if cid is not None:
+        if cid is not None and xref:
             fem1.resolveGrids(cid=cid)
         fem1.writeBDFAsPatran(outModel)
         #fem1.writeAsCTRIA3(outModel)
