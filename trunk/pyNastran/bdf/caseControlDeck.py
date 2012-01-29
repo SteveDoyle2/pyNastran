@@ -221,8 +221,9 @@ class CaseControlDeck(object):
         for letter in line:
             if letter=='=':
                 equalsCount +=1
-        
-        if line.startswith('SUBCASE'):
+        lineUpper = line.upper()
+
+        if lineUpper.startswith('SUBCASE'):
             #print "line = |%r|" %(line)
             line2 = line.replace('=','')
             sline = line2.split()
@@ -233,7 +234,7 @@ class CaseControlDeck(object):
             value = int(iSubcase)
             #self.iSubcase = int(iSubcase)
             paramType = 'SUBCASE-type'
-        elif line.startswith('LABEL') or line.startswith('SUBTITLE') or line.startswith('TITLE'):
+        elif lineUpper.startswith('LABEL') or lineUpper.startswith('SUBTITLE') or lineUpper.startswith('TITLE'):
             eIndex = line.index('=')
             key   = line[0:eIndex].strip()
             value = line[eIndex+1:].strip()
@@ -297,14 +298,14 @@ class CaseControlDeck(object):
                 pass
             ###
         ### = in line
-        elif line.startswith('BEGIN'): # begin bulk
+        elif lineUpper.startswith('BEGIN'): # begin bulk
             try:
                 (key,value) = line.split(' ')
             except:
                 msg = 'excepted "BEGIN BULK" found=|%r|' %(line)
                 raise RuntimeError(msg)
             paramType = 'BEGIN_BULK-type'
-        elif 'PARAM' in line: # param
+        elif 'PARAM' in lineUpper: # param
             sline = line.split(',')
             if len(sline) != 3:
                 raise ParamParseError("trying to parse |%s|..." %(line))

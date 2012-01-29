@@ -410,6 +410,10 @@ class PROD(LineProperty):
     def I12(self):
         return 0.
 
+    def rawFields(self):
+        fields = ['PROD',self.pid,self.Mid(),self.A,self.j,self.c,self.nsm]
+        return fields
+        
     def reprFields(self):
         c   = self.setBlankIfDefault(self.c,0.0)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
