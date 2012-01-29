@@ -331,10 +331,12 @@ class writeMesh(object):
             if strSPC:
                 msg += strSPC
             else:
-                for spcadd in self.spcadds:
+                for spcID, spcadd in sorted(self.spcadds.items()):
                     msg += str(spcadd)
-                for spc in self.spcs:
-                    msg += str(spc)
+                for spcID, spcs in sorted(self.spcs.items()):
+                    for spc in spcs:
+                        msg += str(spc)
+                    ###
                 ###
             ###
         ###
@@ -345,10 +347,12 @@ class writeMesh(object):
             if strMPC:
                 msg += strMPC
             else:
-                for mpcadd in self.mpcadds:
+                for mpcID,mpcadd in sorted(self.mpcadds.items()):
                     msg += str(mpcadd)
-                for mpc in self.mpcs:
-                    msg += str(mpc)
+                for mpcID,mpcs in sorted(self.mpcs.items()):
+                    for mpc in mpcs:
+                        msg += str(mpc)
+                    ###
                 ###
             ###
         ###
