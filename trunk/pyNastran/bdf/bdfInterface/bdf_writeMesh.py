@@ -259,6 +259,7 @@ class writeMesh(object):
         for pid,prop in sorted(self.properties.items()):
             #print "pid = ",pid
             eids = self.getElementIDsWithPID(pid)
+            eids.sort()
             #print "   eids = ",eids
             if eids:
                 msg += str(prop)
@@ -315,16 +316,6 @@ class writeMesh(object):
     def writeConstraints(self):
         """writes the constraint cards sorted by ID"""
         msg = ''
-        #msg += '$ where are my constraints...\n'
-        if self.constraints or self.suports:
-            msg += '$CONSTRAINTS\n'
-            for key,loadcase in sorted(self.constraints.items()):
-                for constraint in loadcase:
-                    msg += str(constraint)
-            for suport in self.suports:
-                msg += str(suport)
-            ###
-        ###
         if self.spcs or self.spcadds:
             msg += '$SPCs\n'
             strSPC = str(self.spcObject2)
@@ -357,6 +348,16 @@ class writeMesh(object):
             ###
         ###
         return msg
+        #msg += '$ where are my constraints...\n'
+        if self.constraints or self.suports:
+            msg += '$CONSTRAINTS\n'
+            for key,loadcase in sorted(self.constraints.items()):
+                for constraint in loadcase:
+                    msg += str(constraint)
+            for suport in self.suports:
+                msg += str(suport)
+            ###
+        ###
 
     def writeLoads(self):
         """writes the load cards sorted by ID"""

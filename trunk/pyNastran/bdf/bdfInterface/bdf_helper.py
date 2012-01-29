@@ -244,11 +244,23 @@ class addMethods(object):
             self.params[key] = param
         ###
 
-    def addNode(self,node):
+    def addNode(self,node,allowOverwrites=False):
         #print node
         #assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[node.nid],node)  ## @todo enable before release...
-        assert node.nid>0,'nid=%s node=\n%s' %(node.nid,node)
-        self.nodes[node.nid] = node
+        #assert node.nid>0,'nid=%s node=\n%s' %(node.nid,node)
+        #self.nodes[key] = node
+
+        key = node.nid
+        if key in self.nodes and allowOverwrites==False:
+            if not node.isSameCard(self.nodes[key]):
+                print 'nid=%s\noldNode=\n%snewNode=\n%s' %(key,self.nodes[key],node)
+                assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[key],node)
+            else:                
+                print 'Node was duplicated...nid=%s\nnode=\n%s' %(key,node)
+        else:
+            assert key>0,'nid=%s node=%s' %(key,node)
+            self.nodes[key] = node
+        ###
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
@@ -433,11 +445,11 @@ class addMethods(object):
         else:
             self.spcs[key] = [constraint]
 
-        assert key>0
-        if self.constraints.has_key(key):
-            self.constraints[key].append(constraint)
-        else:
-            self.constraints[key] = [constraint]
+        #assert key>0
+        #if self.constraints.has_key(key):
+        #    self.constraints[key].append(constraint)
+        #else:
+        #    self.constraints[key] = [constraint]
 
     def addSUPORT(self,suport):
         self.suports.append(suport)

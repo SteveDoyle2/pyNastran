@@ -303,8 +303,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # constraints
         ## stores SUPORT1s
-        self.constraints = {} # suport1, anything else???
-        self.suports = [] # suport, suport1
+        #self.constraints = {} # suport1, anything else???
+        #self.suports = [] # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject2 = constraintObject2()
@@ -1261,7 +1261,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addConstraint_SPCADD(constraint)
             elif cardName=='SUPORT':  # pseudo-constraint
                 suport = SUPORT(cardObj)
-                self.addSUPORT(suport)
+                self.addConstraint(suport)
             elif cardName=='SUPORT1': # pseudo-constraint
                 suport1 = SUPORT1(cardObj)
                 self.addConstraint(suport1)
