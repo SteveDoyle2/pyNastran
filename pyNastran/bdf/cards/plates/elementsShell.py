@@ -527,7 +527,41 @@ class CQUAD4(ShellElement):
 class CQUADR(CQUAD4):
     type = 'CQUADR'
     def __init__(self,card=None,data=None):
-        CQUAD4.__init__(self,card,data)
+        ShellElement.__init__(self,card,data)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
+
+            nids = card.fields(3,7)
+
+            self.thetaMcid = card.field(7,0.0)
+            self.zOffset   = card.field(8,0.0)
+
+            self.TFlag = card.field(10,0)
+            self.T1 = card.field(11,1.0)
+            self.T2 = card.field(12,1.0)
+            self.T3 = card.field(13,1.0)
+            self.T4 = card.field(14,1.0)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:6]
+
+            self.thetaMcid = data[6]
+            self.zOffset   = data[7]
+            self.TFlag     = data[8]
+            self.T1 = data[9]
+            self.T2 = data[10]
+            self.T3 = data[11]
+            self.T4 = data[12]
+            if self.T1==-1.0: self.T1=1.0
+            if self.T2==-1.0: self.T2=1.0
+            if self.T3==-1.0: self.T3=1.0
+            if self.T4==-1.0: self.T4=1.0
+        ###            
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==4,'CQUAD4'
 
     def Thickness(self):
         return self.pid.Thickness()
@@ -538,8 +572,8 @@ class CQUADR(CQUAD4):
                   self.TFlag]
         return fields
 
-    #def reprFields(self):
-        #return self.rawFields()
+    def reprFields(self):
+        return self.rawFields()
 
 class CQUAD(CQUAD4):
     type = 'CQUAD'
@@ -593,7 +627,7 @@ class CQUAD8(CQUAD4):
             self.zOffset   = card.field(16,0.0)
             self.TFlag     = card.field(17,0)
         else:
-            print "CQUAD8 = ",data
+            #print "CQUAD8 = ",data
             #(6401, 
             #6400, 
             #6401, 6402, 6405, 6403, 0, 0, 6404, 0, 

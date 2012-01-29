@@ -284,7 +284,11 @@ class writeMesh(object):
             msg += '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)\n'
             for eid in sorted(eidsMissing):
                 element = self.Element(eid)
-                msg += str(element)
+                try:
+                    msg += str(element)
+                except:
+                    raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                ###
             ###
 
         if missingProperties:
@@ -316,6 +320,12 @@ class writeMesh(object):
     def writeConstraints(self):
         """writes the constraint cards sorted by ID"""
         msg = ''
+        if self.suports:
+            msg += '$CONSTRAINTS\n'
+            for suport in self.suports:
+                msg += str(suport)
+            ###
+
         if self.spcs or self.spcadds:
             msg += '$SPCs\n'
             strSPC = str(self.spcObject2)
@@ -369,7 +379,7 @@ class writeMesh(object):
                     try:
                         msg += str(load)
                     except:
-                        raise Exception('failed printing element...type=%s key=%s' %(loadcase.type,key))
+                        raise Exception('failed printing load...type=%s key=%s' %(loadcase.type,key))
                     ###
             for ID,grav in sorted(self.gravs.items()):
                 msg += str(grav)

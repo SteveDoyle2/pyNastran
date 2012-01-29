@@ -489,7 +489,7 @@ class PCOMPG(PCOMP):
         for i in range(len(fields)):
             gPlyID    = card.field(i)
             mid       = card.field(i+1,midLast)
-            thickness = card.field(i+2,tLast) # can be blank
+            thickness = float(card.field(i+2,tLast)) # can be blank 2nd time thru
             theta     = card.field(i+3,0.0)
             sout      = card.field(i+4,'NO')
             self.plies.append([mid,thickness,theta,sout,gPlyID])

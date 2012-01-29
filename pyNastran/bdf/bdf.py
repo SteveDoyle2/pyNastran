@@ -184,6 +184,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.bdfFileName = None
         self.autoReject = False
         self.solmap_toValue = {
+                        'NONLIN'    : 101, #66 -> 101 per http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
                         'SESTATIC'  : 101,
                         'SESTATICS' : 101,
                         'SEMODES'   : 103,
@@ -230,28 +231,29 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                        }
 
         self.rsolmap_toStr = {
-                         101 : 'SESTSTATIC',
-                         103 : 'SEMODES'   ,
-                         105 : 'BUCKLING'  ,  # SEBUCKL
-                         106 : 'NLSTATIC'  ,
-                         107 : 'SEDCEIG'   ,
-                         108 : 'SEDFREQ'   ,
-                         109 : 'SEDTRAN'   ,
-                         110 : 'SEMCEIG'   ,
-                         111 : 'SEMFREQ'   ,
-                         112 : 'SEMTRAN'   ,
-                         114 : 'CYCSTATX'  ,
+                         66  : 'NONLIN',
+                         101 : 'SESTSTATIC',  # linear static
+                         103 : 'SEMODES'   ,  # modal
+                         105 : 'BUCKLING'  ,  # buckling
+                         106 : 'NLSTATIC'  ,  # non-linear static
+                         107 : 'SEDCEIG'   ,  # direct complex frequency response
+                         108 : 'SEDFREQ'   ,  # direct frequency response
+                         109 : 'SEDTRAN'   ,  # direct transient response
+                         110 : 'SEMCEIG'   ,  # modal complex eigenvalue
+                         111 : 'SEMFREQ'   ,  # modal frequency response
+                         112 : 'SEMTRAN'   ,  # modal transient response
+                         114 : 'CYCSTATX'  , 
                          115 : 'CYCMODE'   ,
                          116 : 'CYCBUCKL'  ,
                          118 : 'CYCFREQ'   ,
-                         129 : 'NLTRAN'    ,
-                         144 : 'AESTAT'    ,
-                         145 : 'FLUTTR'    ,
-                         146 : 'SEAERO'    ,
-                         153 : 'NLSCSH'    ,
-                         159 : 'NLTCSH'    ,
+                         129 : 'NLTRAN'    ,  # nonlinear transient
+                         144 : 'AESTAT'    ,  # static aeroelastic
+                         145 : 'FLUTTR'    ,  # flutter/aeroservoelastic
+                         146 : 'SEAERO'    ,  # dynamic aeroelastic
+                         153 : 'NLSCSH'    ,  # nonlinear static thermal
+                         159 : 'NLTCSH'    ,  # nonlinear transient thermal
                          190 : 'DBTRANS'   ,
-                         200 : 'DESOPT'    ,
+                         200 : 'DESOPT'    ,  # optimization
                        }
         self._initStructuralDefaults()
         self._initAeroDefaults()
@@ -304,7 +306,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # constraints
         ## stores SUPORT1s
         #self.constraints = {} # suport1, anything else???
-        #self.suports = [] # suport, suport1
+        self.suports = [] # suport, suport1
 
         ## stores SPCADD,SPC,SPC1,SPCD,SPCAX
         self.spcObject2 = constraintObject2()
@@ -1261,7 +1263,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addConstraint_SPCADD(constraint)
             elif cardName=='SUPORT':  # pseudo-constraint
                 suport = SUPORT(cardObj)
-                self.addConstraint(suport)
+                self.addSuport(suport)
             elif cardName=='SUPORT1': # pseudo-constraint
                 suport1 = SUPORT1(cardObj)
                 self.addConstraint(suport1)

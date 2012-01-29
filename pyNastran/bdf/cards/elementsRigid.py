@@ -104,14 +104,14 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         for i,(gn,cn) in enumerate(zip(self.Gni,self.Cni)):
             fields+=[gn,cn]
             if i%6==0:
-                fields += None
+                fields += [None]
             ###
 
         fields += ['UM']
         for i,(gm,cm) in enumerate(zip(self.Gmi,self.Cmi)):
             fields+=[gm,cm]
             if i%6==0:
-                fields += None
+                fields += [None]
             ###
         fields += [self.alpha]
         return self.printCard(fields)
