@@ -4,7 +4,7 @@
 
 The Graphical User Interface (GUI) was first introduced in version 0.3.0 (unreleased).  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
 
-An early version of the GUI looks like:
+TheGUI looks like:
 
 https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 
@@ -22,12 +22,6 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
  * Snap to Axis (keyboard)
  * Change Background Color (menu)
 
-== TODO ==
- * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
- * display the values un-normalized (the values are normalized so the colors can be seen; default range is 0 to 1; this might not be a problem)
- * support composite elements
- * allow edges to be shown from without passing in a command line argument
-
 = Supported Elements =
  * CQUAD4 / CQUAD8 (CQUAD5/6/7 represented as CQUAD4)
  * CTRIA3 / CTRIA6
@@ -42,7 +36,7 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 = BDF Requirements =
  * Entire model can be cross-referenced
  * No SPOINTs
- * Same requirements as BDF
+ * Same requirements as BDF (include an executive/case control deck, define all cross-referenced cards, etc.)
 
 = Mouse Controls =
 || *Command* || *Purpose* ||
@@ -65,8 +59,12 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 || z/Z || Snap to z/-z axis ||
 
 
-== Desired Keyboard Controls ==
-|| *Key* || *Purpose* ||
-|| p || Pick a point ||
-|| e || Pick an element ||
-|| d || Display element edges ||
+
+== TODO ==
+ * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
+ * display the values un-normalized (the values are normalized so the colors can be seen; default range is 0 to 1; this might not be a problem)
+ * support composite elements
+ * allow edges to be shown from without passing in a command line argument
+ * Allow point picking (p)
+ * Allow element picking (e)
+ * Display element edges (d)
