@@ -55,7 +55,10 @@ class OUGV1(object):
             self.nonlinearFactor = value
             self.dataCode['nonlinearFactor'] = value
             self.dataCode['name'] = Name
-
+    
+    def applyDataCodeValue(self,Name,value):
+        self.dataCode[Name] = value
+        
     def readTable_OUGV1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
         if self.makeOp2Debug:
@@ -79,10 +82,13 @@ class OUGV1(object):
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode',     'i',5)         ## mode number
             self.addDataParameter(data,'eigr',     'f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'modeCycle','i',7,False)   ## mode or cycle @todo confused on the type - F1???
+            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
+
             assert self.dataCode['name']=='mode'
             #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
@@ -91,29 +97,36 @@ class OUGV1(object):
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
+            self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
             #self.log.debug("DT(5)=%s" %(self.dt))
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
+            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
             #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
             #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
+            self.applyDataCodeValue('dataNames',['lftsfq'])
             #print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
             #print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
@@ -220,6 +233,7 @@ class OUGV1(object):
     def readOUGV1_Data_table1_format1_sort0(self): # displacement
 
         if self.thermal==0:
+            #print self.codeInformation()
             if self.analysisCode==1: # displacement
                 #print "isDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
@@ -238,7 +252,7 @@ class OUGV1(object):
                 self.createTransientObject(self.displacements,displacementObject)
 
             elif self.analysisCode==8: # post-buckling eigenvector
-                #print "isPostBucklingEigenvector"
+                #print "isPostBucklingEigenvector8_1_0"
                 self.createTransientObject(self.displacements,eigenVectorObject)
 
             #elif self.analysisCode==9: # nonlinear static eigenvector
@@ -308,13 +322,14 @@ class OUGV1(object):
     def readOUGV1_Data_table7_format1_sort0(self):  # modes
         #assert self.formatCode==1 # Real
         #assert self.sortCode==0   # Real
-
+        
         if self.thermal==0:
+            #print self.codeInformation()
             if self.analysisCode==2: # nonlinear static eigenvector
-                #print "isEigenvector"
+                #print "isEigenvector2"
                 self.createTransientObject(self.eigenvectors,eigenVectorObject)
             elif self.analysisCode==8: # post-buckling eigenvector
-                #print "isPostBucklingEigenvector"
+                #print "isPostBucklingEigenvector8"
                 self.createTransientObject(self.eigenvectors,realEigenVectorObject)
             else:
                 raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
@@ -430,6 +445,7 @@ class OUGV1(object):
     def readOUGV1_Data_table7_format1_sort1(self): # modes
         #assert self.formatCode==1 # Real
         #assert self.sortCode==1   # Real/Imaginary
+        #print self.codeInformation()
         if self.thermal==0:
             #if self.analysisCode==5: # frequency displacement
                 #print "isFrequencyDisplacement"
@@ -457,6 +473,7 @@ class OUGV1(object):
     def readOUGV1_Data_table10_format1_sort1(self): # velocity
         #assert self.formatCode==1 # Real
         #assert self.sortCode==1   # Real/Imaginary
+        #print self.codeInformation()
         if self.thermal==0:
             if self.analysisCode==5: # frequency velocity
                 #print "isFrequencyVelocity"
@@ -500,6 +517,7 @@ class OUGV1(object):
     def readOUGV1_Data_table1_format2_sort1(self): # displacement
         #assert self.formatCode==2 # Real/Imaginary
         #assert self.sortCode==1   # Real/Imaginary
+        #print self.codeInformation()
         if self.thermal==0:
             if self.analysisCode==5: # frequency displacement
                 #print "isFrequencyDisplacement"
@@ -528,13 +546,14 @@ class OUGV1(object):
     def readOUGV1_Data_table1_format3_sort0(self): # displacement
         #assert self.formatCode==3 # Magnitude/Phase
         #assert self.sortCode==0   # Real
+        #print self.codeInformation()
         if self.thermal==0:
             raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             if self.analysisCode==1: # displacement
                 #print "isDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
             elif self.analysisCode==2: # nonlinear static eigenvector
-                #print "isEigenvector"
+                #print "isEigenvector_3_0"
                 self.createTransientObject(self.eigenvectors,eigenVectorObject)
             elif self.analysisCode==5: # frequency displacement
                 #print "isFreqDisplacement"

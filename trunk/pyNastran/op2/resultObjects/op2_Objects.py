@@ -23,7 +23,11 @@ class scalarObject(Op2Codes):
             if key is not 'log':
                 self.__setattr__(key,value)
                 self.log.debug("  key=%s value=%s" %(key,value))
-    
+
+    def getUnsteadyValue(self):
+        name = self.dataCode['name']
+        return self.getVar(name)
+        
     def getVar(self,name):
         return getattr(self,name)
 
@@ -45,7 +49,7 @@ class scalarObject(Op2Codes):
         if hasList:
             listA = self.getVar(varName)
             if listA is not None:
-                print "has %s" %(varName)
+                #print "has %s" %(varName)
                 value = self.getVar(valueName)
                 try:
                     n = len(listA)
@@ -56,11 +60,48 @@ class scalarObject(Op2Codes):
                 assert len(listA)==n+1
             ###
         ###
+    def setDataMembers(self):
+        for name in self.dataCode['dataNames']:
+            #print "name = ",name
+            self.appendDataMember(name+'s',name)
+        ###
+
+    def printDataMembers(self):
+        """
+        Prints out the "unique" vals of the case.
+        Uses a provided list of dataCode['dataNames'] to set the values for each
+        subcase.  Then populates a list of self.name+'s' (by using setattr)
+        with the current value.  For example, if the variable name is 'mode', 
+        we make self.modes.  Then to extract the values, we build a list of of the
+        variables that were set like this and then loop over then to print their values.
+        
+        This way there is no dependency on one result type having ['mode'] and another 
+        result type having ['mode','eigr','eigi'].
+        """
+        keyVals = []
+        for name in self.dataCode['dataNames']:
+            vals = getattr(self,name+'s')
+            keyVals.append(vals)
+            #print "%ss = %s" %(name,vals)
+        
+        msg = ''
+        for name in self.dataCode['dataNames']:
+            msg += '%-10s ' %(name)
+        msg += '\n'
+        
+        nModes = len(keyVals[0])
+        for i in range(nModes):
+            for vals in keyVals:
+                msg += '%-10g ' %(vals[i])
+            msg += '\n'
+        ###
+        return msg+'\n'
             
     def printDataMember(word,selfVarName):
         msg = ''
         if self.getVar(selfVarName):
             msg += '%s = %s' %(word,selfVarName)
+        raise Exception('do i need this...msg=%s' %(msg))
         return msg
 
     def recastGridType(self,gridType):
@@ -130,8 +171,8 @@ class spcForcesObject(scalarObject):
         ###
 
     #def addBinary(self,deviceCode,data):
-    #    print "*******add********"
-    #    (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
+        #print "*******add********"
+        #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
 
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = 'nodeID=%s' %(nodeID)
