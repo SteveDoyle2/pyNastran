@@ -105,6 +105,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             self.nonlinearFactor = None
             self.dataCode = {}
             table3(iTable)
+            self.dataCode['tableName'] = self.tableName
             ## developer parameter - Analysis/Table/Format/Sort Codes
             self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
             #print "self.tellA = ",self.op2.tell()

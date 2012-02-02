@@ -27,15 +27,16 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
     def parseLength(self):
         self.mainHeaders = []
         self.strFormat = ''
-        if self.analysisCode==6:
+        if self.analysisCode==5:
             self.mainHeaders.append('Freq')
             self.strFormat += 'fi'
             self.add = self.addF
-        elif self.analysisCode==5:
-            self.mainHeaders.append('Time')
-            self.strFormat += 'fi'
-            self.add = self.addF
-        elif self.analysisCode in [1,2,3,4,7,8,9,11,12]:
+        #elif self.analysisCode in[6]: # 10
+            #self.mainHeaders.append('Time')
+            #self.strFormat += 'fi'
+            #self.add = self.addF
+            #print self.dataCode
+        elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
             self.mainHeaders.append('NodeID')
             self.strFormat += 'ii'
         else:
@@ -87,8 +88,8 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
 
     def add(self,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
-        nodeID = (nodeID-self.deviceCode) // 10
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
+        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'velocityObject - static failure'
         
@@ -223,7 +224,7 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
 
-            msg += '%-10i %8s ' %(nodeID,gridType)
+            msg += '%-10i %-8s ' %(nodeID,gridType)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:

@@ -27,15 +27,19 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def parseLength(self):
         self.mainHeaders = []
         self.strFormat = ''
-        if self.analysisCode==6:
+        #print self.dataCode
+        if self.analysisCode==5:
             self.mainHeaders.append('Freq')
             self.strFormat += 'fi'
             self.add = self.addF
-        elif self.analysisCode in[5,10]:
-            self.mainHeaders.append('Time')
-            self.strFormat += 'fi'
-            self.add = self.addF
-        elif self.analysisCode in [1,2,3,4,7,8,9,11,12]:
+            #raise Exception('???A')
+        #elif self.analysisCode in[6]: # 10
+            #self.mainHeaders.append('Time')
+            #self.strFormat += 'fi'
+            #self.add = self.addF
+            #print self.dataCode
+            #raise Exception('???B')
+        elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
             self.mainHeaders.append('NodeID')
             self.strFormat += 'ii'
         else:
@@ -65,7 +69,9 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         ###
 
     def addNewTransient(self):
-        """initializes the transient variables"""
+        """
+        initializes the transient variables
+        """
         if self.dt not in self.translations:
             self.translations[self.dt] = {}
             self.rotations[self.dt]    = {}
@@ -202,6 +208,36 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             ###
         return msg
 
+    def GetAsSort1(self):
+        return (self.translations,self.rotations)
+
+    def GetAsSort2(self):
+        """returns translations and rotations in sort2 format"""
+        translations2 = {}
+        rotations2 = {}
+        if self.dt is not None:
+            return self.__reprTransient__()
+
+            for dt,translations in sorted(self.translations.items()):
+                nodeIDs = translations.keys()
+                for nodeID in nodeIDs:
+                    translations2[nodeID] = {}
+                    rotations2[nodeID] = {}
+
+                for nodeID,translation in sorted(translations.items()):
+                    rotation = self.rotations[dt][nodeID]
+                    translations2[nodeID][dt] = translation
+                    rotations2[nodeID][dt]    = rotation
+                ###
+        else:
+            for nodeID,translation in sorted(self.translations.items()):
+                rotation = self.rotations[nodeID]
+                translations2[nodeID] = translation
+                rotations2[nodeID]    = rotation
+            ###
+        ###
+        return translations2,rotations2
+        
     def getHeaders(self):
         return (self.mainHeaders,self.headers)
 

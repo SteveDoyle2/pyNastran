@@ -39,7 +39,7 @@ class plateStressObject(stressObject):
             assert self.isVonMises()      == True,self.stressBits
         elif self.code == [1,0,0]:
             assert self.isFiberDistance() == False,self.stressBits
-            assert self.isVonMises()      == True,self.stressBits
+            assert self.isVonMises()      == False,self.stressBits
         else:
             raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
