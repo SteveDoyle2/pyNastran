@@ -307,6 +307,9 @@ class solidStrainObject(strainObject):
         self.exy = {}
         self.eyz = {}
         self.exz = {}
+        self.e1 = {}
+        self.e2 = {}
+        self.e3 = {}
         #self.aCos = {}
         #self.bCos = {}
         #self.cCos = {}
@@ -340,6 +343,9 @@ class solidStrainObject(strainObject):
         self.exy[self.dt] = {}
         self.eyz[self.dt] = {}
         self.exz[self.dt] = {}
+        self.e1[self.dt] = {}
+        self.e2[self.dt] = {}
+        self.e3[self.dt] = {}
         
         #self.aCos[self.dt] = {}
         #self.bCos[self.dt] = {}
@@ -360,6 +366,9 @@ class solidStrainObject(strainObject):
         self.exy[eid]  = {nodeID: exy}
         self.eyz[eid]  = {nodeID: eyz}
         self.exz[eid]  = {nodeID: exz}
+        self.e1[eid]   = {nodeID: e1}
+        self.e2[eid]   = {nodeID: e2}
+        self.e3[eid]   = {nodeID: e3}
         #self.aCos[eid] = {nodeID: aCos}
         #self.bCos[eid] = {nodeID: bCos}
         #self.cCos[eid] = {nodeID: cCos}
@@ -383,6 +392,9 @@ class solidStrainObject(strainObject):
         self.exy[dt][eid]  = {nodeID: exy}
         self.eyz[dt][eid]  = {nodeID: eyz}
         self.exz[dt][eid]  = {nodeID: exz}
+        self.e1[dt][eid]   = {nodeID: e1}
+        self.e2[dt][eid]   = {nodeID: e2}
+        self.e3[dt][eid]   = {nodeID: e3}
         #self.aCos[dt][eid] = {nodeID: aCos}
         #self.bCos[dt][eid] = {nodeID: bCos}
         #self.cCos[dt][eid] = {nodeID: cCos}
@@ -405,6 +417,9 @@ class solidStrainObject(strainObject):
         self.exy[eid][nodeID] = exy
         self.eyz[eid][nodeID] = eyz
         self.exz[eid][nodeID] = exz
+        self.e1[eid][nodeID] = e1
+        self.e2[eid][nodeID] = e2
+        self.e3[eid][nodeID] = e3
 
         #self.aCos[eid][nodeID] = aCos
         #self.bCos[eid][nodeID] = bCos
@@ -428,6 +443,10 @@ class solidStrainObject(strainObject):
         self.exy[dt][eid][nodeID] = exy
         self.eyz[dt][eid][nodeID] = eyz
         self.exz[dt][eid][nodeID] = exz
+
+        self.e1[dt][eid][nodeID] = e1
+        self.e2[dt][eid][nodeID] = e2
+        self.e3[dt][eid][nodeID] = e3
 
         #self.aCos[dt][eid][nodeID] = aCos
         #self.bCos[dt][eid][nodeID] = bCos
