@@ -410,6 +410,16 @@ class PROD(LineProperty):
     def I12(self):
         return 0.
 
+    def writeCodeAster(self):
+        msg  = "PROD_%s = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n" %(self.pid)
+        msg += "    POUTRE=_F(GROUP_MA='P1',\n"
+        msg += "              SECTION='GENERALE',\n"
+        msg += "              CARA=('A','IY','IZ','JX'\n"
+        msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(self.Area(),self.I11(),self.I22(),self.J())
+        msg += "                    CARA='VECT_Y'),\n"
+        msg += "                    VALE=(1.0,0.0,0.0,),),);\n"        
+        return msg
+
     def rawFields(self):
         fields = ['PROD',self.pid,self.Mid(),self.A,self.j,self.c,self.nsm]
         return fields
@@ -580,6 +590,20 @@ class PBAR(LineProperty):
 
     #def Iyz(self):
     #    return self.i12
+
+    def writeCodeAster(self):
+        a  = self.Area()
+        iy = self.I11()
+        iz = self.I22()
+        j  = self.J()
+        msg  = "PBAR_%s = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n" %(self.pid)
+        msg += "    POUTRE=_F(GROUP_MA='P1',\n"
+        msg += "              SECTION='GENERALE',\n"
+        msg += "              CARA=('A','IY','IZ','JX'\n"
+        msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
+        msg += "                    CARA='VECT_Y'),\n"
+        msg += "                    VALE=(1.0,0.0,0.0,),),);\n"        
+        return msg
 
     def rawFields(self):
         line1 = ['PBAR',self.pid,self.Mid(),self.A,self.i1,self.i2,self.j,self.nsm,None]
@@ -857,6 +881,20 @@ class PBEAM(IntegratedLineProperty):
 
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
+
+    def writeCodeAster(self):
+        a  = self.Area()
+        iy = self.I11()
+        iz = self.I22()
+        j  = self.J()
+        msg  = "PBEAM_%s = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n" %(self.pid)
+        msg += "    POUTRE=_F(GROUP_MA='P1',\n"
+        msg += "              SECTION='GENERALE',\n"
+        msg += "              CARA=('A','IY','IZ','JX'\n"
+        msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
+        msg += "                    CARA='VECT_Y'),\n"
+        msg += "                    VALE=(1.0,0.0,0.0,),),);\n"
+        return msg
 
     def rawFields(self):
         fields = ['PBEAM',self.pid,self.Mid()]

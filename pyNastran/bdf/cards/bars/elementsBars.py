@@ -240,6 +240,9 @@ class CROD(LineElement):
     def Centroid(self):
         return (self.nodes[0].Position()+self.nodes[1].Position())/2.
 
+    def Mid(self):
+        return self.pid.Mid()
+
     def Area(self):
         return self.pid.A
 
@@ -303,6 +306,9 @@ class CONROD(CROD):
 
     def Pid(self):
         return None
+
+    def Mid(self):
+        return self.Mid()
 
     def MassPerLength(self):
         massPerLength = self.mid.rho*self.A + self.nsm
@@ -581,6 +587,9 @@ class CBAR(LineElement):
         assert self.offt[1] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
         assert self.offt[2] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
 
+    def Mid(self):
+        return self.pid.Mid()
+
     def Area(self):
         A = self.pid.Area()
         assert isinstance(A,float)
@@ -738,6 +747,9 @@ class CBEAM(CBAR):
             msg = 'field8 on %s card is not a string(offt) or bit (float)...field8=%s\n' %(self.type,field8)
             raise CardInstantiationError(msg)
         ###
+
+    def Mid(self):
+        return self.pid.Mid()
 
     def Area(self):
         return self.pid.Area()

@@ -13,6 +13,9 @@ class BaseCard(BDF_Card):
 
     #def wipeEmptyFields(self,card): # BaseCard
 
+    def writeCodeAster(self):
+        return '%% skipping %s\n' %(self.type)
+
     def verify(self,model,iSubcase):
         """
         this method checks performs checks on the cards such as
