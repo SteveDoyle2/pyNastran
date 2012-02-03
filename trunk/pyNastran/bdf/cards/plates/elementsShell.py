@@ -14,6 +14,9 @@ class ShellElement(Element):
         #raise Exception('area undefined for %s' %(self.type))
         return self.pid.Thickness()
 
+    def Mid(self):
+        return self.pid.Mid()
+
     def Rho(self):
         return self.pid.mid.rho
 

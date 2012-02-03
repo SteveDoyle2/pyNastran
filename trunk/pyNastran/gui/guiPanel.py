@@ -19,9 +19,12 @@ def getScreenCorner(x,y):
 
 class Pan(wx.Panel,NastranIO):
     def __init__(self, *args, **kwargs):
+        isEdges=kwargs['isEdges']
+        del kwargs['isEdges']
         wx.Panel.__init__(self, *args, **kwargs)
         NastranIO.__init__(self)
-        isEdges = False
+        #isEdges = False
+        print "isEdges = ",isEdges
         self.isEdges = isEdges # surface wireframe
         self.widget = pyWidget(self, -1)
 
@@ -39,8 +42,13 @@ class Pan(wx.Panel,NastranIO):
         self.isEdges = not(self.isEdges)
         if 0:
             self.getEdges()
-
-        if 1:
+        
+        try:
+            hasEdgeActor = hasattr(self,edgeActor)
+        except:
+            return
+        
+        if hasEdgeActor:
             prop = self.edgeActor.GetProperty()
             print "dir(prop) = ",dir(prop)
             print "visible = ",prop.GetEdgeVisibility()
@@ -386,7 +394,6 @@ class Pan(wx.Panel,NastranIO):
 
     def getWindowName(self,winName=''):
         return "pyNastran v%s - %s" %(version,self.bdfFileName)
-        return "pyNastran v%s - %s" %(version,'solid.bdf')
 
     def setWindowName(self,winName=''):
         window = self.getWindow()
@@ -423,10 +430,10 @@ class Pan(wx.Panel,NastranIO):
         if location=='centroid':
             #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
             self.gridResult.Allocate(self.nElements,1000)
-        else: # node
+        #else: # node
             #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
-            self.gridResult.Allocate(self.nNodes*vectorSize,1000)
-            self.gridResult.SetNumberOfComponents(vectorSize)
+            #self.gridResult.Allocate(self.nNodes*vectorSize,1000)
+            #self.gridResult.SetNumberOfComponents(vectorSize)
 
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
         caseName = self.iSubcaseNameMap[subcaseID]
@@ -454,8 +461,9 @@ class Pan(wx.Panel,NastranIO):
                 self.gridResult.InsertNextValue(value)
             ###
         else: # vectorSize=3
-            for value in case:
-                self.gridResult.InsertNextTuple3(value)  # x,y,z
+            pass
+            #for value in case:
+            #    self.gridResult.InsertNextTuple3(value)  # x,y,z
             ###
         ###
         print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
@@ -469,13 +477,17 @@ class Pan(wx.Panel,NastranIO):
         if location=='centroid':
             self.grid.GetCellData().SetScalars(self.gridResult)
             #self.grid.GetPointData().SetScalars(self.emptyResult) # causes a crash
+            self.grid.Modified()
         else:
             #self.grid.GetCellData().SetScalars(self.emptyResult)
-            if vectorSize==1:
-                self.grid.GetPointData().SetScalars(self.gridResult)
-            else:
-                self.grid.GetPointData().SetScalars(self.gridResult)
-        self.grid.Modified()
+            #if vectorSize==1:
+            #    self.grid.GetPointData().SetScalars(self.gridResult)
+            #else:
+            #    self.grid.GetPointData().SetScalars(self.gridResult)
+            #self.grid.Modified()
+            pass
+        ###
+        
 
     def OnKeyPress(self,obj,event):
         rwi = obj

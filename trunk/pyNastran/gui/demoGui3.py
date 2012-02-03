@@ -3,6 +3,7 @@
 import os
 import wx
 import vtk
+import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
 import pyNastran
@@ -25,10 +26,11 @@ ID_OP2 = 921
 
 class AppFrame( wx.Frame ) :
 
-    def __init__( self) :
+    def __init__(self,isEdges=False,debug=False) :
         
-        wx.Frame.__init__( self, None, -1, size=wx.Size(800, 600),title='pyNastran' )
+        wx.Frame.__init__( self, None, -1, size=wx.Size(800, 600),title='pyNastran')
         self.bdfFileName = None
+        self.isEdges = isEdges
         self.dirname = ''
         self.setupFrame()
 
@@ -58,8 +60,9 @@ class AppFrame( wx.Frame ) :
         """
         # Must call before any event handler is referenced.
         self.eventsHandler = EventsHandler(self)
-
-        self.frmPanel = Pan(self,size=(100,200))
+        
+        
+        self.frmPanel = Pan(self,isEdges=self.isEdges,size=(100,200))
 
         self.buildMenuBar()
         self.buildToolBar()
@@ -227,7 +230,7 @@ class AppFrame( wx.Frame ) :
         wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.Bitmap('icons/twireframe.png'),longHelp='Set to Wireframe Model')
         surface   = toolbar1.AddLabelTool(ID_SURFACE,   '', wx.Bitmap('icons/tsolid.png'),    longHelp='Set to Surface/Solid Model')
         camera    = toolbar1.AddLabelTool(ID_CAMERA,    '', wx.Bitmap('icons/tcamera.png'),   longHelp='Take a Screenshot')
-        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.Bitmap('icons/texit.png'),     longHelp='Set to Surface Model')
+        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.Bitmap('icons/texit.png'),     longHelp='Exit pyNastran GUI')
         #toolbar1.EnableTool(wx.ID_REDO, False)
         toolbar1.Realize()
 
@@ -333,18 +336,6 @@ class EventsHandler(object) :
         """ Open a file"""
         #print "OnOpen..."
 
-        if 0:
-            if self.parent.bdfFileName=='test_tet10.bdf':
-                bdfFileName = 'box_cylindrical_coord_sys.bdf'
-            else:
-                bdfFileName = 'test_tet10.bdf'
-            self.parent.bdfFileName = bdfFileName
-            #self.parent.frmPanel.buildVTK(bdfFileName)
-            self.parent.frmPanel.loadGeometry(bdfFileName)
-            #self.parent.frmPanel.getWindow.Render()
-            self.parent.frmPanel.Update()
-            return
-        
         wildcard = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
          "All files (*.*)|*.*"
 
@@ -363,7 +354,7 @@ class EventsHandler(object) :
         """ Open a file"""
         #print "OnOpen..."
 
-        if 1:
+        if 0:
             bdf = self.parent.bdfFileName
             bdfBase = os.path.basename(bdf)
             #dirname = os.path.dirname(bdf)
@@ -386,7 +377,7 @@ class EventsHandler(object) :
             oname = os.path.join(self.parent.dirname, op2FileName)
             print "oname = ",oname
             #self.parent.UpdateWindowName(op2FileName)
-            self.parent.frmPanel.loadResults(op2FileName)
+            self.parent.frmPanel.loadResults(oname)
             self.parent.frmPanel.Update()
         dlg.Destroy()
 
@@ -437,9 +428,9 @@ class EventsHandler(object) :
     # Help Menu
     def OnAbout(self, event):
         about = [
-            'pyNastran v%s'%(pyNastran.__version__), 
-            'Copyright Steven P. Doyle 2011-2012\n',
-            'code.google.com/p/pynastran/',
+            'pyNastran v%s'%(pyNastran.__version__),
+            'Copyright %s; Steven P. Doyle 2011-2012\n', %(pyNastran.__license__)
+            pyNastran.__website__,
             '',
             'Mouse',
               'Left Click - Rotate',
@@ -480,10 +471,47 @@ class EventsHandler(object) :
 #end Events class
 
 #------------------------------------------------------------------------------
+def runArgParse():
+    import argparse
 
-def Main():
+    ver = str(pyNastran.__version__)
+    parser = argparse.ArgumentParser(description='Tests to see if an OP2 will work with pyNastran.',add_help=True) #,version=ver)
+    #parser.add_argument('op2FileName', metavar='op2FileName', type=str, nargs=1,
+    #                   help='path to OP2 file')
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
+
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('-g','--edges',    dest='edges', action='store_true',help='Reads the OP2 for geometry, which can be written out')
+    #group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
+
+    parser.add_argument('-v','--version',action='version',version=ver)
+    
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit()
+    args = parser.parse_args()
+    #print "op2FileName = ",args.op2FileName[0]
+    #print "debug       = ",not(args.quiet)
+
+    debug = not(args.quiet)
+    edges = args.edges
+    #writeBDF    = args.writeBDF
+    #op2FileName = args.op2FileName[0]
+
+    return (edges,debug)
+
+def main():
+    isEdges = False
+    debug   = True
+    if sys.version_info < (2,6):
+        print "requires Python 2.6+ to use command line arguments..."
+    else:
+        if len(sys.argv)>1:
+            (isEdges,debug) = runArgParse()
     app = wx.App( redirect=False )
-    appFrm = AppFrame()
+    appFrm = AppFrame(isEdges,debug)
     #appFrm.Show()
     app.MainLoop()
 
@@ -492,5 +520,4 @@ def Main():
 #==============================================================================
 
 if __name__ == '__main__' :
-
-    Main()
+    main()

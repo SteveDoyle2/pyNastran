@@ -31,7 +31,7 @@ class NastranIO(object):
         if bdfFileName is None:
             self.grid       = vtk.vtkUnstructuredGrid()
             self.gridResult = vtk.vtkFloatArray()
-            self.emptyResult = vtk.vtkFloatArray()
+            #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.grid2      = vtk.vtkUnstructuredGrid()
             self.scalarBar.VisibilityOff()
@@ -41,7 +41,7 @@ class NastranIO(object):
             self.grid.Reset()
             self.grid2.Reset()
             self.gridResult.Reset()
-            #self.gridResult.Modified()
+            self.gridResult.Modified()
 
             self.resultCases = {}
             self.nCases = 0
@@ -50,6 +50,7 @@ class NastranIO(object):
                 del self.iCase
                 del self.iSubcaseNameMap
             except:
+                print "cant delete geo"
                 pass
             ###
         self.scalarBar.VisibilityOff()
@@ -81,27 +82,25 @@ class NastranIO(object):
         self.gridResult.Allocate(nNodes,1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
-        i=0
         #elem.SetNumberOfPoints(nNodes)
-        fraction = 1./nNodes
-        for nid,node in sorted(model.nodes.items()):
-            #print "i = ",i
-            point = node.Position()
-            #print "point = ",point
-            #sys.stdout.flush()
-            #aVoxel = vtk.vtkPixel()
-            #print "made voxel"; sys.stdout.flush()
-            points.InsertPoint(i, *point)
-            self.gridResult.InsertNextValue(i*fraction)
-            #print str(element)
+        if 0:
+            i=0
+            fraction = 1./nNodes # so you can color the nodes by ID
+            for nid,node in sorted(model.nodes.items()):
+                #print "i = ",i
+                point = node.Position()
+                #print "point = ",point
+                points.InsertPoint(i, *point)
+                self.gridResult.InsertNextValue(i*fraction)
+                #print str(element)
 
-            #elem = vtk.vtkVertex()
-            #elem.GetPointIds().SetId(0, i)
-            #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
+                #elem = vtk.vtkVertex()
+                #elem.GetPointIds().SetId(0, i)
+                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
-            self.nidMap[nid] = i
-            i+=1
+                self.nidMap[nid] = i
+                i+=1
 
         j = 0
         points2 = vtk.vtkPoints()
@@ -328,17 +327,17 @@ class NastranIO(object):
         
         nElements = len(self.eidMap)
         print "***nElements = ",nElements
-        nidsSet = True # set to True to disable nodeIDs
-        eidsSet = False
+        nidsSet = False # set to False to disable nodeIDs
+        eidsSet = True
         for ID in subcaseIDs:
-            if not nidsSet:
+            if nidsSet:
                 nids = zeros(self.nNodes,'d')
                 for nid,nid2 in self.nidMap.items():
                     nids[nid2] = nid
                 cases[(ID,'Node_ID',1,'node','%.0f')] = nids
                 nidsSet = True
 
-            if not eidsSet:
+            if eidsSet:
                 eids = zeros(nElements,'d')
                 for eid,eid2 in self.eidMap.items():
                     eids[eid2] = eid
@@ -351,7 +350,7 @@ class NastranIO(object):
             if ID in op2.displacements: # not correct?
                 case = op2.displacements[ID]
                 key = (ID,'DisplacementX',3,'node','%g')
-                cases[key] = case.translations
+                #cases[key] = case.translations
 
             if ID in op2.temperatures:
                 case = op2.temperatures[ID]
@@ -362,7 +361,8 @@ class NastranIO(object):
                     print T
                     nid2 = self.nidMap[nid]
                     temps[nid2] = T
-                cases[key] = temps
+                ###
+                #cases[key] = temps
 
             if self.isStress(op2,ID):
                 cases = self.fillStressCase(cases,op2,ID,eKey,nElements)

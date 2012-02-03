@@ -23,6 +23,9 @@ class SolidElement(Element):
     def Mass(self):
         return self.Rho()*self.Volume()
     
+    def Mid(self):
+        return self.pid.Mid()
+
     def Rho(self):
         return self.pid.mid.rho
 
