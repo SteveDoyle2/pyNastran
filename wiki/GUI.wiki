@@ -58,7 +58,8 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 || y/Y || Snap to y/-y axis ||
 || z/Z || Snap to z/-z axis ||
 
-
+== Warning ==
+For proper performance, it is important to update the driver for your graphics card, especially if you have a Radeon card. For a desktop machine, go to the web site of the manufacturer of the graphics card. For a laptop, you should normally go to the web site of the laptop manufacturer, though for NVIDIA you may now find a newer driver available from NVIDIA.
 
 == TODO ==
  * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
