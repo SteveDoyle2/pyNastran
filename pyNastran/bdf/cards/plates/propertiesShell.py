@@ -641,6 +641,14 @@ class PSHELL(ShellProperty):
         #self.mid3 = mesh.Material(self.mid3)
         #self.mid4 = mesh.Material(self.mid4)
 
+    def writeCodeAster(self):
+        msg = ''
+        msg += "    POUTRE=_F(GROUP_MA='PSHELL_%s',\n" %(self.pid)
+        msg += "              SECTION='GENERALE',\n"
+        msg += "              CARA=('T','NSM','Z1',\n"
+        msg += "              VALE=(%g,  %g,  %g,),) \n"  %(self.t,self.nsm,self.z1)
+        return msg
+
     def rawFields(self):
         fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
                            self.z1,self.z2,self.mid4]

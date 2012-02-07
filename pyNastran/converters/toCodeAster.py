@@ -58,7 +58,7 @@ class CodeAsterConverter(BDF):
 
     def CA_Nodes(self):
         if language=='english':
-            msg = '%Coordinate Points\n'
+            msg = '% Grid Points\n'
         else:
             msg = ''
 
@@ -98,10 +98,21 @@ class CodeAsterConverter(BDF):
             msg = '%Elements\n'
         else:
             msg = ''
+        
+        p = []
+        for pid,prop in sorted(self.properties.items()):
+            p.append('%s_%s' %(prop.type,pid))
+        p = str(p)[1:-1] # chops the [] signs
+        msg += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
+        msg += "          AFFE=_F(GROUP_MA=(%s),\n" %(p)
+        msg += "                  PHENOMENE='MECANIQUE',\n"
+        msg += "                  MODELISATION=('POU_D_T'),),);\n\n"
 
-        for pid,property in sorted(self.properties.items()):
-            msg += property.writeCodeAster()
-        msg += 'FINSF\n\n'
+        msg += "Prop = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n"
+        for pid,prop in sorted(self.properties.items()):
+            msg += prop.writeCodeAster()
+        msg = msg[:-1]
+        msg += ');\nFINSF\n\n'
         return msg
 
     def CA_Materials(self):
@@ -162,5 +173,5 @@ if __name__=='__main__':
     #model = 'solidBending'
     model = sys.argv[1]
     ca.readBDF(model+'.bdf')
-    ca.writeAsCodeAster(model+'.ca')
+    ca.writeAsCodeAster(model+'.comm')
     
