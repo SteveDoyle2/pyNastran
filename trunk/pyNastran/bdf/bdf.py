@@ -26,12 +26,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
     #def setCardsToInclude():
     #    pass
 
-    def __init__(self,debug=True,log=None):
+    def __init__(self,debug=True,log=None,nCardLinesMax=1000):
         """
         Initializes the BDF object
         @param self the object pointer
         @param debug used to set the logger if no logger is passed in
         @param log a python logging module object
+        @param nCardLinesMax the number of lines of the longest card in the deck (default=1000)
         """
         ## allows the BDF variables to be scoped properly (i think...)
         bdfReader.__init__(self,debug,log)
@@ -39,7 +40,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         addMethods.__init__(self)
         bdfMethods.__init__(self)
         writeMesh.__init__(self)
-        cardMethods.__init__(self)
+        cardMethods.__init__(self,nCardLinesMax)
         XrefMesh.__init__(self)
 
         ## useful in debugging errors in input

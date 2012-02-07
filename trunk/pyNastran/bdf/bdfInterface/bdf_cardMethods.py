@@ -4,15 +4,15 @@ import sys
 from pyNastran.bdf.errors import *
 
 class cardMethods(object):
-    def __init__(self):
-        pass
+    def __init__(self,nCardLinesMax=1000):
+        self.nCardLinesMax = nCardLinesMax
 
     def makeLinesPack(self,debug=False):
         emptyLines=0
         if not self.linesPack:
             return ['']
 
-        while len(self.linesPack[-1])<1000:
+        while len(self.linesPack[-1])<self.nCardLinesMax:
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0].rstrip('\n\r\t ')
             if '\t' in line:

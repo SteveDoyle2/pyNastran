@@ -411,13 +411,13 @@ class PROD(LineProperty):
         return 0.
 
     def writeCodeAster(self):
-        msg  = "PROD_%s = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n" %(self.pid)
-        msg += "    POUTRE=_F(GROUP_MA='P1',\n"
+        msg = ''
+        msg += "    POUTRE=_F(GROUP_MA='PROD_%s',\n" %(self.pid)
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A','IY','IZ','JX'\n"
         msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(self.Area(),self.I11(),self.I22(),self.J())
         msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),);\n"        
+        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return msg
 
     def rawFields(self):
@@ -596,13 +596,13 @@ class PBAR(LineProperty):
         iy = self.I11()
         iz = self.I22()
         j  = self.J()
-        msg  = "PBAR_%s = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n" %(self.pid)
-        msg += "    POUTRE=_F(GROUP_MA='P1',\n"
+        msg = ''
+        msg += "    POUTRE=_F(GROUP_MA='PBAR_%s',\n" %(self.pid)
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A','IY','IZ','JX'\n"
         msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
         msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),);\n"        
+        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return msg
 
     def rawFields(self):
@@ -887,13 +887,13 @@ class PBEAM(IntegratedLineProperty):
         iy = self.I11()
         iz = self.I22()
         j  = self.J()
-        msg  = "PBEAM_%s = AFFE_CARA_ELEM(MODELE=FEMODL,),);\n" %(self.pid)
-        msg += "    POUTRE=_F(GROUP_MA='P1',\n"
+        msg = ''
+        msg += "    POUTRE=_F(GROUP_MA='PBEAM_%s',\n" %(self.pid)
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A','IY','IZ','JX'\n"
         msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
         msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),);\n"
+        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return msg
 
     def rawFields(self):
