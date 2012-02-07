@@ -76,7 +76,7 @@ class AppFrame( wx.Frame ) :
         windowName = self.frmPanel.getWindowName()
         self.SetTitle(windowName)
         #self.SetSize([600,600])
-        self.Centre()
+        #self.Centre()
 
         # Add them to sizer.
         hbox = wx.BoxSizer( wx.HORIZONTAL )
@@ -429,8 +429,8 @@ class EventsHandler(object) :
     def OnAbout(self, event):
         about = [
             'pyNastran v%s'%(pyNastran.__version__),
-            'Copyright %s; Steven P. Doyle 2011-2012\n', %(pyNastran.__license__)
-            pyNastran.__website__,
+            'Copyright %s; Steven P. Doyle 2011-2012\n' %(pyNastran.__license__),
+            '%s' %(pyNastran.__website__),
             '',
             'Mouse',
               'Left Click - Rotate',
@@ -513,6 +513,7 @@ def main():
     app = wx.App( redirect=False )
     appFrm = AppFrame(isEdges,debug)
     #appFrm.Show()
+    print "launching gui"
     app.MainLoop()
 
 #end class

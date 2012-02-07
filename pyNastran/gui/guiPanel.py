@@ -1,4 +1,6 @@
 import os
+import platform
+
 import wx
 import vtk
 from numpy import zeros,ones
@@ -30,7 +32,9 @@ class Pan(wx.Panel,NastranIO):
 
         window = self.widget.GetRenderWindow()
         self.iren = vtk.vtkRenderWindowInteractor()
-        self.iren.SetRenderWindow(window)
+
+        if platform.system=='Windows':
+            self.iren.SetRenderWindow(window)
         
         self.iText = 0
         self.textActors = {}
