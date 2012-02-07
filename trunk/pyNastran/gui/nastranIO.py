@@ -101,6 +101,13 @@ class NastranIO(object):
 
                 self.nidMap[nid] = i
                 i+=1
+        if 1:
+            i = 0
+            for nid,node in sorted(model.nodes.items()):
+                point = node.Position()
+                points.InsertPoint(i, *point)
+                self.nidMap[nid] = i
+                i+=1
 
         j = 0
         points2 = vtk.vtkPoints()
