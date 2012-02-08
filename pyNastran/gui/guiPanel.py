@@ -54,7 +54,7 @@ class Pan(wx.Panel,NastranIO):
         
         if hasEdgeActor:
             prop = self.edgeActor.GetProperty()
-            print "dir(prop) = ",dir(prop)
+            #print "dir(prop) = ",dir(prop)
             print "visible = ",prop.GetEdgeVisibility()
             if self.isEdges:
                 prop.EdgeVisibilityOn()
@@ -132,17 +132,6 @@ class Pan(wx.Panel,NastranIO):
                 actor.GetProperty().SetInterpolationToPhong()
             self.widget.Render()
         ###
-
-    def WireframeTemp(self):
-        """Sets the current actor representation as wireframe.
-        """
-        actors = self.widget._CurrentRenderer.GetActors()
-        numActors = actors.GetNumberOfItems()
-        actors.InitTraversal()
-        for i in range(0,numActors):
-            actor = actors.GetNextItem()
-            actor.GetProperty().SetRepresentationToWireframe()
-        self.Render()
 
     def getColors(self):
         pass
@@ -260,7 +249,7 @@ class Pan(wx.Panel,NastranIO):
         self.scalarBar.SetWidth(0.20) # the width is set first
         self.scalarBar.SetPosition(0.77, 0.1) # after the width is set, this is adjusted
         #self.scalarBar.SetPosition2(0.1, 0.3)
-        print self.scalarBar.GetPosition()
+        #print self.scalarBar.GetPosition()
 
         propTitle = vtk.vtkTextProperty()
         propTitle.SetFontFamilyToArial()
@@ -346,9 +335,10 @@ class Pan(wx.Panel,NastranIO):
         self.createTriAxes()
         
         textSize = 15
-        self.createText([5,35],'Max: ', textSize) # text actor 0
-        self.createText([5,20],'Min: ', textSize) # text actor 1
-        self.createText([5,5 ],'Word: ',textSize) # text actor 2
+        self.createText([5,50],'Max  ', textSize) # text actor 0
+        self.createText([5,35],'Min  ', textSize) # text actor 1
+        self.createText([5,20],'Word1',textSize) # text actor 2
+        self.createText([5,5 ],'Word2',textSize) # text actor 3
         #self.createText([5,35],'Yet Again',  textSize)
 
         # Create the usual rendering stuff.
@@ -441,7 +431,7 @@ class Pan(wx.Panel,NastranIO):
 
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
         caseName = self.iSubcaseNameMap[subcaseID]
-        subtitle,label = caseName
+        (subtitle,label) = caseName
 
         print "subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
 
@@ -456,7 +446,7 @@ class Pan(wx.Panel,NastranIO):
         
         # flips sign to make colors go from blue -> red
         normValue = maxValue-minValue
-        print "case = ",case
+        #print "case = ",case
         #if normValue==0.: # avoids division by 0.
         #    normValue = 1.
         
@@ -474,7 +464,8 @@ class Pan(wx.Panel,NastranIO):
 
         self.textActors[0].SetInput('Max:  %g' %(maxValue)) # max
         self.textActors[1].SetInput('Min:  %g' %(minValue)) # min
-        self.textActors[2].SetInput('subcase=%s subtitle=%s' %(subcaseID,subtitle)) # info
+        self.textActors[2].SetInput('Subcase=%s Subtitle: %s' %(subcaseID,subtitle)) # info
+        self.textActors[3].SetInput('Label: %s'               %(label)) # info
         self.UpdateScalarBar(resultType,minValue,maxValue,dataFormat)
 
         # @todo results can only go from centroid->node and not back to centroid
@@ -496,7 +487,7 @@ class Pan(wx.Panel,NastranIO):
     def OnKeyPress(self,obj,event):
         rwi = obj
         key = rwi.GetKeySym()
-        print "*Pressed %s" %(key)
+        #print "*Pressed %s" %(key)
 
     def buildVTK(self,bdfFileName=None,dirname=None):
         self.bdfFileName = bdfFileName

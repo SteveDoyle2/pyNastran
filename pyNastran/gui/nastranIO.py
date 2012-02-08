@@ -28,6 +28,9 @@ class NastranIO(object):
         pass
 
     def loadGeometry(self,bdfFileName,dirname):
+        #key = self.caseKeys[self.iCase]
+        #case = self.resultCases[key]
+        
         if bdfFileName is None:
             self.grid       = vtk.vtkUnstructuredGrid()
             self.gridResult = vtk.vtkFloatArray()
@@ -40,8 +43,11 @@ class NastranIO(object):
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
+            self.gridResult = vtk.vtkFloatArray()
             self.gridResult.Reset()
             self.gridResult.Modified()
+            self.eidMap = {}
+            self.nidMap = {}
 
             self.resultCases = {}
             self.nCases = 0
@@ -53,6 +59,7 @@ class NastranIO(object):
                 print "cant delete geo"
                 pass
             ###
+            #print dir(self)
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 
@@ -75,6 +82,7 @@ class NastranIO(object):
         else:
             nCONM2 = 0
         self.grid.Allocate(nElements, 1000)
+        self.gridResult.SetNumberOfComponents(nElements)
         self.grid2.Allocate(nCAeros +nCONM2, 1000)
 
         points = vtk.vtkPoints()
@@ -305,6 +313,8 @@ class NastranIO(object):
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
+        #print dir(self.grid) #.SetNumberOfComponents(0)
+        #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid2.Modified()
@@ -325,7 +335,7 @@ class NastranIO(object):
         #case = op2.displacements[1]
         #print "case = ",case
         #for nodeID,translation in sorted(case.translations.items()):
-        #    print "nodeID=%s t=%s" %(nodeID,translation)
+            #print "nodeID=%s t=%s" %(nodeID,translation)
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
         cases = {}
@@ -333,7 +343,7 @@ class NastranIO(object):
         self.iSubcaseNameMap = op2.iSubcaseNameMap
         
         nElements = len(self.eidMap)
-        print "***nElements = ",nElements
+        #print "nElements = ",nElements
         nidsSet = False # set to False to disable nodeIDs
         eidsSet = True
         for ID in subcaseIDs:
@@ -353,23 +363,24 @@ class NastranIO(object):
                 cases[(ID,'Element_ID',1,'centroid','%.0f')] = eids
                 cases[eKey] = zeros(nElements) # is the element supported
                 eidsSet = True
+            
+            if False:
+                if ID in op2.displacements: # not correct?
+                    case = op2.displacements[ID]
+                    key = (ID,'DisplacementX',3,'node','%g')
+                    #cases[key] = case.translations
 
-            if ID in op2.displacements: # not correct?
-                case = op2.displacements[ID]
-                key = (ID,'DisplacementX',3,'node','%g')
-                #cases[key] = case.translations
-
-            if ID in op2.temperatures:
-                case = op2.temperatures[ID]
-                print case
-                temps = zeros(self.nNodes)
-                key = (ID,'Temperature',1,'node','%g')
-                for nid,T in case.temperatures.items():
-                    print T
-                    nid2 = self.nidMap[nid]
-                    temps[nid2] = T
-                ###
-                #cases[key] = temps
+                if ID in op2.temperatures:
+                    case = op2.temperatures[ID]
+                    #print case
+                    temps = zeros(self.nNodes)
+                    key = (ID,'Temperature',1,'node','%g')
+                    for nid,T in case.temperatures.items():
+                        #print T
+                        nid2 = self.nidMap[nid]
+                        temps[nid2] = T
+                    ###
+                    #cases[key] = temps
 
             if self.isStress(op2,ID):
                 cases = self.fillStressCase(cases,op2,ID,eKey,nElements)
@@ -377,7 +388,7 @@ class NastranIO(object):
         ###
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print "caseKeys = ",self.caseKeys
+        #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
         self.iCase = -1
         self.nCases = len(self.resultCases)-1 # number of keys in dictionary
@@ -489,7 +500,7 @@ class NastranIO(object):
                 o3i = case.o3[eid]['C']
                 ovmi = case.ovmShear[eid]['C']
                 #if ID==1:
-                #    print "ovm[%s] = %s" %(eid,ovmi)
+                    #print "ovm[%s] = %s" %(eid,ovmi)
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
                 ozz[eid2] = ozzi
