@@ -66,8 +66,8 @@ class pyWidget(wxVTKRenderWindow):
         elif code == ord('i'):
             self.TakePicture(event)
 
-        elif code == ord('e'): # edges dont work right yet
-            self.parent.DisplayEdges(event)
+        #elif code == ord('e'): # edges dont work right yet
+            #self.parent.DisplayEdges(event)
 
         elif code == ord('L'):
             self.parent.cycleResults()
