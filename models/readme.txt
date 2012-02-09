@@ -1,8 +1,8 @@
 solidBending
  - written by MSC.Nastran
- - tested in Windows GUI
  - BDF reader - SOL 101
  - OP2 reader - displacement, stress
+ - tested in Windows GUI
 
 plate_py
  - written by FEMAP
@@ -14,4 +14,5 @@ beam_modes
  = written by FEMAP
  - BDF reader - SOL 103
  - OP2 reader - has problems with OP2 written by Linux (while on Windows), Windows OP2 is OK
+ - no results in GUI
 

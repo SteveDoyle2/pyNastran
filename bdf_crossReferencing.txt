@@ -2,18 +2,41 @@
 
 For a card to meet the criteria of "done" in this list,
 it must Read/Write ALL fields AND link to interfacing cards.
-This prevents cards like the CORD1x cards from being listed
-as done despite not being supported.
 
-
-NOTE:  If a card interfaces with other cards, the other card doesn't
-       need to be linked for the first card to be considered "done".
+NOTES:  (1) See the documentation (in the folder) for a list of methods for the card.
+        (2) If a card interfaces with other cards, the other card doesn't
+            need to be linked for the first card to be considered "done".
 
 For example, an element (e.g. CQUAD4) links to 4 nodes, and a property (e.g. PSHELL).
 The nodes then link to coordinate systems (e.g. CORD2R).
 The property then links to a material (e.g. MAT1).
 The CQUAD4 must link to the nodes and the property to be considered done.
 
+
+=== Not Added ===
+ - AEFACT
+ - EIGRL
+ - EIGR
+ - EIGC
+
+ - MATT1
+ - MATT4
+ - RBE3
+ - SEQSET1
+ - SPOINT
+ - GRIDG
+ - EGRID
+ - MKAERO1
+ - RLOAD1
+ - RLOAD2
+ - TABRNDG
+ - TEMPD
+ - TEMPD1
+ - RADM
+ - TSTEPNL
+ - CGEN
+ - SPCG
+ 
 ===Unlabeled Cards (???)===
  - SESET
  - SEQSEP
@@ -73,6 +96,8 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - SET
  - RBE3
  - SET1
+ - SPCADD
+ - MPCADD
 
 
 ===Cross Referenced Cards (done)===
@@ -122,11 +147,8 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - SPC
  - SPC1
  - SPCD
- - SPCADD
 
  - MPC
- - MPC1
- - MPCADD
 
  - LOAD
  - FORCE
@@ -161,4 +183,5 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - FREQ1
  - FREQ2
  - PAERO
+
 
