@@ -264,8 +264,8 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
-        self.elements[key] = elem  ## temporary
-        return                     ## temporary
+        #self.elements[key] = elem  ## temporary
+        #return                     ## temporary
 
         if key in self.elements and allowOverwrites==False:
             if not elem.isSameCard(self.elements[key]):
