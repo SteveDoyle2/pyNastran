@@ -180,6 +180,8 @@ OP2 Reader
    - OUGV1 Table (displacement/velocity/acceleration)
       - displacement / temperature (approachCode=1/6/10, sortCode=0, done)
       - eigenvectors /             (approachCode=2,      sortCode=0, done)
+      - velocity     (done)
+      - acceleration (done)
 
 
    - OGP1 Table (grid point forces)
