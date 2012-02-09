@@ -1,16 +1,16 @@
 import unittest
 
-from test_helper import runBDF
+from test_bdf import runBDF
 from pyNastran.bdf.fieldWriter import printCard,printField
 
 class Tester(unittest.TestCase):
-    def Atest_ints(self):
+    def test_ints(self):
         self.assertEquals(printField( 1        ),'       1','a')
         self.assertEquals(printField( 12345678 ),'12345678','b')
         self.assertEquals(printField('12345678'),'12345678','c')
         #self.assertEquals(printField('1       '),'       1','|%s|' %(printField('1       ')))
 
-    def Atest_floats_greater_than_1(self):
+    def test_floats_greater_than_1(self):
         self.assertEquals(printField( 1.2        ),'     1.2','a')
         self.assertEquals(printField( 1.234567890),'1.234568','b')
         self.assertEquals(printField( 12.234568  ),'12.23457','c')
@@ -21,6 +21,7 @@ class Tester(unittest.TestCase):
         self.assertEquals(printField( 1234567.25 ),'1234567.',printField( 1234567.25 ))  # 1.2346+6
         self.assertEquals(printField( 12345678. ), '1.2346+7','|%s|'%printField( 12345678. ))
         self.assertEquals(printField( 123456789.), '1.2346+8','|%s|'%printField( 12345678. ))
+
     def test_floats_small(self):
         #self.assertEquals(printField( 0.1        ),'      .1','A|%s|'%printField( 0.1))
         #self.assertEquals(printField( 0.0001     ),'   .0001','B|%s|'%printField( 0.0001))
