@@ -1,0 +1,272 @@
+See the "bdf_xxx.txt" or "op2_xxx.txt" files for a list of the BDF/OP2 features that
+are supported.  They're nice and long :)
+
+This document discusses the major features (and limitations) added in each
+version of the software.  See the HTML documentation for more information.
+
+If you like it/want to help leave some feedback on the
+Dicussion Page:  http://groups.google.com/group/pynastran-discuss?pli=1
+
+If you have a bug/want a new feature or card, leave some feedback on the
+Issues List:     http://code.google.com/p/pynastran/issues/list
+
+This code was written entirely in Python and should install easily.
+
+
+*** Not done....
+
+-----------------------v0.3 released 2012/01/??-----------------------
+Overall Notes
+   - coordinate systems!!!
+   - all user BDF card API methods will have the first letter capitalized
+     (not fully implemented)
+   - added OP2 demo program that calculates solidStress & displacement margins
+
+
+BDF API Changes
+   - standardizing methods for element/property cards
+     - Eid, Pid, Mid, Mass, NodeIDs, Centroid
+     - Thickness, Area, Volume, Length
+     - J, I11, I12, I22
+   - FREQx  methods
+   - CAERO1 methods
+   - SETx   methods
+
+BDF Bug Fixes
+   - enabled PDAMP, CREEP
+   - bug fix in NLPARM, MAT9,GRDSET
+*  - fixed issue with python <2.6 not supporting
+     argparse module (sys.argv used instead)
+   - BEGIN BULK may now have multiple spaces in it
+   - CORD2Rs can have axes that arent ijk!
+   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and -0.0999) to be written out
+     as (-.)  They were assumed to not round up to -1.0 and -0.1 respectively so the
+     leading -0. could be replaced by (-.) to save field width.
+
+Overall BDF
+   - reorganized code files (main BDF class is in the same place)
+   - improved accuracy of PBEAM methods (Area, Nsm, etc.) by integrating
+     instead of using the first value
+   - added cross referencing of SPLINE1
+   - test_bdf only prints a reject message once per card type now
+   - more Volume, Centroid methods
+
+Added BDF
+   - PBEAML
+   - TABLED1,TABLED2,TABLED3,
+     TABLEM1,TABLEM2,TABLEM3,TABLEM4,
+     TABLES1,TABLEST,TABRND1
+   - PAERO1
+   - FREQ,FREQ1,FREQ2
+   - CGAP, PGAP
+   - PDAMP5
+   - PSHEAR
+   - AEPARAM,AELINK,AESTAT
+   - SET1,SET3,SESET
+   - CORD1R,CORD1C,CORD2C,CORD1S,CORD2S
+   - CONM2 (cid!=0)
+*  - DMIG, DEQATN (not done)
+
+Added OP2
+   - GEOM2
+     - CGAP
+   - OES
+     - CSHEAR
+     - CTRIAR, CTRIA6
+   - OUG
+     - velocity
+     - accleration
+
+OP2 API Changes
+   - OUG
+      - displacementObject now has self.translations (no more self.displacements) & self.rotations
+        This is standard across displacement/velocity/acceleration
+
+Overall OP2
+   - reorganized code files (main OP2 class is in the same place)
+
+OP2 Bug Fixes
+   - deviceCode is now passed properly to result objects
+
+-----------------------v0.2 released 2011/12/20-----------------------
+
+BDF API Changes
+   - test_bdf can be called from the command line
+   - renamed read method  to readBDF (it got confusing when the op2 object can
+     read the bdf b/c it needs to initialize the bdf cards for the geomX tables)
+   - renamed write to writeBDF
+   - renamed writeAsPatran to writeBDFAsPatran
+   - thermal materials (MAT4, MAT5) pulled from self.materials and put into self.thermalMaterials
+     new ThermalMaterial & StructuralMaterial methods
+     Material method checks for either still
+   - rigid elements (RBAR, RBE2, etc.) separated out of elements to avoid overwriting cards
+     new RigidElement method
+     Element method doesnt check for rigid elements anymore
+
+Overall BDF
+   - a few more cards
+   - added extra argument to all cards to set data directly from the 
+     OP2 (no data type setting as the OP2 is binary).
+   - max lines in executive & case control decks is now 600
+   - methods for Elements (Area, Nsm, Thicknesss)
+     
+
+Overall OP2
+   - test_op2 can be called from the command line
+   - reading support ONLY
+   - static solutions (e.g. SOL 101) results will be very stable
+   - thermal solutions have significantly less support than
+     structural solutions.
+   - SORT2 is not supported...for example:
+         use   DISPLACEMENT(PLOT,SORT1)=ALL
+         not   DISPLACEMENT(PLOT,SORT2)=ALL
+   - Many examples outside of SOL 101 have been tested 
+     and dont crash.  This includes large SOL 200 models.  Verify your results first.
+   - The user has the option to read the Geometry tables (GEOM1 (nodes/coords),
+     GEOM2 (elements), GEOM3 (loads), GEOM4 (constraints),
+     EPT/EPTS (properties), MPT/MPTS (materials) and can write the data to a
+     BDF.  This is still a preliminary option.  Use the makeGeom argument.
+     You still need to write the BDF.
+
+BDF Bug Fixes
+   - DCONSTR wasn't processed properly
+   - DDVAL   wasn't processed properly
+   - DAREA   wasn't processed properly
+   - fixed RBE1 bug
+   - fixed RBE3 bug & disabled RBE3
+   - disabled PLOAD4
+   - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
+   - FLFACT reading when the card is short works
+   - PCOMP Thickness method doesnt crash when you want the total thickness
+     Better defaults on PCOMP
+   - fixed some fields on disabled CORDxx cards
+   - CELASx cards had issues with proper order of entries
+   - PELAS cards werent processed properly
+   - files on remote drives dont cause crashes anymore
+   - cend now also signifies the end of the executive control deck
+   - fixed issue with the case control deck parsing on some uncommon cards
+
+Added BDF
+   - PBARL
+   - CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
+   - PDAMP
+   - AESTAT
+   - DRESP1
+   - DVPREL1
+   - DRESP1
+   - PBARL
+
+OP2 Tables
+   - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)
+     Cards that are not stable are not supported.  The
+     writeAsPatran method may be used, but there may still be a
+     few bugs in some of the cards.  These tables are very stable.
+
+   - OUG  table (displacement/temperature,eigenvalues
+                 velocity,acceleration) is very robust
+       - just verify you're getting the result you want, there are
+         a lot of results in this table
+   - OQG  table (spc/mpc forces) None
+   - OGP  table (grid point forces) works for SOL 101, untested on others (shouldnt crash)
+   - OSTR table (strain) - see OES table
+   - OES  table (stress) - elements that arent supported are skipped
+       - Be careful about how you request the data from the object as
+         the variables are dynamic based on the Case Control Deck parameters
+         selected.  For example:
+             STRESS(PLOT,SORT1,FIBER,VONMISES)=ALL
+                - composite stress oxx is in the fiber direction (not the
+                  x axis)
+                - isotropic stress elements have von mises stress (ovm)
+             STRESS(PLOT,SORT1,FIBER,MAXSHEAR)=ALL
+                - composite stress oxx is in the fiber direction (not the
+                  x axis)
+                - isotropic stress elements have max shear stress (maxShear)
+       - All this information is contained within boolean variables such as
+         isVonMises(), isMaxShear() (stress/strain),isFiber(), isCurvature() (stress/strain)
+         which are located on the result objects.
+       - Elements can have different outputs depending on the
+         solution and user requested output options.  For example, rods can
+         contain the margin of safety in tension and compression, but they
+         don't always have that data.  You can check this by using the
+         boolean isMargins.
+
+   - OEE table (element energy) - stable, but results are questionable
+         and difficult to verify.
+
+
+-----------------------v0.1.1 released 2011/12/06 -----------------------
+
+BDF Bug Fixes
+- bug fix to elements.py to fix import error
+
+-----------------------v0.1   released 2011/11/09 -----------------------
+
+Overall BDF
+   - an executive control deck, case control deck, and bulk data deck
+     are REQUIRED.
+   - A ENDDATA card is strongly recommened!
+   - Mass/Stiffness Matricies not supported except in a few, rare cases.
+   - superelements are NOT supported
+   - loads need some TLC in v0.2, but there is minor support for them
+   - see the HTML documenation for a list of object data and methods.
+     The Nastran QRG (Quick Reference Guide) is another good reference.
+
+Executive Control Deck
+   - Include files NOT supported
+   - Limited to LESS than 200 lines
+   - Extract soltion and method (if sol=600)
+   - Can update solution/method
+
+Case Control Deck
+   - Include files supported (dont cross the BEGIN BULK entry)
+   - Limited to LESS than 200 lines
+   - In general, if a card is supported, EVERY field can be read,
+     accessed, and written.
+   - Most cards forms supported
+      1.  STRESS(PLOT,PUNCH) = ALL     #  name(options) = value  (STRESS-type)
+      2.  STRESS = ALL                 #  name = value           (STRESS-type)
+      3.  DISP(PLOT,PUNCH) = ALL       #  name(options) = value  (STRESS-type)
+      4.  PARAM,FIXEDB,-1              #  name, options, value   (PARAM-type)
+      5.  SET 1 = 1,2,3,4, etc.        #  name id = options      (SET-type)
+   - Some forms not supported
+      1.  AUTOSPC (PRINT, PUNCH, SID=100, EPS=1.E-6, MPC)=YES    (AUTOSPC=YES is supported)
+      2.  MODALSE(ESORT=ASCEND,THRESH=.0001)= 100
+      3.  MODESELECT (FLUID LMODES = 5)
+      4.  OUTPUT(XYOUT)
+      5.  TFL = 1, 25, 77
+      6.  SURFACE 10 SET 9 NORMAL X3
+      7.  VOLUME 21 SET 2
+   - Methods to update global/local subcase values
+
+
+BDF Data Deck (no cross referencing required)
+   - include files supported
+   - 8/16 character fields, csv format for cards is supported.  DONT USE TABS!!!
+   - Cards are written in 8-character fields and make use of Nastran-scientific
+     notation to maximize precision.
+   - write and writeAsPatran methods to write the bdf file after modifying it.
+     The write method writes each 'section' (e.g. nodes/elements/properties)
+     as isolated sections.  writeAsPatran intersperses properties and elements.
+   - Duplicate node/element/property/etc. IDs are NOT allowed!
+
+Bulk Data Deck Cross-Referencing
+   - Entire deck is read.  If a card isnt supported, it is rejected.  Unparsed
+     cards are clearly marked in the $REJECTS or $REJECT_LINES sections.
+   - Cross-referencing is a feature that links data from one card to another.
+     An example is a CQUAD4 has four nodes.  When cross-referenced, the element
+     object's nodes become node objects.
+   - Coordinate systems are a work in progress and difficult to test without
+     good test cases.  Feel free to add some.  Therefore, the global coordinate
+     system is safest and is the only one supported at the moment (CORD2R).
+   - In order to determine element information that requires information from
+     other cards, cross-referencing is REQUIRED.  The read method has the
+     option to disable this.
+   - When using constraints, all constraints (SPC,SPC1,SPCD,MPC) must be
+     part of an SPCADD or MPCADD, unless there are no SPCADDs or MPCADDs.
+     In other words, DONT mix and match!
+   - Structural elements have a Mass/Area/Length/Thickness depending on type.
+   - Volume ONLY supported for TET4 and TET10
+   - Lots of methods for PCOMPs
+   - CBEAM elements do are not complete for their area/mass/etc calcuations.
+   - Moments of intertias of elements are not calculated.
+   - Stiffness Matricies are incomplete

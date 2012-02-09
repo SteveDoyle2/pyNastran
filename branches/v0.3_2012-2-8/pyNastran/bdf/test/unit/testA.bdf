@@ -1,0 +1,12 @@
+SOL 123  $ made up solution
+CEND
+SET 101 = 61 THRU 69
+SET 102 = 1 THRU 6
+STRESS(PLOT,PUNCH) = 5
+INCLUDE 'testB.bdf'
+$back from testB
+DISP(PLOT,PUNCH) = 5
+BEGIN BULK
+GRID,1,
+INCLUDE 'testC.bdf'
+ENDDATA
