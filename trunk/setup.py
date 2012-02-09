@@ -29,6 +29,7 @@ setup(name='pyNastran',
         'console_scripts': [
                             'test_bdf = pyNastran.bdf.test.test_bdf:main',
                             'test_op2 = pyNastran.op2.test.test_op2:main',
+                            'pyNastranGUI = pyNastran.gui.gui:main',
                            ]
       },
       )

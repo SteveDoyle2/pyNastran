@@ -1,406 +1,524 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
-# This example shows how to manually construct unstructured grids
-# using Python.  Unstructured grids require explicit point and cell
-# representations, so every point and cell must be created, and then
-# added to the vtkUnstructuredGrid instance.
-
+import os
 import wx
 import vtk
-from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
-                 vtkQuadraticTriangle,vtkQuadraticQuad,vtkQuadraticTetra,vtkQuadraticWedge,vtkQuadraticHexahedron)
-
-
 import sys
+#from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
+
 import pyNastran
-from pyNastran.bdf.bdf import *
-from mouseStyle import MouseStyle
+from guiPanel import Pan
+ID_SAVEAS = 803
+ID_ABOUT = 3
+
+ID_SURFACE   = 901
+ID_WIREFRAME = 902
+ID_HIDDEN    = 903
+
+ID_CAMERA    = 910
+
+ID_BDF = 920
+ID_OP2 = 921
 
 
-def getScreenCorner(x,y):
-    #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
-    (xScreen,yScreen) = wx.GetDisplaySize()
-    xCorner = (xScreen-x)//2
-    yCorner = (yScreen-y)//2
-    return(xCorner,yCorner)
 
-version = pyNastran.__version__
-bdfFileName = sys.argv[1]
+#------------------------------------------------------------------------------
+
+class AppFrame( wx.Frame ) :
+
+    def __init__(self,isEdges=False,debug=False) :
+        
+        wx.Frame.__init__( self, None, -1, size=wx.Size(800, 600),title='pyNastran')
+        self.bdfFileName = None
+        self.isEdges = isEdges
+        self.dirname = ''
+        self.setupFrame()
+
+    def setupFrame(self):
+        """
+        --------------------------------
+        |        VERTICAL(VMAIN)       |
+        |   -------------------------  |
+        |   |                       |  |
+        |   |        toolbar        |  |
+        |   |                       |  |
+        |   -------------------------  |
+        |   |       HORIZ           |  |
+        |   |         |  VERTICAL   |  |
+        |   |         |             |  |
+        |   |   GUI   |  sidewindow |  |
+        |   |         |             |  |
+        |   |         |             |  |
+        |   |         |             |  |
+        |   -------------------------  |
+        |   |                       |  |
+        |   |       statusbar       |  |
+        |   |                       |  |
+        |   -------------------------  |
+        |                              |
+        --------------------------------
+        """
+        # Must call before any event handler is referenced.
+        self.eventsHandler = EventsHandler(self)
+        
+        
+        self.frmPanel = Pan(self,isEdges=self.isEdges,size=(100,200))
+
+        self.buildMenuBar()
+        self.buildToolBar()
+        self.buildStatusBar()
+        
+        self.SetMenuBar(self.menubar)
+
+        self.frmPanel.bdfFileName = self.bdfFileName
+        self.frmPanel.buildVTK(self.bdfFileName)
+
+        windowName = self.frmPanel.getWindowName()
+        self.SetTitle(windowName)
+        #self.SetSize([600,600])
+        #self.Centre()
+
+        # Add them to sizer.
+        hbox = wx.BoxSizer( wx.HORIZONTAL )
+        hbox.Add( self.frmPanel.widget, 1, wx.EXPAND|wx.ALL, 1 )
+
+        # Add buttons in their own sizer
+        if 0:
+            self.redBtn   = wx.Button( self.frmPanel, label='Red' )
+            self.greenBtn = wx.Button( self.frmPanel, label='Green' )
+            self.exitBtn  = wx.Button( self.frmPanel, label='Exit' )
+
+            vRight = wx.BoxSizer( wx.VERTICAL)
+            vRight.AddStretchSpacer()
+            vRight.Add( self.greenBtn, proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.Add( self.exitBtn,  proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.Add( self.redBtn,   proportion=0, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.AddStretchSpacer()
+            hbox.Add(vRight,1,wx.EXPAND)
+
+        if 0:
+            tree = self.buildTree(self.frmPanel)
+            vRight = wx.BoxSizer( wx.VERTICAL)
+            vRight.AddStretchSpacer()
+            vRight.Add( tree, proportion=1, flag=wx.EXPAND|wx.ALL, border=5 )
+            vRight.AddStretchSpacer()
+            hbox.Add(vRight,1,wx.EXPAND)
 
 
-class FrameVTK(object):
-    def __init__(self,isEdges):
-        self.isEdges = isEdges # surface wireframe
-        self.loadGeometry(bdfFileName)
-        self.main()
+        # best guess at tree
+        if 0:
+            #self.tree  = wx.Button( self.frmPanel, label='Tree' )
 
-    def getColors(self):
-        pass
-        #Merger = vtk.vtkMergeFilter()
-        #Filter = vtk.vtkGeometryFilter()
-        #Filter.SetInput(self.aQuadGrid)
+            vRight = wx.BoxSizer( wx.VERTICAL)
 
+            scroll = wx.ScrolledWindow( self, -1 )
+            panelRight = wx.Panel( scroll, -1 )
+
+            panelRight = wx.Panel(self, wx.EXPAND)
+            tree = self.buildTree(panelRight)
+            vRight.Add( tree,   flag=wx.EXPAND|wx.ALL)
+            #vRight.Add(tree, 1, wx.EXPAND)
+            #hbox.Add(panel1, 1, wx.EXPAND)
+            
+            vRight.Add(scroll, 1, wx.EXPAND | wx.ALL)
+            #panelRight.SetSizer(vRight)
+            panelRight.Layout()
+
+            
+
+            hbox.Add( vRight, 1, wx.EXPAND)
+            #hbox.Add(panelRight, 1, wx.EXPAND | wx.ALL)
+
+            # SetSizer both sizers in the most senior control that has sizers in it.
+            self.vMain = wx.BoxSizer(wx.VERTICAL | wx.EXPAND)
+            self.vMain.Add(hbox,1,wx.EXPAND,5)
+
+        #self.vMain.AddStretchSpacer()
+        #self.vMain.Add(self.frmPanel.widget, 0, wx.EXPAND)
+        #self.vMain.Add(self.toolbar1, 0, wx.EXPAND)
+        #self.vMain.AddStretchSpacer()
+        #self.vMain.Add(hbox, 0, wx.EXPAND|wx.ALL, 5)
+        self.frmPanel.SetSizer(hbox)
+        #self.frmPanel.SetSizer(self.vMain)
+        self.frmPanel.Layout()
+        #self.toolbar1.Realize()
 
         
-        #Filter = vtk.vtkRotationFilter()
-        #Filter.SetCenter(0.,0.,0.)
-        #Filter.SetNumberOfCopies(1)
-        #Filter.SetInput(aQuadGrid)
-        #Filter.Update()
+        events = self.eventsHandler
+        # Bind Controls
+        #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
         
-    def getEdges(self):
-        edges = vtk.vtkExtractEdges()
-        edges.SetInput(self.grid)
-        self.edgeMapper = vtk.vtkPolyDataMapper()
-        self.edgeMapper.SetInput(edges.GetOutput())
-        #self.edgeMapper.EdgeVisibilityOff()
+        # Bind View Menu
+        self.Bind(wx.EVT_MENU, self.frmPanel.widget.TakePicture, id=ID_CAMERA)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe,     id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,       id=ID_SURFACE)
 
-        self.edgeActor = vtk.vtkActor()
-        self.edgeActor.SetMapper(self.edgeMapper)
-        self.edgeActor.GetProperty().SetColor(0,0,0)
-        prop = self.edgeActor.GetProperty()
-        #prop.SetLineWidth(0.0)
-        if self.isEdges:
-            prop.EdgeVisibilityOn()
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToFlatShading,    self.flatShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToGouraudShading, self.gouraudShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToPhongShading,   self.phongShading)
+
+        self.Bind(wx.EVT_MENU, events.OnBackgroundColor, self.bkgColorView)
+        #self.Bind(wx.EVT_MENU, events.ToggleStatusBar, self.showStatusBar)
+        #self.Bind(wx.EVT_MENU, events.ToggleToolBar, self.showToolBar)
+        
+        # Bind Help Menu
+        self.Bind(wx.EVT_MENU, events.OnAbout, id=ID_ABOUT)
+    #end __init__
+
+    def buildTree(self,panel1):
+        tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1,-1), wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS)
+        root = tree.AddRoot('Programmer')
+        os   = tree.AppendItem(root, 'Operating Systems')
+        tree.AppendItem(os, 'Linux')
+        tree.AppendItem(os, 'FreeBSD')
+        tree.AppendItem(os, 'OpenBSD')
+        tree.AppendItem(os, 'NetBSD')
+        tree.AppendItem(os, 'Solaris')
+        pl = tree.AppendItem(root, 'Programming Languages')
+        cl = tree.AppendItem(pl, 'Compiled languages')
+        sl = tree.AppendItem(pl, 'Scripting languages')
+        tree.AppendItem(cl, 'Java')
+        tree.AppendItem(cl, 'C++')
+        tree.AppendItem(cl, 'C')
+        tree.AppendItem(cl, 'Pascal')
+        tree.AppendItem(sl, 'Python')
+        tree.AppendItem(sl, 'Ruby')
+        tree.AppendItem(sl, 'Tcl')
+        tree.AppendItem(sl, 'PHP')
+
+        tk = tree.AppendItem(root, 'Toolkits')
+        tree.AppendItem(tk, 'Qt')
+        tree.AppendItem(tk, 'MFC')
+        tree.AppendItem(tk, 'wxPython')
+        tree.AppendItem(tk, 'GTK+')
+        tree.AppendItem(tk, 'Swing')
+        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe, id=ID_WIREFRAME)
+        #tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, id=1)
+        return tree
+
+    def OnSelChanged(self, event):
+        item =  event.GetItem()
+        self.display.SetLabel(tree.GetItemText(item))
+
+    def UpdateWindowName(self,bdfFileName):
+        self.bdfFileName = bdfFileName
+        self.frmPanel.bdfFileName = bdfFileName
+        windowName = self.frmPanel.getWindowName()
+        self.SetTitle(windowName)
+    
+    def buildStatusBar(self):
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText('Ready')
+
+    def buildToolBar(self):
+        events = self.eventsHandler
+
+        #toolbar1.AddSeparator()
+        #toolbar1.AddSeparator()
+        #tnew  = toolbar1.AddLabelTool(wx.ID_ANY,  '', wx.Bitmap('icons/new.png'))
+        #tsave = toolbar1.AddLabelTool(ID_SAVEAS,  '', wx.Bitmap('icons/tsave.png'))
+        #tundo = toolbar1.AddLabelTool(wx.ID_UNDO, '', wx.Bitmap('icons/tundo.png'))
+        #tredo = toolbar1.AddLabelTool(wx.ID_REDO, '', wx.Bitmap('icons/tredo.png'))
+
+        # toolbar at top - toggles
+        toolbar1 = self.CreateToolBar()
+        #toolbar.AddLabelTool(self.id, '', bitmap, wx.NullBitmap, self.kind, 
+        #                     shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
+        #             longHelp=self.helpText)
+
+        topen     = toolbar1.AddLabelTool(ID_BDF,       '' ,wx.Bitmap('icons/topen.png'),     longHelp='Loads a BDF')
+        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.Bitmap('icons/twireframe.png'),longHelp='Set to Wireframe Model')
+        surface   = toolbar1.AddLabelTool(ID_SURFACE,   '', wx.Bitmap('icons/tsolid.png'),    longHelp='Set to Surface/Solid Model')
+        camera    = toolbar1.AddLabelTool(ID_CAMERA,    '', wx.Bitmap('icons/tcamera.png'),   longHelp='Take a Screenshot')
+        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.Bitmap('icons/texit.png'),     longHelp='Exit pyNastran GUI')
+        #toolbar1.EnableTool(wx.ID_REDO, False)
+        toolbar1.Realize()
+
+        self.toolbar1 = toolbar1
+
+
+        # Bind File Menu
+        self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=ID_BDF)
+        self.Bind(wx.EVT_TOOL, events.OnLoadOP2,  id=ID_OP2)
+
+        self.Bind(wx.EVT_MENU, events.OnExit,     id=wx.ID_EXIT)
+        #self.Bind(wx.EVT_TOOL, events.OnExit,     id=wx.ID_EXIT)
+
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe, id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,   id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,   id=ID_CAMERA)
+
+
+        #self.Bind(wx.EVT_TOOL, events.OnSaveAsFile, id=ID_SAVEAS)
+        #self.Bind(wx.EVT_TOOL, events.OnUndo, tundo)
+        #self.Bind(wx.EVT_TOOL, events.OnRedo, tredo)
+
+    def buildMenuBar(self):
+        events = self.eventsHandler
+
+        menubar = wx.MenuBar()
+        # file menu
+        fileMenu = wx.Menu()
+        #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
+        loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
+        loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
+        loadBDF.SetBitmap(   wx.Image('icons/topen.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+
+        #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
+        #fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
+        fileMenu.AppendSeparator()
+
+        
+        # dummy import submenu
+        #imp = wx.Menu()
+        #imp.Append(wx.ID_ANY, 'Import newsfeed list...')
+        #imp.Append(wx.ID_ANY, 'Import bookmarks...')
+        #imp.Append(wx.ID_ANY, 'Import mail...')
+
+        #fileMenu.AppendMenu(wx.ID_ANY, 'I&mport', imp)
+        exitButton = wx.MenuItem(fileMenu, wx.ID_EXIT, 'Exit','Exits pyNastran')
+        exitButton.SetBitmap(wx.Image('icons/texit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        fileMenu.AppendItem(exitButton)
+
+        # view menu
+        # status bar at bottom - toggles
+        viewMenu = wx.Menu()
+        camera    = viewMenu.Append(ID_CAMERA, 'Take a Screenshot','Take a Screenshot')
+        viewMenu.AppendSeparator()
+        wireframe = viewMenu.Append(ID_WIREFRAME, 'Wireframe Model','Show Model as a Wireframe Model')
+        surface   = viewMenu.Append(ID_SURFACE, 'Surface Model',  'Show Model as a Surface Model')
+        #viewMenu.AppendSeparator()
+
+        #self.flatShading    = viewMenu.Append(wx.ID_ANY, 'Flat Shading',           'Flat Shading')
+        #self.gouraudShading = viewMenu.Append(wx.ID_ANY, 'Mid (Gouraud) Shading',  'Mid (Gouraud) Shading')
+        #self.phongShading   = viewMenu.Append(wx.ID_ANY, 'Smooth (Phong) Shading', 'Smooth (Phong) Shading')
+
+        # view images
+        wireframe.SetBitmap(wx.Image('icons/twireframe.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        surface.SetBitmap(  wx.Image('icons/tsolid.png',     wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        camera.SetBitmap(   wx.Image('icons/tcamera.png',    wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+
+        #wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap('icons/twireframe.png'))
+        #surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap('icons/tsolid.png'))
+        #camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap('icons/tcamera.png'))
+
+
+        viewMenu.AppendSeparator()
+        self.bkgColorView  = viewMenu.Append(wx.ID_ANY, 'Change Background Color','Change Background Color')
+        #self.showStatusBar = viewMenu.Append(wx.ID_ANY, 'Show statusbar', 'Show Statusbar', kind=wx.ITEM_CHECK)
+        #self.showToolBar   = viewMenu.Append(wx.ID_ANY, 'Show toolbar',   'Show Toolbar',   kind=wx.ITEM_CHECK)
+        #viewMenu.Check(self.showStatusBar.GetId(), True)
+        #viewMenu.Check(self.showToolBar.GetId(),   True)
+
+        # help/about menu
+        helpMenu = wx.Menu()
+        helpMenu.Append(ID_ABOUT, '&About', 'About pyNastran')
+
+        # menu bar
+        menubar.Append(fileMenu, '&File')
+        menubar.Append(viewMenu, '&View')
+        menubar.Append(helpMenu, '&Help')
+        self.menubar = menubar
+
+
+
+#end AppFrame class
+
+#------------------------------------------------------------------------------
+
+class EventsHandler(object) :
+
+    def __init__(self,parent):
+        self.parent = parent
+
+    # File Menu
+    def OnLoadBDF(self, event):
+        """ Open a file"""
+        #print "OnOpen..."
+
+        wildcard = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
+         "All files (*.*)|*.*"
+
+        dlg = wx.FileDialog(None, "Choose a Nastran Input Deck to Load ", self.parent.dirname, "", wildcard, wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:
+            bdfFileName         = dlg.GetFilename()
+            self.parent.dirname = dlg.GetDirectory()
+            fname = os.path.join(self.parent.dirname, bdfFileName)
+            print "fname = ",fname
+            self.parent.UpdateWindowName(bdfFileName)
+            self.parent.frmPanel.loadGeometry(fname,self.parent.dirname)
+            self.parent.frmPanel.Update()
+        dlg.Destroy()
+
+    def OnLoadOP2(self, event):
+        """ Open a file"""
+        #print "OnOpen..."
+
+        if 0:
+            bdf = self.parent.bdfFileName
+            bdfBase = os.path.basename(bdf)
+            #dirname = os.path.dirname(bdf)
+            op2name,op2 = os.path.splitext(bdfBase)
+            op2 = os.path.join(self.parent.dirname,op2name+'.op2')
+            
+            self.parent.op2FileName = op2
+            if os.path.exists(op2):
+                self.parent.frmPanel.loadResults(op2)
+                self.parent.frmPanel.Update()
+            return
+        
+        wildcard = "Nastran OP2 (*.op2)|*.op2|" \
+         "All files (*.*)|*.*"
+
+        dlg = wx.FileDialog(None, "Choose a Nastran Output File to Load (OP2 only)", self.parent.dirname, "", wildcard, wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:
+            op2FileName         = dlg.GetFilename()
+            self.parent.dirname = dlg.GetDirectory()
+            oname = os.path.join(self.parent.dirname, op2FileName)
+            print "oname = ",oname
+            #self.parent.UpdateWindowName(op2FileName)
+            self.parent.frmPanel.loadResults(oname)
+            self.parent.frmPanel.Update()
+        dlg.Destroy()
+
+    def OnExit(self,event):
+        self.parent.Destroy()
+
+    # View Menu
+    def OnBackgroundColor(self,event):
+        dlg = wx.ColourDialog(self.parent)
+        dlg.GetColourData().SetChooseFull(True)
+        if dlg.ShowModal() == wx.ID_OK:
+            data = dlg.GetColourData()
+            #print 'You selected: %s\n' % str(data.GetColour().Get())
+            dlg.Destroy()
+            self.SetColor(data.GetColour().Get())
+            return
+        dlg.Destroy()
+
+    def SetColor(self,bkgColor):
+        """
+        @warning if the model is not loaded and the color is not "clicked"
+        on, then rend will return None
+        """
+        rend = self.parent.frmPanel.widget.GetCurrentRenderer()
+        if not rend: # rend doesnt exist at first
+            print 'Try again to change the color (you didnt "click" on the color; one time bug)'
+            return
+            rend = self.parent.frmPanel.widget.GetCurrentRenderer()
+
+        ## bkgColor range from 0 to 255
+        ## color ranges from 0 to 1
+        color = [bkgColor[0]/255.,bkgColor[1]/255.,bkgColor[2]/255.]
+        rend.SetBackground(color)
+        self.parent.frmPanel.widget.Render()
+
+    def ToggleStatusBar(self, e):
+        if self.parent.showStatusBar.IsChecked():
+            self.parent.statusbar.Show()
         else:
-            prop.EdgeVisibilityOff()
+            self.parent.statusbar.Hide()
 
-        self.rend.AddActor(self.edgeActor)
-
-        vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
-        print "visible = ",prop.GetEdgeVisibility()
-        #self.edgeActor.Update()
-
-
-    def addGeometry(self):
-        aQuadMapper = vtk.vtkDataSetMapper()
-        aQuadMapper.SetInput(self.grid)
-        #aQuadMapper.SetInput(Filter.GetOutput())
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(aQuadMapper)
-        #geometryActor.AddPosition(2, 0, 2)
-        #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0) # red
-        self.rend.AddActor(geometryActor)
-
-    def addAltGeometry(self):
-        aQuadMapper = vtk.vtkDataSetMapper()
-        aQuadMapper.SetInput(self.grid2)
-        #aQuadMapper.SetInput(Filter.GetOutput())
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(aQuadMapper)
-        #geometryActor.AddPosition(2, 0, 2)
-        #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        geometryActor.GetProperty().SetDiffuseColor(1, 1, 0) # green
-        self.rend.AddActor(geometryActor)
-        vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
-
-    def main(self):
-        self.rend = vtk.vtkRenderer()
-        self.addGeometry()
-        self.addAltGeometry()
-
-        # Create the usual rendering stuff.
-        if self.isEdges:
-            self.getEdges()
-        self.rend.GetActiveCamera().ParallelProjectionOn()
-        self.rend.SetBackground(.1, .2, .4)
-        self.rend.ResetCamera()
-
-        self.renWin = vtk.vtkRenderWindow()
-        self.renWin.AddRenderer(self.rend)
-        
-        cam = self.rend.GetActiveCamera()
-        mouseArgs = {'pipeline':self,'camera':cam}
-
-        xSize = 500
-        ySize = 400
-        k = wx.App(False) # required to get screen resolution; will be True in final gui
-        (x,y) = getScreenCorner(xSize,ySize)
-        self.renWin.SetSize(xSize,ySize)
-        self.renWin.SetPosition(x,y)
-
-
-        iren = vtk.vtkRenderWindowInteractor()
-        mouseStyle = MouseStyle(mouseArgs,iren)
-        iren.SetInteractorStyle(mouseStyle)
-        iren.SetRenderWindow(self.renWin)
-
-        iren.AddObserver("KeyPressEvent", mouseStyle.OnKeyPress)
-
-        print "type(ren) = ",type(self.rend)
-        #self.rend.GetActiveCamera().Zoom(2.0)
-
-        # Render the scene and start interaction.
-        iren.Initialize()
-        self.renWin.Render()
-        self.renWin.SetWindowName("pyNastran v%s - %s" %(version,bdfFileName))
-        iren.Start()
-
-    def loadGeometry(self,bdfFileName):
-        model = BDF()
-        model.readBDF(bdfFileName)
-
-        nNodes    = model.nNodes()
-        nElements = model.nElements()
-        nCAeros   = model.nCAeros()
-
-        #print "nNodes = ",nNodes
-        print "nElements = ",nElements
-
-        self.grid  = vtk.vtkUnstructuredGrid()
-        self.grid2 = vtk.vtkUnstructuredGrid()
-        #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
-
-        if 'CONM2' in model.cardCount:
-            nCONM2 = model.cardCount['CONM2']
+    def ToggleToolBar(self, e):
+        if self.parent.showToolBar.IsChecked():
+            self.parent.toolbar1.Show()
         else:
-            nCONM2 = 0
-        self.grid.Allocate(nElements, 1000)
-        self.grid2.Allocate(nCAeros +nCONM2, 1000)
+            self.parent.toolbar1.Hide()
 
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nNodes)
-        nidMap = {}
-        i=0
-        #elem.SetNumberOfPoints(nNodes)
-        for nid,node in sorted(model.nodes.items()):
-            #print "i = ",i
-            point = node.Position()
-            #print "point = ",point
-            #sys.stdout.flush()
-            #aVoxel = vtk.vtkPixel()
-            #print "made voxel"; sys.stdout.flush()
-            points.InsertPoint(i, *point)
+    # Help Menu
+    def OnAbout(self, event):
+        about = [
+            'pyNastran v%s'%(pyNastran.__version__),
+            'Copyright %s; Steven P. Doyle 2011-2012\n' %(pyNastran.__license__),
+            '%s' %(pyNastran.__website__),
+            '',
+            'Mouse',
+              'Left Click - Rotate',
+              'Middle Click - Pan/Recenter Rotation Point',
+              'Shift + Left Click - Pan/Recenter Rotation Point',
+              'Right Mouse - Zoom',
+            '',
+            'Keyboard Controls',
+              'X/x - snap to x axis',
+              'Y/y - snap to y axis',
+              'Z/z - snap to z axis',
+              '',
+              'h   - show/hide legend & info',
+              'i   - take a screenshot (image)',
+              'L   - cycle op2 results',
+              'm/M - scale up/scale down by 1.1 times',
+              'o/O - rotate counter-clockwise/clockwise 5 degrees',
+              's   - surface',
+              'w   - wireframe',
+              ]
+        
+        # not done
+              #'',
+              #'left arrow  - pan left',
+              #'right arrow - pan right',
+              #'up arrow    - pan up',
+              #'down arrow  - pan down',
+              #'',
+              #'e  - show/hide edges',
+              #'f   fly to rotation point',
+              #'p   project point',
 
-            #print str(element)
+        dlg = wx.MessageDialog(None, '\n'.join(about), 'About',
+                 wx.OK | wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
 
-            #elem = vtk.vtkVertex()
-            #elem.GetPointIds().SetId(0, i)
-            #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+#end Events class
 
-            nidMap[nid] = i
-            i+=1
+#------------------------------------------------------------------------------
+def runArgParse():
+    import argparse
 
-        j = 0
-        points2 = vtk.vtkPoints()
-        points2.SetNumberOfPoints(nCAeros*4+nCONM2)
-        for eid,element in sorted(model.caeros.items()):
-            if isinstance(element,CAERO1):
-                cpoints = element.Points()
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, j)
-                elem.GetPointIds().SetId(1, j+1)
-                elem.GetPointIds().SetId(2, j+2)
-                elem.GetPointIds().SetId(3, j+3)
-                points2.InsertPoint(j,   *cpoints[0])
-                points2.InsertPoint(j+1, *cpoints[1])
-                points2.InsertPoint(j+2, *cpoints[2])
-                points2.InsertPoint(j+3, *cpoints[3])
-                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                j+=4
-        self.mapElements(points,points2,nidMap,model,j)
+    ver = str(pyNastran.__version__)
+    parser = argparse.ArgumentParser(description='Tests to see if an OP2 will work with pyNastran.',add_help=True) #,version=ver)
+    #parser.add_argument('op2FileName', metavar='op2FileName', type=str, nargs=1,
+    #                   help='path to OP2 file')
 
-    def mapElements(self,points,points2,nidMap,model,j):
-        for eid,element in sorted(model.elements.items()):
-            if isinstance(element,CTRIA3):
-                #print "ctria3"
-                elem = vtkTriangle()
-                nodeIDs = element.nodeIDs()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CTRIA6):
-                nodeIDs = element.nodeIDs()
-                if None not in nodeIDs:
-                    elem = vtkQuadraticTriangle()
-                    elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                    elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                    elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                else:
-                    elem = vtkTriangle()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CQUAD4):
-                nodeIDs = element.nodeIDs()
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CQUAD8):
-                nodeIDs = element.nodeIDs()
-                if None not in nodeIDs:
-                    elem = vtkQuadraticQuad()
-                    elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                    elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                    elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
-                    elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
-                else:
-                    elem = vtkQuad()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CTETRA4):
-                elem = vtkTetra()
-                nodeIDs = element.nodeIDs()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CTETRA10):
-                nodeIDs = element.nodeIDs()
-                if None not in nodeIDs:
-                    elem = vtkQuadraticTetra()
-                    elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                    elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                    elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
-                    elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
-                    elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
-                    elem.GetPointIds().SetId(9, nidMap[nodeIDs[9]])
-                else:
-                    elem = vtkTetra()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CPENTA6):
-                elem = vtkWedge()
-                nodeIDs = element.nodeIDs()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
-            elif isinstance(element,CPENTA15):
-                nodeIDs = element.nodeIDs()
-                if None not in nodeIDs:
-                    elem = vtkQuadraticWedge()
-                    elem.GetPointIds().SetId(6,  nidMap[nodeIDs[6]])
-                    elem.GetPointIds().SetId(7,  nidMap[nodeIDs[7]])
-                    elem.GetPointIds().SetId(8,  nidMap[nodeIDs[8]])
-                    elem.GetPointIds().SetId(9,  nidMap[nodeIDs[9]])
-                    elem.GetPointIds().SetId(10, nidMap[nodeIDs[10]])
-                    elem.GetPointIds().SetId(11, nidMap[nodeIDs[11]])
-                    elem.GetPointIds().SetId(12, nidMap[nodeIDs[12]])
-                    elem.GetPointIds().SetId(13, nidMap[nodeIDs[13]])
-                    elem.GetPointIds().SetId(14, nidMap[nodeIDs[14]])
-                else:
-                    elem = vtkWedge()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CHEXA8):
-                nodeIDs = element.nodeIDs()
-                elem = vtkHexahedron()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
-                elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CHEXA20):
-                nodeIDs = element.nodeIDs()
-                #print "nodeIDs = ",nodeIDs
-                if None not in nodeIDs:
-                    elem = vtkQuadraticHexahedron()
-                    elem.GetPointIds().SetId(8,  nidMap[nodeIDs[8]])
-                    elem.GetPointIds().SetId(9,  nidMap[nodeIDs[9]])
-                    elem.GetPointIds().SetId(10, nidMap[nodeIDs[10]])
-                    elem.GetPointIds().SetId(11, nidMap[nodeIDs[11]])
-                    elem.GetPointIds().SetId(12, nidMap[nodeIDs[12]])
-                    elem.GetPointIds().SetId(13, nidMap[nodeIDs[13]])
-                    elem.GetPointIds().SetId(14, nidMap[nodeIDs[14]])
-                    elem.GetPointIds().SetId(15, nidMap[nodeIDs[15]])
-                    elem.GetPointIds().SetId(16, nidMap[nodeIDs[16]])
-                    elem.GetPointIds().SetId(17, nidMap[nodeIDs[17]])
-                    elem.GetPointIds().SetId(18, nidMap[nodeIDs[18]])
-                    elem.GetPointIds().SetId(19, nidMap[nodeIDs[19]])
-                else:
-                    elem = vtkHexahedron()
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('-g','--edges',    dest='edges', action='store_true',help='Reads the OP2 for geometry, which can be written out')
+    #group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
 
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
-                elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
-                elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
-                elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
-                elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
-                elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,LineElement) or isinstance(element,SpringElement):
-                elem = vtk.vtkLine()
-                nodeIDs = element.nodeIDs()
-                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            ###
-            elif isinstance(element,CONM2): # not perfectly located
-                nid  = element.Nid()
-                c    = element.Centroid()
-                elem = vtk.vtkVertex()
-                #elem = vtk.vtkSphere()
-                #elem.SetRadius(1.0)
-                #print str(element)
+    parser.add_argument('-v','--version',action='version',version=ver)
+    
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit()
+    args = parser.parse_args()
+    #print "op2FileName = ",args.op2FileName[0]
+    #print "debug       = ",not(args.quiet)
 
-                points2.InsertPoint(j,     *c)
-                elem.GetPointIds().SetId(0, j)
-                #elem.SetCenter(points.GetPoint(nidMap[nid]))
-                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                j+=1
-            else:
-                print "skipping %s" %(element.type)
+    debug = not(args.quiet)
+    edges = args.edges
+    #writeBDF    = args.writeBDF
+    #op2FileName = args.op2FileName[0]
 
-        ###
-        self.grid.SetPoints(points)
-        self.grid2.SetPoints(points2)
-        self.grid.Update()
-        self.grid2.Update()
-
-    def takePicture(self):
-        """
-        doesnt work...
-        """
-        #imageName = 'image.tiff'
-        imageName = 'image.png'
-        self.captureImage(imageName)
-        print "took picture %s" %(imageName)
-
-    def captureImage(self,imageName):
-        """
-        doesnt work...
-        """
-        w2i = vtk.vtkWindowToImageFilter()
-        #writer = vtk.vtkTIFFWriter()
-        writer = vtk.vtkPNGWriter()
-        w2i.SetInput(self.renWin)
-        w2i.Update()
-        writer.SetInputConnection(w2i.GetOutputPort())
-        self.renWin.Render()
-        writer.SetFileName(imageName)
-        writer.Write()
+    return (edges,debug)
 
 def main():
     isEdges = False
-    p = FrameVTK(isEdges)
+    debug   = True
+    if sys.version_info < (2,6):
+        print "requires Python 2.6+ to use command line arguments..."
+    else:
+        if len(sys.argv)>1:
+            (isEdges,debug) = runArgParse()
+    app = wx.App( redirect=False )
+    appFrm = AppFrame(isEdges,debug)
+    #appFrm.Show()
+    print "launching gui"
+    app.MainLoop()
 
-if __name__=='__main__':
+#end class
+
+#==============================================================================
+
+if __name__ == '__main__' :
     main()
