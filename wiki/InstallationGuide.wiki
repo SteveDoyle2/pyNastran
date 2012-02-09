@@ -4,8 +4,7 @@
 
 = User Overview = 
  * Install Python
- * Install numpy
- * Install scipy
+ * Install numpy, scipy, vtk, & wxPython
  * Download the latest pyNastran release
  * Extract the zip file
  * Navigate to pyNastran directory on the command line
@@ -13,8 +12,7 @@
 
 = Developer Overview = 
  * Install Python
- * Install numpy
- * Install scipy
+ * Install numpy, scipy, vtk, & wxPython
  * install Doxygen
  * Use subversion to checkout pyNastran
  * run *doxygen Doxyfile* to generate the documentation
@@ -24,14 +22,15 @@
 = Install Procedure - User =
 
 == Download Python ==
-The software has been tested Python 2.6
+The software has been tested for Python 2.7.
 
-I use *Python(x,y)-2.6.5.6*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.4 to 2.7 are probably fine, but good luck!
+I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.6 and 2.7 are both fine, but the code uses a few features that aren't available in Python 2.5.  If you cannot update your Python, you still can use the code if you modify it slightly.
 
  * [http://code.google.com/p/pythonxy/wiki/Welcome Python(x,y) ]
  * [http://scipy.org/ scipy 0.9.0  ]
  * [http://numpy.org/ numpy 1.5.1  ]
-
+ * vtk 5.8.0
+ * wxPython 2.8.12.0
 
 == Download pyNastran ==
  * Click the downloads page and download the most recent [http://code.google.com/p/pynastran/downloads/list version]
@@ -47,7 +46,7 @@ Enjoy!
 
 == Install Subversion ==
  * download install [http://tortoisesvn.net/ Subversion]
- * checkout the code (see the suberversion website if you need help) and the [http://code.google.com/p/pynastran/source/checkout Source]
+ * checkout the code (see the subversion website if you need help) and the [http://code.google.com/p/pynastran/source/checkout Source]
 
 == Install Doxygen ==
  * download and install [http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html Doxygen ]
@@ -60,10 +59,10 @@ Enjoy!
  * Navigate to pyNastran directory on the command line
  * run *doxygen Doxyfile* to generate the documentation
 
-=== Non-Python 2.6 Windows ===
- * open Doxyfile in a text editor and change the python path from *C:\Python26\python.exe* to your executable location (likely *C:\Python27\python.exe* or some variation on that).  *NOTE* that Doxygen cares about the slash direction even if you're using cygwin and it works on the command line.
+=== Non-Python 2.7 Windows ===
+ * open Doxyfile in a text editor and change the python path from *C:\Python27\python.exe* to your executable location (likely *C:\Python26\python.exe* or some variation on that).  *NOTE* that Doxygen cares about the slash direction even if you're using cygwin and it works on the command line.
 
 === Linux Step ===
- * open Doxyfile in a text editor and change the python path from    *C:\Python26\python.exe* to your executable location (likely */usr/bin/python* or some variation on that)
+ * open Doxyfile in a text editor and change the python path from    *C:\Python27\python.exe* to your executable location (likely */usr/bin/python* or some variation on that)
 
 Glad to have you aboard!
