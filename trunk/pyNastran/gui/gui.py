@@ -7,6 +7,7 @@ import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
 import pyNastran
+import pyNastran.gui
 from guiPanel import Pan
 ID_SAVEAS = 803
 ID_ABOUT = 3
@@ -20,7 +21,11 @@ ID_CAMERA    = 910
 ID_BDF = 920
 ID_OP2 = 921
 
+pkgPath = pyNastran.gui.__path__[0]
+#print "pkgPath = |%r|" %(pkgPath)
 
+iconPath = os.path.join(pkgPath,'icons')
+#print "iconPath = |%r|" %(iconPath)
 
 #------------------------------------------------------------------------------
 
@@ -215,10 +220,10 @@ class AppFrame( wx.Frame ) :
 
         #toolbar1.AddSeparator()
         #toolbar1.AddSeparator()
-        #tnew  = toolbar1.AddLabelTool(wx.ID_ANY,  '', wx.Bitmap('icons/new.png'))
-        #tsave = toolbar1.AddLabelTool(ID_SAVEAS,  '', wx.Bitmap('icons/tsave.png'))
-        #tundo = toolbar1.AddLabelTool(wx.ID_UNDO, '', wx.Bitmap('icons/tundo.png'))
-        #tredo = toolbar1.AddLabelTool(wx.ID_REDO, '', wx.Bitmap('icons/tredo.png'))
+        #tnew  = toolbar1.AddLabelTool(wx.ID_ANY,  '', wx.Bitmap(os.path.join(iconPath,'new.png')))
+        #tsave = toolbar1.AddLabelTool(ID_SAVEAS,  '', wx.Bitmap(os.path.join(iconPath,'tsave.png')))
+        #tundo = toolbar1.AddLabelTool(wx.ID_UNDO, '', wx.Bitmap(os.path.join(iconPath,'tundo.png')))
+        #tredo = toolbar1.AddLabelTool(wx.ID_REDO, '', wx.Bitmap(os.path.join(iconPath,'tredo.png')))
 
         # toolbar at top - toggles
         toolbar1 = self.CreateToolBar()
@@ -226,11 +231,11 @@ class AppFrame( wx.Frame ) :
         #                     shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
         #             longHelp=self.helpText)
 
-        topen     = toolbar1.AddLabelTool(ID_BDF,       '' ,wx.Bitmap('icons/topen.png'),     longHelp='Loads a BDF')
-        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.Bitmap('icons/twireframe.png'),longHelp='Set to Wireframe Model')
-        surface   = toolbar1.AddLabelTool(ID_SURFACE,   '', wx.Bitmap('icons/tsolid.png'),    longHelp='Set to Surface/Solid Model')
-        camera    = toolbar1.AddLabelTool(ID_CAMERA,    '', wx.Bitmap('icons/tcamera.png'),   longHelp='Take a Screenshot')
-        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.Bitmap('icons/texit.png'),     longHelp='Exit pyNastran GUI')
+        topen     = toolbar1.AddLabelTool(ID_BDF,       '' ,wx.Bitmap(os.path.join(iconPath,'topen.png')),     longHelp='Loads a BDF')
+        wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.Bitmap(os.path.join(iconPath,'twireframe.png')),longHelp='Set to Wireframe Model')
+        surface   = toolbar1.AddLabelTool(ID_SURFACE,   '', wx.Bitmap(os.path.join(iconPath,'tsolid.png')),    longHelp='Set to Surface/Solid Model')
+        camera    = toolbar1.AddLabelTool(ID_CAMERA,    '', wx.Bitmap(os.path.join(iconPath,'tcamera.png')),   longHelp='Take a Screenshot')
+        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.Bitmap(os.path.join(iconPath,'texit.png')),     longHelp='Exit pyNastran GUI')
         #toolbar1.EnableTool(wx.ID_REDO, False)
         toolbar1.Realize()
 
@@ -262,7 +267,8 @@ class AppFrame( wx.Frame ) :
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
         loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
         loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
-        loadBDF.SetBitmap(   wx.Image('icons/topen.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        assert os.path.exists(os.path.join(iconPath,'topen.png'))
+        loadBDF.SetBitmap(   wx.Image(os.path.join(iconPath,'topen.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
 
         #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
         #fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
@@ -277,7 +283,7 @@ class AppFrame( wx.Frame ) :
 
         #fileMenu.AppendMenu(wx.ID_ANY, 'I&mport', imp)
         exitButton = wx.MenuItem(fileMenu, wx.ID_EXIT, 'Exit','Exits pyNastran')
-        exitButton.SetBitmap(wx.Image('icons/texit.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        exitButton.SetBitmap(wx.Image(os.path.join(iconPath,'texit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
         fileMenu.AppendItem(exitButton)
 
         # view menu
@@ -294,13 +300,13 @@ class AppFrame( wx.Frame ) :
         #self.phongShading   = viewMenu.Append(wx.ID_ANY, 'Smooth (Phong) Shading', 'Smooth (Phong) Shading')
 
         # view images
-        wireframe.SetBitmap(wx.Image('icons/twireframe.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-        surface.SetBitmap(  wx.Image('icons/tsolid.png',     wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-        camera.SetBitmap(   wx.Image('icons/tcamera.png',    wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        wireframe.SetBitmap(wx.Image(os.path.join(iconPath,'twireframe.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        surface.SetBitmap(  wx.Image(os.path.join(iconPath,'tsolid.png'),     wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+        camera.SetBitmap(   wx.Image(os.path.join(iconPath,'tcamera.png'),    wx.BITMAP_TYPE_PNG).ConvertToBitmap())
 
-        #wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap('icons/twireframe.png'))
-        #surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap('icons/tsolid.png'))
-        #camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap('icons/tcamera.png'))
+        #wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap(os.path.join(iconPath,'twireframe.png')))
+        #surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap(os.path.join(iconPath,'tsolid.png')))
+        #camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap(os.path.join(iconPath,'tcamera.png')))
 
 
         viewMenu.AppendSeparator()
@@ -429,7 +435,7 @@ class EventsHandler(object) :
     def OnAbout(self, event):
         about = [
             'pyNastran v%s'%(pyNastran.__version__),
-            'Copyright %s; Steven P. Doyle 2011-2012\n' %(pyNastran.__license__),
+            'Copyright %s; Steven Doyle 2011-2012\n' %(pyNastran.__license__),
             '%s' %(pyNastran.__website__),
             '',
             'Mouse',

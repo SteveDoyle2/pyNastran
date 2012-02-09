@@ -15,16 +15,16 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
------------------------v0.3 released 2012/01/??-----------------------
+-----------------------v0.3 released 2012/02/08-----------------------
 Overall Notes
    - coordinate systems!!!
    - all user BDF card API methods will have the first letter capitalized
      (not fully implemented)
    - added OP2 demo program that calculates solidStress & displacement margins
-
+   - addd preliminary GUI (pyNastranGUI) that can 
 
 BDF API Changes
-   - standardizing methods for element/property cards
+   - standardizing methods for element/property/material cards
      - Eid, Pid, Mid, Mass, NodeIDs, Centroid
      - Thickness, Area, Volume, Length
      - J, I11, I12, I22
@@ -35,9 +35,9 @@ BDF API Changes
 BDF Bug Fixes
    - enabled PDAMP, CREEP
    - bug fix in NLPARM, MAT9,GRDSET
-*  - fixed issue with python <2.6 not supporting
-     argparse module (sys.argv used instead)
    - BEGIN BULK may now have multiple spaces in it
+   - Continuation markers can have more than 1 character in them for CSV cards
+   - Unincluded cards at the end of an INCLUDE file won't crash the BDF reader
    - CORD2Rs can have axes that arent ijk!
    - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and -0.0999) to be written out
      as (-.)  They were assumed to not round up to -1.0 and -0.1 respectively so the
@@ -65,7 +65,6 @@ Added BDF
    - SET1,SET3,SESET
    - CORD1R,CORD1C,CORD2C,CORD1S,CORD2S
    - CONM2 (cid!=0)
-*  - DMIG, DEQATN (not done)
 
 Added OP2
    - GEOM2
@@ -87,6 +86,13 @@ Overall OP2
 
 OP2 Bug Fixes
    - deviceCode is now passed properly to result objects
+   - nodeIDs now are correct for transient results
+
+-----------------------v0.2.1 released 2011/1/2-----------------------
+BDF Bug Fixes
+   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and -0.0999) to be written out
+     as (-.)  They were assumed to not round up to -1.0 and -0.1 respectively so the
+     leading -0. could be replaced by (-.) to save field width.
 
 -----------------------v0.2 released 2011/12/20-----------------------
 
@@ -134,7 +140,6 @@ BDF Bug Fixes
    - DAREA   wasn't processed properly
    - fixed RBE1 bug
    - fixed RBE3 bug & disabled RBE3
-   - disabled PLOAD4
    - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
    - FLFACT reading when the card is short works
    - PCOMP Thickness method doesnt crash when you want the total thickness
@@ -144,6 +149,7 @@ BDF Bug Fixes
    - PELAS cards werent processed properly
    - files on remote drives dont cause crashes anymore
    - cend now also signifies the end of the executive control deck
+   - begin BULK is valid now
    - fixed issue with the case control deck parsing on some uncommon cards
 
 Added BDF
