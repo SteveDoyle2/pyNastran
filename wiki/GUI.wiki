@@ -4,9 +4,21 @@
 
 The Graphical User Interface (GUI) was first introduced in version 0.3.0 (unreleased).  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
 
-TheGUI looks like:
+The GUI looks like:
 
 https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
+
+= Running the GUI (not done) =
+On the command line:
+{{{
+>> pyNastranGUI
+
+To view the options:
+>> pyNastranGUI --help
+
+}}}
+
+The solidBending.bdf and solidBending.op2 files have been included as examples that work in the GUI.  They are inside the "models" folder (at the same level as setup.py).
 
 = Features =
  * Load BDF file window (menu/button)
@@ -59,11 +71,12 @@ https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 || z/Z || Snap to z/-z axis ||
 
 == Warning ==
-For proper performance, it is important to update the driver for your graphics card, especially if you have a Radeon card. For a desktop machine, go to the web site of the manufacturer of the graphics card. For a laptop, you should normally go to the web site of the laptop manufacturer, though for NVIDIA you may now find a newer driver available from NVIDIA.
+You'll have the best performance if you run the GUI on Windows with an new NVIDIA graphics card and on a desktop.
+
+If you're having issues, you should update the driver for your graphics card, especially if you have a laptop or Radeon card. For a desktop machine, go to the web site of the manufacturer of the graphics card. For a laptop, you should normally go to the web site of the laptop manufacturer, though for NVIDIA you may now find a newer driver available from NVIDIA.
 
 == TODO ==
  * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
- * display the values un-normalized (the values are normalized so the colors can be seen; default range is 0 to 1; this might not be a problem)
  * support composite elements
  * allow edges to be shown from without passing in a command line argument
  * Allow point picking (p)
