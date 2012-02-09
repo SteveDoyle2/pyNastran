@@ -1,5 +1,5 @@
+#summary your rights to using the software
 #labels Featured
-#your rights to using the software
 
 = Licensing =
 
