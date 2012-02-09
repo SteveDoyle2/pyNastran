@@ -297,7 +297,6 @@ class BaseCard(BDF_Card):
         Prints a card in the simplest way possible
         (default values are left blank).
         """
-        self.rawFields()
         fields = self.reprFields()
         return self.printCard(fields)
 ###
