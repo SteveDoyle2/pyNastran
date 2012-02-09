@@ -11,8 +11,8 @@ setup(name='pyNastran',
 """,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
-      author='Steven P. Doyle',
-      author_email='mesheb82@gmail.com',
+      author=pyNastran.__author__,
+      author_email=pyNastran.__email__,
       url=pyNastran.__website__,
       license=pyNastran.__license__,
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
@@ -22,8 +22,8 @@ setup(name='pyNastran',
           # -*- Extra requirements: -*-
 #          'numpy >= 1.3.0',
 #          'scipy >= 0.6.0',
-#          'vtk'
-#          'wx'
+#          'vtk >= 5.8.0',
+#          'wx >= 2.8.12.0',
       ],
       entry_points = {
         'console_scripts': [
