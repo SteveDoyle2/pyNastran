@@ -1,22 +1,4 @@
-dev = False
-if dev:
-    import os
-    import pysvn
-    
-    import inspect, os
-    print inspect.getfile(inspect.currentframe()) # script filename (usually with path)
-    curDir = os.path.dirname(inspect.getfile(inspect.currentframe())) # script directory
-    
-    client = pysvn.Client()
-    #print dir(client)
-    client.update(curDir)
-    revision = client.info(curDir).revision.number
-    print "revision = ",revision
-    changes = client.get_changelist(curDir)
-    print "changes = ",changes
-    #client.update('./examples/pysvn')
-else:
-    revision = '???'
+revision = '419'
 
 __author__  = "Steven Doyle"
 __email__   = 'mesheb82@gmail.com'
