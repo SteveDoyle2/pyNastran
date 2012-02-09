@@ -34,10 +34,10 @@ CELAS3 (done)
 CELAS4 (done)
 
 CBAR   (done)
-CBEAM  (done)
-CONROD (done)
 CROD   (done)
 CTUBE  (done)
+CBEAM  (done)
+CONROD (done)
 
 CTRIA3  (done)
 CTRIA6  (done)
@@ -45,7 +45,7 @@ CTRIAR  (done)
 CTRIAX  (done)
 CTRIAX6 (done)
 
-CQUAD  (done)
+CQUAD  (???)
 CQUAD4 (done)
 CQUAD8 (done)
 CQUADR (done)
@@ -68,16 +68,48 @@ CRAC3D (done)
 CGAP   (done)
 
 ----Rigid Elements----:
+RBAR  (done)
+RBAR1 (done)
 RBE1  (done)
 RBE2  (done)
 RBE3  (disabled)
-RBAR  (done)
-RBAR1 (done)
+
+----Properties----:
+PGAP    (done)
+PMASS   (done)
+
+PELAS   (done)
+PDAMP   (done)
+PDAMP5  (done)
+
+PROD    (done)
+PBAR    (done)
+PBARL   (done)
+PBEAM   (done)
+PBEAML  (done, not well tested)
+PTUBE   (not enabled)
+
+PSHELL  (done)
+PCOMP   (done)
+PCOMPG  (done)
+PSHEAR  (done)
+PSOLID  (done)
+PLSOLID (done)
+
+----Materials----:
+CREEP (done)
+MAT1  (done)
+MAT2  (done)
+MAT3  (done)
+MAT8  (done)
+MAT9  (done)
+MAT10 (done)
+
+----Thermal Materials----:
+MAT4  (done)
+MAT5  (done)
 
 ----Constraints----:
-SUPORT  (done)
-SUPORT1 (done)
-
 SPC     (done)
 SPC1    (done)
 SPCD    (done)
@@ -87,37 +119,8 @@ SPCAX   (done)
 MPC     (done)
 MPCADD  (done)
 
-----Materials----:
-CREEP (done)
-MAT1  (done)
-MAT2  (done)
-MAT3  (done)
-MAT4  (done)
-MAT5  (done)
-MAT8  (done)
-MAT9  (done)
-MAT10 (done)
-
-----Properties----:
-PMASS   (done)
-
-PELAS   (done)
-PDAMP   (done)
-
-PROD    (done)
-PBEAM   (done)
-PBEAML  (done)
-PBAR    (done)
-PBARL   (done)
-PTUBE   (done)
-
-PSHEAR
-PCOMP   (done)
-PCOMPG  (done)
-PSHELL  (done)
-PSOLID  (done)
-PLSOLID (done)
-PGAP    (done)
+SUPORT  (done)
+SUPORT1 (done)
 
 ----Loads----:
 LOAD    (done)
@@ -125,6 +128,8 @@ LOAD    (done)
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
+
+GRAV    (done)
 
 PLOAD   (done)
 PLOAD1  (done)
@@ -135,8 +140,12 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
+RLOAD1
+RLOAD2
+
 ----Thermal Loads----:
 TEMP   (done)
+TEMPD
 
 QHBDY  (done)
 QBDY1  (done)
@@ -149,36 +158,39 @@ CHBDYG (done)
 CHBDYP (done)
 
 ----Thermal BCs----:
-RADBC  (done)
 CONV   (done)
+RADBC  (done)
+RADM
 
 ----Thermal Properties----:
 PCONV  (done)
 PCONVM (done)
 PHBDY  (done)
 
-----Dynamic----:
-DAREA   (done)
-NLPARM  (done)
-
 ----Aero----:
 AERO    (done)
 AEROS   (done)
 GUST    (done)
-GRAV    (done)
 FLUTTER (done)
 FLFACT  (done)
+
+AEFACT
+AELINK  (done)
+AEPARAM (done)
+AESTAT  (done)
+AELIST  (done)
+AESURF  (done)
+AESURFS (needs integration)
 
 CAERO1  (done)
 PAERO1  (done)
 SPLINE1 (done)
 SPLINE2 (done)
-AEPARM  (done)
-AELINK  (done)
-AESTAT  (done)
-AELIST  (done)
-AESURF  (done)
-AESURFS (needs integration)
+TRIM    (done)
+
+----Dynamic----:
+DAREA   (done)
+NLPARM  (done)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -227,7 +239,7 @@ INCLUDE (partial - case control deck & bulk data deck ONLY)
 PARAM (done)
 
 -----------------------------------------------
-Missed v0.1
+===Not Supported===
 
 nodes
 SPOINT (needs integration)
@@ -249,8 +261,7 @@ radiation
 RADM   (needs integration)
 -----------------------------------------------
 
-
-Potential (v0.3) - these will be added in groupings...maybe (not necessarily in order):
+Potential (v0.4) - these will be added in groupings...maybe (not necessarily in order):
 If you want a certain group...ask!
 **************
 AXIC
@@ -263,12 +274,8 @@ BEAMOR
 CBARAO
 PBEAM3
 **************
-CORD1R
-CORD1C
-CORD1S
-**************
 
-----Patran Elements w/ Properties----:
+---- Elements w/ Properties----:
 CBARAO
 PBCOMP
 
@@ -276,17 +283,17 @@ CBUSH
 PBUSH
 PBUSHT
 
-----Patran Elements----:
+---- Elements----:
 CONM1
 PLOTEL
 MBOLTUS
 
-----Patran Rigid Elements----:
+---- Rigid Elements----:
 RROD
 RSPLINE
 RTRPLT
 
-----Patran Materials----:
+---- Materials----:
 MATT1
 MATT2
 MATT3
@@ -305,7 +312,6 @@ RADMT
 RFORCE
 
 SLOAD
-
 TEMPP1
 TEMPRB
 
@@ -339,6 +345,9 @@ FORCEAX
 ----Methods----:
 EIGR
 EIGRL
+EIGB
+MKAERO
+MKAERO1
 
 ----Modal Cards----:
 FREQ3
@@ -369,10 +378,6 @@ BDYOR
 -----------------------------------------------
 Card Groupings:
 
-----Nodes----:
-
-----Elements----:
-
 ----Rigid Elements----:
 RBE2GS
 RBJOINT
@@ -381,33 +386,21 @@ RJOINT
 RTRPLT1
 MATRIG
 
-----Properties----:
-
-----Coordinates----:
-
-----Optimization----:
-
-----Loads----:
-
 ----Methods----:
 EIGB
 EIGC
 EIGP
-
-----Constraint Cards----:
+EIGRL
 
 ----Materials----:
 MATS1
+MATT1
 
 ----Thermal----:
 RADBND
 RADLST
 RADMTX
 RADSET
-
-----Modal Cards----:
-
-----Aero Cards----:
 
 ----Special----:
 GENEL
@@ -438,10 +431,6 @@ SESUP
 ACSRCE
 CHACAB
 CHACBR
-
----Tables---:
-
-----Unsorted----:
 
 
 -------------------------------------------

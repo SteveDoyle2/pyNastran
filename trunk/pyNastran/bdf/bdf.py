@@ -67,10 +67,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
         'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
         
-        'CBAR','CROD','CTUBE','CBEAM','CONROD',
+        'CBAR','CROD','CTUBE','CBEAM','CONROD',#'CBEND',
         'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
-        'CQUAD4','CQUAD8','CQUADR','CQUADX',
-        'CHEXA','CPENTA','CTETRA',
+        'CQUAD4','CQUAD8','CQUADR','CQUADX',# 'CQUAD'
+        'CTETRA','CPENTA','CHEXA',
         'CSHEAR','CVISC','CRAC2D','CRAC3D',
         'CGAP',
         
@@ -82,7 +82,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PMASS',
         'PELAS',
         'PDAMP','PDAMP5',
-        'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PBEAM3',
+        'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PTUBE','PBEAM3','PBEND',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
         'PSOLID','PLSOLID',
         
@@ -103,14 +103,16 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'SUPORT','SUPORT1',
 
         # loads
-        'LOAD',
+        'LOAD',#'LSEQ',
         'FORCE','FORCE1','FORCE2',
+        'GRAV',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
+        #'RLOAD1','RLOAD2',
 
         # aero cards
-        'FLFACT','AERO','AEROS','GUST','FLUTTER','GRAV',
-        'AELINK','AEPARAM','AESTAT','AELIST','AESURF',
+        'AERO','AEROS','GUST','FLUTTER','FLFACT',
+        'AELINK','AEPARAM','AESTAT','AELIST','AESURF',#'AEFACT'
         'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
         'PAERO1',
         'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
@@ -139,6 +141,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         
         # optimization cards
         'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
+        #'DRESP2','DRESP3','DLINK'
         
         # sets
         'SET1','SET3',
@@ -147,7 +150,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'SESET',
 
         # tables
-        'TABLED1','TABLED2','TABLED3',
+        #'DTABLE','TABLEHT','TABRNDG',
+        'TABLED1','TABLED2','TABLED3',#'TABLED4',
         'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
         'TABLES1','TABLEST',
         'TABRND1',
