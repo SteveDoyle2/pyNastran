@@ -11,7 +11,7 @@ To make sure that everyone has such rights, we have to forbid you to deprive any
 
 Also, for our own protection, we must make certain that everyone finds out that there is no warranty for pyNastran. If pyNastran is modified by someone else and passed on, we want their recipients to know that what they have is not what we distributed, so that any problems introduced by others will not reflect on our reputation.
 
-The precise conditions of the license for pyNastran are found in the General Public License that accompanies the source code (see License). Further information about this license is available from the GNU Project webpage http://www.gnu.org/licenses/gpl.html. Detailed copyright information can be found in Copyright and credits.
+The precise conditions of the license for pyNastran are found in the General Public License that accompanies the source code (see License). Further information about this license is available from the GNU Project webpage (see below). Detailed copyright information can be found in Copyright and credits.
 
 
 || *Software Version* || *License* ||
