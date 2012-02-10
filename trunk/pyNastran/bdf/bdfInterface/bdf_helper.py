@@ -223,6 +223,11 @@ class getMethods(object):
         return self.setsSuper[seid]
 
     #--------------------
+    # METHOD CARDS
+    def Method(self,sid):
+        return self.methods[sid]
+
+    #--------------------
     # NONLINEAR CARDS
 
     def NLParm(self,nid):
@@ -619,3 +624,9 @@ class addMethods(object):
         assert key not in self.tables
         assert key>0
         self.tables[key] = table
+
+    def addMethod(self,method):
+        key = method.sid
+        assert key not in self.methods
+        assert key>0
+        self.methods[key] = method

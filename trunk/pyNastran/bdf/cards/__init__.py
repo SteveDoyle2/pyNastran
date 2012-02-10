@@ -12,4 +12,5 @@ from dynamic import *
 from optimization import *
 from tables import *
 from dmig import *
+from methods import *
 from sets import *
