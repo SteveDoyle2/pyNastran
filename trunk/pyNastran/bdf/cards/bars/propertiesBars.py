@@ -147,6 +147,15 @@ class LineProperty(Property):
 
             (A,Iyy,Izz,Iyz) = getInertiaRectangular(sections)
             assert Iyz == 0.
+
+        elif self.Type=='BAR':    #  *-------*
+            h1 = dim[1]           #  |       |
+            w1 = dim[0]           #  |       |h1
+            A = h1*w1             #  |       |
+            i11 = 1/12.*w1*h1**3  #  *-------*          I_{xx}=\frac{bh^3}{12}
+            i22 = 1/12.*h1*w1**3  #      w1             I_{yy}=\frac{hb^3}{12}
+            i12 = 0. ## @todo is the Ixy of a bar 0 ???
+            
         else:
             raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.type))
         return (A,Iyy,Izz,Iyz)

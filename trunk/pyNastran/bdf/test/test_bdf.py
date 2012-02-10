@@ -32,14 +32,14 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        #except MissingFileError:
-        #    pass
-        #except TabCharacterError:
-        #    pass
-        #except ScientificParseError:
-        #    pass
-        #except ClosedBDFError:
-        #    pass
+        except MissingFileError:
+            pass
+        except TabCharacterError:
+            pass
+        except ScientificParseError:
+            pass
+        except ClosedBDFError:
+            pass
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
@@ -101,14 +101,14 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except MissingFileError:
-    #    pass
-    #except TabCharacterError:
-    #    pass
-    #except ScientificParseError:
-    #    pass
-    #except ClosedBDFError:
-    #    pass
+    except MissingFileError:
+        pass
+    except TabCharacterError:
+        pass
+    except ScientificParseError:
+        pass
+    except ClosedBDFError:
+        pass
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
