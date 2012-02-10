@@ -234,6 +234,15 @@ SESET  (done)
 SEQSEP (not integrated...is this a set)
 RADSET (not integrated)
 
+----Methods----:
+EIGB   (done)
+EIGC
+EIGP   (done)
+EIGR   (done)
+EIGRL
+MKAERO
+MKAERO1
+
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)
 PARAM (done)
@@ -342,12 +351,6 @@ FORCEAX
 
 ----Optimization----:
 
-----Methods----:
-EIGR
-EIGRL
-EIGB
-MKAERO
-MKAERO1
 
 ----Modal Cards----:
 FREQ3
@@ -386,11 +389,6 @@ RJOINT
 RTRPLT1
 MATRIG
 
-----Methods----:
-EIGB
-EIGC
-EIGP
-EIGRL
 
 ----Materials----:
 MATS1

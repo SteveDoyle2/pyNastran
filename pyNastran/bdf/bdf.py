@@ -155,6 +155,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
         'TABLES1','TABLEST',
         'TABRND1',
+
+        # methods
+        'EIGB','EIGR','EIGP',#'EIGC','EIGRL','EIGC',
         
         # other
         'INCLUDE',  # '='
@@ -350,6 +353,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.setsSuper = {}
         ## tables
         self.tables = {}
+        
+        ## methods
+        self.methods = {}
 
     def _initAeroDefaults(self):
         # aero cards
@@ -1470,6 +1476,19 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 table = TABRND1(cardObj)
                 self.addTable(table)
             
+
+            elif cardName=='EIGB':
+                method = EIGB(cardObj)
+                self.addMethod(method)
+            elif cardName=='EIGR':
+                method = EIGR(cardObj)
+                self.addMethod(method)
+            elif cardName=='EIGP':
+                method = EIGP(cardObj)
+                self.addMethod(method)
+
+
+
             elif cardName=='PARAM':
                 param = PARAM(cardObj)
                 self.addParam(param)
