@@ -10,6 +10,7 @@ class EIGB(Method):
     def __init__(self,card=None,data=None):
         Method.__init__(self,card,data)
         if card:
+            ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
             ## Method of eigenvalue extraction. (Character: “INV” for inverse power
             ## method or 'SINV' for enhanced inverse power method.)
@@ -30,6 +31,7 @@ class EIGB(Method):
             self.C    = card.field(11)
         else:
             raise NotImplementedError('EIGB')
+        ###
 
     def crossReference(self,model):
         pass
@@ -49,6 +51,49 @@ class EIGB(Method):
                          norm,self.G,self.C]
         return fields
 
+class EIGC(Method): ## not done
+    """
+    Defines data needed to perform complex eigenvalue analysis
+    """
+    type = 'EIGC'
+    def __init__(self,card=None,data=None):
+        Method.__init__(self,card,data)
+        if card:
+            ## Set identification number. (Unique Integer > 0)
+            self.sid = card.field(1)
+            ## Method of complex eigenvalue extraction
+            self.method = card.field(2)
+            assert self.method in ['INV','HESS','CLAN']
+            ## Method for normalizing eigenvectors
+            self.norm   = card.field(3)
+
+            ## Grid or scalar point identification number. Required only if NORM='POINT'. (Integer>0)
+            self.G      = card.field(4)
+            ## Component number. Required only if NORM='POINT' and G is a geometric grid point. (1<Integer<6)
+            self.C      = card.field(5)
+            ## Convergence criterion. (Real > 0.0. Default values are: 10-4 for
+            ## METHOD = "INV", 10-15 for METHOD = "HESS", E is machine
+            ## dependent for METHOD = "CLAN".)
+            self.E      = card.field(6)
+            self.ndo    = card.field(7)
+            assert card.nFields()<8,'card = %s' %(card.fields(0))
+        else:
+            raise NotImplementedError('EIGC')
+        ###
+
+    def crossReference(self,model):
+        pass
+
+    def rawFields(self):
+        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,self.E,self.ndo,None]
+        raise Exception('EIGC not finished...')
+        return fields
+
+    def reprFields(self):
+        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,self.E,self.ndo,None]
+        raise Exception('EIGC not finished...')
+        return fields
+
 class EIGR(Method):
     """
     Defines data needed to perform real eigenvalue analysis
@@ -57,6 +102,7 @@ class EIGR(Method):
     def __init__(self,card=None,data=None):
         Method.__init__(self,card,data)
         if card:
+            ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
             ## Method of eigenvalue extraction. (Character: “INV” for inverse power
             ## method or 'SINV' for enhanced inverse power method.)
@@ -78,6 +124,7 @@ class EIGR(Method):
             self.C    = card.field(11)
         else:
             raise NotImplementedError('EIGR')
+        ###
 
     def crossReference(self,model):
         pass
@@ -102,6 +149,7 @@ class EIGP(Method):
     def __init__(self,card=None,data=None):
         Method.__init__(self,card,data)
         if card:
+            ## Set identification number. (Unique Integer > 0)
             self.sid = card.field(1)
             
             ## Coordinates of point in complex plane. (Real)
@@ -119,6 +167,7 @@ class EIGP(Method):
             self.m2     = card.field(7)
         else:
             raise NotImplementedError('EIGP')
+        ###
 
     def crossReference(self,model):
         pass
@@ -129,3 +178,65 @@ class EIGP(Method):
 
     def reprFields(self):
         return self.rawFields()
+
+class EIGRL(Method):
+    """
+    Defines data needed to perform real eigenvalue (vibration or buckling)
+    analysis with the Lanczos method
+    """
+    type = 'EIGRL'
+    def __init__(self,card=None,data=None):
+        Method.__init__(self,card,data,sol=None)
+        if card:
+            ## Set identification number. (Unique Integer > 0)
+            self.sid    = card.field(1)
+            ## For vibration analysis: frequency range of interest. For buckling
+            ## analysis: eigenvalue range of interest. See Remark 4. (Real or blank,
+            ## -5 10e16 <= V1 < V2 <= 5.10e16
+            self.v1     = card.field(2)
+            self.v2     = card.field(3)
+            ## Number of roots desired
+            self.nd     = card.field(4)
+            ## Diagnostic level. (0 < Integer < 4; Default = 0)
+            self.msglvl = card.field(5,0)
+            ## Number of vectors in block or set. Default is machine dependent
+            self.maxset = card.field(6)
+            ## Estimate of the first flexible mode natural frequency (Real or blank)
+            self.shfscl = card.field(7)
+            
+            optionValues = card.fields(9)
+            n = len(optionValues)
+            nOptions = n//2
+            assert n%2==0
+            self.options = []
+            self.values  = []
+            for o in range(0,n,2):
+                self.options.append(optionValues[o])
+                self.values.append(optionValues[o+1])
+
+            ## Method for normalizing eigenvectors
+            if sol==105:
+                self.norm = 'MAX'
+            else:
+                self.norm   = card.field(8)
+            assert self.nrom in ['MASS','MAX']
+            assert card.nFields()<9,'card = %s' %(card.fields(0))
+        else:
+            raise NotImplementedError('EIGRL')
+        ###
+
+    def crossReference(self,model):
+        pass
+
+    def rawFields(self):
+        fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,self.msglvl,self.maxset,self.shfscl]
+        for (option,value) in zip(self.options,self.values):
+            fields += [option,value]
+        return fields
+
+    def reprFields(self):
+        msglvl = self.setBlankIfDefault(self.msglvl,0)
+        fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,msglvl,self.maxset,self.shfscl]
+        for (option,value) in zip(self.options,self.values):
+            fields += [option,value]
+        return fields

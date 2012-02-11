@@ -36,30 +36,38 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - SPCG
  
 ===Unlabeled Cards (???)===
+
+#Sets
  - SESET
  - SEQSEP
  - RADSET
  - SET1
  - SET3
 
+# Elements
  - CDAMP1
  - CDAMP2
  - CDAMP3
  - CDAMP4
  - CDAMP5
 
+# Special
  - DEQATN
  - DMIG
 
+# Properties
  - PMASS
  - PGAP
 
+# Constraints
  - RBAR
  - RBAR1
  - RBE1
  - RBE2
  - SUPORT
  - SUPORT1
+
+# Optimization
  - DCONSTR
  - DESVAR
  - DDVAL
@@ -83,13 +91,17 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - DAREA
  - NLPARM
 
+# Aero
  - AELIST
  - AESURF
  - SPLINE2
 
+# Methods
+ - EIGC
  - EIGB
  - EIGP
  - EIGR
+ - EIGRL
 
 
 ===To Cross Reference (not supported)===
@@ -104,6 +116,8 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 
 ===Cross Referenced Cards (done)===
  - GRID
+
+# Coordinate Systems
  - CORD1R
  - CORD1C
  - CORD1S
@@ -111,6 +125,7 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - CORD2C
  - CORD2S
 
+# Elements
  - CTRIA3
  - CQUAD4
  - CSHEAR
@@ -121,37 +136,36 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - CTRIAR
  - CTRIAX
  - CTRIAX6
- - PSHELL
- - PCOMP
- - PCOMPG
-
  - CGAP   (no spoints)
-
  - CONROD
  - CTUBE
  - CROD
- - PROD
-
  - CBEAM
- - PBEAM
- - PBEAML
-
  - CBAR
- - PBAR
- - PBARL
-
  - CTETRA
  - CHEXA
  - CPENTA
+
+# Properties
  - PSOLID
  - PLSOLID
+ - PBAR
+ - PBARL
+ - PBEAM
+ - PBEAML
+ - PROD
+ - PSHELL
+ - PCOMP
+ - PCOMPG
+ - PTUBE
 
+# Constraints
  - SPC
  - SPC1
  - SPCD
-
  - MPC
 
+# Loads
  - LOAD
  - FORCE
  - FORCE1
@@ -164,6 +178,7 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - MOMENT1
  - MOMENT2
 
+# Aero
  - CAERO1
  - SPLINE1
 
@@ -185,5 +200,4 @@ The CQUAD4 must link to the nodes and the property to be considered done.
  - FREQ1
  - FREQ2
  - PAERO
-
 
