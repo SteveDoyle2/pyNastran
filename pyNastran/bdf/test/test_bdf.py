@@ -8,7 +8,7 @@ import pyNastran
 from pyNastran.bdf.errors import *
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
-
+from compareCardContent import compareCardContent
 
 import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
@@ -257,10 +257,10 @@ def compare(fem1,fem2,xref=True):
     diffCards = compareCardCount(fem1,fem2)
     if xref:
         getElementStats(fem1,fem2)
+    compareCardContent(fem1,fem2)
     #compareParams(fem1,fem2)
     #printPoints(fem1,fem2)
     return diffCards
-
 
 def compareParams(fem1,fem2):
     compute(fem1.params,fem2.params)
