@@ -12,6 +12,86 @@ The nodes then link to coordinate systems (e.g. CORD2R).
 The property then links to a material (e.g. MAT1).
 The CQUAD4 must link to the nodes and the property to be considered done.
 
+----Nodes----:
+GRID   (done)
+
+----Coordinates----:
+CORD1R (done)
+CORD2R (done)
+CORD1C (done)
+CORD2C (done)
+CORD1S (done)
+CORD2S (done)
+===Cross Referenced Cards (done)===
+
+----Elements----:
+ CBAR    (done)
+ CROD    (done)
+ CTUBE   (done)
+ CBEAM   (done)
+ CONROD  (done)
+ CTRIA3  (done)
+ CTRIAR  (done)
+ CTRIAX  (done)
+ CTRIAX6 (done)
+ CQUAD   (done)
+ CQUAD4  (done)
+ CQUAD8  (done)
+ CQUADR  (done)
+ CQUADX  (done)
+ CSHEAR  (done)
+ CTETRA  (done)
+ CPENTA  (done)
+ CHEXA   (done)
+
+ CGAP   (no spoints)
+# Properties
+PSOLID   (done)
+PLSOLID  (done)
+PROD     (done)
+PBAR     (done)
+PBARL    (done)
+PBEAM    (done)
+PBEAML   (done)
+PTUBE    (done)
+PSHELL   (done)
+PCOMP    (done)
+PCOMPG   (done)
+
+----Materials----:
+
+----Thermal Materials----:
+
+----Constraints----:
+SPC   (done)
+SPC1  (done)
+SPCD  (done)
+MPC   (done)
+
+----Loads----:
+ LOAD    (done)
+ FORCE   (done)
+ FORCE1  (done)
+ FORCE2  (done)
+ PLOAD   (done)
+ PLOAD1  (done)
+ PLOAD2  (done)
+ PLOAD4  (done)
+ MOMENT  (done)
+ MOMENT1 (done)
+ MOMENT2 (done)
+
+----Thermal Loads----:
+
+----Thermal Elements----:
+
+----Thermal BCs----:
+
+----Thermal Properties----:
+
+----Aero----:
+ CAERO1  (done)
+ SPLINE1 (done)
 
 === Not Added ===
  - AEFACT
@@ -38,166 +118,99 @@ The CQUAD4 must link to the nodes and the property to be considered done.
 ===Unlabeled Cards (???)===
 
 #Sets
- - SESET
- - SEQSEP
- - RADSET
- - SET1
- - SET3
+SESET
+SEQSEP
+RADSET
+SET1
+SET3
 
 # Elements
- - CDAMP1
- - CDAMP2
- - CDAMP3
- - CDAMP4
- - CDAMP5
+CDAMP1
+CDAMP2
+CDAMP3
+CDAMP4
+CDAMP5
 
 # Special
- - DEQATN
- - DMIG
+DEQATN
+DMIG
 
 # Properties
- - PMASS
- - PGAP
+PMASS
+PGAP
 
 # Constraints
- - RBAR
- - RBAR1
- - RBE1
- - RBE2
- - SUPORT
- - SUPORT1
+RBAR
+RBAR1
+RBE1
+RBE2
+SUPORT
+SUPORT1
 
 # Optimization
- - DCONSTR
- - DESVAR
- - DDVAL
- - DRESP1
- - DVPREL1
+DCONSTR
+DESVAR
+DDVAL
+DRESP1
+DVPREL1
 
- - TEMP
- - QBDY1
- - QBDY2
- - QBDY3
- - QHBDY
- - CHBDYE
- - CHBDYG
- - CHBDYP
- - PCONV
- - PCONVM
- - PHBDY
- - RADBC
- - CONV
- - PARAM
- - DAREA
- - NLPARM
+TEMP
+QBDY1
+QBDY2
+QBDY3
+QHBDY
+CHBDYE
+CHBDYG
+CHBDYP
+PCONV
+PCONVM
+PHBDY
+RADBC
+CONV
+PARAM
+DAREA
+NLPARM
 
 # Aero
- - AELIST
- - AESURF
- - SPLINE2
+AELIST
+AESURF
+SPLINE2
 
 # Methods
- - EIGC
- - EIGB
- - EIGP
- - EIGR
- - EIGRL
+EIGC
+EIGB
+EIGP
+EIGR
+EIGRL
 
 
 ===To Cross Reference (not supported)===
- - TABLEx
- - SPOINT
- - SET
- - RBE3
- - SET1
- - SPCADD
- - MPCADD
+TABLEx
+SPOINT
+SET
+RBE3
+SET1
+SPCADD
+MPCADD
 
 
-===Cross Referenced Cards (done)===
- - GRID
-
-# Coordinate Systems
- - CORD1R
- - CORD1C
- - CORD1S
- - CORD2R
- - CORD2C
- - CORD2S
-
-# Elements
- - CTRIA3
- - CQUAD4
- - CSHEAR
- - CQUAD
- - CQUAD8
- - CQUADR
- - CQUADX
- - CTRIAR
- - CTRIAX
- - CTRIAX6
- - CGAP   (no spoints)
- - CONROD
- - CTUBE
- - CROD
- - CBEAM
- - CBAR
- - CTETRA
- - CHEXA
- - CPENTA
-
-# Properties
- - PSOLID
- - PLSOLID
- - PBAR
- - PBARL
- - PBEAM
- - PBEAML
- - PROD
- - PSHELL
- - PCOMP
- - PCOMPG
- - PTUBE
-
-# Constraints
- - SPC
- - SPC1
- - SPCD
- - MPC
-
-# Loads
- - LOAD
- - FORCE
- - FORCE1
- - FORCE2
- - PLOAD
- - PLOAD1
- - PLOAD2
- - PLOAD4
- - MOMENT
- - MOMENT1
- - MOMENT2
-
-# Aero
- - CAERO1
- - SPLINE1
 
 ===Partially Cross Referenced (partial)===
- - CONM2  (cid!=0, cid=0 requires CG location...)
- - CELAS1 (no spoints)
- - CELAS2 (no spoints)
- - CELAS3 (no spoints)
- - CELAS4 (no spoints)
+CONM2  (cid!=0, cid=0 requires CG location...)
+CELAS1 (no spoints)
+CELAS2 (no spoints)
+CELAS3 (no spoints)
+CELAS4 (no spoints)
 
 
 ===Doesnt Cross Reference (NA)===
- - INCLUDE
- - GRDSET
- - CONM1
- - PELAS
- - MATx
- - FREQ
- - FREQ1
- - FREQ2
- - PAERO
+INCLUDE
+GRDSET
+CONM1
+PELAS
+MATx
+FREQ
+FREQ1
+FREQ2
+PAERO
 
