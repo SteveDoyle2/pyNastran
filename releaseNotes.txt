@@ -15,13 +15,29 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
+-----------------------v0.4 released 2012/03/??-----------------------
+Overall Notes
+BDF API Changes
+BDF Bug Fixes
+Overall BDF
+Added BDF
+ - EIGB, EIGP, EIGR
+ - *** EIGC, EIGRL
+
+OP2 API Changes
+OP2 Bug Fixes
+Overall OP2
+Added OP2
+
+
+
 -----------------------v0.3 released 2012/02/08-----------------------
 Overall Notes
    - coordinate systems!!!
    - all user BDF card API methods will have the first letter capitalized
      (not fully implemented)
    - added OP2 demo program that calculates solidStress & displacement margins
-   - addd preliminary GUI (pyNastranGUI) that can 
+   - addd preliminary GUI (pyNastranGUI) that can view results
 
 BDF API Changes
    - standardizing methods for element/property/material cards
@@ -65,6 +81,8 @@ Added BDF
    - SET1,SET3,SESET
    - CORD1R,CORD1C,CORD2C,CORD1S,CORD2S
    - CONM2 (cid!=0)
+   - SPLINE2
+   - TRIM
 
 Added OP2
    - GEOM2
@@ -160,7 +178,6 @@ Added BDF
    - DRESP1
    - DVPREL1
    - DRESP1
-   - PBARL
 
 OP2 Tables
    - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)

@@ -82,7 +82,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PMASS',
         'PELAS',
         'PDAMP','PDAMP5',
-        'PROD','PBAR','PBARL','PBEAM','PBEAML', #'PTUBE','PBEAM3','PBEND',
+        'PROD','PBAR','PBARL','PBEAM','PBEAML', 'PTUBE',#'PBEAM3','PBEND',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
         'PSOLID','PLSOLID',
         
@@ -156,8 +156,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABLES1','TABLEST',
         'TABRND1',
 
-        # methods
-        'EIGB','EIGR','EIGP',#'EIGC','EIGRL','EIGC',
+        # methods - EIGC,EIGRL not done
+        'EIGB','EIGC','EIGR','EIGP','EIGRL',
         
         # other
         'INCLUDE',  # '='
@@ -1480,12 +1480,18 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='EIGB':
                 method = EIGB(cardObj)
                 self.addMethod(method)
-            elif cardName=='EIGR':
-                method = EIGR(cardObj)
+            elif cardName=='EIGC':
+                method = EIGC(cardObj)
                 self.addMethod(method)
             elif cardName=='EIGP':
                 method = EIGP(cardObj)
                 self.addMethod(method)
+            elif cardName=='EIGR':
+                method = EIGR(cardObj)
+                self.addMethod(method)
+            elif cardName=='EIGRL':
+                method = EIGRL(cardObj)
+                self.addMethod(method,sol=self.sol)
 
 
 

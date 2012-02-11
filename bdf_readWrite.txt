@@ -87,7 +87,7 @@ PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
 PBEAML  (done, not well tested)
-PTUBE   (not enabled)
+PTUBE   (done)
 
 PSHELL  (done)
 PCOMP   (done)
@@ -183,9 +183,25 @@ AESURF  (done)
 AESURFS (needs integration)
 
 CAERO1  (done)
+CAERO2
+CAERO3
+CAERO4
+CAERO5
+
 PAERO1  (done)
+PAERO2
+PAERO3
+PAERO4
+PAERO5
+
 SPLINE1 (done)
 SPLINE2 (done)
+SPLINE3
+SPLINE4
+SPLINE5
+SPLINE6
+SPLINE7
+
 TRIM    (done)
 
 ----Dynamic----:
@@ -236,10 +252,10 @@ RADSET (not integrated)
 
 ----Methods----:
 EIGB   (done)
-EIGC
+EIGC   (in progress)
 EIGP   (done)
 EIGR   (done)
-EIGRL
+EIGRL  (in progress)
 MKAERO
 MKAERO1
 
@@ -358,21 +374,6 @@ FREQ4
 FREQ5
 
 ----Aero Cards----:
-CAERO2
-CAERO3
-CAERO4
-CAERO5
-
-PAERO2
-PAERO3
-PAERO4
-PAERO5
-
-SPLINE3
-SPLINE4
-SPLINE5
-SPLINE6
-SPLINE7
 
 ----Thermal Loads----:
 CONTRLT
