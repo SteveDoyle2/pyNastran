@@ -1490,8 +1490,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 method = EIGR(cardObj)
                 self.addMethod(method)
             elif cardName=='EIGRL':
-                method = EIGRL(cardObj)
-                self.addMethod(method,sol=self.sol)
+                method = EIGRL(cardObj,sol=self.sol)
+                self.addMethod(method)
 
 
 

@@ -671,7 +671,16 @@ class CBAR(LineElement):
     def nodeIDs(self):
         return [self.Ga(),self.Gb()]
 
-    def __repr__(self):
+    def rawFields(self):
+        """@todo not perfectly accurate"""
+        (x1,x2,x3) = self.getX_G0_defaults()
+        offt = self.setBlankIfDefault(self.offt,'GGG')
+        fields = ['CBAR',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
+                         self.pa,self.pb,self.w1a,self.w2a,self.w3a,self.w1b,self.w2b,self.w3b]
+
+        return fields
+
+    def reprFields(self):
         pa = self.setBlankIfDefault(self.pa,0)
         pb = self.setBlankIfDefault(self.pb,0)
 
@@ -686,7 +695,7 @@ class CBAR(LineElement):
         fields = ['CBAR',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
                          pa,pb,w1a,w2a,w3a,w1b,w2b,w3b]
 
-        return self.printCard(fields)
+        return fields
 
 class CBEAM(CBAR):
     """
