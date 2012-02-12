@@ -522,25 +522,31 @@ class CONM2(PointElement): # v0.1 not done
         return self.cid.cid
 
     def rawFields(self):
-        fields = ['CONM2',self.eid,self.Nid(),self.Cid(),self.mass]+list(self.X)+list(self.I)
+        #print "X=%r" %(self.X)
+        #print "I=%r" %(self.I)
+        fields = ['CONM2',self.eid,self.Nid(),self.Cid(),self.mass]+list(self.X)+[None]+list(self.I)
         return fields
 
     def reprFields(self):
         I = []
         for i in self.I:
             if i==0.:
-                i = None
-            I.append(None)
+                I.append(None)
+            else:
+                I.append(i)
+            ###
         ###
         X = []
         for x in self.X:
             if x==0.:
-                x = None
-            X.append(None)
+                X.append(None)
+            else:
+                X.append(x)
+            ###
         ###
 
         cid  = self.setBlankIfDefault(self.Cid(),0)
         mass = self.setBlankIfDefault(self.mass,0.0)
-        fields = ['CONM2',self.eid,self.Nid(),cid,mass]+X+I
+        fields = ['CONM2',self.eid,self.Nid(),cid,mass]+X+[None]+I
         return fields
 

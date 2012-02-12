@@ -1,13 +1,13 @@
-from pyNastran.bdf.fieldWriter import printField
+from pyNastran.bdf.fieldWriter import printField,printCard
 
 def assertFields(card1,card2):
         fields1 = card1.rawFields()
         fields2 = card2.rawFields()
-        assert len(fields1)==len(fields2),'len(fields1)=%s len(fields2)=%s' %(len(fields1),len(fields2))
+        assert len(fields1)==len(fields2),'len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s' %(len(fields1),len(fields2),fields1,fields2,printCard(fields1),printCard(fields2))
         for i,(f1,f2) in enumerate(zip(fields1,fields2)):
             v1=printField(f1)
             v2=printField(f2)
-            assert v1==v2,'cardName=%s i=%s f1=%r f2=%r' %(fields1[0],i,v1,v2)
+            assert v1==v2,'cardName=%s ID=%s i=%s f1=%r f2=%r\n%r\n%r' %(fields1[0],fields1[1],i,v1,v2,fields1,fields2)
             
 def compareCardContent(fem1,fem2):
     for key in fem1.params:
