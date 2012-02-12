@@ -276,7 +276,7 @@ class GRID(Node):
         @param cid the desired coordinate ID (int)
         @param debug developer debug
         """
-        if cid==self.Cp:
+        if cid==self.Cp():
             return self.xyz
         #coordA = model.Coord(cid)
         # converting the xyz point arbitrary->global
