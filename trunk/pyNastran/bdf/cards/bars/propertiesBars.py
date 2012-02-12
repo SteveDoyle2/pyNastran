@@ -157,7 +157,7 @@ class LineProperty(Property):
             i12 = 0. ## @todo is the Ixy of a bar 0 ???
             
         else:
-            raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.type))
+            raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
         return (A,Iyy,Izz,Iyz)
     
     def areaL(self,dim):
@@ -348,7 +348,7 @@ class LineProperty(Property):
             w3 = dim[4]
             A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7 +h8*w8
         else:
-            raise Exception('Type=%s is not supported for %s class...' %(self.Type,self.type))
+            raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
             
         return A
 
@@ -718,7 +718,7 @@ class PBARL(LineProperty):
             #print "dim = ",self.dim
             #print str(self)
             #print "*PBARL = ",data
-            #raise Exception('not finished...')
+            #raise NotImplementedError('not finished...')
         assert self.Type in self.validTypes,'Invalid PBARL Type, Type=%s validTypes=%s' %(self.Type,self.validTypes.keys())
         assert len(self.dim)==self.validTypes[self.Type],'dim=%s len(dim)=%s Type=%s len(dimType)=%s' %(self.dim,len(self.dim),self.Type,self.validTypes[self.Type])
         assert None not in self.dim
@@ -863,7 +863,7 @@ class PBEAM(IntegratedLineProperty):
             self.n1b = card.field(x+14,0.0)
             self.n2b = card.field(x+15,self.n1b)
         else:
-            raise Exception('not supported')
+            raise NotImplementedError('not supported')
         ###
 
     #def Area(self):
@@ -1140,7 +1140,7 @@ class PBEAML(IntegratedLineProperty):
             ###
         ###
         #print self.printCard(fields)
-        #raise Exception('verify PBEAML...')
+        #raise NotImplementedError('verify PBEAML...')
         return fields
 
     def reprFields(self):
@@ -1174,7 +1174,7 @@ class PBEAM3(LineProperty): # not done, cleanup
             # more...
         ###
         else:
-            raise Exception('not implemented...')
+            raise NotImplementedError('not implemented...')
         ###
 
     def Nsm(self):
@@ -1186,6 +1186,6 @@ class PBEAM3(LineProperty): # not done, cleanup
         self.mid = model.Material(self.mid)
 
     def reprFields(self):
-        raise Exception('not done...')
+        raise NotImplementedError('not done...')
         fields = ['PBEAM3',self.pid,self.Mid(),] # other
         return fields

@@ -19,6 +19,8 @@ This code was written entirely in Python and should install easily.
 Overall Notes
 BDF API Changes
 BDF Bug Fixes
+- fixed bug in CONM2 with inertia terms
+
 Overall BDF
 Added BDF
  - EIGB, EIGP, EIGR
@@ -29,7 +31,9 @@ OP2 Bug Fixes
 Overall OP2
 Added OP2
 
-
+-----------------------v0.3 released 2012/02/??-----------------------
+BDF Bug Fixes
+- fixed bug in CONM2 with inertia terms
 
 -----------------------v0.3 released 2012/02/08-----------------------
 Overall Notes
