@@ -1,4 +1,5 @@
 from baseCard import BaseCard
+from math import log,exp
 
 class FREQ(BaseCard):
     """

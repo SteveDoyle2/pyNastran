@@ -101,14 +101,14 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except MissingFileError:
-        pass
-    except TabCharacterError:
-        pass
-    except ScientificParseError:
-        pass
-    except ClosedBDFError:
-        pass
+    #except MissingFileError:
+    #    pass
+    #except TabCharacterError:
+    #    pass
+    #except ScientificParseError:
+    #    pass
+    #except ClosedBDFError:
+    #    pass
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
@@ -212,10 +212,14 @@ def getElementStats(fem1,fem2):
                 mA  = e.MassPerArea()
                 m   = e.Mass()
                 c   = e.Centroid()
+                mid = e.Mid()
+                pid = e.Pid()
             elif isinstance(e,SolidElement):
                 v = e.Volume()
                 m = e.Mass()
                 c   = e.Centroid()
+                mid = e.Mid()
+                pid = e.Pid()
             elif isinstance(e,LineElement): # ROD/BAR/BEAM
                 L   = e.Length()
                 nsm = e.Nsm()
@@ -227,6 +231,8 @@ def getElementStats(fem1,fem2):
                 I12 = e.I12()
                 J   = e.J()
                 c   = e.Centroid()
+                mid = e.Mid()
+                pid = e.Pid()
                 if J is None:
                     print "Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid)
             elif isinstance(e,RigidElement):
@@ -236,6 +242,7 @@ def getElementStats(fem1,fem2):
             elif isinstance(e,SpringElement):
                 L = e.Length()
                 K = e.K()
+                pid = e.Pid()
             elif isinstance(e,PointElement):
                 m = e.Mass()
                 c = e.Centroid()

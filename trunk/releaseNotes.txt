@@ -17,11 +17,15 @@ This code was written entirely in Python and should install easily.
 
 -----------------------v0.4 released 2012/03/??-----------------------
 Overall Notes
+Overall BDF
 BDF API Changes
+
 BDF Bug Fixes
 - fixed bug in CONM2 with inertia terms
+ - PCOMP can now have 1 ply per line or 2 plies per line
+ - PCOMP doesnt lose last plies anymore
+ - fixed bugs in CQUADR, CVISC, CONROD, PTUBE, QBDY1, QBDY3, FREQ2, PMASS
 
-Overall BDF
 Added BDF
  - EIGB, EIGP, EIGR
  - *** EIGC, EIGRL
@@ -31,7 +35,7 @@ OP2 Bug Fixes
 Overall OP2
 Added OP2
 
------------------------v0.3 released 2012/02/??-----------------------
+-----------------------v0.3.1 released 2012/02/??-----------------------
 BDF Bug Fixes
 - fixed bug in CONM2 with inertia terms
 

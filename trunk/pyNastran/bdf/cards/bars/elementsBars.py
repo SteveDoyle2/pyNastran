@@ -523,6 +523,18 @@ class CONROD(CROD):
         #print "K = \n",K
         return K
 
+    def writeCodeAster(self):
+        msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" %(self.eid)
+        msg += "              SECTION='CERCLE',  # circular section\n"
+        if thickness:
+            msg += "              CARA=('R','EP'),   # radius, thickness\n"
+            msg += "              VALE=(%g,%g),\n"  %(self.Radius(),self.Thickness())
+        else:
+            msg += "              CARA=('R')   # radius\n"
+            msg += "              VALE=(%g),\n"  %(self.Radius())
+        ###
+        return msg
+
     def rawFields(self):
         fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,self.c,self.nsm]
         return fields

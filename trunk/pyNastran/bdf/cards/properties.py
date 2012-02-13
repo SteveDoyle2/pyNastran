@@ -21,7 +21,7 @@ class NSM(PointProperty):
         'PSHELL', 'PCOMP', 'PBAR',  'PBARL', 'PBEAM',  'PBEAML', 'PBCOMP', 'PROD',
         'CONROD', 'PBEND', 'PSHEAR','PTUBE', 'PCONEAX','PRAC2D']
     def __init__(self,card=None,nOffset=0,data=None):
-        #Element.__init__(self,card,data)
+        PointProperty.__init__(self,card,data)
         if card:
             nOffset *= 2
             self.sid   = card.field(1)
@@ -43,6 +43,9 @@ class NSM(PointProperty):
         fields = ['NSM',self.sid,self.Type,self.id,self.value]
         return fields
 
+    def reprFields(self):
+        return self.rawFields()
+
 class PMASS(PointProperty):
     def __init__(self,card=None,nOffset=0,data=None):
         PointProperty.__init__(self,card,data)
@@ -55,8 +58,11 @@ class PMASS(PointProperty):
         return self.mass
 
     def rawFields(self):
-        fields = ['PMASS',self.pid,self.Mass]
+        fields = ['PMASS',self.pid,self.mass]
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class DamperProperty(Property):
     type = 'DamperProperty'
@@ -83,6 +89,9 @@ class PDAMP(DamperProperty):
         fields = ['PDAMP',self.pid,self.b]
         return fields
 
+    def reprFields(self):
+        return self.rawFields()
+
 class PDAMP5(DamperProperty):
     type = 'PDAMP5'
     def __init__(self,card=None,data=None):
@@ -108,6 +117,9 @@ class PDAMP5(DamperProperty):
     def rawFields(self):
         fields = ['PDAMP5',self.pid,self.Mid(),self.b]
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class PGAP(Property):
     type = 'PGAP'
