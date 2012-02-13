@@ -564,15 +564,14 @@ class CQUADR(CQUAD4):
             if self.T4==-1.0: self.T4=1.0
         ###            
         self.prepareNodeIDs(nids)
-        assert len(self.nodes)==4,'CQUAD4'
+        assert len(self.nodes)==4,'CQUADR'
 
     def Thickness(self):
         return self.pid.Thickness()
 
     def rawFields(self):
-        fields = ['CQUADR',self.eid,self.Pid()]+self.nodeIDs()+[
-                  self.T1,self.T2,self.T3,self.T4,self.thetaMcid,self.zOffset,
-                  self.TFlag]
+        fields = ['CQUADR',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,
+                  None,self.TFlag,self.T1,self.T2,self.T3,self.T4,]
         return fields
 
     def reprFields(self):

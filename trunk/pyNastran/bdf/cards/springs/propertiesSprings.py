@@ -1,7 +1,7 @@
 import sys
 from numpy import zeros,pi
 
-# my code
+# pyNastran
 from ..baseCard import Property
 
 class SpringProperty(Property):
@@ -29,6 +29,9 @@ class PELAS(SpringProperty):
     def crossReference(self,model):
         pass
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PELAS',self.pid,self.k,self.ge,self.s]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()

@@ -34,9 +34,12 @@ class Load(BaseCard):
             return [node.nid for node in nodes]
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = [self.type,self.lid]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class GRAV(BaseCard):
     """
@@ -114,9 +117,13 @@ class LSEQ(BaseCard):
             return [node.nid for node in nodes]
         ###
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['LSEQ',self.lid]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        fields = ['LSEQ',self.lid]
+        return fields
 
 class LOAD(Load):
     type = 'LOAD'
@@ -170,11 +177,14 @@ class LOAD(Load):
             return ID
         return ID.lid
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['LOAD',self.lid,self.s]
         for scaleFactor,loadID in zip(self.scaleFactors,self.loadIDs):
             fields += [scaleFactor,self.LoadID(loadID)]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 
 class OneDeeLoad(Load): # FORCE/MOMENT
@@ -247,10 +257,14 @@ class FORCE(Force):
         """@todo cross reference and fix repr function"""
         pass
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['FORCE',self.lid,self.node,self.Cid(),self.mag] + list(self.xyz)
+        return fields
+
+    def reprFields(self):
         cid = self.setBlankIfDefault(self.Cid(),0)
         fields = ['FORCE',self.lid,self.node,cid,self.mag] + list(self.xyz)
-        return self.printCard(fields)
+        return fields
 
 class FORCE1(Force):
     """
@@ -351,10 +365,13 @@ class FORCE2(Force):
             return self.node
         return self.node.nid
 
-    def __repr__(self):
+    def rawFields(self):
         (node,g1,g2,g3,g4) = self.nodeIDs([self.node,self.g1,self.g2,self.g3,self.g4])
         fields = ['FORCE2',self.lid,node,self.mag,g1,g2,g3,g4]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class MOMENT(Moment):  # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
@@ -385,10 +402,14 @@ class MOMENT(Moment):  # can i copy the force init without making the MOMENT a F
         """@todo cross reference and fix repr function"""
         pass
 
-    def __repr__(self):
-        cid = self.setBlankIfDefault(self.cid,0)
+    def rawFields(self):
+        fields = ['MOMENT',self.lid,self.node,self.Cid(),self.mag] + list(self.xyz)
+        return fields
+
+    def reprFields(self):
+        cid = self.setBlankIfDefault(self.Cid(),0)
         fields = ['MOMENT',self.lid,self.node,cid,self.mag] + list(self.xyz)
-        return self.printCard(fields)
+        return fields
 
 class MOMENT1(Moment):
     type = 'MOMENT1'
@@ -429,10 +450,13 @@ class MOMENT1(Moment):
         self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.Normalize()
 
-    def __repr__(self):
+    def rawFields(self):
         (node,g1,g2) = self.nodeIDs([self.node,self.g1,self.g2])
         fields = ['MOMENT1',self.lid,node,self.mag,g1,g2]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 
 class MOMENT2(Moment):
@@ -476,10 +500,13 @@ class MOMENT2(Moment):
         v34 = v34/norm(v34)
         self.xyz = cross(v12,v34)
 
-    def __repr__(self):
+    def rawFields(self):
         (node,g1,g2,g3,g4) = self.nodeIDs([self.node,self.g1,self.g2,self.g3,self.g4])
         fields = ['MOMENT2',self.lid,node,self.mag,g1,g2,g3,g4]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class PLOAD(Load):
     type = 'PLOAD'
@@ -501,9 +528,12 @@ class PLOAD(Load):
         """@todo cross reference and fix repr function"""
         pass
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PLOAD',self.lid,self.p]+self.nodeIDs()
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class PLOAD1(Load):
     type = 'PLOAD1'
@@ -537,9 +567,12 @@ class PLOAD1(Load):
         """@todo cross reference and fix repr function"""
         pass
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PLOAD1',self.lid,self.eid,self.Type,self.scale,self.x1,self.p1,self.x2,self.p2]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class PLOAD2(Load):  # todo:  support THRU
     type = 'PLOAD2'
@@ -565,9 +598,12 @@ class PLOAD2(Load):  # todo:  support THRU
         """@todo cross reference and fix repr function"""
         pass
 
-    def __repr__(self):
+    def rawFields(self):
         fields = ['PLOAD2',self.lid,self.p]+self.nodeIDs()
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class PLOAD4(Load):
     """
@@ -632,7 +668,7 @@ class PLOAD4(Load):
         if self.eids:
             self.eids = model.Elements(self.eids)
 
-    def __repr__(self):
+    def rawFields(self):
         cid  = self.setBlankIfDefault(self.Cid(),0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
         p2   = self.setBlankIfDefault(self.p[1],self.p[0])
@@ -659,4 +695,7 @@ class PLOAD4(Load):
         fields += list(self.NVector)
         fields.append(sorl)
         #print "fields = ",fields
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()

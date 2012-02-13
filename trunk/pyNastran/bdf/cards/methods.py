@@ -78,7 +78,7 @@ class EIGC(Method): ## not done
             ## dependent for METHOD = "CLAN".)
             self.E      = card.field(6)
             self.ndo    = card.field(7)
-            assert card.nFields()<8,'card = %s' %(card.fields(0))
+            #assert card.nFields()<8,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGC')
         ###
@@ -88,12 +88,12 @@ class EIGC(Method): ## not done
 
     def rawFields(self):
         fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,self.E,self.ndo,None]
-        raise Exception('EIGC not finished...')
+        #raise Exception('EIGC not finished...')
         return fields
 
     def reprFields(self):
         fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,self.E,self.ndo,None]
-        raise Exception('EIGC not finished...')
+        #raise Exception('EIGC not finished...')
         return fields
 
 class EIGR(Method):
@@ -217,9 +217,9 @@ class EIGRL(Method):
                 self.values.append(optionValues[o+1])
 
             ## Method for normalizing eigenvectors
-            if sol in [103,146]:
+            if sol in [103,115,146]: # normal modes,cyclic normal modes, flutter
                 self.norm = card.field(8,'MASS')
-            elif sol==105:
+            elif sol in [105,110,111,116]: # buckling, modal complex eigenvalues,modal frequency response,cyclic buckling
                 self.norm = card.field(8,'MAX')
             else:
                 self.norm = card.field(8)

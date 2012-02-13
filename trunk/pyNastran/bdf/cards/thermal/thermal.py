@@ -160,7 +160,7 @@ class CHBDYG(ThermalElement):
         #self.pid = mesh.Phbdy(self.pid)
 
     def rawFields(self):
-        fields = ['CHBDYG',self.eid,None,self.Type,self.iViewFront,iViewBack,self.radMidFront,self.radMidBack,None,
+        fields = ['CHBDYG',self.eid,None,self.Type,self.iViewFront,self.iViewBack,self.radMidFront,self.radMidBack,None,
         ]+self.grids
         return fields
 
@@ -172,7 +172,7 @@ class CHBDYG(ThermalElement):
 
         fields = ['CHBDYG',self.eid,None,self.Type,iViewFront,iViewBack,radMidFront,radMidBack,None,
         ]+self.grids
-        print "fields = %s" %(fields)
+        #print "chbdyg fields = %s" %(fields)
         return fields
 
 class CHBDYP(ThermalElement):
@@ -287,6 +287,11 @@ class PCONV(ThermalProperty):
     #def crossReference(self,model):
     #    pass
 
+    def rawFields(self):
+        fields = ['PCONV',self.pconid,self.mid,self.form,self.expf,self.ftype,self.tid,None,None,
+                  self.chlen,self.gidin,self.ce,self.e1,self.e2,self.e3]
+        return fields
+
     def reprFields(self):
         form  = self.setBlankIfDefault(self.form,  0)
         expf  = self.setBlankIfDefault(self.expf,0.0)
@@ -327,6 +332,10 @@ class PCONVM(ThermalProperty):
     #def crossReference(self,model):
     #    pass
 
+    def rawFields(self):
+        fields = ['PCONVM',self.pconid,self.mid,self.form,self.flag,self.coef,self.expr,self.exppi,self.exppo]
+        return fields
+
     def reprFields(self):
         form  = self.setBlankIfDefault(self.form,   0)
         flag  = self.setBlankIfDefault(self.flag,   0)
@@ -359,6 +368,10 @@ class PHBDY(ThermalProperty):
 
     #def crossReference(self,model):
     #    pass
+
+    def rawFields(self):
+        fields = ['PHBDY',self.pid,self.af,self.d1,self.d2]
+        return fields
 
     def reprFields(self):
         d2  = self.setBlankIfDefault(self.d2,self.d1)
@@ -402,6 +415,10 @@ class CONV(ThermalBC):
         if i is None:
             return self.ta
         return self.ta[i]
+
+    def rawFields(self):
+        fields = ['CONV',self.eid,self.pconID,self.flmnd,self.cntrlnd]+self.ta
+        return fields
 
     def reprFields(self):
         flmnd   = self.setBlankIfDefault(self.flmnd,  0)
@@ -454,6 +471,10 @@ class RADBC(ThermalBC):
     #def crossReference(self,model):
     #    pass
 
+    def rawFields(self):
+        fields = ['RADBC',self.nodamb,self.famb,self.cntrlnd]+self.eids
+        return fields
+
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
         eids   = self.collapseThruBy(self.eids)
@@ -493,9 +514,13 @@ class QBDY1(ThermalLoad):
     def nQFluxTerms(self):
         return len(self.qFlux)
 
+    def rawFields(self):
+        fields = ['QBDY1',self.qFlux,self.sid]+list(self.eids)+[self.qFlux]
+        return fields
+
     def reprFields(self):
         eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY1',self.sid]+list(eids)+[self.qFlux]
+        fields = ['QBDY1',self.qFlux,self.sid]+list(eids)+[self.qFlux]
         #print "FIELDS = ",fields
         return fields
 
@@ -525,9 +550,12 @@ class QBDY2(ThermalLoad): # not tested
     def nQFluxTerms(self):
         return len(self.qFlux)
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['QBDY2',self.sid,self.eid,self.qFlux]
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class QBDY3(ThermalLoad):
     """
@@ -557,10 +585,14 @@ class QBDY3(ThermalLoad):
     #def crossReference(self,model):
     #    pass
 
+    def rawFields(self):
+        fields = ['QBDY3',self.sid,self.Q0,self.cntrlnd]+self.eids
+        return fields
+
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
         eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY3',self.sid,cntrlnd]+self.eids
+        fields = ['QBDY3',self.sid,self.Q0,cntrlnd]+self.eids
         return fields
 
 class QHBDY(ThermalLoad):
@@ -598,9 +630,12 @@ class QHBDY(ThermalLoad):
     #def crossReference(self,model):
     #    pass
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['QHBDY',self.sid,self.flag,self.Q0,self.af]+self.grids
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class TEMP(ThermalLoad):
     """
@@ -639,18 +674,20 @@ class TEMP(ThermalLoad):
     def crossReference(self,model):
         pass
 
-    def reprFields(self):
+    def rawFields(self):
         """Writes the TEMP card"""
         fields = ['TEMP',self.sid]
 
         nTemps = len(self.temperatures)-1
-        #print "self.temperatures = ",self.temperatures
-        #print "nTemps = ",nTemps
         for i,(gid,temp) in enumerate(sorted(self.temperatures.items())):
             fields += [gid,temp]
             if i%3==2 and nTemps>i: # start a new TEMP card
                 fields += [None,'TEMP',self.sid]
         return fields
+
+    def reprFields(self):
+        """Writes the TEMP card"""
+        return self.rawFields()
 
 # Loads
 #-------------------------------------------------------

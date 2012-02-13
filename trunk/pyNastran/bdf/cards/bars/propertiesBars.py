@@ -110,6 +110,31 @@ class LineProperty(Property):
     def Nu(self):
         return self.mid.nu
 
+    def CA_Section(self,iFace,iStart,dim):
+        """
+        ---msg1---
+        H1=0.1
+        W1=0.05
+
+        ---msg2---
+        Face_1 = geompy.MakeFaceHW(H1, W1, 1)
+        geompy.addToStudy( Face_1, 'Face_1' )
+        
+        ---msg---
+        H1=0.1
+        W1=0.05
+        Face_1 = geompy.MakeFaceHW(H1, W1, 1)
+        geompy.addToStudy( Face_1, 'Face_1' )
+        """
+        msg1 = ''
+        msg2 = 'Face_%s = geompy.MakeFaceHW(' %(iFace+1)
+        for i,d in enumerate(dim):
+            msg1 += 'D%s = \n' %(iStart+d)
+            msg2 += 'D%s,'
+        msg2 += '1)\n'
+        msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" %(iFace,iFace)
+        return (msg1+msg2)
+            
     def IAreaL(self,dim):
         if self.Type=='ROD':
             R = dim[0]
@@ -419,7 +444,7 @@ class PROD(LineProperty):
     def I12(self):
         return 0.
 
-    def writeCodeAster(self):
+    def writeCodeAster(self,iCut,iFace,iStart):
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='PROD_%s',\n" %(self.pid)
         msg += "              SECTION='GENERALE',\n"
@@ -427,7 +452,7 @@ class PROD(LineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(self.Area(),self.I11(),self.I22(),self.J())
         msg += "                    CARA='VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return msg
+        return (msg,iCut,iFace,iStart)
 
     def rawFields(self):
         fields = ['PROD',self.pid,self.Mid(),self.A,self.j,self.c,self.nsm]
@@ -447,9 +472,9 @@ class PTUBE(LineProperty):
             self.pid = card.field(1)
             self.mid = card.field(2)
             self.OD1 = card.field(3)
-            self.t   = card.field(4,self.outerDiameter/2.)
+            self.t   = card.field(4,self.OD1/2.)
             self.nsm = card.field(5,0.0)
-            self.OD2 = card.field(6,self.outerDiameter)
+            self.OD2 = card.field(6,self.OD1)
         else:
             self.pid = data[0]
             self.mid = data[1]
@@ -462,13 +487,6 @@ class PTUBE(LineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def reprFields(self):
-        t   = self.setBlankIfDefault(self.t,self.OD1/2.)
-        nsm = self.setBlankIfDefault(self.nsm,0.0)
-        OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
-        fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
-        return fields
-    
     def Area(self):
         A = (self.area1()+self.area2())/2.
         
@@ -505,6 +523,17 @@ class PTUBE(LineProperty):
         m[0,0] = 1.
         return m
 
+    def rawFields(self):
+        fields = ['PTUBE',self.pid,self.Mid(),self.OD1,self.t,self.nsm,self.OD2]
+        return fields
+    
+    def reprFields(self):
+        t   = self.setBlankIfDefault(self.t,self.OD1/2.)
+        nsm = self.setBlankIfDefault(self.nsm,0.0)
+        OD2 = self.setBlankIfDefault(self.OD2,self.OD1)
+        fields = ['PTUBE',self.pid,self.Mid(),self.OD1,t,nsm,OD2]
+        return fields
+    
 class PBAR(LineProperty):
     type = 'PBAR'
     def __init__(self,card=None,data=None):
@@ -600,7 +629,7 @@ class PBAR(LineProperty):
     #def Iyz(self):
     #    return self.i12
 
-    def writeCodeAster(self):
+    def writeCodeAster(self,iCut,iFace,iStart):
         a  = self.Area()
         iy = self.I11()
         iz = self.I22()
@@ -612,7 +641,7 @@ class PBAR(LineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
         msg += "                    CARA='VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return msg
+        return (msg,iCut,iFace,iStart)
 
     def rawFields(self):
         line1 = ['PBAR',self.pid,self.Mid(),self.A,self.i1,self.i2,self.j,self.nsm,None]
@@ -750,6 +779,25 @@ class PBARL(LineProperty):
         return None
     def I22(self):
         return None
+    
+    def writeCodeAster(self,iCut=0,iFace=0,iStart=0):
+        msg1=''; msg2=''
+        msg = ''
+        (msg) += CA_Section(self,iFace,iStart,self.dim)
+        nFace += 1
+        iStart += len(self.dim)
+
+        (msg) += CA_Section(self,iFace,iStart,self.dim)
+        nFace += 1
+        msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' %(iCut+1,iFace+1,iFace+2)
+        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  %(iCut+1,iCut+1)
+        iStart += len(self.dim)
+        return (msg+msg2,iCut,nFace,iStart)
+
+    def rawFields(self):
+        fields = ['PBARL',self.pid,self.Mid(),self.group,self.Type,None,None,None,None,
+        ]+self.dim+[self.nsm]
+        return fields
 
     def reprFields(self):
         group = self.setBlankIfDefault(self.group,'MSCBMLO')
@@ -891,7 +939,7 @@ class PBEAM(IntegratedLineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def writeCodeAster(self):
+    def writeCodeAster(self,iCut,iFace,iStart):
         a  = self.Area()
         iy = self.I11()
         iz = self.I22()
@@ -903,7 +951,7 @@ class PBEAM(IntegratedLineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
         msg += "                    CARA='VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return msg
+        return (msg,iCut,iFace,iStart)
 
     def rawFields(self):
         fields = ['PBEAM',self.pid,self.Mid()]
@@ -1128,6 +1176,24 @@ class PBEAML(IntegratedLineProperty):
         #i12 = integrateLine(self.xxb,self.i12)
         i12 = None
         return i12
+
+    def writeCodeAster(self,iCut=0,iFace=0,iStart=0):
+        msg1=''; msg2=''
+        msg = ''
+        
+        msg2 = 'Cut_%s = geompy.MakeCut(' %(iCut+1)
+        for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
+            (msg) += CA_Section(self,iFace,iStart,self.dim)
+            msg2 += 'Face_%i, ' %(iFace+1)
+            nFace += 1
+            iStart += len(self.dim)
+        
+        msg2 = msg2[-2:]
+        msg2 += ')\n'
+        
+        msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  %(iCut+1,iCut+1)
+        iCut += 1
+        return (msg=msg2,iCut,nFace,iStart)
 
     def rawFields(self):
         fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]
