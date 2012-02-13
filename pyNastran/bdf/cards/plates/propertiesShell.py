@@ -232,7 +232,7 @@ class PCOMP(ShellProperty):
             self.lam  = card.field(8)
             #print "lam = ",self.lam
 
-            nPlyFields = card.nFields()-8 # -8 for the first 8 fields (1st line)
+            nPlyFields = card.nFields()-9 # -8 for the first 8 fields (1st line)
             #plyCards = card.fields(9)
 
             # counting plies
@@ -241,18 +241,24 @@ class PCOMP(ShellProperty):
             if nLeftover:
                 nMajor+=1
             nplies = nMajor
+            #print "nplies = ",nplies
 
             iPly = 1
             plies = []
             midLast = None
-            for i in range(9,nplies*4,4):  # doesnt support single ply per line
-                defaults = [midLast,None,0.0,'NO']
+            tLast = None
+
+            ## supports single ply per line
+            for i in range(9,9+nplies*4,4):
+                defaults = [midLast,tLast,0.0,'NO']
                 (mid,t,theta,sout) = card.fields(i,i+4,defaults)
                 ply = [mid,t,theta,sout]
-                assert t>0.,'thickness of PCOMP layer is invalid iLayer=%s t=%s' %(iPly,t)
+                
+                assert t>0.,'thickness of PCOMP layer is invalid iLayer=%s t=%s ply=[mid,t,theta,sout]=%s' %(iPly,t,ply)
                 if ply!=defaults: # if they're not all defaults...
                     plies.append(ply)
                 midLast = mid
+                tLast = t
                 iPly +=1
             #print "nplies = ",nplies
 
@@ -296,6 +302,10 @@ class PCOMP(ShellProperty):
                 self.plies.append([mid,t,theta,sout])
             ###
         ###
+        #print self
+        #print "nPlies = %s" %(self.nPlies())
+        #if self.pid==2058:
+        #    sys.exit()
 
     def hasCoreLayer(self):
         """is there a center layer (matters most for a symmetrical ply)"""
@@ -468,7 +478,7 @@ class PCOMP(ShellProperty):
             fields += [mid,t,theta,sout]
         return fields
 
-class PCOMPG(PCOMP):
+class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
     type = 'PCOMPG'
     def __init__(self,card=None,data=None):
         ShellProperty.__init__(self,card,data) ## @todo doesnt support data

@@ -70,6 +70,7 @@ class Coord(BaseCard):
             ## i = j cross k
             self.i = cross(self.j,self.k)
         except InvalidUnitVectorError:
+            print "---InvalidUnitVectorError---"
             print "Cp = ",self.Cid()
             print "e1 = ",self.e1
             print "e2 = ",self.e2

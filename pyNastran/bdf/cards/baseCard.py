@@ -299,7 +299,12 @@ class BaseCard(BDF_Card):
         """
         self.rawFields()
         fields = self.reprFields()
-        return self.printCard(fields)
+        try:
+            return self.printCard(fields)
+        except:
+            print 'problem printing %s card' %(self.type)
+            print "fields = ",fields
+            raise
 ###
 
 def Mid(self):

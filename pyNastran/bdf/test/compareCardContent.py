@@ -1,8 +1,13 @@
 from pyNastran.bdf.fieldWriter import printField,printCard
 
 def assertFields(card1,card2):
-        fields1 = card1.rawFields()
-        fields2 = card2.rawFields()
+        try:
+            fields1 = card1.reprFields()
+            fields2 = card2.reprFields()
+        except:
+            print "card1 = \n%s" %(card1)
+            print "card2 = \n%s" %(card2)
+            raise
         assert len(fields1)==len(fields2),'len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s' %(len(fields1),len(fields2),fields1,fields2,printCard(fields1),printCard(fields2))
         for i,(f1,f2) in enumerate(zip(fields1,fields2)):
             v1=printField(f1)
@@ -10,10 +15,6 @@ def assertFields(card1,card2):
             assert v1==v2,'cardName=%s ID=%s i=%s f1=%r f2=%r\n%r\n%r' %(fields1[0],fields1[1],i,v1,v2,fields1,fields2)
             
 def compareCardContent(fem1,fem2):
-    for key in fem1.params:
-        card1 = fem1.params[key]
-        card2 = fem2.params[key]
-        assert card1.rawFields()==card2.rawFields()
     assert len(fem1.params)                ==  len(fem2.params)
     assert len(fem1.nodes)                 ==  len(fem2.nodes)
     assert len(fem1.elements)              ==  len(fem2.elements)
@@ -21,7 +22,7 @@ def compareCardContent(fem1,fem2):
     assert len(fem1.properties)            ==  len(fem2.properties)
     assert len(fem1.materials)             ==  len(fem2.materials)
     assert len(fem1.creepMaterials)        ==  len(fem2.creepMaterials)
-    assert len(fem1.loads)                 ==  len(fem2.loads)
+    #assert len(fem1.loads)                 ==  len(fem2.loads)
     assert len(fem1.gravs)                 ==  len(fem2.gravs)
     assert len(fem1.coords)                ==  len(fem2.coords)
     assert len(fem1.spcs)                  ==  len(fem2.spcs)
@@ -96,10 +97,11 @@ def compareCardContent(fem1,fem2):
         card2 = fem2.creepMaterials[key]
         assertFields(card1,card2)
 
-    #for key in fem1.loads:
-        #card1 = fem1.loads[key]
-        #card2 = fem2.loads[key]
-        #assertFields(card1,card2)
+    for key in fem1.loads:
+        loads1 = fem1.loads[key]
+        loads2 = fem2.loads[key]
+        for card1,card2 in zip(loads1,loads2):
+            assertFields(card1,card2)
 
     for key in fem1.gravs:
         card1 = fem1.gravs[key]
@@ -227,9 +229,11 @@ def compareCardContent(fem1,fem2):
         assertFields(card1,card2)
 
     for key in fem1.aelinks:
-        card1 = fem1.aelinks[key]
-        card2 = fem2.aelinks[key]
-        assertFields(card1,card2)
+        aelinks1 = fem1.aelinks[key]
+        aelinks2 = fem2.aelinks[key]
+        for (card1,card2) in zip(aelinks1,aelinks2):
+            assertFields(card1,card2)
+        ###
 
     for key in fem1.aelists:
         card1 = fem1.aelists[key]
@@ -272,9 +276,11 @@ def compareCardContent(fem1,fem2):
         assertFields(card1,card2)
 
     for key in fem1.bcs:
-        card1 = fem1.bcs[key]
-        card2 = fem2.bcs[key]
-        assertFields(card1,card2)
+        BCs1 = fem1.bcs[key]
+        BCs2 = fem2.bcs[key]
+        for card1,card2 in zip(BCs1,BCs2):
+            assertFields(card1,card2)
+        ###
 
     for key in fem1.thermalMaterials:
         card1 = fem1.thermalMaterials[key]

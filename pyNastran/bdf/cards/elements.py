@@ -277,16 +277,6 @@ class CRAC3D(Element):
     def rawFields(self):
         fields = ['CRAC3D',self.eid,self.Pid()]+self.nodes
         return fields
-        
-
-class CVISC(CROD):
-    type = 'CVISC'
-    def __init__(self,card=None,data=None):
-        CROD.__init__(self,card,data)
-    ###
-    def rawFields(self):  # not done...
-        fields = ['CVISC',self.eid]
-###
 
 class PointElement(Element):
     def __init__(self,card=None,data=None):

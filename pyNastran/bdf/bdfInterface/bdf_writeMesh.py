@@ -222,7 +222,8 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    raise
                 ###
         return msg
 
@@ -235,7 +236,8 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    raise
                 ###
         return msg
 
@@ -269,7 +271,8 @@ class writeMesh(object):
                     try:
                         msg += str(element)
                     except:
-                        raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                        print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                        raise
                     ###
                 ###
                 eidsWritten+=eids
@@ -287,7 +290,8 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    raise Exception('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    raise
                 ###
             ###
 
@@ -379,7 +383,8 @@ class writeMesh(object):
                     try:
                         msg += str(load)
                     except:
-                        raise Exception('failed printing load...type=%s key=%s' %(loadcase.type,key))
+                        print 'failed printing load...type=%s key=%s' %(load.type,key)
+                        raise
                     ###
             for ID,grav in sorted(self.gravs.items()):
                 msg += str(grav)
