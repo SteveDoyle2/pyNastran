@@ -430,6 +430,10 @@ class PROD(LineProperty):
             self.nsm = data[5]
         ###
 
+    def Radius(self):
+        """assumes circular cross section - probably will remove this"""
+        return (self.A/pi)**0.5
+        
     def crossReference(self,mesh):
         self.mid = mesh.Material(self.mid)
 
@@ -446,12 +450,16 @@ class PROD(LineProperty):
 
     def writeCodeAster(self,iCut,iFace,iStart):
         msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='PROD_%s',\n" %(self.pid)
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX'\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(self.Area(),self.I11(),self.I22(),self.J())
-        msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
+        msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" %(self.pid)
+        msg += "              SECTION='CERCLE',  # circular section\n"
+        msg += "              CARA=('R')   # radius\n"
+        msg += "              VALE=(%g),),\n"  %(self.Radius())
+        
+        #msg += "              SECTION='GENERALE',\n"
+        #msg += "              CARA=('A','IY','IZ','JX')\n"
+        #msg += "              VALE=(%g,  %g,  %g,  %g),\n"  %(self.Area(),self.I11(),self.I22(),self.J())
+        #msg += "                    CARA='VECT_Y'),\n"
+        #msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return (msg,iCut,iFace,iStart)
 
     def rawFields(self):
@@ -635,11 +643,12 @@ class PBAR(LineProperty):
         iz = self.I22()
         j  = self.J()
         msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='PBAR_%s',\n" %(self.pid)
+        msg += "    POUTRE=_F(GROUP_MA='P%s', # PBAR\n" %(self.pid)
         msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX'\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
-        msg += "                    CARA='VECT_Y'),\n"
+        msg += "              CARA=('A','IY','IZ','JX')\n"
+        msg += "              VALE=(%g,  %g,  %g,  %g,)\n"  %(a,iy,iz,j)
+        msg += "              ORIENTATION=(\n"
+        msg += "                    CARA=('VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return (msg,iCut,iFace,iStart)
 
@@ -945,12 +954,19 @@ class PBEAM(IntegratedLineProperty):
         iz = self.I22()
         j  = self.J()
         msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='PBEAM_%s',\n" %(self.pid)
+        msg += "    POUTRE=_F(GROUP_MA='P%s', # PBEAM\n" %(self.pid)
         msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('A','IY','IZ','JX'\n"
-        msg += "              VALE=(%g,  %g,  %g,  %g,\n"  %(a,iy,iz,j)
-        msg += "                    CARA='VECT_Y'),\n"
-        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
+        msg += "              CARA=('A','IY','IZ','JX'), # area, moments of inertia\n"
+        msg += "              VALE=(%g,  %g,  %g,  %g),\n"  %(a,iy,iz,j)
+
+        msg += "              ORIENTATION=_F( \n"
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n" # @todo is this correct
+        msg += "                  VALE=(1.0,0.0,0.0,),\n"
+        msg += "              ),\n"
+
+        msg += "              CARA=('AX','AY'), # shear centers\n"
+        msg += "              VALE=(%g, %g),\n"  %(self.n1a,self.n1b)
+        msg += "             ),\n"
         return (msg,iCut,iFace,iStart)
 
     def rawFields(self):
@@ -1193,7 +1209,7 @@ class PBEAML(IntegratedLineProperty):
         
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  %(iCut+1,iCut+1)
         iCut += 1
-        return (msg=msg2,iCut,nFace,iStart)
+        return (msg+msg2,iCut,nFace,iStart)
 
     def rawFields(self):
         fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]

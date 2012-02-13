@@ -138,6 +138,32 @@ class CELAS2(SpringElement):
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
         
+    def writeCodeAster(self):
+        nodes = self.nodeIDs()
+        msg = ''
+        msg += 'DISCRET=_F( # CELAS2\n'
+        if nodes[0]:
+            msg += "     CARA='K_T_D_N'\n"
+            msg += "     NOEUD=N%i,\n" %(nodes[0])
+
+        if nodes[1]:
+            msg += "     CARA='K_T_D_L'\n"
+            msg += "     NOEUD=N%i,\n" %(nodes[1])
+            msg += "     AMOR_HYST=%g # ge - damping\n" %(self.ge)
+        msg += "     )\n"
+        msg += "\n"
+        
+        if self.c1==1:
+            msg += "VALE=(%g,0.,0.)\n" %(self.k)
+        elif self.c1==2:
+            msg += "VALE=(0.,%g,0.)\n" %(self.k)
+        elif self.c1==2:
+            msg += "VALE=(0.,0.,%g)\n" %(self.k)
+        else:
+            raise Exception('unsupported value of c1=%s' %(self.c1))
+        ###
+        return msg
+
     def rawFields(self):
         nodes = self.nodeIDs()
         fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]

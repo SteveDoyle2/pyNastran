@@ -653,10 +653,11 @@ class PSHELL(ShellProperty):
 
     def writeCodeAster(self):
         msg = ''
-        msg += "    POUTRE=_F(GROUP_MA='PSHELL_%s',\n" %(self.pid)
-        msg += "              SECTION='GENERALE',\n"
-        msg += "              CARA=('T','NSM','Z1',\n"
-        msg += "              VALE=(%g,  %g,  %g,),) \n"  %(self.t,self.nsm,self.z1)
+        msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" %(self.pid)
+        msg += "              EPAIS=%g, # EPAIS=thickness\n" %(self.t)
+        msg += "              ANGL_REP=(0.,90.), # ???\n"  ## @todo what is this?
+        msg += "              CARA=('NSM','Z1'), # ???\n"  ## @todo check
+        msg += "              VALE=(%g, %g,),),\n"  %(self.nsm,self.z1)
         return msg
 
     def rawFields(self):

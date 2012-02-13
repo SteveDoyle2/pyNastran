@@ -181,10 +181,11 @@ class MAT1(Material):
         #print "nu = ",nu
 
     def writeCodeAster(self):
-        msg  = 'MAT1_%s = DEFI_MATRIAU(ELAS=_F(\n' %(self.mid)
-        msg += '                       E  =%g,\n'    %(self.E)
-        msg += '                       RHO=%g,\n'  %(self.rho)
-        msg += '                       NU =%g,),);\n'   %(self.nu)
+        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1\n' %(self.mid,self.E)
+        #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
+        #msg += '                       E  =%g,\n'  %(self.E)
+        msg += '                       NU =%g,\n'  %(self.nu)
+        msg += '                       RHO=%g),);\n'  %(self.rho)
         return msg
 
     def rawFields(self):

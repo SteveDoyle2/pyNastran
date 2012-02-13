@@ -511,6 +511,12 @@ class CONM2(PointElement): # v0.1 not done
             return self.cid
         return self.cid.cid
 
+    def writeCodeAster(self):
+        msg += "    DISCRET=_F(\n"
+        msg += "             'CARA='M_T_D_N'\n"
+        msg += "              NOEUD=N%s\n" %(self.Nid())
+        msg += "              VALE=%g),\n" %(self.mass)
+        return msg
     def rawFields(self):
         #print "X=%r" %(self.X)
         #print "I=%r" %(self.I)
