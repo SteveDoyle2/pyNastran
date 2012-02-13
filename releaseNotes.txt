@@ -29,6 +29,7 @@ BDF Bug Fixes
 Added BDF
  - EIGB, EIGP, EIGR
  - *** EIGC, EIGRL
+ - CBUSH, PBUSH, PDAMPT
 
 OP2 API Changes
 OP2 Bug Fixes

@@ -448,7 +448,7 @@ class PROD(LineProperty):
     def I12(self):
         return 0.
 
-    def writeCodeAster(self,iCut,iFace,iStart):
+    def writeCodeAster(self,iCut,iFace,iStart): # PROD
         msg = ''
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" %(self.pid)
         msg += "              SECTION='CERCLE',  # circular section\n"
@@ -637,7 +637,7 @@ class PBAR(LineProperty):
     #def Iyz(self):
     #    return self.i12
 
-    def writeCodeAster(self,iCut,iFace,iStart):
+    def writeCodeAster(self): # PBAR
         a  = self.Area()
         iy = self.I11()
         iz = self.I22()
@@ -650,7 +650,7 @@ class PBAR(LineProperty):
         msg += "              ORIENTATION=(\n"
         msg += "                    CARA=('VECT_Y'),\n"
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
-        return (msg,iCut,iFace,iStart)
+        return (msg)
 
     def rawFields(self):
         line1 = ['PBAR',self.pid,self.Mid(),self.A,self.i1,self.i2,self.j,self.nsm,None]
@@ -789,7 +789,7 @@ class PBARL(LineProperty):
     def I22(self):
         return None
     
-    def writeCodeAster(self,iCut=0,iFace=0,iStart=0):
+    def writeCodeAster(self,iCut=0,iFace=0,iStart=0):  # PBARL
         msg1=''; msg2=''
         msg = ''
         (msg) += CA_Section(self,iFace,iStart,self.dim)
@@ -948,7 +948,7 @@ class PBEAM(IntegratedLineProperty):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
-    def writeCodeAster(self,iCut,iFace,iStart):
+    def writeCodeAster(self): # PBEAM
         a  = self.Area()
         iy = self.I11()
         iz = self.I22()
@@ -961,13 +961,16 @@ class PBEAM(IntegratedLineProperty):
 
         msg += "              ORIENTATION=_F( \n"
         msg += "                  CARA=('VECT_Y'), # direction of beam ???\n" # @todo is this correct
-        msg += "                  VALE=(1.0,0.0,0.0,),\n"
-        msg += "              ),\n"
-
-        msg += "              CARA=('AX','AY'), # shear centers\n"
-        msg += "              VALE=(%g, %g),\n"  %(self.n1a,self.n1b)
-        msg += "             ),\n"
-        return (msg,iCut,iFace,iStart)
+        msg += "                  VALE=(1.0,0.0,0.0,)"
+        
+        if [self.n1a,self.n1b] != [0.,0.]:
+            msg += "              \n),\n"
+            msg += "              CARA=('AX','AY'), # shear centers\n"
+            msg += "              VALE=(%g, %g),\n"  %(self.n1a,self.n1b)
+            msg += "             ),\n"
+        else:
+            msg += " )),\n"
+        return (msg)
 
     def rawFields(self):
         fields = ['PBEAM',self.pid,self.Mid()]
@@ -1193,7 +1196,7 @@ class PBEAML(IntegratedLineProperty):
         i12 = None
         return i12
 
-    def writeCodeAster(self,iCut=0,iFace=0,iStart=0):
+    def writeCodeAster(self,iCut=0,iFace=0,iStart=0): # PBEAML
         msg1=''; msg2=''
         msg = ''
         

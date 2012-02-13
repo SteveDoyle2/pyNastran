@@ -12,6 +12,78 @@ from bars.elementsBars       import *
 from plates.elementsShell    import *
 from springs.elementsSprings import *
 
+class BushingElement(Element):
+    def __init__(self,card,data):
+        Element.__init__(self,card,data)
+
+class CBUSH(BushingElement):
+    type = 'CBUSH'
+    def __init__(self,card=None,data=None):
+        DamperElement.__init__(self,card,data)
+        
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            self.ga = card.field(3)
+            self.gb = card.field(4)
+            x1G0    = card.field(5)
+            if isinstance(x1G0,int):
+                self.g0 = x1G0
+                self.x = None
+            elif isinstance(x1G0,float):
+                self.g0  = None
+                x1  = x1G0
+                x2  = card.field(6)
+                x3  = card.field(7)
+                self.x   = [x1,x2,x3]
+            else:
+                raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
+            ###
+            ## Element coordinate system identification. A 0 means the basic
+            ## coordinate system. If CID is blank, then the element coordinate system
+            ## is determined from GO or Xi.
+            self.cid  = card.field(8,0)
+            ## Location of spring damper (0 <= s <= 1.0)
+            self.s    = card.field(10,0.5)
+            ## Coordinate system identification of spring-damper offset. See
+            ## Remark 9. (Integer > -1; Default = -1, which means the offset point lies
+            ## on the line between GA and GB
+            self.ocid = card.field(11,-1)
+            ## Components of spring-damper offset in the OCID coordinate system if OCID > 0.
+            self.si   = card.fields(i=12,j=14)
+        else:
+            self.eid = data[0]
+            raise NotImplementedError('CBUSH data...')
+        self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        assert len(self.nodes)==2
+
+    #def OCid(self):
+        #if isinstance(self.ocid,int):
+            #return self.ocid
+        #return self.ocid.cid
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
+        
+    def rawFields(self):
+        nodes = self.nodeIDs()
+        if self.g0 is not None:
+            x = [self.g0,None,None]
+        else:
+            x = self.x
+        fields = ['CBUSH',self.eid,self.Pid(),self.ga,self.gb]+x+[self.Cid(),
+                          self.s,self.ocid]+self.si
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
 class DamperElement(Element):
     def __init__(self,card,data):
         Element.__init__(self,card,data)
