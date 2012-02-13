@@ -1,5 +1,5 @@
 language = 'english'
-from pyNastran.bdf.bdf import BDF,LineProperty
+from pyNastran.bdf.bdf import BDF,PBAR,PBARL,PBEAM,PBEAML
 
 class CodeAsterConverter(BDF):
     def __init__(self):
@@ -131,18 +131,20 @@ class CodeAsterConverter(BDF):
         #msg += "                  MODELISATION=('POU_D_T'),),);\n\n"
 
         msg += "Prop = AFFE_CARA_ELEM(MODELE=FEMODL,\n"
+        pyCA = ''
         iCut=0; iFace=0; iStart=0
         for pid,prop in sorted(self.properties.items()):
-            if isinstance(prop,LineProperty):
-                (msgProp,iCut,iFace,iStart) = prop.writeCodeAster(iCut,iFace,iStart)
+            if isinstance(prop,PBARL) or isinstance(prop,PBEAML):
+                (pyCAi,iCut,iFace,iStart) = prop.writeCodeAster(iCut,iFace,iStart)
+                pyCA += pyCAi
             else:
-                (msgProp) = prop.writeCodeAster()
-            msg += msgProp
+                (msg) += prop.writeCodeAster()
+            ###
         msg = msg[:-2]
         msg += ');\n'
         #msg += ');\nFINSF\n\n'
         msg += self.breaker()
-        return msg
+        return msg,pyCA
 
     def CA_Loads(self):
         """writes the load cards sorted by ID"""
@@ -234,7 +236,7 @@ class CodeAsterConverter(BDF):
         self.maxPIDlen = len(str(max(self.properties)))
         self.maxMIDlen = len(str(max(self.materials)))
 
-    def writeAsCodeAster(self,fname='fem.ca'):
+    def writeAsCodeAster(self,fname='fem'):
         self.buildMaxs()
 
         msg = ''
@@ -259,14 +261,22 @@ class CodeAsterConverter(BDF):
         #msg += self.CA_Elements()
         msg += self.CA_Materials()
         msg += self.CA_MaterialField()
-        msg += self.CA_Properties()
+        (msgi,pyCA) = self.CA_Properties()
+        msg += msgi
         msg += self.CA_Loads()
 
         msg += 'FIN();\n'
         msg += '# ENDDATA\n'
-        f = open(fname,'wb')
+        f = open(fname+'.comm','wb')
         f.write(msg)
         f.close()
+        
+        if pyCA:
+            f = open(fname+'.py','wb')
+            f.write(pyCA)
+            f.close()
+        ###
+
         
 
 if __name__=='__main__':
@@ -275,5 +285,5 @@ if __name__=='__main__':
     #model = 'solidBending'
     model = sys.argv[1]
     ca.readBDF(model+'.bdf')
-    ca.writeAsCodeAster(model+'.comm')
+    ca.writeAsCodeAster(model)  # comm, py
     

@@ -65,7 +65,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # elements
         'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
-        'CDAMP2','CDAMP1','CDAMP3','CDAMP4','CDAMP5',
+        'CBUSH',
+        'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD',#'CBEND',
         'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
@@ -81,7 +82,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PGAP',
         'PMASS',
         'PELAS',
-        'PDAMP','PDAMP5',
+        'PBUSH',
+        'PDAMP','PDAMP5','PDAMPT',
         'PROD','PBAR','PBARL','PBEAM','PBEAML', 'PTUBE',#'PBEAM3','PBEND',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
         'PSOLID','PLSOLID',
@@ -955,6 +957,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 (elem) = CELAS4(cardObj)
                 self.addElement(elem)
 
+            elif cardName=='CBUSH':
+                (elem) = CBUSH(cardObj)
+                self.addDamperElement(elem)
+
             elif cardName=='CDAMP1':
                 (elem) = CDAMP1(cardObj)
                 self.addDamperElement(elem)
@@ -1085,6 +1091,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
 
+            elif cardName=='PBUSH':
+                prop = PBUSH(cardObj)
+                self.addProperty(prop)
+
+            elif cardName=='PDAMPT':
+                prop = PDAMPT(cardObj)
+                self.addProperty(prop)
             elif cardName=='PDAMP':
                 prop = PDAMP(cardObj)
                 self.addProperty(prop)

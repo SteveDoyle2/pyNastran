@@ -35,10 +35,21 @@ class RBAR(RigidElement):
             self.alpha = data[7]
         ###
 
-    def __repr__(self):
+    #def writeCodeAster(self):
+        #msg = ''
+        #msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBAR\n"
+        #msg += "        MODELE=MODELE,\n"  # rigid element
+        #msg += "        \n"
+        #return msg
+        
+    def rawFields(self):
+        fields = ['RBAR',self.eid,self.ga,self.gb,self.cna,self.cnb,self.cma,self.cmb,self.alpha]
+        return fields
+
+    def reprFields(self):
         alpha = self.setBlankIfDefault(self.alpha,0.0)
         fields = ['RBAR',self.eid,self.ga,self.gb,self.cna,self.cnb,self.cma,self.cmb,alpha]
-        return self.printCard(fields)
+        return fields
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
@@ -62,7 +73,11 @@ class RBAR1(RigidElement):
             self.alpha = data[4]
         ###
 
-    def __repr__(self):
+    def rawFields(self):
+        fields = ['RBAR1',self.eid,self.ga,self.gb,self.cb,self.alpha]
+        return fields
+
+    def reprFields(self):
         alpha = self.setBlankIfDefault(self.alpha,0.0)
         fields = ['RBAR1',self.eid,self.ga,self.gb,self.cb,alpha]
         return self.printCard(fields)
@@ -99,7 +114,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             i+=2
         ###
         
-    def __repr__(self):
+    def rawFields(self):
         fields = [self.type,self.eid]
         for i,(gn,cn) in enumerate(zip(self.Gni,self.Cni)):
             fields+=[gn,cn]
@@ -114,7 +129,10 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 fields += [None]
             ###
         fields += [self.alpha]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class RBE2(RigidElement):
     type = 'RBE2'
@@ -124,15 +142,62 @@ class RBE2(RigidElement):
         GM6 GM7 GM8 -etc.- ALPHA
         """
         RigidElement.__init__(self,card,data)
-        self.eid = card.field(1)
-        self.gn  = card.field(2)
-        self.cm  = card.field(3)
-        self.Gmi = card.fields(4) # get the rest of the fields
-        self.alpha = self.Gmi.pop() # the last field is not part of self.Gmi
+        if card:
+            ## Element identification number
+            self.eid = card.field(1)
+            ## Identification number of grid point to which all six independent
+            ## degrees-of-freedom for the element are assigned. (Integer > 0)
+            self.gn  = card.field(2)
+            ## Component numbers of the dependent degrees-of-freedom in the global
+            ## coordinate system at grid points GMi. (Integers 1 through 6 with no
+            ## embedded blanks.)
+            self.cm  = card.field(3)  # 123456 constraint or other
+            ## Grid point identification numbers at which dependent degrees-offreedom
+            ## are assigned. (Integer > 0)
+            self.Gmi = card.fields(4) # get the rest of the fields
+            ## Thermal expansion coefficient. See Remark 11. (Real > 0.0 or blank)
+            self.alpha = self.Gmi.pop() # the last field is not part of self.Gmi
+        else:
+            raise NotImplementedError('RBE2 data...')
+        ###
 
-    def __repr__(self):
+    def writeCodeAster(self):
+        """
+        Converts to a LIAISON SOLIDE for dofs 123456.
+        For other dof combinations, general MPC equations are written
+        """
+        msg = ''
+        msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBE2 ID=%s\n" %(self.eid)
+        msg += "        MODELE=MODELE,\n"  # rigid element
+        if self.cm==123456:
+            msg += "        LIASON_SOLIDE=(\n"
+            msg += "        _F(NOEUD=\n"
+            msg += "           "
+            for nid in self.Gmi:
+                msg += "'N%i'," %(nid)
+            msg = msg[:-1]
+            msg += '\n'
+        else:
+            msg += "        _F(NOEUD=  # doesnt handle coordinate systems\n"
+            msg += "           "
+            for nid in self.Gmi:
+                msg += "'N%i'," %(nid)
+            msg = msg[:-1]
+            msg += '\n'
+            
+            #msg += "        \n"
+            #msg += "        \n"
+        #msg += "        \n"
+        #msg += "        \n"
+        #msg += "        \n"
+        return msg
+        
+    def rawFields(self):
         fields = [self.type,self.eid,self.gn,self.cm]+self.Gmi+[self.alpha]
         return self.printCard(fields)
+
+    def reprFields(self):
+        return self.rawFields()
 
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
