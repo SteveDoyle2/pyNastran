@@ -180,7 +180,7 @@ class PDAMPT(DamperProperty):
     def Tbid(self):
         if isinstance(self.tbid,int):
             return self.tbid
-        retrun self.tbid.tid
+        return self.tbid.tid
 
     def reprFields(self):
         return self.rawFields()
