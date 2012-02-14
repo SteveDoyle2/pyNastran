@@ -176,6 +176,104 @@ class RLOAD2(BaseCard): # not integrated
         fields = ['RLOAD2',self.sid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,Type]
         return fields
 
+class TSTEP(BaseCard):
+    """
+   Defines time step intervals at which a solution will be generated and output in
+    transient analysis.
+    Transient Time Step
+    """
+    type = 'TSTEP'
+    def __init__(self,card=None,data=None):
+        self.sid = card.field(1)
+        self.N=[]; self.DT=[]; self.NO=[]
+        fields = card.fields(1)
+        
+        i=1
+        nFields = len(fields)
+        while i<nFields:
+            self.N.append(card.field(i+1),1)
+            self.DT.append(card.field(i+2),0.)
+            self.NO.append(card.field(i+3),1)
+            i+= 8
+
+    def rawFields(self):
+        fields = ['TSTEP']
+        for (n,dt,no) in zip(self.N,self.DT,self.NO):
+            fields += [n,dt,no,None,None,None,None]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+class TSTEPNL(BaseCard):
+    """
+    Defines parametric controls and data for nonlinear transient structural or heat transfer
+    analysis. TSTEPNL is intended for SOLs 129, 159, and 600.
+    Parameters for Nonlinear Transient Analysis
+    """
+    type = 'TSTEPNL'
+    def __init__(self,card=None,data=None):
+        self.sid     = card.field(1)
+        self.ndt     = card.field(2)
+        self.dt      = card.field(3)
+        self.no      = card.field(4,1)
+        self.method  = card.field(5,'ADAPT') ## @note not listed in all QRGs
+        self.kstep   = card.field(6,10)
+        self.maxIter = card.field(7,10)
+        self.conv    = card.field(8,'PW')
+
+        # line 2
+        self.epsu    = card.field(9,1.0E-2)
+        self.epsp    = card.field(10,1.0E-3)
+        self.epsw    = card.field(11,1.0E-6)
+        self.maxDiv  = card.field(12,2)
+        self.maxQn   = card.field(13,10)
+        self.MaxLs   = card.field(14,2)
+        self.fStress = card.field(15,0.2)
+        
+        # line 3
+        self.maxBis = card.field(17,5)
+        self.adjust = card.field(18,5)
+        self.mStep  = card.field(19)
+        self.rb     = card.field(20,0.6)
+        self.maxR   = card.field(21,32.)
+        self.uTol   = card.field(22,0.1)
+        self.rTolB  = card.field(23,20.)
+        self.minIter = card.field(24) # not listed in all QRGs
+
+    def rawFields(self):
+        fields = ['TSTEPNL',self.sid,self.ndt,self.dt,self.no,self.method,self.kstep,self.maxIter,self.conv,
+                            self.epsu,self.epsp,self.epsw,self.maxDiv,self.maxQn,self.MaxLs,self.fStress,None,
+                            self.maxBis,self.adjust,self.mStep,self.rb,self.maxR,self.uTol,self.rTolB,self.minIter]
+        return fields
+
+    def reprFields(self):
+        no      = self.setBlankIfDefault(self.no,1)
+        method  = self.setBlankIfDefault(self.method,'ADAPT')
+        kstep   = self.setBlankIfDefault(self.kstep,10)
+        maxIter = self.setBlankIfDefault(self.maxIter,10)
+        conv    = self.setBlankIfDefault(self.conv,'PW')
+
+        epsu    = self.setBlankIfDefault(self.epsu   ,1e-2)
+        epsp    = self.setBlankIfDefault(self.epsp   ,1e-3)
+        epsw    = self.setBlankIfDefault(self.epsw   ,1e-6)
+        maxDiv  = self.setBlankIfDefault(self.maxDiv ,2)
+        maxQn   = self.setBlankIfDefault(self.maxQn  ,10)
+        MaxLs   = self.setBlankIfDefault(self.MaxLs  ,2)
+        fStress = self.setBlankIfDefault(self.fStress,0.2)
+
+        maxBis  = self.setBlankIfDefault(self.maxBis ,5)
+        adjust  = self.setBlankIfDefault(self.adjust ,5)
+        rb      = self.setBlankIfDefault(self.rb     ,0.6)
+        maxR    = self.setBlankIfDefault(self.maxR   ,32.)
+        uTol    = self.setBlankIfDefault(self.uTol   ,0.1)
+        rTolB   = self.setBlankIfDefault(self.rTolB  ,20.)
+
+        fields = ['TSTEPNL',self.sid,self.ndt,self.dt,no,method,kstep,self.maxIter,conv,
+                            epsu,epsp,epsw,maxDiv,maxQn,MaxLs,fStress,None,
+                            maxBis,adjust,self.mStep,rb,maxR,uTol,rTolB,self.minIter]
+        return fields
+
 class NLPARM(BaseCard):
     """
     Defines a set of parameters for nonlinear static analysis iteration strategy
@@ -235,6 +333,5 @@ class NLPARM(BaseCard):
                            epsU,epsP,epsW,maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,None,None,None,
                            maxR,None,rTolB]
         return fields
-
 
 

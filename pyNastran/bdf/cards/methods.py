@@ -223,7 +223,7 @@ class EIGRL(Method):
                 self.norm = card.field(8,'MAX')
             else:
                 self.norm = card.field(8)
-            assert self.norm in ['MASS','MAX'],'norm=%s sol=%s' %(self.norm,sol)
+            #assert self.norm in ['MASS','MAX'],'norm=%s sol=%s' %(self.norm,sol)
             #assert card.nFields()<9,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGRL')
