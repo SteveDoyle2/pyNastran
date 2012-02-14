@@ -3,6 +3,9 @@ import sys
 from setuptools import setup, find_packages
 
 import pyNastran
+packages = find_packages()+['gui/icons/*.*']
+#print "packages = ",packages
+#sys.exit()
 
 setup(name='pyNastran',
       version=pyNastran.__version__,
