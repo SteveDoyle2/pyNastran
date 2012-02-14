@@ -19,9 +19,11 @@ class BushingElement(Element):
 class CBUSH(BushingElement):
     type = 'CBUSH'
     def __init__(self,card=None,data=None):
-        DamperElement.__init__(self,card,data)
+        BushingElement.__init__(self,card,data)
         
         if card:
+            fields = card.fields()
+            #print "fields = ",fields
             self.eid = card.field(1)
             self.pid = card.field(2)
             self.ga = card.field(3)
@@ -37,7 +39,9 @@ class CBUSH(BushingElement):
                 x3  = card.field(7)
                 self.x   = [x1,x2,x3]
             else:
-                raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
+                #raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
+                self.g0 = None
+                self.x  = [None,None,None]
             ###
             ## Element coordinate system identification. A 0 means the basic
             ## coordinate system. If CID is blank, then the element coordinate system
@@ -54,8 +58,8 @@ class CBUSH(BushingElement):
         else:
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
-        self.prepareNodeIDs(nids,allowEmptyNodes=True)
-        assert len(self.nodes)==2
+        #self.prepareNodeIDs(nids,allowEmptyNodes=True)
+        #assert len(self.nodes)==2
 
     #def OCid(self):
         #if isinstance(self.ocid,int):
@@ -68,11 +72,11 @@ class CBUSH(BushingElement):
         return self.cid.cid
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
-        self.pid   = model.Property(self.pid)
+        #self.nodes = model.Nodes(self.nodes)
+        self.pid = model.Property(self.pid)
+        self.cid = model.Coord(self.cid)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
         if self.g0 is not None:
             x = [self.g0,None,None]
         else:

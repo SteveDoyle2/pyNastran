@@ -4,6 +4,36 @@
 from baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
+class TIC(BaseCard): # Transient Initial Condition
+    type = 'TIC'
+    def __init__(self,card=None,data=None):
+        """
+        Defines values for the initial conditions of variables used in structural transient
+        analysis. Both displacement and velocity values may be specified at independent
+        degrees-of-freedom. This entry may not be used for heat transfer analysis.
+        """
+        Table.__init__(self,card,data)
+        if card:
+            self.sid = card.field(1)
+            self.G   = card.field(2)
+            self.C   = card.field(3)
+            self.U0  = card.field(4)
+            self.V0  = card.field(5)
+        else:
+            self.sid = data[0]
+            self.G   = data[1]
+            self.C   = data[2]
+            self.U0  = data[3]
+            self.V0  = data[4]
+        ###
+
+    def rawFields(self):
+        fields = ['TIC',self.sid,self.G,self.C,self.U0,self.V0]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+   
 class Table(BaseCard):
     type = 'TABLE??'
     def __init__(self,card,data):
