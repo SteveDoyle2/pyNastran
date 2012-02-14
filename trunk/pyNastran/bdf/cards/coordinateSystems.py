@@ -160,6 +160,8 @@ class Coord(BaseCard):
 class RectangularCoord(object):
     def coordToXYZ(self,p):
         """@todo is this correct..."""
+        #print "p = ",p
+        #print "e1 = ",self.e1
         return p+self.e1
     def XYZtoCoord(self,p):
         """@todo is this correct..."""
@@ -291,26 +293,29 @@ class Cord2x(Coord):
         """
         #print str(self)
         #print self.rid
+        #print "1 cid=%s rid=%s"%(self.cid,self.Rid())
         if self.cid==0 or isinstance(self.rid,int) or self.rid.isResolved:  # rid=0
             return
         elif self.rid.isResolved==False: # rid
-            assert self.rid.isCrossReferenced==False,'there is a circular reference between Coord %s and Coord %s' %(self.cid,self.Rid())
+            #assert self.rid.isCrossReferenced==False,'there is a circular reference between Coord %s and Coord %s' %(self.cid,self.Rid())
+            #print "  resolving cid=%s rid=%s" %(self.cid,self.Rid())
             self.rid.resolveCid()
-        
+        #print "2"
         ## rid coordinate system is now resolved, time to resolve the cid coordinate system
         ## rid may be in a different coordinate system than cid
+        self.isResolved = True
         self.e1,matrix  = self.transformToGlobal(self.e1)
-        
+        #print "3"
         ## the axes are normalized, so assume they're points and
         ## resolve them in the XYZ system, but dont subtract e1 off (hence the False)
+        #print "e1^ = ",self.e1
         self.e1,matrix = self.rid.transformToGlobal(self.e1) # origin
         i,matrix       = self.rid.transformToGlobal(self.i,False)
         j,matrix       = self.rid.transformToGlobal(self.j,False)
         k,matrix       = self.rid.transformToGlobal(self.k,False)
-
+        #print "4"
         ## the axes are global, so now we put them in the cid
         self.i=i; self.j=j; self.k=k
-        self.isResolved = True
 
     def crossReference(self,model):
         """
@@ -355,6 +360,7 @@ class Cord2x(Coord):
                             [0.,1.,0.],
                             [0.,0.,1.]])
         if resolveAltCoord:  # the ijk axes arent resolved as R-theta-z, only points
+            #print "p* = ",p
             p = self.coordToXYZ(p)
         #p2 = p-self.eo
         
@@ -394,7 +400,7 @@ class Cord2x(Coord):
         if isinstance(self.rid,int):
             return p3,matrix
         else:
-            return self.rid.transformToGlobal(p3),matrix
+            return self.rid.transformToGlobal(p3)[0],matrix  ## @todo do i need to multiply rid.transform(p3)[1]*matrix
         ###
 
     def Rid(self):

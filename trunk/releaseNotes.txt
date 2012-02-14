@@ -30,6 +30,7 @@ Added BDF
  - EIGB, EIGP, EIGR
  - *** EIGC, EIGRL
  - CBUSH, PBUSH, PDAMPT
+ - *** TSTEP, TSTEPNL, TIC
 
 OP2 API Changes
 OP2 Bug Fixes

@@ -101,7 +101,8 @@ PMASS   (???)
 PELAS    (NA)
 PDAMP   (???)
 PDAMP5  (???)
-PBUSH
+PDAMPT  (???)
+PBUSH   (???)
 PBUSHT
 
 PROD    (done)
@@ -164,6 +165,7 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
+DLOAD
 RLOAD1
 RLOAD2
 
@@ -191,7 +193,6 @@ RADM
 PCONV  (???)
 PCONVM (???)
 PHBDY  (???)
-
 
 ----Aero----:
 AERO    (???)
@@ -233,6 +234,7 @@ TRIM    (???)
 ----Dynamic----:
 DAREA   (???)
 NLPARM  (???)
+TSTEP
 TSTEPNL
 
 ----Modal Cards----:
@@ -271,6 +273,7 @@ TABLES1  (???)
 TABLEST  (???)
 TABRND1  (???)
 TABRNDG
+TIC
 
 ----Sets----:
 SET1   (???)

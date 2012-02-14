@@ -9,8 +9,8 @@ BDF Cards Supported Reading/Writing
 ----Nodes----:
 GRID   (done)
 GRDSET (done)
-RINGAX (needs integration)
-SPOINT (needs integration)
+RINGAX (not integrated)
+SPOINT (not integrated)
 
 ----Coordinates----:
 CORD1R (done)
@@ -86,7 +86,8 @@ PMASS   (done)
 PELAS   (done)
 PDAMP   (done)
 PDAMP5  (done)
-PBUSH
+PDAMPT  (done)
+PBUSH   (done)
 PBUSHT
 
 PROD    (done)
@@ -149,12 +150,13 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
-RLOAD1
-RLOAD2
+DLOAD  (not integrated)
+RLOAD1 (not integrated)
+RLOAD2 (not integrated)
 
 ----Thermal Loads----:
 TEMP   (done)
-TEMPD  (needs integration)
+TEMPD  (not integrated)
 TEMPD1
 
 QHBDY  (done)
@@ -170,7 +172,7 @@ CHBDYP (done)
 ----Thermal BCs----:
 CONV   (done)
 RADBC  (done)
-RADM   (needs integration)
+RADM   (not integrated)
 
 ----Thermal Properties----:
 PCONV  (done)
@@ -190,7 +192,7 @@ AEPARAM (done)
 AESTAT  (done)
 AELIST  (done)
 AESURF  (done)
-AESURFS (needs integration)
+AESURFS (not integrated)
 
 CAERO1  (done)
 CAERO2
@@ -217,7 +219,8 @@ TRIM    (done)
 ----Dynamic----:
 DAREA   (done)
 NLPARM  (done)
-TSTEPNL
+TSTEP   (not integrated)
+TSTEPNL (not integrated)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -255,6 +258,7 @@ TABLES1  (done)
 TABLEST  (done)
 TABRND1  (done)
 TABRNDG
+TIC      (not integrated)
 
 ----Sets----:
 SET1   (done)
@@ -386,9 +390,6 @@ GENEL
 
 ----Dynamics/Nonlinear---:
 EPOINT
-DLOAD  (needs integration)
-RLOAD1 (needs integration)
-RLOAD2 (needs integration)
 
 ----Super Elements----:
 CSUPER
