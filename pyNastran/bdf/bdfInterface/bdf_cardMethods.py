@@ -234,7 +234,7 @@ class cardMethods(object):
                     pass
                 else:
                     #debug = True
-                    value = self.getValue(valueIn,debug=debug)
+                    value = getValue(valueIn,debug=debug)
                     card.append(value)
                     #print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
                 ###
@@ -284,98 +284,98 @@ class cardMethods(object):
         return cardOut
         #return collapse(cardOut)
         
-    def getValue(self,valueRaw,debug=False):
-        """converts a value from nastran format into python format."""
+def getValue(valueRaw,debug=False):
+    """converts a value from nastran format into python format."""
+    if debug:
+        print "v1 = |%s|" %(valueRaw)
+    valueIn = valueRaw.lstrip().rstrip(' *').upper()
+
+    if debug:
+        pass
+        #print "v2 = |%s|" %(valueIn)
+    if len(valueIn)==0:
         if debug:
-            print "v1 = |%s|" %(valueRaw)
-        valueIn = valueRaw.lstrip().rstrip(' *').upper()
-        
+            print "BLANK!"
+        return None
+
+    if valueIn[0].isalpha():
         if debug:
-            pass
-            #print "v2 = |%s|" %(valueIn)
-        if len(valueIn)==0:
-            if debug:
-                print "BLANK!"
-            return None
+            print "STRING!"
+        return valueIn
 
-        if valueIn[0].isalpha():
-            if debug:
-                print "STRING!"
-            return valueIn
-
-        if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
-            if debug:
-                print "=(! - special formatting"
-            return valueRaw.strip()
-        #valueIn = valueIn.upper()
-        # int, float, string, exponent
-        valuePositive = valueIn.strip('+-')
+    if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
         if debug:
-            print "isDigit = ",valuePositive.isdigit()
-        if valuePositive.isdigit():
-            if debug:
-                print "INT!"
-            return int(valueIn)
-        try:
-            value = float(valueIn)
-            if debug:
-                print "FLOAT!"
-            return value
-        except:
-             pass
-
-        #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
-        #    print "=()!"
-        #    return valueIn
-
-        noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
-        word = ''.join(noED)
-        #print "word=|%s|" %word
-        if word.isalpha():
-            if debug:
-                print "WORD!"
-            return valueIn
-
-        v0 = valueIn[0]
-        if '-'==v0 or '+'==v0:
-            valueLeft = valueIn[1:] # truncate the sign for now
-        else:
-            v0 = '+' # inplied positive value
-            valueLeft = valueIn
-
-        #print "valueIn = |%s|" %(valueIn)
-        #print "v0 = |%s|" %v0
-        if v0=='-':
-            vFactor=-1.
-        elif v0=='+' or v0.isdigit():
-            vFactor=1.
-        else:
-            msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s|' %(valueRaw,v0)
-            raise FloatScientificParseError(msg)
-
-        vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
-        vp = valueIn.find('+',1)
-        if vm>0:
-            sline = valueLeft.split('-')
-            expFactor = -1.
-        elif vp>0:
-            sline = valueLeft.split('+')
-            expFactor = 1.
-        else:
-            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s|' %(valueRaw,valueLeft)
-            raise ScientificParseError(msg)
-
-        s0 = vFactor*float(sline[0])
-        s1 = expFactor*int(sline[1])
-        #except:
-        #    print "vm=%s vp=%s valueRaw=|%s| sline=|%s|" %(vm,vp,valueRaw,sline)
-
-        value = s0*10**(s1)
-        #print "valueOut = |%s|" %value
-        
+            print "=(! - special formatting"
+        return valueRaw.strip()
+    #valueIn = valueIn.upper()
+    # int, float, string, exponent
+    valuePositive = valueIn.strip('+-')
+    if debug:
+        print "isDigit = ",valuePositive.isdigit()
+    if valuePositive.isdigit():
         if debug:
-            print "SCIENTIFIC!"
+            print "INT!"
+        return int(valueIn)
+    try:
+        value = float(valueIn)
+        if debug:
+            print "FLOAT!"
         return value
+    except:
+         pass
+
+    #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
+    #    print "=()!"
+    #    return valueIn
+
+    noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
+    word = ''.join(noED)
+    #print "word=|%s|" %word
+    if word.isalpha():
+        if debug:
+            print "WORD!"
+        return valueIn
+
+    v0 = valueIn[0]
+    if '-'==v0 or '+'==v0:
+        valueLeft = valueIn[1:] # truncate the sign for now
+    else:
+        v0 = '+' # inplied positive value
+        valueLeft = valueIn
+
+    #print "valueIn = |%s|" %(valueIn)
+    #print "v0 = |%s|" %v0
+    if v0=='-':
+        vFactor=-1.
+    elif v0=='+' or v0.isdigit():
+        vFactor=1.
+    else:
+        msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s|' %(valueRaw,v0)
+        raise FloatScientificParseError(msg)
+
+    vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
+    vp = valueIn.find('+',1)
+    if vm>0:
+        sline = valueLeft.split('-')
+        expFactor = -1.
+    elif vp>0:
+        sline = valueLeft.split('+')
+        expFactor = 1.
+    else:
+        msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s|' %(valueRaw,valueLeft)
+        raise ScientificParseError(msg)
+
+    s0 = vFactor*float(sline[0])
+    s1 = expFactor*int(sline[1])
+    #except:
+    #    print "vm=%s vp=%s valueRaw=|%s| sline=|%s|" %(vm,vp,valueRaw,sline)
+
+    value = s0*10**(s1)
+    #print "valueOut = |%s|" %value
+
+    if debug:
+        print "SCIENTIFIC!"
+    return value
     
 
 def stringParser(stringIn):

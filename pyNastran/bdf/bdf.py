@@ -157,6 +157,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
         'TABLES1','TABLEST',
         'TABRND1',
+        
+        # initial conditions - sid (set ID)
+        #'TIC',  (in tables.py)
 
         # methods - EIGC,EIGRL not done
         'EIGB','EIGC','EIGR','EIGP','EIGRL',

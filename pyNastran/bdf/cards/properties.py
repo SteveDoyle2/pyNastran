@@ -69,23 +69,26 @@ class BushingProperty(Property):
     def __init__(self,card,data):
         Property.__init__(self,card,data)
         pass
+    def crossReference(self,model):
+        pass
 
 class PBUSH(BushingProperty):
     type = 'PBUSH'
     def __init__(self,card=None,data=None):
-        DamperProperty.__init__(self,card,data)
+        BushingProperty.__init__(self,card,data)
         if card:
             ## Property ID
             self.pid = card.field(1)
             
             nFields = card.nFields()
             self.vars = []
+            iStart = 0
             while iStart<nFields:
                 pname = card.field(2)
-                if   pname=='K':     self.getK()
-                elif pname=='B':   self.getB()
-                elif pname=='GE':  self.getGE()
-                elif pname=='RCV': self.getRCV()
+                if   pname=='K':     self.getK(card,iStart)
+                elif pname=='B':   self.getB(card,iStart)
+                elif pname=='GE':  self.getGE(card,iStart)
+                elif pname=='RCV': self.getRCV(card,iStart)
                 else:
                     break
                 iStart += 8
@@ -96,14 +99,14 @@ class PBUSH(BushingProperty):
             raise NotImplementedError('PBUSH data...')
         ###
 
-    def getK(self,iStart):
+    def getK(self,card,iStart):
         ## Flag indicating that the next 1 to 6 fields are stiffness values in the element coordinate system.
         self.k = card.field(iStart)
         ## Nominal stiffness values in directions 1 through 6. See Remarks 2. and 3. (Real; Default = 0.0)
         self.Ki = card.fields(i=iStart+1,j=iStart+6)
         self.vars.append('K')
 
-    def getB(self,iStart):
+    def getB(self,card,iStart):
         ## Flag indicating that the next 1 to 6 fields are force-per-velocity damping.
         self.b = card.field(iStart)
         ## Force per unit velocity (Real)
@@ -112,7 +115,7 @@ class PBUSH(BushingProperty):
         self.Bi = card.fields(i=iStart+1,j=iStart+6)
         self.vars.append('B')
 
-    def getGE(self,iStart):
+    def getGE(self,card,iStart):
         ## Flag indicating that the next fields, 1 through 6 are structural damping constants. See Remark 7. (Character)
         self.ge = card.field(iStart)
         ## Nominal structural damping constant in directions 1 through 6. See
@@ -120,7 +123,7 @@ class PBUSH(BushingProperty):
         self.GEi = card.fields(i=iStart+1,j=iStart+6)
         self.vars.append('GE')
 
-    def getRCV(self,iStart):
+    def getRCV(self,card,iStart):
         ## Flag indicating that the next 1 to 4 fields are stress or strain coefficients. (Character)
         self.ge = card.field(iStart)
         self.sa = card.field(iStart+1,1.)
@@ -153,6 +156,8 @@ class DamperProperty(Property):
     def __init__(self,card,data):
         Property.__init__(self,card,data)
         pass
+    def crossReference(self,model):
+        pass
 
 class PDAMPT(DamperProperty):
     type = 'PDAMPT'
@@ -169,11 +174,19 @@ class PDAMPT(DamperProperty):
             self.tbid = data[1]
         ###
 
+    def crossReference(self,model):
+        self.tbid = Table(self.tbid)
+    
+    def Tbid(self):
+        if isinstance(self.tbid,int):
+            return self.tbid
+        retrun self.tbid.tid
+
     def reprFields(self):
         return self.rawFields()
 
     def rawFields(self):
-        fields = ['PDAMPT',self.pid,self.tbid]
+        fields = ['PDAMPT',self.pid,self.Tbid()]
         return fields
 
 class PDAMP(DamperProperty):
@@ -220,6 +233,14 @@ class PDAMP5(DamperProperty):
             self.b   = data[2]
         ###
 
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+    
+    def Mid(self):
+        if isinstance(self.mid,int):
+            return self.mid
+        return self.mid.mid
+    
     def reprFields(self):
         return self.rawFields()
 
