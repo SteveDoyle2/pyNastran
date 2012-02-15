@@ -93,7 +93,7 @@ class GRAV(BaseCard):
         fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[self.mb]
         return fields
 
-class LSEQ(BaseCard):
+class LSEQ(BaseCard): # Requires LOADSET in case control deck
     """
     Defines a sequence of static load sets
     @todo how does this work...
@@ -116,14 +116,26 @@ class LSEQ(BaseCard):
             #print 'else'
             return [node.nid for node in nodes]
         ###
+    def crossReference(self,model):
+        self.lid = model.Load(self.lid)
+        self.tid = model.Load(self.tid)
+    
+    def Lid(self):
+        if isinstance(self.lid,int):
+            return self.lid
+        return self.lid.lid
+        
+    def Tid(self):
+        if isinstance(self.tid,int):
+            return self.tid
+        return self.tid.tid
 
     def rawFields(self):
-        fields = ['LSEQ',self.lid]
+        fields = ['LSEQ',self.sid,self.exciteID,self.Lid(),self.Tid()]
         return fields
 
     def reprFields(self):
-        fields = ['LSEQ',self.lid]
-        return fields
+        return self.rawFields()
 
 class LOAD(Load):
     type = 'LOAD'
@@ -176,6 +188,74 @@ class LOAD(Load):
         if isinstance(ID,int):
             return ID
         return ID.lid
+    
+    def getLoads(self):
+        loads = []
+        for load in self.loadIDs:
+            loads += loadID.getLoads()
+        ###
+        return loads
+
+    def writeCodeAster(self):
+        msg = '# Loads\n'
+        (forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoadsForCodeAster()
+        # stuff
+        msg += "load_bc=AFFE_CHAR_MECA(MODELE=modmod,\n"
+        msg += "                      DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
+        msg += "                                   DX=0.0,\n"
+        msg += "                                   DY=0.0,\n"
+        msg += "                                   DZ=0.0,),\n"
+        msg += "                                _F(GROUP_MA='Lright',\n"
+        msg += "                                   DZ=0.0,),),\n"
+
+        mags = {}
+        for node,load in sorted(forceLoads.items()):
+            pass
+        return msg
+
+    def organizeLoadsForCodeAster(self):
+        forceLoads  = {} # spc enforced displacement (e.g. FORCE=0)
+        momentLoads = {}
+        forceConstraints  = {}
+        momentConstraints = {}
+        allLoads = array([0.,0.,0.])
+        for loadID in self.loadIDs():
+            loads = loadID.getLoads()
+            for load in loads:
+                loc,node,vector = load.transformLoad()
+                if isinstance(load,Force):
+                    if loc==1:  #load
+                        if node not in forceLoads:
+                            forceLoads[node]  = vector
+                        else:
+                            forceLoads[node] += vector
+                        ###
+                    else: # constraint
+                        if node not in forceLoads:
+                            forceConstraints[node]  = vector
+                        else:
+                            forceConstraints[node] += vector
+                        ###
+                    ###
+                else:  # Moment
+                    if 
+                    if loc==1: # load
+                        if node not in momentLoads:
+                            momentLoads[node]  = vector
+                        else:
+                            momentLoads[node] += vector
+                        ###
+                    else: # constraint
+                        if node not in momentLoads:
+                            momentConstraints[node]  = vector
+                        else:
+                            momentConstraints[node] += vector
+                        ###
+                    ###
+                ###
+            ###
+        ###
+        return (forceLoads,momentLoads,forceConstraints,momentConstraints)
 
     def rawFields(self):
         fields = ['LOAD',self.lid,self.s]
@@ -191,6 +271,15 @@ class OneDeeLoad(Load): # FORCE/MOMENT
     type = '1D_Load'
     def __init__(self,card,data):
         Load.__init__(self,card,data)
+
+    def getLoads(self):
+        return [self]
+
+    def transformLoad(self):
+        xyxz = self.cid.transformToGlobal(self.xyz)
+        if self.mag>0.:
+            return (1,self.node,self.mag*xyz) # load
+        return (0,self.node,xyz) # enforced displacement
 
     def normalize(self):
         """

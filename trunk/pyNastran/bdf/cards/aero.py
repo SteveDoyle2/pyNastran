@@ -414,6 +414,93 @@ class CAERO1(BaseCard): # add helper functions
     #def reprFields(self):
     #    return self.rawFields()
 
+class CAERO2(BaseCard): # add helper functions
+    """
+    """
+    type = 'CAERO2'
+    def __init__(self,card=None,data=None):
+        """
+        1 \
+        |   \
+        |     \
+        |      3
+        |      |
+        |      |
+        2------4
+        """
+        #Material.__init__(self,card)
+        ## Element identification number
+        self.eid  = card.field(1)
+        ## Property identification number of a PAERO2 entry.
+        self.pid  = card.field(2)
+        ## Coordinate system for locating point 1.
+        self.cp   = card.field(3,0)
+        ## Number of slender body elements. If NSB > 0, then NSB equal divisions
+        ## are assumed; if zero or blank, specify a list of divisions in LSB.
+        ## (Integer >= 0)
+        self.nsb  = card.field(4)
+        ## Number of interference elements. If NINT > 0, then NINT equal
+        ## divisions are assumed; if zero or blank, specify a list of divisions in
+        ## LINT. (Integer >= 0)
+        self.nint = card.field(5)
+        
+        ## ID of an AEFACT Bulk Data entry for slender body division points; used
+        ## only if NSB is zero or blank. (Integer >= 0)
+        self.lsb  = card.field(6) # ID of AEFACT
+        ## ID of an AEFACT data entry containing a list of division points for
+        ## interference elements; used only if NINT is zero or blank. (Integer > 0)
+        self.lint = card.field(7)
+        ## Interference group identification. Aerodynamic elements with different
+        ## IGIDs are uncoupled. (Integer >= 0)
+        self.igid = card.field(8)
+        ## Location of point 1 in coordinate system CP
+        self.p1   =  array([card.field(9, 0.0), card.field(10,0.0), card.field(11,0.0)])
+        ## Length of body in the x-direction of the aerodynamic coordinate system.
+        ## (Real > 0)
+        self.x12 = card.field(12,0.)
+
+    def Cp(self):
+        if isinstance(self.cp,int):
+            return self.cp
+        return self.cp.cid
+
+    def Pid(self):
+        if isinstance(self.pid,int):
+            return self.pid
+        return self.pid.pid
+
+    def Lsb(self):  # AEFACT
+        if isinstance(self.lsb,int):
+            return self.lsb
+        return self.lsb.sid
+
+    def crossReference(self,model):
+        self.pid = model.PAero(self.pid)
+        self.cp  = model.Coord(self.cp)
+        self.lsb = model.AeFact(self.lsb)
+
+    def Points(self):
+        p1,matrix = self.cp.transformToGlobal(self.p1)
+
+        p2 = self.p1+array([self.x12,0.,0.])
+        #print "x12 = ",self.x12
+        #print "pcaero[%s] = %s" %(self.eid,[p1,p2])
+        return [p1,p2]
+    
+    def SetPoints(self,points):
+        self.p1 = points[0]
+        self.p2 = points[1]
+        x12 = self.p2-self.p1
+        self.x12 = x12[0]
+
+    def rawFields(self):
+        fields = ['CAERO2',self.eid,self.Pid(),self.Cp(),self.nsb,self.lsb,self.lint,self.igid,
+                         ]+list(self.p1)+[self.x12]
+        return fields
+
+    #def reprFields(self):
+    #    return self.rawFields()
+
 class DAREA(BaseCard):
     """
     Defines scale (area) factors for static and dynamic loads. In dynamic analysis, DAREA
