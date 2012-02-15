@@ -9,7 +9,7 @@ The GUI looks like:
 
 https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
 
-= Running the GUI (not done) =
+= Running the GUI =
 On the command line:
 {{{
 >> pyNastranGUI
