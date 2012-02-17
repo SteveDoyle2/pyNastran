@@ -31,6 +31,7 @@ def compareCardContent(fem1,fem2):
     assert len(fem1.mpcadds)               ==  len(fem2.mpcadds)
     assert len(fem1.dareas)                ==  len(fem2.dareas)
     assert len(fem1.nlparms)               ==  len(fem2.nlparms)
+    assert len(fem1.tsteps)                ==  len(fem2.tsteps)
     assert len(fem1.dmigs)                 ==  len(fem2.dmigs)
     assert len(fem1.dequations)            ==  len(fem2.dequations)
     assert len(fem1.frequencies)           ==  len(fem2.frequencies)
@@ -77,10 +78,10 @@ def compareCardContent(fem1,fem2):
         card2 = fem2.elements[key]
         assertFields(card1,card2)
 
-    #for key in fem1.rigidElements:
-        #card1 = fem1.rigidElements[key]
-        #card2 = fem2.rigidElements[key]
-        #assertFields(card1,card2)
+    for key in fem1.rigidElements:
+        card1 = fem1.rigidElements[key]
+        card2 = fem2.rigidElements[key]
+        assertFields(card1,card2)
 
     for key in fem1.properties:
         card1 = fem1.properties[key]
@@ -138,10 +139,15 @@ def compareCardContent(fem1,fem2):
         card2 = fem2.dareas[key]
         assertFields(card1,card2)
 
-    #for key in fem1.nlparms:
-        #card1 = fem1.nlparms[key]
-        #card2 = fem2.nlparms[key]
-        #assertFields(card1,card2)
+    for key in fem1.nlparms:
+        card1 = fem1.nlparms[key]
+        card2 = fem2.nlparms[key]
+        assertFields(card1,card2)
+
+    for key in fem1.tsteps:
+        card1 = fem1.tsteps[key]
+        card2 = fem2.tsteps[key]
+        assertFields(card1,card2)
 
     for key in fem1.dmigs:
         card1 = fem1.dmigs[key]

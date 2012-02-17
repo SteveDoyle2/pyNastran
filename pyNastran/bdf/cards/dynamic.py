@@ -290,7 +290,9 @@ class NLPARM(BaseCard):
         self.kStep     = card.field(5,5)
         self.maxIter   = card.field(6,25)
         self.conv      = card.field(7,'PW')
-        self.intOut    = card.field(7,'NO')
+        self.intOut    = card.field(8,'NO')
+        
+        # line 2
         self.epsU      = card.field(9,1e-2)
         self.epsP      = card.field(10,1e-2)
         self.epsW      = card.field(11,1e-2)
@@ -299,6 +301,8 @@ class NLPARM(BaseCard):
         self.maxLs     = card.field(14,4)
         self.fStress   = card.field(15,0.2)
         self.lsTol     = card.field(16,0.5)
+
+        # line 3
         self.maxBisect = card.field(17,5)
         self.maxR      = card.field(21,20.)
         self.rTolB     = card.field(23,20.)
@@ -330,8 +334,6 @@ class NLPARM(BaseCard):
         rTolB     = self.setBlankIfDefault(self.rTolB,20.)
 
         fields = ['NLPARM',self.nid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,
-                           epsU,epsP,epsW,maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,None,None,None,
-                           maxR,None,rTolB]
+                           epsU,epsP,epsW,maxDiv,maxQn,maxLs,fStress,lsTol,
+                           maxBisect,None,None,None,maxR,None,rTolB]
         return fields
-
-

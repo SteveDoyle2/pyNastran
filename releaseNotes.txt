@@ -21,23 +21,32 @@ Overall BDF
 BDF API Changes
 
 BDF Bug Fixes
-- fixed bug in CONM2 with inertia terms
- - PCOMP can now have 1 ply per line or 2 plies per line
- - PCOMP doesnt lose last plies anymore
- - fixed bugs in CQUADR, CVISC, CONROD, PTUBE, QBDY1, QBDY3, FREQ2, PMASS, RBE2
+   - printCard can now handle cards with an embedded line of Nones with data below
+     - this is a rare bug but affects the NLPARM
+   - fixed bug in CONM2 with inertia terms
+   - PCOMP can now have 1 ply per line or 2 plies per line
+   - PCOMP doesnt lose last plies anymore
+   - fixed bug in CQUADR, CVISC, CONROD, PTUBE, QBDY1, QBDY3, FREQ2, PMASS, RBE2
+   - fixed bug in NLPARM, CGAP, CTRIAX, PLOAD4
 
 Added BDF
- - EIGB, EIGP, EIGR
- - *** EIGC, EIGRL
- - CBUSH, PBUSH, PDAMPT
- - TSTEP, TSTEPNL
- - *** TIC
- - CAERO2
+   - enabled CQUAD
+   - EIGB, EIGP, EIGR
+   - EIGC, EIGRL
+   - CBUSH, PBUSH, PDAMPT
+   - TSTEP, TSTEPNL
+   - CAERO2
+   - *** TIC
 
 OP2 API Changes
 OP2 Bug Fixes
 Overall OP2
 Added OP2
+
+Overall GUI
+Added GUI
+GUI Bug Fixes
+   - "python setup.py install" should work now
 
 -----------------------v0.3.1 released 2012/02/??-----------------------
 BDF Bug Fixes
@@ -52,6 +61,7 @@ Overall Notes
    - addd preliminary GUI (pyNastranGUI) that can view results
 
 BDF API Changes
+   - added simpler method to remove cards from the BDF
    - standardizing methods for element/property/material cards
      - Eid, Pid, Mid, Mass, NodeIDs, Centroid
      - Thickness, Area, Volume, Length

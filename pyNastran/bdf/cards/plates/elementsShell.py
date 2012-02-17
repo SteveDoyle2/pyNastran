@@ -229,9 +229,12 @@ class CTRIAX(CTRIA3):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(nids)==6,'error on CTRIAX'
 
-    def reprFields(self):
+    def rawFields(self):
         fields = ['CTRIAX',self.eid,self.Pid()]+self.nodeIDs()
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class CTRIAX6(CTRIA3):
     type = 'CTRIAX6'
