@@ -25,6 +25,7 @@ CORD3G (partial)
 CONM1
 CONM2  (cid!=0)
 CBUSH
+CFAST
 
 CDAMP1 (done)
 CDAMP2 (done)
@@ -50,7 +51,7 @@ CTRIAR  (done)
 CTRIAX  (done)
 CTRIAX6 (done)
 
-CQUAD  (???)
+CQUAD  (done)
 CQUAD4 (done)
 CQUAD8 (done)
 CQUADR (done)
@@ -73,6 +74,8 @@ CRAC3D (done)
 CGAP   (done)
 
 ----Rigid Elements----:
+RROD
+RTRPLT
 RBAR  (done)
 RBAR1 (done)
 RBE1  (done)
@@ -132,9 +135,11 @@ SUPORT  (done)
 SUPORT1 (done)
 
 ----Loads----:
+SLOAD
 LOAD    (done)
 LSEQ
 
+RFORCE
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
@@ -195,7 +200,7 @@ AESURF  (done)
 AESURFS (not integrated)
 
 CAERO1  (done)
-CAERO2
+CAERO2  (done)
 CAERO3
 CAERO4
 CAERO5
@@ -219,8 +224,8 @@ TRIM    (done)
 ----Dynamic----:
 DAREA   (done)
 NLPARM  (done)
-TSTEP   (not integrated)
-TSTEPNL (not integrated)
+TSTEP   (done)
+TSTEPNL (done)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -328,9 +333,7 @@ QVOL
 
 RADCAV
 RADMT
-RFORCE
 
-SLOAD
 TEMPP1
 TEMPRB
 
@@ -353,7 +356,6 @@ NSM1
 
 ----Properties----:
 PBEAM3
-PBCOMP
 PCONEAX
 
 ----Loads----:

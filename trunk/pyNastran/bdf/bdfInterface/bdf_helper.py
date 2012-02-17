@@ -598,6 +598,16 @@ class addMethods(object):
         assert key>0
         self.nlparms[key] = nlparm
 
+    def addTStep(self,tstep):
+        key = tstep.sid
+        if key in self.tsteps and allowOverwrites==False:
+            if not tstep.isSameCard(self.tsteps[key]):
+                assert key not in self.tsteps,'sid=%s\noldTStep=\n%snewTStep=\n%s' %(key,self.tsteps[key],tstep)
+        else:
+            assert key>0,'mid=%s material=\n%s' %(key,tstep)
+            self.tsteps[key] = tstep
+        ###
+
     def addFREQ(self,freq):
         key = freq.sid
         assert key>0

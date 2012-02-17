@@ -328,7 +328,7 @@ class AESURFS(BaseCard): # not integrated
         fields = ['AESURFS',self.id,self.label,None,self.list1,None,self.list2]
         return fields
 
-class CAERO1(BaseCard): # add helper functions
+class CAERO1(BaseCard):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge locations
     and side chords. This is used for Doublet-Lattice theory for subsonic aerodynamics
@@ -414,7 +414,7 @@ class CAERO1(BaseCard): # add helper functions
     #def reprFields(self):
     #    return self.rawFields()
 
-class CAERO2(BaseCard): # add helper functions
+class CAERO2(BaseCard):
     """
     """
     type = 'CAERO2'
@@ -475,7 +475,7 @@ class CAERO2(BaseCard): # add helper functions
         return self.lsb.sid
 
     def crossReference(self,model):
-        self.pid = model.PAero(self.pid)
+        #self.pid = model.PAero(self.pid)  # links to PAERO2
         self.cp  = model.Coord(self.cp)
         self.lsb = model.AeFact(self.lsb)
 
