@@ -8,5 +8,9 @@ $back from testB
 DISP(PLOT,PUNCH) = 5
 BEGIN BULK
 GRID,1,
+NLPARM         1     100            AUTO       1      40       P     ALL+
++                  0.010                                                +
++              9
+PLOAD4         1    1001  -4005.
 INCLUDE 'testC.bdf'
 ENDDATA

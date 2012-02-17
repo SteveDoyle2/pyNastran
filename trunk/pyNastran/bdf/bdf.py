@@ -70,7 +70,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD',#'CBEND',
         'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
-        'CQUAD4','CQUAD8','CQUADR','CQUADX',# 'CQUAD'
+        'CQUAD4','CQUAD8','CQUADR','CQUADX','CQUAD',
         'CTETRA','CPENTA','CHEXA',
         'CSHEAR','CVISC','CRAC2D','CRAC3D',
         'CGAP',

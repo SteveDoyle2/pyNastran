@@ -701,13 +701,14 @@ class PLOAD4(Load):
     type = 'PLOAD4'
     def __init__(self,card=None,data=None):
         if card:
+            #print "card.fields() = ",card.fields()
             self.lid = card.field(1)
             self.eid = card.field(2)
             p1 = card.field(3)
             p  = card.fields(4,7,[p1,p1,p1])
             self.p = [p1]+p
 
-            if card.field(7)=='THRU':
+            if card.field(7)=='THRU' and card.field(8):
                 #print "found a THRU on PLOAD4"
                 pass
                 eid2 = card.field(8)
@@ -757,12 +758,24 @@ class PLOAD4(Load):
         if self.eids:
             self.eids = model.Elements(self.eids)
 
+    def Eid(self,element):
+        if isinstance(element,int):
+            return element
+        return element.eid
+
+    def getElementIDs(self):
+        eids = []
+        for element in self.eids:
+            eids.append(Eid(element))
+        return eids
+            
     def rawFields(self):
         cid  = self.setBlankIfDefault(self.Cid(),0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
-        p2   = self.setBlankIfDefault(self.p[1],self.p[0])
-        p3   = self.setBlankIfDefault(self.p[2],self.p[0])
-        p4   = self.setBlankIfDefault(self.p[3],self.p[0])
+        p1   = self.p[0]
+        p2   = self.setBlankIfDefault(self.p[1],p1)
+        p3   = self.setBlankIfDefault(self.p[2],p1)
+        p4   = self.setBlankIfDefault(self.p[3],p1)
         fields = ['PLOAD4',self.lid,self.eid,self.p[0],p2,p3,p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
@@ -771,19 +784,29 @@ class PLOAD4(Load):
             fields.append(g3)
             fields.append(g4)
         else:
-            fields.append('THRU')
-            try:
-                eid = self.eids[-1]
-            except:
-                print "g3 = ",self.g3
-                print "g4 = ",self.g4
-                print "self.eids = ",self.eids
-                raise
-            fields.append(self.getElementIDs([eid]) )
+            print "eids = %s" %(self.eids)
+            if not self.eids==None:
+                try:
+                    fields.append('THRU')
+                    eid = self.eids[-1]
+                except:
+                    print "g3 = ",self.g3
+                    print "g4 = ",self.g4
+                    print "self.eids = ",self.eids
+                    raise
+                ###
+                fields.append(self.getElementIDs([eid]) )
+            else:
+                fields += [None,None]
+            ###
         fields.append(cid)
-        fields += list(self.NVector)
+        
+        n1   = self.setBlankIfDefault(self.NVector[0],0.0)
+        n2   = self.setBlankIfDefault(self.NVector[1],0.0)
+        n3   = self.setBlankIfDefault(self.NVector[2],0.0)
+        fields += [n1,n2,n3]
         fields.append(sorl)
-        #print "fields = ",fields
+        print "fields = ",fields
         return fields
 
     def reprFields(self):

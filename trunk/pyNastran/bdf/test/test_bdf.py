@@ -215,8 +215,8 @@ def getElementStats(fem1,fem2):
                 mid = e.Mid()
                 pid = e.Pid()
             elif isinstance(e,SolidElement):
-                v = e.Volume()
-                m = e.Mass()
+                v   = e.Volume()
+                m   = e.Mass()
                 c   = e.Centroid()
                 mid = e.Mid()
                 pid = e.Pid()
@@ -271,7 +271,7 @@ def compare(fem1,fem2,xref=True):
 
 def compareParams(fem1,fem2):
     compute(fem1.params,fem2.params)
-    
+
 def printPoints(fem1,fem2):
     for nid,n1 in sorted(fem1.nodes.items()):
         print "%s   xyz=%s  n1=%s  n2=%s" %(nid,n1.xyz,n1.Position(True),  fem2.Node(nid).Position())

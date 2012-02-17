@@ -333,15 +333,23 @@ def printCard(fields):
         field = fields[i]
         try:
             out += printField(field)
+            #print "|%r|" %(printField(field))
         except AssertionError:
             print "bad fields = ",fields
             raise
         if i%8==0: # allow 1+8 fields per line
-            out = out.rstrip()
+            #print "-------------------------"
+            #print "out = ***\n%s***" %(out)
+            #print "fields = ",fields[:i+1]
+            out = out.rstrip(' ')
+            #print "out[-1] = |%r|" %(out[-1])
+            if out[-1]=='\n': # empty line
+                out += '+'
             out += '\n%8s' %('')
         ###
     ###
-    out = out.rstrip()+'\n'
+    #print "out = ",out
+    out = out.rstrip(' \n+')+'\n'  # removes blank lines at the end of cards
     return out
 
 def printCard_16(fields):
