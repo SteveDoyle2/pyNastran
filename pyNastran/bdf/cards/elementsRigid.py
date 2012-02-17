@@ -1,10 +1,10 @@
 from baseCard import Element
 
 class RigidElement(Element):
-    def __repr__(self):
-        fields = ['RIGID_EL',self.eid]
-        return self.printCard(fields)
-    def crossReference(self,mesh):
+    #def __repr__(self):
+        #fields = [self.type,self.eid]
+        #return self.printCard(fields)
+    def crossReference(self,model):
         pass
 
 class RBAR(RigidElement):
@@ -80,7 +80,7 @@ class RBAR1(RigidElement):
     def reprFields(self):
         alpha = self.setBlankIfDefault(self.alpha,0.0)
         fields = ['RBAR1',self.eid,self.ga,self.gb,self.cb,alpha]
-        return self.printCard(fields)
+        return fields
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
@@ -155,8 +155,12 @@ class RBE2(RigidElement):
             ## Grid point identification numbers at which dependent degrees-offreedom
             ## are assigned. (Integer > 0)
             self.Gmi = card.fields(4) # get the rest of the fields
-            ## Thermal expansion coefficient. See Remark 11. (Real > 0.0 or blank)
-            self.alpha = self.Gmi.pop() # the last field is not part of self.Gmi
+            if len(self.Gmi)>0 and isinstance(self.Gmi[-1],float):
+                ## Thermal expansion coefficient. See Remark 11. (Real > 0.0 or blank)
+                self.alpha = self.Gmi.pop() # the last field is not part of self.Gmi
+            else:
+                self.alpha = 0.0
+            ###
         else:
             raise NotImplementedError('RBE2 data...')
         ###
@@ -193,8 +197,8 @@ class RBE2(RigidElement):
         return msg
         
     def rawFields(self):
-        fields = [self.type,self.eid,self.gn,self.cm]+self.Gmi+[self.alpha]
-        return self.printCard(fields)
+        fields = ['RBE2',self.eid,self.gn,self.cm]+self.Gmi+[self.alpha]
+        return fields
 
     def reprFields(self):
         return self.rawFields()
@@ -263,12 +267,15 @@ class RBE3(RigidElement):  # not done, needs testing badly
             ###
             self.alpha = card.field(j)
 
-    def __repr__(self):
-        fields = [self.type,self.eid,None,self.refc]
+    def rawFields(self):
+        fields = ['RBE3',self.eid,None,self.refc]
         for (wt,ci,Gij) in self.WtCG_groups:
             fields+=[wt,ci]+Gij
         fields += ['UM']
         for (gmi,cmi) in zip(self.Gmi,self.Cmi):
             fields+=[gmi,cmi]
         fields += ['ALPHA',self.alpha]
-        return self.printCard(fields)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()

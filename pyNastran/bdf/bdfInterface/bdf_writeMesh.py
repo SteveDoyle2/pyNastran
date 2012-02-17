@@ -430,7 +430,7 @@ class writeMesh(object):
 
     def writeDynamic(self):
         msg = ''
-        if self.dareas or self.nlparms or self.frequencies or self.methods:
+        if self.dareas or self.nlparms or self.frequencies or self.methods or self.tsteps:
             msg += '$DYNAMIC\n'
             for ID,method in sorted(self.methods.items()):
                 msg += str(method)
@@ -438,6 +438,8 @@ class writeMesh(object):
                 msg += str(darea)
             for ID,nlparm in sorted(self.nlparms.items()):
                 msg += str(nlparm)
+            for ID,tstep in sorted(self.tsteps.items()):
+                msg += str(tstep)
             for ID,freq in sorted(self.frequencies.items()):
                 msg += str(freq)
         return msg

@@ -115,7 +115,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # aero cards
         'AERO','AEROS','GUST','FLUTTER','FLFACT',
         'AELINK','AEPARAM','AESTAT','AELIST','AESURF',#'AEFACT'
-        'CAERO1',#'CAERO2','CAERO3','CAERO4','CAERO5',
+        'CAERO1','CAERO2',#'CAERO3','CAERO4','CAERO5',
         'PAERO1',
         'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
         'TRIM',
@@ -132,7 +132,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'RADBC','CONV',  #'RADM',
         
         # dynamic cards
-        'DAREA','NLPARM',
+        'DAREA','NLPARM','TSTEP','TSTEPNL',
 
         # frequencies
         'FREQ','FREQ1','FREQ2',
@@ -337,6 +337,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.dareas  = {}
         ## stores NLPARM
         self.nlparms = {}
+        ## stores TSTEP, TSTEPNL
+        self.tsteps = {}
 
         ## direct matrix input - DMIG
         self.dmigs = {}
@@ -1302,15 +1304,24 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='SPLINE2':
                 aero = SPLINE2(cardObj)
                 self.addSpline(aero)
+            #elif cardName=='SPLINE3':
+                #aero = SPLINE3(cardObj)
+                #self.addSpline(aero)
             elif cardName=='CAERO1':
                 aero = CAERO1(cardObj)
                 self.addCAero(aero)
-            #elif cardName=='CAERO2':
-            #    aero = CAERO2(cardObj)
+            elif cardName=='CAERO2':
+                aero = CAERO2(cardObj)
+                self.addCAero(aero)
+            #elif cardName=='CAERO3':
+            #    aero = CAERO3(cardObj)
             #    self.addCAero(aero)
             elif cardName=='PAERO1':
                 aero = PAERO1(cardObj)
                 self.addPAero(aero)
+            #elif cardName=='PAERO2':
+                #aero = PAERO2(cardObj)
+                #self.addPAero(aero)
             elif cardName=='AEPARM':
                 aeparm = AEPARM(cardObj)
                 self.addAEParm(aeparm)
@@ -1364,6 +1375,15 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='NLPARM':
                 nlparmObj = NLPARM(cardObj)
                 self.addNLParm(nlparmObj)
+            elif cardName=='NLPARM':
+                nlparmObj = NLPARM(cardObj)
+                self.addNLParm(nlparmObj)
+            elif cardName=='TSTEP':
+                tstepObj = TSTEP(cardObj)
+                self.addTStep(tstepObj)
+            elif cardName=='TSTEPNL':
+                tstepObj = TSTEPNL(cardObj)
+                self.addTStep(tstepObj)
 
             # frequencies
             elif cardName=='FREQ':

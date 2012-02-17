@@ -24,13 +24,15 @@ BDF Bug Fixes
 - fixed bug in CONM2 with inertia terms
  - PCOMP can now have 1 ply per line or 2 plies per line
  - PCOMP doesnt lose last plies anymore
- - fixed bugs in CQUADR, CVISC, CONROD, PTUBE, QBDY1, QBDY3, FREQ2, PMASS
+ - fixed bugs in CQUADR, CVISC, CONROD, PTUBE, QBDY1, QBDY3, FREQ2, PMASS, RBE2
 
 Added BDF
  - EIGB, EIGP, EIGR
  - *** EIGC, EIGRL
  - CBUSH, PBUSH, PDAMPT
- - *** TSTEP, TSTEPNL, TIC
+ - TSTEP, TSTEPNL
+ - *** TIC
+ - CAERO2
 
 OP2 API Changes
 OP2 Bug Fixes

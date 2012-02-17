@@ -222,9 +222,9 @@ class LOAD(Load):
         for loadID in self.loadIDs():
             loads = loadID.getLoads()
             for load in loads:
-                loc,node,vector = load.transformLoad()
+                isLoad,node,vector = load.transformLoad()
                 if isinstance(load,Force):
-                    if loc==1:  #load
+                    if isLoad:  #load
                         if node not in forceLoads:
                             forceLoads[node]  = vector
                         else:
@@ -238,8 +238,8 @@ class LOAD(Load):
                         ###
                     ###
                 else:  # Moment
-                    if 
-                    if loc==1: # load
+                    #if 
+                    if isLoad: # load
                         if node not in momentLoads:
                             momentLoads[node]  = vector
                         else:
@@ -278,8 +278,8 @@ class OneDeeLoad(Load): # FORCE/MOMENT
     def transformLoad(self):
         xyxz = self.cid.transformToGlobal(self.xyz)
         if self.mag>0.:
-            return (1,self.node,self.mag*xyz) # load
-        return (0,self.node,xyz) # enforced displacement
+            return (True,self.node,self.mag*xyz) # load
+        return (False,self.node,xyz) # enforced displacement
 
     def normalize(self):
         """
