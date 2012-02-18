@@ -1,21 +1,16 @@
 #summary Walk through of how to install the project
 #labels Featured,Phase-Deploy
 
+= Introduction =
+ * pyNastran v0.3 is a very easy package to install once you have the required Python modules.  It's a pure Python package so no one should really be having too many problems.
+
+Note that in v0.4, an OP4 reader/writer will be added which does require some compiling.  Even then, the software will still install easily.
 
 = User Overview = 
  * Install Python
  * Install numpy, scipy, vtk, & wxPython
  * Download the latest pyNastran release
  * Extract the zip file
- * Navigate to pyNastran directory on the command line
- * run *python setup.py develop* to install the package
-
-= Developer Overview = 
- * Install Python
- * Install numpy, scipy, vtk, & wxPython
- * install Doxygen
- * Use subversion to checkout pyNastran
- * run *doxygen Doxyfile* to generate the documentation
  * Navigate to pyNastran directory on the command line
  * run *python setup.py develop* to install the package
 
@@ -37,10 +32,19 @@ I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your ve
 
 == Install pyNastran ==
  * Navigate to pyNastran directory on the command line
- * run *python setup.py develop* to install the package
+ * run *python setup.py develop* to install pyNastran.  Don't type *python setup.py install*
 
 Enjoy!
 
+= Developer Overview = 
+ * Install Python
+ * Install numpy, scipy, vtk, & wxPython
+ * install Doxygen
+ * Install Cython (if you want OP4 support)
+ * Use subversion to checkout pyNastran
+ * run *doxygen Doxyfile* to generate the documentation
+ * Navigate to pyNastran directory on the command line
+ * run *python setup.py develop* to install the package
 
 = Install Procedure - Developer =
 
@@ -51,13 +55,21 @@ Enjoy!
 == Install Doxygen ==
  * download and install [http://www.stack.nl/~dimitri/doxygen/doxywizard_usage.html Doxygen ]
 
+== Install Cython ==
+ * Open a command prompt / terminal
+ * run *easy_install cython* to install Cython
+
 == Install pyNastran ==
  * Navigate to pyNastran directory on the command line
- * run *python setup.py develop* to install the package
+ * run *python setup.py develop* to install pyNastran
 
 == Create the Documentation ==
  * Navigate to pyNastran directory on the command line
  * run *doxygen Doxyfile* to generate the documentation
+
+== Install OP4 Reader/Writer ==
+ * Navigate to pyNastran/op4/Cython directory on the command line
+ * run *python setup.py install* to install the OP4 code
 
 === Non-Python 2.7 Windows ===
  * open Doxyfile in a text editor and change the python path from *C:\Python27\python.exe* to your executable location (likely *C:\Python26\python.exe* or some variation on that).  *NOTE* that Doxygen cares about the slash direction even if you're using cygwin and it works on the command line.
