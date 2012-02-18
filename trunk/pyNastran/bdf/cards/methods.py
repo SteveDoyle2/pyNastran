@@ -78,6 +78,9 @@ class EIGC(Method): ## not done
             ## dependent for METHOD = "CLAN".)
             self.E      = card.field(6)
             self.ndo    = card.field(7)
+            
+            # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
+            #fields = card.fields(9)
             #assert card.nFields()<8,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGC')
@@ -87,12 +90,12 @@ class EIGC(Method): ## not done
         pass
 
     def rawFields(self):
-        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,self.E,self.ndo,None]
+        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,str(self.E),self.ndo,None]
         #raise Exception('EIGC not finished...')
         return fields
 
     def reprFields(self):
-        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,self.E,self.ndo,None]
+        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,str(self.E),self.ndo,None]
         #raise Exception('EIGC not finished...')
         return fields
 
@@ -205,16 +208,18 @@ class EIGRL(Method):
             self.maxset = card.field(6)
             ## Estimate of the first flexible mode natural frequency (Real or blank)
             self.shfscl = card.field(7)
+            ## Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
+            self.norm   = card.field(8)
             
             optionValues = card.fields(9)
-            n = len(optionValues)
-            nOptions = n//2
-            assert n%2==0
             self.options = []
             self.values  = []
-            for o in range(0,n,2):
-                self.options.append(optionValues[o])
-                self.values.append(optionValues[o+1])
+            #print "optionValues = ",optionValues
+            for optionValue in optionValues:
+                #print "optionValue = ",optionValue
+                (option,value) = optionValue.split('=')
+                self.options.append(option)
+                self.values.append(value)
 
             ## Method for normalizing eigenvectors
             if sol in [103,115,146]: # normal modes,cyclic normal modes, flutter
@@ -233,14 +238,14 @@ class EIGRL(Method):
         pass
 
     def rawFields(self):
-        fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,self.msglvl,self.maxset,self.shfscl]
+        fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,self.msglvl,self.maxset,self.shfscl,self.norm]
         for (option,value) in zip(self.options,self.values):
-            fields += [option,value]
+            fields += [option+'='+str(value)]
         return fields
 
     def reprFields(self):
         msglvl = self.setBlankIfDefault(self.msglvl,0)
-        fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,msglvl,self.maxset,self.shfscl]
+        fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,msglvl,self.maxset,self.shfscl,self.norm]
         for (option,value) in zip(self.options,self.values):
-            fields += [option,value]
+            fields += [option+'='+str(value)]
         return fields

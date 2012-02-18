@@ -129,6 +129,7 @@ def printFloat8(value,tol=1e-8):
     #value = round(value,4)
     #print "float...%s" %value
     if abs(value)<tol:  # tol=1e-8
+        #print "below tol %s" %(value)
         field = "%8s" %('0.')
     else:
         if value>0.:  # positive, not perfect...
@@ -147,10 +148,10 @@ def printFloat8(value,tol=1e-8):
                     #if 'e' not in field:
                     field1 = field.replace('-','e-')
 
-                    #print "value=|%s| field1=|%s| field2=|%s|" %(value,field1,field2)
+                    #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
                     #print "same - ",float(field1)==float(field2)
                     if field2=='.':
-                        return "%8s" %('0.')
+                        return "%8s" %(field)
                     if len(field2)<=8 and float(field1)==float(field2):
                         field = field2
                         #print "*field = ",field
