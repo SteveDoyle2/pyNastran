@@ -331,7 +331,7 @@ class MAT3(AnisotropicMaterial):
         return fields
 
     def reprFields(self):
-        Tref = self.setBlankIfDefault(self.TRef,0.0)
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
         fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
                          None,None,self.gzx,self.ax,self.ath,self.az,TRef,self.ge]
         return fields

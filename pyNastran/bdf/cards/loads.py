@@ -116,9 +116,12 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
             #print 'else'
             return [node.nid for node in nodes]
         ###
+
     def crossReference(self,model):
         self.lid = model.Load(self.lid)
-        self.tid = model.Load(self.tid)
+        if self.tid:
+            self.tid = model.Load(self.tid)
+        ###
     
     def Lid(self):
         if isinstance(self.lid,int):
@@ -126,6 +129,8 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
         return self.lid.lid
         
     def Tid(self):
+        if self.tid is None:
+            return None
         if isinstance(self.tid,int):
             return self.tid
         return self.tid.tid

@@ -23,5 +23,7 @@ PLOAD4  510     101     5.                              THRU    112
 DRESP2  16      SUMFORC 1
         DRESP1  14      15
 MAT10   25      1.      0.1
+CQUAD   16410   16411   16411   16412   16413   16414   16415   16416   +QD1
++QD1    16417   16418   16419
 INCLUDE 'testC.bdf'
 ENDDATA

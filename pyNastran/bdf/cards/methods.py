@@ -65,7 +65,7 @@ class EIGC(Method): ## not done
             self.sid = card.field(1)
             ## Method of complex eigenvalue extraction
             self.method = card.field(2)
-            assert self.method in ['INV','HESS','CLAN']
+            assert self.method in ['INV','HESS','CLAN'],'method=%s is not INV, HESS, CLAN' %(self.method)
             ## Method for normalizing eigenvectors
             self.norm   = card.field(3)
 
@@ -90,12 +90,20 @@ class EIGC(Method): ## not done
         pass
 
     def rawFields(self):
-        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,str(self.E),self.ndo,None]
+        if self.E is None:
+            E = None
+        else:
+            E = str(self.E)
+        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,E,self.ndo,None]
         #raise Exception('EIGC not finished...')
         return fields
 
     def reprFields(self):
-        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,str(self.E),self.ndo,None]
+        if self.E is None:
+            E = None
+        else:
+            E = str(self.E)
+        fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,E,self.ndo,None]
         #raise Exception('EIGC not finished...')
         return fields
 

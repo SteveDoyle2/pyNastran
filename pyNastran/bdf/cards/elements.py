@@ -48,13 +48,13 @@ class CBUSH(BushingElement):
             ## is determined from GO or Xi.
             self.cid  = card.field(8,0)
             ## Location of spring damper (0 <= s <= 1.0)
-            self.s    = card.field(10,0.5)
+            self.s    = card.field(9,0.5)
             ## Coordinate system identification of spring-damper offset. See
             ## Remark 9. (Integer > -1; Default = -1, which means the offset point lies
             ## on the line between GA and GB
-            self.ocid = card.field(11,-1)
+            self.ocid = card.field(10,-1)
             ## Components of spring-damper offset in the OCID coordinate system if OCID > 0.
-            self.si   = card.fields(i=12,j=14)
+            self.si   = card.fields(i=11,j=13)
         else:
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
@@ -281,6 +281,7 @@ class CGAP(Element):
                 #raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
                 self.g0 = None
                 self.x  = [None,None,None]
+                self.cid = None
             ###
         else:
             self.eid = data[0]
