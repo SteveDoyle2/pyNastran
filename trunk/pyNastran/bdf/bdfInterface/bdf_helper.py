@@ -596,7 +596,7 @@ class addMethods(object):
         assert key>0
         self.nlparms[key] = nlparm
 
-    def addTStep(self,tstep):
+    def addTStep(self,tstep,allowOverwrites=False):
         key = tstep.sid
         if key in self.tsteps and allowOverwrites==False:
             if not tstep.isSameCard(self.tsteps[key]):

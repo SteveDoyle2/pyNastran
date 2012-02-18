@@ -76,27 +76,6 @@ class CTRIA3(ShellElement):
     def Thickness(self):
         return self.pid.Thickness()
 
-    def getReprDefaults(self):
-        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
-        TFlag     = self.setBlankIfDefault(self.TFlag,0)
-        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
-
-        T1 = self.setBlankIfDefault(self.T1,1.0)
-        T2 = self.setBlankIfDefault(self.T2,1.0)
-        T3 = self.setBlankIfDefault(self.T3,1.0)
-        return (thetaMcid,zOffset,TFlag,T1,T2,T3)
-
-    def rawFields(self):
-        fields = ['CTRIA3',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,None]+[
-            None,self.TFlag,self.T1,self.T2,self.T3]
-        return fields
-
-    def reprFields(self):
-        (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
-        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None]+[
-        None,TFlag,T1,T2,T3]
-        return fields
-
     def AreaCentroidNormal(self):
         """
         returns area,centroid, normal as it's more efficient to do them together
@@ -134,6 +113,27 @@ class CTRIA3(ShellElement):
         (n0,n1,n2) = self.nodePositions()
         centroid = self.CentroidTriangle(n0,n1,n2,debug)
         return centroid
+
+    def getReprDefaults(self):
+        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
+        TFlag     = self.setBlankIfDefault(self.TFlag,0)
+        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
+
+        T1 = self.setBlankIfDefault(self.T1,1.0)
+        T2 = self.setBlankIfDefault(self.T2,1.0)
+        T3 = self.setBlankIfDefault(self.T3,1.0)
+        return (thetaMcid,zOffset,TFlag,T1,T2,T3)
+
+    def rawFields(self):
+        fields = ['CTRIA3',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,None]+[
+            None,self.TFlag,self.T1,self.T2,self.T3]
+        return fields
+
+    def reprFields(self):
+        (thetaMcid,zOffset,TFlag,T1,T2,T3) = self.getReprDefaults()
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,None]+[
+        None,TFlag,T1,T2,T3]
+        return fields
 
 class CTRIA6(CTRIA3):
     type = 'CTRIA6'
@@ -347,7 +347,9 @@ class CSHEAR(ShellElement):
     def rawFields(self):
         fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
         return fields
-
+    
+    def reprFields(self):
+        return self.rawFields()
 
 class CQUAD4(ShellElement):
     type = 'CQUAD4'
@@ -403,67 +405,6 @@ class CQUAD4(ShellElement):
         
     def Thickness(self):
         return self.pid.Thickness()
-
-    def getReprDefaults(self,debug=False):
-        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
-        TFlag     = self.setBlankIfDefault(self.TFlag,0)
-        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
-
-        T1 = self.setBlankIfDefault(self.T1,1.0)
-        T2 = self.setBlankIfDefault(self.T2,1.0)
-        T3 = self.setBlankIfDefault(self.T3,1.0)
-        T4 = self.setBlankIfDefault(self.T4,1.0)
-        if debug:
-        #if 1:
-            print "eid       = ",self.eid
-            print "nodes     = ",self.nodes
-
-            print "self.zOffset   = ",self.zOffset
-            print "self.TFlag     = ",self.TFlag
-            print "self.thetaMcid = ",self.thetaMcid
-
-            print "zOffset   = ",zOffset
-            print "TFlag     = ",TFlag
-            print "thetaMcid = ",thetaMcid
-
-            print "T1 = ",T1
-            print "T2 = ",T2
-            print "T3 = ",T3
-            print "T4 = ",T4,'\n'
-        return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
-
-    def rawFields(self):
-        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
-        return fields
-
-    def reprFields(self):
-        debug = False
-        #if self.id==20020:
-        #    debug = True
-        (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults(debug=debug)
-
-        fields = ['CQUAD4',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
-                  None,TFlag,T1,T2,T3,T4]
-
-        #if self.id==20020:
-        #    print "thetaMcid = ",thetaMcid
-        #    print "actual = ",self.thetaMcid
-        #    #print str(self)
-        #    print fields
-        #    sys.exit()
-        return fields
-
-    def writeAsCTRIA3(self,newID):
-        """
-        triangle - 012
-        triangle - 023
-        """
-        zOffset = self.setBlankIfDefault(self.zOffset,0.0)
-        nodes1 = [self.nodes[0],self.nodes[1],self.nodes[2]]
-        nodes2 = [self.nodes[0],self.nodes[2],self.nodes[3]]
-        fields1 = ['CTRIA3',self.eid,self.mid]+nodes1+[self.thetaMcid,zOffset]
-        fields2 = ['CTRIA3',newID,   self.mid]+nodes2+[self.thetaMcid,zOffset]
-        return self.printCard(fields1)+printCard(fields2)
 
     def Normal(self):
         (n1,n2,n3,n4) = self.nodePositions()
@@ -529,6 +470,67 @@ class CQUAD4(ShellElement):
         area = Area(a,b)
         return area
     ###
+
+    def writeAsCTRIA3(self,newID):
+        """
+        triangle - 012
+        triangle - 023
+        """
+        zOffset = self.setBlankIfDefault(self.zOffset,0.0)
+        nodes1 = [self.nodes[0],self.nodes[1],self.nodes[2]]
+        nodes2 = [self.nodes[0],self.nodes[2],self.nodes[3]]
+        fields1 = ['CTRIA3',self.eid,self.mid]+nodes1+[self.thetaMcid,zOffset]
+        fields2 = ['CTRIA3',newID,   self.mid]+nodes2+[self.thetaMcid,zOffset]
+        return self.printCard(fields1)+printCard(fields2)
+
+    def getReprDefaults(self,debug=False):
+        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
+        TFlag     = self.setBlankIfDefault(self.TFlag,0)
+        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
+
+        T1 = self.setBlankIfDefault(self.T1,1.0)
+        T2 = self.setBlankIfDefault(self.T2,1.0)
+        T3 = self.setBlankIfDefault(self.T3,1.0)
+        T4 = self.setBlankIfDefault(self.T4,1.0)
+        if debug:
+        #if 1:
+            print "eid       = ",self.eid
+            print "nodes     = ",self.nodes
+
+            print "self.zOffset   = ",self.zOffset
+            print "self.TFlag     = ",self.TFlag
+            print "self.thetaMcid = ",self.thetaMcid
+
+            print "zOffset   = ",zOffset
+            print "TFlag     = ",TFlag
+            print "thetaMcid = ",thetaMcid
+
+            print "T1 = ",T1
+            print "T2 = ",T2
+            print "T3 = ",T3
+            print "T4 = ",T4,'\n'
+        return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
+
+    def rawFields(self):
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
+        return fields
+
+    def reprFields(self):
+        debug = False
+        #if self.id==20020:
+        #    debug = True
+        (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults(debug=debug)
+
+        fields = ['CQUAD4',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
+                  None,TFlag,T1,T2,T3,T4]
+
+        #if self.id==20020:
+        #    print "thetaMcid = ",thetaMcid
+        #    print "actual = ",self.thetaMcid
+        #    #print str(self)
+        #    print fields
+        #    sys.exit()
+        return fields
 
 class CQUADR(CQUAD4):
     type = 'CQUADR'
@@ -686,3 +688,6 @@ class CQUADX(CQUAD4):
     def rawFields(self):
         fields = ['CQUADX',self.eid,self.Pid()]+self.nodeIDs()
         return fields
+    
+    def reprFields(self):
+        return self.rawFields()
