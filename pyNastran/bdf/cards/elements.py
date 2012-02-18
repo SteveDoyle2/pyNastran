@@ -442,6 +442,7 @@ class CMASS2(PointElement):
     def reprFields(self):
         mass = self.setBlankIfDefault(self.mass,0.0)
         fields = ['CMASS2',self.eid,mass,self.g1,self.c1,self.g2,self.c2]
+        #print "cmass2 fields = ",fields
         return fields
 
 class CMASS3(PointElement):

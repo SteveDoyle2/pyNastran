@@ -91,7 +91,7 @@ class BaseCard(BDF_Card):
         i=0
         while(i<nFields):
             if fields[i]=='THRU':
-                for j in range(fields[i-1],fields[i+1]):
+                for j in range(fields[i-1],fields[i+1]+1):
                     out.append(j)
                 ###
                 i+=2

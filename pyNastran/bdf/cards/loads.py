@@ -663,32 +663,38 @@ class PLOAD1(Load):
     def reprFields(self):
         return self.rawFields()
 
-class PLOAD2(Load):  ## todo:  support THRU
+class PLOAD2(Load):
     type = 'PLOAD2'
     def __init__(self,card=None,data=None):
         if card:
             self.lid = card.field(1)
             self.p   = card.field(2)
-            self.nodes = card.fields(3,9)
+            eids = card.fields(3,9)
 
             if card.field(4)=='THRU':
-                print "found a THRU on PLOAD2"
-                raise NotImplementedError('PLOAD2')
+                #print "PLOAD2 %s %s" %(eids[0],eids[-1])
+                eids = [i for i in range(eids[0],eids[2]+1)]
+                #print "found a THRU on PLOAD2"
+                #raise NotImplementedError('PLOAD2')
             ###
+            self.eids = eids
         else:
             self.lid   = data[0]
             self.p     = data[1]
-            self.nodes = list(data[2:])
+            self.eids = list(data[2:])
             #print "PLOAD2 = ",data
         ###
-        assert len(self.nodes)==6
-    
+
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
         pass
 
     def rawFields(self):
-        fields = ['PLOAD2',self.lid,self.p]+self.nodeIDs()
+        fields = ['PLOAD2',self.lid,self.p]
+        if len(self.eids)>6:
+            fields += [self.eids[0],'THRU',self.eids[-1]]
+        else:
+            fields += self.eids
         return fields
 
     def reprFields(self):
@@ -765,10 +771,10 @@ class PLOAD4(Load):
 
     def getElementIDs(self,eid=None):
         if eid:
-            return Eid(eid)
+            return self.Eid(eid)
         eids = []
         for element in self.eids:
-            eids.append(Eid(element))
+            eids.append(self.Eid(element))
         return eids
             
     def rawFields(self):
