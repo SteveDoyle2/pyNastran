@@ -269,6 +269,7 @@ class CGAP(Element):
             if isinstance(x1G0,int):
                 self.g0 = x1G0
                 self.x = None
+                self.cid = None
             elif isinstance(x1G0,float):
                 self.g0  = None
                 x1  = x1G0
@@ -301,10 +302,12 @@ class CGAP(Element):
             self.g0 = mesh.Node(self.g0)
             self.x  = self.g0.Position()
         self.pid = mesh.Property(self.pid)
-        self.cid = mesh.Coord(self.cid)
+        if self.cid:
+            self.cid = mesh.Coord(self.cid)
+        ###
 
     def Cid(self):
-        if isinstance(self.cid,int):
+        if isinstance(self.cid,int) or self.cid is None:
             return self.cid
         return self.cid.cid
 
@@ -428,8 +431,6 @@ class CMASS2(PointElement):
         return self.mass
 
     def crossReference(self,mesh):
-        """
-        """
         #self.g1 = mesh.Node(self.g1)
         #self.g2 = mesh.Node(self.g2)
         pass

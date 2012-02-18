@@ -27,7 +27,7 @@ BDF Bug Fixes
    - PCOMP can now have 1 ply per line or 2 plies per line
    - PCOMP doesnt lose last plies anymore
    - fixed bug in CQUADR, CVISC, CONROD, PTUBE, QBDY1, QBDY3, FREQ2, PMASS, RBE2
-   - fixed bug in NLPARM, CGAP, CTRIAX, PLOAD4
+   - fixed bug in NLPARM, CGAP, CTRIAX, PLOAD4, MAT3
 
 Added BDF
    - enabled CQUAD
@@ -35,7 +35,7 @@ Added BDF
    - EIGC, EIGRL
    - CBUSH, PBUSH, PDAMPT
    - TSTEP, TSTEPNL
-   - CAERO2
+   - CAERO2, PAERO2
    - *** TIC
 
 OP2 API Changes

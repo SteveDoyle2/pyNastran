@@ -327,13 +327,13 @@ class MAT3(AnisotropicMaterial):
 
     def rawFields(self):
         fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
-                         None,None,self.gzx,self.ax,self.ath,self.az,self.Tref,self.ge]
+                         None,None,self.gzx,self.ax,self.ath,self.az,self.TRef,self.ge]
         return fields
 
     def reprFields(self):
         Tref = self.setBlankIfDefault(self.TRef,0.0)
         fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
-                         None,None,self.gzx,self.ax,self.ath,self.az,Tref,self.ge]
+                         None,None,self.gzx,self.ax,self.ath,self.az,TRef,self.ge]
         return fields
 
 class MAT4(ThermalMaterial):

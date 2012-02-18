@@ -610,7 +610,7 @@ class PLOAD(Load):
             self.p     = data[1]
             self.nodes = data[2:]
             print "PLOAD = ",data
-            raise Exception('not supported')
+            raise NotImplementedError('PLOAD')
         assert len(self.nodes) in [3,4],'nodes=%s' %(self.nodes)
     
     def crossReference(self,model):
@@ -663,7 +663,7 @@ class PLOAD1(Load):
     def reprFields(self):
         return self.rawFields()
 
-class PLOAD2(Load):  # todo:  support THRU
+class PLOAD2(Load):  ## todo:  support THRU
     type = 'PLOAD2'
     def __init__(self,card=None,data=None):
         if card:
@@ -673,13 +673,13 @@ class PLOAD2(Load):  # todo:  support THRU
 
             if card.field(4)=='THRU':
                 print "found a THRU on PLOAD2"
-                pass
+                raise NotImplementedError('PLOAD2')
             ###
         else:
             self.lid   = data[0]
             self.p     = data[1]
             self.nodes = list(data[2:])
-            print "PLOAD2 = ",data
+            #print "PLOAD2 = ",data
         ###
         assert len(self.nodes)==6
     
@@ -763,7 +763,9 @@ class PLOAD4(Load):
             return element
         return element.eid
 
-    def getElementIDs(self):
+    def getElementIDs(self,eid=None):
+        if eid:
+            return Eid(eid)
         eids = []
         for element in self.eids:
             eids.append(Eid(element))
@@ -784,7 +786,7 @@ class PLOAD4(Load):
             fields.append(g3)
             fields.append(g4)
         else:
-            print "eids = %s" %(self.eids)
+            #print "eids = %s" %(self.eids)
             if not self.eids==None:
                 try:
                     fields.append('THRU')
@@ -795,7 +797,7 @@ class PLOAD4(Load):
                     print "self.eids = ",self.eids
                     raise
                 ###
-                fields.append(self.getElementIDs([eid]) )
+                fields.append(self.getElementIDs(eid) )
             else:
                 fields += [None,None]
             ###
@@ -806,7 +808,7 @@ class PLOAD4(Load):
         n3   = self.setBlankIfDefault(self.NVector[2],0.0)
         fields += [n1,n2,n3]
         fields.append(sorl)
-        print "fields = ",fields
+        #print "fields = ",fields
         return fields
 
     def reprFields(self):

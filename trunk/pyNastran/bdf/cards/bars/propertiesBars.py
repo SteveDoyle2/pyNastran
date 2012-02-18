@@ -1003,7 +1003,7 @@ class PBEAM(IntegratedLineProperty):
             j   = self.setBlankIfDefault(j,0.0)
 
             nsm = self.setBlankIfDefault(nsm,0.0)
-            #c1 = self.setBlankIfDefault(c1,0.0)
+            c1 = self.setBlankIfDefault(c1,0.0)
             d1 = self.setBlankIfDefault(d1,0.0)
             e1 = self.setBlankIfDefault(e1,0.0)
             f1 = self.setBlankIfDefault(f1,0.0)
