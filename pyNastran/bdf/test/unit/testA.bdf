@@ -8,9 +8,20 @@ $back from testB
 DISP(PLOT,PUNCH) = 5
 BEGIN BULK
 GRID,1,
+PLOAD4         1    1001  -4005.
 NLPARM         1     100            AUTO       1      40       P     ALL+
 +                  0.010                                                +
 +              9
-PLOAD4         1    1001  -4005.
+
+EIGRL   1       0.      800.    6       4                               +001
++001    nums=4
+EIGC    10      CLAN    MAX                     1.E-12
+                                                        20
+CMASS2  2005     .5-7   44      5
+PLOAD2  13      1.0     2100001  THRU   2100100
+PLOAD4  510     101     5.                              THRU    112
+DRESP2  16      SUMFORC 1
+        DRESP1  14      15
+MAT10   25      1.      0.1
 INCLUDE 'testC.bdf'
 ENDDATA

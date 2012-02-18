@@ -133,7 +133,7 @@ class PBUSH(BushingProperty):
         self.vars.append('RCV')
 
     def rawFields(self):
-        fields = ['PDAMP',self.pid]
+        fields = ['PBUSH',self.pid]
         for var in self.vars:
             if var=='K':
                 fields += [None,'K']+self.Ki
@@ -144,8 +144,7 @@ class PBUSH(BushingProperty):
             elif var=='RCV':
                 fields += [None,'RCV',self.sa,self.st,self.ea,self.et]
             else:
-                raise Exception('not supported PDAMP field...')
-                
+                raise Exception('not supported PBUSH field...')
         return fields
 
     def reprFields(self):
@@ -158,36 +157,6 @@ class DamperProperty(Property):
         pass
     def crossReference(self,model):
         pass
-
-class PDAMPT(DamperProperty):
-    type = 'PDAMPT'
-    def __init__(self,card=None,data=None):
-        DamperProperty.__init__(self,card,data)
-        if card:
-            ## Property ID
-            self.pid  = card.field(1)
-            ## Identification number of a TABLEDi entry that defines the damping
-            ## force per-unit velocity versus frequency relationship
-            self.tbid = card.field(2,0)
-        else:
-            self.pid  = data[0]
-            self.tbid = data[1]
-        ###
-
-    def crossReference(self,model):
-        self.tbid = Table(self.tbid)
-    
-    def Tbid(self):
-        if isinstance(self.tbid,int):
-            return self.tbid
-        return self.tbid.tid
-
-    def reprFields(self):
-        return self.rawFields()
-
-    def rawFields(self):
-        fields = ['PDAMPT',self.pid,self.Tbid()]
-        return fields
 
 class PDAMP(DamperProperty):
     type = 'PDAMP'
@@ -246,6 +215,36 @@ class PDAMP5(DamperProperty):
 
     def rawFields(self):
         fields = ['PDAMP5',self.pid,self.Mid(),self.b]
+        return fields
+
+class PDAMPT(DamperProperty):
+    type = 'PDAMPT'
+    def __init__(self,card=None,data=None):
+        DamperProperty.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid  = card.field(1)
+            ## Identification number of a TABLEDi entry that defines the damping
+            ## force per-unit velocity versus frequency relationship
+            self.tbid = card.field(2,0)
+        else:
+            self.pid  = data[0]
+            self.tbid = data[1]
+        ###
+
+    def crossReference(self,model):
+        self.tbid = Table(self.tbid)
+    
+    def Tbid(self):
+        if isinstance(self.tbid,int):
+            return self.tbid
+        return self.tbid.tid
+
+    def reprFields(self):
+        return self.rawFields()
+
+    def rawFields(self):
+        fields = ['PDAMPT',self.pid,self.Tbid()]
         return fields
 
 class PGAP(Property):
@@ -409,7 +408,7 @@ class PCONEAX(Property): #not done
             self.Type  = card.field(4)
             self.dim   = [] # confusing entry...
         else:
-            raise Exception('not supported')
+            raise NotImplementedError('not supported')
         ###
 
     def crossReference(self,model):

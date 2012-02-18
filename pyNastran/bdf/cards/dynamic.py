@@ -191,15 +191,15 @@ class TSTEP(BaseCard):
         i=1
         nFields = len(fields)
         while i<nFields:
-            self.N.append(card.field(i+1),1)
-            self.DT.append(card.field(i+2),0.)
-            self.NO.append(card.field(i+3),1)
+            self.N.append(card.field(i+1,1))
+            self.DT.append(card.field(i+2,0.))
+            self.NO.append(card.field(i+3,1))
             i+= 8
 
     def rawFields(self):
-        fields = ['TSTEP']
+        fields = ['TSTEP',self.sid]
         for (n,dt,no) in zip(self.N,self.DT,self.NO):
-            fields += [n,dt,no,None,None,None,None]
+            fields += [n,dt,no,None,None,None,None,None]
         return fields
 
     def reprFields(self):

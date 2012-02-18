@@ -1,9 +1,7 @@
 import sys
 import copy
+
 from pyNastran.bdf.fieldWriter     import printCard
-#from pyNastran.bdf.bdf_writeMesh   import writeMesh
-#from pyNastran.bdf.bdf_cardMethods import cardMethods
-#from pyNastran.bdf.crossReference  import XrefMesh
 
 class getMethods(object):
     def __init__(self):
@@ -269,8 +267,8 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
-        self.elements[key] = elem  ## temporary
-        return                     ## temporary
+        self.elements[key] = elem  ## @todo temporary
+        return                     ## @todo temporary
 
         if key in self.elements and allowOverwrites==False:
             if not elem.isSameCard(self.elements[key]):
@@ -319,8 +317,8 @@ class addMethods(object):
 
     def addProperty(self,prop,allowOverwrites=False):   
         key = prop.pid
-        self.properties[key] = prop  ## temporary
-        return                       ## temporary
+        self.properties[key] = prop  ## @todo temporary
+        return                       ## @todo temporary
 
         if not allowOverwrites:
             assert key not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
@@ -635,8 +633,15 @@ class addMethods(object):
         assert key>0
         self.tables[key] = table
 
-    def addMethod(self,method):
+    def addMethod(self,method,allowOverwrites=False):
         key = method.sid
-        assert key not in self.methods
-        assert key>0
-        self.methods[key] = method
+        if key in self.methods and allowOverwrites==False:
+            if not method.isSameCard(self.methods[key]):
+                assert key not in self.methods,'sid=%s\noldMethod=\n%snewMethod=\n%s' %(key,self.methods[key],method)
+        else:
+            assert key>0,'sid=%s method=\n%s' %(key,method)
+            self.methods[key] = method
+        ###
+
+    def addMKAero(self,mkaero):
+        self.mkaeros.append(mkaero)

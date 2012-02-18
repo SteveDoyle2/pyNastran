@@ -105,7 +105,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'SUPORT','SUPORT1',
 
         # loads
-        'LOAD',#'LSEQ',
+        'LOAD','LSEQ',
         'FORCE','FORCE1','FORCE2',
         'GRAV',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
@@ -113,10 +113,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #'RLOAD1','RLOAD2',
 
         # aero cards
-        'AERO','AEROS','GUST','FLUTTER','FLFACT',
+        'AERO','AEROS','GUST','FLUTTER','FLFACT','MKAERO1','MKAERO2',
         'AELINK','AEPARAM','AESTAT','AELIST','AESURF',#'AEFACT'
         'CAERO1','CAERO2',#'CAERO3','CAERO4','CAERO5',
-        'PAERO1',
+        'PAERO1','PAERO2',#'PAERO3','PAERO4','PAERO5',
         'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
         'TRIM',
         
@@ -374,25 +374,27 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.aero   = {}
         ## stores AEROS
         self.aeros  = {}
+
         ## stores AEPARAM
         self.aeparams = {}
         ## stores AELINK
-        self.aelinks  = {}
-        
+        self.aelinks  = {}        
         ## stores AELIST
         self.aelists = {}
         ## stores AESURF
-        self.aesurfs = {}
-        
+        self.aesurfs = {}        
         ## stores AESTAT
         self.aestats  = {}
+
         ## stores GUST cards
         self.gusts    = {}  # can this be simplified ???
         ## stores FLFACT
         self.flfacts  = {}  # can this be simplified ???
         ## stores FLUTTER
         self.flutters = {}
-        ## store SPLINE1
+        ## mkaeros
+        self.mkaeros = []
+        ## store SPLINE1,SPLINE2
         self.splines  = {}
         ## stores TRIM
         self.trims = {}
@@ -1191,6 +1193,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='MOMENT2':
                 moment = MOMENT2(cardObj)
                 self.addLoad(moment)
+            elif cardName=='LSEQ':
+                load = LSEQ(cardObj)
+                self.addLoad(load)
             elif cardName=='LOAD':
                 load = LOAD(cardObj)
                 self.addLoad(load)
@@ -1319,8 +1324,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='PAERO1':
                 aero = PAERO1(cardObj)
                 self.addPAero(aero)
-            #elif cardName=='PAERO2':
-                #aero = PAERO2(cardObj)
+            elif cardName=='PAERO2':
+                aero = PAERO2(cardObj)
+                self.addPAero(aero)
+            #elif cardName=='PAERO3':
+                #aero = PAERO3(cardObj)
                 #self.addPAero(aero)
             elif cardName=='AEPARM':
                 aeparm = AEPARM(cardObj)
@@ -1354,6 +1362,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='FLUTTER':
                 flutter = FLUTTER(cardObj)
                 self.addFlutter(flutter)
+            elif cardName=='MKAERO1':
+                mkaero = MKAERO1(cardObj)
+                self.addMKAero(mkaero)
+            elif cardName=='MKAERO2':
+                mkaero = MKAERO2(cardObj)
+                self.addMKAero(mkaero)
 
             elif cardName=='FLFACT':
                 flfact = FLFACT(cardObj)

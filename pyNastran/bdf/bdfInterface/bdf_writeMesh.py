@@ -491,13 +491,15 @@ class writeMesh(object):
     def writeFlutter(self):
         """writes the flutter cards"""
         msg = ''
-        if (self.flfacts or self.flutters):
+        if (self.flfacts or self.flutters or self.mkaeros):
             msg = '$FLUTTER\n'
             for ID,flfact in sorted(self.flfacts.items()):
                 #if ID!=0:
                 msg += str(flfact)
             for ID,flutter in sorted(self.flutters.items()):
                 msg += str(flutter)
+            for mkaero in self.mkaeros:
+                msg += str(mkaero)
         return msg
 
     def writeThermal(self):

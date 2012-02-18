@@ -1,3 +1,4 @@
+import sys
 from numpy import array,log,exp,pi
 from baseCard import BaseCard
 
@@ -475,9 +476,9 @@ class CAERO2(BaseCard):
         return self.lsb.sid
 
     def crossReference(self,model):
-        #self.pid = model.PAero(self.pid)  # links to PAERO2
+        self.pid = model.PAero(self.pid)  # links to PAERO2
         self.cp  = model.Coord(self.cp)
-        self.lsb = model.AeFact(self.lsb)
+        #self.lsb = model.AeFact(self.lsb) # not added
 
     def Points(self):
         p1,matrix = self.cp.transformToGlobal(self.p1)
@@ -494,7 +495,7 @@ class CAERO2(BaseCard):
         self.x12 = x12[0]
 
     def rawFields(self):
-        fields = ['CAERO2',self.eid,self.Pid(),self.Cp(),self.nsb,self.lsb,self.lint,self.igid,
+        fields = ['CAERO2',self.eid,self.Pid(),self.Cp(),self.nsb,self.nint,self.lsb,self.lint,self.igid,
                          ]+list(self.p1)+[self.x12]
         return fields
 
@@ -545,7 +546,7 @@ class FLFACT(BaseCard):
             self.factors = card.fields(2)
             
             if len(self.factors)>1 and self.factors[1]=='THRU':
-                raise Exception('embedded THRUs not supported yet on FLFACT card\n')
+                raise NotImplementedError('embedded THRUs not supported yet on FLFACT card\n')
                 #(a,thru,b,n,dn) = factors
                 #for i in range(
             ###
@@ -583,7 +584,7 @@ class FLUTTER(BaseCard):
             self.imethod  = data[6]
             self.nValue   = data[7]
             self.omax     = data[8]
-            raise Exception('verify...')
+            raise NotImplementedError('verify...')
         ###
         assert self.method in ['K','PK','PKNL','PKS','PKNLS','KE']
 
@@ -662,6 +663,101 @@ class GUST(BaseCard):
         fields = ['GUST',self.sid,self.dload,self.wg,self.x0,self.V]
         return fields
 
+class MKAERO1(BaseCard):
+    """
+    Provides a table of Mach numbers (m) and reduced frequencies (k) for aerodynamic
+    matrix calculation
+    MKAERO1 m1 m2 m3 m4 m5 m6 m7 m8
+            k1 k2 k3 k4 k5 k6 k7 k8
+    """
+    type = 'MKAERO1'
+    def __init__(self,card=None,data=None):
+        if card:
+            fields  = card.fields(1)
+            nFields = len(fields)-8
+            self.machs  = []
+            self.rFreqs = []
+            for i in range(1,1+nFields):
+                self.machs.append( card.field(i  ))
+                self.rFreqs.append(card.field(i+8))
+            ###
+        else:
+            raise NotImplementedError('MKAERO1')
+        ###
+        #print "machs  = ",self.machs
+        #print "rFreqs = ",self.rFreqs
+        #print self
+        #sys.exit()
+    
+    def addFreqs(self,mkaero):
+        self.getMach_rFreqs()
+        for m in mkaero.machs:
+            self.machs.append(m)
+        for f in mkaero.rFreqs:
+            self.rFreqs.append(f)
+        ###
+
+    def rawFields(self):
+        #fields = ['MKAERO2']
+        #for i,(mach,rfreq) in enumerate(zip(self.machs,self.rFreqs)):
+        #    fields += [mach,rfreq]
+        machs = [None]*8        
+        freqs = [None]*8
+        for i,mach in enumerate(self.machs):
+            machs[i] = mach
+        for i,freq in enumerate(self.rFreqs):
+            freqs[i] = freq
+        fields = ['MKAERO1']+machs+freqs
+        return fields
+
+    def getMach_rFreqs(self):
+        return (self.machs,self.rFreqs)
+
+    def reprFields(self):
+        return self.rawFields()
+
+class MKAERO2(BaseCard):
+    """
+    Provides a table of Mach numbers (m) and reduced frequencies (k) for aerodynamic
+    matrix calculation
+    MKAERO2 m1 k1 m2 k2 m3 k3 m4 k4
+    """
+    type = 'MKAERO2'
+    def __init__(self,card=None,data=None):
+        if card:
+            fields  = card.fields(1)
+            nFields = len(fields)
+            self.machs  = []
+            self.rFreqs = []
+            for i in range(1,1+nFields,2):
+                self.machs.append( card.field(i  ))
+                self.rFreqs.append(card.field(i+1))
+            ###
+        else:
+            raise NotImplementedError('MKAERO2')
+        ###
+    
+    def addFreqs(self,mkaero):
+        self.getMach_rFreqs()
+        for m in mkaero.machs:
+            self.machs.append(m)
+        for f in mkaero.rFreqs:
+            self.rFreqs.append(f)
+        ###
+
+    def rawFields(self):
+        fields = ['MKAERO2']
+        for i,(mach,rfreq) in enumerate(zip(self.machs,self.rFreqs)):
+            fields += [mach,rfreq]
+        return fields
+
+    def getMach_rFreqs(self):
+        return (self.machs,self.rFreqs)
+
+    def reprFields(self):
+        return self.rawFields()
+
+
 class PAERO1(BaseCard):
     """
     Defines associated bodies for the panels in the Doublet-Lattice method.
@@ -688,6 +784,58 @@ class PAERO1(BaseCard):
     def rawFields(self):
         fields = ['PAERO1',self.pid] + self.Bi
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+class PAERO2(BaseCard):
+    """
+    Defines the cross-sectional properties of aerodynamic bodies
+    PAERO2 PID ORIENT WIDTH AR LRSB LRIB LTH1 LTH2
+    THI1 THN1 THI2 THN2 THI3 THN3
+    """
+    type = 'PAERO2'
+    def __init__(self,card=None,data=None):
+        ## Property identification number. (Integer > 0)
+        self.pid    = card.field(1)
+        ## Orientation flag. Type of motion allowed for bodies. Refers to the
+        ## aerodynamic coordinate system of ACSID. See AERO entry.
+        ## (Character = 'Z', 'Y', or 'ZY')
+        self.orient = card.field(2)
+        ## Reference half-width of body and the width of the constant width
+        ## interference tube. (Real > 0.0)
+        self.width  = card.field(3)
+        ## Aspect ratio of the interference tube (height/width). float>0.
+        self.AR     = card.field(4)
+        ## Identification number of an AEFACT entry containing a list of slender
+        ## body half-widths at the end points of the slender body elements. If
+        ## blank, the value of WIDTH will be used. (Integer > 0 or blank)
+        self.lrsb   = card.field(5)
+        ## Identification number of an AEFACT entry containing a list of slender
+        ## body half-widths at the end points of the interference elements. If
+        ## blank, the value of WIDTH will be used. (Integer > 0 or blank)
+        self.lrib   = card.field(6)
+        ## dentification number of AEFACT entries for defining ? arrays for
+        ## interference calculations. (Integer >= 0)
+        self.lth1   = card.field(7)
+        self.lth2   = card.field(8)
+        self.thi = []
+        self.thn = []
+        fields = card.fields(9)
+        nFields = len(fields)
+        for i in range(9,9+nFields,2):
+            self.thi.append(card.field(i  ))
+            self.thi.append(card.field(i+1))
+        ###
+
+    def rawFields(self):
+        fields = ['PAERO2',self.pid,self.orient,self.width,self.AR,self.lrsb,self.lrib,self.lth1,self.lth2]
+        for thi,thn in zip(self.thi,self.thn):
+            fields += [thi,thn]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class SPLINE1(BaseCard):
     """
@@ -787,7 +935,8 @@ class SPLINE2(BaseCard):
             #print self
             #raise Exception(str(self))
         else:
-            raise Exception('not supported')
+            raise NotImplementedError('not supported')
+        ###
 
     def Cid(self):
         if isinstance(self.cid,int):
@@ -853,8 +1002,9 @@ class TRIM(BaseCard):
                 i+=2
             ###
         else:
-            raise Exception('not supported')
-            
+            raise NotImplementedError('not supported')
+        ###
+
     def rawFields(self):
         fields = ['TRIM',self.sid,self.mach,self.q]
         for i,(label,ux) in enumerate(zip(self.labels,self.uxs)):

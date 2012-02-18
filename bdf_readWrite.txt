@@ -143,6 +143,7 @@ RFORCE
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
+FORCEAX
 
 GRAV    (done)
 
@@ -206,7 +207,7 @@ CAERO4
 CAERO5
 
 PAERO1  (done)
-PAERO2
+PAERO2  (done)
 PAERO3
 PAERO4
 PAERO5
@@ -311,11 +312,28 @@ PBCOMP
 CONM1
 PLOTEL
 MBOLTUS
+AXIC
+BAROR
+BEAMOR
+CBARAO
+CCONEAX
+NSM
+NSM1
+
+----Properties----:
+PBEAM3
+PCONEAX
 
 ---- Rigid Elements----:
 RROD
 RSPLINE
 RTRPLT
+RBE2GS
+RBJOINT
+RBJSTIF
+RJOINT
+RTRPLT1
+MATRIG
 
 ---- Materials----:
 MATT1
@@ -345,37 +363,9 @@ MONPNT1
 MONPNT2
 MONPNT3
 
-----Elements----:
-AXIC
-BAROR
-BEAMOR
-CBARAO
-CCONEAX
-NSM
-NSM1
-
-----Properties----:
-PBEAM3
-PCONEAX
-
-----Loads----:
-FORCEAX
-
 ----Thermal Loads----:
 CONTRLT
 BDYOR
-
------------------------------------------------
-Card Groupings:
-
-----Rigid Elements----:
-RBE2GS
-RBJOINT
-RBJSTIF
-RJOINT
-RTRPLT1
-MATRIG
-
 
 ----Materials----:
 MATS1

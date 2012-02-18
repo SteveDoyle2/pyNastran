@@ -26,7 +26,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
         ###
     ###
     for filename in filenames2:
-        print "filename = ",filename
+        print "filename = ",os.path.abspath(os.path.join(folder,filename))
         try:
             (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,cid=cid,isFolder=True)
             diffCards += diffCards
@@ -40,6 +40,8 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
             pass
         except ClosedBDFError:
             pass
+        except SystemExit:
+            sys.exit('sys.exit...')
         except:
             traceback.print_exc(file=sys.stdout)
             #raise
@@ -101,14 +103,16 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except MissingFileError:
-    #    pass
-    #except TabCharacterError:
-    #    pass
-    #except ScientificParseError:
-    #    pass
-    #except ClosedBDFError:
-    #    pass
+    except MissingFileError:
+        pass
+    except TabCharacterError:
+        pass
+    except ScientificParseError:
+        pass
+    except ClosedBDFError:
+        pass
+    except SystemExit:
+        sys.exit('sys.exit...')
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
