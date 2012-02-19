@@ -11,6 +11,8 @@ class PointProperty(Property):
     def __init__(self,card,data):
         Property.__init__(self,card,data)
         pass
+    def crossReference(self,MODEL):
+        pass
 
 class NSM(PointProperty):
     """

@@ -627,26 +627,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ###
         return (line,lineUpper)
 
-    def Is(self,card,cardCheck):
-        """
-        a method for determining the cardName
-        """
-        raise Exception('is this method used....')
-        #print "card=%s" %(card)
-        #return cardCheck in card[0][0:8]
-        return any([cardCheck in field[0:8].lstrip().rstrip(' *') for field in card])
-
-    def isPrintable(self,cardName):
-        """can the card be printed"""
-        raise Exception('is this method used....')
-        #cardName = self.getCardName(card)
-        
-        if cardName in self.cardsToWrite:
-            #print "*card = ",card
-            #print "WcardName = |%s|" %(cardName)
-            return False
-        return True
-
     def getCardName(self,cardLines):
         """
         Given a list of card lines, determines the cardName.

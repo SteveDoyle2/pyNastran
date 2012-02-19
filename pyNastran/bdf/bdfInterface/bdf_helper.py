@@ -98,6 +98,7 @@ class getMethods(object):
 
     def Properties(self,pids):
         properties = []
+        #print "pids = ",pids
         for pid in pids:
             properties.append(self.properties[pid])
         return properties

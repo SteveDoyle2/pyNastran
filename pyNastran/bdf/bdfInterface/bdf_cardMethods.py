@@ -234,7 +234,11 @@ class cardMethods(object):
                     pass
                 else:
                     #debug = True
-                    value = getValue(valueIn,debug=debug)
+                    try:
+                        value = getValue(valueIn,debug=debug)
+                    except:
+                        self.log.error("card = |%r|" %(card))
+                        raise
                     card.append(value)
                     #print "fieldCounter=%s valueIn=%s value=%s type=%s" %(fieldCounter,valueIn,value,type(value))
                 ###

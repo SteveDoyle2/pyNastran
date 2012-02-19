@@ -162,7 +162,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element,CQUAD4):
+            elif isinstance(element,CQUAD4) or isinstance(element,CSHEAR):
                 nodeIDs = element.nodeIDs()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])

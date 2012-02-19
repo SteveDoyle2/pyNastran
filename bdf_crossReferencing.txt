@@ -23,9 +23,9 @@ Notations
 
 ----Nodes----:
 GRID   (done)
-GRDSET  (NA)
+GRDSET   (NA)
 RINGAX
-SPOINT
+SPOINT   (NA)
 
 ----Coordinates----:
 CORD1R (done)
@@ -60,7 +60,7 @@ CBEND
 CONROD (done)
 
 CTRIA3  (done)
-CTRIA6  (???)
+CTRIA6  (done)
 CTRIAR  (done)
 CTRIAX  (done)
 CTRIAX6 (done)
@@ -96,7 +96,7 @@ RBE3  (???)
 
 ----Properties----:
 PGAP    (???)
-PMASS   (???)
+PMASS   (NA)
 
 PELAS    (NA)
 PDAMP   (???)
