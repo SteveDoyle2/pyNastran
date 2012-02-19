@@ -18,17 +18,25 @@ This code was written entirely in Python and should install easily.
 -----------------------v0.4 released 2012/03/??-----------------------
 Overall Notes
 Overall BDF
+   - reworked format of bdf_crossReferencing.txt to be more like
+     bdf_readWrite.txt
+   - added test code that compares cards values from one run to the next.
+     This helped find lots of bugs.
+
 BDF API Changes
+   - removed obsolete isPrintable and Is methods from BDF class
 
 BDF Bug Fixes
-   - printCard can now handle cards with an embedded line of Nones with data below
-     - this is a rare bug but affects the NLPARM
+   - printCard can now handle cards with an embedded line of Nones
+       with data below.  This is a rare bug but affects the NLPARM
+   - fixed minor bug with small values not printing that were slightly 
+     above the tolerance level
    - fixed bug in CONM2 with inertia terms
    - PCOMP can now have 1 ply per line or 2 plies per line
    - PCOMP doesnt lose last plies anymore
    - fixed bug in CQUADR, CQUADX, CVISC, CONROD, CGAP, CTRIAX, PTUBE, PMASS, MAT3
    - fixed bug in NLPARM, PLOAD2, PLOAD4, QBDY1, QBDY3, FREQ2, RBE2, CHBDYE
-   - fixed bug in 
+   - fixed bug in PMASS, CSHEAR, CBAR
 
 Added BDF
    - enabled CQUAD
@@ -46,6 +54,8 @@ Added OP2
 
 Overall GUI
 Added GUI
+   - CSHEAR support
+
 GUI Bug Fixes
    - "python setup.py install" should work now
 

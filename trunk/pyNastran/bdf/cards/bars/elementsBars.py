@@ -657,8 +657,12 @@ class CBAR(LineElement):
             self.x2 = float(card.field(6,0.0))
             self.x3 = float(card.field(7,0.0))
         else:
-            msg = 'field5 on %s is the wrong type...id=%s field5=%s type=%s' %(self.type,self.eid,field5,type(field5))
-            raise InvalidFieldError(msg)
+            #msg = 'field5 on %s is the wrong type...id=%s field5=%s type=%s' %(self.type,self.eid,field5,type(field5))
+            #raise InvalidFieldError(msg)
+            self.g0 = None
+            self.x1 = 0.
+            self.x2 = 0.
+            self.x3 = 0.
         #if self.eid==14100238:
             #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0,self.x1,self.x2,self.x3)
 

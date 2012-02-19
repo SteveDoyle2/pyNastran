@@ -345,7 +345,7 @@ class CSHEAR(ShellElement):
     ###
 
     def rawFields(self):
-        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodes
+        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodeIDs()
         return fields
     
     def reprFields(self):
