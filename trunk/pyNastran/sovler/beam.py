@@ -49,9 +49,10 @@ class tri(object):
         A = 1/2*A
         m = matrix(([y23,  0,y31,  0,y12,  0],
                     [0,  x32,  0,x13,  0,x21],
-                    [x32,y23,x13,y31,x21,y21]
-def applyBoundaryConditons():
-    pass
+                    [x32,y23,x13,y31,x21,y21]))
+
+#def applyBoundaryConditons():
+#    pass
 
 def doProblem(elements):
     Kg = buildGlobalStiffness()     # global  stiffness (Kg)
@@ -98,7 +99,7 @@ def frame3d():
     b2 = rod(p2,p3,2,3,Ab,Jb,Ixb,Iyb)
     b3 = rod(p3,p4,3,4,Ab,Jb,Ixb,Iyb)
     b4 = rod(p4,p1,4,1,Ab,Jb,Ixb,Iyb)
-    ,
+    
     b5 = rod(p5,p6,5,6,Ab,Jb,Ixb,Iyb)
     b6 = rod(p6,p7,6,7,Ab,Jb,Ixb,Iyb)
     b7 = rod(p7,p8,7,8,Ab,Jb,Ixb,Iyb)
@@ -150,7 +151,7 @@ def fKx(K,x):
     return f
 
 def beamStiffness(r,A,E,I):
-    Ke = matrix( zeros((6,6),'d')) )
+    Ke = matrix( zeros((6,6),'d'))
     AE = A*E
     EI = E*I
 
