@@ -1,7 +1,7 @@
 import sys
 import copy
 
-from pyNastran.bdf.fieldWriter     import printCard
+from pyNastran.bdf.fieldWriter import printCard
 
 class getMethods(object):
     def __init__(self):

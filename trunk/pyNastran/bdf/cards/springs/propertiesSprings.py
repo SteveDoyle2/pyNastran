@@ -2,7 +2,7 @@ import sys
 from numpy import zeros,pi
 
 # pyNastran
-from ..baseCard import Property
+from pyNastran.bdf.cards.baseCard import Property
 
 class SpringProperty(Property):
     type = 'SpringProperty'
@@ -31,7 +31,7 @@ class PELAS(SpringProperty):
 
     def writeCodeAster(self):
         """
-        %PELAS - check if there are 1 (DISCRET=>K_T_D_N) or 2 (DISCRET_2D=>K_T_D_L) nodes
+        @todo check if there are 1 (DISCRET=>K_T_D_N) or 2 (DISCRET_2D=>K_T_D_L) nodes
         """
         nodes = self.nodeIDs()
         msg = ''
@@ -48,7 +48,7 @@ class PELAS(SpringProperty):
         msg += "     )\n"
         msg += "\n"
         
-        if self.c1==1:
+        if self.c1==1:  ## @todo what is this???
             msg += "VALE=(%g,0.,0.)\n" %(self.k)
         elif self.c1==2:
             msg += "VALE=(0.,%g,0.)\n" %(self.k)

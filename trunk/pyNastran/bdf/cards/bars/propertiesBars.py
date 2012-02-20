@@ -4,7 +4,7 @@ from numpy import zeros,pi
 from pyNastran.general.generalMath import integrateLine,integratePositiveLine
 
 # pyNastran code
-from ..baseCard import Property
+from pyNastran.bdf.cards.baseCard import Property
 
 
 def IyyBeam(b,h):

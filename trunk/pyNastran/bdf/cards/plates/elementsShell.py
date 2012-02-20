@@ -1,6 +1,6 @@
 import sys
 
-from ..baseCard import Element
+from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
 
 class ShellElement(Element):

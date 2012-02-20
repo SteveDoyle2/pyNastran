@@ -3,7 +3,7 @@ from numpy import array
 #from numpy import cross,dot
 #from numpy.linalg import norm
 
-# my code
+# pyNastran
 from baseCard import Element
 
 from elementsRigid  import *

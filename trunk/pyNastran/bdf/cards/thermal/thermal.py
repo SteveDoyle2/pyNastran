@@ -1,4 +1,4 @@
-from ..baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class ThermalCard(BaseCard):
     def __init__(self,card,data):
@@ -190,7 +190,7 @@ class CHBDYP(ThermalElement):
         self.pid  = card.field(2)
 
         self.Type = card.field(3)
-        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE']
+        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'Type=%s card=%s' (self.Type,str(card))
 
         ## A VIEW entry identification number for the front face.
         self.iViewFront = card.field(4,0)
@@ -298,7 +298,7 @@ class PCONV(ThermalProperty):
         ftype = self.setBlankIfDefault(self.ftype, 0)
         ce    = self.setBlankIfDefault(self.ce,    0)
         fields = ['PCONV',self.pconid,self.mid,form,expf,ftype,self.tid,None,None,
-                  self.chlen,self.gidin,ce,self.e1,self.e2,self.e3]
+                          self.chlen,self.gidin,ce,self.e1,self.e2,self.e3]
         return fields
 
 class PCONVM(ThermalProperty):
@@ -468,16 +468,29 @@ class RADBC(ThermalBC):
         ## CHBDYi element identification number
         self.eids = self.expandThruBy(eids)
         
-    #def crossReference(self,model):
-    #    pass
+    def crossReference(self,model):
+        for i,eid in enumerate(self,eids):
+            self.eids[i] = model.Element(eid)
+        ###
+
+    def Eids(self):
+        eids = []
+        for eid in self.eids:
+            eids.append(self.Eid(eid))
+        ###
+
+    def Eid(self,eid):
+        if isinstance(eid,int);
+            return eid
+        return eid.eid
 
     def rawFields(self):
-        fields = ['RADBC',self.nodamb,self.famb,self.cntrlnd]+self.eids
+        fields = ['RADBC',self.nodamb,self.famb,self.cntrlnd]+self.Eids()
         return fields
 
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
-        eids   = self.collapseThruBy(self.eids)
+        eids   = self.collapseThruBy(self.Eids())
         fields = ['RADBC',self.nodamb,self.famb,cntrlnd]+eids
         return fields
 
@@ -508,8 +521,13 @@ class QBDY1(ThermalLoad):
             self.eids  = data[2:]
         ###
 
-    #def crossReference(self,model):
-    #    pass
+    def crossReference(self,model):
+        self.eid = model.Element(eid)
+
+    def Eid(self):
+        if isinstance(self.eid,int);
+            return self.eid
+        return self.eid.eid
 
     def nQFluxTerms(self):
         return len(self.qFlux)
@@ -544,14 +562,20 @@ class QBDY2(ThermalLoad): # not tested
             self.eid = data[1]
             self.qFlux = data[2]
         ###
-    #def crossReference(self,model):
-    #    pass
+
+    def crossReference(self,model):
+        self.eid = model.Element(eid)
+
+    def Eid(self):
+        if isinstance(self.eid,int);
+            return self.eid
+        return self.eid.eid
 
     def nQFluxTerms(self):
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = ['QBDY2',self.sid,self.eid,self.qFlux]
+        fields = ['QBDY2',self.sid,self.Eid(),self.qFlux]
         return fields
 
     def reprFields(self):
@@ -582,17 +606,30 @@ class QBDY3(ThermalLoad):
             self.eids    = list(data[3:])
         ###
 
-    #def crossReference(self,model):
-    #    pass
+    def crossReference(self,model):
+        for i,eid in enumerate(self,eids):
+            self.eids[i] = model.Element(eid)
+        ###
+
+    def Eids(self):
+        eids = []
+        for eid in self.eids:
+            eids.append(self.Eid(eid))
+        ###
+
+    def Eid(self,eid):
+        if isinstance(eid,int);
+            return eid
+        return eid.eid
 
     def rawFields(self):
-        fields = ['QBDY3',self.sid,self.Q0,self.cntrlnd]+self.eids
+        fields = ['QBDY3',self.sid,self.Q0,self.cntrlnd]+self.Eids()
         return fields
 
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
-        eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY3',self.sid,self.Q0,cntrlnd]+self.eids
+        eids = self.collapseThruBy(self.Eids())
+        fields = ['QBDY3',self.sid,self.Q0,cntrlnd]+self.Eids()
         return fields
 
 class QHBDY(ThermalLoad):

@@ -3,10 +3,9 @@ import sys
 from numpy import pi,matrix,zeros,ones,array,transpose,dot
 from numpy.linalg import norm
 
-from pyNastran.bdf.cards.baseCard import Mid
 from pyNastran.bdf.errors import *
+from pyNastran.bdf.cards.baseCard import Element,Mid
 
-from ..baseCard import Element,Mid
 
 class LineElement(Element):
     def __init__(self,card,data):

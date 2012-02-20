@@ -1,8 +1,8 @@
 import sys
 from numpy import zeros,pi
 
-# my code
-from ..baseCard import Property
+# pyNastran
+from pyNastran.bdf.cards.baseCard import Property
 
 class ShellProperty(Property):
     type = 'ShellProperty'
