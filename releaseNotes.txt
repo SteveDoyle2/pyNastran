@@ -44,7 +44,9 @@ Added BDF
    - *** EIGC
    - CBUSH, PBUSH, PDAMPT
    - TSTEP, TSTEPNL
+   - RLOAD1, RLOAD2
    - CAERO2, PAERO2
+   - CBEND, PBEND
    - *** TIC
 
 OP2 API Changes

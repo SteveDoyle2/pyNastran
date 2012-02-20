@@ -478,9 +478,10 @@ class RADBC(ThermalBC):
         for eid in self.eids:
             eids.append(self.Eid(eid))
         ###
+        return eids
 
     def Eid(self,eid):
-        if isinstance(eid,int);
+        if isinstance(eid,int):
             return eid
         return eid.eid
 
@@ -525,7 +526,7 @@ class QBDY1(ThermalLoad):
         self.eid = model.Element(eid)
 
     def Eid(self):
-        if isinstance(self.eid,int);
+        if isinstance(self.eid,int):
             return self.eid
         return self.eid.eid
 
@@ -567,7 +568,7 @@ class QBDY2(ThermalLoad): # not tested
         self.eid = model.Element(eid)
 
     def Eid(self):
-        if isinstance(self.eid,int);
+        if isinstance(self.eid,int):
             return self.eid
         return self.eid.eid
 
@@ -616,9 +617,10 @@ class QBDY3(ThermalLoad):
         for eid in self.eids:
             eids.append(self.Eid(eid))
         ###
+        return eids
 
     def Eid(self,eid):
-        if isinstance(eid,int);
+        if isinstance(eid,int):
             return eid
         return eid.eid
 

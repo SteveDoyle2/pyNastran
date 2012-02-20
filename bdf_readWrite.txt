@@ -42,7 +42,7 @@ CBAR   (done)
 CROD   (done)
 CTUBE  (done)
 CBEAM  (done)
-CBEND
+CBEND  (done)
 CONROD (done)
 
 CTRIA3  (done)
@@ -98,7 +98,7 @@ PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
 PBEAML  (done, not well tested)
-PBEND
+PBEND   (done)
 PTUBE   (done)
 
 PSHELL  (done)
@@ -135,9 +135,8 @@ SUPORT  (done)
 SUPORT1 (done)
 
 ----Loads----:
-SLOAD
 LOAD    (done)
-LSEQ
+LSEQ    (done)
 
 RFORCE
 FORCE   (done)
@@ -157,8 +156,9 @@ MOMENT1 (done)
 MOMENT2 (done)
 
 DLOAD  (not integrated)
-RLOAD1 (not integrated)
-RLOAD2 (not integrated)
+RLOAD1 (done, dynamic)
+RLOAD2 (done, dynamic)
+SLOAD
 
 ----Thermal Loads----:
 TEMP   (done)
@@ -220,6 +220,7 @@ SPLINE5
 SPLINE6
 SPLINE7
 
+CSSCHD  (not integrated)
 TRIM    (done)
 
 ----Dynamic----:
@@ -276,13 +277,13 @@ SEQSET1
 RADSET (not integrated)
 
 ----Methods----:
-EIGB   (done)
-EIGC   (in progress)
-EIGP   (done)
-EIGR   (done)
-EIGRL  (in progress)
-MKAERO
-MKAERO1
+EIGB    (done)
+EIGC    (in progress)
+EIGP    (done)
+EIGR    (done)
+EIGRL   (done)
+MKAERO1 (done)
+MKAERO2 (done)
 
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)
