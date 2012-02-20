@@ -24,7 +24,7 @@ CORD3G (partial)
 ----Elements----:
 CONM1
 CONM2  (cid!=0)
-CBUSH
+CBUSH  (done)
 CFAST
 
 CDAMP1 (done)
@@ -155,10 +155,10 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
-DLOAD  (not integrated)
+DLOAD  (done)
 RLOAD1 (done, dynamic)
 RLOAD2 (done, dynamic)
-SLOAD
+SLOAD  (done)
 
 ----Thermal Loads----:
 TEMP   (done)
