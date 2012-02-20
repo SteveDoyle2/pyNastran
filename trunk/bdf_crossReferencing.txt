@@ -38,8 +38,8 @@ CORD2S (done)
 
 ----Elements----:
 CONM1   (NA)
-CONM2  (cid!=0, cid=0 requires CG location...)
-CBUSH
+CONM2   (cid!=0, cid=0 requires CG location...)
+CBUSH   (???)
 
 CDAMP1  (???)
 CDAMP2  (???)
@@ -96,7 +96,7 @@ RBE3  (???)
 
 ----Properties----:
 PGAP    (???)
-PMASS   (NA)
+PMASS    (NA)
 
 PELAS    (NA)
 PDAMP   (???)
@@ -116,7 +116,7 @@ PTUBE   (done)
 PSHELL  (done)
 PCOMP   (done)
 PCOMPG  (done)
-PSHEAR  (???)
+PSHEAR  (done)
 PSOLID  (done)
 PLSOLID (done)
 
@@ -165,9 +165,10 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
-DLOAD
+DLOAD   (???)
 RLOAD1  (???)
 RLOAD2  (???)
+SLOAD   (???)
 
 ----Thermal Loads----:
 TEMP   (???)

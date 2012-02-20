@@ -106,12 +106,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # loads
         'LOAD','LSEQ',
-        'RLOAD1','RLOAD2',
+        'DLOAD','SLOAD','RLOAD1','RLOAD2',
         'FORCE','FORCE1','FORCE2',
         'GRAV',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
-        #'RLOAD1','RLOAD2',
 
         # aero cards
         'AERO','AEROS','GUST','FLUTTER','FLFACT','MKAERO1','MKAERO2',
@@ -1196,6 +1195,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 load = PLOAD4(cardObj)
                 self.addLoad(load)
 
+            elif cardName=='DLOAD':
+                load = DLOAD(cardObj)
+                self.addLoad(load)
+            elif cardName=='SLOAD':
+                load = SLOAD(cardObj)
+                self.addLoad(load)
             elif cardName=='RLOAD1':
                 load = RLOAD1(cardObj)
                 self.addLoad(load)

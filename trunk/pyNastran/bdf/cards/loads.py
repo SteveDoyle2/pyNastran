@@ -271,6 +271,80 @@ class LOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
+class DLOAD(Load):
+    type = 'DLOAD'
+    def __init__(self,card=None,data=None):
+        ## load ID
+        self.lid   = card.field(1)
+        self.scale = card.field(2)
+
+        fields = card.fields(3)
+        n = len(fields)/2
+        if len(fields)%2==1:
+            n+=1
+            raise Exception('missing last magnitude on DLOAD card=%s' %(card.fields()) )
+
+        for i in range(n):
+            j = 2*n
+            self.mags.append(fields(j  ))
+            self.sids.append(fields(j+1))  # RLOADx,TLOADx,ACSRC
+        ###
+
+    def crossReference(self,model):
+        for (i,sid) in enumerate(self.sids):
+            self.sids[i] = model.Load(sid)
+        ###
+
+    def Sid(self,sid):
+        if isinstance(sid,int):
+            return sid
+        return sid.lid
+
+    def rawFields(self):
+        fields = ['DLOAD',self.lid,self.scale]
+        for (mag,sid) in zip(self.mags,self.sids):
+            fields += [mag,self.Sid(sid)]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+class SLOAD(Load):
+    type = 'SLOAD'
+    def __init__(self,card=None,data=None):
+        ## load ID
+        self.lid = card.field(1)
+        
+        fields = card.fields(2)
+        n = len(fields)/2
+        if len(fields)%2==1:
+            n+=1
+            raise Exception('missing last magnitude on SLOAD card=%s' %(card.fields()) )
+
+        for i in range(n):
+            j = 2*n
+            self.sids.append(fields(j  ))
+            self.mags.append(fields(j+1))
+        ###
+
+    def crossReference(self,model):
+        for (i,sid) in enumerate(self.sids):
+            self.sids[i] = model.Load(sid)
+        ###
+
+    def Sid(self,sid):
+        if isinstance(sid,int):
+            return sid
+        return sid.lid
+
+    def rawFields(self):
+        fields = ['SLOAD',self.lid]
+        for sid,mag in zip(self.sids,self.mags):
+            fields += [self.Sid(sid),mag]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
 
 class OneDeeLoad(Load): # FORCE/MOMENT
     type = '1D_Load'
@@ -814,9 +888,9 @@ class PLOAD4(Load):
             ###
         fields.append(cid)
         
-        n1   = self.setBlankIfDefault(self.NVector[0],0.0)
-        n2   = self.setBlankIfDefault(self.NVector[1],0.0)
-        n3   = self.setBlankIfDefault(self.NVector[2],0.0)
+        n1 = self.setBlankIfDefault(self.NVector[0],0.0)
+        n2 = self.setBlankIfDefault(self.NVector[1],0.0)
+        n3 = self.setBlankIfDefault(self.NVector[2],0.0)
         fields += [n1,n2,n3]
         fields.append(sorl)
         #print "fields = ",fields
