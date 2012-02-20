@@ -1369,9 +1369,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='NLPARM':
                 nlparmObj = NLPARM(cardObj)
                 self.addNLParm(nlparmObj)
-            elif cardName=='NLPARM':
-                nlparmObj = NLPARM(cardObj)
-                self.addNLParm(nlparmObj)
             elif cardName=='TSTEP':
                 tstepObj = TSTEP(cardObj)
                 self.addTStep(tstepObj)
