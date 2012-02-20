@@ -68,7 +68,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CBUSH',
         'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
         
-        'CBAR','CROD','CTUBE','CBEAM','CONROD',#'CBEND',
+        'CBAR','CROD','CTUBE','CBEAM','CONROD','CBEND',
         'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
         'CQUAD4','CQUAD8','CQUADR','CQUADX','CQUAD',
         'CTETRA','CPENTA','CHEXA',
@@ -106,6 +106,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # loads
         'LOAD','LSEQ',
+        'RLOAD1','RLOAD2',
         'FORCE','FORCE1','FORCE2',
         'GRAV',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
@@ -930,6 +931,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CTUBE':
                 elem = CTUBE(cardObj)
                 self.addElement(elem)
+            elif cardName=='CBEND':
+                elem = CBEND(cardObj)
+                self.addElement(elem)
 
             elif cardName=='CELAS1':
                 elem = CELAS1(cardObj)
@@ -1190,6 +1194,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addLoad(load)
             elif cardName=='PLOAD4':
                 load = PLOAD4(cardObj)
+                self.addLoad(load)
+
+            elif cardName=='RLOAD1':
+                load = RLOAD1(cardObj)
+                self.addLoad(load)
+            elif cardName=='RLOAD2':
+                load = RLOAD2(cardObj)
                 self.addLoad(load)
 
             # thermal loads

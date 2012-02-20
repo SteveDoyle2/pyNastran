@@ -329,6 +329,44 @@ class AESURFS(BaseCard): # not integrated
         fields = ['AESURFS',self.id,self.label,None,self.list1,None,self.list2]
         return fields
 
+class CSSCHD(BaseCard):
+    """
+    Defines a scheduled control surface deflection as a function of Mach number and
+    angle of attack
+    CSSCHD SlD AESID LALPHA LMACH LSCHD
+    """
+    type = 'ASSCHD'
+    def __init__(self,card=None,data=None):
+        Aero.__init__(self,card,data)
+        if card:
+            self.sid    = card.field(1)
+            self.aesid  = card.field(2) # AESURF
+            self.lAlpha = card.field(3) # AEFACT
+            self.lMach  = card.field(4) # AEFACT
+            self.lSchd  = card.field(5) # AEFACT
+        else:
+            self.sid    = data[0]
+            self.aesid  = data[1] # AESURF
+            self.lAlpha = data[2] # AEFACT
+            self.lMach  = data[3] # AEFACT
+            self.lSchd  = data[4] # AEFACT
+        ###
+
+    def crossReference(self,model): # more
+        self.lSchd = self.AEFact(self.lSchd)
+
+    def LSchd(self):
+        if isinstance(self.lSchd,int):
+            return self.lSchd
+        return self.lSchd.aeid
+
+    def rawFields(self):
+        fields = ['AERO',self.acsid,self.velocity,self.cRef,self.rhoRef,self.symXZ,self.symXY]
+        return fields
+
+    def reprFields(self):
+        fields = ['CSSCHD',self.sid,self.aesid,self.lAlpha,self.lMach,self.lSchd]
+
 class CAERO1(BaseCard):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge locations
@@ -1002,7 +1040,7 @@ class TRIM(BaseCard):
                 i+=2
             ###
         else:
-            raise NotImplementedError('not supported')
+            raise NotImplementedError('TRIM not supported')
         ###
 
     def rawFields(self):

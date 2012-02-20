@@ -56,7 +56,7 @@ CBAR   (done)
 CROD   (done)
 CTUBE  (done)
 CBEAM  (done)
-CBEND
+CBEND  (partial)
 CONROD (done)
 
 CTRIA3  (done)
@@ -166,8 +166,8 @@ MOMENT1 (done)
 MOMENT2 (done)
 
 DLOAD
-RLOAD1
-RLOAD2
+RLOAD1  (???)
+RLOAD2  (???)
 
 ----Thermal Loads----:
 TEMP   (???)
@@ -285,13 +285,13 @@ SEQSET1
 RADSET
 
 ----Methods----:
-EIGB   (???)
-EIGC   (???)
-EIGP   (???)
-EIGR   (???)
-EIGRL  (???)
-MKAERO
-MKAERO1
+EIGB    (???)
+EIGC    (???)
+EIGP    (???)
+EIGR    (???)
+EIGRL   (???)
+MKAERO   (NA)
+MKAERO1  (NA)
 
 ----Other----:
 INCLUDE (NA)

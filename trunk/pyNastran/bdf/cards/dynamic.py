@@ -109,7 +109,7 @@ class FREQ4(FREQ):
 
 #class FREQ5(FREQ):
 
-class RLOAD1(BaseCard): # not integrated
+class RLOAD1(BaseCard):
     """
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
@@ -119,30 +119,33 @@ class RLOAD1(BaseCard): # not integrated
     """
     type = 'RLOAD1'
     def __init__(self,card=None,data=None):
-        self.sid      = card.field(1)
+        self.lid      = card.field(1)  # was sid
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
         self.dphase   = card.field(4)
         self.tc    = card.field(5)
         self.td    = card.field(6)
-        self.Type  = card.field(7,0)
+        self.Type  = card.field(7,'LOAD')
 
         if   self.Type in [0,'L','LO','LOA','LOAD']: self.Type = 'LOAD'
-        elif self.Type in [1,'D','DI','DIS','DIPS']: self.Type = 'DISP'
+        elif self.Type in [1,'D','DI','DIS','DISP']: self.Type = 'DISP'
         elif self.Type in [2,'V','VE','VEL','VELO']: self.Type = 'VELO'
         elif self.Type in [3,'A','AC','ACC','ACCE']: self.Type = 'ACCE'
         else: raise RuntimeError('invalid RLOADi type  Type=|%s|' %(self.Type))
 
+    def crossReference(self,model):
+        pass
+
     def rawFields(self):
-        fields = ['RLOAD1',self.sid,self.exciteID,self.delay,self.dphase,self.tc,self.td,self.Type]
+        fields = ['RLOAD1',self.lid,self.exciteID,self.delay,self.dphase,self.tc,self.td,self.Type]
         return fields
 
     def reprFields(self):
         Type = self.setBlankIfDefault(self.Type,'LOAD')
-        fields = ['RLOAD1',self.sid,self.exciteID,self.delay,self.dphase,self.tc,self.td,Type]
+        fields = ['RLOAD1',self.lid,self.exciteID,self.delay,self.dphase,self.tc,self.td,Type]
         return fields
 
-class RLOAD2(BaseCard): # not integrated
+class RLOAD2(BaseCard):
     """
     Defines a frequency-dependent dynamic load of the form
     for use in frequency response problems.
@@ -153,27 +156,30 @@ class RLOAD2(BaseCard): # not integrated
     """
     type = 'RLOAD2'
     def __init__(self,card=None,data=None):
-        self.sid      = card.field(1)
+        self.lid      = card.field(1)  # was sid
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
         self.dphase   = card.field(4)
         self.tb    = card.field(5)
         self.tp    = card.field(6)
-        self.Type  = card.field(7,0)
+        self.Type  = card.field(7,'LOAD')
 
         if   self.Type in [0,'L','LO','LOA','LOAD']: self.Type = 'LOAD'
-        elif self.Type in [1,'D','DI','DIS','DIPS']: self.Type = 'DISP'
+        elif self.Type in [1,'D','DI','DIS','DISP']: self.Type = 'DISP'
         elif self.Type in [2,'V','VE','VEL','VELO']: self.Type = 'VELO'
         elif self.Type in [3,'A','AC','ACC','ACCE']: self.Type = 'ACCE'
         else: raise RuntimeError('invalid RLOADi type  Type=|%s|' %(self.Type))
 
+    def crossReference(self,model):
+        pass
+
     def rawFields(self):
-        fields = ['RLOAD2',self.sid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,self.Type]
+        fields = ['RLOAD2',self.lid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,self.Type]
         return fields
 
     def reprFields(self):
         Type = self.setBlankIfDefault(self.Type,0.0)
-        fields = ['RLOAD2',self.sid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,Type]
+        fields = ['RLOAD2',self.lid,self.exciteID,self.delay,self.dphase,self.tb,self.tp,Type]
         return fields
 
 class TSTEP(BaseCard):

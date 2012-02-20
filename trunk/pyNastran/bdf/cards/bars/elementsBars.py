@@ -896,3 +896,34 @@ class CBEAM(CBAR):
                   self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b,
                   self.sa,self.sb]
         return self.printCard(fields)
+
+class CBEND(LineElement):
+    type = 'CBEND'
+    def __init__(self,card=None,data=None):
+        LineElement.__init__(self,card,data)
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            self.ga  = card.field(3)
+            self.gb  = card.field(4)
+            self.initX_G0(card)
+            #self.x1  = card.field(5)
+            #self.x2  = card.field(6)
+            #self.x3  = card.field(7)
+            self.geom = card.field(8)
+        else:
+            raise NotImplementedError('CBEND')
+        ###
+
+    def Area(self):
+        return self.pid.Area()
+
+    def rawFields(self):
+        (x1,x2,x3) = self.getX_G0_defaults()
+        fields = ['CBEND',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,self.geom]
+        return fields
+    
+    def reprFields(self):
+        return self.rawFields()
+###
+

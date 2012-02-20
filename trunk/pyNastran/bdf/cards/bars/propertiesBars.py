@@ -1274,3 +1274,98 @@ class PBEAM3(LineProperty): # not done, cleanup
         raise NotImplementedError('not done...')
         fields = ['PBEAM3',self.pid,self.Mid(),] # other
         return fields
+
+class PBEND(LineProperty):
+    type = 'PBEND'
+    def __init__(self,card=None,data=None):
+        LineProperty.__init__(self,card,data)
+        if card:
+            self.pid = card.field(1)
+            self.mid = card.field(2)
+
+            value3 = card.field(3)
+            if isinstance(value3,float):
+                self.beamType = 1
+                ## Area of the beam cross section
+                self.A   = card.field(3)
+                ## Area moments of inertia in planes 1 and 2.
+                self.i1  = card.field(4)
+                self.i2  = card.field(5)
+                ## Torsional stiffness
+                self.j   = card.field(6)
+
+                # line2
+                ## The r,z locations from the geometric centroid for stress data recovery.
+                self.c1 = card.field(9) 
+                self.c2 = card.field(10)
+                self.d1 = card.field(11)
+                self.d2 = card.field(12)
+                self.e1 = card.field(13)
+                self.e2 = card.field(14)
+                self.f1 = card.field(15)
+                self.f2 = card.field(16)
+
+                # line 3 
+                ## Shear stiffness factor K in K*A*G for plane 1 and plane 2.
+                self.k1   = card.field(17)
+                self.k2   = card.field(18)
+                ## Radial offset of the neutral axis from the geometric centroid,
+                ## positive is toward the center of curvature
+                self.deltaN = card.field(22)
+
+            elif isinstance(value3,int):
+                self.beamType = 2
+                ## Flag selecting the flexibility and stress intensification factors. See
+                ## Remark 3. (Integer = 1, 2, or 3)
+                self.fsi = card.field(3)
+                ## Mean cross-sectional radius of the curved pipe
+                self.rm  = card.field(4)
+                ## Wall thickness of the curved pipe
+                self.t   = card.field(5)
+                ## Internal pressure
+                self.p   = card.field(6)
+                
+                # line3
+                self.nsm  = card.field(19)
+                self.rc   = card.field(20)
+                self.zc   = card.field(21)
+            else:
+                raise Exception('Area/FSI on CBEND must be defined...')
+            ## Bend radius of the line of centroids
+            self.rb     = card.field(7)
+            ## Arc angle of element  (optional)
+            self.thetab = card.field(8)
+
+            ## Nonstructural mass per unit length.
+            self.nsm  = card.field(19)
+            ## Radial offset of the geometric centroid from points GA and GB
+            self.rc   = card.field(20)
+            ## Offset of the geometric centroid in a direction perpendicular to the
+            ## plane of points GA and GB and vector v
+            self.zc   = card.field(21)
+        ###
+        else:
+            raise NotImplementedError('PBEND')
+        ###
+
+    #def Nsm(self):
+        #"""@warning nsm field not supported fully on PBEND card"""
+        #raise Exception(self.nsm[0])
+        #return self.nsm
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+
+    def reprFields(self):
+        fields = ['PBEND',self.pid,self.Mid(),] # other
+        if self.beamType ==1:
+            fields += [self.A,self.i1,self.i2,self.j,self.rb,self.thetab,
+                       self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,eslf.f2,
+                       self.k1,self.k2,self.nsm,self.rc,self.zc,self.deltaN]
+        elif self.beamType==2:
+            fields += [self.fsi,self.rm,self.t,self.p,self.rb,self.thetab,
+                       None,None,self.nsm,self.rc,self.zc]
+        else:
+            raise Exception('only beamType=1 and 2 supported')
+        return fields
+
