@@ -76,15 +76,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CGAP',
         
         # rigid elements
-        'RBAR','RBAR1','RBE1','RBE2',#'RBE3',
+        'RBAR','RBAR1','RBE1','RBE2','RBE3',
 
         # properties
-        'PGAP',
         'PMASS',
-        'PELAS',
-        'PBUSH',
+        'PELAS','PGAP','PBUSH',
         'PDAMP','PDAMP5','PDAMPT',
-        'PROD','PBAR','PBARL','PBEAM','PBEAML', 'PTUBE',#'PBEAM3','PBEND',
+        'PROD','PBAR','PBARL','PBEAM','PBEAML','PTUBE','PBEND',#'PBEAM3',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
         'PSOLID','PLSOLID',
         
@@ -1015,9 +1013,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='RBE2':
                 (elem) = RBE2(cardObj)
                 self.addRigidElement(elem)
-            #elif cardName=='RBE3':
-            #    (elem) = RBE3(cardObj)
-            #    self.addRigidElement(elem)
+            elif cardName=='RBE3':
+                (elem) = RBE3(cardObj)
+                self.addRigidElement(elem)
 
             elif cardName=='PSHELL':
                 prop = PSHELL(cardObj)

@@ -201,7 +201,9 @@ class RBE2(RigidElement):
         return fields
 
     def reprFields(self):
-        return self.rawFields()
+        alpha = self.setBlankIfDefault(self.alpha,0.)
+        fields = ['RBE2',self.eid,self.gn,self.cm]+self.Gmi+[alpha]
+        return fields
 
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'

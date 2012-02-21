@@ -450,8 +450,13 @@ class CAERO1(BaseCard):
                          ]+list(self.p1)+[self.x12]+list(self.p4)+[self.x43]
         return fields
 
-    #def reprFields(self):
-    #    return self.rawFields()
+    def reprFields(self):
+        cp     = self.setBlankIfDefault(self.Cp(),0)
+        nspan  = self.setBlankIfDefault(self.nspan,0)
+        nchord = self.setBlankIfDefault(self.nchord,0)
+        fields = ['CAERO1',self.eid,self.Pid(),cp,nspan,nchord,self.lspan,self.lchord,self.igid,
+                         ]+list(self.p1)+[self.x12]+list(self.p4)+[self.x43]
+        return fields
 
 class CAERO2(BaseCard):
     """
@@ -537,8 +542,11 @@ class CAERO2(BaseCard):
                          ]+list(self.p1)+[self.x12]
         return fields
 
-    #def reprFields(self):
-    #    return self.rawFields()
+    def reprFields(self):
+        cp     = self.setBlankIfDefault(self.Cp(),0)
+        fields = ['CAERO2',self.eid,self.Pid(),cp,self.nsb,self.nint,self.lsb,self.lint,self.igid,
+                         ]+list(self.p1)+[self.x12]
+        return fields
 
 class DAREA(BaseCard):
     """
@@ -936,11 +944,13 @@ class SPLINE1(BaseCard):
         return fields
 
     def reprFields(self):
+        dz        = self.setBlankIfDefault(self.dz,0.)
         method    = self.setBlankIfDefault(self.method,'IPS')
         usage     = self.setBlankIfDefault(self.usage,'BOTH')
         nelements = self.setBlankIfDefault(self.nelements,10)
         melements = self.setBlankIfDefault(self.melements,10)
-        fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),self.dz,method,usage,
+        
+        fields = ['SPLINE1',self.eid,self.CAero(),self.box1,self.box2,self.Set(),dz,method,usage,
                             nelements,melements]
         fields = self.wipeEmptyFields(fields)
         return fields
@@ -996,14 +1006,14 @@ class SPLINE2(BaseCard):
         self.setg  = model.Set(self.setg)
 
     def rawFields(self):
-        usage     = self.setBlankIfDefault(self.usage,'BOTH')
         fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
                             self.thx,self.thy,None,self.usage]
         return fields
 
     def reprFields(self):
-        usage  = self.setBlankIfDefault(self.usage,'BOTH')
-        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
+        dz    = self.setBlankIfDefault(self.dz,0.)
+        usage = self.setBlankIfDefault(self.usage,'BOTH')
+        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),dz,self.dtor,self.Cid(),
                             self.thx,self.thy,None,usage]
         return fields
 
