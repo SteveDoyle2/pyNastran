@@ -473,7 +473,7 @@ class PCOMP(ShellProperty):
         for (iPly,ply) in enumerate(self.plies):
             (_mid,t,theta,sout) = ply
             mid = self.Mid(iPly)
-            theta = self.setBlankIfDefault(theta,0.0)
+            #theta = self.setBlankIfDefault(theta,0.0)
             sout  = self.setBlankIfDefault(sout,'NO')
             fields += [mid,t,theta,sout]
         return fields
@@ -535,7 +535,7 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         for (iPly,ply) in enumerate(self.plies):
             (_mid,t,theta,sout,gPlyID) = ply
             mid = self.Mid(iPly)
-            theta = self.setBlankIfDefault(theta,0.0)
+            #theta = self.setBlankIfDefault(theta,0.0)
             sout  = self.setBlankIfDefault(sout,'NO')
             fields += [mid,t,theta,sout,gPlyID,None,None,None]
         return fields
