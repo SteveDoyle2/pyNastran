@@ -314,7 +314,7 @@ def printField16(value,tol=1e-8):
     #    return self.printCard_16(fields)
     ###
 
-def printCard(fields):
+def printCard(fields,tol=1e-8):
     """
     Prints a nastran-style card with 8-character width fields.
     
@@ -333,7 +333,7 @@ def printCard(fields):
     for i in range(1,len(fields)):
         field = fields[i]
         try:
-            out += printField(field)
+            out += printField(field,tol=tol)
             #print "|%r|" %(printField(field))
         except AssertionError:
             print "bad fields = ",fields
