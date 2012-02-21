@@ -2,6 +2,7 @@
 from baseCard import BaseCard
 
 class PARAM(BaseCard):
+    type = 'PARAM'
     def __init__(self,card):
         self.key   = card.field(1)
         self.value = card.field(2)

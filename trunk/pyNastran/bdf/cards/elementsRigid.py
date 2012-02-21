@@ -1,4 +1,5 @@
 from baseCard import Element
+import sys
 
 class RigidElement(Element):
     #def __repr__(self):
@@ -216,67 +217,102 @@ class RBE3(RigidElement):  # not done, needs testing badly
         #iUM = fields.index('UM')
         
         fields = card.fields(5)
+        #print "fields = ",fields
+        iOffset = 5
+        iWtMax = len(fields)+iOffset
         try:
-            iAlpha = fields.index('ALPHA')
+            iAlpha = fields.index('ALPHA')+iOffset
+            iWtMax  = iAlpha-1  # the index to start parsing UM
+            iUmStop = iAlpha-1  # the index to stop  parsing UM
         except ValueError:
-            iAlpha = None
-
+            iAlpha  = None
+            iUmStop = iWtMax
+        #print "iAlpha = ",iAlpah
         try:
-            iUm = fields.index('UM')
+            iUm = fields.index('UM')+iOffset
+            iWtMax = iUm
         except ValueError:
             iUm = None
-        #print "iAlpha=%s iUm=%s" %(iUm,iAlpha)
+        #print "iAlpha=%s iUm=%s" %(iAlpha,iUm)
+        #sys.stdout.flush()
 
         #print "iUM = ",iUM
         self.WtCG_groups = []
-        if iUm:
-            for i in range(5,card.nFields()):
-                Gij = []
-
-                wt = card.field(i)
+        
+        i=iOffset
+        while i<iWtMax:
+            Gij = []
+            wt = card.field(i)
+            if wt is not None:
                 ci = card.field(i+1)
+                #print "wt=%s ci=%s" %(wt,ci)
                 i+=2
                 gij = 0
                 while isinstance(gij,int):  # does this get extra fields???
-                    gij = card.field(i+1)
-                    Gij.append(gij)
+                    gij = card.field(i)
+                    if gij is not None:
+                        Gij.append(gij)
                     i+=1
+                #print "Gij = ",Gij
                 #print "gij_stop? = ",gij
-                if gij=='UM':
+                #if gij=='UM':
                     #print "breaking A..."
-                    break
+                    #raise Exception('error in RBE3...found UM in Weight Loop...bug...')
+                    #break
                 ###
                 self.WtCG_groups.append([wt,ci,Gij])
+            else:
+                i+=1
             ###
+        ###
         
         self.Gmi = []
         self.Cmi = []
-        ## thermal expansion coefficient
-        self.alpha = 0.0
-        if iAlpha:
-            for j in range(i,card.nFields()):  # does this get extra fields???
+        #print ""
+        if iUm:
+            #i+=1
+            #raise NotImplementedError('parse the UM')
+            i = iUm+1
+            #print "i=%s iUmStop=%s" %(i,iUmStop)
+            for j in range(i,iUmStop,2):  # does this get extra fields???
                 gmi = card.field(j)
                 cmi = card.field(j+1)
-                nextEntry = card.field(j+2)
+                #print "gmi=%s cmi=%s" %(gmi,cmi)
                 self.Gmi.append(gmi)
                 self.Cmi.append(cmi)
-                j+=2
-
-                #print "next_stop? = ",nextEntry
-                if nextEntry=='ALPHA':
-                    break
-                ###
             ###
+        ###
+        if iAlpha:
             self.alpha = card.field(j)
+        else:
+            ## thermal expansion coefficient
+            self.alpha = 0.0
+        ###
+        #print self
+        #sys.exit()
 
     def rawFields(self):
-        fields = ['RBE3',self.eid,None,self.refc]
+        fields = ['RBE3',self.eid,None,self.refgrid,self.refc]
         for (wt,ci,Gij) in self.WtCG_groups:
             fields+=[wt,ci]+Gij
-        fields += ['UM']
-        for (gmi,cmi) in zip(self.Gmi,self.Cmi):
-            fields+=[gmi,cmi]
-        fields += ['ALPHA',self.alpha]
+        nSpaces = 8-(len(fields)-1)%8  # puts UM onto next line
+        #print "nSpaces = ",nSpaces
+        fields += [None]*nSpaces
+            
+        if self.Gmi:
+            fields += ['UM']
+        if self.Gmi:
+            #print "Gmi = ",self.Gmi
+            #print "Cmi = ",self.Cmi
+            for (gmi,cmi) in zip(self.Gmi,self.Cmi):
+                fields+=[gmi,cmi]
+            ###
+        ###
+        nSpaces = 8-(len(fields)-1)%8  # puts ALPHA onto next line
+        fields += [None]*nSpaces
+        #print "nSpaces = ",nSpaces
+        if self.alpha>0.: # handles the default value
+            fields += ['ALPHA',self.alpha]
         return fields
 
     def reprFields(self):

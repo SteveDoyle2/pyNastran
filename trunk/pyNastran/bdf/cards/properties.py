@@ -87,7 +87,7 @@ class PBUSH(BushingProperty):
             iStart = 0
             while iStart<nFields:
                 pname = card.field(2)
-                if   pname=='K':     self.getK(card,iStart)
+                if   pname=='K':   self.getK(card,iStart)
                 elif pname=='B':   self.getB(card,iStart)
                 elif pname=='GE':  self.getGE(card,iStart)
                 elif pname=='RCV': self.getRCV(card,iStart)
@@ -138,15 +138,16 @@ class PBUSH(BushingProperty):
         fields = ['PBUSH',self.pid]
         for var in self.vars:
             if var=='K':
-                fields += [None,'K']+self.Ki
+                fields += ['K']+self.Ki
             elif var=='B':
-                fields += [None,'B']+self.Bi
+                fields += ['B']+self.Bi
             elif var=='GE':
-                fields += [None,'GE']+self.GEi
+                fields += ['GE']+self.GEi
             elif var=='RCV':
-                fields += [None,'RCV',self.sa,self.st,self.ea,self.et]
+                fields += ['RCV',self.sa,self.st,self.ea,self.et]
             else:
                 raise Exception('not supported PBUSH field...')
+            fields.append(None)
         return fields
 
     def reprFields(self):

@@ -605,6 +605,10 @@ class FLFACT(BaseCard):
         fields = ['FLFACT',self.sid]+self.factors
         return fields
 
+    def __repr__(self):
+        fields = self.reprFields()
+        return self.printCard(fields,tol=0.)
+
 class FLUTTER(BaseCard):
     """
     Defines data needed to perform flutter analysis.

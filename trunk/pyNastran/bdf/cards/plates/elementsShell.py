@@ -607,14 +607,12 @@ class CQUAD(CQUAD4):
         return self.pid.Thickness()
 
     def rawFields(self):
-        fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,
-                  None,self.TFlag,self.T1,self.T2,self.T3,self.T4]
+        fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()
         return fields
 
     def reprFields(self):
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
-        fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
-                  None,TFlag,T1,T2,T3,T4]
+        fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()
         return fields
 
 class CQUAD8(CQUAD4):

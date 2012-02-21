@@ -284,6 +284,8 @@ class DLOAD(Load):
             n+=1
             raise Exception('missing last magnitude on DLOAD card=%s' %(card.fields()) )
 
+        self.sids = []
+        self.mags = []
         for i in range(n):
             j = 2*n
             self.mags.append(fields(j  ))
@@ -321,6 +323,8 @@ class SLOAD(Load):
             n+=1
             raise Exception('missing last magnitude on SLOAD card=%s' %(card.fields()) )
 
+        self.sids = []
+        self.mags = []
         for i in range(n):
             j = 2*n
             self.sids.append(fields(j  ))
