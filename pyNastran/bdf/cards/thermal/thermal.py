@@ -190,7 +190,7 @@ class CHBDYP(ThermalElement):
         self.pid  = card.field(2)
 
         self.Type = card.field(3)
-        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'Type=%s card=%s' (self.Type,str(card))
+        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'Type=%s card=%s' (self.Type,card)
 
         ## A VIEW entry identification number for the front face.
         self.iViewFront = card.field(4,0)
@@ -625,13 +625,16 @@ class QBDY3(ThermalLoad):
         return eid.eid
 
     def rawFields(self):
-        fields = ['QBDY3',self.sid,self.Q0,self.cntrlnd]+self.Eids()
+        eids = self.Eids()
+        eids.sort()
+        fields = ['QBDY3',self.sid,self.Q0,self.cntrlnd]+eids
         return fields
 
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
         eids = self.collapseThruBy(self.Eids())
-        fields = ['QBDY3',self.sid,self.Q0,cntrlnd]+self.Eids()
+        eids.sort()
+        fields = ['QBDY3',self.sid,self.Q0,cntrlnd]+eids
         return fields
 
 class QHBDY(ThermalLoad):

@@ -252,3 +252,32 @@ class BDF_Card(object):
     def getOldField(i):
         """used for nastran = format"""
         return self.oldCard.field(i)
+
+def wipeEmptyFields(card):
+    """
+    Removes an trailing Nones from the card.  Also converts empty strings to None.
+    @param self the object pointer
+    @param card the fields on the card as a list
+    @retval shortCard the card with no trailing blank fields
+    """
+    #print "cardA = ",card
+    cardB = []
+    for field in card:
+        if isinstance(field,str) and field.strip()=='':
+            field = None
+        ###
+        cardB.append(field)
+    ###
+    #print "cardB = ",cardB
+    i = 0
+    iMax = 0
+    while i<len(card):
+        if cardB[i] is not None:
+            iMax = i
+        ###
+        i+=1
+    ###
+    #print "i=%s iMax=%s"%(i,iMax)
+    #print "cardC = ",cardB[:iMax+1],'\n'
+
+    return cardB[:iMax+1]

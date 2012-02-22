@@ -287,9 +287,9 @@ class DLOAD(Load):
         self.sids = []
         self.mags = []
         for i in range(n):
-            j = 2*n
-            self.mags.append(fields(j  ))
-            self.sids.append(fields(j+1))  # RLOADx,TLOADx,ACSRC
+            j = 2*i
+            self.mags.append(fields[j  ])
+            self.sids.append(fields[j+1])  # RLOADx,TLOADx,ACSRC
         ###
 
     def crossReference(self,model):
@@ -326,9 +326,9 @@ class SLOAD(Load):
         self.sids = []
         self.mags = []
         for i in range(n):
-            j = 2*n
-            self.sids.append(fields(j  ))
-            self.mags.append(fields(j+1))
+            j = 2*i
+            self.sids.append(fields[j  ])
+            self.mags.append(fields[j+1])
         ###
 
     def crossReference(self,model):

@@ -196,30 +196,6 @@ class LineElement(Element):
         
         return M
 
-class CBEND(LineElement):
-    type = 'CBEND'
-    def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card,data)
-        self.eid  = int(card.field(1))
-        self.pid  = card.field(2,self.eid)
-        self.ga = card.field(3)
-        self.gb = card.field(4)
-        x1Go = card.field(5)
-        if isinstance(x1Go,int):
-            self.g0 = x1Go
-            self.x1 = None
-            self.x2 = None
-            self.x3 = None
-        elif isinstance(x1Go,float):
-            self.g0 = None
-            self.x1 = x1Go
-            self.x2 = card.field(6)
-            self.x3 = card.field(7)
-        else:
-            raise Exception('invalid x1Go=|%s| on CBEND' %(x1Go))
-        self.geom = card.field(8)
-        assert self.geom in [1,2,3,4],'geom is invalid geom=|%s|' %(self.geom)
-
 class CROD(LineElement):
     type = 'CROD'
     def __init__(self,card=None,data=None):
@@ -901,19 +877,43 @@ class CBEND(LineElement):
     type = 'CBEND'
     def __init__(self,card=None,data=None):
         LineElement.__init__(self,card,data)
-        if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            self.ga  = card.field(3)
-            self.gb  = card.field(4)
-            self.initX_G0(card)
-            #self.x1  = card.field(5)
-            #self.x2  = card.field(6)
-            #self.x3  = card.field(7)
-            self.geom = card.field(8)
+        self.eid  = int(card.field(1))
+        self.pid  = card.field(2,self.eid)
+        self.ga = card.field(3)
+        self.gb = card.field(4)
+        x1Go = card.field(5)
+        if isinstance(x1Go,int):
+            self.g0 = x1Go
+            self.x1 = None
+            self.x2 = None
+            self.x3 = None
+        elif isinstance(x1Go,float):
+            self.g0 = None
+            self.x1 = x1Go
+            self.x2 = card.field(6)
+            self.x3 = card.field(7)
         else:
-            raise NotImplementedError('CBEND')
-        ###
+            raise Exception('invalid x1Go=|%s| on CBEND' %(x1Go))
+        self.geom = card.field(8)
+        assert self.geom in [1,2,3,4],'geom is invalid geom=|%s|' %(self.geom)
+
+#class CBEND(LineElement):
+#    type = 'CBEND'
+#    def __init__(self,card=None,data=None):
+#        LineElement.__init__(self,card,data)
+#        if card:
+#            self.eid = card.field(1)
+#            self.pid = card.field(2)
+#            self.ga  = card.field(3)
+#            self.gb  = card.field(4)
+#            self.initX_G0(card)
+#            #self.x1  = card.field(5)
+#            #self.x2  = card.field(6)
+#            #self.x3  = card.field(7)
+#            self.geom = card.field(8)
+#        else:
+#            raise NotImplementedError('CBEND')
+#        ###
 
     def Area(self):
         return self.pid.Area()

@@ -1,3 +1,6 @@
+class BDF_SyntaxError(SyntaxError):
+    pass
+
 class TabCharacterError(SyntaxError):
     pass
 

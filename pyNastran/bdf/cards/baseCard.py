@@ -122,6 +122,7 @@ class BaseCard(BDF_Card):
                 if i+2<nFields and fields[i+2]=='BY':
                     by = fields[i+3]
                     sys.stderr.write("BY was found...untested...")
+                    raise NotImplementedError('implement BY support\nfields=%s' %(fields))
                 for j in range(fields[i-1],fields[i+1],by):
                     out.append(j)
                 ###

@@ -1,9 +1,10 @@
+from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
 from pyNastran.bdf.fieldWriter import printField,printCard
 
 def assertFields(card1,card2):
         try:
-            fields1 = card1.reprFields()
-            fields2 = card2.reprFields()
+            fields1 = wipeEmptyFields(card1.reprFields())
+            fields2 = wipeEmptyFields(card2.reprFields())
         except:
             print "card1 = \n%s" %(card1)
             print "card2 = \n%s" %(card2)
