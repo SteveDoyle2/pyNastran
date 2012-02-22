@@ -3,9 +3,10 @@ Based on cython_wrapper.pyx from https://gist.github.com/1249305
 by Gael Varoquaux
 """
 
-# Declare the prototype of the C function we are interested in calling
+# prototypes of the C function we are interested in calling
 cdef extern from "libop4.c":
     float *op4_load(int size)
+    int    Op4_scan(char *filename)
 
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
@@ -61,6 +62,8 @@ cdef class ArrayWrapper:
         free(<void*>self.data_ptr)
 
 def File(char *filename, char *mode):
+    cdef int  n_mat_in_file
+#   cdef char name[Max_Matrices_Per_OP4][9]
     print('op4.File got [%s], [%c]' % (filename, mode))
     if not os.path.exists(filename):
         print('op4.File: no such file %s' % (filename))
@@ -69,10 +72,24 @@ def File(char *filename, char *mode):
         print('op4.File: not a file %s' % (filename))
         raise IOError
     fh = None
+    # Scan the file for number of matrices and headers for each matrix.
     try:
-        fh = open(filename, mode)
+        rv = Op4_scan(filename)      # in                            
+#                    &n_mat_in_file, # out number of matrices        
+#                     name,          # out matrix names              
+#                     storage,       # out 0=dn; 1=sp1; 2=sp2        
+#                     nRow,          # out number of rows            
+#                     nCol,          # out number of columns         
+#                     nStr,          # out number of strings         
+#                     nNnz,          # out number of nonzero terms   
+#                     Type,          # out 1=RS; 2=RD; 3=CS; 4=CD    
+#                     form,          # out matrix form 6=symm, etc   
+#                     digits,        # out size of mantissa          
+#                     offset)        # out byte offset to matrix     
     except:
+        print('op4.File: failed to scan %s' % (filename))
         raise IOError
+
     return fh
 
 def load(int size):
