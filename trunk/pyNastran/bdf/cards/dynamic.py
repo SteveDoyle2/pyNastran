@@ -229,9 +229,9 @@ class TSTEPNL(BaseCard):
         self.conv    = card.field(8,'PW')
 
         # line 2
-        self.epsu    = card.field(9,1.0E-2)
-        self.epsp    = card.field(10,1.0E-3)
-        self.epsw    = card.field(11,1.0E-6)
+        self.epsu    = card.field(9, 1.E-2)
+        self.epsp    = card.field(10,1.E-3)
+        self.epsw    = card.field(11,1.E-6)
         self.maxDiv  = card.field(12,2)
         self.maxQn   = card.field(13,10)
         self.MaxLs   = card.field(14,2)

@@ -90,15 +90,26 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.eid = card.field(1)
         self.Gni = []
         self.Cni = []
-        fields = card.fields(4)
-        iUM = fields.index('UM')
-        self.alpha = fields.pop() # the last field is not part of fields
+
+        fields = card.fields(2)
+        iUm = fields.index('UM')+2
+        if isinstance(fields[-1],float):
+            self.alpha = fields.pop() # the last field is not part of fields
+            nFields = card.nFields()-1
+        else:
+            nFields = card.nFields()
+            self.alpha = 0.
 
         # loop till UM, no field9,field10
-        i=0
-        while i<iUM-4:
-            self.Gni.append(card.field(i ))
-            self.Cni.append(card.field(i+1))
+        i=2
+        #print "iUm = %s" %(iUm)
+        while i<iUm:
+            gni = card.field(i  )
+            #if gni:
+            cni = card.field(i+1)
+            self.Gni.append(gni)
+            self.Cni.append(cni)
+            #print "gni=%s cni=%s" %(gni,cni)
             if i%6==0:
                 i+=2
             i+=2
@@ -106,14 +117,24 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         self.Gmi = []
         self.Cmi = []
+        #print ""
+        #print "i=%s iUm=%s card.field(iUm)=%s" %(i,iUm,card.field(iUm))
         # loop till alpha, no field9,field10
-        while i <card.nFields()-1: # dont grab alpha
-            self.Gmi.append(card.field(i ))
-            self.Cmi.append(card.field(i+1))
-            if i%6==0:
-                i+=2
+        while i < nFields: # dont grab alpha
+            gmi = card.field(i  )
+            cmi = card.field(i+1)
+            if gmi:
+                #print "gmi=%s cmi=%s" %(gmi,cmi)
+                self.Gmi.append(gmi)
+                self.Cmi.append(cmi)
+            #else:
+                #print "---"
+            #if i%8==0:
+            #    i+=2
             i+=2
         ###
+        #print self
+        #sys.exit()
         
     def rawFields(self):
         fields = [self.type,self.eid]
@@ -122,14 +143,29 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             if i%6==0:
                 fields += [None]
             ###
+        ###
+        nSpaces = 8-(len(fields)-1)%8  # puts ALPHA onto next line
+        if nSpaces<8:
+            fields += [None]*nSpaces
 
+        ## overly complicated loop to print the UM section
         fields += ['UM']
+        j=1
         for i,(gm,cm) in enumerate(zip(self.Gmi,self.Cmi)):
+            #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
             fields+=[gm,cm]
-            if i%6==0:
-                fields += [None]
+            if i>0 and j%3==0:
+                fields += [None,None]
+                print "---"
+                j-=3
+            j+=1
             ###
-        fields += [self.alpha]
+        ###
+        nSpaces = 8-(len(fields)-1)%8  # puts ALPHA onto next line
+        if nSpaces==1:
+            fields += [None,None]
+        if self.alpha>0.: # handles default alpha value
+            fields += [self.alpha]
         return fields
 
     def reprFields(self):
@@ -222,18 +258,19 @@ class RBE3(RigidElement):  # not done, needs testing badly
         iWtMax = len(fields)+iOffset
         try:
             iAlpha = fields.index('ALPHA')+iOffset
-            iWtMax  = iAlpha-1  # the index to start parsing UM
-            iUmStop = iAlpha-1  # the index to stop  parsing UM
+            iWtMax  = iAlpha  # the index to start parsing UM
+            iUmStop = iAlpha  # the index to stop  parsing UM
         except ValueError:
             iAlpha  = None
             iUmStop = iWtMax
-        #print "iAlpha = ",iAlpah
+        #print "iAlpha = ",iAlpha
         try:
             iUm = fields.index('UM')+iOffset
             iWtMax = iUm
         except ValueError:
             iUm = None
         #print "iAlpha=%s iUm=%s" %(iAlpha,iUm)
+        #print "iAlpha=%s iWtMax=%s" %(iAlpha,iWtMax)
         #sys.stdout.flush()
 
         #print "iUM = ",iUM
@@ -248,7 +285,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
                 #print "wt=%s ci=%s" %(wt,ci)
                 i+=2
                 gij = 0
-                while isinstance(gij,int):  # does this get extra fields???
+                while isinstance(gij,int) and i<iWtMax:  # does this get extra fields???
                     gij = card.field(i)
                     if gij is not None:
                         Gij.append(gij)
@@ -276,14 +313,17 @@ class RBE3(RigidElement):  # not done, needs testing badly
             #print "i=%s iUmStop=%s" %(i,iUmStop)
             for j in range(i,iUmStop,2):  # does this get extra fields???
                 gmi = card.field(j)
-                cmi = card.field(j+1)
-                #print "gmi=%s cmi=%s" %(gmi,cmi)
-                self.Gmi.append(gmi)
-                self.Cmi.append(cmi)
+                if gmi is not None:
+                    cmi = card.field(j+1)
+                    #print "gmi=%s cmi=%s" %(gmi,cmi)
+                    self.Gmi.append(gmi)
+                    self.Cmi.append(cmi)
+                ###
             ###
         ###
         if iAlpha:
-            self.alpha = card.field(j)
+            self.alpha = card.field(iAlpha+1)
+            #print "self.alpha = ",self.alpha
         else:
             ## thermal expansion coefficient
             self.alpha = 0.0
@@ -294,10 +334,12 @@ class RBE3(RigidElement):  # not done, needs testing badly
     def rawFields(self):
         fields = ['RBE3',self.eid,None,self.refgrid,self.refc]
         for (wt,ci,Gij) in self.WtCG_groups:
+            #print 'wt=%s ci=%s Gij=%s' %(wt,ci,Gij)
             fields+=[wt,ci]+Gij
         nSpaces = 8-(len(fields)-1)%8  # puts UM onto next line
         #print "nSpaces = ",nSpaces
-        fields += [None]*nSpaces
+        if nSpaces<8:
+            fields += [None]*nSpaces
             
         if self.Gmi:
             fields += ['UM']
@@ -309,7 +351,8 @@ class RBE3(RigidElement):  # not done, needs testing badly
             ###
         ###
         nSpaces = 8-(len(fields)-1)%8  # puts ALPHA onto next line
-        fields += [None]*nSpaces
+        if nSpaces<8:
+            fields += [None]*nSpaces
         #print "nSpaces = ",nSpaces
         if self.alpha>0.: # handles the default value
             fields += ['ALPHA',self.alpha]

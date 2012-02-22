@@ -160,6 +160,8 @@ RLOAD1 (done, dynamic)
 RLOAD2 (done, dynamic)
 SLOAD  (done)
 
+TLOAD1
+
 ----Thermal Loads----:
 TEMP   (done)
 TEMPD  (not integrated)
@@ -174,11 +176,16 @@ QBDY3  (done)
 CHBDYE (done)
 CHBDYG (done)
 CHBDYP (done)
+CONVM
 
 ----Thermal BCs----:
 CONV   (done)
 RADBC  (done)
 RADM   (not integrated)
+TEMPBC
+RADCAV
+RADM
+RADSET
 
 ----Thermal Properties----:
 PCONV  (done)
