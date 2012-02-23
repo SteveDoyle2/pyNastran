@@ -74,6 +74,31 @@ class AELIST(BaseCard):
         fields = ['AELIST',self.sid]+self.elements
         return fields
 
+class AEPARM(BaseCard):
+    """
+    Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic
+    extra point). The forces associated with this controller will be derived
+    from AEDW, AEFORCE and AEPRESS input data.
+    AEPARM ID LABEL UNITS
+    AEPARM 5 THRUST LBS
+    """
+    type = 'AEPARM'
+    def __init__(self,card=None,data=None):
+        if card:
+            self.id    = card.field(1)
+            self.label = card.field(2)
+            self.units = card.fiedl(3,'')
+        else:
+            self.id    = data[0]
+            self.label = data[1]
+            self.units = data[2]
+            assert len(data)==3,'data = %s' %(data)
+        ###
+
+    def rawFields(self):
+        fields = ['AEPARM',self.id,self.label,self.units]
+        return fields
+
 class AESURF(BaseCard):
     """
     Specifies an aerodynamic control surface as a member of the set of aerodynamic extra
@@ -147,29 +172,54 @@ class AESURF(BaseCard):
                            crefc,crefs,pllim,pulim,self.hmllim,self.hmulim,self.tqllim,self.tqulim]
         return fields
 
-class AEPARM(BaseCard):
+class AESTAT(BaseCard):
     """
-    Defines a general aerodynamic trim variable degree-of-freedom (aerodynamic
-    extra point). The forces associated with this controller will be derived
-    from AEDW, AEFORCE and AEPRESS input data.
-    AEPARM ID LABEL UNITS
-    AEPARM 5 THRUST LBS
+    Specifies rigid body motions to be used as trim variables in static aeroelasticity.
+    AESTAT ID   LABEL
+    AESTAT 5001 ANGLEA
     """
-    type = 'AEPARM'
+    type = 'AESTAT'
     def __init__(self,card=None,data=None):
         if card:
             self.id    = card.field(1)
             self.label = card.field(2)
-            self.units = card.fiedl(3,'')
         else:
             self.id    = data[0]
             self.label = data[1]
-            self.units = data[2]
-            assert len(data)==3,'data = %s' %(data)
+            assert len(data)==2,'data = %s' %(data)
         ###
 
     def rawFields(self):
-        fields = ['AEPARM',self.id,self.label,self.units]
+        fields = ['AESTAT',self.id,self.label]
+        return fields
+
+class AESURFS(BaseCard): # not integrated
+    """
+    Optional specification of the structural nodes associated with an aerodynamic control
+    surface that has been defined on an AESURF entry. The mass associated with these
+    structural nodes define the control surface moment(s) of inertia about the hinge
+    line(s).
+    Specifies rigid body motions to be used as trim variables in static aeroelasticity.
+    AESURFS ID   LABEL - LIST1 - LIST2
+    AESURFS 6001 ELEV  - 6002  - 6003
+    """
+    type = 'AESURFS'
+    def __init__(self,card=None,data=None):
+        if card:
+            self.id    = card.field(1)
+            self.label = card.field(2)
+            self.list1 = card.field(4)
+            self.list2 = card.field(6)
+        else:
+            self.id    = data[0]
+            self.label = data[1]
+            self.list1 = data[2]
+            self.list2 = data[3]
+            assert len(data)==4,'data = %s' %(data)
+        ###
+
+    def rawFields(self):
+        fields = ['AESURFS',self.id,self.label,None,self.list1,None,self.list2]
         return fields
 
 class Aero(BaseCard):
@@ -202,7 +252,6 @@ class Aero(BaseCard):
         if self.symXY==-1:
             return True
         return False
-
 
 class AERO(Aero):
     """
@@ -277,56 +326,6 @@ class AEROS(Aero):
         symXZ = self.setBlankIfDefault(self.symXZ,0)
         symXY = self.setBlankIfDefault(self.symXY,0)
         fields = ['AEROS',self.acsid,self.rcsid,self.cRef,self.bRef,self.Sref,symXZ,symXY]
-        return fields
-
-class AESTAT(BaseCard):
-    """
-    Specifies rigid body motions to be used as trim variables in static aeroelasticity.
-    AESTAT ID   LABEL
-    AESTAT 5001 ANGLEA
-    """
-    type = 'AESTAT'
-    def __init__(self,card=None,data=None):
-        if card:
-            self.id    = card.field(1)
-            self.label = card.field(2)
-        else:
-            self.id    = data[0]
-            self.label = data[1]
-            assert len(data)==2,'data = %s' %(data)
-        ###
-
-    def rawFields(self):
-        fields = ['AESTAT',self.id,self.label]
-        return fields
-
-class AESURFS(BaseCard): # not integrated
-    """
-    Optional specification of the structural nodes associated with an aerodynamic control
-    surface that has been defined on an AESURF entry. The mass associated with these
-    structural nodes define the control surface moment(s) of inertia about the hinge
-    line(s).
-    Specifies rigid body motions to be used as trim variables in static aeroelasticity.
-    AESURFS ID   LABEL - LIST1 - LIST2
-    AESURFS 6001 ELEV  - 6002  - 6003
-    """
-    type = 'AESURFS'
-    def __init__(self,card=None,data=None):
-        if card:
-            self.id    = card.field(1)
-            self.label = card.field(2)
-            self.list1 = card.field(4)
-            self.list2 = card.field(6)
-        else:
-            self.id    = data[0]
-            self.label = data[1]
-            self.list1 = data[2]
-            self.list2 = data[3]
-            assert len(data)==4,'data = %s' %(data)
-        ###
-
-    def rawFields(self):
-        fields = ['AESURFS',self.id,self.label,None,self.list1,None,self.list2]
         return fields
 
 class CSSCHD(BaseCard):
