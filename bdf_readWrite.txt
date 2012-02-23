@@ -1,4 +1,4 @@
-W------------------------------BDF Info------------------------------
+------------------------------BDF Info------------------------------
 
 In order for a card to be supported, it must read AND write ALL fields.
 Important calculated parameters are nice, but not required.
@@ -26,6 +26,7 @@ CONM1  (done)
 CONM2  (cid!=0)
 CBUSH  (done)
 CFAST
+CGAP   (done)
 
 CDAMP1 (done)
 CDAMP2 (done)
@@ -69,9 +70,8 @@ CMASS2 (done)
 CMASS3 (done)
 CMASS4 (done)
 
-CRAC2D (done)
-CRAC3D (done)
-CGAP   (done)
+CRAC2D (done, not well tested)
+CRAC3D (done, not well tested)
 
 ----Rigid Elements----:
 RROD
@@ -109,13 +109,13 @@ PSOLID  (done)
 PLSOLID (done)
 
 ----Materials----:
-CREEP (done)
+CREEP (done, not well tested)
 MAT1  (done)
 MAT2  (done)
 MAT3  (done)
 MAT8  (done)
 MAT9  (done)
-MAT10 (done)
+MAT10 (done, not well tested)
 
 ----Thermal Materials----:
 MAT4  (done)
@@ -248,10 +248,17 @@ FREQ5
 DCONSTR  (done)
 DESVAR   (done)
 DDVAL    (done)
+DOPTPRM
 DRESP1   (done)
 DRESP2
 DRESP3
-DVPREL1  (done)
+DVGRID
+DVCREL1         # element  DV
+DVCREL2
+DVPREL1  (done) # property DV
+DVPREL2  (done)
+DVMREL1         # material DV
+DVMREL2
 DLINK
 DMIG    (in progress)
 DEQATN  (in progress)

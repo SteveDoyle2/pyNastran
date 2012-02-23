@@ -50,6 +50,7 @@ Added BDF
    - *** TIC
    - RBE3
    - CONM1, AEFACT
+   - DVPREL2
 
 OP2 API Changes
 OP2 Bug Fixes

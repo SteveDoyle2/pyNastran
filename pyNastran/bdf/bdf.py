@@ -2,7 +2,7 @@ import os
 import sys
 import copy
 
-# my code
+# pyNastran
 from pyNastran.general.general import ListPrint
 from pyNastran.bdf.errors import *
 
@@ -140,7 +140,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #'DEQATN',
         
         # optimization cards
-        'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1',
+        'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1','DVPREL2',
         #'DRESP2','DRESP3','DLINK'
         
         # sets
@@ -350,6 +350,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.desvars  = {}
         self.ddvals   = {}
         self.dresps   = {}
+        ## stores DVPREL1, DVPREL2...might change to DVxRel
         self.dvprels  = {}
         
         ## SETx
@@ -1446,6 +1447,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addDResp(ddval)
             elif cardName=='DVPREL1':
                 dvprel = DVPREL1(cardObj)
+                self.addDvprel(dvprel)
+            elif cardName=='DVPREL2':
+                dvprel = DVPREL2(cardObj)
                 self.addDvprel(dvprel)
 
 
