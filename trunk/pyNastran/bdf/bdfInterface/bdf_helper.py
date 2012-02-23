@@ -480,11 +480,15 @@ class addMethods(object):
         assert key>=0
         self.aeros[key] = aero
 
-    def addAESurf(self,aesurf):
-        key = aesurf.aesid
-        assert key not in self.aesurfs,'\naesurf=\n%s oldAESURF=\n%s' %(aesurf,self.aesurfs[key])
-        assert key>=0
-        self.aesurfs[key] = aesurf
+    def addAEFact(self,aefact,allowOverwrites=False):
+        key = aefact.sid
+        if key in self.aefacts and allowOverwrites==False:
+            if not aefact.isSameCard(self.aefacts[key]):
+                assert key not in self.aefacts,'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' %(key,self.aefacts[key],aefact)
+        else:
+            assert key>0,'sid=%s method=\n%s' %(key,aefact)
+            self.aefact[key] = aefact
+        ###
 
     def addAEList(self,aelist):
         key = aelist.sid
@@ -511,6 +515,12 @@ class addMethods(object):
         assert key not in self.aestats,'\naestat=\n%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
         assert key>=0
         self.aestats[key] = aestat
+
+    def addAESurf(self,aesurf):
+        key = aesurf.aesid
+        assert key not in self.aesurfs,'\naesurf=\n%s oldAESURF=\n%s' %(aesurf,self.aesurfs[key])
+        assert key>=0
+        self.aesurfs[key] = aesurf
 
     def addCAero(self,caero):
         key = caero.eid

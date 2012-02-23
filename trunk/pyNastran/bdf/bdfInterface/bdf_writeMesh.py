@@ -473,7 +473,8 @@ class writeMesh(object):
     def writeAeroControl(self):
         """writes the aero control surface cards"""
         msg = ''
-        if (self.aestats or self.aeparams or self.aelinks or self.aelists or self.aesurfs):
+        if (self.aefacts or self.aeparams or self.aelinks or self.aelists or
+            self.aestats or self.aesurfs):
             msg = '$AERO CONTROL SURFACES\n'
             for ID,aelinks in sorted(self.aelinks.items()):
                 for aelink in aelinks:
@@ -487,6 +488,8 @@ class writeMesh(object):
                 msg += str(aelist)
             for ID,aesurf in sorted(self.aesurfs.items()):
                 msg += str(aesurf)
+            for ID,aefact in sorted(self.aefacts.items()):
+                msg += str(aefact)
         return msg
 
     def writeFlutter(self):

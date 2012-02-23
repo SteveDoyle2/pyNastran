@@ -2,6 +2,23 @@ import sys
 from numpy import array,log,exp,pi
 from baseCard import BaseCard
 
+class AEFACT(BaseCard):
+    """
+    Defines real numbers for aeroelastic analysis.
+    AEFACT SID D1 D2 D3 D4 D5 D6 D7
+           D8  D9 -etc.-
+    AEFACT 97 .3 .7 1.0
+    """
+    type = 'AEFACT'
+    def __init__(self,card=None,data=None): ## @todo doesnt support data
+        ## Set identification number. (Unique Integer > 0)
+        self.sid = card.field(1)
+        ## Number (float)
+        self.Di = card.fields(2)
+
+    def rawFields(self):
+        fields = ['AEFACT',self.sid]+self.Di
+
 class AELINK(BaseCard):
     """
     Defines relationships between or among AESTAT and AESURF entries, such that:
@@ -99,6 +116,27 @@ class AEPARM(BaseCard):
         fields = ['AEPARM',self.id,self.label,self.units]
         return fields
 
+class AESTAT(BaseCard):
+    """
+    Specifies rigid body motions to be used as trim variables in static aeroelasticity.
+    AESTAT ID   LABEL
+    AESTAT 5001 ANGLEA
+    """
+    type = 'AESTAT'
+    def __init__(self,card=None,data=None):
+        if card:
+            self.id    = card.field(1)
+            self.label = card.field(2)
+        else:
+            self.id    = data[0]
+            self.label = data[1]
+            assert len(data)==2,'data = %s' %(data)
+        ###
+
+    def rawFields(self):
+        fields = ['AESTAT',self.id,self.label]
+        return fields
+
 class AESURF(BaseCard):
     """
     Specifies an aerodynamic control surface as a member of the set of aerodynamic extra
@@ -170,27 +208,6 @@ class AESURF(BaseCard):
         
         fields = ['AESURF',self.aesid,self.cntlid,self.label,self.cid1,self.alid1,self.cid2,self.alid2,eff,ldw,
                            crefc,crefs,pllim,pulim,self.hmllim,self.hmulim,self.tqllim,self.tqulim]
-        return fields
-
-class AESTAT(BaseCard):
-    """
-    Specifies rigid body motions to be used as trim variables in static aeroelasticity.
-    AESTAT ID   LABEL
-    AESTAT 5001 ANGLEA
-    """
-    type = 'AESTAT'
-    def __init__(self,card=None,data=None):
-        if card:
-            self.id    = card.field(1)
-            self.label = card.field(2)
-        else:
-            self.id    = data[0]
-            self.label = data[1]
-            assert len(data)==2,'data = %s' %(data)
-        ###
-
-    def rawFields(self):
-        fields = ['AESTAT',self.id,self.label]
         return fields
 
 class AESURFS(BaseCard): # not integrated
@@ -351,20 +368,38 @@ class CSSCHD(BaseCard):
             self.lSchd  = data[4] # AEFACT
         ###
 
-    def crossReference(self,model): # more
-        self.lSchd = self.AEFact(self.lSchd)
+    def crossReference(self,model):
+        self.aesid  = self.AESurf(self.aesid)
+        self.lAlpha = self.AEFact(self.lAlpha)
+        self.lMach  = self.AEFact(self.lMach)
+        self.lSchd  = self.AEFact(self.lSchd)
+
+    def AESid(self):
+        if isinstance(self.aesid,int):
+            return self.aesid
+        return self.aesid.aesid
+
+    def LAlpha(self):
+        if isinstance(self.lAlpha,int):
+            return self.lAlpha
+        return self.lAlpha.sid
+
+    def LMach(self):
+        if isinstance(self.lMach,int):
+            return self.lMach
+        return self.lMach.sid
 
     def LSchd(self):
         if isinstance(self.lSchd,int):
             return self.lSchd
-        return self.lSchd.aeid
+        return self.lSchd.sid
 
     def rawFields(self):
-        fields = ['AERO',self.acsid,self.velocity,self.cRef,self.rhoRef,self.symXZ,self.symXY]
+        fields = ['CSSCHD',self.sid,self.AESid(),self.LAlpha(),self.LMach(),self.LSchd()]
         return fields
 
     def reprFields(self):
-        fields = ['CSSCHD',self.sid,self.aesid,self.lAlpha,self.lMach,self.lSchd]
+        return self.rawFields()
 
 class CAERO1(BaseCard):
     """

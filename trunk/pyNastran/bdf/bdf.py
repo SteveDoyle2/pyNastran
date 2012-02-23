@@ -112,7 +112,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # aero cards
         'AERO','AEROS','GUST','FLUTTER','FLFACT','MKAERO1','MKAERO2',
-        'AELINK','AEPARAM','AESTAT','AELIST','AESURF',#'AEFACT'
+        'AEFACT','AELINK','AELIST','AEPARAM','AESTAT','AESURF',
         'CAERO1','CAERO2',#'CAERO3','CAERO4','CAERO5',
         'PAERO1','PAERO2',#'PAERO3','PAERO4','PAERO5',
         'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
@@ -373,14 +373,16 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## stores AEROS
         self.aeros  = {}
 
-        ## stores AEPARAM
-        self.aeparams = {}
+        ## stores AEFACT
+        self.aefacts = {}
         ## stores AELINK
-        self.aelinks  = {}        
+        self.aelinks  = {}
         ## stores AELIST
         self.aelists = {}
+        ## stores AEPARAM
+        self.aeparams = {}
         ## stores AESURF
-        self.aesurfs = {}        
+        self.aesurfs = {}
         ## stores AESTAT
         self.aestats  = {}
 
@@ -1324,31 +1326,32 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='PAERO3':
                 #aero = PAERO3(cardObj)
                 #self.addPAero(aero)
-            elif cardName=='AEPARM':
-                aeparm = AEPARM(cardObj)
-                self.addAEParm(aeparm)
             elif cardName=='AERO':
                 aero = AERO(cardObj)
                 self.addAero(aero)
             elif cardName=='AEROS':
                 aeros = AEROS(cardObj)
                 self.addAeros(aeros)
-            elif cardName=='AELIST':
-                aelist = AELIST(cardObj)
-                self.addAEList(aelist)
-            elif cardName=='AEPARAM':
-                aeparam = AEPARAM(cardObj)
-                self.addAEParam(aeparam)
-            elif cardName=='AESTAT':
-                aestat = AESTAT(cardObj)
-                self.addAEStat(aestat)
 
+            elif cardName=='AEFACT':
+                aefact = AEFACT(cardObj)
+                self.addAEFact(aefact)
             elif cardName=='AELINK':
                 aelink = AELINK(cardObj)
                 self.addAELink(aelink)
+            elif cardName=='AELIST':
+                aelist = AELIST(cardObj)
+                self.addAEList(aelist)
+            elif cardName=='AEPARM':
+                aeparm = AEPARM(cardObj)
+                self.addAEParm(aeparm)
+            elif cardName=='AESTAT':
+                aestat = AESTAT(cardObj)
+                self.addAEStat(aestat)
             elif cardName=='AESURF':
                 aesurf = AESURF(cardObj)
                 self.addAESurf(aesurf)
+
             elif cardName=='TRIM':
                 trim = TRIM(cardObj)
                 self.addTrim(trim)
