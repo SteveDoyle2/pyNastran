@@ -63,7 +63,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'GRID','GRDSET', #'RINGAX',
 
         # elements
-        'CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
+        'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
         'CBUSH',
         'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
@@ -967,6 +967,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 (elem) = CDAMP5(cardObj)
                 self.addDamperElement(elem)
 
+            elif cardName=='CONM1':
+                elem = CONM1(cardObj)
+                self.addElement(elem)
             elif cardName=='CONM2': # cid=0 not supported...
                 elem = CONM2(cardObj)
                 self.addElement(elem)

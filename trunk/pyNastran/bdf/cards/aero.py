@@ -412,13 +412,14 @@ class CAERO1(BaseCard):
     type = 'CAERO1'
     def __init__(self,card=None,data=None):
         """
-        1 \
+        1
+        | \
         |   \
         |     \
-        |      3
+        |      4
         |      |
         |      |
-        2------4
+        2------3
         """
         #Material.__init__(self,card)
         self.eid    =  card.field(1)
@@ -494,6 +495,9 @@ class CAERO1(BaseCard):
 
 class CAERO2(BaseCard):
     """
+    Aerodynamic Body Connection
+    Defines aerodynamic slender body and interference elements for Doublet-Lattice
+    aerodynamics
     """
     type = 'CAERO2'
     def __init__(self,card=None,data=None):

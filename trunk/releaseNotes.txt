@@ -49,6 +49,7 @@ Added BDF
    - CBEND, PBEND
    - *** TIC
    - RBE3
+   - CONM1, AEFACT
 
 OP2 API Changes
 OP2 Bug Fixes

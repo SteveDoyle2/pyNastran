@@ -22,7 +22,7 @@ CORD2S (done)
 CORD3G (partial)
 
 ----Elements----:
-CONM1
+CONM1  (done)
 CONM2  (cid!=0)
 CBUSH  (done)
 CFAST
@@ -317,7 +317,6 @@ CBARAO
 PBCOMP
 
 ---- Elements----:
-CONM1
 PLOTEL
 MBOLTUS
 AXIC

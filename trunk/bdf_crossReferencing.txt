@@ -37,7 +37,7 @@ CORD2S (done)
 
 
 ----Elements----:
-CONM1   (NA)
+CONM1   (done, does this card need cross-referencing???)
 CONM2   (cid!=0, cid=0 requires CG location...)
 CBUSH   (???)
 
