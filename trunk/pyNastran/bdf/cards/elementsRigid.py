@@ -1,5 +1,6 @@
-from baseCard import Element
 import sys
+
+from baseCard import Element
 
 class RigidElement(Element):
     #def __repr__(self):
@@ -138,6 +139,13 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         
     def rawFields(self):
         fields = [self.type,self.eid]
+
+        if 0:
+            fields2 = [self.eid]
+            for i,(gn,cn) in enumerate(zip(self.Gni,self.Cni)):
+                fields+=[gn,cn]
+            fields += self.buildTableLines(fields2,i=1,j=1)
+
         for i,(gn,cn) in enumerate(zip(self.Gni,self.Cni)):
             fields+=[gn,cn]
             if i%6==0:
@@ -148,6 +156,14 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         if nSpaces<8:
             fields += [None]*nSpaces
 
+        if 0:
+            fields2 = ['UM']
+            for i,(gm,cm) in enumerate(zip(self.Gmi,self.Cmi)):
+                #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
+                fields2 += [gm,cm]
+            fields += self.buildTableLines(fields2,i=1,j=1)
+            fields = self.wipeFields(fields)
+            
         ## overly complicated loop to print the UM section
         fields += ['UM']
         j=1
@@ -156,7 +172,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             fields+=[gm,cm]
             if i>0 and j%3==0:
                 fields += [None,None]
-                print "---"
+                #print "---"
                 j-=3
             j+=1
             ###
@@ -340,6 +356,13 @@ class RBE3(RigidElement):  # not done, needs testing badly
         #print "nSpaces = ",nSpaces
         if nSpaces<8:
             fields += [None]*nSpaces
+        
+        if self.Gmi and 0:
+            fields2 = ['UM']
+            for (gmi,cmi) in zip(self.Gmi,self.Cmi):
+                fields2 += [gmi,cmi]
+            ###
+            fields += self.buildTableLines(fields2,i=1,j=1)
             
         if self.Gmi:
             fields += ['UM']
