@@ -1,17 +1,14 @@
 #import sys
-from numpy import array
-#from numpy import cross,dot
-#from numpy.linalg import norm
 
 # pyNastran
 from baseCard import Element
 
 from elementsRigid  import *
 from elementsSolid  import *
-from bars.elementsBars       import *
-from plates.elementsShell    import *
+from    bars.elementsBars    import *
+from  plates.elementsShell   import *
 from springs.elementsSprings import *
-from mass.elementsMass       import *
+from    mass.elementsMass    import *
 
 
 class BushingElement(Element):

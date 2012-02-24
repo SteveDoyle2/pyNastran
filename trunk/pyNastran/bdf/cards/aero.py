@@ -18,6 +18,10 @@ class AEFACT(BaseCard):
 
     def rawFields(self):
         fields = ['AEFACT',self.sid]+self.Di
+        return fields
+    
+    def reprFields(self):
+        return self.rawFields()
 
 class AELINK(BaseCard):
     """

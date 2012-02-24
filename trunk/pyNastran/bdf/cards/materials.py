@@ -4,26 +4,8 @@
 #from numpy.linalg import norm
 
 # my code
-from baseCard import BaseCard
+from baseCard import BaseCard,Material
 #from thermal.materials import *
-
-class Material(BaseCard):
-    """Base Material Class"""
-    def __init__(self,card,data):
-        pass
-        #self.type = card[0]
-
-    def isSameCard(self,mat):
-        if self.type!=mat.type:  return False
-        fields1 = self.rawFields()
-        fields2 = mat.rawFields()
-        return self.isSameFields(fields1,fields2)
-
-    def crossReference(self,model):
-        pass
-
-    def Mid(self):
-        return self.mid
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""

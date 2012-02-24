@@ -206,7 +206,7 @@ class DVPREL2(OptConstraint):
             #iDesMax  = idTable # the index to start parsing DESVAR
             iDesStop = idTable # the index to stop  parsing DESVAR
         except ValueError:
-            idTable  = None
+            iDTable  = None
             iDesStop = iEnd
 
         self.dvids = []

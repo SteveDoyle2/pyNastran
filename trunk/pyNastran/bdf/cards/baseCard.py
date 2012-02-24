@@ -334,6 +334,24 @@ class Property(BaseCard):
     def crossReference(self,model):
         self.mid = model.Material(self.mid)
 
+class Material(BaseCard):
+    """Base Material Class"""
+    def __init__(self,card,data):
+        pass
+        #self.type = card[0]
+
+    def isSameCard(self,mat):
+        if self.type!=mat.type:  return False
+        fields1 = self.rawFields()
+        fields2 = mat.rawFields()
+        return self.isSameFields(fields1,fields2)
+
+    def crossReference(self,model):
+        pass
+
+    def Mid(self):
+        return self.mid
+
 class Element(BaseCard):
     pid = 0 # CONM2, rigid
     def __init__(self,card,data):

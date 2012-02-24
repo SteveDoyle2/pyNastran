@@ -24,7 +24,8 @@ def integrateLine(x,y):
         out = quad(scipy.splev,0.,1.,args=(spline))  # now integrate the area
         A = out[0]
     except:
-        raise Exception('spline Error x=%s y=%s' %(x,y))
+        print 'spline Error x=%s y=%s' %(x,y)
+        raise
     return A
 
 def evaluatePositiveSpline(x,spline,minValue):

@@ -190,7 +190,7 @@ class CHBDYP(ThermalElement):
         self.pid  = card.field(2)
 
         self.Type = card.field(3)
-        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'Type=%s card=%s' (self.Type,card)
+        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'CHBDYP Type=|%s|' (self.Type)
 
         ## A VIEW entry identification number for the front face.
         self.iViewFront = card.field(4,0)

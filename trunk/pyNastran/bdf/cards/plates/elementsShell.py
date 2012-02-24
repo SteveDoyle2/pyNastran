@@ -14,11 +14,14 @@ class ShellElement(Element):
         #raise Exception('area undefined for %s' %(self.type))
         return self.pid.Thickness()
 
+    def mid(self):
+        return self.pid.mid()
+
     def Mid(self):
         return self.pid.Mid()
 
     def Rho(self):
-        return self.pid.mid.rho
+        return self.pid.mid().rho
 
     def Nsm(self):
         return self.pid.Nsm()
@@ -479,8 +482,8 @@ class CQUAD4(ShellElement):
         zOffset = self.setBlankIfDefault(self.zOffset,0.0)
         nodes1 = [self.nodes[0],self.nodes[1],self.nodes[2]]
         nodes2 = [self.nodes[0],self.nodes[2],self.nodes[3]]
-        fields1 = ['CTRIA3',self.eid,self.mid]+nodes1+[self.thetaMcid,zOffset]
-        fields2 = ['CTRIA3',newID,   self.mid]+nodes2+[self.thetaMcid,zOffset]
+        fields1 = ['CTRIA3',self.eid,self.mid1]+nodes1+[self.thetaMcid,zOffset]
+        fields2 = ['CTRIA3',newID,   self.mid1]+nodes2+[self.thetaMcid,zOffset]
         return self.printCard(fields1)+printCard(fields2)
 
     def getReprDefaults(self,debug=False):
