@@ -25,6 +25,8 @@ Overall BDF
 
 BDF API Changes
    - removed obsolete isPrintable and Is methods from BDF class
+   - added Mid1(), Mid2(), Mid3(), Mid4() methods for PSHELL.
+     Mid() now returns Mid1() or Mid2() depending on the form of the PSHELL
 
 BDF Bug Fixes
    - printCard can now handle cards with an embedded line of Nones
@@ -39,7 +41,7 @@ BDF Bug Fixes
    - fixed bug in PMASS, CSHEAR, CBAR, CQUAD, RBE1, RBE2, RBE3
 
 Added BDF
-   - enabled CQUAD
+   - enabled CQUAD, RBE3
    - EIGB, EIGP, EIGR, EIGRL
    - *** EIGC
    - CBUSH, PBUSH, PDAMPT
@@ -48,7 +50,6 @@ Added BDF
    - CAERO2, PAERO2
    - CBEND, PBEND
    - *** TIC
-   - RBE3
    - CONM1, AEFACT
    - DVPREL2
 
@@ -197,7 +198,7 @@ BDF Bug Fixes
    - fixed RBE1 bug
    - fixed RBE3 bug & disabled RBE3
    - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
-   - FLFACT reading when the card is short works
+   - FLFACT reading when the card is short
    - PCOMP Thickness method doesnt crash when you want the total thickness
      Better defaults on PCOMP
    - fixed some fields on disabled CORDxx cards

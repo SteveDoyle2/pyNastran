@@ -58,7 +58,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
         print "diffCards2 = ",diffCards
 ###
 
-def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
+def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,meshForm='combined',isFolder=False):
     bdfModel = str(bdfFilename)
     print "bdfModel = ",bdfModel
     if isFolder:
@@ -83,7 +83,12 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,isFolder=False):
         outModel = bdfModel+'_out'
         if cid is not None and xref:
             fem1.resolveGrids(cid=cid)
-        fem1.writeBDFAsPatran(outModel)
+        if meshForm=='combined':
+            fem1.writeBDFAsPatran(outModel)
+        elif meshForm=='separate':
+            fem1.writeBDF(outModel)
+        else:
+            raise NotImplementedError("meshForm=|%r| allowedForms=['combined','separate']" %(meshForm))
         #fem1.writeAsCTRIA3(outModel)
 
         fem2 = BDF(debug=debug,log=None)

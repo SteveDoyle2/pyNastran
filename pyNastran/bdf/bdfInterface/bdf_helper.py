@@ -487,7 +487,7 @@ class addMethods(object):
                 assert key not in self.aefacts,'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' %(key,self.aefacts[key],aefact)
         else:
             assert key>0,'sid=%s method=\n%s' %(key,aefact)
-            self.aefact[key] = aefact
+            self.aefacts[key] = aefact
         ###
 
     def addAEList(self,aelist):

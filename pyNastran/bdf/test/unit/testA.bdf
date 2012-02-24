@@ -66,4 +66,5 @@ DRESP2  16      SUMFORC 1
 DVMREL1 1       MAT1    1       E
         30      1.44+9
 INCLUDE 'testC.bdf'
+QBDY3,500,50000.0,,10,THRU,60,BY,10
 ENDDATA

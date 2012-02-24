@@ -5,6 +5,7 @@
 from    bars.propertiesBars    import *
 from  plates.propertiesShell   import *
 from springs.propertiesSprings import *
+from    mass.propertiesMass    import *
 
 
 class BushingProperty(Property):

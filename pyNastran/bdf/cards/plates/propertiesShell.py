@@ -2,7 +2,7 @@ import sys
 from numpy import zeros,pi
 
 # pyNastran
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.baseCard import Property,Material
 
 class ShellProperty(Property):
     type = 'ShellProperty'
@@ -586,7 +586,7 @@ class PSHELL(ShellProperty):
         ShellProperty.__init__(self,card,data)
         if card:
             self.pid  = int(card.field(1))
-            self.mid  = int(card.field(2))
+            self.mid1 = card.field(2)
             self.t    = card.field(3)
 
             ## Material identification number for bending
@@ -613,7 +613,7 @@ class PSHELL(ShellProperty):
             ###
         else:
             self.pid       = data[0]
-            self.mid       = data[1]
+            self.mid1      = data[1]
             self.t         = data[2]
             self.mid2      = data[3]
             self.twelveIt3 = data[4]
@@ -628,11 +628,41 @@ class PSHELL(ShellProperty):
 
         assert self.t>0.0,'the thickness must be defined on the PSHELL card (Ti field not supported)'
 
+    def mid(self):
+        if isinstance(self.mid1,Material):
+            return self.mid1
+        return self.mid2
+
+    def Mid(self):
+        if isinstance(self.mid1,Material):
+            return self.mid1.mid  # self.Mid1()
+        return self.Mid2()
+    
+    def Mid1(self):
+        if isinstance(self.mid1,Material):
+            return self.mid1.mid
+        return self.mid1
+
+    def Mid2(self):
+        if isinstance(self.mid2,Material):
+            return self.mid2.mid
+        return self.mid2
+
+    def Mid3(self):
+        if isinstance(self.mid3,Material):
+            return self.mid3.mid
+        return self.mid3
+
+    def Mid4(self):
+        if isinstance(self.mid4,Material):
+            return self.mid4.mid
+        return self.mid4
+
     def Thickness(self):
         return self.t
 
     def Rho(self):
-        return self.mid.rho
+        return self.mid().rho
 
     def Nsm(self):
         return self.nsm
@@ -642,14 +672,18 @@ class PSHELL(ShellProperty):
         calculates mass per area
         \f[ \large  \frac{mass}{A} = nsm + \rho t \f]
         """
-        massPerArea = self.nsm + self.mid.rho*self.t
+        massPerArea = self.nsm + self.Rho()*self.t
         return massPerArea
 
     def crossReference(self,mesh):
-        self.mid  = mesh.Material(self.mid)
-        #self.mid2 = mesh.Material(self.mid2)
-        #self.mid3 = mesh.Material(self.mid3)
-        #self.mid4 = mesh.Material(self.mid4)
+        if self.mid1:
+            self.mid1 = mesh.Material(self.mid1)
+        if self.mid2:
+            self.mid2 = mesh.Material(self.mid2)
+        if self.mid3:
+            self.mid3 = mesh.Material(self.mid3)
+        if self.mid4:
+            self.mid4 = mesh.Material(self.mid4)
 
     def writeCodeAster(self):
         """
@@ -670,8 +704,8 @@ class PSHELL(ShellProperty):
         return msg
 
     def rawFields(self):
-        fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,self.twelveIt3,self.mid3,self.tst,self.nsm,
-                           self.z1,self.z2,self.mid4]
+        fields = ['PSHELL',self.pid,self.Mid1(),self.t,self.Mid2(),self.twelveIt3,self.Mid3(),self.tst,self.nsm,
+                           self.z1,self.z2,self.Mid4()]
         return fields
 
     def reprFields(self):
@@ -683,8 +717,8 @@ class PSHELL(ShellProperty):
         z1 = self.setBlankIfDefault(self.z1,-tOver2)
         z2 = self.setBlankIfDefault(self.z2, tOver2)
 
-        fields = ['PSHELL',self.pid,self.Mid(),self.t,self.mid2,twelveIt3,self.mid3,tst,nsm,
-                           z1,z2,self.mid4]
+        fields = ['PSHELL',self.pid,self.Mid1(),self.t,self.Mid2(),twelveIt3,self.Mid3(),tst,nsm,
+                           z1,z2,self.Mid4()]
         #print fields
         return fields
 

@@ -431,6 +431,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         fname = self.printFileName(self.bdfFileName)
         self.log.debug('---starting BDF.readBDF of %s---' %(fname))
+        #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
 
         #self.debug = True

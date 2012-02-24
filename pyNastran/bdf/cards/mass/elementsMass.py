@@ -1,4 +1,4 @@
-from numpy import zeros
+from numpy import zeros,array
 
 from pyNastran.bdf.cards.baseCard import Element
 
@@ -198,9 +198,9 @@ class CONM1(PointElement):
             #self.pid = None
             self.eid = card.field(1)
             self.nid = card.field(2)
-            self.cid = card.field(3)
+            self.cid = card.field(3,0)
             
-            m = zeros(6,6)
+            m = zeros((6,6))
             m[0,0] = card.field(4,0.)   # M11
             m[1,0] = card.field(5,0.)   # M21
             m[1,1] = card.field(6,0.)   # M22
@@ -246,7 +246,7 @@ class CONM1(PointElement):
         return self.massMatrix
 
     def rawFields(self):
-        cid = self.Cid()
+        cid  = self.setBlankIfDefault(self.Cid(),0)
         nid = self.Nid()
         m = self.massMatrix
         fields = ['CONM1',eid,nid,cid,m[0,0],m[1,0],m[1,1],m[2,0],m[2,1],

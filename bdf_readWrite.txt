@@ -80,7 +80,7 @@ RBAR  (done)
 RBAR1 (done)
 RBE1  (done)
 RBE2  (done)
-RBE3  (disabled)
+RBE3  (done)
 
 ----Properties----:
 PGAP    (done)
