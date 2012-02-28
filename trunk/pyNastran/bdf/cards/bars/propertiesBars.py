@@ -1287,12 +1287,12 @@ class PBEND(LineProperty):
             if isinstance(value3,float):
                 self.beamType = 1
                 ## Area of the beam cross section
-                self.A   = card.field(3)
+                self.A = card.field(3)
                 ## Area moments of inertia in planes 1 and 2.
-                self.i1  = card.field(4)
-                self.i2  = card.field(5)
+                self.i1 = card.field(4)
+                self.i2 = card.field(5)
                 ## Torsional stiffness
-                self.j   = card.field(6)
+                self.j = card.field(6)
 
                 # line2
                 ## The r,z locations from the geometric centroid for stress data recovery.
@@ -1307,8 +1307,8 @@ class PBEND(LineProperty):
 
                 # line 3 
                 ## Shear stiffness factor K in K*A*G for plane 1 and plane 2.
-                self.k1   = card.field(17)
-                self.k2   = card.field(18)
+                self.k1 = card.field(17)
+                self.k2 = card.field(18)
                 ## Radial offset of the neutral axis from the geometric centroid,
                 ## positive is toward the center of curvature
                 self.deltaN = card.field(22)
@@ -1319,30 +1319,30 @@ class PBEND(LineProperty):
                 ## Remark 3. (Integer = 1, 2, or 3)
                 self.fsi = card.field(3)
                 ## Mean cross-sectional radius of the curved pipe
-                self.rm  = card.field(4)
+                self.rm = card.field(4)
                 ## Wall thickness of the curved pipe
-                self.t   = card.field(5)
+                self.t = card.field(5)
                 ## Internal pressure
-                self.p   = card.field(6)
+                self.p = card.field(6)
                 
                 # line3
-                self.nsm  = card.field(19)
-                self.rc   = card.field(20)
-                self.zc   = card.field(21)
+                self.nsm = card.field(19)
+                self.rc  = card.field(20)
+                self.zc  = card.field(21)
             else:
                 raise Exception('Area/FSI on CBEND must be defined...')
             ## Bend radius of the line of centroids
-            self.rb     = card.field(7)
+            self.rb = card.field(7)
             ## Arc angle of element  (optional)
             self.thetab = card.field(8)
 
             ## Nonstructural mass per unit length.
-            self.nsm  = card.field(19)
+            self.nsm = card.field(19)
             ## Radial offset of the geometric centroid from points GA and GB
-            self.rc   = card.field(20)
+            self.rc = card.field(20)
             ## Offset of the geometric centroid in a direction perpendicular to the
             ## plane of points GA and GB and vector v
-            self.zc   = card.field(21)
+            self.zc = card.field(21)
         ###
         else:
             raise NotImplementedError('PBEND')

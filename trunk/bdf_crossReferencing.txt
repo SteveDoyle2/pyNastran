@@ -40,6 +40,8 @@ CORD2S (done)
 CONM1   (done, does this card need cross-referencing???)
 CONM2   (cid!=0, cid=0 requires CG location...)
 CBUSH   (???)
+CFAST   (no)
+CGAP    (???)
 
 CDAMP1  (???)
 CDAMP2  (???)
@@ -78,14 +80,14 @@ CTETRA (done)
 CPENTA (done)
 CHEXA  (done)
 
-CMASS1 (???)
-CMASS2 (???)
-CMASS3 (???)
-CMASS4 (???)
+CMASS1 (no)
+CMASS2 (no)
+CMASS3 (no)
+CMASS4 (no)
 
 CRAC2D (???)
 CRAC3D (???)
-CGAP    (no spoints)
+CGAP   (no spoints)
 
 ----Rigid Elements----:
 RBAR  (???)
@@ -104,13 +106,14 @@ PDAMP5  (???)
 PDAMPT  (???)
 PBUSH   (???)
 PBUSHT
+PFAST   (no)
 
 PROD    (done)
 PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
 PBEAML  (done)
-PBEND
+PBEND   (done)
 PTUBE   (done)
 
 PSHELL  (done)
@@ -235,8 +238,8 @@ TRIM    (???)
 ----Dynamic----:
 DAREA   (???)
 NLPARM  (???)
-TSTEP
-TSTEPNL
+TSTEP   (???)
+TSTEPNL (???)
 
 ----Modal Cards----:
 FREQ    (NA)

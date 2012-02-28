@@ -16,7 +16,7 @@ class CMASS1(PointElement):
     CMASS2 EID M   G1 C1 G2 C2
     CMASS1 EID PID G1 C1 G2 C2
     """
-    type = 'CMASS2'
+    type = 'CMASS1'
     def __init__(self,card=None,data=None):
         PointElement.__init__(self,card,data)
         if card:

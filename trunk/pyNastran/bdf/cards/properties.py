@@ -16,6 +16,48 @@ class BushingProperty(Property):
     def crossReference(self,model):
         pass
 
+class PFAST(Property):
+    type = 'PFAST'
+    def __init__(self,card=None,data=None):
+        Property.__init__(self,card,data)
+        ## Property ID
+        self.pid   = card.field(1)
+        ## diameter of the fastener
+        self.d     = card.field(2)
+        ## Specifies the element stiffness coordinate system
+        self.mcid  = card.field(3,-1)
+        self.mflag = card.field(4,0) # 0-absolute 1-relative
+        ## stiffness values in directions 1-3
+        self.kt1  = card.field(5)
+        self.kt2  = card.field(6)
+        self.kt3  = card.field(7)
+        ## Rotational stiffness values in directions 1-3
+        self.kr1  = card.field(8, 0.0)
+        self.kr2  = card.field(9, 0.0)
+        self.kr3  = card.field(10,0.0)
+        ## Lumped mass of fastener
+        self.mass = card.field(11,0.0)
+        ## Structural damping
+        self.ge   = card.field(12,0.0)
+
+    def crossReference(self,model):
+        self.mcid = model.Coord(self.mcid)
+    
+    def Mcid(self):
+        if isinstance(self.mcid,int):
+            return self.mcid
+        return self.mcid.cid
+
+    def Mass(self):
+        return self.mass
+
+    def rawFields(self):
+        fields = ['PFAST',self.pid,self.d,self.Mcid(),self.mflag,self.kt1,self.kt2,self.kt3,self.kr1,
+                          self.kr2,self.kr2,self.mass,self.ge]
+    
+    def reprFields(self):
+        return self.rawFields()
+
 class PBUSH(BushingProperty):
     type = 'PBUSH'
     def __init__(self,card=None,data=None):

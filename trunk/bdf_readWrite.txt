@@ -25,7 +25,7 @@ CORD3G (partial)
 CONM1  (done)
 CONM2  (cid!=0)
 CBUSH  (done)
-CFAST
+CFAST  (done)
 CGAP   (done)
 
 CDAMP1 (done)
@@ -92,6 +92,7 @@ PDAMP5  (done)
 PDAMPT  (done)
 PBUSH   (done)
 PBUSHT
+PFAST   (done)
 
 PROD    (done)
 PBAR    (done)
