@@ -1094,19 +1094,21 @@ class PBEAML(IntegratedLineProperty):
             
             self.dim = []
             Dim = []
-            j=0
             self.xxb = [0.]
             self.so = ['YES']
             self.nsm = []
             
+            j = 0
             n = 0
-            i=0
-            #print "dimAll = ",dimAll
+            i = 0
+            #print "dimAll = ",dimAll,nDim
             for i,dim in enumerate(dimAll):
                 if j<nDim:
+                    #print "*1"
                     Dim.append(dim)
                     j+=1
                 else:
+                    #print "*2",
                     #print "dim = ",Dim
                     self.nsm.append(dim)
                     if n>0:
@@ -1117,11 +1119,14 @@ class PBEAML(IntegratedLineProperty):
                     #j = 
                     n+=1
                     i+=2
+                    #print "Dim = ",Dim
                     self.dim.append(Dim)
                     Dim = []
                 ###
+                #print "i=%s j=%s Dim=%s" %(i,j,Dim)
             ###
-            if j<nDim: # if the last field is blank
+            if j<=nDim: # if the last field is blank
+                #print "DimB = ",Dim
                 self.dim.append(Dim)
                 self.nsm.append(card.field(i,0.0))
             ###
@@ -1217,6 +1222,7 @@ class PBEAML(IntegratedLineProperty):
     def rawFields(self):
         fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]
         #print "self.nsm = ",self.nsm
+        #print "xxb=%s so=%s dim=%s nsm=%s" %(self.xxb,self.so,self.dim,self.nsm)
         for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
             if i==0:
                 fields += dim+[nsm]
@@ -1229,7 +1235,10 @@ class PBEAML(IntegratedLineProperty):
         return fields
 
     def reprFields(self):
-        return self.rawFields()
+        group = self.setBlankIfDefault(self.group,'MSCBMLO')
+        fields = self.rawFields()
+        fields[3] = group
+        return fields
 
 class PBEAM3(LineProperty): # not done, cleanup
     type = 'PBEAM3'

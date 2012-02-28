@@ -38,7 +38,7 @@ BDF Bug Fixes
    - PCOMP doesnt lose last plies anymore
    - fixed bug in CQUADR, CQUADX, CVISC, CONROD, CGAP, CTRIAX, PTUBE, PMASS, MAT3
    - fixed bug in NLPARM, PLOAD2, PLOAD4, QBDY1, QBDY3, FREQ2, CHBDYE
-   - fixed bug in PMASS, CSHEAR, CBAR, CQUAD, RBE1, RBE2, RBE3
+   - fixed bug in PMASS, CSHEAR, CBAR, CQUAD, RBE1, RBE2, RBE3, PBEAML
 
 Added BDF
    - enabled CQUAD, RBE3

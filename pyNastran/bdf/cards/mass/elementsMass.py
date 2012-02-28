@@ -249,12 +249,13 @@ class CONM1(PointElement):
         cid  = self.setBlankIfDefault(self.Cid(),0)
         nid = self.Nid()
         m = self.massMatrix
-        fields = ['CONM1',eid,nid,cid,m[0,0],m[1,0],m[1,1],m[2,0],m[2,1],
+        fields = ['CONM1',self.eid,nid,cid,m[0,0],m[1,0],m[1,1],m[2,0],m[2,1],
                  m[2,2],m[3,0],m[3,1],m[3,2],m[3,3],m[4,0],m[4,1],m[4,2],
                  m[4,3],m[4,4],m[5,0],m[5,1],m[5,2],m[5,3],m[5,4],m[5,5] ]
         return fields
 
     def reprFields(self):
+        fields = self.rawFields()
         fields2 = fields[0:4]
         for field in fields[4:]:
             val = self.setBlankIfDefault(field,0.)
