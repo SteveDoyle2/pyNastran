@@ -87,6 +87,38 @@ class CBUSH(BushingElement):
     def reprFields(self):
         return self.rawFields()
 
+class CFAST(Element):
+    type = 'CFAST'
+    def __init__(self,card=None,data=None):
+        Element.__init__(self,card,data)
+        self.eid  = card.field(1)
+        self.pid  = card.field(2)
+        self.Type = card.field(3)
+        self.ida = card.field(4)
+        self.idb = card.field(5)
+        self.gs  = card.field(6)
+        self.ga  = card.field(7)
+        self.gb  = card.field(8)
+        self.xs  = card.field(9)
+        self.ys  = card.field(10)
+        self.zs  = card.field(11)
+        
+        #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
+
+    def crossReference(self,model):
+        self.pid = model.Property(self.pid)
+        #self.gs = model.Node(self.gs)
+        #self.ga = model.Node(self.ga)
+        #self.gb = model.Node(self.gb)
+    
+    def rawFields(self):
+        fields = ['CFAST',self.eid,self.Pid(),self.Type,self.ida,self.idb,self.gs,self.ga,self.gb,
+                          self.xs,self.ys,self.zs]
+        return fields
+    
+    def reprFields(self):
+        return self.rawFields()
+
 class DamperElement(Element):
     def __init__(self,card,data):
         Element.__init__(self,card,data)

@@ -227,6 +227,9 @@ def getElementStats(fem1,fem2):
                 c   = e.Centroid()
                 #mid = e.Mid()
                 pid = e.Pid()
+                n    = e.Normal()
+                a,c,n = e.AreaCentroidNormal()
+                
             elif isinstance(e,SolidElement):
                 v   = e.Volume()
                 m   = e.Mass()

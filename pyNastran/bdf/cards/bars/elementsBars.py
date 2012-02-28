@@ -858,7 +858,16 @@ class CBEAM(CBAR):
         ###
         return Ke
 
-    def __repr__(self):
+    def rawFields(self):
+        (x1,x2,x3) = self.getX_G0_defaults()
+        offt = self.getOfft_Bit_defaults()
+        ga,gb = self.nodeIDs()
+        fields = ['CBEAM',self.eid,self.Pid(),ga,gb,x1,x2,x3,offt,
+                  self.pa,self.pb,self.w1a,self.w2a,self.w3a,self.w1b,self.w2b,self.w3b,
+                  self.sa,self.sb]
+        return fields
+
+    def reprFields(self):
         w1a = self.setBlankIfDefault(self.w1a,0.0)
         w2a = self.setBlankIfDefault(self.w2a,0.0)
         w3a = self.setBlankIfDefault(self.w3a,0.0)
@@ -871,7 +880,7 @@ class CBEAM(CBAR):
         fields = ['CBEAM',self.eid,self.Pid(),ga,gb,x1,x2,x3,offt,
                   self.pa,self.pb,w1a,w2a,w3a,w1b,w2b,w3b,
                   self.sa,self.sb]
-        return self.printCard(fields)
+        return fields
 
 class CBEND(LineElement):
     type = 'CBEND'
@@ -882,6 +891,7 @@ class CBEND(LineElement):
         self.ga = card.field(3)
         self.gb = card.field(4)
         x1Go = card.field(5)
+        #self.initX_G0(card)
         if isinstance(x1Go,int):
             self.g0 = x1Go
             self.x1 = None
@@ -896,24 +906,6 @@ class CBEND(LineElement):
             raise Exception('invalid x1Go=|%s| on CBEND' %(x1Go))
         self.geom = card.field(8)
         assert self.geom in [1,2,3,4],'geom is invalid geom=|%s|' %(self.geom)
-
-#class CBEND(LineElement):
-#    type = 'CBEND'
-#    def __init__(self,card=None,data=None):
-#        LineElement.__init__(self,card,data)
-#        if card:
-#            self.eid = card.field(1)
-#            self.pid = card.field(2)
-#            self.ga  = card.field(3)
-#            self.gb  = card.field(4)
-#            self.initX_G0(card)
-#            #self.x1  = card.field(5)
-#            #self.x2  = card.field(6)
-#            #self.x3  = card.field(7)
-#            self.geom = card.field(8)
-#        else:
-#            raise NotImplementedError('CBEND')
-#        ###
 
     def Area(self):
         return self.pid.Area()

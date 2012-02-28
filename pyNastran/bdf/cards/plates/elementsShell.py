@@ -269,7 +269,7 @@ class CTRIAX6(CTRIA3):
 class CSHEAR(ShellElement):
     type = 'CSHEAR'
     def __init__(self,card=None,data=None):
-        Element.__init__(self,card,data)
+        ShellElement.__init__(self,card,data)
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)

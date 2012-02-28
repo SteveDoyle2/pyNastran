@@ -65,7 +65,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # elements
         'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
-        'CBUSH',
+        'CBUSH','CFAST',
         'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
         
         'CBAR','CROD','CTUBE','CBEAM','CONROD','CBEND',
@@ -80,7 +80,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # properties
         'PMASS',
-        'PELAS','PGAP','PBUSH',
+        'PELAS','PGAP','PBUSH','PFAST',
         'PDAMP','PDAMP5','PDAMPT',
         'PROD','PBAR','PBARL','PBEAM','PBEAML','PTUBE','PBEND',#'PBEAM3',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
@@ -952,6 +952,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CBUSH':
                 (elem) = CBUSH(cardObj)
                 self.addDamperElement(elem)
+            elif cardName=='CFAST':
+                (elem) = CFAST(cardObj)
+                self.addDamperElement(elem)
 
             elif cardName=='CDAMP1':
                 (elem) = CDAMP1(cardObj)
@@ -1005,7 +1008,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CRAC3D':
                 elem = CRAC3D(cardObj)
                 self.addElement(elem)
-
 
             # rigid elements
             elif cardName=='RBAR':
@@ -1088,6 +1090,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             elif cardName=='PBUSH':
                 prop = PBUSH(cardObj)
+                self.addProperty(prop)
+            #elif cardName=='PBUSHT':
+            #    prop = PBUSHT(cardObj)
+            #    self.addProperty(prop)
+            elif cardName=='PFAST':
+                prop = PFAST(cardObj)
                 self.addProperty(prop)
 
             elif cardName=='PDAMPT':
@@ -1311,8 +1319,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 aero = SPLINE2(cardObj)
                 self.addSpline(aero)
             #elif cardName=='SPLINE3':
-                #aero = SPLINE3(cardObj)
-                #self.addSpline(aero)
+            #    aero = SPLINE3(cardObj)
+            #    self.addSpline(aero)
             elif cardName=='CAERO1':
                 aero = CAERO1(cardObj)
                 self.addCAero(aero)
@@ -1329,8 +1337,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 aero = PAERO2(cardObj)
                 self.addPAero(aero)
             #elif cardName=='PAERO3':
-                #aero = PAERO3(cardObj)
-                #self.addPAero(aero)
+            #    aero = PAERO3(cardObj)
+            #    self.addPAero(aero)
             elif cardName=='AERO':
                 aero = AERO(cardObj)
                 self.addAero(aero)
@@ -1544,7 +1552,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='EIGRL':
                 method = EIGRL(cardObj,sol=self.sol)
                 self.addMethod(method)
-
 
 
             elif cardName=='PARAM':
