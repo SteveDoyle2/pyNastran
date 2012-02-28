@@ -633,8 +633,11 @@ class MAT10(Material):
             raise RuntimeError('c, bulk, and rho are all undefined on tbe MAT10')
         ###
         return(bulk,rho,c)
-            
+
     def rawFields(self):
         fields = ['MAT10',self.mid,self.bulk,self.rho,self.c,self.ge]
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 

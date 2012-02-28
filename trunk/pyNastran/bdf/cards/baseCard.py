@@ -121,10 +121,15 @@ class BaseCard(BDF_Card):
                 by = 1
                 if i+2<nFields and fields[i+2]=='BY':
                     by = fields[i+3]
-                    sys.stderr.write("BY was found...untested...")
-                    raise NotImplementedError('implement BY support\nfields=%s' %(fields))
-                for j in range(fields[i-1],fields[i+1],by):
-                    out.append(j)
+                    #sys.stderr.write("BY was found...untested...")
+                    #raise NotImplementedError('implement BY support\nfields=%s' %(fields))
+                    minValue = fields[i-1]
+                    maxValue = fields[i+1]
+                    #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
+                for j in range(0,maxValue/by):
+                    value = minValue+by*j
+                    out.append(value)
+                #print "v = ",minValue+j*by
                 ###
                 if by>1:
                     i+=3

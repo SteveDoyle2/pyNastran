@@ -1,3 +1,4 @@
+import sys
 from baseCard import BaseCard
 
 class Method(BaseCard):
@@ -34,12 +35,16 @@ class EIGB(Method):
         else:
             raise NotImplementedError('EIGB')
         ###
+        #print self.rawFields()
+        #print self.reprFields()
+        #print self
+        #sys.exit()
 
     def crossReference(self,model):
         pass
 
     def rawFields(self):
-        fields = ['EIGB',self.sid,self.method,self.L1,self.L2,self.nep,self.ndn,None,
+        fields = ['EIGB',self.sid,self.method,self.L1,self.L2,self.nep,self.ndp,self.ndn,None,
                          self.norm,self.G,self.C]
         return fields
 
@@ -48,8 +53,9 @@ class EIGB(Method):
         nep = self.setBlankIfDefault(self.nep,0)
         ndp = self.setBlankIfDefault(self.ndp,3*self.nep)
         ndn = self.setBlankIfDefault(self.ndn,3*self.nep)
+        #print "nep = ",self.nep,ndn
         norm = self.setBlankIfDefault(self.norm,'MAX')
-        fields = ['EIGB',self.sid,method,self.L1,self.L2,nep,ndn,None,
+        fields = ['EIGB',self.sid,method,self.L1,self.L2,nep,ndp,ndn,None,
                          norm,self.G,self.C]
         return fields
 
