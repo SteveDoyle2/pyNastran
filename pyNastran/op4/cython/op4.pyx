@@ -7,6 +7,19 @@ by Gael Varoquaux
 cdef extern from "libop4.c":
     float *op4_load(int size)
     int    Op4_scan(char *filename)
+    int    op4_scan(char *filename  , #/* in                          */
+                    int  *n_mat     , #/* out number of matrices      */
+                    char  name[][9] , #/* out matrix names            */
+                    int  *storage   , #/* out 0=dn; 1=sp1; 2=sp2      */
+                    int  *nRow      , #/* out number of rows          */
+                    int  *nCol      , #/* out number of columns       */
+                    int  *nStr      , #/* out number of strings       */
+                    int  *nNnz      , #/* out number of nonzero terms */
+                    int  *Type      , #/* out 1=RS; 2=RD; 3=CS; 4=CD  */
+                    int  *form      , #/* out matrix form 6=symm, etc */
+                    int  *digits    , #/* out size of mantissa        */
+                    long *offset      #/* out byte offset to matrix   */
+                    )
 
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
@@ -61,31 +74,68 @@ cdef class ArrayWrapper:
         references to the object are gone. """
         free(<void*>self.data_ptr)
 
-def File(char *filename, char *mode):
+def File(char *filename, 
+         char *mode    ):
+    cdef int  Max_Matrices_Per_OP4 = 100
     cdef int  n_mat_in_file
-#   cdef char name[Max_Matrices_Per_OP4][9]
-    print('op4.File got [%s], [%c]' % (filename, mode))
+#   cdef char name[Max_Matrices_Per_OP4][9]   # not allowed
+    cdef char name[100][9]
+    cdef int  storage[100]
+    cdef int  nRow[100]   
+    cdef int  nCol[100]   
+    cdef int  nStr[100]   
+    cdef int  nNnz[100]   
+    cdef int  Type[100]   
+    cdef int  form[100]   
+    cdef int  digits[100]
+    cdef long offset[100]
+#   print('op4.File got [%s], [%c]' % (filename, mode))
     if not os.path.exists(filename):
         print('op4.File: no such file %s' % (filename))
         raise IOError
     elif not os.path.isfile(filename):
         print('op4.File: not a file %s' % (filename))
         raise IOError
-    fh = None
+    fh = { 'File' : filename }
     # Scan the file for number of matrices and headers for each matrix.
     try:
-        rv = Op4_scan(filename)      # in                            
-#                    &n_mat_in_file, # out number of matrices        
-#                     name,          # out matrix names              
-#                     storage,       # out 0=dn; 1=sp1; 2=sp2        
-#                     nRow,          # out number of rows            
-#                     nCol,          # out number of columns         
-#                     nStr,          # out number of strings         
-#                     nNnz,          # out number of nonzero terms   
-#                     Type,          # out 1=RS; 2=RD; 3=CS; 4=CD    
-#                     form,          # out matrix form 6=symm, etc   
-#                     digits,        # out size of mantissa          
-#                     offset)        # out byte offset to matrix     
+        rv = op4_scan(filename , # in                            
+                 &n_mat_in_file, # out number of matrices        
+                  name         , # out matrix names              
+                  storage      , # out 0=dn; 1=sp1; 2=sp2        
+                  nRow         , # out number of rows            
+                  nCol         , # out number of columns         
+                  nStr         , # out number of strings         
+                  nNnz         , # out number of nonzero terms   
+                  Type         , # out 1=RS; 2=RD; 3=CS; 4=CD    
+                  form         , # out matrix form 6=symm, etc   
+                  digits       , # out size of mantissa          
+                  offset)        # out byte offset to matrix     
+
+        if n_mat_in_file > Max_Matrices_Per_OP4:
+            print('op4.File: too many matrices in %s' % (filename))
+            raise IOError
+
+        fh['nMat']   = n_mat_in_file
+        fh['name']   = []
+        fh['nRow']   = []
+        fh['nCol']   = []
+        fh['nStr']   = []
+        fh['nNnz']   = []
+        fh['type']   = []
+        fh['form']   = []
+        fh['digits'] = []
+        fh['offset'] = []
+        for i in range(n_mat_in_file):
+            fh['name'].append( name[i] )
+            fh['nRow'].append( nRow[i] )
+            fh['nCol'].append( nCol[i] )
+            fh['nStr'].append( nStr[i] )
+            fh['nNnz'].append( nNnz[i] )
+            fh['type'].append( Type[i] )
+            fh['form'].append( form[i] )
+            fh['digits'].append( digits[i] )
+            fh['offset'].append( digits[i] )
     except:
         print('op4.File: failed to scan %s' % (filename))
         raise IOError
