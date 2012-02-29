@@ -395,7 +395,8 @@ class writeMesh(object):
 
     def writeOptimization(self):
         msg = ''
-        if self.dconstrs or self.desvars or self.ddvals or self.dresps or self.dvprels:
+        if (self.dconstrs or self.desvars or self.ddvals or self.dresps 
+          or self.dvprels or self.dvmrels or self.doptprm or self.dlinks):
             msg += '$OPTIMIZATION\n'
             for ID,dconstr in sorted(self.dconstrs.items()):
                 msg += str(dconstr)
@@ -403,12 +404,18 @@ class writeMesh(object):
                 msg += str(desvar)
             for ID,ddval in sorted(self.ddvals.items()):
                 msg += str(ddval)
+            for ID,dlink in sorted(self.dlinks.items()):
+                msg += str(dlink)
             for ID,dresp in sorted(self.dresps.items()):
                 msg += str(dresp)
             for ID,dvprel in sorted(self.dvprels.items()):
                 msg += str(dvprel)
+            for ID,dvmrel in sorted(self.dvmrels.items()):
+                msg += str(dvmrel)
             for ID,equation in sorted(self.dequations.items()):
                 msg += str(equation)
+            if self.doptprm is not None:
+                msg += str(self.doptprm)
         return msg
 
     def writeTables(self):

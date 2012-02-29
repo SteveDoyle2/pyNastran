@@ -160,7 +160,6 @@ DLOAD  (done)
 RLOAD1 (done, dynamic)
 RLOAD2 (done, dynamic)
 SLOAD  (done)
-
 TLOAD1
 
 ----Thermal Loads----:
@@ -185,7 +184,6 @@ RADBC  (done)
 RADM   (not integrated)
 TEMPBC
 RADCAV
-RADM
 RADSET
 
 ----Thermal Properties----:
@@ -249,7 +247,7 @@ FREQ5
 DCONSTR  (done)
 DESVAR   (done)
 DDVAL    (done)
-DOPTPRM
+DOPTPRM  (done)
 DRESP1   (done)
 DRESP2
 DRESP3
@@ -258,9 +256,9 @@ DVCREL1         # element  DV
 DVCREL2
 DVPREL1  (done) # property DV
 DVPREL2  (done)
-DVMREL1         # material DV
+DVMREL1  (done) # material DV
 DVMREL2
-DLINK
+DLINK   (done)
 DMIG    (in progress)
 DEQATN  (in progress)
 
@@ -374,6 +372,8 @@ VIEW
 VIEW3D
 
 ----Nodes----:
+EGRID
+GRIDG
 MONPNT1
 MONPNT2
 MONPNT3
@@ -418,6 +418,10 @@ SESUP
 ACSRCE
 CHACAB
 CHACBR
+
+----Unclassified----:
+CGEN
+SPCG
 
 -------------------------------------------
 
