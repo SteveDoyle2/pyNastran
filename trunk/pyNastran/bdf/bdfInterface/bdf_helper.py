@@ -589,11 +589,23 @@ class addMethods(object):
         assert key>0
         self.ddvals[key] = ddval
 
+    def addDLink(self,dlink):
+        key = dlink.oid
+        assert key not in self.dlink
+        assert key>0
+        self.dlinks[key] = dlink
+
     def addDResp(self,dresp):
         key = dresp.oid
         assert key not in self.dresps
         assert key>0
         self.dresps[key] = dresp
+
+    def addDvmrel(self,dvmrel):
+        key = dvmrel.oid
+        assert key not in self.dvmrels
+        assert key>0
+        self.dvmrels[key] = dvmrel
 
     def addDvprel(self,dvprel):
         key = dvprel.oid

@@ -36,10 +36,10 @@ BDF Bug Fixes
    - fixed bug in CONM2 with inertia terms
    - PCOMP can now have 1 ply per line or 2 plies per line
    - PCOMP doesnt lose last plies anymore
-   - fixed bug in CQUADR, CQUADX, CVISC, CONROD, CGAP, CTRIAX, PTUBE, PMASS, MAT3
-   - fixed bug in NLPARM, PLOAD2, PLOAD4, QBDY1, QBDY3, FREQ2, CHBDYE
-   - fixed bug in PMASS, CSHEAR, CBAR, CQUAD, RBE1, RBE2, RBE3, PBEAML
-
+   - fixed bugs in CQUADR, CQUADX, CVISC,  CONROD, CGAP,  CTRIAX, PTUBE
+   - fixed bugs in NLPARM, PLOAD2, PLOAD4, QBDY1,  QBDY3, FREQ2,  CHBDYE
+   - fixed bugs in PMASS,  CSHEAR, CBAR,   CQUAD,  RBE1,  RBE2,   RBE3, 
+   - fixed bugs in PBEAML, MAT3
 Added BDF
    - enabled CQUAD, RBE3
    - EIGB, EIGP, EIGR, EIGRL
@@ -51,7 +51,7 @@ Added BDF
    - CBEND, PBEND
    - *** TIC
    - CONM1, AEFACT
-   - DVPREL2
+   - DVPREL2, DOPTPRM, DVMREL1, DLINK
 
 OP2 API Changes
 OP2 Bug Fixes

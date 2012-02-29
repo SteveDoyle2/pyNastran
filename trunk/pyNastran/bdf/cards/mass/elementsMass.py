@@ -259,7 +259,10 @@ class CONM1(PointElement):
         fields2 = fields[0:4]
         for field in fields[4:]:
             val = self.setBlankIfDefault(field,0.)
+            #print "field=%s value=%s" %(field,val)
             fields2.append(val)
+        #print "fields  = ",fields
+        #print "fields2 = ",fields2
         return fields2
 
 class CONM2(PointElement): ## @todo not done

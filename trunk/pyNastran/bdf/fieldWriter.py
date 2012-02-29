@@ -11,10 +11,10 @@ def isSame(value1,value2):
         if value1==value2:
             return True
         return False
-    elif type(value1)==type(value2) and not isinf(value1) and allclose(value1,value2):
-        #print "value=%s default=%s same=%s" %(value,default,True)
+    elif value1==value2 or type(value1)==type(value2) and not isinf(value1) and allclose(value1,value2):
+        #print "value=%s value2=%s same=%s" %(value1,value2,True)
         return True
-    #print "value=%s default=%s same=%s" %(value,default,False)
+    #print "value1=%s value2=%s same=%s" %(value1,value2,False)
     return False
 
 def setBlankIfDefault(value,default):

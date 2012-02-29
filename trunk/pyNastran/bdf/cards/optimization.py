@@ -60,7 +60,7 @@ class DESVAR(OptConstraint):
         return fields
 
 class DDVAL(OptConstraint):
-    type = 'DDVal'
+    type = 'DDVAL'
     def __init__(self,card=None,data=None):
         self.oid = card.field(1)
         self.dval1 = card.field(2)
@@ -75,6 +75,70 @@ class DDVAL(OptConstraint):
         fields = ['DDVAL',self.oid,self.dval1,self.dval2,self.dval3,
                   self.dval4,self.dval5,self.dval6,self.dval7]
         return self.printCard(fields)
+
+class DOPTPRM(OptConstraint):
+    type = 'DOPTPRM'
+    def __init__(self,card=None,data=None):
+        """
+        Design Optimization Parameters
+        Overrides default values of parameters used in design optimization
+        DOPTPRM PARAM1 VAL1 PARAM2 VAL2 PARAM3 VAL3 PARAM4 VAL4
+                PARAM5 VAL5 -etc.-
+        """
+        fields = card.fields(1)
+        nFields = len(fields)
+        
+        self.params = {}
+        for i in range(0,nFields,2):
+            param = fields[i]
+            val   = fields[i+1]
+            self.params[param] = val
+        ###
+    
+    def rawFields(self):
+        fields = ['DOPTPRM']
+        for param,val in sorted(self.params.items()):
+            fields += [param,val]
+        return fields
+
+class DLINK(OptConstraint):
+    type = 'DLINK'
+    def __init__(self,card=None,data=None):
+        """
+        Multiple Design Variable Linking
+        Relates one design variable to one or more other design variables
+        DLINK ID DDVID C0 CMULT IDV1 C1 IDV2 C2
+              IDV3 C3 -etc.-
+        """
+        self.oid   = card.field(1)
+        self.ddvid = card.field(2)
+        self.c0    = card.field(3,0.)
+        self.cmult = card.field(4,1.)
+        
+        fields = card.fields(5)
+        nFields = len(fields)
+        self.IDv = []
+        self.Ci  = []
+        
+        for i in range(0,nFields,2):
+            sekf.IDv.append(fields[i])
+            self.Ci.append(fields[i+1])
+        ###
+
+    def rawFields(self):
+        fields = ['DLINK',self.oid,self.ddvid,self.c0,self.cmult]
+        for idv,ci in zip(self.IDv,self.Ci):
+            fields += [idv,ci]
+        return fields
+
+    def reprFields(self):
+        c0    = self.setBlankIfDefault(self.c0,0.)
+        cmult = self.setBlankIfDefault(self.cmult,1.)
+        fields = ['DLINK',self.oid,self.ddvid,c0,cmult]
+        for idv,ci in zip(self.IDv,self.Ci):
+            fields += [idv,ci]
+        return fields
+
 
 class DRESP1(OptConstraint):
     type = 'DRESP1'
@@ -101,7 +165,67 @@ class DRESP1(OptConstraint):
                            ]+self.others
         return fields
 
-class DVPREL1(OptConstraint):
+class DVMREL1(OptConstraint):  # similar to DVPREL1
+    type = 'DVMREL1'
+    def __init__(self,card=None,data=None):
+        """
+        Design Variable to Material Relation
+        Defines the relation between a material property and design variables
+        DVMREL1 ID TYPE MID MPNAME MPMIN MPMAX C0
+                DVID1 COEF1 DVID2 COEF2 DVID3 COEF3 -etc.-
+        """
+        self.oid    = card.field(1)
+        self.Type   = card.field(2)
+        self.mid    = card.field(3)
+        self.mpName = card.field(4)
+        self.mpMin  = card.field(5) ## @todo bad default
+        self.mpMax  = card.field(6,1e20)
+        self.c0     = card.field(7,0.0)
+        
+        self.dvids  = []
+        self.coeffs = []
+        endFields = card.fields(9)
+        #print "endFields = ",endFields
+        nFields = len(endFields)-1
+        if nFields%2==1:
+            endFields.append(None)
+            nFields+=1
+        i = 0
+        for i in range(0,nFields,2):
+            self.dvids.append(endFields[i])
+            self.coeffs.append(endFields[i+1])
+        if nFields%2==1:
+            print card
+            print "dvids = ",self.dvids
+            print "coeffs = ",self.coeffs
+            print str(self)
+            raise Exception('invalid DVMREL1...')
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+    
+    def Mid(self):
+        if isinstance(self.mid,int):
+            return self.mid
+        return self.mid.mid
+
+    def rawFields(self):
+        fields = ['DVMREL1',self.oid,self.Type,self.Mid(),self.mpName,self.mpMin,self.mpMax,self.c0,None]
+        for dvid,coeff in zip(self.dvids,self.coeffs):
+            fields.append(dvid)
+            fields.append(coeff)
+        return fields
+
+    def reprFields(self):
+        mpMax = self.setBlankIfDefault(self.mpMax,1e20)
+        c0    = self.setBlankIfDefault(self.c0,0.)
+        fields = ['DVMREL1',self.oid,self.Type,self.Mid(),self.mpName,self.mpMin,mpMax,c0,None]
+        for dvid,coeff in zip(self.dvids,self.coeffs):
+            fields.append(dvid)
+            fields.append(coeff)
+        return fields
+
+class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
     def __init__(self,card=None,data=None):
         """
@@ -112,7 +236,7 @@ class DVPREL1(OptConstraint):
         self.Type   = card.field(2)
         self.pid    = card.field(3)
         self.pNameFid = card.field(4)
-        self.pMin   = card.field(5)
+        self.pMin   = card.field(5) ## @todo bad default
         self.pMax   = card.field(6,1e20)
         self.c0     = card.field(7,0.0)
             

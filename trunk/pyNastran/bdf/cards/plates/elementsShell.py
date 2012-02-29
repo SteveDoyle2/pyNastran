@@ -84,7 +84,7 @@ class CTRIA3(ShellElement):
         returns area,centroid, normal as it's more efficient to do them together
         """
         (n0,n1,n2) = self.nodePositions()
-        return Triangle_AreaCentroidNormal(nodes)
+        return Triangle_AreaCentroidNormal([n0,n1,n2])
 
     def Area(self):
         """
@@ -289,9 +289,8 @@ class CSHEAR(ShellElement):
         return Normal(a,b)
 
     def AreaCentroidNormal(self):
-        (n1,n2,n3,n4) = self.nodePositions()
-        (area,centroid) = self.AreaCentroid(nodes)
-        normal = self.Normal(nodes)
+        (area,centroid) = self.AreaCentroid()
+        normal = self.Normal()
         return (area,centroid,normal)
 
     def AreaCentroid(self,debug=False):
@@ -331,7 +330,6 @@ class CSHEAR(ShellElement):
     ###
 
     def Centroid(self,debug=False):
-        nodes = self.nodePositions()
         (area,centroid) = self.AreaCentroid(debug)
         return centroid
 
@@ -416,9 +414,8 @@ class CQUAD4(ShellElement):
         return Normal(a,b)
 
     def AreaCentroidNormal(self):
-        (n1,n2,n3,n4) = self.nodePositions()
-        (area,centroid) = self.AreaCentroid(nodes)
-        normal = self.Normal(nodes)
+        (area,centroid) = self.AreaCentroid()
+        normal = self.Normal()
         return (area,centroid,normal)
 
     def AreaCentroid(self,debug=False):

@@ -140,8 +140,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #'DEQATN',
         
         # optimization cards
-        'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1','DVPREL2',
-        #'DRESP2','DRESP3','DLINK'
+        'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1','DVPREL2','DOPTPRM',
+        'DVMREL1','DLINK',#'DRESP2','DRESP3',
         
         # sets
         'SET1','SET3',
@@ -349,9 +349,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.dconstrs = {}
         self.desvars  = {}
         self.ddvals   = {}
+        self.dlinks   = {}
         self.dresps   = {}
         ## stores DVPREL1, DVPREL2...might change to DVxRel
         self.dvprels  = {}
+        self.dvmrels  = {}
+        self.doptprm = None
         
         ## SETx
         self.sets = {}
@@ -703,17 +706,12 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         if self.debug:
             self.log.debug("*readBulkDataDeck")
         self.openFile(self.bdfFileName)
-        #self.nodes = {}
-        #self.elements = {}
-        #self.rejects = []
-        
+
         #oldCardObj = BDF_Card()
         while len(self.activeFileNames)>0: # keep going until finished
             (rawCard,card,cardName) = self.getCard(debug=False) # gets the cardLines
             #print "outcard = ",card
-            #if cardName=='CQUAD4':
-            #    print "card = ",card
-            
+
             if cardName=='INCLUDE':
                 #print "rawCard = ",rawCard
                 #print "card    = ",card
@@ -747,7 +745,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             #print "card2 = ",ListPrint(card)
             #print "card = ",card
-            cardName = self.getCardName(card)
+            #cardName = self.getCardName(card)
             
             if 'ENDDATA' in cardName:
                 #print cardName
@@ -825,8 +823,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         @warning cardObject is not returned
         @todo this method is 600+ lines long...refactor time...
         """
-        #if cardName != 'CQUAD4':
-            #print cardName
         #print "card = ",card
 
         #if cardName in self.specialCards:
@@ -1451,6 +1447,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='DDVAL':
                 ddval = DDVAL(cardObj)
                 self.addDDVal(ddval)
+            elif cardName=='DLINK':
+                dlink = DLINK(cardObj)
+                self.addDLink(dlink)
             elif cardName=='DRESP1':
                 ddval = DRESP1(cardObj)
                 self.addDResp(ddval)
@@ -1460,7 +1459,16 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='DVPREL2':
                 dvprel = DVPREL2(cardObj)
                 self.addDvprel(dvprel)
-
+            elif cardName=='DVMREL1':
+                dvmrel = DVMREL1(cardObj)
+                self.addDvmrel(dvmrel)
+            #elif cardName=='DVMREL2':
+            #    dvmrel = DVMREL2(cardObj)
+            #    self.addDvmrel(dvmrel)
+            elif cardName=='DOPTPRM':
+                doptprm = DOPTPRM(cardObj)
+                #self.addDoptprm(doptprm)
+                self.doptprm = doptprm
 
             # coordinate systems
             elif cardName=='CORD2R':

@@ -41,7 +41,7 @@ CONM1   (done, does this card need cross-referencing???)
 CONM2   (cid!=0, cid=0 requires CG location...)
 CBUSH   (???)
 CFAST   (no)
-CGAP    (???)
+CGAP    (no spoints)
 
 CDAMP1  (???)
 CDAMP2  (???)
@@ -87,9 +87,10 @@ CMASS4 (no)
 
 CRAC2D (???)
 CRAC3D (???)
-CGAP   (no spoints)
 
 ----Rigid Elements----:
+RROD
+RTRPLT
 RBAR  (???)
 RBAR1 (???)
 RBE1  (???)
@@ -153,9 +154,11 @@ SUPORT1 (???)
 LOAD    (done)
 LSEQ    (???)
 
+RFORCE
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
+FORCEAX
 
 GRAV    (???)
 
@@ -172,6 +175,7 @@ DLOAD   (???)
 RLOAD1  (???)
 RLOAD2  (???)
 SLOAD   (???)
+TLOAD1
 
 ----Thermal Loads----:
 TEMP   (???)
@@ -187,11 +191,15 @@ QBDY3  (???)
 CHBDYE (???)
 CHBDYG (???)
 CHBDYP (???)
+CONVM
 
 ----Thermal BCs----:
 CONV   (???)
 RADBC  (???)
 RADM
+TEMPBC
+RADCAV
+RADSET
 
 ----Thermal Properties----:
 PCONV  (???)
@@ -233,6 +241,7 @@ SPLINE5
 SPLINE6
 SPLINE7
 
+CSSCHD
 TRIM    (???)
 
 ----Dynamic----:
@@ -253,11 +262,18 @@ FREQ5
 DCONSTR  (???)
 DESVAR   (???)
 DDVAL    (???)
+DOPTPRM  (NA)
 DRESP1   (???)
 DRESP2   (no deqatn)
 DRESP3
+DVGRID
+DVCREL1         # element  DV
+DVCREL2
 DVPREL1  (???)
-DLINK
+DVPREL2  (???)
+DVMREL1  (???)
+DVMREL2
+DLINK   (???)
 DMIG
 DEQATN
 
@@ -294,8 +310,8 @@ EIGC    (???)
 EIGP    (???)
 EIGR    (???)
 EIGRL   (???)
-MKAERO   (NA)
 MKAERO1  (NA)
+MKAERO2  (NA)
 
 ----Other----:
 INCLUDE (NA)
@@ -303,11 +319,4 @@ PARAM   (???)
 
 
 -----------------------------------------------
-===Not Supported===
-MATT1
-MATT4
-GRIDG
-EGRID
-CGEN
-SPCG
 
