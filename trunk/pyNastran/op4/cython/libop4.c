@@ -29,8 +29,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 float *op4_load(int size) {
     int* array;
-    array = malloc(sizeof(int)*size);
     int i;
+    array = malloc(sizeof(int)*size);
     for (i=0; i<size; i++) {
 	    array[i] = i;
     }
