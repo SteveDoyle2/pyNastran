@@ -264,7 +264,7 @@ DESVAR   (???)
 DDVAL    (???)
 DOPTPRM  (NA)
 DRESP1   (???)
-DRESP2   (no deqatn)
+DRESP2   (???)
 DRESP3
 DVGRID
 DVCREL1         # element  DV

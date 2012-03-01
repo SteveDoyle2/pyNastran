@@ -196,8 +196,8 @@ def printFloat8(value,tol=1e-8):
                     assert '.' != field[0],field
                 else:
                     field = printScientific8(value)
-                    return field
                 ###
+                return field
             ###
         ###
         else:
@@ -239,13 +239,19 @@ def printFloat8(value,tol=1e-8):
                 #print "C"
                 field = "%8.6f" %(value)   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
                 field = field.replace('-0.','-.')
-            elif value>-10.:   field = "%8.5f" %(value)   # -1    >x>-10
-            elif value>-100:   field = "%8.4f" %(value)   # -10   >x>-100
-            elif value>-1000:  field = "%8.3f" %(value)   # -100  >x>-1000
-            elif value>-10000: field = "%8.2f" %(value)   # -1000 >x>-10000
-            elif value>-100000:field = "%8.1f" %(value)   # -10000>x>-100000
+            elif value>-10.:     field = "%8.5f" %(value)   # -1    >x>-10
+            elif value>-100:     field = "%8.4f" %(value)   # -10   >x>-100
+            elif value>-1000:    field = "%8.3f" %(value)   # -100  >x>-1000
+            elif value>-10000:   field = "%8.2f" %(value)   # -1000 >x>-10000
+            elif value>-100000:  field = "%8.1f" %(value)   # -10000>x>-100000
             else:
-                field = printScientific8(value)
+                field = "%8.1f" %(value)
+                if field.index('.')<8:
+                    field = field[0:8]
+                    assert '.' != field[0],field
+                else:
+                    field = printScientific8(value)
+                ###
                 return field
             ###
         ###
@@ -403,7 +409,7 @@ if __name__=='__main__':
     #print printField(8.17272e-6)
     #print printField(10300000.0)
     #print printField(-10300000.0)
-    #printField(-0.021004)
+    printField(-0.021004)
     
     field = printField(1e20);       assert '   1.+20' == field,'|%s|' %(field)
     field = printField(-.723476);   assert '-.723476' == field,'|%s|' %(field)
@@ -414,6 +420,7 @@ if __name__=='__main__':
     field = printField(.0000001);   assert '.0000001' == field,'|%s|' %(field)
     field = printField(-5.007e-3);  assert '-5.007-3' == field,'|%s|' %(field)
     field = printField(-0.0748662); assert '-.074866' == field,'|%s|' %(field)
+    field = printField(-999999.);   assert '-999999.' == field,'|%s|' %(field)
     #print printField(12500000. )
     #print printField(47.77267)
     #print printField(.0000001)

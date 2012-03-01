@@ -108,6 +108,7 @@ class BaseCard(BDF_Card):
         expands a list of values of the form [1,5,THRU,9,BY,2,13]
         to be [1,5,7,9,13]
         @todo not tested
+        @note used for QBDY3, ???
         """
         if len(fields)==1: return fields
         #print "expandThruBy"
@@ -123,25 +124,29 @@ class BaseCard(BDF_Card):
                     by = fields[i+3]
                     #sys.stderr.write("BY was found...untested...")
                     #raise NotImplementedError('implement BY support\nfields=%s' %(fields))
-                    minValue = fields[i-1]
-                    maxValue = fields[i+1]
-                    #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
-                for j in range(0,maxValue/by):
+                else:
+                    by = 1
+                minValue = fields[i-1]
+                maxValue = fields[i+1]
+                #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
+                for j in range(0,(maxValue-minValue)//by+1): # +1 is to include final point
                     value = minValue+by*j
                     out.append(value)
-                #print "v = ",minValue+j*by
                 ###
-                if by>1:
-                    i+=3
-                else:
+                if by==1: # null/standard case
                     i+=2
+                else:     # BY case
+                    i+=3
                 ###
             else:
                 out.append(fields[i])
                 i+=1
             ###
         ###
+        #out = list(set(out))
+        #out.sort()
         #print "out = ",out,'\n'
+        #sys.exit()
         return list(set(out))
 
     def expandThruExclude(self,fields):
@@ -285,6 +290,45 @@ class BaseCard(BDF_Card):
         return (out,i)
     ###
         
+    def buildTableLines(self,fields,nStart=1,nEnd=0):
+        """
+        builds a table of the form:
+        'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
+                 DVID8 -etc.-
+        'UM'     VAL1  VAL2  -etc.-
+        and then pads the rest of the fields with None's
+        @param fields the fields to enter, including DESVAR
+        @param nStart the number of blank fields at the start of the line (default=1)
+        @param nEnd the number of blank fields at the end of the line (default=0)
+        
+        @note will be used for DVPREL2, RBE1, RBE3
+        @warning only works for small field format???
+        """
+        fieldsOut = []
+        n = 8-nStart-nEnd
+
+        # pack all the fields into a list.  Only consider an entry as isolated
+        for (i,field) in enumerate(fields):
+            fieldsOut.append(field)
+            if i>0 and i%n==0: # beginning of line
+                #print "i=%s" %(i)
+                #pad = [None]*(i+j)
+                #fieldsOut += pad
+                fieldsOut += [None]*(nStart+nEnd)
+            ###
+        ###
+        # make sure they're aren't any trailing None's (from a new line)
+        fieldsOut = self.wipeEmptyFields(fieldsOut)
+        #print "fieldsOut = ",fieldsOut,len(fieldsOut)
+
+        # push the next key (aka next fields[0]) onto the next line
+        nSpaces = 8-(len(fieldsOut))%8  # puts UM onto next line
+        #print "nSpaces[%s] = %s max=%s" %(fields[0],nSpaces,nSpaceMax)
+        if nSpaces<8:
+            fieldsOut += [None]*(nSpaces)
+        #print ""
+        return fieldsOut
+
     def isSameCard(self,card):
         fields1 = self.rawFields()
         fields2 = card.rawFields()

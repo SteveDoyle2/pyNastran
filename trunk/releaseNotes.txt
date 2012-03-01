@@ -22,6 +22,7 @@ Overall BDF
      bdf_readWrite.txt
    - added test code that compares cards values from one run to the next.
      This helped find lots of bugs.
+   - added support for THRU-BY on certain cards (QBDY3, ???)
 
 BDF API Changes
    - removed obsolete isPrintable and Is methods from BDF class
@@ -52,6 +53,7 @@ Added BDF
    - *** TIC
    - CONM1, AEFACT
    - DVPREL2, DOPTPRM, DVMREL1, DLINK
+   - DRESP2
 
 OP2 API Changes
 OP2 Bug Fixes
