@@ -1,3 +1,4 @@
+import sys
 from baseCard import BaseCard
 
 class OptConstraint(BaseCard):
@@ -165,6 +166,93 @@ class DRESP1(OptConstraint):
                            ]+self.others
         return fields
 
+class DRESP2(OptConstraint):
+    type = 'DRESP2'
+    def __init__(self,card=None,data=None):
+        """
+        Design Sensitivity Equation Response Quantities
+        Defines equation responses that are used in the design, either as constraints or as an
+        objective.
+        """
+        self.oid      = card.field(1)
+        self.label    = card.field(2)
+        self.eqidFunc = card.field(3)
+        self.region   = card.field(4)
+        self.method   = card.field(5,'MIN')
+        self.c1       = card.field(6,100.)
+        self.c2       = card.field(7,0.005)
+        self.c3       = card.field(8)
+
+        i=0
+        fields = card.fields(9)
+        key = '$NULL$' # dummy key
+        self.params = { key:[] }
+        valueList = []
+        for (i,field) in enumerate(fields):
+            if i%8==0 and field is not None:
+                self.params[key] = valueList
+                key = field
+                valueList = []
+            elif field is not None:
+                valueList.append(field)
+            #else:
+            #    pass
+            ###
+        self.params[key] = valueList
+        del self.params['$NULL$']
+
+        #print "--Params--"
+        #for key,valueList in sorted(self.params.items()):
+        #    print "  key=%s params=%s" %(key,valueList)
+        
+        #print self
+        #sys.exit()
+
+    def packParams(self):
+        packLength = {  # the amount of padding at the [beginning,end] of the 2nd line
+                        'DESVAR' : [1,0],
+                        'DTABLE' : [1,0],
+                        'DRESP1' : [1,0],
+                        'DNODE'  : [1,1],  # unique entry
+                        'DVPREL1': [1,0],
+                        'DVCREL1': [1,0],
+                        'DVMREL1': [1,0],
+                        'DVPREL2': [1,0],
+                        'DVCREL2': [1,0],
+                        'DVMREL2': [1,0],
+                        'DRESP2' : [1,0],
+                        'DESVAR' : [1,0],
+                        'DESVAR' : [1,0],
+                        'DESVAR' : [1,0],
+                        'DESVAR' : [1,0],
+                     }
+        fields = []
+        for key,valueList in sorted(self.params.items()):
+            fields2 = [key]+valueList
+            try:
+                (i,j) = packLength[key]
+            except KeyError:
+                msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' %(key,valueList,self.oid)
+                raise KeyError(msg)
+            fields += self.buildTableLines(fields2,nStart=i,nEnd=j)
+        ###
+        return fields
+
+    def rawFields(self):
+        method = self.setBlankIfDefault(self.method,'MIN')
+        fields = ['DRESP2',self.oid,self.label,self.eqidFunc,self.region,self.method,self.c1,self.c2,self.c3]
+        fields += self.packParams()
+        return fields
+
+    def reprFields(self):
+        method = self.setBlankIfDefault(self.method,'MIN')
+        c1 = self.setBlankIfDefault(self.c2,0.005)
+        c2 = self.setBlankIfDefault(self.c2,100.)
+
+        fields = ['DRESP2',self.oid,self.label,self.eqidFunc,self.region,method,c1,c2,self.c3]
+        fields += self.packParams()
+        return fields
+
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
     def __init__(self,card=None,data=None):
@@ -294,7 +382,7 @@ class DVPREL2(OptConstraint):
                  LABL8 -etc.-
         """
         ## Unique identification number
-        self.did = card.field(1)
+        self.oid = card.field(1)
         ## Name of a property entry, such as PBAR, PBEAM, etc
         self.Type = card.field(2)
         ## Property entry identification number
@@ -369,7 +457,7 @@ class DVPREL2(OptConstraint):
         self.pid.OptValue(self.pnameFid)
 
     def rawFields(self):
-        fields = ['DVPREL2',self.did,self.Type,self.Pid(),self.pnameFid,self.pmin,self.pmax,self.eqID,None]
+        fields = ['DVPREL2',self.oid,self.Type,self.Pid(),self.pnameFid,self.pmin,self.pmax,self.eqID,None]
 
         if self.desvars:
             fields2 = ['DESVAR']+self.desvars
@@ -378,37 +466,6 @@ class DVPREL2(OptConstraint):
         if self.dtables:
             fields2 = ['DTABLE']+self.dtables
             fields += self.buildTableLines(fields2,i=1,j=0)
-        return fields
-
-    def buildTableLines(fields,i=1,j=0):
-        """
-        builds a table of the form:
-        'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
-                 DVID8 -etc.-
-        'UM'     VAL1  VAL2  -etc.-
-        
-        and then pads the rest of the fields with None's
-        @param fields the fields to enter, including DESVAR
-        @param i the number of blank fields at the start of the line (default=1)
-        @param j the number of blank fields at the end of the line (default=0)
-        
-        @todo does this work???
-        @note will be used for DVPREL2, RBE1, RBE3
-        @warning only works for small field format???
-        """
-        fields = []
-        n = 8-i-j
-        for (i,desvar) in enumerate(self.desvars):
-            fields.append(desvar)
-            if i>0 and i%n==0:
-                pad = [None]*i+j
-                fields.append(None)
-            ###
-        ###
-        nSpaces = 8-(len(fields))%8  # puts UM onto next line
-        #print "nSpaces = ",nSpaces
-        if nSpaces<8:
-            fields += [None]*nSpaces
         return fields
 
     def reprFields(self):

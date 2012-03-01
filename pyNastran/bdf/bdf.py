@@ -140,8 +140,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         #'DEQATN',
         
         # optimization cards
-        'DCONSTR','DESVAR','DDVAL','DRESP1','DVPREL1','DVPREL2','DOPTPRM',
-        'DVMREL1','DLINK',#'DRESP2','DRESP3',
+        'DCONSTR','DESVAR','DDVAL','DRESP1','DRESP2','DVPREL1','DVPREL2','DOPTPRM',
+        'DVMREL1','DLINK','DRESP3',
         
         # sets
         'SET1','SET3',
@@ -170,7 +170,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         caseControlCards = set(['FREQ','GUST','MPC','SPC','NLPARM','NSM','TEMP','TSTEPNL','INCLUDE'])
         self.uniqueBulkDataCards = self.cardsToRead.difference(caseControlCards)
         
-        self.specialCards = ['DEQATN',]
+        self.specialCards = ['DEQATN','/']  # / is the delete from restart card
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
@@ -1452,6 +1452,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addDLink(dlink)
             elif cardName=='DRESP1':
                 ddval = DRESP1(cardObj)
+                self.addDResp(ddval)
+            elif cardName=='DRESP2':
+                ddval = DRESP2(cardObj)
                 self.addDResp(ddval)
             elif cardName=='DVPREL1':
                 dvprel = DVPREL1(cardObj)
