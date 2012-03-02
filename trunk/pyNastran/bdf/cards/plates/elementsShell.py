@@ -1,5 +1,8 @@
 import sys
 
+#from numpy import zeros,dot
+#from numpy.linalg import inv
+
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
 
