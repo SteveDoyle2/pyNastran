@@ -474,8 +474,13 @@ class Element(BaseCard):
     def Mass(self):
         raise NotImplementedMethodError('Mass not implemented in the %s class' %(self.__class__.__name__))
 
+    def B(self):
+        raise NotImplementedMethodError('B matrix not implemented in the %s class' %(self.__class__.__name__))
+    def D(self):
+        raise NotImplementedMethodError('D matrix not implemented in the %s class' %(self.__class__.__name__))
     def Jacobian(self):
         raise NotImplementedMethodError('Jacobian not implemented for %s' %(self.self.__class__.__name__))
+
     def stiffnessMatrix(self):
         raise NotImplementedMethodError('stiffnessMatrix not implemented in the %s class' %(self.__class__.__name__))
     def massMatrix(self):
