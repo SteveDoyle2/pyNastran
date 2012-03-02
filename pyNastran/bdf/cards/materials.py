@@ -104,8 +104,8 @@ class MAT1(Material):
             self.Mcsid = card.field(12,0)
         else:
             self.mid   = data[0]
-            self.E     = data[1]
-            self.G     = data[2]
+            self.e     = data[1]
+            self.g     = data[2]
             self.nu    = data[3]
             self.rho   = data[4]
             self.a     = data[5]
@@ -116,14 +116,29 @@ class MAT1(Material):
             self.Ss    = data[10]
             self.Mcsid = data[11]
 
-    #def G(self):
-    #    return self.G
+    def D(self):
+        E11  = self.E()
+        E22  = E11
+        nu12 = self.Nu()
+        G12  = self.G()
+
+        D = zeros((3,3))
+        mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
+        D[0,0] = E11/mu
+        D[1,1] = E22/mu
+        D[0,1] = nu12*D[0,0]
+        D[1,0] = D[0,1]
+        D[2,2] = G12
+        return D
+
+    def G(self):
+        return self.g
     
-    #def E(self):
-    #    return self.E
+    def E(self):
+        return self.e
     
-    #def nu(self):
-    #    return self.nu
+    def Nu(self):
+        return self.nu
 
     def set_E_G_nu(self,card):
         """
@@ -155,30 +170,30 @@ class MAT1(Material):
         else:
             msg = 'G=%s E=%s nu=%s' %(G,E,nu)
             raise RuntimeError(msg)
-        self.E = E
-        self.G = G
+        self.e = E
+        self.g = G
         self.nu = nu
         #print "E  = ",E
         #print "G  = ",G
         #print "nu = ",nu
 
     def writeCodeAster(self):
-        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1\n' %(self.mid,self.E)
+        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1\n' %(self.mid,self.e)
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
-        #msg += '                       E  =%g,\n'  %(self.E)
+        #msg += '                       E  =%g,\n'  %(self.e)
         msg += '                       NU =%g,\n'  %(self.nu)
         msg += '                       RHO=%g),);\n'  %(self.rho)
         return msg
 
     def rawFields(self):
-        fields = ['MAT1',self.mid,self.E,self.G,self.nu,self.rho,self.a,self.TRef,self.ge,
+        fields = ['MAT1',self.mid,self.e,self.g,self.nu,self.rho,self.a,self.TRef,self.ge,
                   self.St,self.Sc,self.Ss,self.Mcsid]
         return fields
 
     def reprFields(self):
         #print "MAT1 - self.E=%s self.nu=%s" %(self.E,self.nu)
-        G_default = self.E/2./(1+self.nu)
-        G    = self.setBlankIfDefault(self.G,G_default)
+        G_default = self.e/2./(1+self.nu)
+        G    = self.setBlankIfDefault(self.g,G_default)
 
         rho  = self.setBlankIfDefault(self.rho,1e-8)
         a    = self.setBlankIfDefault(self.a,0.)
@@ -245,6 +260,24 @@ class MAT2(AnisotropicMaterial):
             self.Ss   = data[15]
             self.Mcsid = data[16]
         ###
+
+    def D(self):
+        E11  = self.E()
+        E22  = E11
+        nu12 = self.Nu()
+        G12  = self.G()
+
+        D = zeros((6,6))
+        mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
+        D[0,0] = E11/mu
+        D[1,1] = E22/mu
+        D[0,1] = nu12*D[0,0]
+        D[1,0] = D[0,1]
+        D[2,2] = G12
+        #D[4,4] =      ## @ todo verify
+        #D[5,5] = G22
+        #D[6,6] = G33
+        return D
 
     def rawFields(self):
         fields = ['MAT2',self.mid,self.G11,self.G12,self.G13,self.G22,self.G23,self.G33,self.rho,
@@ -569,6 +602,15 @@ class MAT9(AnisotropicMaterial):
         ###
         assert len(self.A)==6
             
+    def D(self):
+        D = array([[self.G11, self.G12, self.G13, self.G14, self.G15, self.G16],
+                   [self.G12, self.G22, self.G23, self.G24, self.G25, self.G26],
+                   [self.G13, self.G23, self.G33, self.G34, self.G35, self.G36],
+                   [self.G14, self.G24, self.G34, self.G44, self.G45, self.G46],
+                   [self.G15, self.G25, self.G35, self.G45, self.G55, self.G56],
+                   [self.G16, self.G26, self.G36, self.G46, self.G56, self.G66]])
+        return D
+
     def rawFields(self):
         fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,

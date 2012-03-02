@@ -1,5 +1,5 @@
 import sys
-from numpy import zeros,pi
+from numpy import zeros,pi,transpose
 
 # pyNastran
 from pyNastran.bdf.cards.baseCard import Property,Material
@@ -203,7 +203,7 @@ class ShellProperty(Property):
         Tinv[2][0] =  mn
         Tinv[2][1] = -mn
         Tinv[2][2] =  mm-nn
-        TinvT = numpy.transpose(Tinv)
+        TinvT = transpose(Tinv)
         return (Tinv,TinvT)
 
 class PCOMP(ShellProperty):
@@ -451,6 +451,18 @@ class PCOMP(ShellProperty):
             return rho*t+self.nsm
         ###
 
+    def D(self):
+        D = zeros([3,3])
+        isSym = self.isSymmetrical()
+        for (iply,ply) in enumerate(self.plies):
+            theta = self.Theta(iply)
+            t     = self.Thickness(iply)
+            mat   = self.Material(iply)
+            Di = mat.D()
+            transform = self.T(theta)
+            D += Di*transform
+        return D
+
     def rawFields(self):
         fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
         #print "plies = ",self.plies
@@ -675,6 +687,9 @@ class PSHELL(ShellProperty):
         massPerArea = self.nsm + self.Rho()*self.t
         return massPerArea
 
+    def D(self):
+        return self.mid().D()
+        
     def crossReference(self,mesh):
         if self.mid1:
             self.mid1 = mesh.Material(self.mid1)
