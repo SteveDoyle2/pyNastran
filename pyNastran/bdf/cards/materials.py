@@ -459,13 +459,13 @@ class MAT8(AnisotropicMaterial):
         AnisotropicMaterial.__init__(self,card,data)
         if card:
             self.mid  = card.field(1)
-            self.E11  = card.field(2)
-            self.E22  = card.field(3)
-            self.nu12 = card.field(4)
+            self.e11  = card.field(2)  ## @todo is this the correct default
+            self.e22  = card.field(3)  ## @todo is this the correct default
+            self.nu12 = card.field(4)  ## @todo is this the correct default
 
-            self.G12  = card.field(5,0.0)
-            self.G1z  = card.field(6,1e8)
-            self.G2z  = card.field(7,1e8)
+            self.g12  = card.field(5,0.0)
+            self.g1z  = card.field(6,1e8)
+            self.g2z  = card.field(7,1e8)
             self.rho  = card.field(8,0.0)
             self.a1   = card.field(9,0.0)
             self.a2   = card.field(10,0.0)
@@ -480,13 +480,13 @@ class MAT8(AnisotropicMaterial):
             self.strn = card.field(19,0.0)
         else:
             self.mid  = data[0]
-            self.E11  = data[1]
-            self.E22  = data[2]
+            self.e11  = data[1]
+            self.e22  = data[2]
             self.nu12 = data[3]
 
-            self.G12  = data[4]
-            self.G1z  = data[5]
-            self.G2z  = data[6]
+            self.g12  = data[4]
+            self.g1z  = data[5]
+            self.g2z  = data[6]
             self.rho  = data[7]
             self.a1   = data[8]
             self.a2   = data[9]
@@ -500,16 +500,44 @@ class MAT8(AnisotropicMaterial):
             self.F12  = data[17]
             self.strn = data[18]
 
+    def E11(self):
+        return self.e11
+    def E22(self):
+        return self.e22
+    def Nu12(self):
+        return self.nu12
+    def G12(self):
+        return self.g12
+    
+    def D(self):
+        """
+        @todo what about G1z and G2z
+        """
+        E11  = self.E11()
+        E22  = self.E22()
+        nu12 = self.Nu12()
+        G12  = self.G12()
+
+        D = zeros((3,3))
+        mu = 1.-nu12*nu12*E11/E22    # not necessary b/c they're equal
+        D[0,0] = E11/mu
+        D[1,1] = E22/mu
+        D[0,1] = nu12*D[0,0]
+        D[1,0] = D[0,1]
+        D[2,2] = G12
+        
+        return D
+
     def rawFields(self):
-        fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,self.G12,self.G1z,self.G2z,self.rho,
+        fields = ['MAT8',self.mid,self.e11,self.e22,self.nu12,self.g12,self.g1z,self.g2z,self.rho,
                   self.a1,self.a2,self.TRef,self.Xt,self.Xc,self.Yt,self.Yc,self.S,
                   self.ge,self.F12,self.strn]
         return fields
 
     def reprFields(self):
-        G12  = self.setBlankIfDefault(self.G12,0.)
-        G1z  = self.setBlankIfDefault(self.G1z,1e8)
-        G2z  = self.setBlankIfDefault(self.G2z,1e8)
+        G12  = self.setBlankIfDefault(self.g12,0.)
+        G1z  = self.setBlankIfDefault(self.g1z,1e8)
+        G2z  = self.setBlankIfDefault(self.g2z,1e8)
 
         rho  = self.setBlankIfDefault(self.rho, 0.0)
         a1   = self.setBlankIfDefault(self.a1,  0.0)
@@ -527,7 +555,7 @@ class MAT8(AnisotropicMaterial):
         F12  = self.setBlankIfDefault(self.F12, 0.0)
         strn = self.setBlankIfDefault(self.strn,0.0)
         
-        fields = ['MAT8',self.mid,self.E11,self.E22,self.nu12,G12,G1z,G2z,rho,
+        fields = ['MAT8',self.mid,self.e11,self.e22,self.nu12,G12,G1z,G2z,rho,
                   a1,a2,TRef,Xt,Xc,Yt,Yc,S,
                   ge,F12,strn]
         return fields

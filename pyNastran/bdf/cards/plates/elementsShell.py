@@ -42,7 +42,6 @@ class ShellElement(Element):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid   = mesh.Property(self.pid)
 
-
 class CTRIA3(ShellElement):
     type = 'CTRIA3'
     def __init__(self,card=None,data=None):
@@ -119,6 +118,23 @@ class CTRIA3(ShellElement):
         (n0,n1,n2) = self.nodePositions()
         centroid = self.CentroidTriangle(n0,n1,n2,debug)
         return centroid
+
+    def MassMatrix(self):
+        """
+        6x6 mass matrix triangle
+        http://www.colorado.edu/engineering/cas/courses.d/IFEM.d/IFEM.Ch32.d/IFEM.Ch32.pdf
+        """
+        mass = self.Mass() # rho*A*t
+        if isLumped:  # lumped mass matrix
+            Mass = mass/3*eye(6);
+        else: # consistent mass
+            M = eye(6)*2.
+            M[2,0] = M[4,0] = M[0,2] = M[0,4] = 1.
+            M[3,1] = M[5,1] = M[1,3] = M[1,5] = 1.
+            M[4,2] = M[2,4] = 1.
+            M[5,3] = M[5,3] = 1.
+            Mass = mass/12*M
+        return Mass
 
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
@@ -473,6 +489,37 @@ class CQUAD4(ShellElement):
         area = Area(a,b)
         return area
     ###
+
+    def MassMatrix(self):
+        """
+        6x6 mass matrix triangle
+        http://www.colorado.edu/engineering/cas/courses.d/IFEM.d/IFEM.Ch32.d/IFEM.Ch32.pdf
+        """
+        mass = self.Mass() # rho*A*t
+        if isLumped:  # lumped mass matrix
+            Mass = mass/3*eye(6);
+        else: # consistent mass
+            if G==1:
+                M = eye(8)*1. # 1x1 Gauss Rule
+                M[2,0] = M[3,1] = M[4,2] = M[5,3] = M[6,4] = M[7,5] = 1.
+                M[4,0] = M[5,1] = M[6,2] = M[7,3] = 1.
+                M[6,0] = M[7,1] = 1.
+
+                M[0,2] = M[1,3] = M[2,4] = M[3,5] = M[4,6] = M[5,7] = 1.
+                M[0,4] = M[1,5] = M[2,6] = M[3,7] = 1.
+                M[0,6] = M[1,7] = 1.
+                Mass = mass/32*M
+            if G==2:
+                M = eye(8)*4. # 2x2 Gauss Rule
+                M[2,0] = M[3,1] = M[4,2] = M[5,3] = M[6,4] = M[7,5] = 2.
+                M[4,0] = M[5,1] = M[6,2] = M[7,3] = 1.
+                M[6,0] = M[7,1] = 2.
+
+                M[0,2] = M[1,3] = M[2,4] = M[3,5] = M[4,6] = M[5,7] = 2.
+                M[0,4] = M[1,5] = M[2,6] = M[3,7] = 1.
+                M[0,6] = M[1,7] = 2.
+                Mass = mass/72*M
+        return Mass
 
     def writeAsCTRIA3(self,newID):
         """
