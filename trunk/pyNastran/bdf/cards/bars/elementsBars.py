@@ -712,6 +712,80 @@ class CBAR(LineElement):
 
         return fields
 
+class CBEAM3(CBAR):
+    """
+    Defines a three-node beam element
+    """
+    type = 'CBEAM3'
+    def __init__(self,card=None,data=None):
+        LineElement.__init__(self,card,data)
+        #if card:
+        self.eid = int(card.field(1))
+        self.eid = int(card.field(1))
+        self.pid = int(card.field(2,self.eid))
+        self.ga  = int(card.field(3))
+        self.gb  = int(card.field(4))
+        self.gc  = int(card.field(5))
+
+        self.initX_G0(card)
+
+        self.w1a = float(card.field(9,0.0))
+        self.w2a = float(card.field(10,0.0))
+        self.w3a = float(card.field(11,0.0))
+
+        self.w1b = float(card.field(12,0.0))
+        self.w2b = float(card.field(13,0.0))
+        self.w3b = float(card.field(14,0.0))
+        
+        self.w1c = float(card.field(15,0.0))
+        self.w2c = float(card.field(16,0.0))
+        self.w3c = float(card.field(17,0.0))
+
+        self.twa = card.field(18,0.)
+        self.twb = card.field(19,0.)
+        self.twc = card.field(20,0.)
+
+        self.sa = card.field(21)
+        self.sb = card.field(22)
+        self.sc = card.field(23)
+
+    def crossReference(self,model):
+        self.ga  = model.Node(self.ga)
+        self.gb  = model.Node(self.gb)
+        self.gc  = model.Node(self.gc)
+        self.pid = model.Property(self.pid)
+
+    def rawFields(self):
+        (x1,x2,x3) = self.getX_G0_defaults()
+        (ga,gb,gc) = self.nodeIDs()
+        fields = ['CBEAM',self.eid,self.Pid(),ga,gb,gc,x1,x2,x3,
+                  self.w1a,self.w2a,self.w3a, self.w1b,self.w2b,self.w3b, self.w1c,self.w2c,self.w3c,
+                  self.twa,self.twb,self.twc,self.sa,self.sb,self.sc]
+        return fields
+
+    def reprFields(self):
+        w1a = self.setBlankIfDefault(self.w1a,0.0)
+        w2a = self.setBlankIfDefault(self.w2a,0.0)
+        w3a = self.setBlankIfDefault(self.w3a,0.0)
+        w1b = self.setBlankIfDefault(self.w1b,0.0)
+        w2b = self.setBlankIfDefault(self.w2b,0.0)
+        w3b = self.setBlankIfDefault(self.w3b,0.0)
+        w1c = self.setBlankIfDefault(self.w1c,0.0)
+        w2c = self.setBlankIfDefault(self.w2c,0.0)
+        w3c = self.setBlankIfDefault(self.w3c,0.0)
+
+        twa = self.setBlankIfDefault(self.twa,0.0)
+        twb = self.setBlankIfDefault(self.twb,0.0)
+        twc = self.setBlankIfDefault(self.twc,0.0)
+
+        (x1,x2,x3) = self.getX_G0_defaults()
+        (ga,gb,gc) = self.nodeIDs()
+        fields = ['CBEAM',self.eid,self.Pid(),ga,gb,x1,x2,x3,offt,
+                  w1a,w2a,w3a, w1b,w2b,w3b, w1c,w2c,w3c,
+                  twa,twb,twc,self.sa,self.sb,self.sc]
+        return fields
+
+
 class CBEAM(CBAR):
     """
     CBEAM EID PID GA GB X1 X2 X3 OFFT/BIT
@@ -728,8 +802,8 @@ class CBEAM(CBAR):
         if card:
             self.eid = int(card.field(1))
             self.pid = int(card.field(2,self.eid))
-            self.ga = int(card.field(3))
-            self.gb = int(card.field(4))
+            self.ga  = int(card.field(3))
+            self.gb  = int(card.field(4))
 
             self.initX_G0(card)
             self.initOfftBit(card)

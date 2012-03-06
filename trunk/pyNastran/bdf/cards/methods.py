@@ -86,14 +86,103 @@ class EIGC(Method): ## not done
             self.ndo    = card.field(7)
             
             # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
-            #fields = card.fields(9)
+            fields = card.fields(9)
+            self.alphaAjs = []
+            self.omegaAjs = []
+            nFields = len(fields)
+            nRows = nFields//7
+            if nFields%7 > 0:
+                nRows += 1
+            
+            if self.method=='CLAN':
+                self.loadCLAN(nRows,card)
+            elif self.method in ['HESS','INV']: # HESS, INV
+                self.loadHESS_INV(nRows,card)
+            else:
+                raise Exception('invalid EIGC method...method=|%r|' %(self.method))
+            ###
             #assert card.nFields()<8,'card = %s' %(card.fields(0))
         else:
             raise NotImplementedError('EIGC')
         ###
 
+    def loadCLAN(self,nRows,card):
+        self.mblkszs = []
+        self.iblkszs = []
+        self.ksteps  = []
+        self.NJIs    = []
+        for iRow in range(nRows):
+            NDJ_default = None
+            if self.method=='INV':
+                NDJ_default = 3*NEj
+
+            NEj = card.field(9+7*iRow+5)
+            self.alphaAjs.append(card.field(9+7*iRow  ,0.0))
+            self.omegaAjs.append(card.field(9+7*iRow+1,0.0))
+            self.mblkszs.append( card.field(9+7*iRow+2,7))
+            self.iblkszs.append( card.field(9+7*iRow+3,2))
+            self.ksteps.append(  card.field(9+7*iRow+4,5))
+            self.NJIs.append(    card.field(9+7*iRow+6))
+        ###
+
+    def loadHESS_INV(self,nRows,card):
+        self.alphaBjs = []
+        self.omegaBjs = []
+        self.LJs  = []
+        self.NEJs = []
+        self.NDJs = []
+
+        alphaOmega_default = None
+        LJ_default = None
+        if self.method=='INV':
+            alphaOmega_default = 0.0
+            LJ_default = 1.0
+
+        for iRow in range(nRows):
+            NDJ_default = None
+            if self.method=='INV':
+                NDJ_default = 3*NEj
+
+            NEj = card.field(9+7*iRow+5)
+            self.alphaAjs.append(card.field(9+7*iRow  ,alphaOmega_default))
+            self.omegaAjs.append(card.field(9+7*iRow+1,alphaOmega_default))
+            self.alphaBjs.append(card.field(9+7*iRow+2,alphaOmega_default))
+            self.omegaBjs.append(card.field(9+7*iRow+3,alphaOmega_default))
+            self.LJs.append(     card.field(9+7*iRow+4,LJ_default))
+            self.NEJs.append(    card.field(9+7*iRow+5))
+            self.NDJs.append(    card.field(9+7*iRow+6))
+        ###
+
     def crossReference(self,model):
         pass
+
+    def rawMethod(self):
+        fields = []
+        if self.method in ['HESS','INV']:
+            self.alphaAjs.append(card.field(9+7*iRow  ,alphaOmega_default))
+            self.omegaAjs.append(card.field(9+7*iRow+1,alphaOmega_default))
+            self.alphaBjs.append(card.field(9+7*iRow+2,alphaOmega_default))
+            self.omegaBjs.append(card.field(9+7*iRow+3,alphaOmega_default))
+            self.LJs.append(     card.field(9+7*iRow+4,LJ_default))
+            self.NEJs.append(    card.field(9+7*iRow+5))
+            self.NDJs.append(    card.field(9+7*iRow+6))
+            for (alphaA,omegaA,alphaB,omegaB,Lj,NEj,NDj) in zip(
+                    self.alphaAjs,self.omegaAjs,self.alphaBjs,self.omegaBjs,
+                    self.LJs,self.NEJs,self.NDJs):
+                fields += [alphaA,omegaA,alphaB,omegaB,Lj,NEj,NDj]
+            ###
+        elif self.method=='CLAN':
+            for (alphaA,omegaA,mblksz,iblksz,kstep,Nj) in zip(
+                    self.alphaAjs,self.omegaAjs,self.mblkszs,self.iblkszs,
+                    self.ksteps,self.NJIs):
+                fields += [alphaA,omegaA,mblksz,iblksz,kstep,Nj]
+            ###
+        else:
+            raise Exception('invalid EIGC method...method=|%r|' %(self.method))
+        return fields
+
+    def reprMethod(self):
+        return self.rawMethod()
 
     def rawFields(self):
         if self.E is None:
@@ -101,7 +190,7 @@ class EIGC(Method): ## not done
         else:
             E = str(self.E)
         fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,E,self.ndo,None]
-        #raise Exception('EIGC not finished...')
+        fields += self.rawMethod()
         return fields
 
     def reprFields(self):
@@ -110,7 +199,7 @@ class EIGC(Method): ## not done
         else:
             E = str(self.E)
         fields = ['EIGC',self.sid,self.method,self.norm,self.G,self.C,E,self.ndo,None]
-        #raise Exception('EIGC not finished...')
+        fields += self.reprMethod()
         return fields
 
 class EIGR(Method):

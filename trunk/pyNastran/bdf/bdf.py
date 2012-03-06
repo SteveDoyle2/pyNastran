@@ -68,7 +68,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CBUSH','CFAST',
         'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
         
-        'CBAR','CROD','CTUBE','CBEAM','CONROD','CBEND',
+        'CBAR','CROD','CTUBE','CBEAM','CBEAM3','CONROD','CBEND',
         'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
         'CQUAD4','CQUAD8','CQUADR','CQUADX','CQUAD',
         'CTETRA','CPENTA','CHEXA',
@@ -918,6 +918,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addElement(elem)
             elif cardName=='CBEAM':
                 elem = CBEAM(cardObj)
+                self.addElement(elem)
+            elif cardName=='CBEAM3':
+                elem = CBEAM3(cardObj)
                 self.addElement(elem)
             elif cardName=='CROD':
                 elem = CROD(cardObj)
