@@ -43,6 +43,7 @@ CBAR   (done)
 CROD   (done)
 CTUBE  (done)
 CBEAM  (done)
+CBEAM3 (done)
 CBEND  (done)
 CONROD (done)
 
@@ -108,6 +109,7 @@ PCOMPG  (done)
 PSHEAR  (done)
 PSOLID  (done)
 PLSOLID (done)
+PBCOMP
 
 ----Materials----:
 CREEP (done, not well tested)
@@ -291,7 +293,7 @@ RADSET (not integrated)
 
 ----Methods----:
 EIGB    (done)
-EIGC    (in progress)
+EIGC    (done)
 EIGP    (done)
 EIGR    (done)
 EIGRL   (done)
@@ -320,7 +322,6 @@ PBEAM3
 
 ---- Elements w/ Properties----:
 CBARAO
-PBCOMP
 
 ---- Elements----:
 PLOTEL
