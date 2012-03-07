@@ -6,7 +6,6 @@ by Gael Varoquaux
 # prototypes of the C function we are interested in calling
 cdef extern from "libop4.c":
     float *op4_load(int size)
-    int    Op4_scan(char *filename)
     int    op4_scan(char *filename  , #/* in                          */
                     int  *n_mat     , #/* out number of matrices      */
                     char  name[][9] , #/* out matrix names            */
@@ -141,6 +140,33 @@ def File(char *filename,
         raise IOError
 
     return fh
+
+def Load(op4_handle,    # in, as created by File()
+         int n_mat=1 ,  # in, number of matrices to return
+         int n_skip=0): # in, number of matrices to skip before loading
+    """ 
+    Skip over the first n_skip matrices then load n_mat matrices from the 
+    previously opened op4 file.
+    """
+    if n_mat < 1 or \
+       n_mat > len(op4_handle['digits']):
+        print('op4.Load: 1 <= n_mat <= %d' % (len(op4_handle['digits'])))
+        raise IOError
+
+    if n_skip < 0 or \
+       n_skip > len(op4_handle['digits'])-1:
+        print('op4.Load: 0 <= n_skip <= %d' % (len(op4_handle['digits']) - 1))
+        raise IOError
+
+    print('Will return %d matrices after skipping %d' % (n_mat, n_skip))
+    for i in range(n_mat):
+        offset = i + n_skip
+        print('Fetching %d. %-8s  %5d x %5d' % (
+            offset + 1, 
+            op4_handle['name'][offset],
+            op4_handle['nRow'][offset],
+            op4_handle['nCol'][offset], ))
+#   print(op4_handle)
 
 def load(int size):
     """ Python binding of the 'compute' function in 'libop4.c' that does
