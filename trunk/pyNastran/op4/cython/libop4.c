@@ -119,16 +119,6 @@ word, w[0], w[1], w[2], w[3]);
     fclose(fp);
     return type;
 } /* 1}}} */
-int  Op4_scan(  const char *filename) {
-
-    int filetype;
-
-    filetype = op4_filetype(filename); /* 1 if a text file
-                                          2 if a binary file native  endian
-                                        */
-    printf("Op4_scan(%s) = %d\n", filename, filetype);
-    return filetype;
-}
 int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
                 int        *n_mat     ,  /* out number of matrices      */
                 char        name[][9] ,  /* out matrix names            */
