@@ -127,15 +127,15 @@ def File(char *filename,
         fh['digits'] = []
         fh['offset'] = []
         for i in range(n_mat_in_file):
-            fh['name'].append( name[i] )
-            fh['nRow'].append( nRow[i] )
-            fh['nCol'].append( nCol[i] )
-            fh['nStr'].append( nStr[i] )
-            fh['nNnz'].append( nNnz[i] )
-            fh['type'].append( Type[i] )
-            fh['form'].append( form[i] )
+            fh['name'].append(   name[i]   )
+            fh['nRow'].append(   nRow[i]   )
+            fh['nCol'].append(   nCol[i]   )
+            fh['nStr'].append(   nStr[i]   )
+            fh['nNnz'].append(   nNnz[i]   )
+            fh['type'].append(   Type[i]   )
+            fh['form'].append(   form[i]   )
             fh['digits'].append( digits[i] )
-            fh['offset'].append( digits[i] )
+            fh['offset'].append( offset[i] )
     except:
         print('op4.File: failed to scan %s' % (filename))
         raise IOError
