@@ -151,6 +151,27 @@ class Coord(BaseCard):
         #print "normV = ",normV
         return v/normV
 
+    def T(self):
+        """
+        Returns the 6x6 transformation 
+        \f[ \large  [\lambda] = [B_{ij}] \f]
+
+        \f[
+        [T] = 
+        \left[ 
+          \begin{array}{cc}
+          \lambda  & 0 \\
+          0  & \lambda \\
+          \end{array}
+        \right
+        \f]
+        """
+        a,matrix  = self.transformToGlobal(self.e1)
+        t = zeros((6,6)) # transformation matrix
+        t[0:2,0:2] = matrix
+        t[3:5,3:5] = matrix
+        return t
+
     def reprFields(self):
         return self.rawFields()
 
