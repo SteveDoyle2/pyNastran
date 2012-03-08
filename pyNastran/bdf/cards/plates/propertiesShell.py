@@ -458,7 +458,7 @@ class PCOMP(ShellProperty):
             theta = self.Theta(iply)
             t     = self.Thickness(iply)
             mat   = self.Material(iply)
-            Di = mat.D()
+            Di = mat.Dplate()
             transform = self.T(theta)
             D += Di*transform
         return D
@@ -688,7 +688,7 @@ class PSHELL(ShellProperty):
         return massPerArea
 
     def D(self):
-        return self.mid().D()
+        return self.mid().Dplate()
         
     def crossReference(self,mesh):
         if self.mid1:

@@ -123,6 +123,7 @@ class MAT1(Material):
         G12  = self.G()
 
         D = zeros((3,3))
+        #D = zeros((6,6))
         mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
         D[0,0] = E11/mu
         D[1,1] = E22/mu
@@ -261,19 +262,37 @@ class MAT2(AnisotropicMaterial):
             self.Mcsid = data[16]
         ###
 
-    def D(self):
-        E11  = self.E()
-        E22  = E11
+    def Dsolid(self):
+        """
+        Eq 9.4.7 in Finite Element Method using Matlab
+        """
+        D = zeros((6,6))
+        mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
+        Emu = E/mu
+        D[0,0] = Emu # E/(1-nu^2)
+        D[1,1] = Emu
+        D[2,2] = Emu
+        D[0,1] = nu*Emu # nu*E/(1-nu^2)
+        D[1,2] = D[2,1] = D[0,2] = D[2,0] = D[1,0] = D[0,1] # nu*E/(1-nu^2)
+        D[3,3] = (1.-nu)*0.5*Emu # (1.-nu)/2.*E/(1-nu^2)
+        D[5,5] = D[4,4] = D[3,3] # (1.-nu)/2.*E/(1-nu^2)
+
+    def Dplate(self):
+        """
+        Eq 9.1.6 in Finite Element Method using Matlab
+        """
+        E  = self.E()
         nu12 = self.Nu()
         G12  = self.G()
 
-        D = zeros((6,6))
+        D = zeros((3,3))
         mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
-        D[0,0] = E11/mu
-        D[1,1] = E22/mu
-        D[0,1] = nu12*D[0,0]
+        Emu = E/mu
+        D[0,0] = Emu
+        D[1,1] = Emu
+        D[0,1] = nu*Emu
         D[1,0] = D[0,1]
-        D[2,2] = G12
+        D[2,2] = 1.-nu/2.*Emu
         #D[4,4] =      ## @ todo verify
         #D[5,5] = G22
         #D[6,6] = G33

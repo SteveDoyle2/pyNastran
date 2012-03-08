@@ -169,13 +169,23 @@ class EIGC(Method): ## not done
             for (alphaA,omegaA,alphaB,omegaB,Lj,NEj,NDj) in zip(
                     self.alphaAjs,self.omegaAjs,self.alphaBjs,self.omegaBjs,
                     self.LJs,self.NEJs,self.NDJs):
-                fields += [alphaA,omegaA,alphaB,omegaB,Lj,NEj,NDj]
+                alphaA = self.setBlankIfDefault(alphaA,0.0)
+                omegaA = self.setBlankIfDefault(omegaA,0.0)
+                alphaB = self.setBlankIfDefault(alphaB,0.0)
+                omegaB = self.setBlankIfDefault(omegaB,0.0)
+                fields += [alphaA,omegaA,alphaB,omegaB,Lj,NEj,NDj,None]
             ###
         elif self.method=='CLAN':
             for (alphaA,omegaA,mblksz,iblksz,kstep,Nj) in zip(
                     self.alphaAjs,self.omegaAjs,self.mblkszs,self.iblkszs,
                     self.ksteps,self.NJIs):
-                fields += [alphaA,omegaA,mblksz,iblksz,kstep,Nj]
+                alphaA = self.setBlankIfDefault(alphaA,0.0)
+                omegaA = self.setBlankIfDefault(omegaA,0.0)
+                mblksz = self.setBlankIfDefault(mblksz,7)
+                iblksz = self.setBlankIfDefault(iblksz,2)
+                kstep  = self.setBlankIfDefault(kstep,5)
+                
+                fields += [alphaA,omegaA,mblksz,iblksz,kstep,None,Nj,None]
             ###
         else:
             raise Exception('invalid EIGC method...method=|%r|' %(self.method))
