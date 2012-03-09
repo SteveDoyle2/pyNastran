@@ -5,6 +5,7 @@
 
 # my code
 from baseCard import BaseCard,Material
+from tables import Table
 #from thermal.materials import *
 
 class IsotropicMaterial(Material):
@@ -437,12 +438,14 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         ThermalMaterial.__init__(self,card,data)
         if card:
             self.mid  = card.field(1)
-            self.kxx  = card.field(2)
-            self.kxy  = card.field(3)
-            self.kxz  = card.field(4)
-            self.kyy  = card.field(5)
-            self.kyz  = card.field(6)
-            self.kzz  = card.field(7)
+            ## Thermal conductivity (assumed default=0.0)
+            self.kxx  = card.field(2,0.)
+            self.kxy  = card.field(3,0.)
+            self.kxz  = card.field(4,0.)
+            self.kyy  = card.field(5,0.)
+            self.kyz  = card.field(6,0.)
+            self.kzz  = card.field(7,0.)
+
             self.cp   = card.field(3,0.0)
             self.rho  = card.field(4,1.0)
             self.hgen = card.field(7,1.0)
@@ -459,16 +462,32 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.hgen = data[9]
         ###
 
+    def K(self):
+        """
+        thermal conductivity matrix
+        """
+        k = array([[self.kxx,self.kxy,self,kxz],
+                   [self.kxy,self.kyy,self,kyz],
+                   [self.kxz,self.kyz,self,kzz]])
+        return k
+
     def rawFields(self):
         fields = ['MAT5',self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,self.cp,
                          self.rho,self.hgen]
         return fields
 
     def reprFields(self):
+        kxx  = self.setBlankIfDefault(self.kxx, 0.0)
+        kyy  = self.setBlankIfDefault(self.kyy, 0.0)
+        kzz  = self.setBlankIfDefault(self.kzz, 0.0)
+        kxy  = self.setBlankIfDefault(self.kxy, 0.0)
+        kyz  = self.setBlankIfDefault(self.kyz, 0.0)
+        kxz  = self.setBlankIfDefault(self.kxz, 0.0)
+
         rho  = self.setBlankIfDefault(self.rho, 1.0)
         hgen = self.setBlankIfDefault(self.hgen,1.0)
         cp   = self.setBlankIfDefault(self.cp,  0.0)
-        fields = ['MAT5',self.mid,self.kxx,self.kxy,self.kxz,self.kyy,self.kyz,self.kzz,cp,
+        fields = ['MAT5',self.mid,kxx,kxy,kxz,kyy,kyz,kzz,cp,
                          rho,hgen]
         return fields
 
@@ -734,3 +753,86 @@ class MAT10(Material):
     def reprFields(self):
         return self.rawFields()
 
+
+class MaterialDependence(BaseCard):
+    def __init__(self,card,data):
+        pass
+
+class MATS1(MaterialDependence):
+    """
+    Specifies stress-dependent material properties for use in applications involving
+    nonlinear materials. This entry is used if a MAT1, MAT2 or MAT9 entry is specified
+    with the same MID in a nonlinear solution sequence (SOLs 106 and 129).
+    """
+    type = 'MATS1'
+    def __init__(self,card=None,data=None):
+        MaterialDependence.__init__(self,card,data)
+        ## Identification number of a MAT1, MAT2, or MAT9 entry.
+        self.mid  = card.field(1)
+        ## Identification number of a TABLES1 or TABLEST entry. If H is given,
+        ## then this field must be blank.
+        self.tid  = card.field(2)
+        ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic 
+        ## or 'PLASTIC' for elastoplastic.)
+        self.Type = card.field(3)
+        ## Work hardening slope (slope of stress versus plastic strain) in units of
+        ## stress. For elastic-perfectly plastic cases, H=0.0. For more than a single
+        ## slope in the plastic range, the stress-strain data must be supplied on a
+        ## TABLES1 entry referenced by TID, and this field must be blank
+        self.h    = card.field(4)
+        ## Yield function criterion, selected by one of the following values
+        ## (1) Von Mises (2) Tresca (3) Mohr-Coulomb (4) Drucker-Prager
+        self.yf   = card.field(5,1)
+        ## Hardening Rule, selected by one of the following values (Integer):
+        ## (1) Isotropic (Default) (2) Kinematic (3) Combined isotropic and kinematic hardening
+        self.hr   = card.field(6,1)
+        ## Initial yield point
+        self.limit1 = card.field(7)
+        ## Internal friction angle, measured in degrees, for the Mohr-Coulomb and
+        ## Drucker-Prager yield criteria
+        self.limit2 = card.field(8)
+
+    def Yf(self):
+        d = {1:'VonMises',2:'Tresca',3:'MohrCoulomb',4:'Drucker-Prager'}
+        return d[self.yf]
+
+    def Hf(self):
+        d = {1:'Isotropic',2:'Kinematic',3:'Combined'}
+        return d[self.hr]
+
+    def E(self,strain=None):
+        """
+        Gets E (Young's Modulus) for a given strain
+        @param self the object pointer
+        @param strain the strain (None -> linear E value)
+        @retval E (Young's Modulus)
+        """
+        raise NotImplementedError("E (Young's Modulus) not implemented for MATS1")
+        if self.tid:
+            E = self.tid.Value(strain)
+        ###
+        return E
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid)
+        if self.tid is None: # then self.h is used
+            self.tid = model.Table(self.tid)
+        ###
+
+    def Mid(self):
+        if isinstance(self.mid,int):
+            return self.mid
+        return self.mid.mid
+
+    def Tid(self):
+        if isinstance(self.tid,Table):
+            return self.tid.tid
+        return self.tid
+
+    def rawFields(self):
+        fields = ['MATS1',self.Mid(),self.Tid(),self.Type,self.h,self.yf,self.hr,self.limit1,self.limit2]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+    

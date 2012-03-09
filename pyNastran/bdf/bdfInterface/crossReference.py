@@ -128,6 +128,13 @@ class XrefMesh(object):
                 sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
                 raise
         ###
+        for mid,m in self.materialDeps.items():
+            try:
+                m.crossReference(self)
+            except:
+                sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
+                raise
+        ###
 
     def crossReference_Loads(self):
         """
