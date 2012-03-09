@@ -9,7 +9,6 @@ BDF Cards Supported Reading/Writing
 ----Nodes----:
 GRID   (done)
 GRDSET (done)
-RINGAX (not integrated)
 SPOINT (not integrated)
 
 ----Coordinates----:
@@ -50,14 +49,11 @@ CONROD (done)
 CTRIA3  (done)
 CTRIA6  (done)
 CTRIAR  (done)
-CTRIAX  (done)
-CTRIAX6 (done)
 
 CQUAD  (done)
 CQUAD4 (done)
 CQUAD8 (done)
 CQUADR (done)
-CQUADX (done)
 
 CSHEAR (done)
 CVISC  (done)
@@ -100,6 +96,7 @@ PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
 PBEAML  (done, not well tested)
+PBEAM3
 PBEND   (done)
 PTUBE   (done)
 
@@ -129,7 +126,6 @@ SPC     (done)
 SPC1    (done)
 SPCD    (done)
 SPCADD  (done)
-SPCAX   (done)
 
 MPC     (done)
 MPCADD  (done)
@@ -145,7 +141,6 @@ RFORCE
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
-FORCEAX
 
 GRAV    (done)
 
@@ -153,6 +148,7 @@ PLOAD   (done)
 PLOAD1  (done)
 PLOAD2  (done)
 PLOAD4  (done)
+PLOADB3
 
 MOMENT  (done)
 MOMENT1 (done)
@@ -306,18 +302,44 @@ PARAM (done)
 
 -----------------------------------------------
 
+----Axial Nodes----:
+RINGAX (not integrated)
+POINTAX
+
+----Axial Elements----:
+CCONEAX
+CTRIAX  (done)
+CTRIAX6 (done)
+CQUADX  (done)
+RINGAX
+
+----Axial Properties----:
+PCONEAX
+
+----Axial Loads----:
+FORCEAX
+PLOADX1
+MOMAX
+TEMPAX
+PRESAX
+
+----Axial Constraints----:
+MPCAX
+SPCAX   (done)
+SUPAX
+
+----Axial Other----:
+AXIC
+OMITAX
+SECTAX
+
+-----------------------------------------------
+
 Potential (v0.4) - these will be added in groupings...maybe (not necessarily in order):
 If you want a certain group...ask!
 **************
-AXIC
-PCONEAX
-PCONEAX
-FORCEAX
-**************
 BAROR
 BEAMOR
-CBARAO
-PBEAM3
 **************
 
 ---- Elements w/ Properties----:
@@ -326,17 +348,11 @@ CBARAO
 ---- Elements----:
 PLOTEL
 MBOLTUS
-AXIC
 BAROR
 BEAMOR
 CBARAO
-CCONEAX
 NSM
 NSM1
-
-----Properties----:
-PBEAM3
-PCONEAX
 
 ---- Rigid Elements----:
 RROD
@@ -359,7 +375,6 @@ MATT8
 MATT9
 
 ----Patran Loads----:
-PLOADX1
 QVECT
 QVOL
 

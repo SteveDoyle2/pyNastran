@@ -22,14 +22,19 @@ class FloatScientificParseError(SyntaxError):
 class ScientificParseError(SyntaxError):
     pass
 
-
 class CardInstantiationError(RuntimeError):
     pass
+
+
 
 class NotImplementedMethodError(NotImplementedError):
     pass
 
 class StiffnessMatrixError(RuntimeError):
+    pass
+
+
+class InvalidRequestError(RuntimeError):
     pass
 
 class InvalidFieldError(RuntimeError):

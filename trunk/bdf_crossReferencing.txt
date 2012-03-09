@@ -24,7 +24,6 @@ Notations
 ----Nodes----:
 GRID   (done)
 GRDSET   (NA)
-RINGAX
 SPOINT   (NA)
 
 ----Coordinates----:
@@ -34,7 +33,7 @@ CORD1C (done)
 CORD2C (done)
 CORD1S (done)
 CORD2S (done)
-
+CORD3G
 
 ----Elements----:
 CONM1   (done, does this card need cross-referencing???)
@@ -58,20 +57,18 @@ CBAR   (done)
 CROD   (done)
 CTUBE  (done)
 CBEAM  (done)
+CBEAM3 (???)
 CBEND  (partial)
 CONROD (done)
 
 CTRIA3  (done)
 CTRIA6  (done)
 CTRIAR  (done)
-CTRIAX  (done)
-CTRIAX6 (done)
 
 CQUAD  (done)
 CQUAD4 (done)
 CQUAD8 (done)
 CQUADR (done)
-CQUADX (done)
 
 CSHEAR (done)
 CVISC  (???)
@@ -114,6 +111,7 @@ PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
 PBEAML  (done)
+PBEAM3
 PBEND   (done)
 PTUBE   (done)
 
@@ -142,7 +140,6 @@ SPC     (done)
 SPC1    (done)
 SPCD    (done)
 SPCADD  (???)
-SPCAX   (???)
 
 MPC     (done)
 MPCADD  (???)
@@ -158,7 +155,6 @@ RFORCE
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
-FORCEAX
 
 GRAV    (???)
 
@@ -166,6 +162,7 @@ PLOAD   (done)
 PLOAD1  (done)
 PLOAD2  (done)
 PLOAD4  (done)
+PLOADB3
 
 MOMENT  (done)
 MOMENT1 (done)
@@ -317,6 +314,36 @@ MKAERO2  (NA)
 INCLUDE (NA)
 PARAM   (???)
 
+-----------------------------------------------
+
+----Axial Nodes----:
+RINGAX
+POINTAX
+----Axial Elements----:
+CTRIAX  (done)
+CTRIAX6 (done)
+CQUADX (done)
+RINGAX
+
+----Axial Properties----:
+PCONEAX
+
+----Axial Loads----:
+FORCEAX
+PLOADX1
+MOMAX
+TEMPAX
+PRESAX
+
+----Axial Constraints----:
+MPCAX
+SPCAX   (???)
+SUPAX
+
+----Axial Other----:
+AXIC
+OMITAX
+SECTAX
 
 -----------------------------------------------
 

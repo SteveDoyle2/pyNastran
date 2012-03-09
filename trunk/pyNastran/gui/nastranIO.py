@@ -116,6 +116,7 @@ class NastranIO(object):
                 points.InsertPoint(i, *point)
                 self.nidMap[nid] = i
                 i+=1
+            #print "nidMap = ",self.nidMap
 
         j = 0
         points2 = vtk.vtkPoints()
@@ -141,6 +142,7 @@ class NastranIO(object):
         i = 0
         for eid,element in sorted(model.elements.items()):
             self.eidMap[eid] = i
+            #print element.type
             if isinstance(element,CTRIA3):
                 #print "ctria3"
                 elem = vtkTriangle()
@@ -162,6 +164,26 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            elif isinstance(element,CTRIAX6): # midside nodes are required, nodes out of order
+                nodeIDs = element.nodeIDs()
+                elem = vtkQuadraticTriangle()
+                elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                elem.GetPointIds().SetId(1, nidMap[nodeIDs[2]])
+                elem.GetPointIds().SetId(2, nidMap[nodeIDs[4]])
+
+                elem.GetPointIds().SetId(3, nidMap[nodeIDs[1]])
+                elem.GetPointIds().SetId(4, nidMap[nodeIDs[3]])
+                elem.GetPointIds().SetId(5, nidMap[nodeIDs[5]])
+                #a = [0,2,4]
+                #msg = "CTRIAX6 %i %i %i" %(nidMap[nodeIDs[a[0]]], nidMap[nodeIDs[a[1]]], nidMap[nodeIDs[a[2]]] )
+                #raise Exception(msg)
+                #sys.stdout.flush()
+                
+                #elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                #elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                #elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
             elif isinstance(element,CQUAD4) or isinstance(element,CSHEAR):
                 nodeIDs = element.nodeIDs()
                 elem = vtkQuad()

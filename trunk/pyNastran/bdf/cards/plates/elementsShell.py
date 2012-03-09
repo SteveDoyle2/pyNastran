@@ -5,6 +5,7 @@ import sys
 
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
+from pyNastran.bdf.errors import *
 
 class ShellElement(Element):
     def __init__(self,card,data):
@@ -42,41 +43,9 @@ class ShellElement(Element):
         self.nodes = mesh.Nodes(self.nodes)
         self.pid   = mesh.Property(self.pid)
 
-class CTRIA3(ShellElement):
-    type = 'CTRIA3'
-    def __init__(self,card=None,data=None):
+class TriShell(ShellElement):
+    def __init__(self,card,data):
         ShellElement.__init__(self,card,data)
-        if card:
-            ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
-
-            nids = card.fields(3,6)
-
-            self.thetaMcid = card.field(6,0.0)
-            self.zOffset   = card.field(7,0.0)
-
-            self.TFlag = card.field(10,0)
-            self.T1 = card.field(11,1.0)
-            self.T2 = card.field(12,1.0)
-            self.T3 = card.field(13,1.0)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:5]
-
-            self.thetaMcid = data[5]
-            self.zOffset   = data[6]
-            self.TFlag     = data[7]
-            self.T1 = data[8]
-            self.T2 = data[9]
-            self.T3 = data[10]
-            if self.T1==-1.0: self.T1=1.0
-            if self.T2==-1.0: self.T2=1.0
-            if self.T3==-1.0: self.T3=1.0
-        ###
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==3
 
     def Thickness(self):
         return self.pid.Thickness()
@@ -136,6 +105,42 @@ class CTRIA3(ShellElement):
             Mass = mass/12*M
         return Mass
 
+class CTRIA3(TriShell):
+    type = 'CTRIA3'
+    def __init__(self,card=None,data=None):
+        TriShell.__init__(self,card,data)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
+
+            nids = card.fields(3,6)
+
+            self.thetaMcid = card.field(6,0.0)
+            self.zOffset   = card.field(7,0.0)
+
+            self.TFlag = card.field(10,0)
+            self.T1 = card.field(11,1.0)
+            self.T2 = card.field(12,1.0)
+            self.T3 = card.field(13,1.0)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:5]
+
+            self.thetaMcid = data[5]
+            self.zOffset   = data[6]
+            self.TFlag     = data[7]
+            self.T1 = data[8]
+            self.T2 = data[9]
+            self.T3 = data[10]
+            if self.T1==-1.0: self.T1=1.0
+            if self.T2==-1.0: self.T2=1.0
+            if self.T3==-1.0: self.T3=1.0
+        ###
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==3
+
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
         TFlag     = self.setBlankIfDefault(self.TFlag,0)
@@ -157,10 +162,10 @@ class CTRIA3(ShellElement):
         None,TFlag,T1,T2,T3]
         return fields
 
-class CTRIA6(CTRIA3):
+class CTRIA6(TriShell):
     type = 'CTRIA6'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        TriShell.__init__(self,card,data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -207,10 +212,10 @@ class CTRIA6(CTRIA3):
         None,TFlag,T1,T2,T3]
         return fields
 
-class CTRIAR(CTRIA3):
+class CTRIAR(TriShell):
     type = 'CTRIAR'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        TriShell.__init__(self,card,data)
         ## element ID number
         self.eid = int(card.field(1))
         self.pid = card.field(2)
@@ -240,10 +245,10 @@ class CTRIAR(CTRIA3):
                   None,TFlag,T1,T2,T3]
         return fields
 
-class CTRIAX(CTRIA3):
+class CTRIAX(TriShell):
     type = 'CTRIAX'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        TriShell.__init__(self,card,data)
         ## element ID number
         self.eid = int(card.field(1))
 
@@ -258,12 +263,21 @@ class CTRIAX(CTRIA3):
     def reprFields(self):
         return self.rawFields()
 
-class CTRIAX6(CTRIA3):
+class CTRIAX6(TriShell):
+    """
+    Nodes defined in a non-standard way
+         5
+        / \
+       6   4
+     /       \
+    1----2----3
+    """
     type = 'CTRIAX6'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        TriShell.__init__(self,card,data)
         ## element ID number
         self.eid = int(card.field(1))
+        self.mid = int(card.field(2))
 
         nids = card.fields(3,9)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
@@ -271,158 +285,44 @@ class CTRIAX6(CTRIA3):
 
         self.th = self.setDefaultIfBlank(card.fields(10),0.0)
 
+    def Area(self):
+        """
+        returns the normal vector
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        """
+        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
+        a = n1-n3
+        b = n1-n5
+        area = Area(a,b)
+        return area
+
     def Thickness(self):
-        return self.pid.th
+        raise InvalidRequestError('CTRIAX6 does not have a thickness')
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        self.mid   = model.Material(self.mid)
+    
+    def Mid(self):
+        if isinstance(self.mid,int):
+            return self.mid
+        return self.mid.mid
 
     def rawFields(self):
-        fields = ['CTRIAX6',self.eid,self.Pid()]+self.nodeIDs()+[
+        fields = ['CTRIAX6',self.eid,self.Mid(),self.Pid()]+self.nodeIDs()+[
                   self.th]
         return fields
 
     def reprFields(self):
         th = self.th
-        fields = ['CTRIAX6',self.eid,self.Pid()]+self.nodeIDs()+[
+        fields = ['CTRIAX6',self.eid,self.Mid()]+self.nodeIDs()+[
                   th]
         return fields
 
-class CSHEAR(ShellElement):
-    type = 'CSHEAR'
+class QuadShell(ShellElement):
     def __init__(self,card=None,data=None):
         ShellElement.__init__(self,card,data)
-        if card:
-            self.eid = card.field(1)
-            self.pid = card.field(2)
-            nids = card.fields(3,7)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:]
-        ###
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==4
 
-    def Normal(self):
-        (n1,n2,n3,n4) = self.nodePositions()
-        a = n1-n3
-        b = n2-n4
-        return Normal(a,b)
-
-    def AreaCentroidNormal(self):
-        (area,centroid) = self.AreaCentroid()
-        normal = self.Normal()
-        return (area,centroid,normal)
-
-    def AreaCentroid(self,debug=False):
-        """
-        1-----2
-        |    /|
-        | A1/ |
-        |  /  |
-        |/ A2 |
-        4-----3
-        
-        centroid
-           c = sum(ci*Ai)/sum(A)
-           where:
-             c=centroid
-             A=area
-        """
-        #if debug:
-        #    print "nodes = ",self.nodes
-        (n1,n2,n3,n4) = self.nodePositions()
-        a = n1-n2
-        b = n2-n4
-        area1 = Area(a,b)
-        c1 = self.CentroidTriangle(n1,n2,n4)
-
-        a = n2-n4
-        b = n2-n3
-        area2 = Area(a,b)
-        c2 = self.CentroidTriangle(n2,n3,n4)
-        
-        area = area1+area2
-        centroid = (c1*area1+c2*area2)/area
-        if debug:
-            print "c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2)
-            print "type(centroid=%s centroid=%s \n" %(type(centroid),centroid)
-        return(area,centroid)
-    ###
-
-    def Centroid(self,debug=False):
-        (area,centroid) = self.AreaCentroid(debug)
-        return centroid
-
-    def Area(self):
-        """
-        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
-        where a and b are the quad's cross node point vectors
-        """
-        (n1,n2,n3,n4) = self.nodePositions()
-        a = n1-n3
-        b = n2-n4
-        area = Area(a,b)
-        return area
-    ###
-
-    def rawFields(self):
-        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodeIDs()
-        return fields
-    
-    def reprFields(self):
-        return self.rawFields()
-
-class CQUAD4(ShellElement):
-    type = 'CQUAD4'
-    def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
-        if card:
-            ## element ID number
-            self.eid = int(card.field(1))
-            self.pid = card.field(2)
-
-            nids = card.fields(3,7)
-
-            self.thetaMcid = card.field(7,0.0)
-            self.zOffset   = card.field(8,0.0)
-
-            self.TFlag = card.field(10,0)
-            self.T1 = card.field(11,1.0)
-            self.T2 = card.field(12,1.0)
-            self.T3 = card.field(13,1.0)
-            self.T4 = card.field(14,1.0)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:6]
-
-            self.thetaMcid = data[6]
-            self.zOffset   = data[7]
-            self.TFlag     = data[8]
-            self.T1 = data[9]
-            self.T2 = data[10]
-            self.T3 = data[11]
-            self.T4 = data[12]
-            if self.T1==-1.0: self.T1=1.0
-            if self.T2==-1.0: self.T2=1.0
-            if self.T3==-1.0: self.T3=1.0
-            if self.T4==-1.0: self.T4=1.0
-        ###            
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==4,'CQUAD4'
-
-        #print "self.xi = ",self.xi
-        #print "nodes = ",self.nodes
-        #for nid in nids:
-        #    self.nodes.append(int(nid))
-
-        #print 'self.T1 = ',self.T1
-        #sys.exit()
-        #if self.id==20020:
-            #print "thetaMcid = ",card.field(7)
-            #print "actual = ",self.thetaMcid
-            #print str(self)
-            #sys.exit()
-        
     def Thickness(self):
         return self.pid.Thickness()
 
@@ -561,6 +461,145 @@ class CQUAD4(ShellElement):
             print "T4 = ",T4,'\n'
         return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
 
+class CSHEAR(QuadShell):
+    type = 'CSHEAR'
+    def __init__(self,card=None,data=None):
+        QuadShell.__init__(self,card,data)
+        if card:
+            self.eid = card.field(1)
+            self.pid = card.field(2)
+            nids = card.fields(3,7)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:]
+        ###
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==4
+
+    def Normal(self):
+        (n1,n2,n3,n4) = self.nodePositions()
+        a = n1-n3
+        b = n2-n4
+        return Normal(a,b)
+
+    def AreaCentroidNormal(self):
+        (area,centroid) = self.AreaCentroid()
+        normal = self.Normal()
+        return (area,centroid,normal)
+
+    def AreaCentroid(self,debug=False):
+        """
+        1-----2
+        |    /|
+        | A1/ |
+        |  /  |
+        |/ A2 |
+        4-----3
+        
+        centroid
+           c = sum(ci*Ai)/sum(A)
+           where:
+             c=centroid
+             A=area
+        """
+        #if debug:
+        #    print "nodes = ",self.nodes
+        (n1,n2,n3,n4) = self.nodePositions()
+        a = n1-n2
+        b = n2-n4
+        area1 = Area(a,b)
+        c1 = self.CentroidTriangle(n1,n2,n4)
+
+        a = n2-n4
+        b = n2-n3
+        area2 = Area(a,b)
+        c2 = self.CentroidTriangle(n2,n3,n4)
+        
+        area = area1+area2
+        centroid = (c1*area1+c2*area2)/area
+        if debug:
+            print "c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2)
+            print "type(centroid=%s centroid=%s \n" %(type(centroid),centroid)
+        return(area,centroid)
+    ###
+
+    def Centroid(self,debug=False):
+        (area,centroid) = self.AreaCentroid(debug)
+        return centroid
+
+    def Area(self):
+        """
+        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        where a and b are the quad's cross node point vectors
+        """
+        (n1,n2,n3,n4) = self.nodePositions()
+        a = n1-n3
+        b = n2-n4
+        area = Area(a,b)
+        return area
+    ###
+
+    def rawFields(self):
+        fields = ['CSHEAR',self.eid,self.Pid()]+self.nodeIDs()
+        return fields
+    
+    def reprFields(self):
+        return self.rawFields()
+
+
+class CQUAD4(QuadShell):
+    type = 'CQUAD4'
+    def __init__(self,card=None,data=None):
+        QuadShell.__init__(self,card,data)
+        if card:
+            ## element ID number
+            self.eid = int(card.field(1))
+            self.pid = card.field(2)
+
+            nids = card.fields(3,7)
+
+            self.thetaMcid = card.field(7,0.0)
+            self.zOffset   = card.field(8,0.0)
+
+            self.TFlag = card.field(10,0)
+            self.T1 = card.field(11,1.0)
+            self.T2 = card.field(12,1.0)
+            self.T3 = card.field(13,1.0)
+            self.T4 = card.field(14,1.0)
+        else:
+            self.eid = data[0]
+            self.pid = data[1]
+            nids = data[2:6]
+
+            self.thetaMcid = data[6]
+            self.zOffset   = data[7]
+            self.TFlag     = data[8]
+            self.T1 = data[9]
+            self.T2 = data[10]
+            self.T3 = data[11]
+            self.T4 = data[12]
+            if self.T1==-1.0: self.T1=1.0
+            if self.T2==-1.0: self.T2=1.0
+            if self.T3==-1.0: self.T3=1.0
+            if self.T4==-1.0: self.T4=1.0
+        ###            
+        self.prepareNodeIDs(nids)
+        assert len(self.nodes)==4,'CQUAD4'
+
+        #print "self.xi = ",self.xi
+        #print "nodes = ",self.nodes
+        #for nid in nids:
+        #    self.nodes.append(int(nid))
+
+        #print 'self.T1 = ',self.T1
+        #sys.exit()
+        #if self.id==20020:
+            #print "thetaMcid = ",card.field(7)
+            #print "actual = ",self.thetaMcid
+            #print str(self)
+            #sys.exit()
+        
     def rawFields(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]
         return fields
@@ -582,10 +621,10 @@ class CQUAD4(ShellElement):
         #    sys.exit()
         return fields
 
-class CQUADR(CQUAD4):
+class CQUADR(QuadShell):
     type = 'CQUADR'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        QuadShell.__init__(self,card,data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -632,10 +671,10 @@ class CQUADR(CQUAD4):
     def reprFields(self):
         return self.rawFields()
 
-class CQUAD(CQUAD4):
+class CQUAD(QuadShell):
     type = 'CQUAD'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        QuadShell.__init__(self,card,data)
         ## element ID number
         self.eid = int(card.field(1))
         self.pid = card.field(2)
@@ -665,10 +704,10 @@ class CQUAD(CQUAD4):
         fields = ['CQUAD',self.eid,self.Pid()]+self.nodeIDs()
         return fields
 
-class CQUAD8(CQUAD4):
+class CQUAD8(QuadShell):
     type = 'CQUAD8'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        QuadShell.__init__(self,card,data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -718,10 +757,10 @@ class CQUAD8(CQUAD4):
                   TFlag]
         return fields
 
-class CQUADX(CQUAD4):
+class CQUADX(QuadShell):
     type = 'CQUADX'
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        QuadShell.__init__(self,card,data)
         ## element ID number
         self.eid = int(card.field(1))
         self.pid = card.field(2)

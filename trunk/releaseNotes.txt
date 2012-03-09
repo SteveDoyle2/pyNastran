@@ -23,11 +23,13 @@ Overall BDF
    - added test code that compares cards values from one run to the next.
      This helped find lots of bugs.
    - added support for THRU-BY on certain cards (QBDY3, ???)
+   - added new custom Exceptions
 
 BDF API Changes
    - removed obsolete isPrintable and Is methods from BDF class
    - added Mid1(), Mid2(), Mid3(), Mid4() methods for PSHELL.
      Mid() now returns Mid1() or Mid2() depending on the form of the PSHELL
+   - Tri-type elements are now TriShells instead of CTRIA3s (same for QUADs, QuadShells)
 
 BDF Bug Fixes
    - printCard can now handle cards with an embedded line of Nones
@@ -39,20 +41,20 @@ BDF Bug Fixes
    - PCOMP doesnt lose last plies anymore
    - fixed bugs in CQUADR, CQUADX, CVISC,  CONROD, CGAP,  CTRIAX, PTUBE
    - fixed bugs in NLPARM, PLOAD2, PLOAD4, QBDY1,  QBDY3, FREQ2,  CHBDYE
-   - fixed bugs in PMASS,  CSHEAR, CBAR,   CQUAD,  RBE1,  RBE2,   RBE3, 
-   - fixed bugs in PBEAML, MAT3
+   - fixed bugs in PMASS,  CSHEAR, CBAR,   CQUAD,  RBE1,  RBE2,   RBE3
+   - fixed bugs in PBEAML, MAT3, CTRIAX6
+
 Added BDF
    - enabled CQUAD, RBE3
-   - EIGB, EIGP, EIGR, EIGRL
-   - *** EIGC
-   - CBUSH, PBUSH, PDAMPT, CFAST, PFAST
+   - EIGB, EIGC, EIGP, EIGR, EIGRL
+   - CBUSH, PBUSH, PDAMPT, CFAST, PFAST, CONM1
    - TSTEP, TSTEPNL
    - DLOAD, SLOAD, RLOAD1, RLOAD2
-   - CAERO2, PAERO2
-   - CBEND, PBEND
+   - CAERO2, PAERO2,AEFACT
+   - CBEND, PBEND, CBEAM3
    - *** TIC
-   - CONM1, AEFACT
-   - DVPREL2, DOPTPRM, DVMREL1, DLINK
+   
+   - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
 
 OP2 API Changes
@@ -62,10 +64,13 @@ Added OP2
 
 Overall GUI
 Added GUI
-   - CSHEAR support
+   - CSHEAR, CTRIAX6 support
 
 GUI Bug Fixes
    - "python setup.py install" should work now
+
+Solver
+   - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.3.1 released 2012/02/??-----------------------
 BDF Bug Fixes
