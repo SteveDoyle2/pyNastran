@@ -67,6 +67,8 @@ EIGB    30      INV     0.0     2.      20      2       2
 NLPARM         1     100            AUTO       1      40       P     ALL+
 +                  0.010                                                +
 +              9
+NLPARM        2       10           AUTO      5      25        PW      NO
+             .01     .01     .01
 $OPTIMIZATION
 DCONSTR 1       16      -999999.1000000.
 DRESP2,1,LBUCK,5,3
