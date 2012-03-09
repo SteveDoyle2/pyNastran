@@ -186,6 +186,10 @@ class MAT1(Material):
         msg += '                       RHO=%g),);\n'  %(self.rho)
         return msg
 
+    #def crossReference(self,model):
+        #self.Mcsid = model.Coord(self.Mcsid)  # used only for PARAM,CURVPLOT
+        #pass
+
     def rawFields(self):
         fields = ['MAT1',self.mid,self.e,self.g,self.nu,self.rho,self.a,self.TRef,self.ge,
                   self.St,self.Sc,self.Ss,self.Mcsid]
@@ -205,7 +209,7 @@ class MAT1(Material):
         Ss   = self.setBlankIfDefault(self.Ss,0.)
         Mcsid = self.setBlankIfDefault(self.Mcsid,0)
 
-        fields = ['MAT1',self.mid,self.E,G,self.nu,rho,a,TRef,ge,
+        fields = ['MAT1',self.mid,self.e,G,self.nu,rho,a,TRef,ge,
                   St,Sc,Ss,Mcsid]
         return fields
 

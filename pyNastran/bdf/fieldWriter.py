@@ -270,10 +270,12 @@ def printCard(fields,tol=1e-8):
     but because it's a left-justified unneccessary field,
     printCard doesnt use it.
     """
+    #print fields
     try:
         out = '%-8s' %(fields[0])
     except:
         print "ERROR!  fields=%s" %(fields)
+        sys.stdout.flush()
         raise
     
     for i in range(1,len(fields)):
