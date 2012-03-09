@@ -351,6 +351,15 @@ class addMethods(object):
             assert key>0,'mid=%s material=\n%s' %(key,material)
             self.thermalMaterials[key] = material
 
+    def addMaterialDependence(self,material,allowOverwrites=False):
+        key = material.mid
+        if key in self.materialDeps and allowOverwrites==False:
+            if not material.isSameCard(self.materialDeps[key]):
+                assert key not in self.materialDeps,'mid=%s\noldMaterialDep=\n%snewMaterialDep=\n%s' %(key,self.materialDeps[key],material)
+        else:
+            assert key>0,'mid=%s material=\n%s' %(key,material)
+            self.materialDeps[key] = material
+
     def addCreepMaterial(self,material,allowOverwrites=False):
         """
         @note

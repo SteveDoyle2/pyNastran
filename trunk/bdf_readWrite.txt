@@ -121,6 +121,16 @@ MAT10 (done, not well tested)
 MAT4  (done)
 MAT5  (done)
 
+----Nonlinear Materials----:
+MATS1  (done)
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
+
 ----Constraints----:
 SPC     (done)
 SPC1    (done)
@@ -365,15 +375,6 @@ RJOINT
 RTRPLT1
 MATRIG
 
----- Materials----:
-MATT1
-MATT2
-MATT3
-MATT4
-MATT5
-MATT8
-MATT9
-
 ----Patran Loads----:
 QVECT
 QVOL
@@ -397,10 +398,6 @@ MONPNT3
 ----Thermal Loads----:
 CONTRLT
 BDYOR
-
-----Materials----:
-MATS1
-MATT1
 
 ----Thermal----:
 RADBND

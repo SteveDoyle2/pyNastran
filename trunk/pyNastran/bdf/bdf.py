@@ -92,7 +92,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # materials
         'MAT1','MAT2','MAT3','MAT8','MAT9','MAT10',
         #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
-        #'MATS1',
+        'MATS1',
          
         # thermal materials
         'MAT4','MAT5',
@@ -301,7 +301,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
         ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
-        self.materials = {} 
+        self.materials = {}
+        ## stores MATS1
+        self.materialDeps = {}
         ## stores the CREEP card
         self.creepMaterials = {}
 
@@ -1145,9 +1147,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 material = MAT10(cardObj)
                 self.addMaterial(material)
 
-            #elif cardName=='MATS1':
-            #    material = MATS1(cardObj)
-            #    self.addStressMaterial(material)
+
+            elif cardName=='MATS1':
+                material = MATS1(cardObj)
+                self.addMaterialDependence(material)
             #elif cardName=='MATT1':
             #    material = MATT1(cardObj)
             #    self.addTempMaterial(material)

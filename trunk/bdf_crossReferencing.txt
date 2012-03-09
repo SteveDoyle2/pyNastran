@@ -121,6 +121,7 @@ PCOMPG  (done)
 PSHEAR  (done)
 PSOLID  (done)
 PLSOLID (done)
+PBCOMP
 
 ----Materials----:
 CREEP (???)
@@ -134,6 +135,16 @@ MAT10 (NA)
 ----Thermal Materials----:
 MAT4  (NA)
 MAT5  (NA)
+
+----Nonlinear Materials----:
+MATS1  (done)
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
 
 ----Constraints----:
 SPC     (done)
@@ -320,6 +331,7 @@ PARAM   (???)
 RINGAX
 POINTAX
 ----Axial Elements----:
+CCONEAX
 CTRIAX  (done)
 CTRIAX6 (done)
 CQUADX (done)

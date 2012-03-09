@@ -52,10 +52,12 @@ Added BDF
    - DLOAD, SLOAD, RLOAD1, RLOAD2
    - CAERO2, PAERO2,AEFACT
    - CBEND, PBEND, CBEAM3
-   - *** TIC
-   
+   - MATS1
+
    - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
+
+   - *** TIC
 
 OP2 API Changes
 OP2 Bug Fixes
