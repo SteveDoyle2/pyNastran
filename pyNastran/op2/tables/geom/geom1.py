@@ -4,7 +4,7 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.nodes import GRID
-from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD1C,CORD1S, CORD2R,CORD2C  #,CORD2S, CORD3G,
+from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD1C,CORD1S, CORD2R,CORD2C,CORD2S # CORD3G
 
 
 class Geometry1(object):
@@ -78,8 +78,8 @@ class Geometry1(object):
             eData = data[n:n+24] # 6*4
             (cid,three,one,g1,g2,g3) = unpack('iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
-            #coord = CORD1S(None,dataIn)
-            #self.addCoord(coord,allowOverwrites=True)
+            coord = CORD1S(None,dataIn)
+            self.addCoord(coord,allowOverwrites=True)
             n+=24
         ###
         data = data[n:]
@@ -159,7 +159,7 @@ class Geometry1(object):
     def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         #print "reading GRID"
-        return
+        #return
         
         n=0
         nEntries = len(data)//32

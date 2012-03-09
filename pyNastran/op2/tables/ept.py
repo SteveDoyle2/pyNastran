@@ -17,7 +17,7 @@ class EPT(object):
                         #(5402,54,262):   self.readPBEAM,   # record 14 - not done
                         #(2706,27,287):   self.readPCOMP,   # record 22 - buggy
                          (902,9,29):      self.readPROD,    # record 49
-                        #(1002,10,42):    self.readPSHEAR,  # record 50 - no PSHEAR object
+                         (1002,10,42):    self.readPSHEAR,  # record 50
                          (2402,24,281):   self.readPSOLID,  # record 51
                          (2302,23,283):   self.readPSHELL,  # record 52
                          (1602,16,30):    self.readPTUBE,   # record 56
@@ -265,7 +265,7 @@ class EPT(object):
         """
         PROD(902,9,29) - the marker for Record 49
         """
-        #print "reading PSHEAR"
+        #print "reading PROD"
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]

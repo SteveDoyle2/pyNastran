@@ -18,7 +18,7 @@ class MPT(object):
                          (2103,21,234): self.readMAT4,  # record 5
                          (2203,22,235): self.readMAT5,  # record 6
                          (2503,25,288): self.readMAT8,  # record 7
-                        #(2603,26,300): self.readMAT9,  # record 8
+                         (2603,26,300): self.readMAT9,  # record 8 - buggy
                          (2801,28,365): self.readMAT10, # record 9
                          (503,5,90):    self.readMATS1, # record 12 - not done
 
@@ -161,8 +161,8 @@ class MPT(object):
                       rho,[a1,a2,a3,a4,a5,a6],
                       TRef,ge]
             #print "dataIn = ",dataIn
-            #mat = MAT9(None,dataIn)
-            #self.addOp2Material(mat)
+            mat = MAT9(None,dataIn)
+            self.addOp2Material(mat)
         ###
 
     def readMAT10(self,data):
@@ -185,7 +185,6 @@ class MPT(object):
     def readMATS1(self,data):
         """
         MATS1(503,5,90) - record 12
-        @todo add object
         """
         #print "reading MATS1"
         while len(data)>=44: # 11*4
@@ -194,8 +193,8 @@ class MPT(object):
             out = unpack('iiifiiffiii',eData)
             (mid,tid,Type,h,yf,hr,limit1,limit2,a,b,c) = out
             dataIn = [mid,tid,Type,h,yf,hr,limit1,limit2]
-            #mat = MATS1(None,dataIn)
-            #self.addOp2Material(mat)
+            mat = MATS1(None,dataIn)
+            self.addMaterialDependence(mat,allowOverwrites=True)
         ###
 
     def readMATT1(self,data):
@@ -259,7 +258,6 @@ class MPT(object):
     def readNLPARM(self,data):
         """
         NLPARM(3003,30,286) - record 27
-        @todo add object
         """
         #print "reading NLPARM"
         while len(data)>=76: # 19*4
@@ -268,8 +266,8 @@ class MPT(object):
             out = unpack('iifiiiiifffiiiffiff',eData)
             (sid,ninc,dt,kmethod,kstep,maxiter,conv,intout,epsu,epsp,epsw,
              maxdiv,maxqn,maxls,fstress,lstol,maxbis,maxr,rtolb) = out
-            #mat = NLPARM(None,out)
-            #self.addOp2Material(mat)
+            mat = NLPARM(None,out)
+            self.addNLParm(mat)
         ###
 
 # NLPCI
@@ -277,7 +275,6 @@ class MPT(object):
     def readTSTEPNL(self,data):
         """
         TSTEPNL(3103,31,337) - record 29
-        @todo add object
         """
         #print "reading TSTEPNL"
         while len(data)>=88: # 19*4
@@ -286,6 +283,7 @@ class MPT(object):
             out = unpack('iifiiiiifffiiifiiiffff',eData)
             (sid,ndt,dt,no,kmethod,kstep,maxiter,conv,epsu,epsp,epsw,
              maxdiv,maxqn,maxls,fstress,lstol,maxbis,adjust,rb,maxr,utol,rtolb) = out
-            #mat = TSTEPNL(None,out)
-            #self.addOp2Material(mat)
+            mat = TSTEPNL(None,out)
+            self.addTStep(mat)
         ###
+        
