@@ -4,7 +4,7 @@ import sys
 class EndOfFileError(Exception):
     pass
 
-class F06Reader(object):
+class asdfF06Reader(object):
     def __init__(self,f06):
         self.f06 = f06
         #self.f06 = 'quad4_tri3.f06'
@@ -12,6 +12,7 @@ class F06Reader(object):
         self.infile = open(self.f06,'r')
         self.n = 0
         self.elements = {}
+
     def removeComments(self,lines):
         lines2 = []
         for line in lines:
@@ -389,7 +390,328 @@ class Table(dict):
             print "  key=%s value=%s" %(key,value)
 
 
+class DisplacementObject(object):
+    def __init__(self,subcaseID,data):
+        #print "*******"
+        self.subcaseID = subcaseID
+        self.grids = []
+        self.gridTypes = []
+        self.translations = []
+        self.rotations = []
+        self.addData(data)
+        
+    def addData(self,data):
+        for line in data:
+            (gridID,gridType,t1,t2,t3,t4,t5,t6) = line
+            self.grids.append(gridID)
+            self.gridTypes.append(gridType)
+            self.translations.append([t1,t2,t3])
+            self.rotations.append([t4,t5,t6])
+        ###
+        #print "grids = ",self.grids
+    
+    def __repr__(self):
+        msg  = "SubcaseID = %s\n" %(self.subcaseID)
+        msg += '%-8s %8s %10s %10s %10s %10s %10s %10s\n' %('gridID','gridType','t1','t2','t3','t4','t5','t6')
+        for (gridID,gridType,translation,rotation) in zip(self.grids,self.gridTypes,self.translations,self.rotations):
+            (t1,t2,t3) = translation
+            (t4,t5,t6) = rotation
+            msg += "%-8i %8s %10.4g %10.4g %10.4g %10.4g %10.4g %10.4g\n" %(gridID,gridType,t1,t2,t3,t4,t5,t6)
+        ###
+        return msg
+
+class StressObject(object):
+    def __init__(self,subcaseID,data):
+        #print "*******"
+        self.subcaseID = subcaseID
+        self.grids = []
+        self.gridTypes = []
+        self.translations = []
+        self.rotations = []
+        
+        self.data = []
+        self.addData(data)
+        
+    def addData(self,data):
+        
+        for line in data:
+            self.data.append(line)
+        return
+            #(gridID,gridType,t1,t2,t3,t4,t5,t6) = line
+            #self.grids.append(gridID)
+            #self.gridTypes.append(gridType)
+            #self.translations.append([t1,t2,t3])
+            #self.rotations.append([t4,t5,t6])
+        ###
+        #print "grids = ",self.grids
+    
+    def __repr__(self):
+        msg  = "SubcaseID = %s\n" %(self.subcaseID)
+        for line in self.data:
+            msg += '%s\n' %(line)
+        return msg
+            
+        msg += '%-8s %8s %10s %10s %10s %10s %10s %10s\n' %('gridID','gridType','t1','t2','t3','t4','t5','t6')
+        for (gridID,gridType,translation,rotation) in zip(self.grids,self.gridTypes,self.translations,self.rotations):
+            (t1,t2,t3) = translation
+            (t4,t5,t6) = rotation
+            msg += "%-8i %8s %10.4g %10.4g %10.4g %10.4g %10.4g %10.4g\n" %(gridID,gridType,t1,t2,t3,t4,t5,t6)
+        ###
+        return msg
+
+class F06Reader(object):
+    def __init__(self,f06name):
+        self.f06name = f06name
+        self.i = 0
+        self.markerMap = {
+          #'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O':self.fileSystem,
+          #'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O':self.executiveControl,
+          #'C A S E    C O N T R O L    E C H O ':self.caseControl,
+          #'M O D E L   S U M M A R Y':self.summary,
+#                            E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y
+#                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+#0                                                  OLOAD    RESULTANT       
+          #'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self.gridPointSingularities,
+
+
+#------------------------
+#    N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S
+#          N O N - D I M E N S I O N A L    H I N G E    M O M E N T    D E R I V A T I V E   C O E F F I C I E N T S
+#                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
+#                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S
+#------------------------
+
+
+          'D I S P L A C E M E N T   V E C T O R':self.displacement,
+          'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T':self.spcForces,
+          'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.mpcForces,
+          #'G R I D   P O I N T   F O R C E   B A L A N C E':self.gridPointForces,
+          #'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.quadStress,
+          #'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.triStress,
+          
+          'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.quadCompositeStress,
+
+          #'* * * END OF JOB * * *': self.end(),
+          'MAXIMUM  SPCFORCES':self.maxSpcForces,
+          'MAXIMUM  DISPLACEMENTS': self.maxDisplacements,
+          'MAXIMUM  APPLIED LOADS': self.maxAppliedLoads,
+         }
+        self.markers = self.markerMap.keys()
+        self.infile = open(self.f06name,'r')
+        self.storedLines = []
+
+        self.disp = {}
+        self.SpcForces = {}
+        self.stress = {}
+        self.subcaseIDs = []
+
+    def gridPointSingularities(self):
+        """
+0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
+0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
+                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
+                                1        G      4         0.00E+00          B        F         SB       S    *
+                                1        G      5         0.00E+00          B        F         SB       S    *
+        
+        """
+        pass
+
+    def maxSpcForces(self):
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,float,float,float,float,float,float])
+        print "max SPC Forces   ",data
+        #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
+        #print self.disp[subcaseID]
+
+    def maxDisplacements(self):
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,float,float,float,float,float,float])
+        print "max Displacements",data
+        #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
+        #print self.disp[subcaseID]
+    
+    def maxAppliedLoads(self):
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,float,float,float,float,float,float])
+        print "max Applied Loads",data
+        #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
+        #print self.disp[subcaseID]
+
+    def quadCompositeStress(self):
+        """
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0      181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
+0      181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
+        """
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
+        if subcaseID in self.stress:
+            self.stress[subcaseID].addData(data)
+        else:
+            self.stress[subcaseID] = StressObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+        #print self.stress[subcaseID]
+        
+
+    def displacement(self):
+        """
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
+             2      G      0.0            0.0            0.0            0.0            0.0            0.0
+             3      G      0.0            0.0            0.0            0.0            0.0            0.0
+        """
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,str,float,float,float,float,float,float])
+        if subcaseID in self.disp:
+            self.disp[subcaseID].addData(data)
+        else:
+            self.disp[subcaseID] = DisplacementObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+        #print self.disp[subcaseID]
+
+    def spcForces(self):
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,str,float,float,float,float,float,float])
+
+        if subcaseID in self.SpcForces:
+            self.SpcForces[subcaseID].addData(data)
+        else:
+            self.SpcForces[subcaseID] = DisplacementObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+        #print self.SpcForces[subcaseID]
+        
+    def mpcForces(self):
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,str,float,float,float,float,float,float])
+
+        if subcaseID in self.MpcForces:
+            self.MpcForces[subcaseID].addData(data)
+        else:
+            self.MpcForces[subcaseID] = DisplacementObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+        #print self.SpcForces[subcaseID]
+        
+    def readTable(self,Format):
+        sline = True
+        data = []
+        while sline:
+            sline = self.infile.readline()[1:].strip().split()
+            self.i+=1
+            sline = self.parseLine(sline,Format)
+            if sline is None:
+                return data
+            data.append(sline)
+        return data
+    
+    def parseLine(self,sline,Format):
+        out = []
+        for entry,iFormat in zip(sline,Format):
+            try:
+                entry2 = iFormat(entry)
+            except:
+                #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
+                return None
+            out.append(entry2)
+        return out
+        
+    def ReadF06(self):
+        #print "2*************"
+        #print dir(self)
+        #print "reading..."
+        blank = 0
+        while 1:
+            if self.i%1000==0:
+                print "i=%i" %(self.i)
+            line = self.infile.readline()
+            marker = line[1:].strip()
+            #print "marker = %s" %(marker)
+            if marker in self.markers:
+                blank = 0
+                #print "\n*marker = %s" %(marker)
+                self.markerMap[marker]()
+                self.storedLines = []
+            elif marker=='':
+                blank +=1
+                if blank==20:
+                    break
+            elif self.isMarker(marker): # marker with space in it (e.g. Model Summary)
+                print "***marker = |%s|" %(marker)
+                
+            else:
+                blank = 0
+            ###
+            self.storedLines.append(line)
+            self.i+=1
+        print "i=%i" %(self.i)
+        self.infile.close()
+
+    def isMarker(self,marker):
+        marker = marker.strip().split('$')[0].strip()
+
+        if len(marker)<2 or marker=='* * * * * * * * * * * * * * * * * * * *':
+            return False
+        for i,char in enumerate(marker):
+            #print "i=%s i%%2=%s char=%s" %(i,i%2,char)
+            if i%2==1 and ' ' is not char:
+                return False
+            elif i%2==0 and ' '==char:
+                return False
+            ###
+        ###
+        return True
+            
+    def skip(self,iskip):
+        for i in range(iskip-1):
+            self.infile.readline()
+        self.i += iskip
+        return self.infile.readline()
+    
+    def __repr__(self):
+        msg = ''
+        data = [self.disp,self.SpcForces,self.stress]
+        self.subcaseIDs = list(set(self.subcaseIDs))
+        for subcaseID in self.subcaseIDs:
+            for result in data:
+                if subcaseID in result:
+                    msg += str(result[subcaseID])
+                ###
+            ###
+        return msg
+
 if __name__=='__main__':
+    f06 = F06Reader('ssb.f06')
+    #f06 = F06Reader('quad_bending_comp.f06')
+    f06.ReadF06()
+    #print f06
+    
+if 0:
     reader = F06Reader('fem3.f06')
     #reader.readHeader()
     dTable = reader.readDisplacement()
@@ -427,3 +749,4 @@ if __name__=='__main__':
 
     #print "-SPC Forces-"
     #ftable = reader.readSPCForces()
+

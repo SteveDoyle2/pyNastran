@@ -27,8 +27,11 @@ class OQG1(object):
         self.deleteAttributes_OQG()
 
     def deleteAttributes_OQG(self):
+        #print self.obj
         params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag','thermal']
         self.deleteAttributes(params)
+        #sys.exit('stopping in oqg1.py')
+        
     
     def readTable_OQG1_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -104,8 +107,8 @@ class OQG1(object):
 
     def readOQG1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.skipOES_Element() # skipping entire table
-        return
+        #self.skipOES_Element() # skipping entire table
+        #return
 
         print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1]
@@ -128,8 +131,8 @@ class OQG1(object):
         #elif tfsCode==[39,1,1]:
         #    self.readOQG1_Data_format1_sort1()
         else:
-            self.skipOES_Element()
-            #raise Exception('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
+            #self.skipOES_Element()
+            raise Exception('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -190,8 +193,8 @@ class OQG1(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        #self.readScalars8(self.obj)
-        self.skipOES_Element()
+        self.readScalars8(self.obj)
+        #self.skipOES_Element()
         
 
     def readOQG1_Data_format1_sort1(self):

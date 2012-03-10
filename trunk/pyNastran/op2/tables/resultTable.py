@@ -397,7 +397,7 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
             #print "grid=%-3s type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz)
             if debug:
                 self.log.debug("grid=%-3i type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz))
-                self.log.debug(self.printBlock(self.data[n:n+64]))
+                #self.log.debug(self.printBlock(self.data[n:n+64]))
                 sys.stdout.flush()
             self.obj.add(grid,gridType,dx,dy,dz,rx,ry,rz)
             n+=32

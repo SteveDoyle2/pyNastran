@@ -206,10 +206,10 @@ class OP2(BDF,  # BDF methods
         
 
         # OQG
-        #self.spcForces      = {}
+        self.spcForces      = {}
         #self.modalSPCForces = {}
 
-        #self.mpcForces      = {}
+        self.mpcForces      = {}
         #self.modalMPCForces = {}
         
         ## OPG - summation of loads for each element
@@ -234,7 +234,7 @@ class OP2(BDF,  # BDF methods
                    #self.temperatureForces,
                    
                    # OQG1 - Forces
-                   #self.spcForces,self.mpcForces,
+                   self.spcForces,self.mpcForces,
                    
                    # OGP - Applied Force/Moment
                    self.appliedLoads,
