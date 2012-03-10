@@ -22,11 +22,14 @@ class OEF(object):
         table4Data = self.readOEF1_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEF()
+        
 
     def deleteAttributes_OEF(self):
         params = ['elementType','dLoadID','loadID','obj','markerStart','oCode',
                   'eigr','eigi','eign','mode','freq','time','thermal',]
         self.deleteAttributes(params)
+        print self.obj
+        sys.exit('stopping in oef.py')
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -101,12 +104,12 @@ class OEF(object):
 
     def readOEF1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.skipOES_Element() # skipping entire table
-        return
-        
+        #self.skipOES_Element() # skipping entire table
+        #return
+        #print "tfsCode = %s" %(tfsCode)
         # element forces & moments / flux
-        if 0:
-            if   tfsCode==[4,1,0]:
+        if 1:
+            if tfsCode==[4,1,0]:
                 self.readOEF1_Data_format1_sort0()
             elif tfsCode==[4,1,1]:
                 self.readOEF1_Data_format1_sort1()
@@ -179,7 +182,7 @@ class OEF(object):
             else:
                 msg = 'OEF_thermal format1_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
                 self.skippedCardsFile.write(msg)
-                #raise Exception('not supported OEF thermal solution...')
+                raise Exception('not supported OEF thermal solution...')
             ###
         else:
             msg = 'invalid thermal flag...not 0 or 1...flag=%s\n' %(self.thermal)
@@ -187,8 +190,8 @@ class OEF(object):
             raise Exception(msg)
         ###
         if self.obj:
-            self.skipOES_Element()
-            #self.readScalars8(self.obj,debug=True)
+            #self.skipOES_Element()
+            self.readScalars8(self.obj,debug=True)
             #self.readForces(data,self.obj)
             #self.skipOES_Element()
         else:

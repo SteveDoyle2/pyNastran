@@ -222,11 +222,11 @@ class OUGV1(object):
 
         else:
             #print "***start skipping***"
-            self.log.debug('skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
+            #self.log.debug('skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
             #print self.codeInformation()
-            self.skipOES_Element()
+            #self.skipOES_Element()
             #print "***end skipping***"
-            #raise Exception('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
+            raise NotImplementedError('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
         ###
         #print self.obj
 
