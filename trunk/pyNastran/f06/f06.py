@@ -4,392 +4,6 @@ import sys
 class EndOfFileError(Exception):
     pass
 
-class asdfF06Reader(object):
-    def __init__(self,f06):
-        self.f06 = f06
-        #self.f06 = 'quad4_tri3.f06'
-        #self.f06 = 'quad_bending.f06'
-        self.infile = open(self.f06,'r')
-        self.n = 0
-        self.elements = {}
-
-    def removeComments(self,lines):
-        lines2 = []
-        for line in lines:
-            if '$' not in line:
-                lines2.append(line)
-        return lines2
-
-    def readHeader(self):
-        self.nHeader = 50
-        wordStart = 'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O'
-        wordExec  = 'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O'
-        wordCase  = 'C A S E    C O N T R O L    E C H O '
-        wordEnd   = 'M O D E L   S U M M A R Y'
-
-        line = ''
-        
-        while wordStart not in line:
-            line = self.readlines(nLines=1)
-        
-        linesFileSystem = []
-        linesExecControl = []
-        linesCaseControl = []
-
-        while wordExec not in line:
-            linesFileSystem.append(line)
-        while wordCase not in line:
-            linesExecControl.append(line)
-        while wordEnd not in line:
-            linesCaseControl.append(line)
-        
-        linesFileSystem  = self.removeComments(linesFileSystem)
-        linesExecControl = self.removeComments(linesExecControl)
-        linesCaseControl = self.removeComments(linesCaseControl)
-        
-        #for line in linesCaseControl:
-        #    print line.strip()
-
-        
-    def readDisplacement(self):
-        word = 'D I S P L A C E M E N T   V E C T O R'
-        typeList=[None,float,float,float]
-        table = {}
-        i=0
-        nHeader=1
-
-        while 1:
-            try:
-                table = self.readTable(word,table,typeList,nHeader,self.parseTableLine)
-            except EndOfFileError:
-                break
-            #print "i=",i
-            i+=1
-        return table
-
-    def printTable(self,table):
-        for key,value in sorted(table.items()):
-            print "  key=%s value=%s" %(key,value)
-
-    def readTable(self,word,table,typeList,nHeader,parseTableLine):
-        #nHeader=1
-        tableStart = self.readTableHeader(word,typeList,nHeader,parseTableLine)
-        if table=={}:
-            table=tableStart
-        line = self.readlines(nLines=1)
-        while('PAGE' not in line):
-            C = parseTableLine(line)
-            #print C
-            tableValues = []
-            
-            for itype,value in zip(typeList,C[1:]):
-                if itype:
-                    tableValues.append(itype(value))
-            id = int(C[0])
-            table[id] = tableValues
-            line = self.readlines(nLines=1)
-        #print "C=%s" %(C)
-        #print "line = |%s|" %(line)
-        return table
-
-    def rewind(self):
-        self.infile.close()
-        self.infile = open(self.f06,'r')
-        self.n = 0
-
-    def readSPCForces(self):
-        word = 'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T'
-        typeList=[None,float,float,float]
-        table = self.readTable(word,typeList,self.parseTableLine)
-
-    def readlines(self,nLines=1,saveAll=False):
-        lines = []
-        for line in range(nLines):
-            line = self.infile.readline()
-            if saveAll:
-                lines.append(line)
-            #print "line[%s]=%s" %(self.n,line.strip())
-            ###
-            self.n += 1
-            #if self.n>347:
-            #    raise Exception('too far')
-        ###
-        if '* * * END OF JOB * * *' in line:
-            raise EndOfFileError()
-        elif saveAll:
-            return lines
-        else:
-            return line
-
-#    def parseSummaryTableLine(self,line):
-#        a,b = line[1:15],line[15:27] # ID, type
-#        c,d,e = line[27:40],line[40:56 ],line[56 :72 ]  # T1,T2,T3
-#        f,g,h = line[72:86],line[86:101],line[101:110]  # R1,R2,R3
-#
-#        A = [a,b,c,d,e,f,g,h]
-#        A = [a.strip() for a in A]
-#        return A
-
-    def parseTriTableLine(self,line):
-        a,b   = line[1:10],line[10:31] # ID, Distance
-        c,d,e = line[31:46],line[46:60 ],line[60 :76 ]  # ox,oy,Txy
-        f,g,h = line[76:88],line[88:103],line[103:120]  # angle,major,minor
-        i   = line[120:132]  # VonMises
-
-        A = [a,b, c,d,e, f,g,h, i]
-        A = [a.strip() for a in A]
-        #print "A = ",A
-        #sys.exit('stopping')
-        return A
-
-    def parseQuadTableLine(self,line):
-        a,b   = line[1:14],line[14:22] # ID, Grid-ID
-        c,d,e = line[22:36],line[36:51 ],line[51 :65 ]  # Distance,ox,oy
-        f,g,h = line[65:81],line[81:92],line[92:105]  # Txy,angle,major
-        i,j   = line[105:120],line[120:135]  # minor,VonMises
-
-        A = [a,b, c,d,e, f,g,h, i,j]
-        A = [a.strip() for a in A]
-        #print "A = ",A
-        #sys.exit('stopping')
-        return A
-
-    def parseTableLine(self,line):
-        a,b =   line[0:15],line[15:26] # ID, type
-        c,d,e = line[26:39],line[39:55 ],line[55 :71 ]  # T1,T2,T3
-        f,g,h = line[71:85],line[85:100],line[100:109]  # R1,R2,R3
-        
-        #print "ID=%s type=%s" %(a,b)
-        #print "T1=%s T2=%s T3=%s" %(c,d,e)
-        #print "R1=%s R2=%s R3=%s" %(f,g,h)
-        A = [a,b,c,d,e,f,g,h]
-        A = [a.strip() for a in A]
-        return A
-
-    def readTableHeader(self,word,typeList,nHeader,parseTableLine):
-        table = {}
-        line = ''
-        nTypes = len(typeList)
-        #print 'word=|%s|' %(word)
-        while(word not in line):
-            #print "line=|%s|" %(line.strip())
-            line = self.readlines(nLines=1)
-            #print "word = ",word
-            #print "line = ",line
-            isWord = word in line
-            #print "isWord = ",isWord
-            #print ""
-        #print "found...%s" %(word)
-        A = parseTableLine(line) # Displacement Vector
-        #print "A=%s" %(A)
-        #print "line = |%s|" %(line)
-
-        line = self.readlines(nLines=1+nHeader)
-        B = parseTableLine(line) # All Variable Titles
-        #print "B=%s" %(B)
-        #print "line = |%s|" %(line)
-
-        Blist = [] # Blist is the reduced set of Variable Titles
-        for bi,itype in zip(B[1:],typeList):
-            if itype:
-                Blist.append(bi)
-        table = {'headers':Blist}
-        return table
-
-    def readElementTable(self,word,typeList,nNodes,nHeader,nBlank,parseTableLine):
-        nHeader-=1
-        table = self.readTableHeader(word,typeList,nHeader,parseTableLine)
-        #print "table = ",table
-        line = self.readlines(nLines=1)
-        #return table
-        while('JOB' not in line):
-            tableNodes = []
-            #print "-----------"
-            for iNode in range(nNodes):
-                layers = []
-                layer = []
-                #print "line1 = ",line.strip()
-                C1 = parseTableLine(line)
-
-                line = self.readlines(nLines=1)
-                #print "line2 = ",line.strip()
-                C2 = parseTableLine(line)
-                #print "C2=",C2
-                if iNode==0:
-                    id = C1[0]
-                    #print "id=",id
-                #print C
-                for itype,value in zip(typeList,C1[1:]):
-
-                    if itype:
-                        #print "C1 itype=%s value=%s" %(itype,value)
-                        layer.append(itype(value))
-                #print "tvo_1 = ",layer
-                #print ""
-                layers.append(layer)
-
-                layer = []
-                for itype,value in zip(typeList,C2[1:]):
-                    if itype:
-                        #print "C2 itype=%s value=%s" %(itype,value)
-                        layer.append(itype(value))
-                layers.append(layer)
-                #print "tvo_2 = ",layer,'\n'
-                #print "line*** = ",line.strip()
-
-                #print "lineNew = ",line.strip()
-                if nBlank>0:
-                    line = self.readlines(nLines=nBlank)
-                line = self.readlines(nLines=1) # quad
-                tableNodes.append(layers)
-
-            #print "lineNew = ",line.strip()
-            #print "tvn = ",tableValuesNodes
-            #print "id = ",id
-
-            table[id] = tableNodes
-            #print "line*** = ",line.strip()
-            if 'JOB' in line:
-                break
-            #sys.exit()
-        print "-----------"
-        #print "C=%s" %(C)
-        #print "line = |%s|" %(line)
-
-        #for key,value in sorted(table.items()):
-        #    print "key=%s " %(key)
-        #    for row in value:
-        #        print "   value=%s" %(row)
-
-        return table
-
-
-        pass
-
-    def readSummary(self):
-        word = 'OLOAD    RESULTANT'
-        word = 'SPCFORCE RESULTANT'
-        word = 'MAXIMUM  SPCFORCES'
-        word = 'MAXIMUM  DISPLACEMENTS'
-        word = 'MAXIMUM  APPLIED LOADS'
-
-    def readQuad4Stresses(self):
-        word = 'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
-        typeList = [str]+8*[float]
-        typeList = [str,None,float,float,float,float]
-        typeList = [None,None,str,str,str]
-        nHeader = 3
-        nNodes = 5
-        nBlank = 1
-        table = self.readElementTable(word,typeList,nNodes,nHeader,nBlank,self.parseQuadTableLine)
-        #word = 'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )'
-
-        for key,nodes in table.items():
-            if key!='headers':
-                self.elements[key] = ShellElement(key,nodes)
-
-
-    def readTri3Stresses(self):
-        word = 'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )'
-        typeList = 8*[float]
-        typeList = [None,None,float,str,str,str]
-        typeList = [None,str,str,str] # good
-        #typeList = [str,str]
-        # [dist,ox,oy,Txy,angle,major,minor,vm]
-        nHeader = 2
-        nNodes = 1
-        nBlank = 0
-        table = self.readElementTable(word,typeList,nNodes,nHeader,nBlank,self.parseTriTableLine)
-
-        for key,nodes in table.items():
-            if key!='headers':
-                self.elements[key] = ShellElement(key,nodes)
-
-
-        #word = 'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )'
-
-class ShellElement(object):
-    def __init__(self,id,nodes):
-        self.layers = []
-        self.id = id
-        print "id = ",id
-        for layers in nodes:
-            print "layers = ",layers
-            self.nLayers = len(layers)
-            for iLayer,layer in enumerate(layers):
-                #print "iLayer=%s layer=%s" %(iLayer,layer)
-                print "layer=",layer
-                (ox,oy,Txy) = layer
-
-                #Txy = 'Txy'
-                layerObj = Layer(iLayer,ox,oy,Txy)
-                self.layers.append(layerObj)
-    def __repr__(self):
-        out = ''
-        for layer in self.layers:
-            out += "%s" %(layer)
-        return out+'\n'
-
-
-class Layer(object):
-    def __init__(self,iLayer,ox,oy,Txy):
-        self.iLayer=iLayer+1
-        self.ox = ox
-        self.oy = oy
-        self.Txy = Txy
-    def __repr__(self):
-        return "    iLayer=%s ox=%s oy=%s Txy=%s\n" %(self.iLayer,self.ox,self.oy,self.Txy)
-
-    def major(self):
-        pass
-    def minor(self):
-        pass
-    def vm(self):
-        pass
-
-class Table(dict):
-    def __init__(self,tableDict):
-#        del tableDict['tableType'],tableDict['headers']
-#        self.tableDict = tableDict
-
-        #self._tableType = tableDict['tableType']
-        self.headers = tableDict['headers']
-
-        dict.__init__(self)
-        self._keys = tableDict.keys()
-        for key, value in tableDict.items():
-            self[key] = value
-
-    def getSpot(self,headerName):
-        #print "headerName = ",headerName
-        #loc = self.headers.index(header)
-        try:
-            loc = self.headers.index(headerName)
-        except ValueError:
-            msg = 'invalid header.  headerName=|%s| available headers=|%s|' %(headerName,self.headers)
-            raise Exception(msg)
-        return loc
-
-    def getValue(self,idNum):
-        return self[idNum]
-
-    def getValueName(self,idNum,headerName):
-        loc = self.getSpot(headerName)
-        return self[idNum][loc]
-
-    def getValueSpot(self,idNum,spot):
-        """
-        Returns the value in the Ith spot in the list of the dictionary
-        Requires that you know the index.
-        Should use the getSpot function if you're going to use this.
-        """
-        return self[idNum][spot]
-
-    def printTable(self,table):
-        for key,value in sorted(table.items()):
-            print "  key=%s value=%s" %(key,value)
-
-
 class DisplacementObject(object):
     def __init__(self,subcaseID,data):
         #print "*******"
@@ -422,18 +36,16 @@ class DisplacementObject(object):
 
 class StressObject(object):
     def __init__(self,subcaseID,data):
-        #print "*******"
         self.subcaseID = subcaseID
         self.grids = []
-        self.gridTypes = []
-        self.translations = []
-        self.rotations = []
+        #self.gridTypes = []
+        #self.translations = []
+        #self.rotations = []
         
         self.data = []
         self.addData(data)
         
     def addData(self,data):
-        
         for line in data:
             self.data.append(line)
         return
@@ -446,7 +58,8 @@ class StressObject(object):
         #print "grids = ",self.grids
     
     def __repr__(self):
-        msg  = "SubcaseID = %s\n" %(self.subcaseID)
+        msg  = 'Composite Shell Element Stress\n'
+        msg += "SubcaseID = %s\n" %(self.subcaseID)
         for line in self.data:
             msg += '%s\n' %(line)
         return msg
@@ -459,6 +72,68 @@ class StressObject(object):
         ###
         return msg
 
+class IsoStressObject(object):
+    def __init__(self,subcaseID,data,isFiberDistance,isVonMises):
+        self.subcaseID = subcaseID
+        self.grids = []
+        self.isFiberDistance = isFiberDistance
+        self.isVonMises = isVonMises
+
+        self.data = []
+        self.addData(data)
+        
+    def addData(self,data):        
+        for line in data:
+            self.data.append(line)
+        return
+    
+    def __repr__(self):
+        msg  = 'Isotropic Shell Element Stress\n'
+        msg += "SubcaseID = %s\n" %(self.subcaseID)
+        for line in self.data:
+            msg += '%s\n' %(line)
+        return msg
+
+class BarStressObject(object):
+    def __init__(self,subcaseID,data):
+        self.subcaseID = subcaseID
+        self.grids = []
+
+        self.data = []
+        self.addData(data)
+        
+    def addData(self,data):        
+        for line in data:
+            self.data.append(line)
+        return
+
+    def __repr__(self):
+        msg  = 'Bar Element Stress\n'
+        msg += "SubcaseID = %s\n" %(self.subcaseID)
+        for line in self.data:
+            msg += '%s\n' %(line)
+        return msg
+
+class SolidStressObject(object):
+    def __init__(self,subcaseID,data):
+        self.subcaseID = subcaseID
+        self.grids = []
+
+        self.data = []
+        self.addData(data)
+        
+    def addData(self,data):        
+        for line in data:
+            self.data.append(line)
+        return
+
+    def __repr__(self):
+        msg  = 'solid Element Stress\n'
+        msg += "SubcaseID = %s\n" %(self.subcaseID)
+        for line in self.data:
+            msg += '%s\n' %(line)
+        return msg
+
 class F06Reader(object):
     def __init__(self,f06name):
         self.f06name = f06name
@@ -468,9 +143,10 @@ class F06Reader(object):
           #'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O':self.executiveControl,
           #'C A S E    C O N T R O L    E C H O ':self.caseControl,
           #'M O D E L   S U M M A R Y':self.summary,
-#                            E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y
-#                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
-#0                                                  OLOAD    RESULTANT       
+          
+          #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
+          #'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R'
+          #'OLOAD    RESULTANT'
           #'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self.gridPointSingularities,
 
 
@@ -491,6 +167,15 @@ class F06Reader(object):
           
           'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.quadCompositeStress,
 
+
+          'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )':self.barStress,
+          'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )':self.solidStressHexa,
+          'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )':self.solidStressPenta,
+          'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.quadStress,
+          #'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )'
+          'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.solidStressTetra,
+          'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.triStress,
+
           #'* * * END OF JOB * * *': self.end(),
           'MAXIMUM  SPCFORCES':self.maxSpcForces,
           'MAXIMUM  DISPLACEMENTS': self.maxDisplacements,
@@ -503,16 +188,18 @@ class F06Reader(object):
         self.disp = {}
         self.SpcForces = {}
         self.stress = {}
+        self.isoStress = {}
+        self.barStress = {}
         self.subcaseIDs = []
+        self.solidStress = {}
 
     def gridPointSingularities(self):
         """
-0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
-0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
-                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
-                                1        G      4         0.00E+00          B        F         SB       S    *
-                                1        G      5         0.00E+00          B        F         SB       S    *
-        
+                    G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
+        POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
+         ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
+          1        G      4         0.00E+00          B        F         SB       S    *
+          1        G      5         0.00E+00          B        F         SB       S    *
         """
         pass
 
@@ -540,37 +227,14 @@ class F06Reader(object):
         #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
         #print self.disp[subcaseID]
 
-    def quadCompositeStress(self):
-        """
-                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
-   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
-     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
-0      181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
-0      181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
-        """
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
-        headers = self.skip(2)
-        #print "headers = %s" %(headers)
-        data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
-        if subcaseID in self.stress:
-            self.stress[subcaseID].addData(data)
-        else:
-            self.stress[subcaseID] = StressObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
-        #print self.stress[subcaseID]
-        
-
     def displacement(self):
         """
                                              D I S P L A C E M E N T   V E C T O R
  
-      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
-             1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
-             2      G      0.0            0.0            0.0            0.0            0.0            0.0
-             3      G      0.0            0.0            0.0            0.0            0.0            0.0
+        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+               1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
+               2      G      0.0            0.0            0.0            0.0            0.0            0.0
+               3      G      0.0            0.0            0.0            0.0            0.0            0.0
         """
         subcaseName = self.storedLines[-3].strip()
         subcaseID   = self.storedLines[-2].strip()[1:]
@@ -618,6 +282,237 @@ class F06Reader(object):
         self.subcaseIDs.append(subcaseID)
         #print self.SpcForces[subcaseID]
         
+    def barStress(self):
+        """
+                                       S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
+        ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
+          ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
+             12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04 
+                   0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04 
+        """
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        print "headers = %s" %(headers)
+        
+        #isFiberDistance = False
+        #isVonMises = False  # Von Mises/Max Shear
+        #if 'DISTANCE' in headers:
+        #    isFiberDistance = True
+        #if 'VON MISES' in headers:
+        #    isVonMises = True
+
+        data = self.readBarStress()
+        if subcaseID in self.barStress:
+            self.barStress[subcaseID].addData(data)
+        else:
+            self.barStress[subcaseID] = BarStressObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+    
+    def readBarStress(self):
+        """
+        ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
+          ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
+             12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04 
+                   0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04 
+        """
+        data = []
+        while 1:
+            line = self.infile.readline()[1:].strip().split()
+            if 'PAGE' in line:
+                break
+            print line
+            sline = self.parseLine(line,[int,float,float,float,float, float, float,float,float]) # line 1
+            sline = ['CBAR']+sline
+            #data.append(sline)
+            line = self.infile.readline()[1:].strip().split()
+            sline += self.parseLine(line,[    float,float,float,float,        float,float,float]) # line 2
+            data.append(sline)
+            self.i+=2
+            ###
+        ###
+        #print "--------"
+        #for line in data:
+        #    print line
+        #sys.exit()
+        return data
+
+    def quadCompositeStress(self):
+        """
+                       S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+        ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+          ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+            181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
+            181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
+        """
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
+        if subcaseID in self.stress:
+            self.stress[subcaseID].addData(data)
+        else:
+            self.stress[subcaseID] = StressObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+        #print self.stress[subcaseID]
+        
+    def triStress(self):
+        """
+                                 S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+        ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
+          ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+              8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
+                   1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
+        """
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        print "headers = %s" %(headers)
+        
+        isFiberDistance = False
+        isVonMises = False  # Von Mises/Max Shear
+        if 'DISTANCE' in headers:
+            isFiberDistance = True
+        if 'VON MISES' in headers:
+            isVonMises = True
+
+        data = self.readTriStress()
+        if subcaseID in self.isoStress:
+            self.isoStress[subcaseID].addData(data)
+        else:
+            self.isoStress[subcaseID] = IsoStressObject(subcaseID,data,isFiberDistance,isVonMises)
+        self.subcaseIDs.append(subcaseID)
+
+    def readTriStress(self):
+        """
+                ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
+                  ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+                      8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
+                           1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
+        """
+        data = []
+        while 1:
+            line = self.infile.readline()[1:].strip().split()
+            if 'PAGE' in line:
+                break
+            print line
+            sline = self.parseLine(line,[int,float, float,float,float, float,float,float, float]) # line 1
+            sline = ['CTRIA3']+sline
+            data.append(sline)
+            line = self.infile.readline()[1:].strip().split()
+            sline = self.parseLine(line,[    float, float,float,float, float,float,float, float]) # line 2
+            data.append(sline)
+            self.i+=2
+            ###
+        ###
+        return data
+
+    def quadStress(self):
+        """
+                             S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
+
+        ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)
+          ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES
+              6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  8.247786E+03
+                           1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  1.175778E+04
+
+                       4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
+                           1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
+        """
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(3)
+        print "headers = %s" %(headers)
+        
+        isFiberDistance = False
+        isVonMises = False  # Von Mises/Max Shear
+        if 'DISTANCE' in headers:
+            isFiberDistance = True
+        if 'VON MISES' in headers:
+            isVonMises = True
+
+        data = self.readQuadBilinear()
+        if subcaseID in self.isoStress:
+            self.isoStress[subcaseID].addData(data)
+        else:
+            self.isoStress[subcaseID] = IsoStressObject(subcaseID,data,isFiberDistance,isVonMises)
+        self.subcaseIDs.append(subcaseID)
+
+    def readQuadBilinear(self):
+        data = []
+        while 1:
+            if 1: # CEN/4
+                line = self.infile.readline()[1:].strip().split()
+                if 'PAGE' in line:
+                    return data
+                sline = self.parseLine(line,[int,str,float, float,float,float, float,float,float, float]) # line 1
+                sline = ['CQUAD4']+sline
+                data.append(sline)
+                line = self.infile.readline()[1:].strip().split()
+                sline = self.parseLine(line,[        float, float,float,float, float,float,float, float]) # line 2
+                data.append(sline)
+                line = self.infile.readline() # blank line
+                self.i+=3
+            ###
+            for i in range(4):
+                line = self.infile.readline()[1:].strip().split()
+                sline = self.parseLine(line,[int,float, float,float,float, float,float,float, float]) # line 1
+                data.append(sline)
+                line = self.infile.readline()[1:].strip().split()
+                sline = self.parseLine(line,[    float, float,float,float, float,float,float, float]) # line 2
+                data.append(sline)
+                line = self.infile.readline() # blank line
+                self.i+=3
+            ###
+        ###
+        return data
+
+    def solidStressHexa(self):
+        return self.readSolidStress('CHEXA',8)
+    def solidStressPenta(self):
+        return self.readSolidStress('CPENTA',6)
+    def solidStressTetra(self):
+        return self.readSolidStress('CTETRA',4)
+
+    def readSolidStress(self,eType,n):
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        headers = self.skip(2)
+        print "headers = %s" %(headers)
+        
+        data = self.read3DStress(eType,n)
+        if subcaseID in self.solidStress:
+            self.solidStress[subcaseID].addData(data)
+        else:
+            self.solidStress[subcaseID] = SolidStressObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+
+    def read3DStress(self,eType,n):
+        data = []
+        while 1:
+            line = self.infile.readline().rstrip('\n\r') #[1:]
+                    #              CENTER         X          #          XY             #        A         #
+            sline = [line[1:17],line[17:24],line[24:28],line[28:43],line[43:47],line[47:63],line[63:66],line[66:80],  line[80:83],line[83:88],line[88:93],line[93:98],line[99:113],line[113:130]]
+            sline = [s.strip() for s in sline]
+            if 'PAGE' in line:
+                break
+            elif '' is not sline[0]:
+                sline = [eType]+sline
+            data.append(sline)
+        ###
+        return data
+
     def readTable(self,Format):
         sline = True
         data = []
@@ -642,8 +537,6 @@ class F06Reader(object):
         return out
         
     def ReadF06(self):
-        #print "2*************"
-        #print dir(self)
         #print "reading..."
         blank = 0
         while 1:
@@ -651,10 +544,11 @@ class F06Reader(object):
                 print "i=%i" %(self.i)
             line = self.infile.readline()
             marker = line[1:].strip()
+            
             #print "marker = %s" %(marker)
             if marker in self.markers:
                 blank = 0
-                #print "\n*marker = %s" %(marker)
+                print "\n*marker = %s" %(marker)
                 self.markerMap[marker]()
                 self.storedLines = []
             elif marker=='':
@@ -695,7 +589,7 @@ class F06Reader(object):
     
     def __repr__(self):
         msg = ''
-        data = [self.disp,self.SpcForces,self.stress]
+        data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress]
         self.subcaseIDs = list(set(self.subcaseIDs))
         for subcaseID in self.subcaseIDs:
             for result in data:
@@ -707,46 +601,5 @@ class F06Reader(object):
 
 if __name__=='__main__':
     f06 = F06Reader('ssb.f06')
-    #f06 = F06Reader('quad_bending_comp.f06')
     f06.ReadF06()
-    #print f06
-    
-if 0:
-    reader = F06Reader('fem3.f06')
-    #reader.readHeader()
-    dTable = reader.readDisplacement()
-    reader.printTable(dTable)
-    
-    sys.exit()
-
-    #print "\n-QUAD Stresses-"
-    #stable = reader.readQuad4Stresses()
-    #reader.rewind()
-    #print "\n"
-
-    #print "\n-Tri Stresses-"
-    #stable = reader.readTri3Stresses()
-    #reader.rewind()
-
-    #for key,element in reader.elements.items():
-    #    print "element = ",element
-    #    print "id=%s e=%s" %(key,element)
-    #print "\n"
-
-    print "-Displacements-"
-    dtableTemp = reader.readDisplacement()
-    reader.rewind()
-    #reader.printTable(dtableTemp)
-
-    #print "dtableTemp['headers'] = ",dtableTemp['headers']
-    dTable = Table(dtableTemp)
-    print "dTable.headers = ",dTable.headers
-    reader.printTable(dTable)
-
-    print "d4  = ",dTable.getValue(4)
-    print "dx4 = ",dTable.getValueName(4,'T1')
-    print "dz4 = ",dTable.getValueSpot(4,2)
-
-    #print "-SPC Forces-"
-    #ftable = reader.readSPCForces()
-
+    print f06
