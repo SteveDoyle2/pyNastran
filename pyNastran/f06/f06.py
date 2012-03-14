@@ -34,6 +34,34 @@ class DisplacementObject(object):
         ###
         return msg
 
+class TemperatureObject(object):
+    def __init__(self,subcaseID,data):
+        #print "*******"
+        self.subcaseID = subcaseID
+        self.grids = []
+        self.gridTypes = []
+        self.temps = []
+        self.addData(data)
+
+    def addData(self,data):
+        for line in data:
+            (gridID,gridType) = line[0:2]
+            temps = line[2:]
+            for (i,temp) in enumerate(temps):
+                self.grids.append(gridID+i)
+                self.gridTypes.append(gridType)
+                self.temps.append(temp)
+        ###
+        #print "grids = ",self.grids
+
+    def __repr__(self):
+        msg  = "SubcaseID = %s\n" %(self.subcaseID)
+        msg += '%-8s %8s %10s\n' %('gridID','gridType','T')
+        for (grid,gridType,temp) in zip(self.grids,self.gridTypes,self.temps):
+            msg += "%-8s %8s %10s\n" %(grid,gridType,temp)
+            
+        return msg
+
 class StressObject(object):
     def __init__(self,subcaseID,data):
         self.subcaseID = subcaseID
@@ -146,7 +174,10 @@ class F06Reader(object):
           
           #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
           #'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R'
-          #'OLOAD    RESULTANT'
+          #'OLOAD    RESULTANT':self.oload,
+          'MAXIMUM  SPCFORCES':self.maxSpcForces,
+          'MAXIMUM  DISPLACEMENTS': self.maxDisplacements,
+          'MAXIMUM  APPLIED LOADS': self.maxAppliedLoads,
           #'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self.gridPointSingularities,
 
 
@@ -176,10 +207,11 @@ class F06Reader(object):
           'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.solidStressTetra,
           'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.triStress,
 
+
+          'T E M P E R A T U R E   V E C T O R':self.temperatureVector,
+          'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S':self.tempGradientsFluxes,
+
           #'* * * END OF JOB * * *': self.end(),
-          'MAXIMUM  SPCFORCES':self.maxSpcForces,
-          'MAXIMUM  DISPLACEMENTS': self.maxDisplacements,
-          'MAXIMUM  APPLIED LOADS': self.maxAppliedLoads,
          }
         self.markers = self.markerMap.keys()
         self.infile = open(self.f06name,'r')
@@ -192,6 +224,7 @@ class F06Reader(object):
         self.barStress = {}
         self.subcaseIDs = []
         self.solidStress = {}
+        self.temperature = {}
 
     def gridPointSingularities(self):
         """
@@ -227,6 +260,20 @@ class F06Reader(object):
         #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
         #print self.disp[subcaseID]
 
+    def readSubcaseNameID(self):
+        subcaseName = self.storedLines[-3].strip()
+        subcaseID   = self.storedLines[-2].strip()[1:]
+        subcaseID = int(subcaseID.strip('SUBCASE '))
+        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+
+        transient   = self.storedLines[-1].strip()
+        if transient:
+            transWord,transValue = transient.split('=')
+            transient = [transWord,transValue]
+        else:
+            transient = None
+        return (subcaseName,subcaseID,transient)
+
     def displacement(self):
         """
                                              D I S P L A C E M E N T   V E C T O R
@@ -236,10 +283,7 @@ class F06Reader(object):
                2      G      0.0            0.0            0.0            0.0            0.0            0.0
                3      G      0.0            0.0            0.0            0.0            0.0            0.0
         """
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
@@ -248,13 +292,88 @@ class F06Reader(object):
         else:
             self.disp[subcaseID] = DisplacementObject(subcaseID,data)
         self.subcaseIDs.append(subcaseID)
-        #print self.disp[subcaseID]
 
+    def temperatureVector(self):
+        """
+        LOAD STEP =  1.00000E+00
+                                              T E M P E R A T U R E   V E C T O R
+ 
+        POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE
+               1      S      1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03
+               7      S      1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03
+        """
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        #print transient
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readTemperatureTable()
+        if subcaseID in self.temperature:
+            self.temperature[subcaseID].addData(data)
+        else:
+            self.temperature[subcaseID] = TemperatureObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+
+    def readTemperatureTable(self):
+        data = []
+        Format = [int,str,float,float,float,float,float,float]
+        while 1:
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            if 'PAGE' in line:
+                return data
+            sline = [line[0:15],line[15:22].strip(),line[22:40],line[40:55],line[55:70],line[70:85],line[85:100]]
+            sline = self.parseLineTemperature(sline,Format)
+            data.append(sline)
+        return data
+
+    def parseLineTemperature(self,sline,Format):
+        out = []
+        for entry,iFormat in zip(sline,Format):
+            if entry is '':
+                return out
+            #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)
+            entry2 = iFormat(entry)
+            out.append(entry2)
+        return out
+    
+    def tempGradientsFluxes(self):
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        #print transient
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        data = self.readGradientFluxesTable()
+        print data
+        if subcaseID in self.temperature:
+            self.temperature[subcaseID].addData(data)
+        else:
+            self.temperature[subcaseID] = TemperatureGradientObject(subcaseID,data)
+        self.subcaseIDs.append(subcaseID)
+    
+    def readGradientFluxesTable(self):
+        data = []
+        Format = [int,str,float,float,float, float,float,float]
+        while 1:
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            if 'PAGE' in line:
+                return data
+            sline = [line[0:15],line[15:24].strip(),line[24:44],line[44:61],line[61:78],line[78:95],line[95:112],line[112:129]]
+            sline = self.parseLineGradientsFluxes(sline,Format)
+            data.append(sline)
+        return data
+
+    def parseLineGradientsFluxes(self,sline,Format):
+        out = []
+        for entry,iFormat in zip(sline,Format):
+            if entry.strip() is '':
+                out.append(0.0)
+            else:
+                #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)
+                entry2 = iFormat(entry)
+                out.append(entry2)
+            ###
+        return out
+    
     def spcForces(self):
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
@@ -267,10 +386,7 @@ class F06Reader(object):
         #print self.SpcForces[subcaseID]
         
     def mpcForces(self):
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
@@ -290,10 +406,7 @@ class F06Reader(object):
              12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04 
                    0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04 
         """
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         print "headers = %s" %(headers)
         
@@ -347,10 +460,7 @@ class F06Reader(object):
             181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
             181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
         """
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
@@ -369,12 +479,9 @@ class F06Reader(object):
               8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
                    1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
         """
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
-        print "headers = %s" %(headers)
+        #print "headers = %s" %(headers)
         
         isFiberDistance = False
         isVonMises = False  # Von Mises/Max Shear
@@ -426,12 +533,9 @@ class F06Reader(object):
                        4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(3)
-        print "headers = %s" %(headers)
+        #print "headers = %s" %(headers)
         
         isFiberDistance = False
         isVonMises = False  # Von Mises/Max Shear
@@ -484,10 +588,7 @@ class F06Reader(object):
         return self.readSolidStress('CTETRA',4)
 
     def readSolidStress(self,eType,n):
-        subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         print "headers = %s" %(headers)
         
@@ -514,6 +615,7 @@ class F06Reader(object):
         return data
 
     def readTable(self,Format):
+        """reads displacement, spc/mpc forces"""
         sline = True
         data = []
         while sline:
@@ -567,6 +669,7 @@ class F06Reader(object):
         self.infile.close()
 
     def isMarker(self,marker):
+        """returns True if the word follows the 'N A S T R A N   P A T T E R N'"""
         marker = marker.strip().split('$')[0].strip()
 
         if len(marker)<2 or marker=='* * * * * * * * * * * * * * * * * * * *':
@@ -589,7 +692,8 @@ class F06Reader(object):
     
     def __repr__(self):
         msg = ''
-        data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress]
+        data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
+        data = []
         self.subcaseIDs = list(set(self.subcaseIDs))
         for subcaseID in self.subcaseIDs:
             for result in data:
@@ -600,6 +704,8 @@ class F06Reader(object):
         return msg
 
 if __name__=='__main__':
-    f06 = F06Reader('ssb.f06')
+    f06 = F06Reader('cylinder01.f06')
+    #f06 = F06Reader('ssb.f06')
+    #f06 = F06Reader('quad_bending_comp.f06')
     f06.ReadF06()
     print f06
