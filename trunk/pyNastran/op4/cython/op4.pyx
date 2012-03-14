@@ -4,7 +4,20 @@ by Gael Varoquaux
 """
 
 # prototypes of the C function we are interested in calling
+
+cdef extern from "stdio.h":
+    cdef int SEEK_SET = 0
+    ctypedef void* FILE
+    int fseek (FILE *stream, long int off, int whence)
+    char *fgets (char *s, int n, FILE *stream)
+
 cdef extern from "libop4.c":
+    ctypedef struct str_t:
+        int     len         #/* Number of terms in the string (a complex       */
+                            #/* number counts as a single term).               */
+        int     start_row   #/* Zero based, so first row has start_row = 0.    */
+        int     N_idx       #/* Index into N[] to first numeric term for this  */
+                            #/* string.                                        */
     float *op4_load(int size)
     int    op4_scan(char *filename  , #/* in                          */
                     int  *n_mat     , #/* out number of matrices      */
@@ -19,6 +32,35 @@ cdef extern from "libop4.c":
                     int  *digits    , #/* out size of mantissa        */
                     long *offset      #/* out byte offset to matrix   */
                     )
+    int  op4_filetype(char *filename)
+    FILE* op4_open_r(char *filename, long offset)
+    int op4_read_col_t(FILE   *fp         ,
+                       int     c_in       ,  #/* in  requested column to read   */
+                       int     nRow       ,  #/* in  # rows    in matrix        */
+                       int     nCol       ,  #/* in  # columns in matrix        */
+                       char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
+                       int     col_width  ,  #/* in  # characters in format str */
+                       int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
+                       int     complx     ,  #/* in  0=real   1=complex         */
+                       int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
+                       str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
+                       int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                       double *N             #/* out numeric data               */
+                      )
+    int  op4_read_col_b(FILE   *fp         ,
+                        int     endian     ,  #/* in  0=native   1=flipped    */
+                        int     c_in       ,  #/* in  requested column to read   */
+                        int     nRow       ,  #/* in  # rows    in matrix        */
+                        int     nCol       ,  #/* in  # columns in matrix        */
+                        int     nType      ,  #/* in  1=RS 2=RD 3=CS 4=CD        */
+                        int     storage    ,  #/* in  0=dn; 1=sp1; 2=sp2         */
+                        int    *n_str      ,  #/* in/out idx str_data[] (s_o)=1,2*/
+                        str_t  *S          ,  #/* out string data   (s_o)=1,2    */
+                        int    *N_index    ,  #/* in/out idx N[]    (s_o)=1,2    */
+                        double *N             #/* out numeric data               */
+                       )
+
+cdef int OP4_TXT_LINE_SIZE = 82
 
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
@@ -115,26 +157,28 @@ def File(char *filename,
             print('op4.File: too many matrices in %s' % (filename))
             raise IOError
 
-        fh['nMat']   = n_mat_in_file
-        fh['name']   = []
-        fh['nRow']   = []
-        fh['nCol']   = []
-        fh['nStr']   = []
-        fh['nNnz']   = []
-        fh['type']   = []
-        fh['form']   = []
-        fh['digits'] = []
-        fh['offset'] = []
+        fh['nMat']    = n_mat_in_file
+        fh['name']    = []
+        fh['storage'] = []
+        fh['nRow']    = []
+        fh['nCol']    = []
+        fh['nStr']    = []
+        fh['nNnz']    = []
+        fh['type']    = []
+        fh['form']    = []
+        fh['digits']  = []
+        fh['offset']  = []
         for i in range(n_mat_in_file):
-            fh['name'].append(   name[i]   )
-            fh['nRow'].append(   nRow[i]   )
-            fh['nCol'].append(   nCol[i]   )
-            fh['nStr'].append(   nStr[i]   )
-            fh['nNnz'].append(   nNnz[i]   )
-            fh['type'].append(   Type[i]   )
-            fh['form'].append(   form[i]   )
-            fh['digits'].append( digits[i] )
-            fh['offset'].append( offset[i] )
+            fh['name'].append(    name[i]    )
+            fh['storage'].append( storage[i] )
+            fh['nRow'].append(    nRow[i]    )
+            fh['nCol'].append(    nCol[i]    )
+            fh['nStr'].append(    nStr[i]    )
+            fh['nNnz'].append(    nNnz[i]    )
+            fh['type'].append(    Type[i]    )
+            fh['form'].append(    form[i]    )
+            fh['digits'].append(  digits[i]  )
+            fh['offset'].append(  offset[i]  )
     except:
         print('op4.File: failed to scan %s' % (filename))
         raise IOError
@@ -144,6 +188,11 @@ def File(char *filename,
 def Load(op4_handle,    # in, as created by File()
          int n_mat=1 ,  # in, number of matrices to return
          int n_skip=0): # in, number of matrices to skip before loading
+    cdef FILE *fp
+    cdef char line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
+    cdef int  *unused
+    cdef str_t  *unused_s
+    cdef double DTEMP[1000]   # testing only!
     """ 
     Skip over the first n_skip matrices then load n_mat matrices from the 
     previously opened op4 file.
@@ -159,6 +208,8 @@ def Load(op4_handle,    # in, as created by File()
         raise IOError
 
     print('Will return %d matrices after skipping %d' % (n_mat, n_skip))
+    filetype = op4_filetype(op4_handle['File'])
+    print('File type of %s is %d' % (op4_handle['File'], filetype))
     for i in range(n_mat):
         offset = i + n_skip
         print('Fetching %d. %-8s  %5d x %5d' % (
@@ -166,7 +217,66 @@ def Load(op4_handle,    # in, as created by File()
             op4_handle['name'][offset],
             op4_handle['nRow'][offset],
             op4_handle['nCol'][offset], ))
-#   print(op4_handle)
+
+    # print(op4_handle)
+
+    if os.path.basename(op4_handle['File']) != 'mat_t_dn.op4': return
+
+    print('Attempting file open of %s' % (op4_handle['File']))
+    fp = op4_open_r(op4_handle['File'], 0)
+    if fp == NULL:
+        print('unable to open %s' % (op4_handle['File']))
+        raise IOError
+
+    print(' open successful')
+    for i in range(n_skip, n_skip+n_mat):
+        complx = False
+        if op4_handle['type'][i] > 2:
+            complx = True
+        print('%s complx=%d' % (op4_handle['name'][i], complx))
+        if op4_handle['storage'][i]:
+            print('%s is sparse, skipping for now' % (op4_handle['name'][i]))
+        else:
+            if complx: NPT    = 2
+            else:      NPT    = 1
+            Matrix = np.zeros(( NPT * op4_handle['nRow'][i] * op4_handle['nCol'][i] ))  # need dtype=
+
+            # now read the file contents
+            fseek(fp, op4_handle['offset'][i], SEEK_SET)
+            if filetype == 1: # text
+                fgets(line, OP4_TXT_LINE_SIZE, fp)   # skip the header line
+                # create the scanf format string
+                col_width = op4_handle['digits'][i] + 7
+                fmt_one   = '%%%dle' % col_width
+                nNum_cols = 80 // col_width
+                fmt_str   = fmt_one*nNum_cols
+                print('fmt_str=[%s]' % (fmt_str))
+
+            for c in range(1, op4_handle['nCol'][i]+1):
+                if filetype == 1: # text
+                    if op4_handle['storage'][i]:     # sparse
+                        pass
+                    else:                            # dense
+                        pass
+                        n_nnz = op4_read_col_t(fp, 
+                                   c, 
+                                   op4_handle['nRow'][i], 
+                                   op4_handle['nCol'][i], 
+                                   fmt_str, 
+                                   col_width,
+                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                   complx    , # in  0=real   1=complex     
+                                   unused    , # in/out index m.S (if sp1,2)
+                                   unused_s  , # out string data (if sp1,2) 
+                                   unused    , # in/out index m.N (sp 1,2)  
+                                  &DTEMP[(c-1)*op4_handle['nRow'][i]*NPT])
+
+                else:             # binary
+                    if op4_handle['storage'][i]:     # sparse
+                        pass
+                    else:                            # dense
+                        pass
+
 
 def load(int size):
     """ Python binding of the 'compute' function in 'libop4.c' that does
