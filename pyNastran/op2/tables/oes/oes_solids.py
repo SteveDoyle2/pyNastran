@@ -24,7 +24,6 @@ class solidStressObject(stressObject):
         stressObject.__init__(self,dataCode,iSubcase)
 
         self.eType = {}
-
         self.code = [self.formatCode,self.sortCode,self.sCode]
 
         self.cid = {} # gridGauss
@@ -61,6 +60,96 @@ class solidStressObject(stressObject):
             self.add       = self.addTransient
             self.addNewEid = self.addNewEidTransient
         ###
+
+    def addF06Data(self,data,transient):
+        if transient is None:
+            if not hasattr(self,'data'):
+                self.data = []
+            self.data += data
+        else:
+            if not hasattr(self,'data'):
+                self.data = {}
+            if dt not in self.data:
+                self.data[dt] = []
+            for line in data:
+                self.data[dt] += data
+            ###
+        ###
+            
+    def processF06Data(self):
+        """
+                          S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )
+                       CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   
+        ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       VON MISES 
+                2           0GRID CS  6 GP
+                       CENTER  X  -1.829319E+03  XY   7.883865E+01   A   1.033182E+04  LX-0.12 0.71 0.70  -2.115135E+03    1.232595E+04
+                               Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
+                               Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
+        """
+        self.cid = {} # gridGauss
+        self.oxx = {}
+        self.oyy = {}
+        self.ozz = {}
+        self.txy = {}
+        self.tyz = {}
+        self.txz = {}
+        self.o1 = {}
+        self.o2 = {}
+        self.o3 = {}
+        self.ovmShear = {}
+        
+        eMap = {'CTETRA':5,'CHEXA':9,'CPENTA':7}   # +1 for the centroid
+        if self.dt is None:
+            pack = []
+            i=0
+            n=0
+            while n<len(self.data):
+                line = self.data[n]
+                #print n,line
+
+                eType = line[0]
+                eid   = int(line[1])
+                #print "eType = ",eType
+                nNodes = eMap[eType]
+                #nodeID = None
+                self.eType[eid] = eType
+                self.oxx[eid]    = {}
+                self.oyy[eid]    = {}
+                self.ozz[eid]    = {}
+                self.txy[eid]    = {}
+                self.tyz[eid]    = {}
+                self.txz[eid]    = {}
+                self.ovmShear[eid] = {}
+                n+=1
+                for j in range(nNodes):
+                    #print self.data[n]
+                    (blank,nodeID,x,oxx,xy,txy,a,o1,lx,d1,d2,d3,pressure,ovmShear) = self.data[n]
+                    (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
+                    (blank,blank, z,ozz,zx,txz,c,o3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
+                    self.oxx[eid][nodeID] = float(oxx)
+                    self.oyy[eid][nodeID] = float(oyy)
+                    self.ozz[eid][nodeID] = float(ozz)
+                    self.txy[eid][nodeID] = float(txy)
+                    self.tyz[eid][nodeID] = float(tyz)
+                    self.txz[eid][nodeID] = float(txz)
+                    self.ovmShear[eid][nodeID] = float(ovmShear)
+                    n+=3
+                ###
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.gridTypes:
+            self.addNewTransient()
+
+        for line in data:
+            (nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
+            self.gridTypes[dt][nodeID]    = array([t1,t2,t3])
+            self.translations[dt][nodeID] = array([t1,t2,t3])
+            self.rotations[dt][nodeID]    = array([r1,r2,r3])
+        ###
+        del self.data
 
     def addNewTransient(self):
         """
@@ -258,7 +347,6 @@ class solidStressObject(stressObject):
                 #o1 = self.o1[eid][nid]
                 #o2 = self.o2[eid][nid]
                 #o3 = self.o3[eid][nid]
-
                 ovm = self.ovmShear[eid][nid]
                 msg += '%-6i %6s %8s ' %(eid,eType,nid)
                 vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
