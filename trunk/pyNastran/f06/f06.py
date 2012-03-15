@@ -1,43 +1,14 @@
 import os
 import sys
-
+from pyNastran.op2.tables.oug.oug_displacements import displacementObject
+from pyNastran.op2.tables.oes.oes_solids        import solidStressObject
 class EndOfFileError(Exception):
     pass
 
-class DisplacementObject(object):
-    def __init__(self,subcaseID,data):
-        #print "*******"
-        self.subcaseID = subcaseID
-        self.grids = []
-        self.gridTypes = []
-        self.translations = []
-        self.rotations = []
-        self.addData(data)
-        
-    def addData(self,data):
-        for line in data:
-            (gridID,gridType,t1,t2,t3,t4,t5,t6) = line
-            self.grids.append(gridID)
-            self.gridTypes.append(gridType)
-            self.translations.append([t1,t2,t3])
-            self.rotations.append([t4,t5,t6])
-        ###
-        #print "grids = ",self.grids
-    
-    def __repr__(self):
-        msg  = "SubcaseID = %s\n" %(self.subcaseID)
-        msg += '%-8s %8s %10s %10s %10s %10s %10s %10s\n' %('gridID','gridType','t1','t2','t3','t4','t5','t6')
-        for (gridID,gridType,translation,rotation) in zip(self.grids,self.gridTypes,self.translations,self.rotations):
-            (t1,t2,t3) = translation
-            (t4,t5,t6) = rotation
-            msg += "%-8i %8s %10.4g %10.4g %10.4g %10.4g %10.4g %10.4g\n" %(gridID,gridType,t1,t2,t3,t4,t5,t6)
-        ###
-        return msg
-
 class TemperatureObject(object):
-    def __init__(self,subcaseID,data):
+    def __init__(self,iSubcase,data):
         #print "*******"
-        self.subcaseID = subcaseID
+        self.iSubcase = iSubcase
         self.grids = []
         self.gridTypes = []
         self.temps = []
@@ -55,7 +26,7 @@ class TemperatureObject(object):
         #print "grids = ",self.grids
 
     def __repr__(self):
-        msg  = "SubcaseID = %s\n" %(self.subcaseID)
+        msg  = "iSubcase = %s\n" %(self.iSubcase)
         msg += '%-8s %8s %10s\n' %('gridID','gridType','T')
         for (grid,gridType,temp) in zip(self.grids,self.gridTypes,self.temps):
             msg += "%-8s %8s %10s\n" %(grid,gridType,temp)
@@ -63,8 +34,8 @@ class TemperatureObject(object):
         return msg
 
 class StressObject(object):
-    def __init__(self,subcaseID,data):
-        self.subcaseID = subcaseID
+    def __init__(self,iSubcase,data):
+        self.iSubcase = iSubcase
         self.grids = []
         #self.gridTypes = []
         #self.translations = []
@@ -87,7 +58,7 @@ class StressObject(object):
     
     def __repr__(self):
         msg  = 'Composite Shell Element Stress\n'
-        msg += "SubcaseID = %s\n" %(self.subcaseID)
+        msg += "iSubcase = %s\n" %(self.iSubcase)
         for line in self.data:
             msg += '%s\n' %(line)
         return msg
@@ -101,8 +72,8 @@ class StressObject(object):
         return msg
 
 class IsoStressObject(object):
-    def __init__(self,subcaseID,data,isFiberDistance,isVonMises):
-        self.subcaseID = subcaseID
+    def __init__(self,iSubcase,data,isFiberDistance,isVonMises):
+        self.iSubcase = iSubcase
         self.grids = []
         self.isFiberDistance = isFiberDistance
         self.isVonMises = isVonMises
@@ -117,14 +88,14 @@ class IsoStressObject(object):
     
     def __repr__(self):
         msg  = 'Isotropic Shell Element Stress\n'
-        msg += "SubcaseID = %s\n" %(self.subcaseID)
+        msg += "iSubcase = %s\n" %(self.iSubcase)
         for line in self.data:
             msg += '%s\n' %(line)
         return msg
 
 class BarStressObject(object):
-    def __init__(self,subcaseID,data):
-        self.subcaseID = subcaseID
+    def __init__(self,iSubcase,data):
+        self.iSubcase = iSubcase
         self.grids = []
 
         self.data = []
@@ -137,27 +108,7 @@ class BarStressObject(object):
 
     def __repr__(self):
         msg  = 'Bar Element Stress\n'
-        msg += "SubcaseID = %s\n" %(self.subcaseID)
-        for line in self.data:
-            msg += '%s\n' %(line)
-        return msg
-
-class SolidStressObject(object):
-    def __init__(self,subcaseID,data):
-        self.subcaseID = subcaseID
-        self.grids = []
-
-        self.data = []
-        self.addData(data)
-        
-    def addData(self,data):        
-        for line in data:
-            self.data.append(line)
-        return
-
-    def __repr__(self):
-        msg  = 'solid Element Stress\n'
-        msg += "SubcaseID = %s\n" %(self.subcaseID)
+        msg += "iSubcase = %s\n" %(self.iSubcase)
         for line in self.data:
             msg += '%s\n' %(line)
         return msg
@@ -222,9 +173,21 @@ class F06Reader(object):
         self.stress = {}
         self.isoStress = {}
         self.barStress = {}
-        self.subcaseIDs = []
+        self.iSubcases = []
         self.solidStress = {}
         self.temperature = {}
+        self.startLog()
+
+    def startLog(self,log=None,debug=False):
+        if log is None:
+            from pyNastran.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            if debug:
+                word = 'debug'
+            else:
+                word = 'info'
+            log = loggerObj.startLog(word) # or info
+        self.log = log
 
     def gridPointSingularities(self):
         """
@@ -241,30 +204,30 @@ class F06Reader(object):
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
         print "max SPC Forces   ",data
-        #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
-        #print self.disp[subcaseID]
+        #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
+        #print self.disp[iSubcase]
 
     def maxDisplacements(self):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
         print "max Displacements",data
-        #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
-        #print self.disp[subcaseID]
+        #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
+        #print self.disp[iSubcase]
     
     def maxAppliedLoads(self):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
         print "max Applied Loads",data
-        #self.disp[subcaseID] = DisplacementObject(subcaseID,data)
-        #print self.disp[subcaseID]
+        #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
+        #print self.disp[iSubcase]
 
     def readSubcaseNameID(self):
         subcaseName = self.storedLines[-3].strip()
-        subcaseID   = self.storedLines[-2].strip()[1:]
-        subcaseID = int(subcaseID.strip('SUBCASE '))
-        #print "subcaseName=%s subcaseID=%s" %(subcaseName,subcaseID)
+        iSubcase   = self.storedLines[-2].strip()[1:]
+        iSubcase = int(iSubcase.strip('SUBCASE '))
+        #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
 
         transient   = self.storedLines[-1].strip()
         if transient:
@@ -272,7 +235,7 @@ class F06Reader(object):
             transient = [transWord,transValue]
         else:
             transient = None
-        return (subcaseName,subcaseID,transient)
+        return (subcaseName,iSubcase,transient)
 
     def displacement(self):
         """
@@ -282,16 +245,27 @@ class F06Reader(object):
                1      G      9.663032E-05   0.0           -2.199001E-04   0.0           -9.121119E-05   0.0
                2      G      0.0            0.0            0.0            0.0            0.0            0.0
                3      G      0.0            0.0            0.0            0.0            0.0            0.0
+               
+        analysisCode = 1 (Statics)
+        deviceCode   = 1 (Print)
+        tableCode    = 1 (Displacement)
+        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
+        numWide      = 8 (???)
         """
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
+        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':1,
+                    'sortCode':0,'sortBits':[0,0,0],'numWide':8}
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
-        if subcaseID in self.disp:
-            self.disp[subcaseID].addData(data)
+        if iSubcase in self.disp:
+            self.disp[iSubcase].addF06Data(data)
         else:
-            self.disp[subcaseID] = DisplacementObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
+            #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
+            disp = displacementObject(dataCode,iSubcase)
+            disp.addF06Data(data,transient)
+            self.disp[iSubcase] = disp
+        self.iSubcases.append(iSubcase)
 
     def temperatureVector(self):
         """
@@ -302,16 +276,16 @@ class F06Reader(object):
                1      S      1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03
                7      S      1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03
         """
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTemperatureTable()
-        if subcaseID in self.temperature:
-            self.temperature[subcaseID].addData(data)
+        if iSubcase in self.temperature:
+            self.temperature[iSubcase].addData(data)
         else:
-            self.temperature[subcaseID] = TemperatureObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
+            self.temperature[iSubcase] = TemperatureObject(iSubcase,data)
+        self.iSubcases.append(iSubcase)
 
     def readTemperatureTable(self):
         data = []
@@ -336,17 +310,17 @@ class F06Reader(object):
         return out
     
     def tempGradientsFluxes(self):
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readGradientFluxesTable()
         print data
-        if subcaseID in self.temperature:
-            self.temperature[subcaseID].addData(data)
+        if iSubcase in self.temperature:
+            self.temperature[iSubcase].addData(data)
         else:
-            self.temperature[subcaseID] = TemperatureGradientObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
+            self.temperature[iSubcase] = TemperatureGradientObject(iSubcase,data)
+        self.iSubcases.append(iSubcase)
     
     def readGradientFluxesTable(self):
         data = []
@@ -373,30 +347,31 @@ class F06Reader(object):
         return out
     
     def spcForces(self):
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
+        return
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
 
-        if subcaseID in self.SpcForces:
-            self.SpcForces[subcaseID].addData(data)
+        if iSubcase in self.SpcForces:
+            self.SpcForces[iSubcase].addData(data)
         else:
-            self.SpcForces[subcaseID] = DisplacementObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
-        #print self.SpcForces[subcaseID]
+            self.SpcForces[iSubcase] = DisplacementObject(iSubcase,data)
+        self.iSubcases.append(iSubcase)
+        #print self.SpcForces[iSubcase]
         
     def mpcForces(self):
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
 
-        if subcaseID in self.MpcForces:
-            self.MpcForces[subcaseID].addData(data)
+        if iSubcase in self.MpcForces:
+            self.MpcForces[iSubcase].addData(data)
         else:
-            self.MpcForces[subcaseID] = DisplacementObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
-        #print self.SpcForces[subcaseID]
+            self.MpcForces[iSubcase] = DisplacementObject(iSubcase,data)
+        self.iSubcases.append(iSubcase)
+        #print self.SpcForces[iSubcase]
         
     def barStress(self):
         """
@@ -406,7 +381,7 @@ class F06Reader(object):
              12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04 
                    0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04 
         """
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         print "headers = %s" %(headers)
         
@@ -418,11 +393,11 @@ class F06Reader(object):
         #    isVonMises = True
 
         data = self.readBarStress()
-        if subcaseID in self.barStress:
-            self.barStress[subcaseID].addData(data)
+        if iSubcase in self.barStress:
+            self.barStress[iSubcase].addData(data)
         else:
-            self.barStress[subcaseID] = BarStressObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
+            self.barStress[iSubcase] = BarStressObject(iSubcase,data)
+        self.iSubcases.append(iSubcase)
     
     def readBarStress(self):
         """
@@ -460,16 +435,16 @@ class F06Reader(object):
             181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
             181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
         """
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
-        if subcaseID in self.stress:
-            self.stress[subcaseID].addData(data)
+        if iSubcase in self.stress:
+            self.stress[iSubcase].addData(data)
         else:
-            self.stress[subcaseID] = StressObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
-        #print self.stress[subcaseID]
+            self.stress[iSubcase] = StressObject(iSubcase,data)
+        self.iSubcases.append(iSubcase)
+        #print self.stress[iSubcase]
         
     def triStress(self):
         """
@@ -479,7 +454,7 @@ class F06Reader(object):
               8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
                    1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
         """
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -491,11 +466,11 @@ class F06Reader(object):
             isVonMises = True
 
         data = self.readTriStress()
-        if subcaseID in self.isoStress:
-            self.isoStress[subcaseID].addData(data)
+        if iSubcase in self.isoStress:
+            self.isoStress[iSubcase].addData(data)
         else:
-            self.isoStress[subcaseID] = IsoStressObject(subcaseID,data,isFiberDistance,isVonMises)
-        self.subcaseIDs.append(subcaseID)
+            self.isoStress[iSubcase] = IsoStressObject(iSubcase,data,isFiberDistance,isVonMises)
+        self.iSubcases.append(iSubcase)
 
     def readTriStress(self):
         """
@@ -533,7 +508,7 @@ class F06Reader(object):
                        4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(3)
         #print "headers = %s" %(headers)
         
@@ -545,11 +520,11 @@ class F06Reader(object):
             isVonMises = True
 
         data = self.readQuadBilinear()
-        if subcaseID in self.isoStress:
-            self.isoStress[subcaseID].addData(data)
+        if iSubcase in self.isoStress:
+            self.isoStress[iSubcase].addData(data)
         else:
-            self.isoStress[subcaseID] = IsoStressObject(subcaseID,data,isFiberDistance,isVonMises)
-        self.subcaseIDs.append(subcaseID)
+            self.isoStress[iSubcase] = IsoStressObject(iSubcase,data,isFiberDistance,isVonMises)
+        self.iSubcases.append(iSubcase)
 
     def readQuadBilinear(self):
         data = []
@@ -588,17 +563,46 @@ class F06Reader(object):
         return self.readSolidStress('CTETRA',4)
 
     def readSolidStress(self,eType,n):
-        (subcaseName,subcaseID,transient) = self.readSubcaseNameID()
+        """
+        analysisCode = 1 (Statics)
+        deviceCode   = 1 (Print)
+        tableCode    = 5 (Stress/Strain)
+        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
+        formatCode   = 1 (Real)
+        sCode        = 0 (Stress)
+        numWide      = 8 (???)
+        """
+        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
         headers = self.skip(2)
-        print "headers = %s" %(headers)
-        
-        data = self.read3DStress(eType,n)
-        if subcaseID in self.solidStress:
-            self.solidStress[subcaseID].addData(data)
-        else:
-            self.solidStress[subcaseID] = SolidStressObject(subcaseID,data)
-        self.subcaseIDs.append(subcaseID)
+        #print "headers = %s" %(headers)
 
+        isMaxShear = True
+        if 'VON MISES' in headers:
+            isMaxShear = False
+            
+        data = self.read3DStress(eType,n)
+        stressBits = self.makeStressBits(isMaxShear=False)
+        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,
+                    'sortCode':0,'sortBits':[0,0,0],'numWide':8,'elementName':eType,'formatCode':1,
+                    'sCode':0,'stressBits':stressBits}
+
+        if iSubcase in self.solidStress:
+            self.solidStress[iSubcase].addF06Data(data,transient)
+        else:
+            #self.solidStress[iSubcase] = SolidStressObject(iSubcase,data)
+            self.solidStress[iSubcase] = solidStressObject(dataCode,iSubcase,transient)
+            self.solidStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def makeStressBits(self,isMaxShear,isFiberDistance=True):
+        stressBits = [0,0,0]
+        if isMaxShear==False:
+            stressBits[0] = 1
+        
+        if isFiberDistance:
+            stressBits[2] = 1
+        return stressBits
+        
     def read3DStress(self,eType,n):
         data = []
         while 1:
@@ -667,7 +671,15 @@ class F06Reader(object):
             self.i+=1
         print "i=%i" %(self.i)
         self.infile.close()
+        f06.processF06()
 
+    def processF06(self):
+        #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
+        dataPack = [self.solidStress]
+        for dataSet in dataPack:
+            for key,data in dataSet.items():
+                data.processF06Data()
+        
     def isMarker(self,marker):
         """returns True if the word follows the 'N A S T R A N   P A T T E R N'"""
         marker = marker.strip().split('$')[0].strip()
@@ -693,19 +705,17 @@ class F06Reader(object):
     def __repr__(self):
         msg = ''
         data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
-        data = []
-        self.subcaseIDs = list(set(self.subcaseIDs))
-        for subcaseID in self.subcaseIDs:
+        data = [self.disp,self.solidStress]
+        self.iSubcases = list(set(self.iSubcases))
+        for iSubcase in self.iSubcases:
             for result in data:
-                if subcaseID in result:
-                    msg += str(result[subcaseID])
+                if iSubcase in result:
+                    msg += str(result[iSubcase])
                 ###
             ###
         return msg
 
 if __name__=='__main__':
-    f06 = F06Reader('cylinder01.f06')
-    #f06 = F06Reader('ssb.f06')
-    #f06 = F06Reader('quad_bending_comp.f06')
+    f06 = F06Reader('ssb.f06')
     f06.ReadF06()
     print f06

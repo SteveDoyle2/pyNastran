@@ -23,6 +23,28 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             #self.writeOp2 = self.writeOp2Transient
         ###
         self.parseLength()
+    
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
+                self.gridTypes[nodeID]    = gridType
+                self.translations[nodeID] = array([t1,t2,t3])
+                self.rotations[nodeID]    = array([r1,r2,r3])
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.gridTypes:
+            self.addNewTransient()
+
+        for line in data:
+            (nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
+            self.gridTypes[dt][nodeID]    = array([t1,t2,t3])
+            self.translations[dt][nodeID] = array([t1,t2,t3])
+            self.rotations[dt][nodeID]    = array([r1,r2,r3])
+        ###
 
     def parseLength(self):
         self.mainHeaders = []
