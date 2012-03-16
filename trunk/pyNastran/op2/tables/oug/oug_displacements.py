@@ -36,12 +36,12 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
 
         (dtName,dt) = transient
         self.dataCode['name'] = dtName
-        if dt not in self.gridTypes:
-            self.addNewTransient()
+        if dt not in self.translations:
+            self.updateDt(self.dataCode,dt)
 
         for line in data:
             (nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
-            self.gridTypes[dt][nodeID]    = array([t1,t2,t3])
+            self.gridTypes[nodeID]    = gridType
             self.translations[dt][nodeID] = array([t1,t2,t3])
             self.rotations[dt][nodeID]    = array([r1,r2,r3])
         ###

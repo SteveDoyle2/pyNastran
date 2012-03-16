@@ -1,37 +1,11 @@
 import os
 import sys
 from pyNastran.op2.tables.oug.oug_displacements import displacementObject
+from pyNastran.op2.tables.oug.oug_temperatures  import temperatureObject
 from pyNastran.op2.tables.oes.oes_solids        import solidStressObject
+
 class EndOfFileError(Exception):
     pass
-
-class TemperatureObject(object):
-    def __init__(self,iSubcase,data):
-        #print "*******"
-        self.iSubcase = iSubcase
-        self.grids = []
-        self.gridTypes = []
-        self.temps = []
-        self.addData(data)
-
-    def addData(self,data):
-        for line in data:
-            (gridID,gridType) = line[0:2]
-            temps = line[2:]
-            for (i,temp) in enumerate(temps):
-                self.grids.append(gridID+i)
-                self.gridTypes.append(gridType)
-                self.temps.append(temp)
-        ###
-        #print "grids = ",self.grids
-
-    def __repr__(self):
-        msg  = "iSubcase = %s\n" %(self.iSubcase)
-        msg += '%-8s %8s %10s\n' %('gridID','gridType','T')
-        for (grid,gridType,temp) in zip(self.grids,self.gridTypes,self.temps):
-            msg += "%-8s %8s %10s\n" %(grid,gridType,temp)
-            
-        return msg
 
 class StressObject(object):
     def __init__(self,iSubcase,data):
@@ -176,6 +150,7 @@ class F06Reader(object):
         self.iSubcases = []
         self.solidStress = {}
         self.temperature = {}
+        self.temperatureGrad = {}
         self.startLog()
 
     def startLog(self,log=None,debug=False):
@@ -232,10 +207,25 @@ class F06Reader(object):
         transient   = self.storedLines[-1].strip()
         if transient:
             transWord,transValue = transient.split('=')
+            transWord = transWord.strip()
+            transValue = float(transValue)
             transient = [transWord,transValue]
+            
+            if transWord=='LOAD STEP':
+                analysisCode = 10
+            elif transWord=='TIME STEP': ## @todo check name
+                analysisCode = 6
+            elif transWord=='FREQ': ## @todo check name
+                analysisCode = 5
+            else:
+                raise NotImplementedError('transientWord=|%r| is not supported...' %(transWord))
+            ###
         else:
             transient = None
-        return (subcaseName,iSubcase,transient)
+            analysisCode = 1
+
+
+        return (subcaseName,iSubcase,transient,analysisCode)
 
     def displacement(self):
         """
@@ -252,14 +242,14 @@ class F06Reader(object):
         sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
-        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':1,
+        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':1,
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8}
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
         if iSubcase in self.disp:
-            self.disp[iSubcase].addF06Data(data)
+            self.disp[iSubcase].addF06Data(data,transient)
         else:
             #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
             disp = displacementObject(dataCode,iSubcase)
@@ -275,16 +265,33 @@ class F06Reader(object):
         POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE
                1      S      1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03
                7      S      1.300000E+03   1.300000E+03   1.300000E+03   1.300000E+03
+        analysisCode = 1 (Statics)
+        deviceCode   = 1 (Print)
+        tableCode    = 1 (Displacement/Temperature)
+        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
+        formatCode   = 1 (Real)
+        sCode        = 0 (Stress)
+        numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         #print transient
+        
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTemperatureTable()
+        
+        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,'sortCode':0,
+                    'sortBits':[0,0,0],'numWide':8,
+                    #'formatCode':1,
+                    #'elementName':eType,'sCode':0,'stressBits':stressBits
+                    }
+
         if iSubcase in self.temperature:
-            self.temperature[iSubcase].addData(data)
+            self.temperature[iSubcase].addF06Data(data,transient)
         else:
-            self.temperature[iSubcase] = TemperatureObject(iSubcase,data)
+            temp = temperatureObject(dataCode,iSubcase)
+            temp.addF06Data(data,transient)
+            self.temperature[iSubcase] = temp
         self.iSubcases.append(iSubcase)
 
     def readTemperatureTable(self):
@@ -310,16 +317,17 @@ class F06Reader(object):
         return out
     
     def tempGradientsFluxes(self):
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readGradientFluxesTable()
-        print data
-        if iSubcase in self.temperature:
-            self.temperature[iSubcase].addData(data)
+        #print data
+        return
+        if iSubcase in self.temperatureGrad:
+            self.temperatureGrad[iSubcase].addData(data)
         else:
-            self.temperature[iSubcase] = TemperatureGradientObject(iSubcase,data)
+            self.temperatureGrad[iSubcase] = TemperatureGradientObject(iSubcase,data)
         self.iSubcases.append(iSubcase)
     
     def readGradientFluxesTable(self):
@@ -347,7 +355,7 @@ class F06Reader(object):
         return out
     
     def spcForces(self):
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         return
         #print "headers = %s" %(headers)
@@ -361,7 +369,7 @@ class F06Reader(object):
         #print self.SpcForces[iSubcase]
         
     def mpcForces(self):
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
@@ -381,7 +389,7 @@ class F06Reader(object):
              12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04 
                    0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04 
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         print "headers = %s" %(headers)
         
@@ -435,7 +443,7 @@ class F06Reader(object):
             181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
             181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
@@ -454,7 +462,7 @@ class F06Reader(object):
               8   -1.250000E-01     -1.303003E+02   1.042750E+04  -1.456123E+02   -89.2100    1.042951E+04   -1.323082E+02   1.049629E+04
                    1.250000E-01     -5.049646E+02   1.005266E+04  -2.132942E+02   -88.8431    1.005697E+04   -5.092719E+02   1.032103E+04
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -508,7 +516,7 @@ class F06Reader(object):
                        4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(3)
         #print "headers = %s" %(headers)
         
@@ -572,7 +580,7 @@ class F06Reader(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -705,7 +713,7 @@ class F06Reader(object):
     def __repr__(self):
         msg = ''
         data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
-        data = [self.disp,self.solidStress]
+        data = [self.disp,self.solidStress,self.temperature]
         self.iSubcases = list(set(self.iSubcases))
         for iSubcase in self.iSubcases:
             for result in data:
@@ -716,6 +724,8 @@ class F06Reader(object):
         return msg
 
 if __name__=='__main__':
-    f06 = F06Reader('ssb.f06')
+    f06 = F06Reader('cylinder01.f06')
+    #f06 = F06Reader('ssb.f06')
     f06.ReadF06()
     print f06
+

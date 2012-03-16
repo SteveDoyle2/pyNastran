@@ -9,9 +9,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         self.gridTypes    = {}
         self.temperatures = {}
         
-        #print "dt = ",self.dt
         if dt is not None:
-        #if 0:
             #raise Exception('potential test of temperature bug...')
             self.addNewTransient()
             #assert dt>=0.
@@ -19,9 +17,38 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.add = self.addTransient
             self.addF = self.addTransientF
             #self.addBinary = self.addBinaryTransient
-            #self.__repr__ = self.__reprTransient__  # why cant i do this...            
+            #self.__repr__ = self.__reprTransient__  # why cant i do this...
         ###
         self.parseLength()
+
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (gridID,gridType) = line[0:2]
+                temps = line[2:]
+                for (i,temp) in enumerate(temps):
+                    nodeID = gridID+i
+                    self.gridTypes[nodeID] = gridType
+                    self.temperatures[nodeID] = temp
+                ###
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.temperatures:
+            self.updateDt(self.dataCode,dt)
+            self.isTransient = True
+
+        for line in data:
+            (gridID,gridType) = line[0:2]
+            temps = line[2:]
+            for (i,temp) in enumerate(temps):
+                nodeID = gridID+i
+                self.gridTypes[nodeID] = gridType
+                self.temperatures[dt][nodeID] = temp
+            ###
+        ###
 
     def parseLength(self):
         self.mainHeaders = []
@@ -47,7 +74,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.headers = ['Temperature']
             raise Exception('verify...add imaginary...')
         else:
-            self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]:
+            self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]
             self.headers = ['Temperature']
         
         self.mainHeaders = tuple(self.mainHeaders)
@@ -182,7 +209,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         for nodeID,T in sorted(self.temperatures.items()):
             gridType = self.gridTypes[nodeID]
             msg += '%10s %8s ' %(nodeID,gridType)
-
+            print "nodeID=%s T=%s" %(nodeID,T)
             if abs(T)<1e-6:
                 msg += '%10s\n' %(0)
             else:

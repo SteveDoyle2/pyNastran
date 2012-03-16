@@ -64,6 +64,18 @@ OP2 Bug Fixes
 Overall OP2
 Added OP2
 
+Overall F06
+   - removed old f06 reader
+   - added some results (displacement, solid stress)
+   - no transient solutions
+   - integrates with OP2 reader
+   
+
+Added F06
+   - displacement
+   - temperature (static/transient)
+   - solid stress
+
 Overall GUI
 Added GUI
    - CSHEAR, CTRIAX6 support
