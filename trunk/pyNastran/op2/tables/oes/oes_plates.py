@@ -22,6 +22,7 @@ class plateStressObject(stressObject):
         self.eType = {}
 
         #self.appendDataMember('sCodes','sCode')
+        #print "self.sCode = ",self.sCode
         self.code = [self.formatCode,self.sortCode,self.sCode]
 
         self.fiberCurvature = {}
@@ -33,9 +34,10 @@ class plateStressObject(stressObject):
         self.minorP = {}
         self.ovmShear = {}
 
+        #print "self.code = ",self.code
         if self.code == [1,0,1]:
             #self.isVonMises = True
-            assert self.isFiberDistance() == False,self.stressBits
+            assert self.isFiberDistance() == True,self.stressBits
             assert self.isVonMises()      == True,self.stressBits
         elif self.code == [1,0,0]:
             assert self.isFiberDistance() == False,self.stressBits
@@ -56,6 +58,60 @@ class plateStressObject(stressObject):
         #else:
         #    self.dt = None
         ###
+
+    def addF06Data(self,data,transient):
+        if transient is None:
+            eType = data[0][0]
+            for line in data:
+                if eType=='CTRIA3':
+                    (eType,eid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
+                               f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                    self.eType[eid] = eType
+                    self.fiberCurvature[eid] = {'C':[f1,f2]}
+                    self.oxx[eid]      = {'C':[ox1,ox2]}
+                    self.oyy[eid]      = {'C':[oy1,oy2]}
+                    self.txy[eid]      = {'C':[txy1,txy2]}
+                    self.angle[eid]    = {'C':[angle1,angle2]}
+                    self.majorP[eid]   = {'C':[o11,o12]}
+                    self.minorP[eid]   = {'C':[o21,o22]}
+                    self.ovmShear[eid] = {'C':[ovm1,ovm2]}
+                elif eType=='CQUAD4':
+                    #assert len(line)==19,'len(line)=%s' %(len(line))
+                    if len(line)==19: # Centroid
+                        (eType,eid,nid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
+                                       f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                        if nid=='CEN/4': nid='C'
+                        self.eType[eid] = eType
+                        self.fiberCurvature[eid] = {nid:[f1,f2]}
+                        self.oxx[eid]      = {nid:[ox1,ox2]}
+                        self.oyy[eid]      = {nid:[oy1,oy2]}
+                        self.txy[eid]      = {nid:[txy1,txy2]}
+                        self.angle[eid]    = {nid:[angle1,angle2]}
+                        self.majorP[eid]   = {nid:[o11,o12]}
+                        self.minorP[eid]   = {nid:[o21,o22]}
+                        self.ovmShear[eid] = {nid:[ovm1,ovm2]}
+                    elif len(line)==17: ## Bilinear
+                        print line
+                        (nid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
+                             f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                        self.fiberCurvature[eid][nid] = [f1,f2]
+                        self.oxx[eid][nid]      = [ox1,ox2]
+                        self.oyy[eid][nid]      = [oy1,oy2]
+                        self.txy[eid][nid]      = [txy1,txy2]
+                        self.angle[eid][nid]    = [angle1,angle2]
+                        self.majorP[eid][nid]   = [o11,o12]
+                        self.minorP[eid][nid]   = [o21,o22]
+                        self.ovmShear[eid][nid] = [ovm1,ovm2]
+                    else:
+                        assert len(line)==19,'len(line)=%s' %(len(line))
+                        #raise NotImplementedError()
+                    ###
+                else:
+                    raise NotImplementedError('line=%s not supported...' %(line))
+            return
+        #for line in data:
+        #    print line
+        raise NotImplementedError('transient results not supported')
 
     def addNewTransient(self):
         """

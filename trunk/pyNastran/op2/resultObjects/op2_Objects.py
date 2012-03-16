@@ -23,6 +23,7 @@ class scalarObject(Op2Codes):
             if key is not 'log':
                 self.__setattr__(key,value)
                 self.log.debug("  key=%s value=%s" %(key,value))
+                #print "  key=%s value=%s" %(key,value)
 
     def getUnsteadyValue(self):
         name = self.dataCode['name']
