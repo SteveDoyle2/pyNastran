@@ -232,6 +232,18 @@ class F06Reader(OES,OUG):
             out.append(entry2)
         return out
         
+    def parseLineBlanks(self,sline,Format):
+        """allows blanks"""
+        out = []
+        for entry,iFormat in zip(sline,Format):
+            if entry.strip():
+                entry2 = iFormat(entry)
+            else:
+                entry2 = None
+                #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
+            out.append(entry2)
+        return out
+        
     def ReadF06(self):
         #print "reading..."
         blank = 0
@@ -295,7 +307,8 @@ class F06Reader(OES,OUG):
     def __repr__(self):
         msg = ''
         data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
-        data = [self.disp,self.solidStress,self.temperature]
+        #data = [self.disp,self.solidStress,self.temperature]
+        data = [self.barStress]
         self.iSubcases = list(set(self.iSubcases))
         for iSubcase in self.iSubcases:
             for result in data:
@@ -306,8 +319,8 @@ class F06Reader(OES,OUG):
         return msg
 
 if __name__=='__main__':
-    f06 = F06Reader('cylinder01.f06')
-    #f06 = F06Reader('ssb.f06')
+    #f06 = F06Reader('cylinder01.f06')
+    f06 = F06Reader('ssb.f06')
     f06.ReadF06()
     print f06
 

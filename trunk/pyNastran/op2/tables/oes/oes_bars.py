@@ -39,6 +39,50 @@ class barStressObject(stressObject):
             self.addNewEid = self.addNewEidTransient
         ###
 
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (eType,eid,s1A,s2A,s3A,s4A,axialA,smaxA,sminA,MSt,
+                           s1B,s2B,s3B,s4B,       smaxB,sminB,MSc) = line
+                self.eType[eid] = 'CBAR'
+                self.s1[eid] = [s1A,s1B]
+                self.s2[eid] = [s2A,s2B]
+                self.s3[eid] = [s3A,s3B]
+                self.s4[eid] = [s4A,s4B]
+
+                self.axial[eid] = axialA
+                self.smax[eid] = [smaxA,smaxB]
+                self.smin[eid] = [sminA,sminB]
+                #self.MS_tension[eid]     = MSt
+                #self.MS_compression[eid] = MSc
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.s1:
+            self.updateDt(self.dataCode,dt)
+            self.isTransient = True
+
+        for line in data:
+            (eType,eid,s1A,s2A,s3A,s4A,axialA,smaxA,sminA,MSt,
+                       s1B,s2B,s3B,s4B,       smaxB,sminB,MSc) = line
+            self.eType[eid] = 'CBAR'
+            self.s1[dt][eid] = [s1A,s1B]
+            self.s2[dt][eid] = [s2A,s2B]
+            self.s3[dt][eid] = [s3A,s3B]
+            self.s4[dt][eid] = [s4A,s4B]
+
+            self.axial[dt][eid] = axialA
+            self.smax[dt][eid] = [smaxA,smaxB]
+            self.smin[dt][eid] = [sminA,sminB]
+            #self.MS_tension[dt][eid]     = MSt
+            #self.MS_compression[dt][eid] = MSc
+
+        #for line in data:
+        #    print line
+        ###
+
     def getLength34_format1_sort0(self):
         return (68,'iffffffffffffffff')
 
