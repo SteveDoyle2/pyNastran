@@ -58,7 +58,7 @@ class OUG(object):
         #print "headers = %s" %(headers)
         data = self.readTemperatureTable()
         
-        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,'sortCode':0,
+        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':1,'sortCode':0,
                     'sortBits':[0,0,0],'numWide':8,
                     #'formatCode':1,
                     #'elementName':eType,'sCode':0,'stressBits':stressBits

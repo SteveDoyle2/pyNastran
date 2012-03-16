@@ -1,4 +1,5 @@
-from pyNastran.op2.tables.oes.oes_solids        import solidStressObject
+from pyNastran.op2.tables.oes.oes_bars   import barStressObject
+from pyNastran.op2.tables.oes.oes_solids import solidStressObject
 
 class StressObject(object):
     def __init__(self,iSubcase,data):
@@ -60,27 +61,6 @@ class IsoStressObject(object):
             msg += '%s\n' %(line)
         return msg
 
-class BarStressObject(object):
-    def __init__(self,iSubcase,data):
-        self.iSubcase = iSubcase
-        self.grids = []
-
-        self.data = []
-        self.addData(data)
-        
-    def addData(self,data):        
-        for line in data:
-            self.data.append(line)
-        return
-
-    def __repr__(self):
-        msg  = 'Bar Element Stress\n'
-        msg += "iSubcase = %s\n" %(self.iSubcase)
-        for line in self.data:
-            msg += '%s\n' %(line)
-        return msg
-
-
 class OES(object):
     def __init__(self):
         self.stress = {}
@@ -95,10 +75,17 @@ class OES(object):
           ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
              12    0.0            0.0            0.0            0.0            1.020730E+04   1.020730E+04   1.020730E+04 
                    0.0            0.0            0.0            0.0                           1.020730E+04   1.020730E+04 
+        analysisCode = 1 (Statics)
+        deviceCode   = 1 (Print)
+        tableCode    = 5 (Stress)
+        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
+        formatCode   = 1 (Real)
+        sCode        = 0 (Stress)
+        numWide      = 8 (???)
         """
         (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
-        print "headers = %s" %(headers)
+        #print "headers = %s" %(headers)
         
         #isFiberDistance = False
         #isVonMises = False  # Von Mises/Max Shear
@@ -107,11 +94,18 @@ class OES(object):
         #if 'VON MISES' in headers:
         #    isVonMises = True
 
+        stressBits = self.makeStressBits()
+        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,'sortCode':0,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':0,'stressBits':stressBits,
+                    'formatCode':1,'elementName':'CBAR','elementType':34,
+                    }
+
         data = self.readBarStress()
         if iSubcase in self.barStress:
-            self.barStress[iSubcase].addData(data)
+            self.barStress[iSubcase].addF06Data(data,transient)
         else:
-            self.barStress[iSubcase] = BarStressObject(iSubcase,data)
+            self.barStress[iSubcase] = barStressObject(dataCode,iSubcase,transient)
+            self.barStress[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
     
     def readBarStress(self):
@@ -123,16 +117,20 @@ class OES(object):
         """
         data = []
         while 1:
-            line = self.infile.readline()[1:].strip().split()
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            sline = [line[0:12],line[12:27],line[27:42],line[42:57],line[57:64],line[64:86],line[86:101],line[101:116],line[116:131]]
             if 'PAGE' in line:
                 break
-            print line
-            sline = self.parseLine(line,[int,float,float,float,float, float, float,float,float]) # line 1
-            sline = ['CBAR']+sline
+            #print sline
+            out = self.parseLineBlanks(sline,[int,float,float,float,float, float, float,float,float]) # line 1
+            out = ['CBAR']+out
             #data.append(sline)
-            line = self.infile.readline()[1:].strip().split()
-            sline += self.parseLine(line,[    float,float,float,float,        float,float,float]) # line 2
-            data.append(sline)
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            sline = [line[12:27],line[27:42],line[42:57],line[57:64],line[86:101],line[101:116],line[116:131]]
+            #print sline
+            out += self.parseLineBlanks(sline,[    float,float,float,float,        float,float,float]) # line 2
+            #print "*",out
+            data.append(out)
             self.i+=2
             ###
         ###
@@ -309,7 +307,7 @@ class OES(object):
             self.solidStress[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
 
-    def makeStressBits(self,isMaxShear,isFiberDistance=True):
+    def makeStressBits(self,isMaxShear=True,isFiberDistance=True):
         stressBits = [0,0,0]
         if isMaxShear==False:
             stressBits[0] = 1

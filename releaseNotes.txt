@@ -66,22 +66,33 @@ Added OP2
 
 Overall F06
    - removed old f06 reader
-   - added some results (displacement, solid stress)
-   - no transient solutions
+   - added results
+   - poor transient support
    - integrates with OP2 reader
-   
+   - field parsing needs lots of testing
 
 Added F06
-   - displacement
+   - displacement (static/transient)
    - temperature (static/transient)
-   - solid stress
+   - solid stress (static)
+      - ctetra
+      - cpenta
+      - chexa
+   - bar stress (static/transient)
+
+   - ***isotropic plate stress
+      - ***ctria3
+      - ***cquad4
+   - ***composite plate stress
+      - ***ctria3
+      - ***cquad4
 
 Overall GUI
 Added GUI
    - CSHEAR, CTRIAX6 support
 
 GUI Bug Fixes
-   - "python setup.py install" should work now
+   - "python setup.py install" should work now, but it's still not recommended
 
 Solver
    - added D matricies for PSHELL, PCOMP, PSOLID
