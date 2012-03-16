@@ -80,9 +80,9 @@ Added F06
       - chexa
    - bar stress (static/transient)
 
-   - ***isotropic plate stress
-      - ***ctria3
-      - ***cquad4
+   - isotropic plate stress
+      - ctria3 (static)
+      - cquad4 (static)
    - ***composite plate stress
       - ***ctria3
       - ***cquad4
