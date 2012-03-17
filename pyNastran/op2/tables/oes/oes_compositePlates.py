@@ -28,7 +28,7 @@ class compositePlateStressObject(stressObject):
         #print "self.dataCode = ",self.dataCode
         #if self.isVonMisesStress():
         if self.code == [1,0,0]:
-            assert self.isVonMises()==False
+            assert self.isVonMises()==False,'isVonMises=%s' %(self.isVonMises())
             #self.isVonMises      = True
         else:
             raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' %(self.code))
@@ -41,6 +41,50 @@ class compositePlateStressObject(stressObject):
             self.add       = self.addTransient
             self.addNewEid = self.addNewEidTransient
         ###
+
+    def addF06Data(self,data,transient,eType):
+        """
+                       S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+        ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+          ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+            151    1  -1.02406E+04  4.18348E+05  4.14359E+02   -8.62021E+00  1.86352E+04   89.94  4.18348E+05 -1.02410E+04  2.14295E+05
+        """
+        if transient is None:
+            #for line in data:
+            #    print line
+            #sys.exit()
+            for line in data:
+                #print line
+                if eType=='CQUAD4':
+                    (eid,iLayer,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovmShear) = line
+                    #if nid=='CEN/4': nid='C'
+                    if eid not in self.eType:
+                        self.eType[eid] = 'CQUAD4'
+                        self.o11[eid]    = [o11]
+                        self.o22[eid]    = [o22]
+                        self.t12[eid]    = [t12]
+                        self.t1z[eid]    = [t1z]
+                        self.t2z[eid]    = [t2z]
+                        self.angle[eid]  = [angle]
+                        self.majorP[eid] = [majorP]
+                        self.minorP[eid] = [minorP]
+                        self.ovmShear[eid] = [ovmShear]
+                    else:
+                        self.o11[eid].append(o11)
+                        self.o22[eid].append(o22)
+                        self.t12[eid].append(t12)
+                        self.t1z[eid].append(t1z)
+                        self.t2z[eid].append(t2z)
+                        self.angle[eid].append(angle)
+                        self.majorP[eid].append(majorP)
+                        self.minorP[eid].append(minorP)
+                        self.ovmShear[eid].append(ovmShear)
+                else:
+                    raise NotImplementedError('line=%s not supported...' %(line))
+            return
+        #for line in data:
+        #    print line
+        raise NotImplementedError('transient results not supported')
 
     def addNewTransient(self):
         """

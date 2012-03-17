@@ -1,45 +1,7 @@
 from pyNastran.op2.tables.oes.oes_bars   import barStressObject
 from pyNastran.op2.tables.oes.oes_solids import solidStressObject
 from pyNastran.op2.tables.oes.oes_plates import plateStressObject
-#from pyNastran.op2.tables.oes.oes_plates import plateStressObject
-
-class StressObject(object):
-    def __init__(self,iSubcase,data):
-        self.iSubcase = iSubcase
-        self.grids = []
-        #self.gridTypes = []
-        #self.translations = []
-        #self.rotations = []
-        
-        self.data = []
-        self.addData(data)
-        
-    def addData(self,data):
-        for line in data:
-            self.data.append(line)
-        return
-            #(gridID,gridType,t1,t2,t3,t4,t5,t6) = line
-            #self.grids.append(gridID)
-            #self.gridTypes.append(gridType)
-            #self.translations.append([t1,t2,t3])
-            #self.rotations.append([t4,t5,t6])
-        ###
-        #print "grids = ",self.grids
-    
-    def __repr__(self):
-        msg  = 'Composite Shell Element Stress\n'
-        msg += "iSubcase = %s\n" %(self.iSubcase)
-        for line in self.data:
-            msg += '%s\n' %(line)
-        return msg
-            
-        msg += '%-8s %8s %10s %10s %10s %10s %10s %10s\n' %('gridID','gridType','t1','t2','t3','t4','t5','t6')
-        for (gridID,gridType,translation,rotation) in zip(self.grids,self.gridTypes,self.translations,self.rotations):
-            (t1,t2,t3) = translation
-            (t4,t5,t6) = rotation
-            msg += "%-8i %8s %10.4g %10.4g %10.4g %10.4g %10.4g %10.4g\n" %(gridID,gridType,t1,t2,t3,t4,t5,t6)
-        ###
-        return msg
+from pyNastran.op2.tables.oes.oes_compositePlates import compositePlateStressObject
 
 class OES(object):
     def __init__(self):
@@ -120,17 +82,29 @@ class OES(object):
           ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
             181    1   3.18013E+04  5.33449E+05  1.01480E+03   -7.06668E+01  1.90232E+04   89.88  5.33451E+05  3.17993E+04  2.50826E+05
             181    2   1.41820E+05  1.40805E+05  1.25412E+05   -1.06000E+02  2.85348E+04   44.88  2.66726E+05  1.58996E+04  1.25413E+05
+        
+        elementType = 33 b/c not bilinear
         """
         (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
+
+        isMaxShear = False  # Von Mises/Max Shear
+        if 'SHEAR' in headers.strip():
+            isMaxShear = True
+        stressBits = self.makeStressBits(isMaxShear=isMaxShear)
+        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':0,'stressBits':stressBits,
+                    'formatCode':1,'elementName':'CQUAD4','elementType':33,
+                    }
+
         if iSubcase in self.stress:
-            self.stress[iSubcase].addData(data)
+            self.stress[iSubcase].addF06Data(data,transient,'CQUAD4')
         else:
-            self.stress[iSubcase] = StressObject(iSubcase,data)
+            self.stress[iSubcase] = compositePlateStressObject(dataCode,iSubcase,transient)
+            self.stress[iSubcase].addF06Data(data,transient,'CQUAD4')
         self.iSubcases.append(iSubcase)
-        #print self.stress[iSubcase]
         
     def triStress(self):
         """
@@ -313,7 +287,7 @@ class OES(object):
         ###
         return data
 
-    def makeStressBits(self,isFiberDistance=True,isMaxShear=True):
+    def makeStressBits(self,isFiberDistance=False,isMaxShear=True):
         print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear,isFiberDistance)
         stressBits = [0,0,0]
         if isMaxShear==False:

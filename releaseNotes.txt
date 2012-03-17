@@ -83,9 +83,9 @@ Added F06
    - isotropic plate stress
       - ctria3 (static)
       - cquad4 (static)
-   - ***composite plate stress
+   - composite plate stress
       - ***ctria3
-      - ***cquad4
+      - cquad4 (static)
 
 Overall GUI
 Added GUI
