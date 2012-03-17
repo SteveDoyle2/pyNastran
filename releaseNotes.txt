@@ -87,6 +87,9 @@ Added F06
       - ***ctria3
       - cquad4 (static)
 
+   - eigenvalues
+   - eigenvectors
+
 Overall GUI
 Added GUI
    - CSHEAR, CTRIAX6 support

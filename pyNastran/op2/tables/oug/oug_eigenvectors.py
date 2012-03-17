@@ -24,6 +24,18 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         self.translations = {self.caseVal: {}}
         self.rotations    = {self.caseVal: {}}
     
+    def readF06Data(self,dataCode,data):
+        iMode = dataCode['mode']
+        if iMode not in self.translations:
+            self.updateMode(dataCode,iMode)
+        
+        for line in data:
+            (nid,gridType,t1,t2,t3,r1,r2,r3) = line
+            self.gridTypes[nid] = gridType
+            self.translations[iMode][nid] = array([t1,t2,t3])
+            self.rotations[iMode][nid]    = array([r1,r2,r3])
+        ###
+
     def updateMode(self,dataCode,mode):
         """
         this method is called if the object
