@@ -91,7 +91,7 @@ class plateStressObject(stressObject):
                         self.minorP[eid]   = {nid:[o21,o22]}
                         self.ovmShear[eid] = {nid:[ovm1,ovm2]}
                     elif len(line)==17: ## Bilinear
-                        print line
+                        #print line
                         (nid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
                              f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
                         self.fiberCurvature[eid][nid] = [f1,f2]
@@ -110,7 +110,7 @@ class plateStressObject(stressObject):
                     raise NotImplementedError('line=%s not supported...' %(line))
             return
         #for line in data:
-        #    print line
+            #print line
         raise NotImplementedError('transient results not supported')
 
     def addNewTransient(self):
