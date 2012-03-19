@@ -18,7 +18,30 @@ cdef extern from "libop4.c":
         int     start_row   #/* Zero based, so first row has start_row = 0.    */
         int     N_idx       #/* Index into N[] to first numeric term for this  */
                             #/* string.                                        */
+    float *op4_load2(int size)
     float *op4_load(int size)
+    float *op4_load_RS(FILE   *fp         ,
+                      int     nRow       ,  #/* in  # rows    in matrix        */
+                      int     nCol       ,  #/* in  # columns in matrix        */
+                      char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
+                      int     col_width  ,  #/* in  # characters in format str */
+                      int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
+                      int     complx     ,  #/* in  0=real   1=complex         */
+                      int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
+                      str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
+                      int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                      )
+    double *op4_load_RD(FILE   *fp         ,
+                      int     nRow       ,  #/* in  # rows    in matrix        */
+                      int     nCol       ,  #/* in  # columns in matrix        */
+                      char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
+                      int     col_width  ,  #/* in  # characters in format str */
+                      int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
+                      int     complx     ,  #/* in  0=real   1=complex         */
+                      int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
+                      str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
+                      int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                      )
     int    op4_scan(char *filename  , #/* in                          */
                     int  *n_mat     , #/* out number of matrices      */
                     char  name[][9] , #/* out matrix names            */
@@ -79,7 +102,44 @@ np.import_array()
 # We need to build an array-wrapper class to deallocate our array when
 # the Python object is deleted.
 
-cdef class ArrayWrapper:
+# types at http://cython.org/release/Cython-0.13/Cython/Includes/numpy.pxd
+cdef class ArrayWrapper:                                   # {{{1
+    cdef void* data_ptr
+    cdef int size
+
+    cdef set_data(self, int size, void* data_ptr):
+        """ Set the data of the array
+
+        This cannot be done in the constructor as it must recieve C-level
+        arguments.
+
+        Parameters:
+        -----------
+        size: int
+            Length of the array.
+        data_ptr: void*
+            Pointer to the data            
+
+        """
+        self.data_ptr = data_ptr
+        self.size = size
+
+    def __array__(self):
+        """ Here we use the __array__ method, that is called when numpy
+            tries to get an array from the object."""
+        cdef np.npy_intp shape[1]
+        shape[0] = <np.npy_intp> self.size
+        # Create a 1D array, of length 'size'
+        ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_INT, self.data_ptr)
+#       ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_DOUBLE, self.data_ptr)
+        return ndarray
+
+    def __dealloc__(self):
+        """ Frees the array. This is called by Python when all the
+        references to the object are gone. """
+        free(<void*>self.data_ptr)
+# 1}}}
+cdef class ArrayWrapper_RS:                                # {{{1
     cdef void* data_ptr
     cdef int size
 
@@ -107,14 +167,122 @@ cdef class ArrayWrapper:
         shape[0] = <np.npy_intp> self.size
         # Create a 1D array, of length 'size'
         ndarray = np.PyArray_SimpleNewFromData(1, shape,
-                                               np.NPY_INT, self.data_ptr)
+                                               np.NPY_FLOAT, self.data_ptr)
         return ndarray
 
     def __dealloc__(self):
         """ Frees the array. This is called by Python when all the
         references to the object are gone. """
         free(<void*>self.data_ptr)
+# 1}}}
+cdef class ArrayWrapper_RD:                                # {{{1
+    cdef void* data_ptr
+    cdef int size
 
+    cdef set_data(self, int size, void* data_ptr):
+        """ Set the data of the array
+
+        This cannot be done in the constructor as it must recieve C-level
+        arguments.
+
+        Parameters:
+        -----------
+        size: int
+            Length of the array.
+        data_ptr: void*
+            Pointer to the data            
+
+        """
+        self.data_ptr = data_ptr
+        self.size = size
+
+    def __array__(self):
+        """ Here we use the __array__ method, that is called when numpy
+            tries to get an array from the object."""
+        cdef np.npy_intp shape[1]
+        shape[0] = <np.npy_intp> self.size
+        # Create a 1D array, of length 'size'
+        ndarray = np.PyArray_SimpleNewFromData(1, shape,
+                                               np.NPY_DOUBLE, self.data_ptr)
+        return ndarray
+
+    def __dealloc__(self):
+        """ Frees the array. This is called by Python when all the
+        references to the object are gone. """
+        free(<void*>self.data_ptr)
+# 1}}}
+cdef class ArrayWrapper_CS:                                # {{{1
+    cdef void* data_ptr
+    cdef int size
+
+    cdef set_data(self, int size, void* data_ptr):
+        """ Set the data of the array
+
+        This cannot be done in the constructor as it must recieve C-level
+        arguments.
+
+        Parameters:
+        -----------
+        size: int
+            Length of the array.
+        data_ptr: void*
+            Pointer to the data            
+
+        """
+        self.data_ptr = data_ptr
+        self.size = size
+
+    def __array__(self):
+        """ Here we use the __array__ method, that is called when numpy
+            tries to get an array from the object."""
+        cdef np.npy_intp shape[1]
+        shape[0] = <np.npy_intp> self.size
+        # Create a 1D array, of length 'size'
+        ndarray = np.PyArray_SimpleNewFromData(1, shape,
+                                               np.NPY_CFLOAT, self.data_ptr)
+        return ndarray
+
+    def __dealloc__(self):
+        """ Frees the array. This is called by Python when all the
+        references to the object are gone. """
+        free(<void*>self.data_ptr)
+# 1}}}
+cdef class ArrayWrapper_CD:                                # {{{1
+    cdef void* data_ptr
+    cdef int size
+
+    cdef set_data(self, int size, void* data_ptr):
+        """ Set the data of the array
+
+        This cannot be done in the constructor as it must recieve C-level
+        arguments.
+
+        Parameters:
+        -----------
+        size: int
+            Length of the array.
+        data_ptr: void*
+            Pointer to the data            
+
+        """
+        self.data_ptr = data_ptr
+        self.size = size
+
+    def __array__(self):
+        """ Here we use the __array__ method, that is called when numpy
+            tries to get an array from the object."""
+        cdef np.npy_intp shape[1]
+        shape[0] = <np.npy_intp> self.size
+        # Create a 1D array, of length 'size'
+        ndarray = np.PyArray_SimpleNewFromData(1, shape,
+                                               np.NPY_CDOUBLE, self.data_ptr)
+        return ndarray
+
+    def __dealloc__(self):
+        """ Frees the array. This is called by Python when all the
+        references to the object are gone. """
+        free(<void*>self.data_ptr)
+# 1}}}
 def File(char *filename, 
          char *mode    ):
     cdef int  Max_Matrices_Per_OP4 = 100
@@ -188,11 +356,16 @@ def File(char *filename,
 def Load(op4_handle,    # in, as created by File()
          int n_mat=1 ,  # in, number of matrices to return
          int n_skip=0): # in, number of matrices to skip before loading
-    cdef FILE *fp
-    cdef char line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
-    cdef int  *unused
+    cdef FILE   *fp
+    cdef char    line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
+    cdef int     size
+    cdef int    *unused
     cdef str_t  *unused_s
-    cdef double DTEMP[1000]   # testing only!
+    cdef float  *array_RS
+    cdef float  *array_CS
+    cdef double *array_RD
+    cdef double *array_CD
+    cdef np.ndarray ndarray
     """ 
     Skip over the first n_skip matrices then load n_mat matrices from the 
     previously opened op4 file.
@@ -231,8 +404,7 @@ def Load(op4_handle,    # in, as created by File()
     print(' open successful')
     for i in range(n_skip, n_skip+n_mat):
         complx = False
-        if op4_handle['type'][i] > 2:
-            complx = True
+        if op4_handle['type'][i] > 2: complx = True
         print('%s complx=%d' % (op4_handle['name'][i], complx))
         if op4_handle['storage'][i]:
             print('%s is sparse, skipping for now' % (op4_handle['name'][i]))
@@ -252,14 +424,13 @@ def Load(op4_handle,    # in, as created by File()
                 fmt_str   = fmt_one*nNum_cols
                 print('fmt_str=[%s]' % (fmt_str))
 
-            for c in range(1, op4_handle['nCol'][i]+1):
-                if filetype == 1: # text
-                    if op4_handle['storage'][i]:     # sparse
-                        pass
-                    else:                            # dense
-                        pass
-                        n_nnz = op4_read_col_t(fp, 
-                                   c, 
+            if filetype == 1: # text
+                if op4_handle['storage'][i]:     # sparse
+                    pass
+                else:                            # dense
+                    size = op4_handle['nRow'][i] * op4_handle['nCol'][i]
+                    if   op4_handle['type'][i] == 1: 
+                        array_RS = op4_load_RS(fp, 
                                    op4_handle['nRow'][i], 
                                    op4_handle['nCol'][i], 
                                    fmt_str, 
@@ -268,24 +439,88 @@ def Load(op4_handle,    # in, as created by File()
                                    complx    , # in  0=real   1=complex     
                                    unused    , # in/out index m.S (if sp1,2)
                                    unused_s  , # out string data (if sp1,2) 
-                                   unused    , # in/out index m.N (sp 1,2)  
-                                  &DTEMP[(c-1)*op4_handle['nRow'][i]*NPT])
+                                   unused    ) # in/out index m.N (sp 1,2)  
 
-                else:             # binary
-                    if op4_handle['storage'][i]:     # sparse
-                        pass
-                    else:                            # dense
-                        pass
+                        array_wrapper_RS = ArrayWrapper_RS()
+                        array_wrapper_RS.set_data(size, <void*> array_RS) 
+                        ndarray = np.array(array_wrapper_RS, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_RS
+                        Py_INCREF(array_wrapper_RS)
 
+                    elif op4_handle['type'][i] == 2: 
+                        array_RD = op4_load_RD(fp, 
+                                   op4_handle['nRow'][i], 
+                                   op4_handle['nCol'][i], 
+                                   fmt_str, 
+                                   col_width,
+                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                   complx    , # in  0=real   1=complex     
+                                   unused    , # in/out index m.S (if sp1,2)
+                                   unused_s  , # out string data (if sp1,2) 
+                                   unused    ) # in/out index m.N (sp 1,2)  
+                        array_wrapper_RD = ArrayWrapper_RD()
+                        array_wrapper_RD.set_data(size, <void*> array_RD) 
+                        ndarray = np.array(array_wrapper_RD, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_RD
+                        Py_INCREF(array_wrapper_RD)
 
-def load(int size):
+                    elif op4_handle['type'][i] == 3: 
+                        array_CS = op4_load_RS(fp, 
+                                   op4_handle['nRow'][i], 
+                                   op4_handle['nCol'][i], 
+                                   fmt_str, 
+                                   col_width,
+                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                   complx    , # in  0=real   1=complex     
+                                   unused    , # in/out index m.S (if sp1,2)
+                                   unused_s  , # out string data (if sp1,2) 
+                                   unused    ) # in/out index m.N (sp 1,2)  
+                        array_wrapper_CS = ArrayWrapper_CS()
+                        array_wrapper_CS.set_data(size, <void*> array_CS) 
+                        ndarray = np.array(array_wrapper_CS, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_CS
+                        Py_INCREF(array_wrapper_CS)
+
+                    elif op4_handle['type'][i] == 4: 
+                        array_CD = op4_load_RD(fp, 
+                                   op4_handle['nRow'][i], 
+                                   op4_handle['nCol'][i], 
+                                   fmt_str, 
+                                   col_width,
+                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                   complx    , # in  0=real   1=complex     
+                                   unused    , # in/out index m.S (if sp1,2)
+                                   unused_s  , # out string data (if sp1,2) 
+                                   unused    ) # in/out index m.N (sp 1,2)  
+                        array_wrapper_CD = ArrayWrapper_CD()
+                        array_wrapper_CD.set_data(size, <void*> array_CD) 
+                        ndarray = np.array(array_wrapper_CD, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_CD
+                        Py_INCREF(array_wrapper_CD)
+
+                    else:
+                        print('op4.Load type failure  %s: %d' % (
+                            op4_handle['name'][i], op4_handle['type'][i]))
+                        raise IOError
+
+                    ndarray = np.reshape(ndarray, (op4_handle['nRow'][i],op4_handle['nCol'][i])) 
+
+                    return ndarray
+
+            else:             # binary
+                if op4_handle['storage'][i]:     # sparse
+                    pass
+                else:                            # dense
+                    pass
+
+def load2(int size):
     """ Python binding of the 'compute' function in 'libop4.c' that does
         not copy the data allocated in C.
     """
     cdef float *array
     cdef np.ndarray ndarray
     # Call the C function
-    array = op4_load(size)
+    array = op4_load2(size)
 
     array_wrapper = ArrayWrapper()
     array_wrapper.set_data(size, <void*> array) 
