@@ -1,5 +1,6 @@
 import os
 import sys
+from numpy import array
 
 from tables.oes import *  # OES
 from tables.oug import *  # OUG
@@ -7,6 +8,38 @@ from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
 
 class EndOfFileError(Exception):
     pass
+
+class ComplexEigenvalues(object):
+    def __init__(self,iSubcase):
+        #self.rootNumber = []
+        self.iSubcase = iSubcase
+        self.extractionOrder = {}
+        self.eigenvalues = {}
+        self.cycles  = {}
+        self.damping = {}
+
+    def isReal(self):
+        return False
+    def isComplex(self):
+        return True
+
+    def addF06Data(self,data):
+        for line in data:
+            (rootNum,extractOrder,eigr,eigi,cycle,damping) = line
+            self.extractionOrder[rootNum] = extractOrder
+            self.eigenvalues[rootNum] = array([eigr,eigi])
+            self.cycles[rootNum]      = cycle
+            self.damping[rootNum]     = damping
+
+    def __repr__(self):
+        msg  = '%-7s %15s %15s %10s %10s %10s\n' %('RootNum','ExtractionOrder','Eigenvalue','','Cycles','Damping')
+        msg += '%-7s %15s %15s %10s\n' %('','','Real','Imaginary')
+        for rootNum,extractOrder in sorted(self.extractionOrder.items()):
+            eigenvalue = self.eigenvalues[rootNum]
+            cycle      = self.cycles[rootNum]
+            damping    = self.damping[rootNum]
+            msg += '%-7s %15s %15s %10s %10s %10s\n' %(rootNum,extractOrder,eigenvalue[0],eigenvalue[1],cycle,damping)
+        return msg
 
 class RealEigenvalues(object):
     def __init__(self,iSubcase):
@@ -19,9 +52,13 @@ class RealEigenvalues(object):
         self.generalizedMass = {}
         self.generalizedStiffness = {}
 
+    def isReal(self):
+        return True
+    def isComplex(self):
+        return False
+
     def addF06Data(self,data):
         for line in data:
-            #print line
             (modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
             self.extractionOrder[modeNum] = extractOrder
             self.eigenvalues[modeNum] = eigenvalue
@@ -69,23 +106,26 @@ class F06Reader(OES,OUG):
 #                               A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S
 #                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S
 #------------------------
+#                                    R O T O R   D Y N A M I C S   S U M M A R Y
+#                              R O T O R   D Y N A M I C S   M A S S   S U M M A R Y
+#                           E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (COMPLEX LANCZOS METHOD) 
+#------------------------
 
           'R E A L   E I G E N V A L U E S':self.getRealEigenvalues,
-
+          'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
+          'E L E M E N T   S T R A I N   E N E R G I E S':self.getElementStrainEnergies,
           'D I S P L A C E M E N T   V E C T O R':self.displacement,
+          'C O M P L E X   D I S P L A C E M E N T   V E C T O R':self.readComplexDisplacement,
           'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T':self.spcForces,
           'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.mpcForces,
           #'G R I D   P O I N T   F O R C E   B A L A N C E':self.gridPointForces,
+
           #'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.quadStress,
-          #'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.triStress,
-          
+          'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.quadStress,
           'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.quadCompositeStress,
-
-
           'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )':self.barStress,
           'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )':self.solidStressHexa,
           'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )':self.solidStressPenta,
-          'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.quadStress,
           #'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )'
           'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.solidStressTetra,
           'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.triStress,
@@ -101,7 +141,7 @@ class F06Reader(OES,OUG):
         self.storedLines = []
 
         self.disp = {}
-        self.realEigenvalues = {}
+        self.eigenvalues = {}
         self.eigenvectors = {}
 
         self.SpcForces = {}
@@ -122,7 +162,7 @@ class F06Reader(OES,OUG):
             log = loggerObj.startLog(word) # or info
         self.log = log
 
-    def gridPointSingularities(self):
+    def gridPointSingularities(self):  # @todo not done
         """
                     G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
         POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
@@ -132,7 +172,7 @@ class F06Reader(OES,OUG):
         """
         pass
 
-    def maxSpcForces(self):
+    def maxSpcForces(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
@@ -140,7 +180,7 @@ class F06Reader(OES,OUG):
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
 
-    def maxDisplacements(self):
+    def maxDisplacements(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
@@ -148,7 +188,7 @@ class F06Reader(OES,OUG):
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
     
-    def maxAppliedLoads(self):
+    def maxAppliedLoads(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
@@ -156,19 +196,25 @@ class F06Reader(OES,OUG):
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
 
-    def readGridWeight(self):
+    def readGridWeight(self):  # @todo not done
         line = ''
         while 'PAGE' not in line:
             line = self.infile.readline()[1:]
+            self.i+=1
         ###
 
     def readSubcaseNameID(self):
         subcaseName = self.storedLines[-3].strip()
-        iSubcase   = self.storedLines[-2].strip()[1:]
-        iSubcase = int(iSubcase.strip('SUBCASE '))
-        #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
-
+        #print "subcaseLine = |%r|" %(subcaseName)
+        if subcaseName=='':
+            iSubcase = 1
+        else:
+            iSubcase   = self.storedLines[-2].strip()[1:]
+            iSubcase = int(iSubcase.strip('SUBCASE '))
+            #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
+        ###
         transient   = self.storedLines[-1].strip()
+        isSort1 = False
         if transient:
             transWord,transValue = transient.split('=')
             transWord = transWord.strip()
@@ -183,6 +229,9 @@ class F06Reader(OES,OUG):
                 analysisCode = 2
             elif transWord=='FREQ': ## @todo check name
                 analysisCode = 5
+            elif transWord=='POINT-ID':
+                isSort1 = True
+                analysisCode = None
             else:
                 raise NotImplementedError('transientWord=|%r| is not supported...' %(transWord))
             ###
@@ -190,7 +239,58 @@ class F06Reader(OES,OUG):
             transient = None
             analysisCode = 1
 
-        return (subcaseName,iSubcase,transient,analysisCode)
+        return (subcaseName,iSubcase,transient,analysisCode,isSort1)
+
+    def readComplexDisplacement(self): # @todo: make a complexDisplacement object
+        """
+          BACKWARD WHIRL                                                                                                                
+                                                                                                                 SUBCASE 2              
+          POINT-ID =       101
+                                           C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                             (MAGNITUDE/PHASE)
+
+          FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3
+        2.000000E+01     G      3.242295E-16   1.630439E-01   1.630439E-01   1.691497E-17   1.362718E-01   1.362718E-01
+                                196.0668        90.0000       180.0000        63.4349       180.0000       270.0000
+        
+        tableCode = 1 (Displacement)
+        formatCode = 3 (Magnitude/Phase)
+        sortBits = [0,1,1]  (Sort1,Real/Imaginary,RandomResponse)
+        analysisCode = 5 (Frequency)
+        sortCode = 2 (Random Response)
+        """
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        headers = self.skip(3)
+        data = []
+
+        dataCode = {'log':self.log,'analysisCode':5,'deviceCode':1,'tableCode':1,'sortCode':2,
+                    'sortBits':[0,1,1],'numWide':8,
+                    'formatCode':3,
+                    #'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
+                    #'dataNames':['mode','eigr','modeCycle'],
+                    #'name':'mode',
+                    #'sCode':0,
+                    #'elementName':'CBAR','elementType':34,'stressBits':stressBits,
+                    }
+        while 1:
+            line  = self.infile.readline()[1:].rstrip('\r\n ')
+            if 'PAGE' in line:
+                break
+            sline = line.strip().split()
+            line2 = self.infile.readline()[1:].rstrip('\r\n ')
+            sline += line2.strip().split()
+            out = [float(sline[0]),sline[1].strip(),float(sline[2]),float(sline[3]),float(sline[4]),
+                                                    float(sline[5]),float(sline[6]),float(sline[7]),
+                                                    float(sline[8]),float(sline[9]),float(sline[10]),
+                                                    float(sline[11]),float(sline[12]),float(sline[13]), ]
+            #print sline
+            #print out
+            data.append(out)
+            self.i+=2
+        ###
+        self.i+=1
+        return
+    
 
     def getRealEigenvalues(self):
         """
@@ -202,18 +302,34 @@ class F06Reader(OES,OUG):
         (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
         
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float])
         
-        #for line in data:
-            #print line
-        #print data
-        #return
-        if iSubcase in self.realEigenvalues:
-            self.realEigenvalues[iSubcase].addF06Data(data)
+        if iSubcase in self.eigenvalues:
+            self.eigenvalues[iSubcase].addF06Data(data)
         else:
-            self.realEigenvalues[iSubcase] = RealEigenvalues(iSubcase)
-            self.realEigenvalues[iSubcase].addF06Data(data)
+            self.eigenvalues[iSubcase] = RealEigenvalues(iSubcase)
+            self.eigenvalues[iSubcase].addF06Data(data)
+        self.iSubcases.append(iSubcase)
+
+    def getComplexEigenvalues(self):
+        """
+                               C O M P L E X   E I G E N V A L U E   S U M M A R Y
+        ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
+         NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
+             1           6          0.0              6.324555E+01          1.006584E+01          0.0
+             2           5          0.0              6.324555E+01          1.006584E+01          0.0
+        """
+        #(subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        iSubcase = 1  # @todo fix this...
+
+        headers = self.skip(2)
+        data = self.readTable([int,int,float,float, float,float])
+
+        if iSubcase in self.eigenvalues:
+            self.eigenvalues[iSubcase].addF06Data(data)
+        else:
+            self.eigenvalues[iSubcase] = ComplexEigenvalues(iSubcase)
+            self.eigenvalues[iSubcase].addF06Data(data)
         self.iSubcases.append(iSubcase)
 
     def getRealEigenvectors(self,marker):
@@ -249,7 +365,7 @@ class F06Reader(OES,OUG):
         #iSubcase = self.storedLines[-2].strip()[1:]
         #iSubcase = int(iSubcase.strip('SUBCASE '))
         #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':7,'sortCode':0,
@@ -263,18 +379,77 @@ class F06Reader(OES,OUG):
                     }
 
         data = self.readTable([int,str,float,float,float,float,float,float])
-        #for line in data:
-        #    print line
-        #pass
+
         if iSubcase in self.eigenvectors:
             self.eigenvectors[iSubcase].readF06Data(dataCode,data)
         else:
             self.eigenvectors[iSubcase] = eigenVectorObject(dataCode,iSubcase,iMode)
             self.eigenvectors[iSubcase].readF06Data(dataCode,data)
         ###
+    
+    def getElementStrainEnergies(self):
+        """
+        EIGENVALUE = -3.741384E-04
+        CYCLES =  3.078479E-03
+                                           E L E M E N T   S T R A I N   E N E R G I E S
+ 
+                ELEMENT-TYPE = QUAD4               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =  -1.188367E-05
+                   MODE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =  -1.188367E-05
+ 
+                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
+                                             1         -5.410134E-08                -0.0929             -4.328107E-05
+                                             2         -3.301516E-09                -0.0057             -2.641213E-06
+        """
+        iSubcase = 1 ## @todo not correct
+        cycles = self.storedLines[-1][1:].strip()
+        cycles = float(cycles.split('=')[1])
+
+        eigenvalue = self.storedLines[-2][1:].strip()
+        eigenvalue = float(eigenvalue.split('=')[1])
+        print "eigenvalue=%s cycle=%s" %(eigenvalue,cycles)
+
+        eTypeLine = self.skip(2)[1:]
+        modeLine  = self.skip(1)[1:]
+        eType=eTypeLine[30:40];  totalEnergy1=eTypeLine[99:114]
+        iMode=modeLine[24:40];   totalEnergy2=modeLine[99:114]
+        print "eType=%s totalEnergy1=|%s|" %(eType,totalEnergy1)
+        print "iMode=%s totalEnergy2=|%s|" %(iMode,totalEnergy2)
+        headers = self.skip(2)
+
+        data = []
+        while 1:
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            self.i+=1
+            if 'PAGE' in line:
+                break
+            sline = line.strip().split()
+            if sline==[]:
+                break
+            #print sline
+            eid = int(sline[0])
+            strainEnergy = float(sline[1])
+            percentTotal = float(sline[2])
+            strainEnergyDensity = float(sline[3])
+            out = (eid,strainEnergy,percentTotal,strainEnergyDensity)
+            data.append(out)
+        ###
+
+        if sline==[]:
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            self.i+=1
+            print line
+
+        return
+        if iSubcase in self.iSubcases:
+            self.strainEnergyDensity[iSubcase].readF06Data(data,transient)
+        else:
+            sed = strainEnergyDensity(data,transient)
+            sed.readF06Data(data,transient)
+            self.strainEnergyDensity[iSubcase] = sed
+        ###
 
     def tempGradientsFluxes(self):
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
@@ -292,6 +467,7 @@ class F06Reader(OES,OUG):
         Format = [int,str,float,float,float, float,float,float]
         while 1:
             line = self.infile.readline()[1:].rstrip('\r\n ')
+            self.i+=1
             if 'PAGE' in line:
                 return data
             sline = [line[0:15],line[15:24].strip(),line[24:44],line[44:61],line[61:78],line[78:95],line[95:112],line[112:129]]
@@ -311,8 +487,8 @@ class F06Reader(OES,OUG):
             ###
         return out
     
-    def spcForces(self):
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+    def spcForces(self):  # @todo not done
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         return
         #print "headers = %s" %(headers)
@@ -326,7 +502,7 @@ class F06Reader(OES,OUG):
         #print self.SpcForces[iSubcase]
         
     def mpcForces(self):
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
@@ -344,9 +520,9 @@ class F06Reader(OES,OUG):
         data = []
         while sline:
             sline = self.infile.readline()[1:].strip().split()
+            self.i+=1
             if 'PAGE' in sline:
                 return data
-            self.i+=1
             sline = self.parseLine(sline,Format)
             if sline is None:
                 return data
@@ -445,7 +621,7 @@ class F06Reader(OES,OUG):
         msg = ''
         data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
         #data = [self.disp,self.solidStress,self.temperature,self.barStress,self.isoStress]
-        data = [self.stress,self.realEigenvalues,self.eigenvectors]
+        data = [self.stress,self.eigenvalues,self.eigenvectors]
         self.iSubcases = list(set(self.iSubcases))
         for iSubcase in self.iSubcases:
             for result in data:
@@ -456,7 +632,8 @@ class F06Reader(OES,OUG):
         return msg
 
 if __name__=='__main__':
-    f06 = F06Reader('ssb.f06')
+    f06Name = sys.argv[1]
+    f06 = F06Reader(f06Name)
     f06.ReadF06()
-    #print f06
+    print f06
 

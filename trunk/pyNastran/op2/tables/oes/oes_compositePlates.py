@@ -51,7 +51,7 @@ class compositePlateStressObject(stressObject):
         """
         if transient is None:
             #for line in data:
-            #    print line
+                #print line
             #sys.exit()
             for line in data:
                 #print line
@@ -83,7 +83,7 @@ class compositePlateStressObject(stressObject):
                     raise NotImplementedError('line=%s not supported...' %(line))
             return
         #for line in data:
-        #    print line
+            #print line
         raise NotImplementedError('transient results not supported')
 
     def addNewTransient(self):

@@ -20,7 +20,7 @@ class OUG(object):
         sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':1,
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8}
@@ -51,7 +51,7 @@ class OUG(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         #print transient
         
         headers = self.skip(2)

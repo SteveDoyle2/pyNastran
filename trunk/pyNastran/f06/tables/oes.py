@@ -25,7 +25,7 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -85,7 +85,7 @@ class OES(object):
         
         elementType = 33 b/c not bilinear
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
@@ -121,7 +121,7 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -181,7 +181,7 @@ class OES(object):
                        4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(3)
         #print "headers = %s" %(headers)
         
@@ -251,7 +251,7 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
