@@ -27,12 +27,56 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>     /* isdigit, isalpha */
 #include "op4.h"
 
-float *op4_load(int size) {
+float *op4_load2(int size) {
     int* array;
     int i;
     array = malloc(sizeof(int)*size);
     for (i=0; i<size; i++) {
 	    array[i] = i;
+    }
+    return array;
+}
+
+float *op4_load_RS(FILE   *fp         ,
+                  int     nRow       ,  /* in  # rows    in matrix        */
+                  int     nCol       ,  /* in  # columns in matrix        */
+                  char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
+                  int     col_width  ,  /* in  # characters in format str */
+                  int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
+                  int     complx     ,  /* in  0=real   1=complex         */
+                  int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
+                  str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
+                  int    *N_index    )  /* in/out          (s_o) = 1,2    */
+{
+    float *array;
+    int i, size;
+    size = nRow*nCol;
+    if (complx) size *= 2;
+    array = malloc(sizeof(float)*size);
+    for (i=0; i<size; i++) {
+	    array[i] = i * 50;
+    }
+    return array;
+}
+
+float *op4_load_RD(FILE   *fp         ,
+                  int     nRow       ,  /* in  # rows    in matrix        */
+                  int     nCol       ,  /* in  # columns in matrix        */
+                  char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
+                  int     col_width  ,  /* in  # characters in format str */
+                  int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
+                  int     complx     ,  /* in  0=real   1=complex         */
+                  int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
+                  str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
+                  int    *N_index    )  /* in/out          (s_o) = 1,2    */
+{
+    double *array;
+    int i, size;
+    size = nRow*nCol;
+    if (complx) size *= 2;
+    array = malloc(sizeof(double)*size);
+    for (i=0; i<size; i++) {
+	    array[i] = i * 50;
     }
     return array;
 }
