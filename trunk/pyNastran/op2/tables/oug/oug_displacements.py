@@ -263,6 +263,23 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def getHeaders(self):
         return (self.mainHeaders,self.headers)
 
+    def writeF06(self,header,pageStamp,pageNum=1):
+        msg = ['                                             D I S P L A C E M E N T   V E C T O R',
+               ' ',
+               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3']
+        for nodeID,translation in sorted(self.translations.items()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+            msg.append('%14i %6s     %13E  %13E  %13E  %13E  %13E  %13E' %(nodeID,gridType,dx,dy,dz,rx,ry,rz))
+        ###
+        msg.append(pageStamp+str(pageNum))
+        msg.append('\n')
+        return '\n'.join(msg)
+            
+        
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()
