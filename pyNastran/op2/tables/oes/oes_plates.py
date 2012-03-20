@@ -37,7 +37,7 @@ class plateStressObject(stressObject):
         #print "self.code = ",self.code
         if self.code == [1,0,1]:
             #self.isVonMises = True
-            assert self.isFiberDistance() == True,self.stressBits
+            assert self.isFiberDistance() == False,self.stressBits
             assert self.isVonMises()      == True,self.stressBits
         elif self.code == [1,0,0]:
             assert self.isFiberDistance() == False,self.stressBits
@@ -291,6 +291,124 @@ class plateStressObject(stressObject):
                             ###
                         msg += '\n'
                     ###
+                ###
+            ###
+        ###
+        return msg
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            raise NotImplementedError()
+
+        if self.isVonMises() and self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES']
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES']
+        elif self.isVonMises():
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES']
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES']
+        elif self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       MAX SHEAR']
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        MAX SHEAR']
+        else:
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       MAX SHEAR']
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        MAX SHEAR']
+
+
+
+        triMsg = []
+        if 'CQUAD4' in self.eType.values():
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
+            isQuad = True
+        else:
+            quadMsg = []
+            isQuad = False
+
+        if 'CTRIA3' in self.eType.values():
+            isTri = True
+            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
+        else:
+            isTri = False
+            triMsg = []
+
+        for eid,oxxNodes in sorted(self.oxx.items()):
+            eType = self.eType[eid]
+            if eType in 'CQUAD4':
+                out = self.writeF06_Quad4(eid,oxxNodes)
+                quadMsg.append(out[:-1])
+            elif eType in 'CTRIA3':
+                out = self.writeF06_Tri3(eid,oxxNodes)
+                triMsg.append(out[:-1])
+            else:
+                raise NotImplementedError('eType = |%r|' %(eType))
+            ###
+        ###
+        if isQuad:
+            quadMsg.append(pageStamp+str(pageNum))
+            quadMsg.append('\n')
+            pageNum+=1
+        if isTri:
+            triMsg.append(pageStamp+str(pageNum))
+            triMsg.append('\n')
+
+        #print "quadMsg = ",quadMsg
+        #print "triMsg = ",triMsg
+        msg = '\n'.join(quadMsg+triMsg)
+        return (msg,pageNum+1)
+
+    def writeF06_Quad4(self,eid,oxxNodes):
+        msg = ''
+        k = oxxNodes.keys()
+        k.sort()
+        k.pop(-1)
+        for nid in ['C']+k:
+            for iLayer in range(len(self.oxx[eid][nid])):
+                fd    = self.fiberCurvature[eid][nid][iLayer]
+                oxx   = self.oxx[eid][nid][iLayer]
+                oyy   = self.oyy[eid][nid][iLayer]
+                txy   = self.txy[eid][nid][iLayer]
+                angle = self.angle[eid][nid][iLayer]
+                major = self.majorP[eid][nid][iLayer]
+                minor = self.minorP[eid][nid][iLayer]
+                ovm = self.ovmShear[eid][nid][iLayer]
+
+                if nid=='C' and iLayer==0:
+                    msg += '0  %8i %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %(eid,'CEN/4',fd,oxx,oyy,txy,angle,major,minor,ovm)
+                elif iLayer==0:
+                    msg += '   %8s %8i  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('',nid,    fd,oxx,oyy,txy,angle,major,minor,ovm)
+                elif iLayer==1:
+                    msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n\n' %('','',      fd,oxx,oyy,txy,angle,major,minor,ovm)
+                else:
+                    raise Exception('Invalid option for cquad4')
+                ###
+            ###
+        ###
+        return msg
+
+    def writeF06_Tri3(self,eid,oxxNodes):
+        msg = ''
+        for nid in sorted(oxxNodes):
+            for iLayer in range(len(self.oxx[eid][nid])):
+                fd    = self.fiberCurvature[eid][nid][iLayer]
+                oxx   = self.oxx[eid][nid][iLayer]
+                oyy   = self.oyy[eid][nid][iLayer]
+                txy   = self.txy[eid][nid][iLayer]
+                angle = self.angle[eid][nid][iLayer]
+                major = self.majorP[eid][nid][iLayer]
+                minor = self.minorP[eid][nid][iLayer]
+                ovm = self.ovmShear[eid][nid][iLayer]
+
+                if iLayer==0:
+                    msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm)
+                else:
+                    msg += '   %6s   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %('',fd,oxx,oyy,txy,angle,major,minor,ovm)
                 ###
             ###
         ###
@@ -566,6 +684,124 @@ class plateStrainObject(strainObject):
 
                         #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
                     ###
+                ###
+            ###
+        ###
+        return msg
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            raise NotImplementedError()
+
+        if self.isVonMises() and self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES']
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES']
+        elif self.isVonMises():
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES']
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES']
+        elif self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       MAX SHEAR']
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        MAX SHEAR']
+        else:
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       MAX SHEAR']
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        MAX SHEAR']
+
+
+
+        triMsg = []
+        if 'CQUAD4' in self.eType.values():
+            quadMsg = header+['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
+            isQuad = True
+        else:
+            quadMsg = []
+            isQuad = False
+
+        if 'CTRIA3' in self.eType.values():
+            isTri = True
+            triMsg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
+        else:
+            isTri = False
+            triMsg = []
+
+        for eid,exxNodes in sorted(self.exx.items()):
+            eType = self.eType[eid]
+            if eType in 'CQUAD4':
+                out = self.writeF06_Quad4(eid,exxNodes)
+                quadMsg.append(out[:-1])
+            elif eType in 'CTRIA3':
+                out = self.writeF06_Tri3(eid,exxNodes)
+                triMsg.append(out[:-1])
+            else:
+                raise NotImplementedError('eType = |%r|' %(eType))
+            ###
+        ###
+        if isQuad:
+            quadMsg.append(pageStamp+str(pageNum))
+            quadMsg.append('\n')
+            pageNum+=1
+        if isTri:
+            triMsg.append(pageStamp+str(pageNum))
+            triMsg.append('\n')
+
+        #print "quadMsg = ",quadMsg
+        #print "triMsg = ",triMsg
+        msg = '\n'.join(quadMsg+triMsg)
+        return (msg,pageNum+1)
+
+    def writeF06_Quad4(self,eid,exxNodes):
+        msg = ''
+        k = exxNodes.keys()
+        k.sort()
+        k.pop(-1)
+        for nid in ['C']+k:
+            for iLayer in range(len(self.exx[eid][nid])):
+                fd    = self.fiberCurvature[eid][nid][iLayer]
+                exx   = self.exx[eid][nid][iLayer]
+                eyy   = self.eyy[eid][nid][iLayer]
+                exy   = self.exy[eid][nid][iLayer]
+                angle = self.angle[eid][nid][iLayer]
+                major = self.majorP[eid][nid][iLayer]
+                minor = self.minorP[eid][nid][iLayer]
+                evm   = self.evmShear[eid][nid][iLayer]
+
+                if nid=='C' and iLayer==0:
+                    msg += '0  %8i %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %(eid,'CEN/4',  fd,exx,eyy,exy,angle,major,minor,evm)
+                elif iLayer==0:
+                    msg += '   %8s %8i  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('',nid,       fd,exx,eyy,exy,angle,major,minor,evm)
+                elif iLayer==1:
+                    msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n\n' %('','',      fd,exx,eyy,exy,angle,major,minor,evm)
+                else:
+                    raise Exception('Invalid option for cquad4')
+                ###
+            ###
+        ###
+        return msg
+
+    def writeF06_Tri3(self,eid,exxNodes):
+        msg = ''
+        for nid in sorted(exxNodes):
+            for iLayer in range(len(self.exx[eid][nid])):
+                fd    = self.fiberCurvature[eid][nid][iLayer]
+                exx   = self.exx[eid][nid][iLayer]
+                eyy   = self.eyy[eid][nid][iLayer]
+                exy   = self.exy[eid][nid][iLayer]
+                angle = self.angle[eid][nid][iLayer]
+                major = self.majorP[eid][nid][iLayer]
+                minor = self.minorP[eid][nid][iLayer]
+                evm   = self.evmShear[eid][nid][iLayer]
+
+                if iLayer==0:
+                    msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
+                else:
+                    msg += '   %6s   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %('', fd,exx,eyy,exy,angle,major,minor,evm)
                 ###
             ###
         ###
