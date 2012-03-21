@@ -11,7 +11,7 @@ from f06Writer import F06Writer
 class EndOfFileError(Exception):
     pass
 
-class F06Reader(OES,OUG):
+class F06Reader(OES,OUG,F06Writer):
     def __init__(self,f06name):
         self.f06name = f06name
         self.i = 0

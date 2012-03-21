@@ -71,7 +71,6 @@ def makeEnd():
              ' \n']
     return ''.join(lines)
 
-
 class F06Writer(object):
     def __init__(self,model='tria3'):
         self.setF06Name(model)
@@ -80,10 +79,13 @@ class F06Writer(object):
         self.model = model
         self.f06Name = '%s.f06.out' %(self.model)
 
-    def loadOp2(self):
+    def loadOp2(self,isTesting=False):
+        if isTesting==False:  ## @todo implement in way that doesnt require a variable (e.g. check parent class)
+            raise Exception("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
         from pyNastran.op2.op2 import OP2
         self.op2Name = model+'.op2'
-        op2 = OP2(self.op2Name)        op2.readOP2()
+        op2 = OP2(self.op2Name)
+        op2.readOP2()
 
         # oug
         self.eigenvectors  = op2.eigenvectors
@@ -157,7 +159,7 @@ if __name__=='__main__':
     
     model = sys.argv[1]
     f06 = F06Writer(model)
-    f06.loadOp2()
+    f06.loadOp2(isTesting=True)
     f06.writeF06()
 
 

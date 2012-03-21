@@ -9,9 +9,10 @@ from op2Errors import *
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
+from pyNastran.f06.f06Writer import F06Writer
 
 class OP2(BDF,  # BDF methods
-          FortranFile,Op2Codes,GeometryTables,ResultTable):
+          FortranFile,Op2Codes,GeometryTables,ResultTable,F06Writer):
 
     def setSubcases(self,iSubcases=[]):
         """
