@@ -76,9 +76,39 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
+    def writeF06(self,header,pageStamp,pageNum=1):
+        """
+        EIGENVALUE =  6.158494E+07
+            CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
+
+        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+               1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+            2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+            2003      G      0.0            0.0            0.0            0.0            0.0            0.0
+        """
+        msg = []
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+            msg += header
+            freq = self.eigrs[i]
+            msg.append('%16s = %12E' %('EIGENVALUE',freq))
+            msg.append('%16s = %12E          R E A L   E I G E N V E C T O R   N O . %10i\n ' %('CYCLES',self.modeCycle,iMode))
+            msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3')
+            for nodeID,displacement in sorted(eigVals.items()):
+                rotation = self.rotations[iMode][nodeID]
+                gridType = self.gridTypes[nodeID]
+                (dx,dy,dz) = displacement
+                (rx,ry,rz) = rotation
+                msg.append('%14i %6s     %13E  %13E  %13E  %13E  %13E  %13E' %(nodeID,gridType,dx,dy,dz,rx,ry,rz))
+            ###
+            msg.append(pageStamp+str(pageNum))
+            msg.append('')
+            pageNum += 1
+        ###
+        out = '\n'.join(msg)
+        return (out,pageNum)
+
     def __repr__(self):
-        msg = '---EIGENVECTORS---\n'
-        
+        msg = '---EIGENVECTORS---\n'        
         msg += self.printDataMembers()
         name = self.dataCode['name']
 
@@ -88,19 +118,19 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for i,(mode,eigVals) in enumerate(sorted(self.translations.items())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             freq = self.eigrs[i]
-            msg += '%s = %g\n' %(name,mode)
+            msg += '%s = %g\n' %(name,iMode)
             msg += 'eigenvalueReal = %g\n' %(freq)
             #msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
             for nodeID,displacement in sorted(eigVals.items()):
-                rotation = self.rotations[mode][nodeID]
-                Type = self.gridTypes[nodeID]
+                rotation = self.rotations[iMode][nodeID]
+                gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
-                msg += '%-8i %8s ' %(nodeID,Type)
+                msg += '%-8i %8s ' %(nodeID,gridType)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
@@ -123,6 +153,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
              7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
     def __init__(self,dataCode,iSubcase,mode):
+        raise Exception('is this used???')
         scalarObject.__init__(self,dataCode,iSubcase)
         #self.caseVal = mode
         #print "mode = %s" %(mode)
