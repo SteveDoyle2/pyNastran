@@ -92,7 +92,7 @@ class F06Writer(object):
         pageStamp = makeStamp(Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
-        #sys.exit()
+
         pageNum = 1
         for case,result in sorted(op2.eigenvectors.items()): # has a special header
             header = ['0                                                                                                            SUBCASE %i'%(case)]
@@ -107,34 +107,23 @@ class F06Writer(object):
             f.write(msg)
             pageNum +=1
 
-        # bar, rod, beam
+        # beam, shear
         # not done...
-
-        # plates
-        for case,result in sorted(op2.plateStrain.items()):
-            header[1] = '0                                                                                                            SUBCASE %i'%(case)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
-            f.write(msg)
-            pageNum +=1
-
-        for case,result in sorted(op2.plateStress.items()):
-            header[1] = '0                                                                                                            SUBCASE %i'%(case)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
-            f.write(msg)
-            pageNum +=1
         
-        # composite plates
-        for case,result in sorted(op2.compositePlateStress.items()):
-            header[1] = '0                                                                                                            SUBCASE %i'%(case)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
-            f.write(msg)
-            pageNum +=1
+        resTypes = [op2.rodStress,op2.rodStrain,
+                    op2.barStress,op2.barStrain,
+                    op2.plateStress,op2.plateStrain,
+                    op2.compositePlateStress,op2.compositePlateStrain,
+                    ]
 
-        for case,result in sorted(op2.compositePlateStrain.items()):
-            header[1] = '0                                                                                                            SUBCASE %i'%(case)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
-            f.write(msg)
-            pageNum +=1
+        for resType in resTypes:
+            for case,result in sorted(resType.items()):
+                header[1] = '0                                                                                                            SUBCASE %i'%(case)
+                (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+                f.write(msg)
+                pageNum +=1
+            ###
+        ###
 
         f.write(makeEnd())
         f.close()

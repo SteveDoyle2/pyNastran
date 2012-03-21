@@ -20,8 +20,7 @@ Overall Notes
 Overall BDF
    - reworked format of bdf_crossReferencing.txt to be more like
      bdf_readWrite.txt
-   - added test code that compares cards values from one run to the next.
-     This helped find lots of bugs.
+   - added test code that compares cards values from one run to the next
    - added support for THRU-BY on certain cards (QBDY3, ???)
    - added new custom Exceptions to make errors messages clearer
 
@@ -65,22 +64,42 @@ Overall OP2
 
 Added OP2
 
-Overall F06
-   - trashed old f06 reader
-   - added results
+Overall F06 Reader/Writer
+   - rewrote f06 reader
    - poor transient support
    - integrates with OP2 reader
-   - field parsing needs lots of testing
+   - preliminary f06 writer;  It's being tested by reading the op2, writing the
+     f06 and comparing to the expected f06.  It will work with the op2 or f06
+     feeding the writer or a solver/user's own results.
+   - field parsing needs more testing, so beware!
 
-Added F06
+Added F06 Reader
    - displacement (static/transient)
-   - *** complex displacement
-   - temperature  (static/transient)
+   - ***complex displacement
+   - ***temperature  (static/transient)
+
    - solid stress (static/***transient)
       - ctetra
       - cpenta
       - chexa
-   - bar stress (static/transient)
+   - isotropic plate stress/***strain (static/***transient)
+      - ctria3
+      - cquad4
+   - composite plate stress/***strain (static/***transient)
+      - ctria3
+      - cquad4
+
+   - rod stress/strain (static/***transient)
+   - bar stress/***strain (static/transient)
+   - ***beam  stress (static/transient)
+   - ***shear stress (static/transient)
+
+   - eigenvalues  (real/complex)
+   - eigenvectors (real/complex)
+
+Added F06 Writer
+   - displacement (static/***transient)
+   - ***temperature  (static/transient)
 
    - isotropic plate stress/strain (static/***transient)
       - ctria3
@@ -89,24 +108,10 @@ Added F06
       - ctria3
       - cquad4
 
-   - eigenvalues  (real/complex)
-   - eigenvectors (real/complex)
-
-F06 Write Support
-   - displacement (static/***transient)
-   - ***temperature  (static/transient)
-   - ***solid stress (static)
-      - ctetra
-      - cpenta
-      - chexa
-   - ***bar stress (static/transient)
-
-   - isotropic plate stress (static)
-      - ctria3
-      - cquad4
-   - composite plate stress/strain (static)
-      - ctria3
-      - cquad4
+   - rod stress/strain (static/***transient)
+   - bar stress/strain (static/transient)
+   - ***beam  stress (static/transient)
+   - ***shear stress (static/transient)
 
    - ***eigenvalues  (real/complex)
    - eigenvectors (real/***complex)
