@@ -23,12 +23,13 @@ Overall BDF
    - added test code that compares cards values from one run to the next.
      This helped find lots of bugs.
    - added support for THRU-BY on certain cards (QBDY3, ???)
-   - added new custom Exceptions
+   - added new custom Exceptions to make errors messages clearer
 
 BDF API Changes
    - removed obsolete isPrintable and Is methods from BDF class
    - added Mid1(), Mid2(), Mid3(), Mid4() methods for PSHELL.
      Mid() now returns Mid1() or Mid2() depending on the form of the PSHELL
+     Mass() calculated based on mid1 (or mid2 if mid1=None) per QRG
    - Tri-type elements are now TriShells instead of CTRIA3s (same for QUADs, QuadShells)
 
 BDF Bug Fixes
@@ -50,22 +51,22 @@ Added BDF
    - CBUSH, PBUSH, PDAMPT, CFAST, PFAST, CONM1
    - TSTEP, TSTEPNL
    - DLOAD, SLOAD, RLOAD1, RLOAD2
-   - CAERO2, PAERO2,AEFACT
+   - CAERO2, PAERO2, AEFACT
    - CBEND, PBEND, CBEAM3
    - MATS1
-
    - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
-
    - *** TIC
 
 OP2 API Changes
 OP2 Bug Fixes
 Overall OP2
+   - supporting F06 reader/writer
+
 Added OP2
 
 Overall F06
-   - removed old f06 reader
+   - trashed old f06 reader
    - added results
    - poor transient support
    - integrates with OP2 reader
@@ -73,22 +74,42 @@ Overall F06
 
 Added F06
    - displacement (static/transient)
-   - temperature (static/transient)
-   - solid stress (static)
+   - *** complex displacement
+   - temperature  (static/transient)
+   - solid stress (static/***transient)
       - ctetra
       - cpenta
       - chexa
    - bar stress (static/transient)
 
-   - isotropic plate stress
-      - ctria3 (static)
-      - cquad4 (static)
-   - composite plate stress
-      - ***ctria3
-      - cquad4 (static)
+   - isotropic plate stress/strain (static/***transient)
+      - ctria3
+      - cquad4
+   - composite plate stress/strain (static/***transient)
+      - ctria3
+      - cquad4
 
-   - eigenvalues
-   - eigenvectors
+   - eigenvalues  (real/complex)
+   - eigenvectors (real/complex)
+
+F06 Write Support
+   - displacement (static/***transient)
+   - ***temperature  (static/transient)
+   - ***solid stress (static)
+      - ctetra
+      - cpenta
+      - chexa
+   - ***bar stress (static/transient)
+
+   - isotropic plate stress (static)
+      - ctria3
+      - cquad4
+   - composite plate stress/strain (static)
+      - ctria3
+      - cquad4
+
+   - ***eigenvalues  (real/complex)
+   - eigenvectors (real/***complex)
 
 Overall GUI
 Added GUI

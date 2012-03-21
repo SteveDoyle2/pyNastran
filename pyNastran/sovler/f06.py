@@ -8,12 +8,12 @@ from pyNastran.op2.op2 import OP2
 def makeStamp(Title):
     t = date.today()
     months = ['January','February','March','April','May','June','July','August','September','October','November','December']
-    today = '%s %s, %s' %(months[t.month],t.day,t.year)
+    today = '%-9s %s, %s' %(months[t.month],t.day,t.year)
     
     releaseDate = '02/08/12'#pyNastran.__releaseDate__
     releaseDate = ''
     build = 'pyNastran v%s %s' %(pyNastran.__version__,releaseDate)
-    out = '1    %-52s   %20s %-22s PAGE ' %(Title,today,build)
+    out = '1    %-67s %20s  %-22s PAGE ' %(Title,today,build)
     return out
 
 def makePyNastranTitle():
@@ -63,7 +63,7 @@ def makePyNastranTitle():
         n+'* *                                 * *\n',
         n+'* *                                 * *\n',
         n+'* * * * * * * * * * * * * * * * * * * *\n',
-        n+'* * * * * * * * * * * * * * * * * * * *\n']
+        n+'* * * * * * * * * * * * * * * * * * * *\n\n\n']
     return ''.join(lines1+lines2)
 
 def makeEnd():
@@ -87,22 +87,54 @@ class F06Writer(object):
         f = open(f06Name,'wb')
         f.write(makePyNastranTitle())
         
-        pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
-        
+        #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
+        Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
+        pageStamp = makeStamp(Title)
+        #print "pageStamp = |%r|" %(pageStamp)
+        #print "stamp     = |%r|" %(stamp)
+        #sys.exit()
         pageNum = 1
+        for case,result in sorted(op2.eigenvectors.items()): # has a special header
+            header = ['0                                                                                                            SUBCASE %i'%(case)]
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            f.write(msg)
+            pageNum +=1
+
         header = ['','','']  # subcase name, subcase ID, transient word & value
         for case,result in sorted(op2.displacements.items()):
+            header[1] = '0                                                                                                            SUBCASE %i'%(case)
             msg = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
             pageNum +=1
 
+        # bar, rod, beam
+        # not done...
+
+        # plates
         for case,result in sorted(op2.plateStrain.items()):
+            header[1] = '0                                                                                                            SUBCASE %i'%(case)
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
+            pageNum +=1
 
         for case,result in sorted(op2.plateStress.items()):
+            header[1] = '0                                                                                                            SUBCASE %i'%(case)
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
+            pageNum +=1
+        
+        # composite plates
+        for case,result in sorted(op2.compositePlateStress.items()):
+            header[1] = '0                                                                                                            SUBCASE %i'%(case)
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            f.write(msg)
+            pageNum +=1
+
+        for case,result in sorted(op2.compositePlateStrain.items()):
+            header[1] = '0                                                                                                            SUBCASE %i'%(case)
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            f.write(msg)
+            pageNum +=1
 
         f.write(makeEnd())
         f.close()

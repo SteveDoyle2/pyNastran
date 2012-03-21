@@ -323,7 +323,6 @@ class plateStressObject(stressObject):
 
 
 
-        triMsg = []
         if 'CQUAD4' in self.eType.values():
             quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
             isQuad = True
