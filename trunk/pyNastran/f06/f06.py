@@ -4,79 +4,12 @@ from numpy import array
 
 from tables.oes import *  # OES
 from tables.oug import *  # OUG
+from f06_classes import * # classes not in op2
 from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
+from f06Writer import F06Writer
 
 class EndOfFileError(Exception):
     pass
-
-class ComplexEigenvalues(object):
-    def __init__(self,iSubcase):
-        #self.rootNumber = []
-        self.iSubcase = iSubcase
-        self.extractionOrder = {}
-        self.eigenvalues = {}
-        self.cycles  = {}
-        self.damping = {}
-
-    def isReal(self):
-        return False
-    def isComplex(self):
-        return True
-
-    def addF06Data(self,data):
-        for line in data:
-            (rootNum,extractOrder,eigr,eigi,cycle,damping) = line
-            self.extractionOrder[rootNum] = extractOrder
-            self.eigenvalues[rootNum] = array([eigr,eigi])
-            self.cycles[rootNum]      = cycle
-            self.damping[rootNum]     = damping
-
-    def __repr__(self):
-        msg  = '%-7s %15s %15s %10s %10s %10s\n' %('RootNum','ExtractionOrder','Eigenvalue','','Cycles','Damping')
-        msg += '%-7s %15s %15s %10s\n' %('','','Real','Imaginary')
-        for rootNum,extractOrder in sorted(self.extractionOrder.items()):
-            eigenvalue = self.eigenvalues[rootNum]
-            cycle      = self.cycles[rootNum]
-            damping    = self.damping[rootNum]
-            msg += '%-7s %15s %15s %10s %10s %10s\n' %(rootNum,extractOrder,eigenvalue[0],eigenvalue[1],cycle,damping)
-        return msg
-
-class RealEigenvalues(object):
-    def __init__(self,iSubcase):
-        #self.modeNumber = []
-        self.iSubcase = iSubcase
-        self.extractionOrder = {}
-        self.eigenvalues = {}
-        self.radians = {}
-        self.cycles = {}
-        self.generalizedMass = {}
-        self.generalizedStiffness = {}
-
-    def isReal(self):
-        return True
-    def isComplex(self):
-        return False
-
-    def addF06Data(self,data):
-        for line in data:
-            (modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
-            self.extractionOrder[modeNum] = extractOrder
-            self.eigenvalues[modeNum] = eigenvalue
-            self.radians[modeNum] = radian
-            self.cycles[modeNum] = cycle
-            self.generalizedMass[modeNum] = genM
-            self.generalizedStiffness[modeNum] = genK
-
-    def __repr__(self):
-        msg = '%-7s %15s %15s %10s %10s %10s %15s\n' %('ModeNum','ExtractionOrder','Eigenvalue','Radians','Cycles','GenMass','GenStiffness')
-        for modeNum,extractOrder in sorted(self.extractionOrder.items()):
-            eigenvalue = self.eigenvalues[modeNum]
-            radian = self.radians[modeNum]
-            cycle = self.cycles[modeNum]
-            genM = self.generalizedMass[modeNum]
-            genK = self.generalizedStiffness[modeNum]
-            msg += '%-7s %15s %15s %10s %10s %10s %15s\n' %(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK)
-        return msg
 
 class F06Reader(OES,OUG):
     def __init__(self,f06name):
@@ -92,11 +25,11 @@ class F06Reader(OES,OUG):
           #'M O D E L   S U M M A R Y':self.summary,
           
           #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
-          'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':self.readGridWeight,
+          'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':self.getGridWeight,
           #'OLOAD    RESULTANT':self.oload,
-          'MAXIMUM  SPCFORCES':self.maxSpcForces,
-          'MAXIMUM  DISPLACEMENTS': self.maxDisplacements,
-          'MAXIMUM  APPLIED LOADS': self.maxAppliedLoads,
+          'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
+          'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
+          'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
           #'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self.gridPointSingularities,
 
 
@@ -114,11 +47,11 @@ class F06Reader(OES,OUG):
           'R E A L   E I G E N V A L U E S':self.getRealEigenvalues,
           'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
           'E L E M E N T   S T R A I N   E N E R G I E S':self.getElementStrainEnergies,
-          'D I S P L A C E M E N T   V E C T O R':self.displacement,
-          'C O M P L E X   D I S P L A C E M E N T   V E C T O R':self.readComplexDisplacement,
-          'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T':self.spcForces,
-          'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.mpcForces,
-          #'G R I D   P O I N T   F O R C E   B A L A N C E':self.gridPointForces,
+          'D I S P L A C E M E N T   V E C T O R':self.getDisplacement,
+          'C O M P L E X   D I S P L A C E M E N T   V E C T O R':self.getComplexDisplacement,
+          'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T':self.getSpcForces,
+          'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.getMpcForces,
+          #'G R I D   P O I N T   F O R C E   B A L A N C E':self.getGridPointForces,
 
           #'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.getQuadStress,
           'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.getQuadStress,
@@ -131,8 +64,8 @@ class F06Reader(OES,OUG):
           'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.getTriStress,
 
 
-          'T E M P E R A T U R E   V E C T O R':self.temperatureVector,
-          'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S':self.tempGradientsFluxes,
+          'T E M P E R A T U R E   V E C T O R':self.getTemperatureVector,
+          'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S':self.getTempGradientsFluxes,
 
           #'* * * END OF JOB * * *': self.end(),
          }
@@ -161,7 +94,7 @@ class F06Reader(OES,OUG):
             log = loggerObj.startLog(word) # or info
         self.log = log
 
-    def gridPointSingularities(self):  # @todo not done
+    def getGridPointSingularities(self):  # @todo not done
         """
                     G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
         POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
@@ -171,7 +104,7 @@ class F06Reader(OES,OUG):
         """
         pass
 
-    def maxSpcForces(self):  # @todo not done
+    def getMaxSpcForces(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
@@ -179,15 +112,17 @@ class F06Reader(OES,OUG):
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
 
-    def maxDisplacements(self):  # @todo not done
+    def getMaxDisplacements(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
         print "max Displacements",data
+        disp = MaxDisplacement(data)
+        print disp.writeF06()
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
     
-    def maxAppliedLoads(self):  # @todo not done
+    def getMaxAppliedLoads(self):  # @todo not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
@@ -195,7 +130,7 @@ class F06Reader(OES,OUG):
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
 
-    def readGridWeight(self):  # @todo not done
+    def getGridWeight(self):  # @todo not done
         line = ''
         while 'PAGE' not in line:
             line = self.infile.readline()[1:]
@@ -247,7 +182,7 @@ class F06Reader(OES,OUG):
           NO.       ORDER                                                                       MASS              STIFFNESS
               1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
-        (subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         
         headers = self.skip(2)
         data = self.readTable([int,int,float,float,float,float,float])
@@ -267,7 +202,7 @@ class F06Reader(OES,OUG):
              1           6          0.0              6.324555E+01          1.006584E+01          0.0
              2           5          0.0              6.324555E+01          1.006584E+01          0.0
         """
-        #(subcaseName,iSubcase,transient,analysisCode) = self.readSubcaseNameID()
+        #(subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         iSubcase = 1  # @todo fix this...
 
         headers = self.skip(2)
@@ -385,7 +320,7 @@ class F06Reader(OES,OUG):
         if sline==[]:
             line = self.infile.readline()[1:].rstrip('\r\n ')
             self.i+=1
-            print line
+            #print line
 
         return
         if iSubcase in self.iSubcases:
@@ -396,7 +331,7 @@ class F06Reader(OES,OUG):
             self.strainEnergyDensity[iSubcase] = sed
         ###
 
-    def tempGradientsFluxes(self):
+    def getTempGradientsFluxes(self):
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
@@ -435,7 +370,7 @@ class F06Reader(OES,OUG):
             ###
         return out
     
-    def spcForces(self):  # @todo not done
+    def getSpcForces(self):  # @todo not done
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         return
@@ -449,7 +384,7 @@ class F06Reader(OES,OUG):
         self.iSubcases.append(iSubcase)
         #print self.SpcForces[iSubcase]
         
-    def mpcForces(self):
+    def getMpcForces(self):
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
