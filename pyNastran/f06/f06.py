@@ -120,15 +120,15 @@ class F06Reader(OES,OUG):
           'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.mpcForces,
           #'G R I D   P O I N T   F O R C E   B A L A N C E':self.gridPointForces,
 
-          #'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.quadStress,
-          'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.quadStress,
-          'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.quadCompositeStress,
-          'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )':self.barStress,
-          'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )':self.solidStressHexa,
-          'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )':self.solidStressPenta,
-          #'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )'
-          'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.solidStressTetra,
-          'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.triStress,
+          #'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.getQuadStress,
+          'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.getQuadStress,
+          'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.getQuadCompositeStress,
+          'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )':self.getBarStress,
+          'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )':self.getSolidStressHexa,
+          'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )':self.getSolidStressPenta,
+          'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )':self.getRodStress,
+          'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.getSolidStressTetra,
+          'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.getTriStress,
 
 
           'T E M P E R A T U R E   V E C T O R':self.temperatureVector,
@@ -140,15 +140,14 @@ class F06Reader(OES,OUG):
         self.infile = open(self.f06name,'r')
         self.storedLines = []
 
-        self.disp = {}
         self.eigenvalues = {}
         self.eigenvectors = {}
 
         self.SpcForces = {}
         self.iSubcases = []
-        self.temperature = {}
         self.temperatureGrad = {}
         OES.__init__(self)
+        OUG.__init__(self)
         self.startLog()
 
     def startLog(self,log=None,debug=False):
@@ -240,57 +239,6 @@ class F06Reader(OES,OUG):
             analysisCode = 1
 
         return (subcaseName,iSubcase,transient,analysisCode,isSort1)
-
-    def readComplexDisplacement(self): # @todo: make a complexDisplacement object
-        """
-          BACKWARD WHIRL                                                                                                                
-                                                                                                                 SUBCASE 2              
-          POINT-ID =       101
-                                           C O M P L E X   D I S P L A C E M E N T   V E C T O R
-                                                             (MAGNITUDE/PHASE)
-
-          FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3
-        2.000000E+01     G      3.242295E-16   1.630439E-01   1.630439E-01   1.691497E-17   1.362718E-01   1.362718E-01
-                                196.0668        90.0000       180.0000        63.4349       180.0000       270.0000
-        
-        tableCode = 1 (Displacement)
-        formatCode = 3 (Magnitude/Phase)
-        sortBits = [0,1,1]  (Sort1,Real/Imaginary,RandomResponse)
-        analysisCode = 5 (Frequency)
-        sortCode = 2 (Random Response)
-        """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
-        headers = self.skip(3)
-        data = []
-
-        dataCode = {'log':self.log,'analysisCode':5,'deviceCode':1,'tableCode':1,'sortCode':2,
-                    'sortBits':[0,1,1],'numWide':8,
-                    'formatCode':3,
-                    #'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
-                    #'dataNames':['mode','eigr','modeCycle'],
-                    #'name':'mode',
-                    #'sCode':0,
-                    #'elementName':'CBAR','elementType':34,'stressBits':stressBits,
-                    }
-        while 1:
-            line  = self.infile.readline()[1:].rstrip('\r\n ')
-            if 'PAGE' in line:
-                break
-            sline = line.strip().split()
-            line2 = self.infile.readline()[1:].rstrip('\r\n ')
-            sline += line2.strip().split()
-            out = [float(sline[0]),sline[1].strip(),float(sline[2]),float(sline[3]),float(sline[4]),
-                                                    float(sline[5]),float(sline[6]),float(sline[7]),
-                                                    float(sline[8]),float(sline[9]),float(sline[10]),
-                                                    float(sline[11]),float(sline[12]),float(sline[13]), ]
-            #print sline
-            #print out
-            data.append(out)
-            self.i+=2
-        ###
-        self.i+=1
-        return
-    
 
     def getRealEigenvalues(self):
         """
@@ -619,9 +567,15 @@ class F06Reader(OES,OUG):
     
     def __repr__(self):
         msg = ''
-        data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
-        #data = [self.disp,self.solidStress,self.temperature,self.barStress,self.isoStress]
-        data = [self.stress,self.eigenvalues,self.eigenvectors]
+        data = [self.displacements,self.SpcForces,self.barStress,self.solidStress,self.temperature]
+        #data = [self.displacements,self.solidStress,self.temperature,self.barStress]
+        #data = [self.eigenvalues,self.eigenvectors]
+        data = [self.rodStress,self.rodStrain,
+                self.barStress,self.barStrain,
+                self.plateStress,self.plateStrain,
+                self.compositePlateStress,self.compositePlateStrain,
+               ]
+
         self.iSubcases = list(set(self.iSubcases))
         for iSubcase in self.iSubcases:
             for result in data:

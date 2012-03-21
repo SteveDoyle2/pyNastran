@@ -78,9 +78,6 @@ class barStressObject(stressObject):
             self.smin[dt][eid] = [sminA,sminB]
             #self.MS_tension[dt][eid]     = MSt
             #self.MS_compression[dt][eid] = MSc
-
-        #for line in data:
-        #    print line
         ###
 
     def getLength34_format1_sort0(self):
@@ -226,6 +223,38 @@ class barStressObject(stressObject):
         ###
         return msg
 
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            raise NotImplementedError()
+
+        msg = header+[
+                '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )',
+                '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T',
+                '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C',
+              ]
+
+        for eid,S1s in sorted(self.s1.items()):
+            eType = self.eType[eid]
+            axial = self.axial[eid]
+            #MSt = self.MSt[eid]
+            #MSc = self.MSc[eid]
+            MSt = ''
+            MSc = ''
+            
+            s1   = self.s1[eid]
+            s2   = self.s2[eid]
+            s3   = self.s3[eid]
+            s4   = self.s4[eid]
+            smax = self.smax[eid]
+            smin = self.smin[eid]
+            
+            msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s' %(eid,s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0],MSt))
+            msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s'   %('', s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1],MSc))
+        ###
+        msg.append(pageStamp+str(pageNum))
+        msg.append('\n')
+        return ('\n'.join(msg),pageNum)
+        
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
@@ -320,6 +349,47 @@ class barStrainObject(strainObject):
             self.isTransient = True
             self.addNewTransient()
             self.addNewEid = self.addNewEidTransient
+        ###
+
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (eType,eid,e1A,e2A,e3A,e4A,axialA,emaxA,eminA,MSt,
+                           e1B,e2B,e3B,e4B,       emaxB,eminB,MSc) = line
+                self.eType[eid] = 'CBAR'
+                self.e1[eid] = [e1A,e1B]
+                self.e2[eid] = [e2A,e2B]
+                self.e3[eid] = [e3A,e3B]
+                self.e4[eid] = [e4A,e4B]
+
+                self.axial[eid] = axialA
+                self.emax[eid] = [emaxA,emaxB]
+                self.emin[eid] = [eminA,eminB]
+                #self.MS_tension[eid]     = MSt
+                #self.MS_compression[eid] = MSc
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.s1:
+            self.updateDt(self.dataCode,dt)
+            self.isTransient = True
+
+        for line in data:
+            (eType,eid,e1A,e2A,e3A,e4A,axialA,emaxA,eminA,MSt,
+                       e1B,e2B,e3B,e4B,       emaxB,eminB,MSc) = line
+            self.eType[eid] = 'CBAR'
+            self.e1[dt][eid] = [e1A,e1B]
+            self.e2[dt][eid] = [e2A,e2B]
+            self.e3[dt][eid] = [e3A,e3B]
+            self.e4[dt][eid] = [e4A,e4B]
+
+            self.axial[dt][eid] = axialA
+            self.emax[dt][eid] = [emaxA,emaxB]
+            self.emin[dt][eid] = [eminA,eminB]
+            #self.MS_tension[dt][eid]     = MSt
+            #self.MS_compression[dt][eid] = MSc
         ###
 
     def addNewTransient(self):
@@ -427,6 +497,38 @@ class barStrainObject(strainObject):
             ###
         ###
         return msg
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            raise NotImplementedError()
+
+        msg = [
+                '                                   S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )',
+                '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T',
+                '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C',
+              ]
+
+        for eid,E1s in sorted(self.e1.items()):
+            eType = self.eType[eid]
+            axial = self.axial[eid]
+            #MSt = self.MSt[eid]
+            #MSc = self.MSc[eid]
+            MSt = ''
+            MSc = ''
+            
+            e1   = self.e1[eid]
+            e2   = self.e2[eid]
+            e3   = self.e3[eid]
+            e4   = self.e4[eid]
+            emax = self.emax[eid]
+            emin = self.emin[eid]
+            
+            msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s' %(eid,s1[0],s2[0],s3[0],s4[0],axial,emax[0],emin[0],MSt))
+            msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s'   %('', s1[1],s2[1],s3[1],s4[1],'',emax[1],emin[1],MSc))
+        ###
+        msg.append(pageStamp+str(pageNum))
+        msg.append('\n')
+        return ('\n'.join(msg),pageNum)
 
     def __repr__(self):
         if self.isTransient:

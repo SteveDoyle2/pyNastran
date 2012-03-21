@@ -55,6 +55,35 @@ class rodStressObject(stressObject):
             self.addNewTransient()
         ###
 
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (eid,axial,MSa,torsion,MSt) = line
+                if MSa==None: MSa = 0.
+                if MSt==None: MSt = 0.
+                self.axial[eid]      = axial
+                self.MS_axial[eid]   = MSa
+                self.torsion[eid]    = torsion
+                self.MS_torsion[eid] = MSt
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.s1:
+            self.updateDt(self.dataCode,dt)
+            self.isTransient = True
+
+        for line in data:
+            (eid,axial,MSa,torsion,MSt) = line
+            if MSa==None: MSa = 0.
+            if MSt==None: MSt = 0.
+            self.axial[dt][eid]      = axial
+            self.MS_axial[dt][eid]   = MSa
+            self.torsion[dt][eid]    = torsion
+            self.MS_torsion[dt][eid] = MSt
+        ###
+
     def getLength_format1_sort0(self):
         return (20,'iffff')
 
@@ -168,6 +197,37 @@ class rodStressObject(stressObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
             ###
         return msg
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            raise NotImplementedError()
+
+        msg = header+['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )',
+                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY',
+                 '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN']
+        out = []
+        for eid in sorted(self.axial):
+            axial   = self.axial[eid]
+            MSa     = self.MS_axial[eid]
+            torsion = self.torsion[eid]
+            MSt     = self.MS_torsion[eid]
+            
+            out.append([eid,axial,MSa,torsion,MSt])
+        
+        nOut = len(out)
+        for i in range(0,nOut,2):
+            print out[i]
+            print out[i+1]
+            print "-----"
+            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E   %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[i]+out[i+1]))
+            msg.append(outLine)
+        
+        if nOut%2==1:
+            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[-1]))
+            msg.append(outLine)
+        msg.append(pageStamp+str(pageNum))
+        msg.append('')
+        return('\n'.join(msg),pageNum)
 
     def __repr__(self):
         if   self.isTransient and self.code in [[1,0,0],[1,0,1]]:
@@ -368,6 +428,33 @@ class rodStrainObject(strainObject):
                 #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
             ###
         return msg
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            raise NotImplementedError()
+
+        msg = header+['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )',
+                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY',
+                 '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN']
+        out = []
+        for eid in sorted(self.axial):
+            axial   = self.axial[eid]
+            MSa     = self.MS_axial[eid]
+            torsion = self.torsion[eid]
+            MSt     = self.MS_torsion[eid]
+            out.append([eid,axial,MSa,torsion,MSt])
+        
+        nOut = len(out)
+        for i in range(0,nOut,2):
+            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E   %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[i]+out[i+1]))
+            msg.append(outLine)
+        
+        if nOut%2==1:
+            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[-1]))
+            msg.append(outLine)
+        msg.append(pageStamp+str(pageNum))
+        msg.append('')
+        return('\n'.join(msg),pageNum)
 
     def __repr__(self):
         if   self.isTransient and self.code==[1,0,10]:

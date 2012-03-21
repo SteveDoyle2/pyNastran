@@ -1,16 +1,101 @@
+from pyNastran.op2.tables.oes.oes_rods   import rodStressObject
 from pyNastran.op2.tables.oes.oes_bars   import barStressObject
+#from pyNastran.op2.tables.oes.oes_beams   import beamStressObject
+#from pyNastran.op2.tables.oes.oes_shear   import shearStressObject
 from pyNastran.op2.tables.oes.oes_solids import solidStressObject
 from pyNastran.op2.tables.oes.oes_plates import plateStressObject
 from pyNastran.op2.tables.oes.oes_compositePlates import compositePlateStressObject
 
+#strain...
+
 class OES(object):
     def __init__(self):
-        self.stress = {}
-        self.isoStress = {}
-        self.barStress = {}
-        self.solidStress = {}
+        #self.celasStress   = {} # CELASi
+        #self.celasStrain   = {}
+        
+        self.rodStress  = {} # CROD
+        self.rodStrain  = {}
 
-    def barStress(self):
+        self.barStress  = {} # CBAR
+        self.barStrain  = {}
+
+        #self.beamStress = {} # CBEAM
+        #self.beamStrain = {}
+
+        self.plateStress = {} # isotropic CTRIA3/CQUAD4
+        self.plateStrain = {}
+
+        self.solidStress = {} # CTETRA/CPENTA/CHEXA
+        self.solidStrain = {}
+
+        self.compositePlateStress = {}  # composite CTRIA3/CQUAD4
+        self.compositePlateStrain = {}
+        
+        #self.shearStress = {} # CSHEAR
+        #self.shearStrain = {}
+
+
+    def getRodStress(self):
+        """
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+          ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+             14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01  
+        analysisCode = 1 (Statics)
+        deviceCode   = 1 (Print)
+        tableCode    = 5 (Stress)
+        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
+        formatCode   = 1 (Real)
+        sCode        = 0 (Stress)
+        numWide      = 8 (???)
+        """
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        
+        stressBits = self.makeStressBits()
+        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':0,'stressBits':stressBits,
+                    'formatCode':1,'elementName':'ROD','elementType':1,
+                    }
+
+        data = self.readRodStress()
+        if iSubcase in self.rodStress:
+            self.rodStress[iSubcase].addF06Data(data,transient)
+        else:
+            self.rodStress[iSubcase] = rodStressObject(dataCode,iSubcase,transient)
+            self.rodStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+    
+    def readRodStress(self):
+        """
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+          ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+             14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01  
+        """
+        data = []
+        while 1:
+            line = self.infile.readline()[1:].rstrip('\r\n ')
+            sline = [line[0:13],line[13:29],line[29:42],line[42:55],line[55:67],   line[67:78],line[78:94],line[94:107],line[107:120],line[120:131]]
+            if 'PAGE' in line:
+                break
+            print sline
+            out = self.parseLineBlanks(sline,[int,float,float,float,float, int,float,float,float,float]) # line 1
+            print out
+            data.append(out[:5])
+            if isinstance(out[5],int):
+                data.append(out[5:])
+            self.i+=1
+            ###
+        ###
+        #print "--------"
+        #for line in data:
+            #print line
+        #sys.exit()
+        return data
+
+    def getBarStress(self):
         """
                                        S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
         ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
@@ -75,7 +160,7 @@ class OES(object):
         #sys.exit()
         return data
 
-    def quadCompositeStress(self):
+    def getQuadCompositeStress(self):
         """
                        S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
         ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
@@ -99,14 +184,14 @@ class OES(object):
                     'formatCode':1,'elementName':'CQUAD4','elementType':33,
                     }
 
-        if iSubcase in self.stress:
-            self.stress[iSubcase].addF06Data(data,transient,'CQUAD4')
+        if iSubcase in self.compositePlateStress:
+            self.compositePlateStress[iSubcase].addF06Data(data,transient,'CQUAD4')
         else:
-            self.stress[iSubcase] = compositePlateStressObject(dataCode,iSubcase,transient)
-            self.stress[iSubcase].addF06Data(data,transient,'CQUAD4')
+            self.compositePlateStress[iSubcase] = compositePlateStressObject(dataCode,iSubcase,transient)
+            self.compositePlateStress[iSubcase].addF06Data(data,transient,'CQUAD4')
         self.iSubcases.append(iSubcase)
         
-    def triStress(self):
+    def getTriStress(self):
         """
                                  S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
         ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
@@ -138,11 +223,11 @@ class OES(object):
                     }
 
         data = self.readTriStress()
-        if iSubcase in self.isoStress:
-            self.isoStress[iSubcase].addF06Data(data,transient)
+        if iSubcase in self.plateStress:
+            self.plateStress[iSubcase].addF06Data(data,transient)
         else:
-            self.isoStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
-            self.isoStress[iSubcase].addF06Data(data,transient)
+            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
+            self.plateStress[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
 
     def readTriStress(self):
@@ -169,7 +254,7 @@ class OES(object):
         ###
         return data
 
-    def quadStress(self):
+    def getQuadStress(self):
         """
                              S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
 
@@ -198,11 +283,11 @@ class OES(object):
                     }
 
         data = self.readQuadBilinear()
-        if iSubcase in self.isoStress:
-            self.isoStress[iSubcase].addF06Data(data,transient)
+        if iSubcase in self.plateStress:
+            self.plateStress[iSubcase].addF06Data(data,transient)
         else:
-            self.isoStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
-            self.isoStress[iSubcase].addF06Data(data,transient)
+            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
+            self.plateStress[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
 
     def readQuadBilinear(self):
@@ -234,11 +319,11 @@ class OES(object):
         ###
         return data
 
-    def solidStressHexa(self):
+    def getSolidStressHexa(self):
         return self.readSolidStress('CHEXA',8)
-    def solidStressPenta(self):
+    def getSolidStressPenta(self):
         return self.readSolidStress('CPENTA',6)
-    def solidStressTetra(self):
+    def getSolidStressTetra(self):
         return self.readSolidStress('CTETRA',4)
 
     def readSolidStress(self,eType,n):
