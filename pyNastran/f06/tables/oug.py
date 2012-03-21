@@ -8,7 +8,7 @@ class OUG(object):
         self.displacements = {}
         self.temperature = {}
 
-    def displacement(self):
+    def getDisplacement(self):
         """
                                              D I S P L A C E M E N T   V E C T O R
  
@@ -29,16 +29,16 @@ class OUG(object):
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8}
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
+
         if iSubcase in self.displacements:
-            self.disp[iSubcase].addF06Data(data,transient)
+            self.displacements[iSubcase].addF06Data(data,transient)
         else:
-            #self.displacements[iSubcase] = DisplacementObject(iSubcase,data)
             disp = displacementObject(dataCode,iSubcase)
             disp.addF06Data(data,transient)
             self.displacements[iSubcase] = disp
         self.iSubcases.append(iSubcase)
 
-    def readComplexDisplacement(self): # @todo: make a complexDisplacement object
+    def getComplexDisplacement(self): # @todo: make a complexDisplacement object
         """
           BACKWARD WHIRL                                                                                                                
                                                                                                                  SUBCASE 2              
@@ -87,9 +87,15 @@ class OUG(object):
         ###
         self.i+=1
 
-        return
+        if iSubcase in self.displacements:
+            self.displacements[iSubcase].addF06Data(data,transient)
+        else:
+            disp = complexDisplacementObject(dataCode,iSubcase)
+            disp.addF06Data(data,transient)
+            self.displacements[iSubcase] = disp
+        self.iSubcases.append(iSubcase)
     
-    def temperatureVector(self):
+    def getTemperatureVector(self):
         """
         LOAD STEP =  1.00000E+00
                                               T E M P E R A T U R E   V E C T O R
@@ -114,16 +120,17 @@ class OUG(object):
         
         dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':1,'sortCode':0,
                     'sortBits':[0,0,0],'numWide':8,
+                    #'thermalCode':1,
                     #'formatCode':1,
                     #'elementName':eType,'sCode':0,'stressBits':stressBits
                     }
 
-        if iSubcase in self.temperature:
-            self.temperature[iSubcase].addF06Data(data,transient)
+        if iSubcase in self.temperatures:
+            self.temperatures[iSubcase].addF06Data(data,transient)
         else:
             temp = temperatureObject(dataCode,iSubcase)
             temp.addF06Data(data,transient)
-            self.temperature[iSubcase] = temp
+            self.temperatures[iSubcase] = temp
         self.iSubcases.append(iSubcase)
 
     def readTemperatureTable(self):

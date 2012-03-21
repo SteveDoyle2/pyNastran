@@ -2,8 +2,6 @@ import sys
 from datetime import date
 
 import pyNastran
-from pyNastran.op2.op2 import OP2
-
 
 def makeStamp(Title):
     t = date.today()
@@ -76,15 +74,37 @@ def makeEnd():
 
 class F06Writer(object):
     def __init__(self,model='tria3'):
+        self.setF06Name(model)
+
+    def setF06Name(self,model):
         self.model = model
+        self.f06Name = '%s.f06.out' %(self.model)
+
+    def loadOp2(self):
+        from pyNastran.op2.op2 import OP2
         self.op2Name = model+'.op2'
+        op2 = OP2(self.op2Name)        op2.readOP2()
+
+        # oug
+        self.eigenvectors  = op2.eigenvectors
+        self.displacements = op2.displacements
+        self.temperatures  = op2.temperatures
         
-    def run(self):
-        op2 = OP2(self.op2Name)
-        op2.readOP2()
-        
-        f06Name = '%s.f06.out' %(self.model)
-        f = open(f06Name,'wb')
+        # oes
+        #CBEAM
+        #CSHEAR
+        #CELASi
+        self.rodStress            = op2.rodStress
+        self.rodStrain            = op2.rodStrain
+        self.barStress            = op2.barStress
+        self.barStrain            = op2.barStrain
+        self.plateStress          = op2.plateStress
+        self.plateStrain          = op2.plateStrain
+        self.compositePlateStress = op2.compositePlateStress
+        self.compositePlateStrain = op2.compositePlateStrain
+    
+    def writeF06(self):
+        f = open(self.f06Name,'wb')
         f.write(makePyNastranTitle())
         
         #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
@@ -94,14 +114,14 @@ class F06Writer(object):
         #print "stamp     = |%r|" %(stamp)
 
         pageNum = 1
-        for case,result in sorted(op2.eigenvectors.items()): # has a special header
+        for case,result in sorted(self.eigenvectors.items()): # has a special header
             header = ['0                                                                                                            SUBCASE %i'%(case)]
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
             pageNum +=1
 
         header = ['','','']  # subcase name, subcase ID, transient word & value
-        for case,result in sorted(op2.displacements.items()):
+        for case,result in sorted(self.displacements.items()):
             header[1] = '0                                                                                                            SUBCASE %i'%(case)
             msg = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
@@ -110,10 +130,11 @@ class F06Writer(object):
         # beam, shear
         # not done...
         
-        resTypes = [op2.rodStress,op2.rodStrain,
-                    op2.barStress,op2.barStrain,
-                    op2.plateStress,op2.plateStrain,
-                    op2.compositePlateStress,op2.compositePlateStrain,
+        resTypes = [self.temperatures,
+                    self.rodStress,self.rodStrain,
+                    self.barStress,self.barStrain,
+                    self.plateStress,self.plateStrain,
+                    self.compositePlateStress,self.compositePlateStrain,
                     ]
 
         for resType in resTypes:
@@ -136,6 +157,7 @@ if __name__=='__main__':
     
     model = sys.argv[1]
     f06 = F06Writer(model)
-    f06.run()
+    f06.loadOp2()
+    f06.writeF06()
 
 
