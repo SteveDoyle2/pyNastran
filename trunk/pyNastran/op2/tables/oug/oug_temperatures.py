@@ -203,7 +203,6 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         #           '0                                                                                                            SUBCASE 1              ',
         #           '     LOAD STEP =  1.00000E+00']
 
-
         msgOrig = ['                                              T E M P E R A T U R E   V E C T O R',
                ' ',
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE']
@@ -220,15 +219,14 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             return('\n'.join(msg),pageNum) # transient
 
         msg += self.printTempLines(self.temperatures)
-
         msg.append(pageStamp+str(pageNum))
         return('\n'.join(msg),pageNum)  # static
     
     def printTempLines(self,temperatures):
         msg = []
-        oldNodeID   = -1
-        oldGridType = None
         pack = []
+        oldNodeID = -1
+        oldGridType = None
         for nodeID,T in sorted(temperatures.items()):
             gridType = self.gridTypes[nodeID]
 
@@ -237,12 +235,10 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                 pack.append(T)
             else:
                 if oldNodeID>0:
-                    i=0
                     msg += self.printPack(pack)
                 oldGridType = gridType
                 oldNodeID = nodeID
                 pack = [nodeID,gridType,T]
-                #print "*pack = ",pack
             ###
         ###
         if pack:
@@ -252,24 +248,18 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
 
     def printPack(self,pack):
         msg = []
-        #print pack
         nID   = pack[0]
         gType = pack[1]
         while len(pack)>8:
-            #print "len(pack) = ",len(pack)
             nID = pack[0]
             packOut = pack[:8]
             pack = [nID+6,gType]+pack[8:]
-            #print "len(pack) = ",len(pack)
-            #print "len(packOut) = ",len(packOut)
             msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E' %(tuple(packOut)))
-            #print packOut
         ###
         if pack:
             fmt = '      %8i   %4s   '+'   %10.6E'*(len(pack)-2)
             out = fmt %(tuple(pack))
             msg.append(out)
-            #print out
         ###
         return msg
 
@@ -280,7 +270,6 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         msg = '---TEMPERATURE---\n'
         msg += self.writeHeader()
         #print "self.dataCode=",self.dataCode
-        #print "self.temperatures=",self.temperatures
         for nodeID,T in sorted(self.temperatures.items()):
             gridType = self.gridTypes[nodeID]
             msg += '%10s %8s ' %(nodeID,gridType)
