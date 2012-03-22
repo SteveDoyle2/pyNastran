@@ -66,17 +66,16 @@ Added OP2
 
 Overall F06 Reader/Writer
    - rewrote f06 reader
-   - poor transient support
-   - integrates with OP2 reader
-   - preliminary f06 writer;  It's being tested by reading the op2, writing the
-     f06 and comparing to the expected f06.  It will work with the op2 or f06
-     feeding the writer or a solver/user's own results.
+   - limited transient support
+   - F06Writer integrates with OP2 reader
+     - transient variable names may not be correct (e.g. 'lftsfq' mean 'LOAD STEP', but it should write 'LOAD STEP')
+   - The op2 or f06 readers feed the F06Writer or another solver/user's own results.
    - field parsing needs more testing, so beware!
 
 Added F06 Reader
    - displacement (static/transient)
    - ***complex displacement
-   - ***temperature  (static/transient)
+   - temperature  (static/transient)
 
    - solid stress (static/***transient)
       - ctetra
@@ -99,7 +98,7 @@ Added F06 Reader
 
 Added F06 Writer
    - displacement (static/***transient)
-   - ***temperature  (static/transient)
+   - temperature  (static/transient)
 
    - isotropic plate stress/strain (static/***transient)
       - ctria3

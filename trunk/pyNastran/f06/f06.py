@@ -11,7 +11,7 @@ from f06Writer import F06Writer
 class EndOfFileError(Exception):
     pass
 
-class F06Reader(OES,OUG,F06Writer):
+class F06(OES,OUG,F06Writer):
     def __init__(self,f06name):
         self.f06name = f06name
         self.i = 0
@@ -435,7 +435,7 @@ class F06Reader(OES,OUG,F06Writer):
             out.append(entry2)
         return out
     
-    def ReadF06(self):
+    def readF06(self):
         #print "reading..."
         blank = 0
         while 1:
@@ -502,8 +502,8 @@ class F06Reader(OES,OUG,F06Writer):
     
     def __repr__(self):
         msg = ''
-        data = [self.displacements,self.SpcForces,self.barStress,self.solidStress,self.temperature]
-        #data = [self.displacements,self.solidStress,self.temperature,self.barStress]
+        data = [self.displacements,self.SpcForces,self.barStress,self.solidStress,self.temperatures]
+        #data = [self.displacements,self.solidStress,self.temperatures,self.barStress]
         #data = [self.eigenvalues,self.eigenvectors]
         data = [self.rodStress,self.rodStrain,
                 self.barStress,self.barStrain,
@@ -522,7 +522,11 @@ class F06Reader(OES,OUG,F06Writer):
 
 if __name__=='__main__':
     f06Name = sys.argv[1]
-    f06 = F06Reader(f06Name)
-    f06.ReadF06()
+    model = f06Name.split('.f06')[0]
+    f06 = F06(f06Name)
+    f06.readF06()
+
+    f06.setF06Name(model)
+    f06.writeF06()
     print f06
 

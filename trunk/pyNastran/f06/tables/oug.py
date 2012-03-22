@@ -6,7 +6,7 @@ from pyNastran.op2.tables.oug.ougv1_Objects     import complexDisplacementObject
 class OUG(object):
     def __init__(self):
         self.displacements = {}
-        self.temperature = {}
+        self.temperatures = {}
 
     def getDisplacement(self):
         """
@@ -140,7 +140,7 @@ class OUG(object):
             line = self.infile.readline()[1:].rstrip('\r\n ')
             if 'PAGE' in line:
                 return data
-            sline = [line[0:15],line[15:22].strip(),line[22:40],line[40:55],line[55:70],line[70:85],line[85:100]]
+            sline = [line[0:15],line[15:22].strip(),line[22:40],line[40:55],line[55:70],line[70:85],line[85:100],line[100:115]]
             sline = self.parseLineTemperature(sline,Format)
             data.append(sline)
         return data

@@ -77,7 +77,7 @@ class F06Writer(object):
 
     def setF06Name(self,model):
         self.model = model
-        self.f06Name = '%s.f06.out' %(self.model)
+        self.f06OutName = '%s.f06.out' %(self.model)
 
     def loadOp2(self,isTesting=False):
         if isTesting==False:  ## @todo implement in way that doesnt require a variable (e.g. check parent class)
@@ -106,7 +106,7 @@ class F06Writer(object):
         self.compositePlateStrain = op2.compositePlateStrain
     
     def writeF06(self):
-        f = open(self.f06Name,'wb')
+        f = open(self.f06OutName,'wb')
         f.write(makePyNastranTitle())
         
         #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
@@ -115,14 +115,16 @@ class F06Writer(object):
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
-        pageNum = 1
+        pageNum = 8
         for case,result in sorted(self.eigenvectors.items()): # has a special header
             header = ['0                                                                                                            SUBCASE %i'%(case)]
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
             pageNum +=1
 
-        header = ['','','']  # subcase name, subcase ID, transient word & value
+        # subcase name, subcase ID, transient word & value
+        header = ['     DEFAULT                                                                                                                        ',
+                  '','']
         for case,result in sorted(self.displacements.items()):
             header[1] = '0                                                                                                            SUBCASE %i'%(case)
             msg = result.writeF06(header,pageStamp,pageNum=pageNum)
