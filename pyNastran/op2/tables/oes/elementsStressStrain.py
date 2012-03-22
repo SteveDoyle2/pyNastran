@@ -5,7 +5,7 @@ from pyNastran.op2.op2Errors import *
 
 #91  -> PENTANL
 #2   -> BEAM
-#33   -> TUBE
+#33  -> TUBE
 #92  -> CONRODNL
 class ElementsStressStrain(object):
 
@@ -136,7 +136,6 @@ class ElementsStressStrain(object):
             self.obj.addNewEid('CQUAD4',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
             self.obj.add(               eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
             
-            #sys.exit('stopCQUAD33')
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]

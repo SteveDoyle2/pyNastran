@@ -9,6 +9,7 @@ from op2Errors import *
 class FortranFile(object):
     def __init__(self):
         ## the endian of the processor (typically '<' for Windows/Linux/Mac, '>' for HPCs)
+        ## currently does nothing
         self.endian = '<'
         ## currently does nothing
         self.bufferSize = 65535
@@ -27,7 +28,7 @@ class FortranFile(object):
         iTable=3
         """
         self.skip(4)
-        
+
     def readHeader(self,expected=None,debug=True):
         """
         a header is defined as (4,i,4), where i is an integer
@@ -169,7 +170,7 @@ class FortranFile(object):
         unpacks a data set into a series of doubles
         """
         n = len(data)
-        nDoubles = n/8
+        nDoubles = n//8
         dFormat = 'd'*nDoubles
         ints = unpack(dFormat,data[:nDoubles*8])
         return ints
@@ -272,8 +273,21 @@ class FortranFile(object):
         
     def readMarkers(self,markers,tableName=None,debug=False,printErrorOnFailure=True):
         """
-        reads a set of predefined markers e.g. [-4,1,0]
-        and makes sure it is correct
+        Reads a set of predefined markers e.g. [-3,1,0]
+        and makes sure it is correct.
+        
+        A marker (e.g. a -3) is a series of 3 integers [4,-3,4].  Typically 3
+        markers are put together (e.g. [-3,1,0]) such that the integers are
+        [4,-3,4, 4,1,4, 4,0,4] to mark important parts of the table. 
+        
+        Markers will "increment" during table reading, such that the first marker
+        is [-1,1,0], then [-2,1,0], etc.  Tables will end (or really the next table starts)
+        when a [-1,1,0] or a [0,1,0] marker is found.
+        
+        # Verify the following statement...
+        Occassionally, buffer markers will be embedded inside the 
+        marker [-3,1,0], (e.g. [4,2^16,4] <- the default BUFFSIZE), which make
+        reading the marker more difficult.
         """
         foundMarkers = []
         for marker in markers:

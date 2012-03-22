@@ -113,6 +113,22 @@ class OES(ElementsStressStrain):
         #print "n4 = ",self.n
 
     def parseStressCode(self):
+        """
+        sCode =  0 -> stressBits = [0,0,0,0,0]
+        sCode =  1 -> stressBits = [0,0,0,0,1]
+        sCode =  2 -> stressBits = [0,0,0,1,0]
+        sCode =  3 -> stressBits = [0,0,0,1,1]
+        etc.
+        sCode = 32 -> stressBits = [1,1,1,1,1]
+
+        stressBits[0] = 0 -> isMaxShear=True       isVonMises=False
+        stressBits[0] = 1 -> isMaxShear=False      isVonMises=True
+
+        stressBits[1] = 0 -> isStress=True         isStrain=False
+        stressBits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
+        stressBits[3] = 0 -> duplicate of Bit[1] (stress/strain)
+        stressBits[4] = 0 -> material coordinate system flag
+        """
         bits = [0,0,0,0,0]
         
         sCode = self.sCode
@@ -335,10 +351,7 @@ class OES(ElementsStressStrain):
 
         elif self.elementType in [4]: # cshear
             #print "    found crod_1"
-            #if self.elementType==1:    self.dataCode['elementName'] = 'CROD'
-            #if self.elementType==3:    self.dataCode['elementName'] = 'CTUBE'
-            #if self.elementType==10:   self.dataCode['elementName'] = 'CONROD'
-            
+            self.dataCode['elementName'] = 'CSHEAR'
             self.makeOES_Object(self.shearStress,shearStressObject,
                                 self.shearStrain,shearStrainObject)
             self.basicElement()

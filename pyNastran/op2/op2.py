@@ -158,7 +158,7 @@ class OP2(BDF,  # BDF methods
         # OEF
         # rename to staticLoads/thermalLoads
         #self.forces = {}
-        #self.fluxes = {}
+        self.fluxes = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
         #self.modalForces = {}
@@ -477,6 +477,18 @@ class OP2(BDF,  # BDF methods
         self.skippedCardsFile.close()
         
     def parseSortCode(self):
+        """
+        sortCode = 0 -> sortBits = [0,0,0]
+        sortCode = 1 -> sortBits = [0,0,1]
+        sortCode = 2 -> sortBits = [0,1,0]
+        sortCode = 3 -> sortBits = [0,1,1]
+        etc.
+        sortCode = 7 -> sortBits = [1,1,1]
+
+        sortBits[0] = 0 -> isSort1=True  isSort2=False
+        sortBits[1] = 0 -> isReal=True   isReal/Imaginary=False
+        sortBits[2] = 0 -> isSorted=True isRandom=False
+        """
         bits = [0,0,0]
         
         sortCode = self.sortCode
@@ -498,9 +510,8 @@ class OP2(BDF,  # BDF methods
     def parseApproachCode(self,data):
         """
         int3 is the 3rd word in table=-3 and may be 
-        elementType or something else depending on the table
+        elementType or something else depending on the table type
         """
-        #self.printBlock(data)
         (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
         ## the local subcase ID
         self.iSubcase = iSubcase
@@ -509,9 +520,10 @@ class OP2(BDF,  # BDF methods
         ## the type of result being processed
         self.tableCode = tCode%1000
         ## used to create sortBits
-        self.sortCode  = tCode//1000
+        self.sortCode = tCode//1000
         ## what type of data was saved from the run; used to parse the approachCode and gridDevice
-        self.deviceCode   = aCode%10
+        ## deviceCode defines what options inside a result, STRESS(PLOT,PRINT), are used.
+        self.deviceCode = aCode%10
         ## what solution was run (e.g. Static/Transient/Modal)
         self.analysisCode = (aCode-self.deviceCode) // 10
 
