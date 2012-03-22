@@ -483,15 +483,15 @@ def Load(op4_handle,    # in, as created by File()
 
                     elif op4_handle['type'][i] == 4: 
                         array_CD = op4_load_RD(fp, 
-                                   op4_handle['nRow'][i], 
-                                   op4_handle['nCol'][i], 
-                                   fmt_str, 
-                                   col_width,
-                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                   complx    , # in  0=real   1=complex     
-                                   unused    , # in/out index m.S (if sp1,2)
-                                   unused_s  , # out string data (if sp1,2) 
-                                   unused    ) # in/out index m.N (sp 1,2)  
+                                               op4_handle['nRow'][i], 
+                                               op4_handle['nCol'][i], 
+                                               fmt_str, 
+                                               col_width,
+                                               op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                               complx    , # in  0=real   1=complex     
+                                               unused    , # in/out index m.S (if sp1,2)
+                                               unused_s  , # out string data (if sp1,2) 
+                                               unused    ) # in/out index m.N (sp 1,2)  
                         array_wrapper_CD = ArrayWrapper_CD()
                         array_wrapper_CD.set_data(size, <void*> array_CD) 
                         ndarray = np.array(array_wrapper_CD, copy=False)

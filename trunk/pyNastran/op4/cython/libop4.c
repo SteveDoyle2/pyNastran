@@ -71,12 +71,23 @@ float *op4_load_RD(FILE   *fp         ,
                   int    *N_index    )  /* in/out          (s_o) = 1,2    */
 {
     double *array;
-    int i, size;
+    int     c, size, NPT, n_nnz;
+    int    *unused;
+    str_t  *unused_s;
+
     size = nRow*nCol;
-    if (complx) size *= 2;
-    array = malloc(sizeof(double)*size);
-    for (i=0; i<size; i++) {
-	    array[i] = i * 50;
+    NPT  = 1;
+    if (complx) NPT *= 2;
+    array = malloc(sizeof(double)*size*NPT);
+    for (c = 1; c <= nCol; c++) {
+        n_nnz = op4_read_col_t(fp, c, nRow, nCol, fmt_str, col_width,
+                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
+                               complx    , /* in  0=real   1=complex     */
+                               unused    , /* in/out index m.S (if sp1,2)*/
+                     (str_t *) unused_s  , /* out string data (if sp1,2) */
+                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
+                              &array[(c-1)*nRow*NPT]
+                              ); /* out numeric data */
     }
     return array;
 }

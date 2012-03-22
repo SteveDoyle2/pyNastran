@@ -41,11 +41,11 @@ for in_file in [ '../test/mat_t_dn.op4' ]:
                fh['digits'][i],
                fh['offset'][i],))
 
-    a = op4.Load(fh)
-#   a = op4.Load(fh, n_mat=3, n_skip=5)
+    for i in range(fh['nMat']):
+        a = op4.Load(fh, n_mat=1, n_skip=i)  # n_mat not yet working
+        print('%2d. %-8s has type %s, contents of' % (
+              i+1, fh['name'][i], type(a[0,0])))
+        print(a)
 
-# a = op4.load2(10)
-
-print 'The array created is %s' % a
 # print 'It carries a reference to our deallocator: %s ' % a.base
 # np.testing.assert_allclose(a, np.arange(10))
