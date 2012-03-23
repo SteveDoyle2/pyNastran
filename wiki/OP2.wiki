@@ -22,9 +22,12 @@ This is how the version 0.2 OP2 reading software works.  Make sure you install t
  * automated printing of tables
  
 == Limitations ==
+ * skippedCards.out (run "test_op2 op2Name.op2") shows the results that were skipped
  * limited thermal support (only temperature)
  * no heat flux
  * no applied/spc/mpc forces
+ * no nonlinear element support (e.g. SOL 106) 
+ * see <A href="http://code.google.com/p/pynastran/source/browse/branches/v0.3_2012-2-8/op2_reading.txt">OP2 Support</A>
 
 = Making an OP2 =
 If you cant make an op2, check your bdf:
