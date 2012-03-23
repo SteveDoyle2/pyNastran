@@ -320,8 +320,8 @@ class barStrainObject(strainObject):
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
-        if self.code == [1,0,1]:
-            raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
+        if self.code in [ [1,0,0],[1,0,1] ]:
+            #raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
             self.e1    = {}
             self.e2    = {}
             self.e3    = {}
@@ -523,8 +523,8 @@ class barStrainObject(strainObject):
             emax = self.emax[eid]
             emin = self.emin[eid]
             
-            msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s' %(eid,s1[0],s2[0],s3[0],s4[0],axial,emax[0],emin[0],MSt))
-            msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s'   %('', s1[1],s2[1],s3[1],s4[1],'',emax[1],emin[1],MSc))
+            msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s' %(eid,e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0],MSt))
+            msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s'   %('', e1[1],e2[1],e3[1],e4[1],'',   emax[1],emin[1],MSc))
         ###
         msg.append(pageStamp+str(pageNum))
         msg.append('\n')

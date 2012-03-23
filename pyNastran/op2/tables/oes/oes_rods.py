@@ -310,6 +310,35 @@ class rodStrainObject(strainObject):
             self.addNewTransient()
         ###
 
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (eid,axial,MSa,torsion,MSt) = line
+                if MSa==None: MSa = 0.
+                if MSt==None: MSt = 0.
+                self.axial[eid]      = axial
+                self.MS_axial[eid]   = MSa
+                self.torsion[eid]    = torsion
+                self.MS_torsion[eid] = MSt
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.s1:
+            self.updateDt(self.dataCode,dt)
+            self.isTransient = True
+
+        for line in data:
+            (eid,axial,MSa,torsion,MSt) = line
+            if MSa==None: MSa = 0.
+            if MSt==None: MSt = 0.
+            self.axial[dt][eid]      = axial
+            self.MS_axial[dt][eid]   = MSa
+            self.torsion[dt][eid]    = torsion
+            self.MS_torsion[dt][eid] = MSt
+        ###
+
     def getLength_format1_sort0(self):
         return (20,'iffff')
 

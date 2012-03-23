@@ -77,21 +77,21 @@ Added F06 Reader
    - ***complex displacement
    - temperature  (static/transient)
 
-   - solid stress (static/***transient)
+   - solid stress/***strain (static/***transient)
       - ctetra
       - cpenta
       - chexa
-   - isotropic plate stress/***strain (static/***transient)
+   - isotropic plate stress/strain (static/***transient)
       - ctria3
-      - cquad4
-   - composite plate stress/***strain (static/***transient)
+      - cquad4 (centroid/bilinear)
+   - composite plate stress/strain (static/***transient)
       - ctria3
-      - cquad4
+      - cquad4 (centroid)
 
-   - rod stress/strain (static/***transient)
-   - bar stress/***strain (static/transient)
-   - ***beam  stress (static/transient)
-   - ***shear stress (static/transient)
+   - rod stress/strain (static/transient)
+   - bar stress/strain (static/transient)
+   - ***beam  stress/strain (static/transient)
+   - ***shear stress/strain (static/transient)
 
    - eigenvalues  (real/complex)
    - eigenvectors (real/complex)
@@ -102,15 +102,15 @@ Added F06 Writer
 
    - isotropic plate stress/strain (static/***transient)
       - ctria3
-      - cquad4
+      - cquad4 (centroid/bilinear)
    - composite plate stress/strain (static/***transient)
       - ctria3
-      - cquad4
+      - cquad4 (centroid)
 
    - rod stress/strain (static/***transient)
-   - bar stress/strain (static/transient)
-   - ***beam  stress (static/transient)
-   - ***shear stress (static/transient)
+   - bar stress/strain (static/***transient)
+   - ***beam  stress/strain (static/transient)
+   - ***shear stress/strain (static/transient)
 
    - ***eigenvalues  (real/complex)
    - eigenvectors (real/***complex)

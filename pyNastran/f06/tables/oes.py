@@ -1,9 +1,9 @@
-from pyNastran.op2.tables.oes.oes_rods   import rodStressObject
-from pyNastran.op2.tables.oes.oes_bars   import barStressObject
+from pyNastran.op2.tables.oes.oes_rods   import rodStressObject,rodStrainObject
+from pyNastran.op2.tables.oes.oes_bars   import barStressObject,barStrainObject
 #from pyNastran.op2.tables.oes.oes_beams   import beamStressObject
 #from pyNastran.op2.tables.oes.oes_shear   import shearStressObject
 from pyNastran.op2.tables.oes.oes_solids import solidStressObject
-from pyNastran.op2.tables.oes.oes_plates import plateStressObject
+from pyNastran.op2.tables.oes.oes_plates import plateStressObject,plateStrainObject
 from pyNastran.op2.tables.oes.oes_compositePlates import compositePlateStressObject
 
 #strain...
@@ -41,6 +41,28 @@ class OES(object):
         ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
              14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01  
+        """
+        (iSubcase,transient,dataCode) = self.getRodHeader(False)
+        data = self.readRodStress()
+        if iSubcase in self.rodStress:
+            self.rodStress[iSubcase].addF06Data(data,transient)
+        else:
+            self.rodStress[iSubcase] = rodStressObject(dataCode,iSubcase,transient)
+            self.rodStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+    
+    def getRodStrain(self):
+        (iSubcase,transient,dataCode) = self.getRodHeader(False)
+        data = self.readRodStress()
+        if iSubcase in self.rodStrain:
+            self.rodStrain[iSubcase].addF06Data(data,transient)
+        else:
+            self.rodStrain[iSubcase] = rodStrainObject(dataCode,iSubcase,transient)
+            self.rodStrain[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getRodHeader(self,isStrain):
+        """
         analysisCode = 1 (Statics)
         deviceCode   = 1 (Print)
         tableCode    = 5 (Stress)
@@ -53,20 +75,13 @@ class OES(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
-        stressBits = self.makeStressBits()
+        (stressBits,sCode) = self.makeStressBits(isStrain=False)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,'sCode':0,'stressBits':stressBits,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
                     'formatCode':1,'elementName':'ROD','elementType':1,
                     }
+        return (iSubcase,transient,dataCode)
 
-        data = self.readRodStress()
-        if iSubcase in self.rodStress:
-            self.rodStress[iSubcase].addF06Data(data,transient)
-        else:
-            self.rodStress[iSubcase] = rodStressObject(dataCode,iSubcase,transient)
-            self.rodStress[iSubcase].addF06Data(data,transient)
-        self.iSubcases.append(iSubcase)
-    
     def readRodStress(self):
         """
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
@@ -80,19 +95,15 @@ class OES(object):
             sline = [line[0:13],line[13:29],line[29:42],line[42:55],line[55:67],   line[67:78],line[78:94],line[94:107],line[107:120],line[120:131]]
             if 'PAGE' in line:
                 break
-            print sline
+            #print sline
             out = self.parseLineBlanks(sline,[int,float,float,float,float, int,float,float,float,float]) # line 1
-            print out
+            #print out
             data.append(out[:5])
             if isinstance(out[5],int):
                 data.append(out[5:])
             self.i+=1
             ###
         ###
-        #print "--------"
-        #for line in data:
-            #print line
-        #sys.exit()
         return data
 
     def getBarStress(self):
@@ -110,15 +121,7 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
-        headers = self.skip(2)
-        #print "headers = %s" %(headers)
-        
-        stressBits = self.makeStressBits()
-        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,'sCode':0,'stressBits':stressBits,
-                    'formatCode':1,'elementName':'CBAR','elementType':34,
-                    }
+        (iSubcase,transient,dataCode) = self.getBarHeader(False)
 
         data = self.readBarStress()
         if iSubcase in self.barStress:
@@ -128,6 +131,29 @@ class OES(object):
             self.barStress[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
     
+    def getBarStrain(self):
+        (iSubcase,transient,dataCode) = self.getBarHeader(False)
+
+        data = self.readBarStress()
+        if iSubcase in self.barStrain:
+            self.barStrain[iSubcase].addF06Data(data,transient)
+        else:
+            self.barStrain[iSubcase] = barStrainObject(dataCode,iSubcase,transient)
+            self.barStrain[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getBarHeader(self,isStrain):
+        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        headers = self.skip(2)
+        #print "headers = %s" %(headers)
+        
+        (stressBits,sCode) = self.makeStressBits(isStrain=isStrain)
+        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
+                    'formatCode':1,'elementName':'CBAR','elementType':34,
+                    }
+        return (iSubcase,transient,dataCode)
+
     def readBarStress(self):
         """
         ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
@@ -138,16 +164,16 @@ class OES(object):
         data = []
         while 1:
             line = self.infile.readline()[1:].rstrip('\r\n ')
-            sline = [line[0:12],line[12:27],line[27:42],line[42:57],line[57:64],line[64:86],line[86:101],line[101:116],line[116:131]]
+            sline = [line[0:11],line[11:26],line[26:41],line[41:56],line[56:69],line[69:86],line[86:101],line[101:116],line[116:131]]
             if 'PAGE' in line:
                 break
-            #print sline
+            print sline
             out = self.parseLineBlanks(sline,[int,float,float,float,float, float, float,float,float]) # line 1
             out = ['CBAR']+out
             #data.append(sline)
             line = self.infile.readline()[1:].rstrip('\r\n ')
-            sline = [line[12:27],line[27:42],line[42:57],line[57:64],line[86:101],line[101:116],line[116:131]]
-            #print sline
+            sline = [line[11:26],line[26:41],line[41:56],line[56:68],line[86:101],line[101:116],line[116:131]]
+            print sline
             out += self.parseLineBlanks(sline,[    float,float,float,float,        float,float,float]) # line 2
             #print "*",out
             data.append(out)
@@ -178,9 +204,9 @@ class OES(object):
         isMaxShear = False  # Von Mises/Max Shear
         if 'SHEAR' in headers.strip():
             isMaxShear = True
-        stressBits = self.makeStressBits(isMaxShear=isMaxShear)
+        (stressBits,sCode) = self.makeStressBits(isMaxShear=isMaxShear,isStrain=False)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,'sCode':0,'stressBits':stressBits,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
                     'formatCode':1,'elementName':'CQUAD4','elementType':33,
                     }
 
@@ -206,6 +232,35 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
+        (iSubcase,transient,dataCode) = self.getTriHeader(False)
+        data = self.readTriStress(['CTRIA3'])
+        if iSubcase in self.plateStress:
+            self.plateStress[iSubcase].addF06Data(data,transient)
+        else:
+            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
+            self.plateStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getTriStrain(self):
+        (iSubcase,transient,dataCode) = self.getTriHeader(True)
+        data = self.readTriStress(['CTRIA3'])
+        if iSubcase in self.plateStrain:
+            self.plateStrain[iSubcase].addF06Data(data,transient)
+        else:
+            self.plateStrain[iSubcase] = plateStrainObject(dataCode,iSubcase,transient)
+            self.plateStrain[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getTriHeader(self,isStrain):
+        """
+        analysisCode = 1 (Statics)
+        deviceCode   = 1 (Print)
+        tableCode    = 5 (Stress)
+        sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
+        formatCode   = 1 (Real)
+        sCode        = 0 (Stress)
+        numWide      = 8 (???)
+        """
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
@@ -216,21 +271,14 @@ class OES(object):
             isFiberDistance = True
         if 'MAX SHEAR' in headers:
             isMaxShear = True
-        stressBits = self.makeStressBits(isFiberDistance,isMaxShear)
+        (stressBits,sCode) = self.makeStressBits(isFiberDistance,isMaxShear,isStrain=isStrain)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,'sCode':1,'stressBits':stressBits,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
                     'formatCode':1,'elementName':'CTRIA3','elementType':74,
                     }
+        return (iSubcase,transient,dataCode)
 
-        data = self.readTriStress()
-        if iSubcase in self.plateStress:
-            self.plateStress[iSubcase].addF06Data(data,transient)
-        else:
-            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
-            self.plateStress[iSubcase].addF06Data(data,transient)
-        self.iSubcases.append(iSubcase)
-
-    def readTriStress(self):
+    def readTriStress(self,eType):
         """
                 ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
                   ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
@@ -244,10 +292,12 @@ class OES(object):
                 break
             #print line
             sline = self.parseLine(line,[int,float, float,float,float, float,float,float, float]) # line 1
-            sline = ['CTRIA3']+sline
+            #print sline
+            sline = eType+sline
             data.append(sline)
             line = self.infile.readline()[1:].strip().split()
-            sline += self.parseLine(line,[    float, float,float,float, float,float,float, float]) # line 2
+            #print line
+            sline += self.parseLine(line,[   float, float,float,float, float,float,float, float]) # line 2
             data.append(sline)
             self.i+=2
             ###
@@ -255,6 +305,26 @@ class OES(object):
         return data
 
     def getQuadStress(self):
+        (iSubcase,transient,dataCode) = self.getQuadHeader(2,True,33)
+        data = self.readTriStress(['CQUAD4'])
+        if iSubcase in self.plateStress:
+            self.plateStress[iSubcase].addF06Data(data,transient)
+        else:
+            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
+            self.plateStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getQuadStrains(self):
+        (iSubcase,transient,dataCode) = self.getQuadHeader(2,True,33)
+        data = self.readTriStress(['CQUAD4'])
+        if iSubcase in self.plateStrain:
+            self.plateStrain[iSubcase].addF06Data(data,transient)
+        else:
+            self.plateStrain[iSubcase] = plateStrainObject(dataCode,iSubcase,transient)
+            self.plateStrain[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getQuadStressBilinear(self):
         """
                              S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN
 
@@ -266,8 +336,18 @@ class OES(object):
                        4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                            1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
+        (iSubcase,transient,dataCode) = self.getQuadHeader(3,False,144)
+        data = self.readQuadBilinear()
+        if iSubcase in self.plateStress:
+            self.plateStress[iSubcase].addF06Data(data,transient)
+        else:
+            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
+            self.plateStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getQuadHeader(self,nHeaderLines,isStrain,elementNumber):
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
-        headers = self.skip(3)
+        headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
         
         isFiberDistance = False
@@ -276,19 +356,12 @@ class OES(object):
             isFiberDistance = True
         if 'MAX SHEAR' in headers:
             isMaxShear = True
-        stressBits = self.makeStressBits(isFiberDistance,isMaxShear)
+        (stressBits,sCode) = self.makeStressBits(isFiberDistance,isMaxShear,isStrain)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,'sCode':1,'stressBits':stressBits,
-                    'formatCode':1,'elementName':'CQUAD4','elementType':144,
+                    'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
+                    'formatCode':1,'elementName':'CQUAD4','elementType':elementNumber,
                     }
-
-        data = self.readQuadBilinear()
-        if iSubcase in self.plateStress:
-            self.plateStress[iSubcase].addF06Data(data,transient)
-        else:
-            self.plateStress[iSubcase] = plateStressObject(dataCode,iSubcase,transient)
-            self.plateStress[iSubcase].addF06Data(data,transient)
-        self.iSubcases.append(iSubcase)
+        return (iSubcase,transient,dataCode)
 
     def readQuadBilinear(self):
         data = []
@@ -345,10 +418,10 @@ class OES(object):
             isMaxShear = False
             
         data = self.read3DStress(eType,n)
-        stressBits = self.makeStressBits(isMaxShear=False)
+        (stressBits,sCode) = self.makeStressBits(isMaxShear=False,isStrain=False)
         dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8,'elementName':eType,'formatCode':1,
-                    'sCode':0,'stressBits':stressBits}
+                    'sCode':sCode,'stressBits':stressBits}
 
         if iSubcase in self.solidStress:
             self.solidStress[iSubcase].addF06Data(data,transient)
@@ -372,13 +445,19 @@ class OES(object):
         ###
         return data
 
-    def makeStressBits(self,isFiberDistance=False,isMaxShear=True):
-        print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear,isFiberDistance)
-        stressBits = [0,0,0]
+    def makeStressBits(self,isFiberDistance=False,isMaxShear=True,isStrain=True):
+        #print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear,isFiberDistance)
+        stressBits = [0,0,0,0,0]
         if isMaxShear==False:
             stressBits[0] = 1 # Von Mises
-        
+        if isStrain:
+            #stressBits[1] = stressBits[3] = 1 # Strain
+            stressBits[1] = stressBits[3] = 1 # Strain
         if isFiberDistance:
-            stressBits[2] = 1
-        return stressBits
+            stressBits[2] = 1 # FiberDistance
+        #print stressBits       
+        sCode = 0
+        for i,bit in enumerate(stressBits):
+            sCode += bit*2**i
+        return (stressBits,sCode)
         
