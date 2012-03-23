@@ -127,8 +127,8 @@ class F06Writer(object):
                   '','']
 
         resTypes = [self.displacements,self.temperatures,
-                    self.rodStrain,self.barStrain,self.beamStrain,self.shearStrain,self.plateStrain,self.compositePlateStrain,  # beam, shear...not done
-                    self.rodStress,self.barStress,self.beamStress,self.shearStress,self.plateStress,self.compositePlateStress,
+                    self.rodStrain,self.barStrain,self.beamStrain,self.shearStrain,self.plateStrain,self.compositePlateStrain,#self.solidStrain,  # beam, shear...not done
+                    self.rodStress,self.barStress,self.beamStress,self.shearStress,self.plateStress,self.compositePlateStress,self.solidStress,
                     ]
 
         for resType in resTypes:

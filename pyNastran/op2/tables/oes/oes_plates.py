@@ -330,16 +330,15 @@ class plateStressObject(stressObject):
                           '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s' %(vonMises)]
 
         eTypes = self.eType.values()
-
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
             ekey = self.oxx[kkey].keys()
             isBilinear=True
-            quadMsg = header+['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
             if len(ekey)==1:
                 isBilinear=False
-                quadMsg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )','']+triMsgTemp
+                quadMsg = header+['                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )','']+triMsgTemp
             isQuad = True
         else:
             quadMsg = []
@@ -347,7 +346,7 @@ class plateStressObject(stressObject):
 
         if 'CTRIA3' in eTypes:
             isTri = True
-            triMsg = header+['                           S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
+            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
         else:
             isTri = False
             triMsg = []

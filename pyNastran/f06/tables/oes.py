@@ -10,17 +10,23 @@ from pyNastran.op2.tables.oes.oes_compositePlates import compositePlateStressObj
 
 class OES(object):
     def __init__(self):
-        #self.celasStress   = {} # CELASi
-        #self.celasStrain   = {}
+        # not done...
+        self.celasStress   = {} # CELASi
+        self.celasStrain   = {}
+        
+        self.beamStress = {} # CBEAM
+        self.beamStrain = {}
+
+        self.shearStress = {} # CSHEAR
+        self.shearStrain = {}
+        
+        #-------------
         
         self.rodStress  = {} # CROD
         self.rodStrain  = {}
 
         self.barStress  = {} # CBAR
         self.barStrain  = {}
-
-        #self.beamStress = {} # CBEAM
-        #self.beamStrain = {}
 
         self.plateStress = {} # isotropic CTRIA3/CQUAD4
         self.plateStrain = {}
@@ -30,9 +36,6 @@ class OES(object):
 
         self.compositePlateStress = {}  # composite CTRIA3/CQUAD4
         self.compositePlateStrain = {}
-        
-        #self.shearStress = {} # CSHEAR
-        #self.shearStrain = {}
 
 
     def getRodStress(self):
@@ -167,13 +170,13 @@ class OES(object):
             sline = [line[0:11],line[11:26],line[26:41],line[41:56],line[56:69],line[69:86],line[86:101],line[101:116],line[116:131]]
             if 'PAGE' in line:
                 break
-            print sline
+            #print sline
             out = self.parseLineBlanks(sline,[int,float,float,float,float, float, float,float,float]) # line 1
             out = ['CBAR']+out
             #data.append(sline)
             line = self.infile.readline()[1:].rstrip('\r\n ')
             sline = [line[11:26],line[26:41],line[41:56],line[56:68],line[86:101],line[101:116],line[116:131]]
-            print sline
+            #print sline
             out += self.parseLineBlanks(sline,[    float,float,float,float,        float,float,float]) # line 2
             #print "*",out
             data.append(out)
@@ -305,7 +308,7 @@ class OES(object):
         return data
 
     def getQuadStress(self):
-        (iSubcase,transient,dataCode) = self.getQuadHeader(2,True,33)
+        (iSubcase,transient,dataCode) = self.getQuadHeader(2,False,33)
         data = self.readTriStress(['CQUAD4'])
         if iSubcase in self.plateStress:
             self.plateStress[iSubcase].addF06Data(data,transient)
