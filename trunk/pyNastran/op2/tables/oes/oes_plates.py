@@ -35,9 +35,9 @@ class plateStressObject(stressObject):
         self.ovmShear = {}
 
         #print "self.code = ",self.code
-        if self.code == [1,0,1]:
+        if self.code in [ [1,0,1],[1,0,5],[1,0,15] ]:
             #self.isVonMises = True
-            #assert self.isFiberDistance() == False,self.stressBits
+            assert self.isFiberDistance() == True,self.stressBits
             assert self.isVonMises()      == True,self.stressBits
         elif self.code == [1,0,0]:
             assert self.isFiberDistance() == False,self.stressBits
@@ -77,10 +77,23 @@ class plateStressObject(stressObject):
                     self.ovmShear[eid] = {'C':[ovm1,ovm2]}
                 elif eType=='CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
-                    if len(line)==19: # Centroid
+                    if len(line)==19: # Centroid - bilinear
                         (eType,eid,nid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
                                        f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
                         if nid=='CEN/4': nid='C'
+                        self.eType[eid] = eType
+                        self.fiberCurvature[eid] = {nid:[f1,f2]}
+                        self.oxx[eid]      = {nid:[ox1,ox2]}
+                        self.oyy[eid]      = {nid:[oy1,oy2]}
+                        self.txy[eid]      = {nid:[txy1,txy2]}
+                        self.angle[eid]    = {nid:[angle1,angle2]}
+                        self.majorP[eid]   = {nid:[o11,o12]}
+                        self.minorP[eid]   = {nid:[o21,o22]}
+                        self.ovmShear[eid] = {nid:[ovm1,ovm2]}
+                    elif len(line)==18: # Centroid
+                        (eType,eid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
+                                   f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                        nid='C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid:[f1,f2]}
                         self.oxx[eid]      = {nid:[ox1,ox2]}
@@ -316,16 +329,25 @@ class plateStressObject(stressObject):
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
                           '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s' %(vonMises)]
 
-        if 'CQUAD4' in self.eType.values():
-            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
+        eTypes = self.eType.values()
+
+        if 'CQUAD4' in eTypes:
+            qkey = eTypes.index('CQUAD4')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.oxx[kkey].keys()
+            isBilinear=True
+            quadMsg = header+['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )','']+triMsgTemp
             isQuad = True
         else:
             quadMsg = []
             isQuad = False
 
-        if 'CTRIA3' in self.eType.values():
+        if 'CTRIA3' in eTypes:
             isTri = True
-            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
+            triMsg = header+['                           S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
         else:
             isTri = False
             triMsg = []
@@ -333,7 +355,10 @@ class plateStressObject(stressObject):
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
             if eType in 'CQUAD4':
-                out = self.writeF06_Quad4(eid,oxxNodes)
+                if isBilinear:
+                    out = self.writeF06_Quad4_Bilinear(eid,oxxNodes)
+                else:
+                    out = self.writeF06_Tri3(eid,oxxNodes)
                 quadMsg.append(out[:-1])
             elif eType in 'CTRIA3':
                 out = self.writeF06_Tri3(eid,oxxNodes)
@@ -355,7 +380,7 @@ class plateStressObject(stressObject):
         msg = '\n'.join(quadMsg+triMsg)
         return (msg,pageNum+1)
 
-    def writeF06_Quad4(self,eid,oxxNodes):
+    def writeF06_Quad4_Bilinear(self,eid,oxxNodes):
         msg = ''
         k = oxxNodes.keys()
         k.sort()
@@ -517,6 +542,72 @@ class plateStrainObject(strainObject):
             self.addNewEid = self.addNewEidTransient
             self.isTransient = True
         ###
+
+    def addF06Data(self,data,transient):
+        if transient is None:
+            eType = data[0][0]
+            for line in data:
+                if eType=='CTRIA3':
+                    (eType,eid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
+                               f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                    self.eType[eid] = eType
+                    self.fiberCurvature[eid] = {'C':[f1,f2]}
+                    self.exx[eid]      = {'C':[ex1,ex2]}
+                    self.eyy[eid]      = {'C':[ey1,ey2]}
+                    self.exy[eid]      = {'C':[exy1,exy2]}
+                    self.angle[eid]    = {'C':[angle1,angle2]}
+                    self.majorP[eid]   = {'C':[e11,e12]}
+                    self.minorP[eid]   = {'C':[e21,e22]}
+                    self.evmShear[eid] = {'C':[evm1,evm2]}
+                elif eType=='CQUAD4':
+                    #assert len(line)==19,'len(line)=%s' %(len(line))
+                    #print line
+                    if len(line)==19: # Centroid - bilinear
+                        (eType,eid,nid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
+                                       f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                        if nid=='CEN/4': nid='C'
+                        self.eType[eid] = eType
+                        self.fiberCurvature[eid] = {nid:[f1,f2]}
+                        self.exx[eid]      = {nid:[ex1,ex2]}
+                        self.eyy[eid]      = {nid:[ey1,ey2]}
+                        self.exy[eid]      = {nid:[exy1,exy2]}
+                        self.angle[eid]    = {nid:[angle1,angle2]}
+                        self.majorP[eid]   = {nid:[e11,e12]}
+                        self.minorP[eid]   = {nid:[e21,e22]}
+                        self.evmShear[eid] = {nid:[evm1,evm2]}
+                    elif len(line)==18: # Centroid
+                        (eType,eid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
+                                   f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                        nid='C'
+                        self.eType[eid] = eType
+                        self.fiberCurvature[eid] = {nid:[f1,f2]}
+                        self.exx[eid]      = {nid:[ex1,ex2]}
+                        self.eyy[eid]      = {nid:[ey1,ey2]}
+                        self.exy[eid]      = {nid:[exy1,exy2]}
+                        self.angle[eid]    = {nid:[angle1,angle2]}
+                        self.majorP[eid]   = {nid:[e11,e12]}
+                        self.minorP[eid]   = {nid:[e21,e22]}
+                        self.evmShear[eid] = {nid:[evm1,evm2]}
+                    elif len(line)==17: ## Bilinear node
+                        #print line
+                        (nid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
+                             f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                        self.fiberCurvature[eid][nid] = [f1,f2]
+                        self.exx[eid][nid]      = [ex1,ex2]
+                        self.eyy[eid][nid]      = [ey1,ey2]
+                        self.txy[eid][nid]      = [exy1,exy2]
+                        self.angle[eid][nid]    = [angle1,angle2]
+                        self.majorP[eid][nid]   = [e11,e12]
+                        self.minorP[eid][nid]   = [e21,e22]
+                        self.evmShear[eid][nid] = [evm1,evm2]
+                    else:
+                        assert len(line)==19,'len(line)=%s' %(len(line))
+                        #raise NotImplementedError()
+                    ###
+                else:
+                    raise NotImplementedError('line=%s not supported...' %(line))
+            return
+        raise NotImplementedError('transient results not supported')
 
     def addNewTransient(self):
         """
@@ -685,38 +776,40 @@ class plateStrainObject(strainObject):
         if self.isTransient:
             raise NotImplementedError()
 
-        if self.isVonMises() and self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES']
-            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES']
-        elif self.isVonMises():
-            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       VON MISES']
-            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES']
-        elif self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       MAX SHEAR']
-            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        MAX SHEAR']
+        if self.isVonMises():
+            vonMises = 'VON MISES'
+        else:
+            vonMises = 'MAX SHEAR'
+
+        if self.isFiberDistance(): 
+            quadMsgTemp = ['    ELEMENT              FIBER                STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s' %(vonMises)]
+            triMsgTemp = ['  ELEMENT      FIBER               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s' %(vonMises)]
         else:
             quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       MAX SHEAR']
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s' %(vonMises)]
             triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        MAX SHEAR']
-
-
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s' %(vonMises)]
+        ###
 
         triMsg = []
-        if 'CQUAD4' in self.eType.values():
+        eTypes = self.eType.values()
+        if 'CQUAD4' in eTypes:
+            qkey = eTypes.index('CQUAD4')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.exx[kkey].keys()
+            isBilinear=True
             quadMsg = header+['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN','']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )']+triMsgTemp
             isQuad = True
         else:
             quadMsg = []
             isQuad = False
 
-        if 'CTRIA3' in self.eType.values():
+        if 'CTRIA3' in eTypes:
             isTri = True
             triMsg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )']+triMsgTemp
         else:
@@ -726,7 +819,10 @@ class plateStrainObject(strainObject):
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
             if eType in 'CQUAD4':
-                out = self.writeF06_Quad4(eid,exxNodes)
+                if isBilinear:
+                    out = self.writeF06_Quad4_Bilinear(eid,exxNodes)
+                else:
+                    out = self.writeF06_Tri3(eid,exxNodes)
                 quadMsg.append(out[:-1])
             elif eType in 'CTRIA3':
                 out = self.writeF06_Tri3(eid,exxNodes)
@@ -748,7 +844,7 @@ class plateStrainObject(strainObject):
         msg = '\n'.join(quadMsg+triMsg)
         return (msg,pageNum+1)
 
-    def writeF06_Quad4(self,eid,exxNodes):
+    def writeF06_Quad4_Bilinear(self,eid,exxNodes):
         msg = ''
         k = exxNodes.keys()
         k.sort()

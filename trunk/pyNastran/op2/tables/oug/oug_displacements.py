@@ -277,7 +277,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         ###
         msg.append(pageStamp+str(pageNum))
         msg.append('\n')
-        return '\n'.join(msg)
+        return ('\n'.join(msg),pageNum)
             
         
     def __repr__(self):

@@ -115,7 +115,7 @@ class F06Writer(object):
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
-        pageNum = 8
+        pageNum = 1
         for case,result in sorted(self.eigenvectors.items()): # has a special header
             header = ['0                                                                                                            SUBCASE %i'%(case)]
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
@@ -125,20 +125,10 @@ class F06Writer(object):
         # subcase name, subcase ID, transient word & value
         header = ['     DEFAULT                                                                                                                        ',
                   '','']
-        for case,result in sorted(self.displacements.items()):
-            header[1] = '0                                                                                                            SUBCASE %i'%(case)
-            msg = result.writeF06(header,pageStamp,pageNum=pageNum)
-            f.write(msg)
-            pageNum +=1
 
-        # beam, shear
-        # not done...
-        
-        resTypes = [self.temperatures,
-                    self.rodStress,self.rodStrain,
-                    self.barStress,self.barStrain,
-                    self.plateStress,self.plateStrain,
-                    self.compositePlateStress,self.compositePlateStrain,
+        resTypes = [self.displacements,self.temperatures,
+                    self.rodStrain,self.barStrain,self.beamStrain,self.shearStrain,self.plateStrain,self.compositePlateStrain,  # beam, shear...not done
+                    self.rodStress,self.barStress,self.beamStress,self.shearStress,self.plateStress,self.compositePlateStress,
                     ]
 
         for resType in resTypes:
