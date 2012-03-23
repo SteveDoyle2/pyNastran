@@ -216,9 +216,9 @@ class rodStressObject(stressObject):
         
         nOut = len(out)
         for i in range(0,nOut,2):
-            print out[i]
-            print out[i+1]
-            print "-----"
+            #print out[i]
+            #print out[i+1]
+            #print "-----"
             outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E   %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         

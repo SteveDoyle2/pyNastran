@@ -402,14 +402,43 @@ class OES(object):
     def getSolidStressTetra(self):
         return self.readSolidStress('CTETRA',4)
 
+    def getSolidStrainHexa(self):
+        return self.readSolidStrain('CHEXA',8)
+    def getSolidStrainPenta(self):
+        return self.readSolidStrain('CPENTA',6)
+    def getSolidStrainTetra(self):
+        return self.readSolidStrain('CTETRA',4)
+
     def readSolidStress(self,eType,n):
+        (iSubcase,transient,dataCode) = self.getSolidHeader(eType,n,False)
+    
+        data = self.read3DStress(eType,n)
+        if iSubcase in self.solidStress:
+            self.solidStress[iSubcase].addF06Data(data,transient)
+        else:
+            self.solidStress[iSubcase] = solidStressObject(dataCode,iSubcase,transient)
+            self.solidStress[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def readSolidStrain(self,eType,n):
+        (iSubcase,transient,dataCode) = self.getSolidHeader(eType,n,True)
+    
+        data = self.read3DStress(eType,n)
+        if iSubcase in self.solidStrain:
+            self.solidStrain[iSubcase].addF06Data(data,transient)
+        else:
+            self.solidStrain[iSubcase] = solidStrainObject(dataCode,iSubcase,transient)
+            self.solidStrain[iSubcase].addF06Data(data,transient)
+        self.iSubcases.append(iSubcase)
+
+    def getSolidHeader(self,eType,n,isStrain):
         """
         analysisCode = 1 (Statics)
         deviceCode   = 1 (Print)
         tableCode    = 5 (Stress/Strain)
         sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
         formatCode   = 1 (Real)
-        sCode        = 0 (Stress)
+        sCode        = 0 (Stress/Strain)
         numWide      = 8 (???)
         """
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
@@ -420,18 +449,11 @@ class OES(object):
         if 'VON MISES' in headers:
             isMaxShear = False
             
-        data = self.read3DStress(eType,n)
-        (stressBits,sCode) = self.makeStressBits(isMaxShear=False,isStrain=False)
+        (stressBits,sCode) = self.makeStressBits(isMaxShear=False,isStrain=isStrain)
         dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8,'elementName':eType,'formatCode':1,
                     'sCode':sCode,'stressBits':stressBits}
-
-        if iSubcase in self.solidStress:
-            self.solidStress[iSubcase].addF06Data(data,transient)
-        else:
-            self.solidStress[iSubcase] = solidStressObject(dataCode,iSubcase,transient)
-            self.solidStress[iSubcase].addF06Data(data,transient)
-        self.iSubcases.append(iSubcase)
+        return (iSubcase,transient,dataCode)
 
     def read3DStress(self,eType,n):
         data = []
