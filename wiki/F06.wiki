@@ -39,4 +39,6 @@ python f06.py model.f06 > junk.out   # parses the f06 and creates model.f06.out
 }}}
 
 == Implementing the F06 Writer in a User-Defined Solver ==
-Take a look at the pyNastran/f06/tables/oug.py and the getDisplacement() method.  You need to create the dataCode dictionary and populate the object by displacementObject by using the 
+Take a look at the pyNastran/f06/tables/oug.py and the getDisplacement() method.  You need to create the dataCode dictionary and populate the object by displacementObject by using the addF06Data() method.  
+
+Assuming you know the F06 table you're trying to create, just look at the reader for that table and copy most of the code.  Fill in your data where applicable.
