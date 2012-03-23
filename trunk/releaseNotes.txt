@@ -81,7 +81,7 @@ Added F06 Reader
       - ctetra
       - cpenta
       - chexa
-   - isotropic plate stress/strain (static/***transient)
+   - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
       - ctria3
       - cquad4 (centroid/bilinear)
    - composite plate stress/strain (static/***transient)
@@ -100,6 +100,10 @@ Added F06 Writer
    - displacement (static/***transient)
    - temperature  (static/transient)
 
+   - solid stress/strain (static/***transient);  (directional vectors & pressure calculated)
+      - ctetra
+      - cpenta
+      - chexa
    - isotropic plate stress/strain (static/***transient)
       - ctria3
       - cquad4 (centroid/bilinear)
