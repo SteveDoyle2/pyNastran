@@ -103,14 +103,14 @@ The list of duplicate defined cards include (not a full list):
  * PDAMP
  * PMASS
 
-== Modified Cards (v0.3+ only)==
+== Modified Cards ==
 Sometimes this will happen
 {{{
 diffKeys1=[] diffKeys2=[]
   *key=FREQ1    value1=2   value2=0
   *key=FREQ     value1=0   value2=1
 }}}
-If you look at the definition of the cards, you'll see that if two FREQx cards have the same ID, then they will both be used during a frequency analysis.  The simplest form of the card will be used, even if it means combining and/or changing card types.
+If you look at the definition of the cards, you'll see that if two FREQx cards have the same ID, then they will both be used during a frequency analysis.  The simplest form of the card will be used (a FREQ card in this case), even if it means combining and/or changing card types.
 
 The list of modified cards include:
  * FREQ
