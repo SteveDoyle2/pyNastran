@@ -53,20 +53,27 @@ class F06(OES,OUG,F06Writer):
           'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self.getMpcForces,
           #'G R I D   P O I N T   F O R C E   B A L A N C E':self.getGridPointForces,
 
+          'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )':self.getBarStress,
+          'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )':self.getRodStress,
+
+          'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.getTriStress,
           'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self.getQuadStress,
           'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self.getQuadStressBilinear,
           'S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )': self.getQuadCompositeStress,
-          'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )':self.getBarStress,
+
+          'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.getSolidStressTetra,
           'S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )':self.getSolidStressHexa,
           'S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )':self.getSolidStressPenta,
-          'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )':self.getRodStress,
-          'S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.getSolidStressTetra,
-          'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self.getTriStress,
+
+          'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )':self.getBarStrain,
+          'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )':self.getRodStrain,
 
           'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )':self.getQuadStrains,
           'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':self.getTriStrain,
-          'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )':self.getBarStrain,
-          'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )':self.getRodStrain,
+
+          'S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )':self.getSolidStrainTetra,
+          'S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )':self.getSolidStrainHexa,
+          'S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )':self.getSolidStrainPenta,
 
           'T E M P E R A T U R E   V E C T O R':self.getTemperatureVector,
           'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S':self.getTempGradientsFluxes,
@@ -451,9 +458,10 @@ class F06(OES,OUG,F06Writer):
             #print "marker = %s" %(marker)
             if marker in self.markers:
                 blank = 0
-                print "\n*marker = %s" %(marker)
+                #print "\n*marker = %s" %(marker)
                 self.markerMap[marker]()
                 self.storedLines = []
+                #print "i=%i" %(self.i)
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:
                 blank = 0
                 #print "\n*marker = %s" %(marker)
