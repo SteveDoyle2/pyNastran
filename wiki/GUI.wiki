@@ -1,6 +1,9 @@
 #summary features of the Graphical User Interface
 #labels Featured
 
+= Setup Note =
+Make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGuide Installation Guide] and use *setup.py develop* and not *setup.py install*.  Otherwise, the GUI will not work in v0.3.
+
 = Introduction =
 
 The Graphical User Interface (GUI) was first introduced in version 0.3.0 (unreleased).  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
