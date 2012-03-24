@@ -633,6 +633,42 @@ class ElementsStressStrain(object):
         self.printSection(100)
         self.handleResultsBuffer(self.CQUAD4_95)
 
+    def QUAD4FD_139(self):
+        """
+        Hyperelastic Quad
+        36+4*7*4 = 148
+        """
+        #print "len(data) = %s" %(len(self.data))
+        
+        #x = 0
+        while len(self.data)>=148:
+            #if x==2:
+            #    sys.exit('end of hyperQuad')
+            eData     = self.data[0:4*9]
+            self.data = self.data[4*9: ]
+            out = unpack('issssiffffff',eData)
+
+            (eid,t1,t2,t3,t4,ID,sx,sy,sxy,angle,smj,smi) = out
+            eid = (eid - self.deviceCode)//10
+            Type = t1+t2+t3+t4
+            self.obj.addNewEid([eid,Type,sx,sy,sxy,angle,smj,smi])
+            #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(eid,Type,ID,sx,sy,sxy,angle,smj,smi)
+            for i in range(3):
+                eData     = self.data[0:4*7]
+                self.data = self.data[4*7: ]
+                out = unpack('iffffff',eData)
+                #(ID,sx,sy,sxy,angle,smj,smi) = out
+                self.obj.add(eid,out)
+                #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(ID,sx,sy,sxy,angle,smj,smi)
+            ###
+            #self.obj.add(data)
+            #x+=1
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+        ###
+        #sys.exit('end of hyperQuad')
+        self.handleResultsBuffer(self.QUAD4FD_139)
+    
     def CQUAD4_144(self): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES

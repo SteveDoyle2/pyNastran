@@ -23,6 +23,10 @@ class ThermalMaterial(Material):
     def __init__(self,card,data):
         Material.__init__(self,card,data) 
 
+class HyperelasticMaterial(Material):
+    """Hyperelastic Material Class"""
+    def __init__(self,card,data):
+        Material.__init__(self,card,data) 
 
 class CREEP(Material):
     type = 'CREEP'
@@ -753,6 +757,65 @@ class MAT10(Material):
     def reprFields(self):
         return self.rawFields()
 
+
+class MATHP(HyperelasticMaterial):
+    def __init__(self,card,data):
+        HyperelasticMaterial.__init__(self,card,data)
+        self.mid  = card.field(1)
+        self.a10  = card.field(2,0.) 
+        self.a01  = card.field(3,0.) 
+        self.d1   = card.field(4,(self.a10+self.a01)*1000)
+        self.rho  = card.field(5)
+        self.av   = card.field(6,0.)
+        self.TRef = card.field(7,0.)
+        self.ge   = card.field(8,0.)
+
+        self.na   = card.field(10,'na')
+        self.nd   = card.field(11,'nd')
+
+        self.a20  = card.field(17,'a20')
+        self.a11  = card.field(18,0.)
+        self.a02  = card.field(19,0.)
+        self.d2   = card.field(20,0.)
+        
+        self.a30 = card.field(25,'a30')
+        self.a21 = card.field(26,0.)
+        self.a12 = card.field(27,0.)
+        self.a03 = card.field(28,0.)
+        self.d3  = card.field(29,0.)
+
+        self.a40 = card.field(33,'a40')
+        self.a31 = card.field(34,0.)
+        self.a22 = card.field(35,0.)
+        self.a13 = card.field(36,0.)
+        self.a04 = card.field(37,0.)
+        self.d4  = card.field(38,0.)
+        
+        self.a50 = card.field(41,'a50')
+        self.a41 = card.field(42)
+        self.a32 = card.field(43)
+        self.a23 = card.field(44)
+        self.a14 = card.field(45)
+        self.a05 = card.field(46)
+        self.d5  = card.field(47,0.)
+        
+        self.tab1 = card.field(49,'tab1')
+        self.tab2 = card.field(50,'tab2')
+        self.tab3 = card.field(51,'tab3')
+        self.tab4 = card.field(52,'tab4')
+        self.tabd = card.field(56,'tabd')
+
+    def rawFields(self):
+        fields = ['MATHP',self.mid,self.a10,self.a01,self.d1,self.rho,self.av,self.TRef,self.ge,
+                          None,    self.na,self.nd,None,None,None,None,None,
+                          self.a20,self.a11,self.a02,self.d2,None,None,None,None,
+                          self.a30,self.a21,self.a12,self.a03,self.d3None,None,None,
+                          self.a40,self.a31,self.a22,self.a13,self.a04,self.d4,None,None,
+                          self.a50,self.a41,self.a32,self.a23,self.a14,self.a05,self.d5,None,
+                          self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
+
+    def reprFields(self):
+        return self.rawFields()
 
 class MaterialDependence(BaseCard):
     def __init__(self,card,data):

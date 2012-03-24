@@ -14,7 +14,7 @@ from oes_solids import solidStressObject,solidStrainObject
 from oes_plates import plateStressObject,plateStrainObject
 from oes_compositePlates import compositePlateStressObject,compositePlateStrainObject
 from oes_springs   import celasStressObject,celasStrainObject
-from oes_nonlinear import nonlinearRodObject
+from oes_nonlinear import nonlinearRodObject,nonlinearQuadObject
 
 class OES(ElementsStressStrain):
     """Table of stresses/strains"""
@@ -438,6 +438,12 @@ class OES(ElementsStressStrain):
             self.CBEAM_94()
             #sys.exit('stoping at end of CBEAM_94')
             #del self.eid2
+
+        elif self.elementType in [139]:   # QUAD4FD
+            #print "    found QUAD4FD_139"
+            self.makeOES_Object(self.plateStress,nonlinearQuadObject,
+                                self.plateStrain,nonlinearQuadObject)
+            self.QUAD4FD_139()
 
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
             #self.skipOES_Element()
