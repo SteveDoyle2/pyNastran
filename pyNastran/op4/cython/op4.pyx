@@ -8,7 +8,7 @@ by Gael Varoquaux
 cdef extern from "stdio.h":
     cdef int SEEK_SET = 0
     ctypedef void* FILE
-    int fseek (FILE *stream, long int off, int whence)
+    int   fseek (FILE *stream, long int off, int whence)
     char *fgets (char *s, int n, FILE *stream)
 
 cdef extern from "libop4.c":
@@ -18,30 +18,28 @@ cdef extern from "libop4.c":
         int     start_row   #/* Zero based, so first row has start_row = 0.    */
         int     N_idx       #/* Index into N[] to first numeric term for this  */
                             #/* string.                                        */
-    float *op4_load2(int size)
-    float *op4_load(int size)
-    float *op4_load_RS(FILE   *fp         ,
-                      int     nRow       ,  #/* in  # rows    in matrix        */
-                      int     nCol       ,  #/* in  # columns in matrix        */
-                      char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
-                      int     col_width  ,  #/* in  # characters in format str */
-                      int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
-                      int     complx     ,  #/* in  0=real   1=complex         */
-                      int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
-                      str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
-                      int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
-                      )
-    double *op4_load_RD(FILE   *fp         ,
-                      int     nRow       ,  #/* in  # rows    in matrix        */
-                      int     nCol       ,  #/* in  # columns in matrix        */
-                      char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
-                      int     col_width  ,  #/* in  # characters in format str */
-                      int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
-                      int     complx     ,  #/* in  0=real   1=complex         */
-                      int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
-                      str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
-                      int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
-                      )
+    float  *op4_load_S(FILE   *fp         ,
+                       int     nRow       ,  #/* in  # rows    in matrix        */
+                       int     nCol       ,  #/* in  # columns in matrix        */
+                       char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
+                       int     col_width  ,  #/* in  # characters in format str */
+                       int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
+                       int     complx     ,  #/* in  0=real   1=complex         */
+                       int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
+                       str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
+                       int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                       )
+    double *op4_load_D(FILE   *fp         ,
+                       int     nRow       ,  #/* in  # rows    in matrix        */
+                       int     nCol       ,  #/* in  # columns in matrix        */
+                       char   *fmt_str    ,  #/* in  eg "%23le%23le%23le"       */
+                       int     col_width  ,  #/* in  # characters in format str */
+                       int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
+                       int     complx     ,  #/* in  0=real   1=complex         */
+                       int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
+                       str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
+                       int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                       )
     int    op4_scan(char *filename  , #/* in                          */
                     int  *n_mat     , #/* out number of matrices      */
                     char  name[][9] , #/* out matrix names            */
@@ -103,42 +101,6 @@ np.import_array()
 # the Python object is deleted.
 
 # types at http://cython.org/release/Cython-0.13/Cython/Includes/numpy.pxd
-cdef class ArrayWrapper:                                   # {{{1
-    cdef void* data_ptr
-    cdef int size
-
-    cdef set_data(self, int size, void* data_ptr):
-        """ Set the data of the array
-
-        This cannot be done in the constructor as it must recieve C-level
-        arguments.
-
-        Parameters:
-        -----------
-        size: int
-            Length of the array.
-        data_ptr: void*
-            Pointer to the data            
-
-        """
-        self.data_ptr = data_ptr
-        self.size = size
-
-    def __array__(self):
-        """ Here we use the __array__ method, that is called when numpy
-            tries to get an array from the object."""
-        cdef np.npy_intp shape[1]
-        shape[0] = <np.npy_intp> self.size
-        # Create a 1D array, of length 'size'
-        ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_INT, self.data_ptr)
-#       ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_DOUBLE, self.data_ptr)
-        return ndarray
-
-    def __dealloc__(self):
-        """ Frees the array. This is called by Python when all the
-        references to the object are gone. """
-        free(<void*>self.data_ptr)
-# 1}}}
 cdef class ArrayWrapper_RS:                                # {{{1
     cdef void* data_ptr
     cdef int size
@@ -283,7 +245,7 @@ cdef class ArrayWrapper_CD:                                # {{{1
         references to the object are gone. """
         free(<void*>self.data_ptr)
 # 1}}}
-def File(char *filename, 
+def File(char *filename,                                   # {{{1
          char *mode    ):
     cdef int  Max_Matrices_Per_OP4 = 100
     cdef int  n_mat_in_file
@@ -352,8 +314,8 @@ def File(char *filename,
         raise IOError
 
     return fh
-
-def Load(op4_handle,    # in, as created by File()
+# 1}}}
+def Load(op4_handle,    # in, as created by File()           {{{1
          int n_mat=1 ,  # in, number of matrices to return
          int n_skip=0): # in, number of matrices to skip before loading
     cdef FILE   *fp
@@ -395,7 +357,7 @@ def Load(op4_handle,    # in, as created by File()
 
     if os.path.basename(op4_handle['File']) != 'mat_t_dn.op4': return
 
-    print('Attempting file open of %s' % (op4_handle['File']))
+    # print('Attempting file open of %s' % (op4_handle['File']))
     fp = op4_open_r(op4_handle['File'], 0)
     if fp == NULL:
         print('unable to open %s' % (op4_handle['File']))
@@ -405,13 +367,10 @@ def Load(op4_handle,    # in, as created by File()
     for i in range(n_skip, n_skip+n_mat):
         complx = False
         if op4_handle['type'][i] > 2: complx = True
-        print('%s complx=%d' % (op4_handle['name'][i], complx))
+        # print('%s complx=%d' % (op4_handle['name'][i], complx))
         if op4_handle['storage'][i]:
             print('%s is sparse, skipping for now' % (op4_handle['name'][i]))
         else:
-            if complx: NPT    = 2
-            else:      NPT    = 1
-            Matrix = np.zeros(( NPT * op4_handle['nRow'][i] * op4_handle['nCol'][i] ))  # need dtype=
 
             # now read the file contents
             fseek(fp, op4_handle['offset'][i], SEEK_SET)
@@ -422,7 +381,7 @@ def Load(op4_handle,    # in, as created by File()
                 fmt_one   = '%%%dle' % col_width
                 nNum_cols = 80 // col_width
                 fmt_str   = fmt_one*nNum_cols
-                print('fmt_str=[%s]' % (fmt_str))
+                # print('fmt_str=[%s]' % (fmt_str))
 
             if filetype == 1: # text
                 if op4_handle['storage'][i]:     # sparse
@@ -430,16 +389,16 @@ def Load(op4_handle,    # in, as created by File()
                 else:                            # dense
                     size = op4_handle['nRow'][i] * op4_handle['nCol'][i]
                     if   op4_handle['type'][i] == 1: 
-                        array_RS = op4_load_RS(fp, 
-                                   op4_handle['nRow'][i], 
-                                   op4_handle['nCol'][i], 
-                                   fmt_str, 
-                                   col_width,
-                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                   complx    , # in  0=real   1=complex     
-                                   unused    , # in/out index m.S (if sp1,2)
-                                   unused_s  , # out string data (if sp1,2) 
-                                   unused    ) # in/out index m.N (sp 1,2)  
+                        array_RS = op4_load_S(fp, 
+                                              op4_handle['nRow'][i], 
+                                              op4_handle['nCol'][i], 
+                                              fmt_str, 
+                                              col_width,
+                                              op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
 
                         array_wrapper_RS = ArrayWrapper_RS()
                         array_wrapper_RS.set_data(size, <void*> array_RS) 
@@ -448,16 +407,16 @@ def Load(op4_handle,    # in, as created by File()
                         Py_INCREF(array_wrapper_RS)
 
                     elif op4_handle['type'][i] == 2: 
-                        array_RD = op4_load_RD(fp, 
-                                   op4_handle['nRow'][i], 
-                                   op4_handle['nCol'][i], 
-                                   fmt_str, 
-                                   col_width,
-                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                   complx    , # in  0=real   1=complex     
-                                   unused    , # in/out index m.S (if sp1,2)
-                                   unused_s  , # out string data (if sp1,2) 
-                                   unused    ) # in/out index m.N (sp 1,2)  
+                        array_RD = op4_load_D(fp, 
+                                              op4_handle['nRow'][i], 
+                                              op4_handle['nCol'][i], 
+                                              fmt_str, 
+                                              col_width,
+                                              op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
                         array_wrapper_RD = ArrayWrapper_RD()
                         array_wrapper_RD.set_data(size, <void*> array_RD) 
                         ndarray = np.array(array_wrapper_RD, copy=False)
@@ -465,16 +424,16 @@ def Load(op4_handle,    # in, as created by File()
                         Py_INCREF(array_wrapper_RD)
 
                     elif op4_handle['type'][i] == 3: 
-                        array_CS = op4_load_RS(fp, 
-                                   op4_handle['nRow'][i], 
-                                   op4_handle['nCol'][i], 
-                                   fmt_str, 
-                                   col_width,
-                                   op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                   complx    , # in  0=real   1=complex     
-                                   unused    , # in/out index m.S (if sp1,2)
-                                   unused_s  , # out string data (if sp1,2) 
-                                   unused    ) # in/out index m.N (sp 1,2)  
+                        array_CS = op4_load_S(fp, 
+                                              op4_handle['nRow'][i], 
+                                              op4_handle['nCol'][i], 
+                                              fmt_str, 
+                                              col_width,
+                                              op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
                         array_wrapper_CS = ArrayWrapper_CS()
                         array_wrapper_CS.set_data(size, <void*> array_CS) 
                         ndarray = np.array(array_wrapper_CS, copy=False)
@@ -482,16 +441,16 @@ def Load(op4_handle,    # in, as created by File()
                         Py_INCREF(array_wrapper_CS)
 
                     elif op4_handle['type'][i] == 4: 
-                        array_CD = op4_load_RD(fp, 
-                                               op4_handle['nRow'][i], 
-                                               op4_handle['nCol'][i], 
-                                               fmt_str, 
-                                               col_width,
-                                               op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                               complx    , # in  0=real   1=complex     
-                                               unused    , # in/out index m.S (if sp1,2)
-                                               unused_s  , # out string data (if sp1,2) 
-                                               unused    ) # in/out index m.N (sp 1,2)  
+                        array_CD = op4_load_D(fp, 
+                                              op4_handle['nRow'][i], 
+                                              op4_handle['nCol'][i], 
+                                              fmt_str, 
+                                              col_width,
+                                              op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
                         array_wrapper_CD = ArrayWrapper_CD()
                         array_wrapper_CD.set_data(size, <void*> array_CD) 
                         ndarray = np.array(array_wrapper_CD, copy=False)
@@ -503,7 +462,7 @@ def Load(op4_handle,    # in, as created by File()
                             op4_handle['name'][i], op4_handle['type'][i]))
                         raise IOError
 
-                    ndarray = np.reshape(ndarray, (op4_handle['nRow'][i],op4_handle['nCol'][i])) 
+                    ndarray = np.reshape(ndarray, (op4_handle['nCol'][i], op4_handle['nRow'][i])).T
 
                     return ndarray
 
@@ -512,25 +471,4 @@ def Load(op4_handle,    # in, as created by File()
                     pass
                 else:                            # dense
                     pass
-
-def load2(int size):
-    """ Python binding of the 'compute' function in 'libop4.c' that does
-        not copy the data allocated in C.
-    """
-    cdef float *array
-    cdef np.ndarray ndarray
-    # Call the C function
-    array = op4_load2(size)
-
-    array_wrapper = ArrayWrapper()
-    array_wrapper.set_data(size, <void*> array) 
-    ndarray = np.array(array_wrapper, copy=False)
-    # Assign our object to the 'base' of the ndarray object
-    ndarray.base = <PyObject*> array_wrapper
-    # Increment the reference count, as the above assignement was done in
-    # C, and Python does not know that there is this additional reference
-    Py_INCREF(array_wrapper)
-
-    ndarray = np.reshape(ndarray, (2,5)) 
-
-    return ndarray
+# 1}}}
