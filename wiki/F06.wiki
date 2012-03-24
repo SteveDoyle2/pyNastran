@@ -7,7 +7,7 @@ The F06 Reader/Writer will be released in v0.4.  Download the source to start tr
 
 The F06 Reader can read Nastran F06 files.  It is less capable than the OP2 Reader in terms of number of results that it can read, but it does read a few tables that don't exist in the OP2.
 
-When results exist in the OP2, the same OP2 objects to store the data, so see the OP2 wiki page to access those data members.
+When results exist in the OP2, the same OP2 objects to store the data, so see the [http://code.google.com/p/pynastran/wiki/OP2 OP2 wiki page] to see how to access those data members.
 
 = Additional Tables =
  - Real/Complex Eigenvalues
@@ -17,7 +17,7 @@ When results exist in the OP2, the same OP2 objects to store the data, so see th
 The F06 Writer is integrated in with the F06 class as well as the OP2 class.  This allows a user to verify that their data was read properly and also will be useful if you're writing your own solver and want to write an F06 file.
 
 = How to Use =
-Note theses arguments will change
+Note these arguments will change to be more consistent with the OP2 reader
 {{{
 from pyNastran.f06.f06 import F06
 f06 = F06(f06Name) ## @todo add log, debug
