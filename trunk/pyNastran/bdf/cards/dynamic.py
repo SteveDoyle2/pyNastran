@@ -219,65 +219,99 @@ class TSTEPNL(BaseCard):
     """
     type = 'TSTEPNL'
     def __init__(self,card=None,data=None):
-        self.sid     = card.field(1)
-        self.ndt     = card.field(2)
-        self.dt      = card.field(3)
-        self.no      = card.field(4,1)
-        self.method  = card.field(5,'ADAPT') ## @note not listed in all QRGs
-        self.kstep   = card.field(6,10)
-        self.maxIter = card.field(7,10)
-        self.conv    = card.field(8,'PW')
+        if card:
+            self.sid     = card.field(1)
+            self.ndt     = card.field(2)
+            self.dt      = card.field(3)
+            self.no      = card.field(4,1)
+            self.method  = card.field(5,'ADAPT') ## @note not listed in all QRGs
+            self.kStep   = card.field(6,10)
+            self.maxIter = card.field(7,10)
+            self.conv    = card.field(8,'PW')
 
-        # line 2
-        self.epsu    = card.field(9, 1.E-2)
-        self.epsp    = card.field(10,1.E-3)
-        self.epsw    = card.field(11,1.E-6)
-        self.maxDiv  = card.field(12,2)
-        self.maxQn   = card.field(13,10)
-        self.MaxLs   = card.field(14,2)
-        self.fStress = card.field(15,0.2)
-        
-        # line 3
-        self.maxBis = card.field(17,5)
-        self.adjust = card.field(18,5)
-        self.mStep  = card.field(19)
-        self.rb     = card.field(20,0.6)
-        self.maxR   = card.field(21,32.)
-        self.uTol   = card.field(22,0.1)
-        self.rTolB  = card.field(23,20.)
-        self.minIter = card.field(24) # not listed in all QRGs
+            # line 2
+            self.epsU    = card.field(9, 1.E-2)
+            self.epsP    = card.field(10,1.E-3)
+            self.epsW    = card.field(11,1.E-6)
+            self.maxDiv  = card.field(12,2)
+            self.maxQn   = card.field(13,10)
+            self.MaxLs   = card.field(14,2)
+            self.fStress = card.field(15,0.2)
+
+            # line 3
+            self.maxBisect = card.field(17,5)
+            self.adjust = card.field(18,5)
+            self.mStep  = card.field(19)
+            self.rb     = card.field(20,0.6)
+            self.maxR   = card.field(21,32.)
+            self.uTol   = card.field(22,0.1)
+            self.rTolB  = card.field(23,20.)
+            self.minIter = card.field(24) # not listed in all QRGs
+        else:
+            print data,len(data)
+            
+            (sid,ndt,dt,no,method,kStep,maxIter,conv,epsU,epsP,epsW,
+             maxDiv,maxQn,maxLs,fStress,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = data
+            self.sid     = sid
+            self.ndt     = ndt
+            self.dt      = dt
+            self.no      = no
+            self.method  = method
+            self.kStep   = kStep
+            self.maxIter = maxIter
+            self.conv    = conv
+
+            # line 2       
+            self.epsU    = epsU
+            self.epsP    = epsP
+            self.epsW    = epsW
+            self.maxDiv  = maxDiv
+            self.maxQn   = maxQn
+            self.MaxLs   = maxLs
+            self.fStress = fStress
+
+            # line 3       
+            self.maxBisect = maxBisect
+            self.adjust =  adjust
+            self.mStep  =  mStep
+            self.rb     =  rb
+            self.maxR   =  maxR
+            self.uTol   =  uTol
+            self.rTolB  =  rTolB
+            self.minIter = None  # not listed in DMAP 2005
+        ###
 
     def rawFields(self):
-        fields = ['TSTEPNL',self.sid,self.ndt,self.dt,self.no,self.method,self.kstep,self.maxIter,self.conv,
-                            self.epsu,self.epsp,self.epsw,self.maxDiv,self.maxQn,self.MaxLs,self.fStress,None,
-                            self.maxBis,self.adjust,self.mStep,self.rb,self.maxR,self.uTol,self.rTolB,self.minIter]
+        fields = ['TSTEPNL',self.sid,self.ndt,self.dt,self.no,self.method,self.kStep,self.maxIter,self.conv,
+                            self.epsU,self.epsP,self.epsW,self.maxDiv,self.maxQn,self.MaxLs,self.fStress,None,
+                            self.maxBisect,self.adjust,self.mStep,self.rb,self.maxR,self.uTol,self.rTolB,self.minIter]
         return fields
 
     def reprFields(self):
         no      = self.setBlankIfDefault(self.no,1)
         method  = self.setBlankIfDefault(self.method,'ADAPT')
-        kstep   = self.setBlankIfDefault(self.kstep,10)
+        kStep   = self.setBlankIfDefault(self.kStep,10)
         maxIter = self.setBlankIfDefault(self.maxIter,10)
         conv    = self.setBlankIfDefault(self.conv,'PW')
 
-        epsu    = self.setBlankIfDefault(self.epsu   ,1e-2)
-        epsp    = self.setBlankIfDefault(self.epsp   ,1e-3)
-        epsw    = self.setBlankIfDefault(self.epsw   ,1e-6)
+        epsU    = self.setBlankIfDefault(self.epsU   ,1e-2)
+        epsP    = self.setBlankIfDefault(self.epsP   ,1e-3)
+        epsW    = self.setBlankIfDefault(self.epsW   ,1e-6)
         maxDiv  = self.setBlankIfDefault(self.maxDiv ,2)
         maxQn   = self.setBlankIfDefault(self.maxQn  ,10)
         MaxLs   = self.setBlankIfDefault(self.MaxLs  ,2)
         fStress = self.setBlankIfDefault(self.fStress,0.2)
 
-        maxBis  = self.setBlankIfDefault(self.maxBis ,5)
+        maxBisect  = self.setBlankIfDefault(self.maxBisect ,5)
         adjust  = self.setBlankIfDefault(self.adjust ,5)
         rb      = self.setBlankIfDefault(self.rb     ,0.6)
         maxR    = self.setBlankIfDefault(self.maxR   ,32.)
         uTol    = self.setBlankIfDefault(self.uTol   ,0.1)
         rTolB   = self.setBlankIfDefault(self.rTolB  ,20.)
 
-        fields = ['TSTEPNL',self.sid,self.ndt,self.dt,no,method,kstep,self.maxIter,conv,
-                            epsu,epsp,epsw,maxDiv,maxQn,MaxLs,fStress,None,
-                            maxBis,adjust,self.mStep,rb,maxR,uTol,rTolB,self.minIter]
+        fields = ['TSTEPNL',self.sid,self.ndt,self.dt,no,method,kStep,self.maxIter,conv,
+                            epsU,epsP,epsW,maxDiv,maxQn,MaxLs,fStress,None,
+                            maxBisect,adjust,self.mStep,rb,maxR,uTol,rTolB,self.minIter]
         return fields
 
 class NLPARM(BaseCard):
@@ -289,29 +323,57 @@ class NLPARM(BaseCard):
     """
     type = 'NLPARM'
     def __init__(self,card=None,data=None):
-        self.nid       = card.field(1)
-        self.ninc      = card.field(2,10)
-        self.dt        = card.field(3,0.0)
-        self.kMethod   = card.field(4,'AUTO')
-        self.kStep     = card.field(5,5)
-        self.maxIter   = card.field(6,25)
-        self.conv      = card.field(7,'PW')
-        self.intOut    = card.field(8,'NO')
-        
-        # line 2
-        self.epsU      = card.field(9, 0.01)
-        self.epsP      = card.field(10,0.01)
-        self.epsW      = card.field(11,0.01)
-        self.maxDiv    = card.field(12,3)
-        self.maxQn     = card.field(13,self.maxIter)
-        self.maxLs     = card.field(14,4)
-        self.fStress   = card.field(15,0.2)
-        self.lsTol     = card.field(16,0.5)
+        if card:
+            self.nid       = card.field(1)
+            self.ninc      = card.field(2,10)
+            self.dt        = card.field(3,0.0)
+            self.kMethod   = card.field(4,'AUTO')
+            self.kStep     = card.field(5,5)
+            self.maxIter   = card.field(6,25)
+            self.conv      = card.field(7,'PW')
+            self.intOut    = card.field(8,'NO')
 
-        # line 3
-        self.maxBisect = card.field(17,5)
-        self.maxR      = card.field(21,20.)
-        self.rTolB     = card.field(23,20.)
+            # line 2
+            self.epsU      = card.field(9, 0.01)
+            self.epsP      = card.field(10,0.01)
+            self.epsW      = card.field(11,0.01)
+            self.maxDiv    = card.field(12,3)
+            self.maxQn     = card.field(13,self.maxIter)
+            self.maxLs     = card.field(14,4)
+            self.fStress   = card.field(15,0.2)
+            self.lsTol     = card.field(16,0.5)
+
+            # line 3
+            self.maxBisect = card.field(17,5)
+            self.maxR      = card.field(21,20.)
+            self.rTolB     = card.field(23,20.)
+        else:
+            (sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
+             maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = data
+            self.nid       = sid
+            self.ninc      = ninc
+            self.dt        = dt
+            self.kMethod   = kMethod
+            self.kStep     = kStep
+            self.maxIter   = maxIter
+            self.conv      = conv
+            self.intOut    = intOut
+                             
+            # line 2
+            self.epsU      = epsU
+            self.epsP      = epsP
+            self.epsW      = epsW
+            self.maxDiv    = maxDiv
+            self.maxQn     = maxQn
+            self.maxLs     = maxLs
+            self.fStress   = fStress
+            self.lsTol     = lsTol
+                             
+            # line 3
+            self.maxBisect = maxBisect
+            self.maxR      = maxR
+            self.rTolB     = rTolB
+        ###
 
     def rawFields(self):
         fields = ['NLPARM',self.nid,self.ninc,self.dt,self.kMethod,self.kStep,self.maxIter,self.conv,self.intOut,

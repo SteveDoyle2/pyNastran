@@ -497,6 +497,79 @@ class ElementsStressStrain(object):
         #self.firstPass = True
         self.handleResultsBuffer(self.CHEXANL_93,debug=True)
 
+    def CBEAM_94(self):
+        if self.makeOp2Debug:
+            self.op2Debug.write('---BEAM_94---\n')
+        deviceCode = self.deviceCode
+        nNodes = 10 # 11-1
+
+        #nTotal       = self.obj.getLengthTotal()
+        #(n1,format1) = self.obj.getLength1()
+        #(n2,format2) = self.obj.getLength2()
+        nTotal = 2*4 + (18-3)*9*4
+        nTotal = 204
+
+        n1 = 24
+        format1 = 'ssssfffff'
+        print "len(data) = ",len(self.data)
+        while len(self.data)>=nTotal:
+            eData     = self.data[0:8]
+            self.data = self.data[8: ]
+            (eid,gridA) = unpack('ii', eData)
+            print "eid=%s gridA=%s" %(eid,gridA)
+
+            for i in range(1):
+                for j in range(4): # c,d,e,f @ A;    c,d,e,f @ B
+                    eData     = self.data[0:n1]
+                    self.data = self.data[n1: ]
+                    out = unpack(format1, eData)
+                    (loc1,loc2,loc3,loc4,nsx,nse,te,epe,ece) = out
+                    loc = loc1+loc2+loc3+loc4
+                    print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" %(loc,nsx,nse,te,epe,ece)
+                ###
+                #self.obj.add(eid,out)
+            ###
+            #sys.exit('stoping in CBEAM_94')
+
+        self.handleResultsBuffer(self.CBEAM_94)
+        if self.makeOp2Debug:
+            print "done with CBEAM-94"
+        #raise Exception('add CBEAM-94...')
+
+    def CBEAM_94b(self): # not coded...
+        if self.makeOp2Debug:
+            self.op2Debug.write('---BEAM_94---\n')
+        deviceCode = self.deviceCode
+        nNodes = 10 # 11-1
+
+        nTotal       = self.obj.getLengthTotal()
+        (n1,format1) = self.obj.getLength1()
+        (n2,format2) = self.obj.getLength2()
+
+        while len(self.data)>=nTotal:
+            eData     = self.data[0:n1]
+            self.data = self.data[n1: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            #print "outA = ",out
+            eid = self.obj.addNewEid(out)
+            
+            for iNode in range(nNodes):
+                eData     = self.data[0:n2]
+                self.data = self.data[n2: ]
+                out = unpack(format2, eData)
+                #print "outB = ",out
+                self.obj.add(eid,out)
+
+            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.CBEAM_94)
+        if self.makeOp2Debug:
+            print "done with CBEAM-94"
+        #raise Exception('add CBEAM-94...')
+
     def CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES

@@ -13,7 +13,7 @@ class Geometry3(object):
                          (4201,42,18): self.readFORCE,    # record 3
                          (4001,40,20): self.readFORCE1,   # record 4
                          (4101,41,22): self.readFORCE2,   # record 5
-                        #(4401,44,26): self.readGRAV,     # record 7 - buggy
+                         (4401,44,26): self.readGRAV,     # record 7 - buggy
                          (4551,61,84): self.readLOAD,     # record 8
                          (3709,37,331): self.readLOADCYH, # record 9 - not done
 
@@ -150,13 +150,13 @@ class Geometry3(object):
         ###
 
     def readLOADCYH(self,data):
-        pass
+        self.skippedCardsFile.write('skipping LOADCYG in GEOM3\n')
 
 # LOADCYN
 # LOADCYT
 
     def readLSEQ(self,data):
-        pass
+        self.skippedCardsFile.write('skipping LSEQ in GEOM3\n')
 
     def readMOMENT(self,data):
         """
@@ -398,10 +398,10 @@ class Geometry3(object):
 # QVOL
 
     def readRFORCE(self,data):
-        pass
+        self.skippedCardsFile.write('skipping RFORCE in GEOM3\n')
 
     def readSLOAD(self,data):
-        pass
+        self.skippedCardsFile.write('skipping SLOAD in GEOM3\n')
  
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33
@@ -410,16 +410,16 @@ class Geometry3(object):
 # TEMP1C
 
     def readTEMPP1(self,data):
-        pass
+        self.skippedCardsFile.write('skipping TEMPP1 in GEOM3\n')
 
     def readTEMPP2(self,data):
-        pass
+        self.skippedCardsFile.write('skipping TEMPP2 in GEOM3\n')
 
     def readTEMPP3(self,data):
-        pass
+        self.skippedCardsFile.write('skipping TEMPP3 in GEOM3\n')
 
     def readTEMPRB(self,data):
-        pass
+        self.skippedCardsFile.write('skipping TEMPRB in GEOM3\n')
 
 # PFACE
 # PEDGE

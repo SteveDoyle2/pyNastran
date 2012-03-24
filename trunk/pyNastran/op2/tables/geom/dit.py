@@ -5,20 +5,20 @@ from struct import unpack
 
 from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.aero   import GUST
-from pyNastran.bdf.cards.tables import TABLED1
+from pyNastran.bdf.cards.tables import TABLED1,TABLED2,TABLED3,TABLEM1,TABLEM2,TABLEM3
 
 class DIT(object):
     def readTable_DIT(self):
         self.iTableMap = {
                             (1005,10,174): self.readGust,     # record 1
-                            (1105,11,133): self.readTableD1,  # record 4
+                           #(1105,11,133): self.readTableD1,  # record 4
                             (1205,12,134): self.readTableD2,  # record 5
                             (1305,13,140): self.readTableD3,  # record 6
                             
-                            (105,1,93): self.readTableM1, # record 9
+                           #(105,1,93): self.readTableM1, # record 9
                             (205,2,94): self.readTableM2, # record 10
                             (305,3,95): self.readTableM3, # record 11
-                            #(405,4,96): self.readTableM4, # record 12
+                            (405,4,96): self.readTableM4, # record 12
                             
                             (15, 21, 162): self.readFake,
                             (56, 26, 303): self.readFake,
@@ -42,6 +42,10 @@ class DIT(object):
             n+=20
         ###
         data = data[n:]
+
+#TABDMP1
+#TABLE3D
+
 
     def readTableD1(self,data):
         """
@@ -140,6 +144,8 @@ class DIT(object):
         ###
         data = data[n:]
 
+#TABLEDR
+
     def readTableM1(self,data):
         """
         TABLEM1(105,1,93) - the marker for Record 9
@@ -164,3 +170,16 @@ class DIT(object):
         func = TABLEM3
         self.readTable3(func,data)
 
+    def readTableM4(self,data):
+        """
+        TABLEM4(405,4,96) - the marker for Record 12
+        """
+        #print "reading TABLED3"
+        func = TABLEM4
+        self.readTable4(func,data)
+
+
+#TABLES1
+#TABLEST
+#TABRND1
+#TABRNDG

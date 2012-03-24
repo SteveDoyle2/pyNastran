@@ -3,7 +3,8 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.materials import CREEP,MAT1,MAT2,MAT3,MAT4,MAT5,MAT8,MAT9,MAT10
+from pyNastran.bdf.cards.materials import CREEP,MAT1,MAT2,MAT3,MAT4,MAT5,MAT8,MAT9,MAT10,MATS1
+from pyNastran.bdf.cards.dynamic import NLPARM,TSTEP,TSTEPNL
 
 class MPT(object):
 
@@ -20,18 +21,18 @@ class MPT(object):
                          (2503,25,288): self.readMAT8,  # record 7
                          (2603,26,300): self.readMAT9,  # record 8 - buggy
                          (2801,28,365): self.readMAT10, # record 9
-                         (503,5,90):    self.readMATS1, # record 12 - not done
+                         (503,5,90):    self.readMATS1, # record 12 - ???
 
-                         (3003,30,286): self.readNLPARM,  # record 27 - not done
-                         (3103,31,337): self.readTSTEPNL, # record 29 - not done
-                         (503,  5, 90): self.readMATS1,   # record 12 - not done
+                         (3003,30,286): self.readNLPARM,  # record 27 - ???
+                         (3103,31,337): self.readTSTEPNL, # record 29 - ???
+                         (503,  5, 90): self.readMATS1,   # record 12 - ???
                          (703,  7, 91): self.readMATT1,   # record 13 - not done
                          (803,  8,102): self.readMATT2,   # record 14 - not done
                          (1503,14,189): self.readMATT3,   # record 15 - not done
                          (2303,23,237): self.readMATT4,   # record 16 - not done
                          (2403,24,238): self.readMATT5,   # record 17 - not done
                          (2703,27,301): self.readMATT9,   # record 19 - not done
-                         (8802,88,413): self.readRADM,    # record 25 - not done
+                        #(8802,88,413): self.readRADM,    # record 25 - not done
 
                          }
 
@@ -264,10 +265,10 @@ class MPT(object):
             eData = data[:76]
             data  = data[76:]
             out = unpack('iifiiiiifffiiiffiff',eData)
-            (sid,ninc,dt,kmethod,kstep,maxiter,conv,intout,epsu,epsp,epsw,
-             maxdiv,maxqn,maxls,fstress,lstol,maxbis,maxr,rtolb) = out
-            mat = NLPARM(None,out)
-            self.addNLParm(mat)
+            #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
+            # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
+            nlparm = NLPARM(None,out)
+            self.addNLParm(nlparm)
         ###
 
 # NLPCI
@@ -281,9 +282,9 @@ class MPT(object):
             eData = data[:88]
             data  = data[88:]
             out = unpack('iifiiiiifffiiifiiiffff',eData)
-            (sid,ndt,dt,no,kmethod,kstep,maxiter,conv,epsu,epsp,epsw,
-             maxdiv,maxqn,maxls,fstress,lstol,maxbis,adjust,rb,maxr,utol,rtolb) = out
-            mat = TSTEPNL(None,out)
-            self.addTStep(mat)
+            #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
+            # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
+            tstep = TSTEPNL(None,out)
+            self.addTStep(tstep)
         ###
         

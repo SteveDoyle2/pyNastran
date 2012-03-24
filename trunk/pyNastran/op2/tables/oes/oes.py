@@ -421,6 +421,16 @@ class OES(ElementsStressStrain):
                                 self.compositePlateStrain,compositePlateStrainObject)
             self.CQUAD4_95()
             del self.eid2
+
+        elif self.elementType in [94]: # CBEAM (nonlinear)
+            print "    found a 94!"
+            #self.eid2 = None # stores the previous elementID
+            self.makeOES_Object(self.beamStress,beamStressObject,
+                                self.beamStrain,beamStrainObject)
+            self.CBEAM_94()
+            #sys.exit('stoping at end of CBEAM_94')
+            #del self.eid2
+
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
             #self.skipOES_Element()
             #elementType=53  -> TRIAX6  is not supported

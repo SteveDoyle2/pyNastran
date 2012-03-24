@@ -184,5 +184,5 @@ class Geometry1(object):
 
     def readSEQGP(self,data):
         """(5301,53,4) - the marker for Record 27"""
-        pass
+        self.skippedCardsFile.write('skipping SEQGP in GEOM1\n')
 

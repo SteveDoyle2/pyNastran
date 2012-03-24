@@ -61,6 +61,7 @@ OP2 API Changes
 OP2 Bug Fixes
 Overall OP2
    - supporting F06 reader/writer
+   - more embedded BDF reading
 
 Added OP2
 
