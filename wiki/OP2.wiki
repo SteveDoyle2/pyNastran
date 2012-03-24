@@ -11,22 +11,27 @@ This is how the version 0.3 OP2 reading software works.  Make sure you install t
  * lots of transient/static results
    * displacements
    * temperature
-   * rod stress/strain
-   * beam stress/strain
-   * plate stress/strain
-   * composite plate stress/strain
-   * solid stress/strain
    * eigenvectors
-   * elment strain energy support (limited)
- * maxShear/vonMises, fiberDistance/plateCurvature support
+   * stress/strain (no nonlinear/hyperelastic results)
+      * spring (CELASi)
+      * rod (CROD, CONROD)
+      * beam (CBEAM)
+      * plate (CQUAD4 bilinear, CQUAD4 centroidal, CTRIA3)
+        * maxShear/vonMises, fiberDistance/plateCurvature support
+      * composite plate (CQUAD4 centroidal, CTRIA3)
+        * maxShear/vonMises support
+      * solid elements (CTETRA, CPENTA, CHEXA)
+   * element strain energy support (limited)
  * automated printing of tables
  
 == Limitations ==
- * skippedCards.out (run "test_op2 op2Name.op2") shows the results that were skipped
+ * no SORT1 support (only SORT2)
+ * *skippedCards.out* (run *test_op2 op2Name.op2*) shows the results that were skipped
  * limited thermal support (only temperature)
  * no heat flux
- * no applied/spc/mpc forces
- * no nonlinear element support (e.g. SOL 106) 
+ * no applied/SPC/MPC forces
+ * no nonlinear element support (e.g. SOL 106)
+ * VERY limited frequency support
  * see <A href="http://code.google.com/p/pynastran/source/browse/branches/v0.3_2012-2-8/op2_reading.txt"> v0.3 OP2 Support</A>
 
 = Making an OP2 =
@@ -96,6 +101,9 @@ op2Obj.readOP2()
 
 # writes the bdf if makeGeom is True, otherwise the file is empty
 op2Obj.writeBDFAsPatran('fem.bdf.out')
+
+# print the results as an F06 (not supported across all results)
+print op2Obj.writeF06(f06Name) # added in v0.4
 
 # lets print the results
 print op2Obj.printResults() # prints ALL results from ALL tables
@@ -370,8 +378,8 @@ Transient Tables
 
 The tables are organized into cascading dictionaries with the final value being a float unless otherwise noted.  
 
-Notes
- * In order to get the static table, drop the "[dt]" term from the transient table. 
+=== Notes ===
+ * In order to get the static table, drop the *[dt]* term from the transient table. 
  * The actual name of dt can be found by extracting the object.dataCode['name'] string.
  * eType means element Type
  * eid means element ID
@@ -432,7 +440,7 @@ The list of data members in the various results:
      * s2[dt][eid][iPoint]
      * s3[dt][eid][iPoint]
      * s4[dt][eid][iPoint]
-     * axial[dt][eid][iPoint]
+     * axial[dt][eid]
      * smax[dt][eid][iPoint]
      * smin[dt][eid][iPoint]
 
