@@ -363,7 +363,7 @@ def Load(op4_handle,    # in, as created by File()           {{{1
         print('unable to open %s' % (op4_handle['File']))
         raise IOError
 
-    print(' open successful')
+    # print(' open successful')
     for i in range(n_skip, n_skip+n_mat):
         complx = False
         if op4_handle['type'][i] > 2: complx = True

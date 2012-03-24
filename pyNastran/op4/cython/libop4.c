@@ -27,76 +27,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>     /* isdigit, isalpha */
 #include "op4.h"
 
-float  *op4_load_S(FILE   *fp         ,
-                   int     nRow       ,  /* in  # rows    in matrix        */
-                   int     nCol       ,  /* in  # columns in matrix        */
-                   char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
-                   int     col_width  ,  /* in  # characters in format str */
-                   int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
-                   int     complx     ,  /* in  0=real   1=complex         */
-                   int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
-                   str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
-                   int    *N_index    )  /* in/out          (s_o) = 1,2    */
-{
-    float  *array;
-    int     c, size, NPT, n_nnz;
-    int    *unused;
-    str_t  *unused_s;
-
-    size = nRow*nCol;
-    if (complx) size *= 2;
-    array = malloc(sizeof(float)*size);
-
-    size = nRow*nCol;
-    NPT  = 1;
-    if (complx) NPT *= 2;
-    array = malloc(sizeof(double)*size*NPT);
-    for (c = 1; c <= nCol; c++) {
-        n_nnz = op4_read_col_t(fp, c, nRow, nCol, fmt_str, col_width,
-                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
-                               complx    , /* in  0=real   1=complex     */
-                               unused    , /* in/out index m.S (if sp1,2)*/
-                     (str_t *) unused_s  , /* out string data (if sp1,2) */
-                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
-                              &array[(c-1)*nRow*NPT]
-                              ); /* out numeric data */
-    }
-
-    return array;
-}
-
-double *op4_load_D(FILE   *fp         ,
-                   int     nRow       ,  /* in  # rows    in matrix        */
-                   int     nCol       ,  /* in  # columns in matrix        */
-                   char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
-                   int     col_width  ,  /* in  # characters in format str */
-                   int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
-                   int     complx     ,  /* in  0=real   1=complex         */
-                   int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
-                   str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
-                   int    *N_index    )  /* in/out          (s_o) = 1,2    */
-{
-    double *array;
-    int     c, size, NPT, n_nnz;
-    int    *unused;
-    str_t  *unused_s;
-
-    size = nRow*nCol;
-    NPT  = 1;
-    if (complx) NPT *= 2;
-    array = malloc(sizeof(double)*size*NPT);
-    for (c = 1; c <= nCol; c++) {
-        n_nnz = op4_read_col_t(fp, c, nRow, nCol, fmt_str, col_width,
-                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
-                               complx    , /* in  0=real   1=complex     */
-                               unused    , /* in/out index m.S (if sp1,2)*/
-                     (str_t *) unused_s  , /* out string data (if sp1,2) */
-                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
-                              &array[(c-1)*nRow*NPT]
-                              ); /* out numeric data */
-    }
-    return array;
-}
 
 #define  MAX(a,b)              ((a) >  (b)) ? (a)  : (b)
 void get_file_suffix(char *file, char *ext);
@@ -120,8 +50,81 @@ const char op4_type_str[4][3] = { {'R',  'S',  0},
                            };
  /* 1}}} */
 
-/* internal functions */
+float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
+                   int     nRow       ,  /* in  # rows    in matrix        */
+                   int     nCol       ,  /* in  # columns in matrix        */
+                   char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
+                   int     col_width  ,  /* in  # characters in format str */
+                   int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
+                   int     complx     ,  /* in  0=real   1=complex         */
+                   int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
+                   str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
+                   int    *N_index    )  /* in/out          (s_o) = 1,2    */
+{
+    float  *array;
+    double *column;
+    int     r, c, size, NPT, n_nnz;
+    int    *unused;
+    str_t  *unused_s;
 
+    size = nRow*nCol;
+    NPT  = 1;
+    if (complx) NPT *= 2;
+    array  = malloc(sizeof(float )*size*NPT);
+    /* op4_read_col_t() only populates arrays of type double.
+     * To minimize memory use, only allocate memory for a single
+     * column of type double and copy it to the float array each
+     * pass through the columns.
+     */
+    column = malloc(sizeof(double)*nRow*NPT);
+    for (c = 0; c < nCol; c++) {
+        n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
+                               complx    , /* in  0=real   1=complex     */
+                               unused    , /* in/out index m.S (if sp1,2)*/
+                     (str_t *) unused_s  , /* out string data (if sp1,2) */
+                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
+                               column
+                              ); /* out numeric data */
+        for (r = 0; r <= nRow*NPT; r++) {
+            array[c*nRow*NPT + r] = column[r];
+        }
+    }
+
+    return array;
+} /* 1}}} */
+double *op4_load_D(FILE   *fp         ,  /* {{{1 */
+                   int     nRow       ,  /* in  # rows    in matrix        */
+                   int     nCol       ,  /* in  # columns in matrix        */
+                   char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
+                   int     col_width  ,  /* in  # characters in format str */
+                   int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
+                   int     complx     ,  /* in  0=real   1=complex         */
+                   int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
+                   str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
+                   int    *N_index    )  /* in/out          (s_o) = 1,2    */
+{
+    double *array;
+    int     c, size, NPT, n_nnz;
+    int    *unused;
+    str_t  *unused_s;
+
+    size = nRow*nCol;
+    NPT  = 1;
+    if (complx) NPT *= 2;
+    array = malloc(sizeof(double)*size*NPT);
+    for (c = 0; c < nCol; c++) {
+        n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
+                               complx    , /* in  0=real   1=complex     */
+                               unused    , /* in/out index m.S (if sp1,2)*/
+                     (str_t *) unused_s  , /* out string data (if sp1,2) */
+                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
+                              &array[c*nRow*NPT]
+                              ); /* out numeric data */
+    }
+    return array;
+} /* 1}}} */
 int  op4_filetype(const char *filename)    /* {{{1 */
 {
     /* Returns
