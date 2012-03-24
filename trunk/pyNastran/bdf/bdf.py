@@ -90,7 +90,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CREEP',
 
         # materials
-        'MAT1','MAT2','MAT3','MAT8','MAT9','MAT10',
+        'MAT1','MAT2','MAT3','MAT8','MAT9','MAT10','MATHP',
         #'MATT1','MATT2','MATT3','MATT4','MATT5','MATT8','MATT9',
         'MATS1',
          
@@ -1153,6 +1153,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 material = MAT10(cardObj)
                 self.addMaterial(material)
 
+            elif cardName=='MATHP':
+                material = MATHP(cardObj)
+                self.addMaterial(material)
 
             elif cardName=='MATS1':
                 material = MATS1(cardObj)
