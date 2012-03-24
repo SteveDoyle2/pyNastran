@@ -418,7 +418,7 @@ class PROD(LineProperty):
             self.pid = card.field(1)
             self.mid = card.field(2)
             self.A   = card.field(3)
-            self.j   = card.field(4)
+            self.j   = card.field(4,0.0)
             self.c   = card.field(5,0.0)
             self.nsm = card.field(6,0.0)
         else:
@@ -467,9 +467,10 @@ class PROD(LineProperty):
         return fields
         
     def reprFields(self):
+        j   = self.setBlankIfDefault(self.j,0.0)
         c   = self.setBlankIfDefault(self.c,0.0)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
-        fields = ['PROD',self.pid,self.Mid(),self.A,self.j,c,nsm]
+        fields = ['PROD',self.pid,self.Mid(),self.A,j,c,nsm]
         return fields
 
 class PTUBE(LineProperty):
@@ -1378,3 +1379,24 @@ class PBEND(LineProperty):
             raise Exception('only beamType=1 and 2 supported')
         return fields
 
+class PVISC(Property):
+    type = 'PVISC'
+    def __init__(self,card=None,nPVISC=0,data=None):
+        if card:
+            self.pid = card.field(1+4*nCard)
+            self.ce = card.field(2+4*nCard)
+            self.cr = card.field(3+4*nCard,0.)
+        else:
+            self.pid = data[0]
+            self.ce = data[1]
+            self.cr = data[2]
+        ###
+    
+    def rawFields(self):
+        fields = ['PVISC',self.pid,self.ce,self.cr]
+        return fields
+    
+    def reprFields(self):
+        cr = self.setBlankIfDefault(self.cr,0.)
+        fields = ['PVISC',self.pid,self.ce,cr]
+        return fields

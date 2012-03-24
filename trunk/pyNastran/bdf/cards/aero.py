@@ -590,33 +590,6 @@ class CAERO2(BaseCard):
                          ]+list(self.p1)+[self.x12]
         return fields
 
-class DAREA(BaseCard):
-    """
-    Defines scale (area) factors for static and dynamic loads. In dynamic analysis, DAREA
-    is used in conjunction with ACSRCE, RLOADi and TLOADi entries.
-    DAREA SID P1 C1 A1  P2 C2 A2
-    DAREA 3   6   2 8.2 15 1  10.1
-    """
-    type = 'DAREA'
-    def __init__(self,card=None,nOffset=0,data=None):
-        if card:
-            nOffset *= 3
-            self.sid   = card.field(1)
-            self.p     = card.field(2+nOffset)
-            self.c     = card.field(3+nOffset)
-            self.a     = card.field(4+nOffset)
-        else:
-            self.sid   = data[0]
-            self.p     = data[1]
-            self.c     = data[2]
-            self.a     = data[3]
-            assert len(data)==4,'data = %s' %(data)
-        ###
-        
-    def rawFields(self):
-        fields = ['DAREA',self.sid, self.p,self.c,self.a]
-        return fields
-
 class FLFACT(BaseCard):
     """
     FLFACT SID F1 F2 F3 F4 F5 F6 F7

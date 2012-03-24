@@ -767,30 +767,42 @@ class MATS1(MaterialDependence):
     type = 'MATS1'
     def __init__(self,card=None,data=None):
         MaterialDependence.__init__(self,card,data)
-        ## Identification number of a MAT1, MAT2, or MAT9 entry.
-        self.mid  = card.field(1)
-        ## Identification number of a TABLES1 or TABLEST entry. If H is given,
-        ## then this field must be blank.
-        self.tid  = card.field(2)
-        ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic 
-        ## or 'PLASTIC' for elastoplastic.)
-        self.Type = card.field(3)
-        ## Work hardening slope (slope of stress versus plastic strain) in units of
-        ## stress. For elastic-perfectly plastic cases, H=0.0. For more than a single
-        ## slope in the plastic range, the stress-strain data must be supplied on a
-        ## TABLES1 entry referenced by TID, and this field must be blank
-        self.h    = card.field(4)
-        ## Yield function criterion, selected by one of the following values
-        ## (1) Von Mises (2) Tresca (3) Mohr-Coulomb (4) Drucker-Prager
-        self.yf   = card.field(5,1)
-        ## Hardening Rule, selected by one of the following values (Integer):
-        ## (1) Isotropic (Default) (2) Kinematic (3) Combined isotropic and kinematic hardening
-        self.hr   = card.field(6,1)
-        ## Initial yield point
-        self.limit1 = card.field(7)
-        ## Internal friction angle, measured in degrees, for the Mohr-Coulomb and
-        ## Drucker-Prager yield criteria
-        self.limit2 = card.field(8)
+        if card:
+            ## Identification number of a MAT1, MAT2, or MAT9 entry.
+            self.mid  = card.field(1)
+            ## Identification number of a TABLES1 or TABLEST entry. If H is given,
+            ## then this field must be blank.
+            self.tid  = card.field(2)
+            ## Type of material nonlinearity. ('NLELAST' for nonlinear elastic 
+            ## or 'PLASTIC' for elastoplastic.)
+            self.Type = card.field(3)
+            ## Work hardening slope (slope of stress versus plastic strain) in units of
+            ## stress. For elastic-perfectly plastic cases, H=0.0. For more than a single
+            ## slope in the plastic range, the stress-strain data must be supplied on a
+            ## TABLES1 entry referenced by TID, and this field must be blank
+            self.h    = card.field(4)
+            ## Yield function criterion, selected by one of the following values
+            ## (1) Von Mises (2) Tresca (3) Mohr-Coulomb (4) Drucker-Prager
+            self.yf   = card.field(5,1)
+            ## Hardening Rule, selected by one of the following values (Integer):
+            ## (1) Isotropic (Default) (2) Kinematic (3) Combined isotropic and kinematic hardening
+            self.hr   = card.field(6,1)
+            ## Initial yield point
+            self.limit1 = card.field(7)
+            ## Internal friction angle, measured in degrees, for the Mohr-Coulomb and
+            ## Drucker-Prager yield criteria
+            self.limit2 = card.field(8)
+        else:
+            (mid,tid,Type,h,yf,hr,limit1,limit2) = data
+            self.mid = mid
+            self.tid = tid
+            self.Type = Type
+            self.h = h
+            self.yf = yf
+            self.hr = hr
+            self.limit1 = limit1
+            self.limit2 = limit2
+        ###
 
     def Yf(self):
         d = {1:'VonMises',2:'Tresca',3:'MohrCoulomb',4:'Drucker-Prager'}

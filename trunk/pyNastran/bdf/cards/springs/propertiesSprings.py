@@ -18,14 +18,15 @@ class PELAS(SpringProperty):
         if card:
             self.pid = card.field(1+nOffset) # 2 PELAS properties can be defined on 1 PELAS card
             self.k   = card.field(2+nOffset) # these are split into 2 separate cards
-            self.ge  = card.field(3+nOffset)
-            self.s   = card.field(4+nOffset)
+            self.ge  = card.field(3+nOffset,0.)
+            self.s   = card.field(4+nOffset,0.)
         else:
             self.pid = data[0]
             self.k   = data[1]
             self.ge  = data[2]
             self.s   = data[3]
         ###
+
     def crossReference(self,model):
         pass
 
@@ -64,4 +65,7 @@ class PELAS(SpringProperty):
         return fields
 
     def reprFields(self):
-        return self.rawFields()
+        ge = self.setBlankIfDefault(self.ge,0.)
+        s  = self.setBlankIfDefault(self.s,0.)
+        fields = ['PELAS',self.pid,self.k,ge,s]
+        return fields
