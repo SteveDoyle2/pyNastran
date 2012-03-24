@@ -24,7 +24,7 @@ class EPT(object):
                          
                         #(9202, 92,  53): self.readPBEAML,  # record 15
                          (2502, 25, 248): self.readPBEND,   # record 16 - not done
-                        #(3101, 31, 219): self.readPBUSH1D, # record 20 - not done
+                        (3101, 31, 219): self.readPBUSH1D,  # record 20 - not done
                         #(152,  19, 147): self.readPCONEAX, # record 24 - not done
                         #(11001,110,411): self.readPCONV,   # record 25 - not done
                          (202,   2,  45): self.readPDAMP,   # record 27 - not done
@@ -180,13 +180,19 @@ class EPT(object):
 # PBEAML
 
     def readPBEND(self,data):
-        self.skippedCardsFile.write('skipping PBEND\n')
+        self.skippedCardsFile.write('skipping PBEND in EPT\n')
 
 # PBMSECT
 # PBRSECT
-# PBUSH
-# PBUSH1D
-# PBUSHT
+
+    def readPBUSH(self,data):
+        self.skippedCardsFile.write('skipping PBUSH in EPT\n')
+
+    def readPBUSH1D(self,data):
+        self.skippedCardsFile.write('skipping PBUSH1D in EPT\n')
+
+    def readPBUSHT(self,data):
+        self.skippedCardsFile.write('skipping PBUSHT in EPT\n')
 
     def readPCOMP(self,data):
         """
@@ -249,7 +255,16 @@ class EPT(object):
 # PDUM9
 
     def readPELAS(self,data):
-        self.skippedCardsFile.write('skipping PELAS\n')
+        """PELAS(302,3,46) - the marker for Record 39"""
+        #print "reading PELAS"
+        while len(data)>=16: # 4*4
+            eData = data[:16]
+            data  = data[16:]
+            out = unpack('ifff',eData)
+            #(pid,k,ge,s) = out
+            prop = PELAS(data=out)
+            self.addOp2Property(prop)
+        ###
 
 # PFAST
 # PELAST
@@ -363,8 +378,17 @@ class EPT(object):
 # PSET
 # PVAL
 
-    def readPVISC(self,prop):
-        self.skippedCardsFile.write('skipping PVISC\n')
+    def readPVISC(self,data):
+        """PVISC(1802,18,31) - the marker for Record 39"""
+        #print "reading PVISC"
+        while len(data)>=12: # 3*4
+            eData = data[:12]
+            data  = data[12:]
+            out = unpack('iff',eData)
+            #(pid,ce,cr) = out
+            prop = PVISC(data=out)
+            self.addOp2Property(prop)
+        ###
 
 # PWELD
 # PWSEAM

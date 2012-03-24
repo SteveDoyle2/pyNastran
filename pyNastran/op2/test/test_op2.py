@@ -81,10 +81,10 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
     
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed))
 
-def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOnFailure=True):
+def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=False,debug=False,stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
-    debug = True
+    #debug = True
     try:
         op2 = OP2(op2file,makeGeom=makeGeom,debug=debug)
         op2.setSubcases(iSubcases)
@@ -96,6 +96,9 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],debug=False,stopOn
             op2.writeBDFAsPatran()
         #tableNamesF06 = parseTableNamesFromF06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
+        if writeF06:
+            op2.setF06Name('model')
+            op2.writeF06()
         print op2.printResults()
         #op2.printResults()
         #print "subcases = ",op2.subcases
@@ -193,6 +196,7 @@ def runArgParse():
     #group2 = parser.add_mutually_exclusive_group()  # should this be exclusive???
     parser.add_argument('-g','--geometry', dest='geometry', action='store_true',help='Reads the OP2 for geometry, which can be written out')
     parser.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
+    parser.add_argument('-f','--writeF06', dest='writeF06', action='store_true',help='Writes the f06 to fem.f06.out')
 
     parser.add_argument('-v','--version',action='version',version=ver)
     
@@ -206,15 +210,16 @@ def runArgParse():
     debug       = not(args.quiet)
     makeGeom    = args.geometry
     writeBDF    = args.writeBDF
+    writeF06    = args.writeF06
     op2FileName = args.op2FileName[0]
 
-    return (op2FileName,makeGeom,writeBDF,debug)
+    return (op2FileName,makeGeom,writeBDF,writeF06,debug)
 
 def main():
-    (op2FileName,makeGeom,writeBDF,debug) = runArgParse()
+    (op2FileName,makeGeom,writeBDF,writeF06,debug) = runArgParse()
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,debug=debug)
+    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,debug=debug)
 
 if __name__=='__main__':  # op2
     main()

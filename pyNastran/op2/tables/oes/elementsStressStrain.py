@@ -423,6 +423,28 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
+    def RODNL_89(self):
+        #print "len(data) = %s" %(len(self.data))
+        while len(self.data)>=28:
+            eData     = self.data[0:4*7]
+            self.data = self.data[4*7: ]
+            out = unpack('iffffff',eData)
+
+            (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss) = out
+            eid = (eid - self.deviceCode) // 10
+            data = (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+            
+            print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+            #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            self.obj.add(data)
+            
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+        ###
+        self.handleResultsBuffer(self.RODNL_89)
+
     def CPENTANL_91(self):
         """
         The DMAP manual says fields 3-18 repeat 7 times. but they dont.

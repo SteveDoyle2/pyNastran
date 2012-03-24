@@ -3,7 +3,7 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements             import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2,CGAP
+from pyNastran.bdf.cards.elements             import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2,CGAP,CVISC
 from pyNastran.bdf.cards.plates.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
 from pyNastran.bdf.cards.bars.elementsBars import CROD,CBAR,CTUBE,CONROD,CBEAM
 from pyNastran.bdf.cards.mass.elementsMass import CONM1,CONM2,CMASS1,CMASS2,CMASS3,CMASS4
@@ -817,7 +817,18 @@ class Geometry2(object):
 
     def readCVISC(self,data):
         """CVISC(3901,39, 50) - the marker for Record 104"""
-        self.skippedCardsFile.write('skipping CVISC in GEOM2\n')
+        #print "reading CVISC"
+        n=0
+        nEntries = len(data)//16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
+            out = unpack('iiii',eData)
+            #(eid,pid,n1,n2) = out
+            elem = CVISC(None,out)
+            self.addOp2Element(elem)
+            n+=16
+        ###
+        data = data[n:]
 
     def readCWELD(self,data): # 105
         self.skippedCardsFile.write('skipping CWELD in GEOM2\n')

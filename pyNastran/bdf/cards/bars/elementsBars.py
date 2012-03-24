@@ -75,9 +75,9 @@ class LineElement(Element):
         #print "type = ",self.type
         
         #try:
-        #    print "mat  = ",self.mid.type
+            #print "mat  = ",self.mid.type
         #except:
-        #    print "no material"
+            #print "no material"
         #print "rho",self.Rho()
         #print "area",self.Area()
         #print "nsm",self.Nsm()
@@ -206,7 +206,7 @@ class CROD(LineElement):
             nids = card.fields(3,5)
         else:
             self.eid = data[0]
-            self.eid = data[1]
+            self.pid = data[1]
             nids = data[2:4]
         ###
         self.prepareNodeIDs(nids)
@@ -245,14 +245,14 @@ class CVISC(CROD):
             nids = card.fields(3,5)
         else:
             self.eid = data[0]
-            self.eid = data[1]
+            self.pid = data[1]
             nids = data[2:4]
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
     ###
     def rawFields(self):  # not done...
-        fields = ['VISC',self.eid,self.Pid()]+self.nodeIDs()
+        fields = ['CVISC',self.eid,self.Pid()]+self.nodeIDs()
         return fields
 
     def reprFields(self):

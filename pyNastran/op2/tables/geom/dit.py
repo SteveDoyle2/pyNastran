@@ -11,7 +11,7 @@ class DIT(object):
     def readTable_DIT(self):
         self.iTableMap = {
                             (1005,10,174): self.readGust,     # record 1
-                           #(1105,11,133): self.readTableD1,  # record 4
+                            (1105,11,133): self.readTableD1,  # record 4
                             (1205,12,134): self.readTableD2,  # record 5
                             (1305,13,140): self.readTableD3,  # record 6
                             
@@ -51,6 +51,8 @@ class DIT(object):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
+        self.skippedCardsFile.write('skipping TABLED1 in DIT\n')
+        return
         #print "reading TABLED1"
         func = TABLED1
         self.readTable1(func,data)
@@ -150,6 +152,8 @@ class DIT(object):
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
+        self.skippedCardsFile.write('skipping TABLEM1 in DIT\n')
+        return
         #print "reading TABLED1"
         func = TABLEM1
         self.readTable1(func,data)

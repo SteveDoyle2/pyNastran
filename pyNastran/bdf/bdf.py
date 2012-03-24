@@ -84,7 +84,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PDAMP','PDAMP5','PDAMPT',
         'PROD','PBAR','PBARL','PBEAM','PBEAML','PTUBE','PBEND',#'PBEAM3',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
-        'PSOLID','PLSOLID',
+        'PSOLID','PLSOLID','PVISC',
         
         # creep materials
         'CREEP',
@@ -1064,7 +1064,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 if cardObj.field(5):
                     prop = PELAS(cardObj,1) # makes 2nd PELAS card
                     self.addProperty(prop)
-
+            elif cardName=='PVISC':
+                prop = PVISC(cardObj)
+                self.addProperty(prop)
+                if cardObj.field(5):
+                    prop = PVISC(card,1)
+                    self.addProperty(prop)
+                ###
             elif cardName=='PROD':
                 prop = PROD(cardObj)
                 self.addProperty(prop)

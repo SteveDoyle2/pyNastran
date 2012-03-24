@@ -8,31 +8,51 @@ from pyNastran.op2.op2Errors import *
 class DYNAMICS(object):
     def readTable_DYNAMICS(self):
         self.iTableMap = {
-                            (37, 18, 183): self.readDelay,
-                            (57,   5,123): self.readDLoad,
-                            (107,  1, 86): self.readEigb,
-                            (207,  2, 87): self.readEigc,
-                            (307,  3, 85): self.readEigr,
-                            (308,  8,348): self.readEigrl,
-                           #(707,  7,124): self.readEPoint,
-                            (1007,10,125): self.readFreq,
-
-                            (1307,13,126): self.readFake,
+                            (27,  17,182): self.readDArea,  # 2
+                            (37,  18,183): self.readDelay,  # 3
+                            (57,   5,123): self.readDLoad,  # 4
+                            (77,  19,184): self.readDPhase, # 5
+                            (107,  1, 86): self.readEigb,   # 7
+                            (207,  2, 87): self.readEigc,   # 8
+                            (257,  4,158): self.readEigp,   # 9
+                            (307,  3, 85): self.readEigr,   # 10
+                            (308,  8,348): self.readEigrl,  # 11
+                            (707,  7,124): self.readEPoint, # 12
+                            
+                            
+                            (1307,13,126): self.readFreq,   # 13
+                            (1007,10,125): self.readFreq1,  # 14
+                            (1107,11,166): self.readFreq2,  # 15
+                            (1407,14,39):  self.readFreq3,  # 16
+                            (1507,15,40):  self.readFreq4,  # 17
+                            (1607,16,41):  self.readFreq5,  # 18
+                            
                             (3107,31,127): self.readFake,
-                           #(5107,51,131): self.readRLoad1,
-                           #(5207,52,132): self.readRLoad2,
+                            (5107,51,131): self.readRLoad1, # 26
+                            (5207,52,132): self.readRLoad2, # 27
                             (6207,62,136): self.readFake,
                             (6607,66,137): self.readFake,
-                           #(7107,71,138): self.readTLoad1,
-                           #(7207,72,139): self.readTLoad2,
-                           #(8307,83,142): self.readTStep,
+                            (7107,71,138): self.readTLoad1, # 37
+                            (7207,72,139): self.readTLoad2, # 38
+                            (8307,83,142): self.readTStep,  # 39
                             (2107,21,195): self.readFake,
                             (2207,22,196): self.readFake,
                          }
         self.readRecordTable('DYNAMICS')
 
 #ACSRCE (5307,53,379)
-#DAREA (27,17,182)
+
+    def readDArea(self,data):
+        """DAREA(27,17,182) - the marker for Record 2"""
+        print "reading DAREA"
+        while len(data)>=16: # 4*4
+            eData = data[:16]
+            data  = data[16:]
+            out = unpack('iiff',eData)
+            #(sid,p,c,a) = out
+            darea = DAREA(data=out)
+            self.addDArea(darea)
+        ###
 
     def readDelay(self,data):
         """DELAY(37,18,183) - Record 3"""
@@ -42,7 +62,10 @@ class DYNAMICS(object):
         """DLOAD(57,5,123) - Record 4"""
         self.skippedCardsFile.write('skipping DLOAD in DYNAMICS\n')
 
-#DPHASE(77,19,184)
+    def readDPhase(self,data):
+        """DPHASE(77,19,184) - Record 5"""
+        self.skippedCardsFile.write('skipping DPHASE in DYNAMICS\n')
+
 #DYNRED(4807,48,306)
 
     def readEigb(self,data):
@@ -65,7 +88,9 @@ class DYNAMICS(object):
         """EIGRL(308,8,348) - Record 11"""
         self.skippedCardsFile.write('skipping EIGRL in DYNAMICS\n')
 
-#EPOINT(707,7,124)
+    def readEPoint(self,data):
+        """EPOINT(707,7,124) - Record 12"""
+        self.skippedCardsFile.write('skipping EPOINT in DYNAMICS\n')
 
     def readFreq(self,data):
         """FREQ(1307,13,126) - Record 13"""
@@ -98,7 +123,16 @@ class DYNAMICS(object):
 #NOLIN4
 #RANDPS
 #RANDT1
-#RLOAD1(5107,51,131)
+
+    def readRLoad1(self,data):
+        """RLOAD1(5107,51,131) - Record 26"""
+        self.skippedCardsFile.write('skipping RLOAD1 in DYNAMICS\n')
+
+    def readRLoad2(self,data):
+        """RLOAD2(5107,51,131) - Record 27"""
+        self.skippedCardsFile.write('skipping RLOAD2 in DYNAMICS\n')
+
+#
 #RLOAD2(5207,52,132)
 #RGYRO
 #ROTORG
@@ -109,7 +143,17 @@ class DYNAMICS(object):
 #TIC
 #TIC
 #TIC3
-#TLOAD1(7107,71,138)
-#TLOAD2(7207,72,139)
-#TSTEP(8307,83,142)
+
+    def readTLoad1(self,data):
+        """TLOAD1(7107,71,138) - Record 37"""
+        self.skippedCardsFile.write('skipping TLOAD1 in DYNAMICS\n')
+
+    def readTLoad2(self,data):
+        """TLOAD2(7207,72,139) - Record 37"""
+        self.skippedCardsFile.write('skipping TLOAD2 in DYNAMICS\n')
+
+    def readTStep(self,data):
+        """TSTEP(8307,83,142) - Record 38"""
+        self.skippedCardsFile.write('skipping TSTEP in DYNAMICS\n')
+
 #UNBALNC

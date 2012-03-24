@@ -99,6 +99,7 @@ PBEAML  (done, not well tested)
 PBEAM3
 PBEND   (done)
 PTUBE   (done)
+PVISC   (done)
 
 PSHELL  (done)
 PCOMP   (done)

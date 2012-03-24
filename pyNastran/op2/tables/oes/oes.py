@@ -13,7 +13,8 @@ from oes_beams  import beamStressObject,beamStrainObject
 from oes_solids import solidStressObject,solidStrainObject
 from oes_plates import plateStressObject,plateStrainObject
 from oes_compositePlates import compositePlateStressObject,compositePlateStrainObject
-from oes_springs import celasStressObject,celasStrainObject
+from oes_springs   import celasStressObject,celasStrainObject
+from oes_nonlinear import nonlinearRodObject
 
 class OES(ElementsStressStrain):
     """Table of stresses/strains"""
@@ -407,6 +408,13 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.solidStress,solidStressObject,
                                 self.solidStrain,solidStrainObject)
             self.CSOLID_85()
+
+        elif self.elementType in [89]:   # RODNL
+            #print "    found RODNL_89"
+            self.makeOES_Object(self.rodStress,nonlinearRodObject,
+                                self.rodStrain,nonlinearRodObject)
+            self.RODNL_89()
+
         #elif self.elementType in [91]: # CPENTANL
         #    #print "hexa_93"
         #    self.CPENTANL_91()
