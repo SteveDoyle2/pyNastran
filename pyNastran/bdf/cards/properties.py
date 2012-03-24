@@ -270,6 +270,7 @@ class PGAP(Property):
             self.mar   = card.field(10,100.)
             self.trmin = card.field(11,0.001)
         else:
+            #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             self.pid   = data[0]
             self.u0    = data[1]
             self.f0    = data[2]

@@ -119,7 +119,7 @@ class solidStressObject(stressObject):
                     (blank,nodeID,x,oxx,xy,txy,a,o1,lx,d1,d2,d3,pressure,ovmShear) = self.data[n]
                     (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
                     (blank,blank, z,ozz,zx,txz,c,o3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
-                    if nodeID=='CENTER': nodeID='C'
+                    if nodeID.strip()=='CENTER': nodeID='C'
                     self.oxx[eid][nodeID] = float(oxx)
                     self.oyy[eid][nodeID] = float(oyy)
                     self.ozz[eid][nodeID] = float(ozz)
@@ -577,7 +577,7 @@ class solidStrainObject(strainObject):
                     (blank,nodeID,x,exx,xy,exy,a,e1,lx,d1,d2,d3,pressure,evmShear) = self.data[n]
                     (blank,blank, y,eyy,yz,eyz,b,e2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
                     (blank,blank, z,ezz,zx,exz,c,e3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
-                    if nodeID=='CENTER': nodeID='C'
+                    if nodeID.strip()=='CENTER': nodeID='C'
                     self.exx[eid][nodeID] = float(exx)
                     self.eyy[eid][nodeID] = float(eyy)
                     self.ezz[eid][nodeID] = float(ezz)
@@ -771,6 +771,21 @@ class solidStrainObject(strainObject):
             ###
         ###
         return msg
+
+    def ovm(self,o11,o22,o33,o12,o13,o23):
+        """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
+        ovm = 0.5 * ( (o11-o22)**2+(o22-o33)**2+(o11-o33)**2+6*(o23**2+o31**2+o12**2))
+        return ovm
+
+    #def ovmPlane(self,o11,o22,o12):
+        #"""http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
+        #ovm = (o11**2+o22**2-o1*o2+3*o12**2)**0.5
+        #return ovm
+
+    def octahedral(self,o11,o22,o33,o12,o13,o23):
+        """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
+        ovm = self.ovm(o11,o22,o33,o12,o13,o23)
+        return ovm/3*2**0.5
 
     def pressure(self,e1,e2,e3):
         """

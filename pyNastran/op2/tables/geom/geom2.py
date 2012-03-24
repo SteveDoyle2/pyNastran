@@ -3,9 +3,10 @@ import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements             import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2
+from pyNastran.bdf.cards.elements             import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2,CGAP
 from pyNastran.bdf.cards.plates.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
-from pyNastran.bdf.cards.bars.elementsBars import CROD,CBAR,CTUBE,CONROD
+from pyNastran.bdf.cards.bars.elementsBars import CROD,CBAR,CTUBE,CONROD,CBEAM
+from pyNastran.bdf.cards.mass.elementsMass import CONM1,CONM2,CMASS1,CMASS2,CMASS3,CMASS4
 from pyNastran.bdf.cards.elementsSolid     import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
 from pyNastran.bdf.cards.thermal.thermal   import CHBDYG,CHBDYP
 
@@ -14,7 +15,7 @@ class Geometry2(object):
         self.iTableMap = {
                            (2408,24,180):    self.readCBAR,    # record 8
                            (4001,40,275):    self.readCBARAO,  # record 9  - not done
-                           (5408,54,261):    self.readCBEAM,   # record 10 - not done
+                           (5408,54,261):    self.readCBEAM,   # record 10
                            (11401,114,9016): self.readCBEAMP,  # record 11 - not done
                            (4601,46,298):    self.readCBEND,   # record 12 - not done
                            (5608,56,218):    self.readCBUSH1D, # record 14 - not done
@@ -31,7 +32,7 @@ class Geometry2(object):
                           #(8515,85,209):    self.readCFLUID2, # record 35 - not done
                           #(8615,86,210):    self.readCFLUID3, # record 36 - not done
                           #(8715,87,211):    self.readCFLUID4, # record 37 - not done
-                           (1908,19,104):    self.readCGAP,    # record 39
+                           (1908,19,104):    self.readCGAP,    # record 39 - buggy
 
                            (10808,108,406):  self.readCHBDYG,   # record 43
                            (10908,109,407):  self.readCHBDYP,   # record 44 - not done
@@ -63,7 +64,7 @@ class Geometry2(object):
                            (9200,92,385):    self.readCTRIAR,   # record 98 - not tested
                            (6108,61,107):    self.readCTRIAX6,  # record 100 - not tested
                            (3701,37,49):     self.readCTUBE,    # record 103
-                          #(3901,39, 50):     self.readCVISC,   # record 104 - not done
+                           (3901,39, 50):     self.readCVISC,   # record 104 - not done
                           #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
                           #(5551,49,105):    self.readSPOINT,   # record 118 - not done
                           #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
@@ -77,13 +78,13 @@ class Geometry2(object):
     def addOp2Element(self,elem):
         self.addElement(elem,allowOverwrites=True)
 
-# 1-AEROQ4
-# AEROT3
-# BEAMAERO
-# CAABSF
-# CAXIF2
-# CAXIF3
-# CAXIF4
+# 1-AEROQ4 (???)
+# AEROT3   (???)
+# 1-BEAMAERO (1701,17,0)
+# 2-CAABSF (2708,27,59)
+# 3-CAXIF2 (2108,21,224)
+# 4-CAXIF3 (2208,22,225)
+# 5-CAXIF4 (2308,23,226)
 
     def readCBAR(self,data):
         """
@@ -121,7 +122,7 @@ class Geometry2(object):
         """
         CBARAO(4001,40,275) - the marker for Record 9
         """
-        self.skippedCardsFile.write('skipping CBARAO\n')
+        self.skippedCardsFile.write('skipping CBARAO in GEOM2\n')
         pass
 
 
@@ -129,43 +130,64 @@ class Geometry2(object):
         """
         CBEAM(5408,54,261) - the marker for Record 10
         """
-        self.skippedCardsFile.write('skipping CBEAM\n')
-        pass
+        #print "reading CBEAM"
+        n=0
+        nEntries = len(data)//72
+        for i in range(nEntries):
+            eData = data[n:n+72] # 18*4
+            f, = unpack('i',eData[40:44])
+            #print "f = ",f
+            #print "len(eData) = %s" %(len(eData))
+            if   f==0: # basic cid
+                out = unpack('iiiiiifffiiiffffff',eData)
+                (eid,pid,ga,gb,sa,sb, x1,x2,x3,f, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+            elif f==1: # global cid
+                out = unpack('iiiiiifffiiiffffff',eData)
+                (eid,pid,ga,gb,sa,sb, x1,x2,x3,f, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+            elif f==2: # grid option
+                out = unpack('iiiiiiiiiiiiffffff',eData)
+                (eid,pid,ga,gb,sa,sb, g0,xx,xx,f, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+            else:
+                raise Exception('invalid f value...f=%s' %(f))
+            ###
+            elem = CBEAM(None,dataIn)
+            self.addOp2Element(elem)
+            n+=72
+        ###
+        data = data[n:]
 
     def readCBEAMP(self,data):
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.skippedCardsFile.write('skipping CBEAMP\n')
-        pass
+        self.skippedCardsFile.write('skipping CBEAMP in GEOM2\n')
 
     def readCBEND(self,data):
         """
         CBEND(4601,46,298) - the marker for Record 12
         """
-        self.skippedCardsFile.write('skipping CBEND\n')
-        pass
+        self.skippedCardsFile.write('skipping CBEND in GEOM2\n')
 
     def readCBUSH(self,data):
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
-        self.skippedCardsFile.write('skipping CBUSH\n')
-        pass
+        self.skippedCardsFile.write('skipping CBUSH in GEOM2\n')
 
     def readCBUSH1D(self,data):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
         """
-        self.skippedCardsFile.write('skipping CBUSH1D\n')
-        pass
+        self.skippedCardsFile.write('skipping CBUSH1D in GEOM2\n')
 
     def readCCONE(self,data):
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        self.skippedCardsFile.write('skipping CCONE\n')
-        pass
+        self.skippedCardsFile.write('skipping CCONE in GEOM2\n')
 
     def readCDAMP1(self,data):
         """
@@ -336,10 +358,10 @@ class Geometry2(object):
             eData = data[:36]
             data  = data[36:]
             out = unpack('iiiifffii',eData)
-            (eid,pid,ga,gb,g,cid,x1,x2,x3,f,cid) = out
+            (eid,pid,ga,gb,x1,x2,x3,f,cid) = out # f=0,1
             g0 = None
-            f2 = unpack('i',eData[28:32])
-            assert f==f2
+            f2, = unpack('i',eData[28:32])
+            assert f==f2,'f=%s f2=%s' %(f,f2)
             if f==2:
                 g0 = unpack('i',eData[16:20])
                 x1 = None
@@ -376,8 +398,7 @@ class Geometry2(object):
         ###
 
     def readCHBDYP(self,data):
-        self.skippedCardsFile.write('skipping CHBDYP\n')
-        pass
+        self.skippedCardsFile.write('skipping CHBDYP in GEOM2\n')
 
     def readCHEXA(self,data):
         """
@@ -414,7 +435,7 @@ class Geometry2(object):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
-        self.skippedCardsFile.write('skipping CMFREE\n')
+        self.skippedCardsFile.write('skipping CMFREE in GEOM2\n')
 
     def readCONM1(self,data):
         """
@@ -433,10 +454,7 @@ class Geometry2(object):
             n+=96
         ###
         data  = data[n:]
-
-        self.skippedCardsFile.write('skipping CONM1\n')
         
-
     def readCONM2(self,data):
         """
         CONM2(1501,15,64) - the marker for Record 57
@@ -770,14 +788,12 @@ class Geometry2(object):
 # CTRIAP
 
     def readCTRIAR(self,data): # 98
-        self.skippedCardsFile.write('skipping CTRIAR\n')
-        pass
+        self.skippedCardsFile.write('skipping CTRIAR in GEOM2\n')
 
 # CTRIAX
 
     def readCTRIAX6(self,data): # 100
-        self.skippedCardsFile.write('skipping CTRIAX6\n')
-        pass
+        self.skippedCardsFile.write('skipping CTRIAX6 in GEOM2\n')
 
 # CTRIX3FD
 # CTRIX6FD
@@ -799,10 +815,19 @@ class Geometry2(object):
         ###
         data = data[n:]
 
-# CVISC
-# CWELD
-# CWELDC
-# CWELDG
+    def readCVISC(self,data):
+        """CVISC(3901,39, 50) - the marker for Record 104"""
+        self.skippedCardsFile.write('skipping CVISC in GEOM2\n')
+
+    def readCWELD(self,data): # 105
+        self.skippedCardsFile.write('skipping CWELD in GEOM2\n')
+
+    def readCWELDC(self,data): # 106
+        self.skippedCardsFile.write('skipping CWELDC in GEOM2\n')
+
+    def readCWELDG(self,data): # 107
+        self.skippedCardsFile.write('skipping CWELDG in GEOM2\n')
+
 # CWSEAM
 # GENEL
 # GMDNDC
@@ -819,7 +844,7 @@ class Geometry2(object):
         (5551,49,105)    - the marker for Record 118
         @todo create object
         """
-        self.skippedCardsFile.write('skipping SPOINT\n')
+        self.skippedCardsFile.write('skipping SPOINT in GEOM2\n')
         #print "reading SPOINT"
         while len(data)>=4: # 4*4
             eData = data[:4]

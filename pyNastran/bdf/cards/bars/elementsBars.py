@@ -719,35 +719,38 @@ class CBEAM3(CBAR):
     type = 'CBEAM3'
     def __init__(self,card=None,data=None):
         LineElement.__init__(self,card,data)
-        #if card:
-        self.eid = int(card.field(1))
-        self.eid = int(card.field(1))
-        self.pid = int(card.field(2,self.eid))
-        self.ga  = int(card.field(3))
-        self.gb  = int(card.field(4))
-        self.gc  = int(card.field(5))
+        if card:
+            self.eid = int(card.field(1))
+            self.eid = int(card.field(1))
+            self.pid = int(card.field(2,self.eid))
+            self.ga  = int(card.field(3))
+            self.gb  = int(card.field(4))
+            self.gc  = int(card.field(5))
 
-        self.initX_G0(card)
+            self.initX_G0(card)
 
-        self.w1a = float(card.field(9,0.0))
-        self.w2a = float(card.field(10,0.0))
-        self.w3a = float(card.field(11,0.0))
+            self.w1a = float(card.field(9,0.0))
+            self.w2a = float(card.field(10,0.0))
+            self.w3a = float(card.field(11,0.0))
 
-        self.w1b = float(card.field(12,0.0))
-        self.w2b = float(card.field(13,0.0))
-        self.w3b = float(card.field(14,0.0))
-        
-        self.w1c = float(card.field(15,0.0))
-        self.w2c = float(card.field(16,0.0))
-        self.w3c = float(card.field(17,0.0))
+            self.w1b = float(card.field(12,0.0))
+            self.w2b = float(card.field(13,0.0))
+            self.w3b = float(card.field(14,0.0))
 
-        self.twa = card.field(18,0.)
-        self.twb = card.field(19,0.)
-        self.twc = card.field(20,0.)
+            self.w1c = float(card.field(15,0.0))
+            self.w2c = float(card.field(16,0.0))
+            self.w3c = float(card.field(17,0.0))
 
-        self.sa = card.field(21)
-        self.sb = card.field(22)
-        self.sc = card.field(23)
+            self.twa = card.field(18,0.)
+            self.twb = card.field(19,0.)
+            self.twc = card.field(20,0.)
+
+            self.sa = card.field(21)
+            self.sb = card.field(22)
+            self.sc = card.field(23)
+        else:
+            raise NotImplementedError(data)
+        ###
 
     def crossReference(self,model):
         self.ga  = model.Node(self.ga)
@@ -758,7 +761,7 @@ class CBEAM3(CBAR):
     def rawFields(self):
         (x1,x2,x3) = self.getX_G0_defaults()
         (ga,gb,gc) = self.nodeIDs()
-        fields = ['CBEAM',self.eid,self.Pid(),ga,gb,gc,x1,x2,x3,
+        fields = ['CBEAM3',self.eid,self.Pid(),ga,gb,gc,x1,x2,x3,
                   self.w1a,self.w2a,self.w3a, self.w1b,self.w2b,self.w3b, self.w1c,self.w2c,self.w3c,
                   self.twa,self.twb,self.twc,self.sa,self.sb,self.sc]
         return fields
@@ -820,8 +823,47 @@ class CBEAM(CBAR):
 
             self.sa = card.field(17)
             self.sb = card.field(18)
-        else:
-            raise NotImplementedError(data)
+
+        else: ## @todo verify
+            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+
+            main = data[0]
+
+            flag = data[1][0]
+            if flag in [0,1]:
+                self.g0 = None
+                self.x1 = data[1][1]
+                self.x2 = data[1][2]
+                self.x3 = data[1][3]
+            else:
+                self.g0 = data[1][1]
+                self.x1 = None
+                self.x2 = None
+                self.x3 = None
+
+            self.eid = main[0]
+            self.pid = main[1]
+            self.ga  = main[2]
+            self.gb  = main[3]
+            self.sa  = main[4]
+            self.sb  = main[5]
+
+            self.isOfft = True ## @todo is this correct???
+            #self.offt = str(data[6]) # GGG
+            self.offt = 'GGG' ## @todo is this correct???
+
+            self.pa   = main[6]
+            self.pb   = main[7]
+
+            self.w1a = main[8]
+            self.w2a = main[9]
+            self.w3a = main[10]
+
+            self.w1b = main[11]
+            self.w2b = main[12]
+            self.w3b = main[13]
+        ###
 
     def initOfftBit(self,card):
         field8 = card.field(8)

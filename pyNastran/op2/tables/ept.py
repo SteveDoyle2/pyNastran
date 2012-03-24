@@ -12,7 +12,7 @@ class EPT(object):
         self.bigProperties = {}
         self.iTableMap = {
                         #(3201,32,55):    self.readNSM,     # record 2  - needs an object holder (e.g. self.elements/self.properties)
-                        #(52,20,181):     self.readPBAR,    # record 11 - buggy
+                         (52,20,181):     self.readPBAR,    # record 11 - buggy
                          (9102,91,52):    self.readPBARL,   # record 12 - almost there...
                         #(5402,54,262):   self.readPBEAM,   # record 14 - not done
                         #(2706,27,287):   self.readPCOMP,   # record 22 - buggy
@@ -22,16 +22,16 @@ class EPT(object):
                          (2302,23,283):   self.readPSHELL,  # record 52
                          (1602,16,30):    self.readPTUBE,   # record 56
                          
-                        #(5402, 54, 262): self.readPBEAM,   # record 14 - not done
                         #(9202, 92,  53): self.readPBEAML,  # record 15
-                        #(2502, 25, 248): self.readPBEND,   # record 16 - not done
+                         (2502, 25, 248): self.readPBEND,   # record 16 - not done
                         #(3101, 31, 219): self.readPBUSH1D, # record 20 - not done
                         #(152,  19, 147): self.readPCONEAX, # record 24 - not done
                         #(11001,110,411): self.readPCONV,   # record 25 - not done
-                        #(202,   2,  45): self.readPDAMP,   # record 27 - not done
-                        #(302,   3,  46): self.readPELAS,   # record 39 - not done
+                         (202,   2,  45): self.readPDAMP,   # record 27 - not done
+                         (302,   3,  46): self.readPELAS,   # record 39 - not done
+                         (2102,21,121):   self.readPGAP,    # record 42 - not done
                         #(2802, 28, 236): self.readPHBDY,   # record 43 - not done
-                        #(1802, 18,  31): self.readPVISC,   # record 59 - not done
+                         (1802, 18,  31): self.readPVISC,   # record 59 - not done
                         #(10201,102,400): self.readPVAL,    # record 58 - not done
                         #(2606, 26, 289): self.readVIEW,    # record 62 - not done
                         #(1402, 14, 37):   self.readFake,    # record 
@@ -180,7 +180,7 @@ class EPT(object):
 # PBEAML
 
     def readPBEND(self,data):
-        pass
+        self.skippedCardsFile.write('skipping PBEND\n')
 
 # PBMSECT
 # PBRSECT
@@ -234,7 +234,7 @@ class EPT(object):
 # PCONVM
 
     def readPDAMP(self,data):
-        pass
+        self.skippedCardsFile.write('skipping PDAMP\n')
 
 # PDAMPT
 # PDAMP5
@@ -249,11 +249,25 @@ class EPT(object):
 # PDUM9
 
     def readPELAS(self,data):
-        pass
+        self.skippedCardsFile.write('skipping PELAS\n')
 
 # PFAST
 # PELAST
-# PGAP
+
+    def readPGAP(self,data):
+        """
+        PGAP(3201,32,55) - the marker for Record 42
+        """
+        #print "reading PGAP"
+        while len(data)>=44: # 11*4
+            eData = data[:44]
+            data  = data[44:]
+            out = unpack('iffffffffff',eData)
+            #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
+            prop = PGAP(None,out)
+            self.addOp2Property(prop)
+        ###
+
 # PHBDY
 # PINTC
 # PINTS
@@ -350,7 +364,7 @@ class EPT(object):
 # PVAL
 
     def readPVISC(self,prop):
-        pass
+        self.skippedCardsFile.write('skipping PVISC\n')
 
 # PWELD
 # PWSEAM
