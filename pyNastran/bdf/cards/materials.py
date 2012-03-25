@@ -245,7 +245,7 @@ class MAT2(AnisotropicMaterial):
             self.a2   = card.field(10)
             self.a3   = card.field(11)
             self.TRef = card.field(12,0.0)
-            self.ge   = card.field(13)
+            self.ge   = card.field(13,0.0)
             self.St   = card.field(14)
             self.Sc   = card.field(15)
             self.Ss   = card.field(16)
@@ -321,8 +321,9 @@ class MAT2(AnisotropicMaterial):
         G23 = self.setBlankIfDefault(self.G23,0.0)
         G33 = self.setBlankIfDefault(self.G33,0.0)
         TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge   = self.setBlankIfDefault(self.ge,0.0)
         fields = ['MAT2',self.mid,G11,G12,G13,G22,G23,G33,self.rho,
-                  self.a1,self.a2,self.a3,TRef,self.ge,self.St,self.Sc,self.Ss,
+                  self.a1,self.a2,self.a3,TRef,ge,self.St,self.Sc,self.Ss,
                   self.Mcsid]
         return fields
 
@@ -350,7 +351,7 @@ class MAT3(AnisotropicMaterial):
             self.ath  = card.field(11)
             self.az   = card.field(12)
             self.TRef = card.field(13,0.0)
-            self.ge   = card.field(14)
+            self.ge   = card.field(14,0.0)
         else:
             self.mid   = data[0]
             self.ex    = data[1]
@@ -375,8 +376,9 @@ class MAT3(AnisotropicMaterial):
 
     def reprFields(self):
         TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge = self.setBlankIfDefault(self.ge,0.0)
         fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
-                         None,None,self.gzx,self.ax,self.ath,self.az,TRef,self.ge]
+                         None,None,self.gzx,self.ax,self.ath,self.az,TRef,ge]
         return fields
 
 class MAT4(ThermalMaterial):
@@ -645,7 +647,7 @@ class MAT9(AnisotropicMaterial):
             self.rho = card.field(23,0.0)
             self.A   = card.fields(24,30,[0.]*6)
             self.TRef = card.field(30,0.0)
-            self.ge   = card.field(31)
+            self.ge   = card.field(31,0.0)
         else:
             self.mid = data[0]
             self.G11 = data[1][0]
@@ -697,8 +699,8 @@ class MAT9(AnisotropicMaterial):
             a = self.setBlankIfDefault(a, 0.0)
             A.append(a)
         TRef = self.setBlankIfDefault(self.TRef,0.0)
-        ge = self.ge
         
+        ge = self.setBlankIfDefault(self.ge,0.0)
         fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+A+[TRef,ge]
@@ -715,7 +717,7 @@ class MAT10(Material):
         if card:
             self.mid  = card.field(1)
             (self.bulk,self.rho,self.c) = self.getBulkRhoC(card)
-            self.ge = card.field(5)
+            self.ge = card.field(5,0.0)
         else:
             self.mid  = data[0]
             self.bulk = data[1]
@@ -755,6 +757,8 @@ class MAT10(Material):
         return fields
 
     def reprFields(self):
+        ge = self.setBlankIfDefault(self.ge,0.0)
+        fields = ['MAT10',self.mid,self.bulk,self.rho,self.c,ge]
         return self.rawFields()
 
 
@@ -771,8 +775,8 @@ class MATHP(HyperelasticMaterial):
             self.TRef = card.field(7,0.)
             self.ge   = card.field(8,0.)
 
-            self.na   = card.field(10,'na')
-            self.nd   = card.field(11,'nd')
+            self.na   = card.field(10,'na') # 1
+            self.nd   = card.field(11,'nd') # 1
 
             self.a20  = card.field(17,'a20')
             self.a11  = card.field(18,0.)
@@ -873,7 +877,50 @@ class MATHP(HyperelasticMaterial):
                           self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
 
     def reprFields(self):
-        return self.rawFields()
+        av = self.setBlankIfDefault(self.av,0.0)
+        na = self.setBlankIfDefault(self.na,0.0)
+        nd = self.setBlankIfDefault(self.nd,0.0)
+
+        a01 = self.setBlankIfDefault(self.a01,0.0)
+        a10 = self.setBlankIfDefault(self.a10,0.0)
+        d1  = self.setBlankIfDefault(self.d1,1000*(a01+a10))
+
+        a20 = self.setBlankIfDefault(self.a20,0.0)
+        a11 = self.setBlankIfDefault(self.a11,0.0)
+        a02 = self.setBlankIfDefault(self.a02,0.0)
+        d2  = self.setBlankIfDefault(self.d2,0.0)
+
+        a30 = self.setBlankIfDefault(self.a30,0.0)
+        a12 = self.setBlankIfDefault(self.a12,0.0)
+        a21 = self.setBlankIfDefault(self.a21,0.0)
+        a03 = self.setBlankIfDefault(self.a03,0.0)
+        d3  = self.setBlankIfDefault(self.d3,0.0)
+
+        a40 = self.setBlankIfDefault(self.a40,0.0)
+        a31 = self.setBlankIfDefault(self.a31,0.0)
+        a22 = self.setBlankIfDefault(self.a22,0.0)
+        a13 = self.setBlankIfDefault(self.a13,0.0)
+        a04 = self.setBlankIfDefault(self.a04,0.0)
+        d4  = self.setBlankIfDefault(self.d4,0.0)
+
+        a50 = self.setBlankIfDefault(self.a50,0.0)
+        a41 = self.setBlankIfDefault(self.a41,0.0)
+        a32 = self.setBlankIfDefault(self.a32,0.0)
+        a23 = self.setBlankIfDefault(self.a23,0.0)
+        a14 = self.setBlankIfDefault(self.a14,0.0)
+        a05 = self.setBlankIfDefault(self.a05,0.0)
+        d5  = self.setBlankIfDefault(self.d5,0.0)
+
+        TRef = self.setBlankIfDefault(self.TRef,0.0)
+        ge   = self.setBlankIfDefault(self.ge,0.0)
+        fields = ['MATHP',self.mid,self.a10,self.a01,self.d1,self.rho,self.av,self.TRef,self.ge,
+                          None,    self.na,self.nd,None,None,None,None,None,
+                          self.a20,self.a11,self.a02,self.d2,None,None,None,None,
+                          self.a30,self.a21,self.a12,self.a03,self.d3None,None,None,
+                          self.a40,self.a31,self.a22,self.a13,self.a04,self.d4,None,None,
+                          self.a50,self.a41,self.a32,self.a23,self.a14,self.a05,self.d5,None,
+                          self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
+        return fields
 
 class MaterialDependence(BaseCard):
     def __init__(self,card,data):
@@ -917,6 +964,8 @@ class MATS1(MaterialDependence):
             (mid,tid,Type,h,yf,hr,limit1,limit2) = data
             self.mid = mid
             self.tid = tid
+            if Type==1:
+                self.Type = 'NLELAST'
             if Type==2:
                 self.Type = 'PLASTIC'
             else:
