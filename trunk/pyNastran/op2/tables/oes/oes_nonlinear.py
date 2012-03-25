@@ -6,7 +6,7 @@ from pyNastran.op2.op2Errors import *
 class nonlinearQuadObject(stressObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
-        self.eType = 'QUAD4FD'
+        #self.eType = 'QUAD4FD' # or CTRIA3
         
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.eType = {}
@@ -133,7 +133,6 @@ class nonlinearQuadObject(stressObject):
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]
 
-
                 
 class hyperelasticQuadObject(stressObject):
     def __init__(self,dataCode,iSubcase,dt=None):
@@ -182,8 +181,7 @@ class hyperelasticQuadObject(stressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
-        print "hyper quad...."
+    def writeF06(self,header,pageStamp,pageNum=1):  ## @todo doesnt support CTRIA3NL (calls them CQUAD4s)
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n',]
@@ -254,7 +252,7 @@ class nonlinearRodObject(stressObject):
         self.linearTorsionalStress[dt][eid] = data[6]
         #print data
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1):  ## @todo doesnt support CONROD/CTUBE (calls them CRODs)
         """
         ELEMENT-ID =     102
                                  N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
@@ -264,10 +262,10 @@ class nonlinearRodObject(stressObject):
         3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
         """
         msg = []
-        msgStart = ['                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )',
-               ' ',
-               '    TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL',
-               '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS']
+        msgStart = ['                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
+               ' \n',
+               '    TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL\n',
+               '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n']
         msgE = {}
         msgT = {}
         for dt,axials in sorted(self.axialStress.items()):
@@ -277,17 +275,17 @@ class nonlinearRodObject(stressObject):
                 epcs = self.effectivePlasticCreepStrain[dt][eid]
                 ecs  = self.effectiveCreepStrain[dt][eid]
                 lts  = self.linearTorsionalStress[dt][eid]
-                msgE[eid] = '      ELEMENT-ID = %8i' %(eid)
+                msgE[eid] = '      ELEMENT-ID = %8i\n' %(eid)
                 if eid not in msgT:
                     msgT[eid] = []
-                msgT[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E'%(dt,axial,eqs,ts,epcs,ecs,lts))
+                msgT[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n'%(dt,axial,eqs,ts,epcs,ecs,lts))
             ###
         ###
         for eid,e in sorted(msgE.items()):
             msg += header+[e]+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum))
 
-        return ('\n'.join(msg),pageNum)    
+        return (''.join(msg),pageNum)    
 
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]

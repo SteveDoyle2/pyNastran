@@ -157,7 +157,7 @@ class OP2(BDF,  # BDF methods
 
         # OEF
         # rename to staticLoads/thermalLoads
-        #self.forces = {}
+        self.forces = {}
         self.fluxes = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
