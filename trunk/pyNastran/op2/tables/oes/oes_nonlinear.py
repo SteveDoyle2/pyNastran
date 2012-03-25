@@ -1,8 +1,141 @@
 import sys
+from math import isnan
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class nonlinearQuadObject(stressObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
+        stressObject.__init__(self,dataCode,iSubcase)
+        self.eType = 'QUAD4FD'
+        
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        self.eType = {}
+        self.fiberDistance = {}
+        self.oxx = {}
+        self.oyy = {}
+        self.ozz = {}
+        self.txy = {}
+
+        self.exx = {}
+        self.eyy = {}
+        self.ezz = {}
+        self.exy = {}
+
+        self.es  = {}
+        self.eps = {}
+        self.ecs = {}
+
+    def addNewTransient(self):
+        dt = self.dt
+        self.fiberDistance[dt] = {}
+        self.oxx[dt] = {}
+        self.oyy[dt] = {}
+        self.ozz[dt] = {}
+        self.txy[dt] = {}
+
+        self.exx[dt] = {}
+        self.eyy[dt] = {}
+        self.ezz[dt] = {}
+        self.exy[dt] = {}
+
+        self.es[dt]  = {}
+        self.eps[dt] = {}
+        self.ecs[dt] = {}
+
+    def addNewEid(self,eType,data):
+        dt = self.dt
+        if dt not in self.oxx:
+            self.addNewTransient()
+        (eid,fd,sx,sy,sz,txy,es,eps,ecs,ex,ey,ez,exy) = data
+        self.fiberDistance[dt][eid] = [fd]
+        if isnan(sz): sz = 0.
+        if isnan(ez): ez = 0.
+        self.eType[eid] = eType
+        self.oxx[dt][eid] = [sx]
+        self.oyy[dt][eid] = [sy]
+        self.ozz[dt][eid] = [sz]
+        self.txy[dt][eid] = [txy]
+
+        self.exx[dt][eid] = [ex]
+        self.eyy[dt][eid] = [ey]
+        self.ezz[dt][eid] = [ez]
+        self.exy[dt][eid] = [exy]
+
+        self.es[dt][eid]  = [es]
+        self.eps[dt][eid] = [eps]
+        self.ecs[dt][eid] = [ecs]
+
+    def add(self,data):
+        dt = self.dt
+        (eid,fd,sx,sy,sz,txy,es,eps,ecs,ex,ey,ez,exy) = data
+        self.fiberDistance[dt][eid].append(fd)
+        if isnan(sz): sz = 0.
+        if isnan(ez): ez = 0.
+        
+        self.oxx[dt][eid].append(sx)
+        self.oyy[dt][eid].append(sy)
+        self.ozz[dt][eid].append(sz)
+        self.txy[dt][eid].append(txy)
+
+        self.exx[dt][eid].append(ex)
+        self.eyy[dt][eid].append(ey)
+        self.ezz[dt][eid].append(ez)
+        self.exy[dt][eid].append(exy)
+
+        self.es[dt][eid].append(es)
+        self.eps[dt][eid].append(eps)
+        self.ecs[dt][eid].append(ecs)
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        msgStart = ['      ELEMENT-ID =     129'
+                    '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )'
+                    ' ',
+                    '    TIME         FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP'
+                    '               DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN']
+#0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
+        msgE = {}
+        msgT = {}
+        for (dt,Oxxs) in sorted(self.oxx.items()):
+            for (eid,oxxs) in sorted(Oxxs.items()):
+                msgE[eid] = '      ELEMENT-ID = %8i' %(eid)
+                if eid not in msgT:
+                    msgT[eid] = []
+                for i,oxx in enumerate(oxxs):
+                    fd = self.fiberDistance[dt][eid][i]
+                    oyy = self.oyy[dt][eid][i]
+                    ozz = self.ozz[dt][eid][i]
+                    txy = self.txy[dt][eid][i]
+
+                    exx = self.exx[dt][eid][i]
+                    eyy = self.eyy[dt][eid][i]
+                    ezz = self.ezz[dt][eid][i]
+                    exy = self.exy[dt][eid][i]
+
+                    es  = self.es[dt][eid][i]
+                    eps = self.eps[dt][eid][i]
+                    ecs = self.ecs[dt][eid][i]
+                    
+                    if i==0:
+                        msgT[eid].append('0 %9.3E %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' %(dt,fd,oxx,oyy,ozz,txy,es,eps,ecs))
+                    else:
+                        msgT[eid].append('  %9s %13s  %13.6E  %13.6E  %13.6E  %13.6E\n' %('','',exx,eyy,ezz,exy))
+                    ###
+                ###
+            ###
+        ###
+        msg = []
+        for eid,e in sorted(msgE.items()):
+            msg += header+[e]+msgStart+msgT[eid]
+            msg.append(pageStamp+str(pageNum))
+
+        return (''.join(msg),pageNum)    
+
+    def __repr__(self):
+        return self.writeF06([],'PAGE ',1)[0]
+
+
+                
+class hyperelasticQuadObject(stressObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'QUAD4FD'
@@ -51,9 +184,9 @@ class nonlinearQuadObject(stressObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):
         print "hyper quad...."
-        msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )',
-               '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)',
-               '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR',]
+        msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
+               '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
+               '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n',]
                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
         
@@ -71,14 +204,14 @@ class nonlinearQuadObject(stressObject):
                 
                 for i in range(4): # 1,2,3,4
                     if i==0:
-                        msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6' %(eid,gauss,i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))
+                        msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' %(eid,gauss,i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))
                     else:
-                        msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6' %('','',    i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))
+                        msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' %('','',    i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))
                     ###
                 ###
             ###
         ###                    
-        return ('\n'.join(msg),pageNum)    
+        return (''.join(msg),pageNum)    
 
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]
@@ -86,10 +219,11 @@ class nonlinearQuadObject(stressObject):
 class nonlinearRodObject(stressObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
-        self.eType = 'CROD'
-        
+        #self.eType = 'CROD'
+        self.eTypeMap = {89:'CRODNL',92:'CONRODNL'}
         self.code = [self.formatCode,self.sortCode,self.sCode]
 
+        self.eType = {}
         self.axialStress = {}
         self.equivStress = {}
         self.totalStrain = {}
@@ -106,11 +240,12 @@ class nonlinearRodObject(stressObject):
         self.effectiveCreepStrain[dt]  = {}
         self.linearTorsionalStress[dt] = {}
 
-    def add(self,data):
+    def add(self,eType,data):
         dt = self.dt
         if dt not in self.axialStress:
             self.addNewTransient()
         eid = data[0]
+        self.eType[eid] = eType
         self.axialStress[dt][eid] = data[1]
         self.equivStress[dt][eid] = data[2]
         self.totalStrain[dt][eid] = data[3]

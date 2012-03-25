@@ -300,8 +300,6 @@ class Geometry3(object):
         pass
 
 # PRESAX
-# QBDY1
-# QBDY2
 
     def readQBDY1(self,data):
         """

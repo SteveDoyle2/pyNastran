@@ -423,7 +423,7 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
-    def RODNL_89(self):
+    def RODNL_89_92(self):
         #print "len(data) = %s" %(len(self.data))
         while len(self.data)>=28:
             eData     = self.data[0:4*7]
@@ -438,13 +438,54 @@ class ElementsStressStrain(object):
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            self.obj.add(data)
+            self.obj.add(self.elementType,data)
             
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.RODNL_89)
+        self.handleResultsBuffer(self.RODNL_89_92)
 
+    def CQUAD4NL_90(self):
+        print "len(data) = %s" %(len(self.data))
+        print "self.numWide = ",self.numWide
+        
+        deviceCode = self.deviceCode
+        numWide = self.numWide
+        if numWide==13:
+            nStep = 52  #4*13
+        elif numWide==25:
+            nStep = 100 #4*25
+        else:
+            raise Exception('invalid CQUAD4NL_90')
+
+        while len(self.data)>=nStep:
+            eData     = self.data[0:nStep]
+            self.data = self.data[nStep: ]
+            
+            if numWide==13:
+                out = unpack('iffffffffffff',eData) # numWide=13
+                (eid,fd1,sx1,sy1,sz1,txy1,es1,esp1,ecs1,ex1,ey1,ez1,exy1) = out
+                eid = (eid - deviceCode) // 10
+                data = (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1)
+                self.obj.addNewEid(self.elementType,data)
+            elif numWide==25:
+                out = unpack('iffffffffffffffffffffffff',eData) # numWide=25
+                (eid,fd1,sx1,sy1,xxx,txy1,es1,eps1,ecs1,ex1,ey1,xxx,exy1,
+                     fd2,sx2,sy2,xxx,txy2,es2,eps2,ecs2,ex2,ey2,xxx,exy2) = out
+                eid = (eid - deviceCode) // 10
+
+                data = (eid,fd1,sx1,sy1,xxx,txy1,es1,eps1,ecs1,ex1,ey1,xxx,exy1)
+                self.obj.addNewEid(self.elementType,data)
+                data = (eid,fd2,sx2,sy2,xxx,txy2,es2,eps2,ecs2,ex2,ey2,xxx,exy2)
+                self.obj.add(data)
+            
+            #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+            
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+        ###
+        self.handleResultsBuffer(self.CQUAD4NL_90)
+    
     def CPENTANL_91(self):
         """
         The DMAP manual says fields 3-18 repeat 7 times. but they dont.
@@ -553,40 +594,6 @@ class ElementsStressStrain(object):
             ###
             #sys.exit('stoping in CBEAM_94')
 
-        self.handleResultsBuffer(self.CBEAM_94)
-        if self.makeOp2Debug:
-            print "done with CBEAM-94"
-        #raise Exception('add CBEAM-94...')
-
-    def CBEAM_94b(self): # not coded...
-        if self.makeOp2Debug:
-            self.op2Debug.write('---BEAM_94---\n')
-        deviceCode = self.deviceCode
-        nNodes = 10 # 11-1
-
-        nTotal       = self.obj.getLengthTotal()
-        (n1,format1) = self.obj.getLength1()
-        (n2,format2) = self.obj.getLength2()
-
-        while len(self.data)>=nTotal:
-            eData     = self.data[0:n1]
-            self.data = self.data[n1: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            #print "outA = ",out
-            eid = self.obj.addNewEid(out)
-            
-            for iNode in range(nNodes):
-                eData     = self.data[0:n2]
-                self.data = self.data[n2: ]
-                out = unpack(format2, eData)
-                #print "outB = ",out
-                self.obj.add(eid,out)
-
-            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
-            #print "len(data) = ",len(self.data)
-        ###
         self.handleResultsBuffer(self.CBEAM_94)
         if self.makeOp2Debug:
             print "done with CBEAM-94"

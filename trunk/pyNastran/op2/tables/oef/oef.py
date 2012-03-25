@@ -3,6 +3,7 @@ from struct import unpack
 from pyNastran.op2.op2Errors import *
 
 # pyNastran
+from pyNastran.op2.tables.oug.oug_displacements import displacementObject
 #from pyNastran.op2.resultObjects.ougv1_Objects import (
 #    temperatureObject,displacementObject,
 #    nonlinearTemperatureObject,
@@ -155,7 +156,7 @@ class OEF(object):
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==10: # nonlinear static displacement
                 print "isNonlinearStaticForces"
-                self.createTransientObject(self.nonlinearForces,displacementObject)
+                self.createTransientObject(self.forces,displacementObject)
             else:
                 pass
                 raise Exception('not supported OEF static solution...')
@@ -191,7 +192,7 @@ class OEF(object):
         ###
         if self.obj:
             #self.skipOES_Element()
-            self.readScalars8(self.obj,debug=True)
+            self.readScalars8(debug=True)
             #self.readForces(data,self.obj)
             #self.skipOES_Element()
         else:

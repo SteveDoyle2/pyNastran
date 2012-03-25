@@ -377,6 +377,8 @@ class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
         
         n = 0
         nEntries = len(data)//32
+        if debug:
+            print "self.obj = ",self.obj
         for i in range(nEntries):
             #if debug:
             #    self.log.debug(self.printBlock(self.data[n:n+64]))

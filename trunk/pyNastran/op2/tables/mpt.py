@@ -21,11 +21,12 @@ class MPT(object):
                          (2503,25,288): self.readMAT8,  # record 7
                          (2603,26,300): self.readMAT9,  # record 8 - buggy
                          (2801,28,365): self.readMAT10, # record 9
-                         (503,5,90):    self.readMATS1, # record 12 - ???
+                         (4506,45,374): self.readMATHP, # record 11
+                         (503,  5, 90): self.readMATS1, # record 12
 
-                         (3003,30,286): self.readNLPARM,  # record 27 - ???
-                         (3103,31,337): self.readTSTEPNL, # record 29 - ???
-                         (503,  5, 90): self.readMATS1,   # record 12 - ???
+                         (3003,30,286): self.readNLPARM,  # record 27
+                         (3104,32,350): self.readNLPCI,   # record 28
+                         (3103,31,337): self.readTSTEPNL, # record 29
                          (703,  7, 91): self.readMATT1,   # record 13 - not done
                          (803,  8,102): self.readMATT2,   # record 14 - not done
                          (1503,14,189): self.readMATT3,   # record 15 - not done
@@ -181,7 +182,31 @@ class MPT(object):
         ###
 
 # MAT11 - unused
-# MATHP
+
+    def readMATHP(self,data):
+        """MATHP(4506,45,374) - Record 11"""
+        #print "reading MATHP"
+        while len(data)>=140: # 35*4
+            eData = data[:140]
+            data  = data[140:]
+            out1 = unpack('ifffffffiiifffffffffffffffffffffffi',eData)
+            (mid,a10,a01,d1,rho,alpha,tref,ge,sf,na,nd,kp,
+             a20,a11,a02,d2,
+             a30,a21,a12,a03,d3,
+             a40,a31,a22,a13,a04,d4,
+             a50,a41,a32,a23,a14,a05,d5,
+             continueFlag) = out1
+            dataIn = [out1]
+
+            if continueFlag:
+                eData = data[:32] # 7*4
+                data  = data[32:]            
+                out2 = unpack('iiiiiiii',eData)
+                (tab1,tab2,tab3,tab4,x1,x2,x3,tab5) = out2
+                data.append(out2)
+            mat = MATHP(None,dataIn)
+            self.addOp2Material(mat)
+        ###
 
     def readMATS1(self,data):
         """
@@ -199,24 +224,24 @@ class MPT(object):
         ###
 
     def readMATT1(self,data):
-        pass
+        self.skippedCardsFile.write('skipping MATT1 in MPT\n')
 
     def readMATT2(self,data):
-        pass
+        self.skippedCardsFile.write('skipping MATT2 in MPT\n')
 
     def readMATT3(self,data):
-        pass
+        self.skippedCardsFile.write('skipping MATT3 in MPT\n')
 
     def readMATT4(self,data):
-        pass
+        self.skippedCardsFile.write('skipping MATT4 in MPT\n')
 
     def readMATT5(self,data):
-        pass
+        self.skippedCardsFile.write('skipping MATT5 in MPT\n')
 
 # MATT8 - unused
 
     def readMATT9(self,data):
-        pass
+        self.skippedCardsFile.write('skipping MATT9 in MPT\n')
 
 # MBOLT
 # MBOLTUS
@@ -271,7 +296,8 @@ class MPT(object):
             self.addNLParm(nlparm)
         ###
 
-# NLPCI
+    def readNLPCI(self,data):
+        self.skippedCardsFile.write('skipping NLPCI in MPT\n')
 
     def readTSTEPNL(self,data):
         """

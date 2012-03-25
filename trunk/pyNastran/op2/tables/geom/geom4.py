@@ -43,108 +43,85 @@ class Geometry4(object):
         self.readRecordTable('GEOM4')
 
     def readASET(self,data):
-        pass
+        """ASET(5561,76,215) - Record 1"""
+        self.skippedCardsFile.write('skipping ASET in GEOM4\n')
 
     def readASET1(self,data):
-        pass
+        """ASET1(5571,77,216) - Record 2"""
+        self.skippedCardsFile.write('skipping ASET1 in GEOM4\n')
 
     def readBNDGRID(self,data):
-        pass
+        """BNDGRID(10200,102,473) - Record 3 """
+        self.skippedCardsFile.write('skipping BNDGRID in GEOM4\n')
 
-    def readCYAX(self,data):
-        pass
-
-    def readCYJOIN(self,data):
-        pass
-
-    def readCYSYM(self,data):
-        pass
-
-    def readMPC(self,data):
-        pass
-
-    def readMPCADD(self,data):
-        pass
-
-    def readOMIT1(self,data):
-        pass
-
-    def readQSET1(self,data):
-        pass
-
-    def readRBAR(self,data):
-        pass
-
-    def readRBE1(self,data):
-        pass
-
-    def readRBE2(self,data):
-        pass
-
-    def readRBE3(self,data):
-        pass
-
-    def readRROD(self,data):
-        pass
-
-    def readRSPLINE(self,data):
-        pass
-
-    def readRSSCON(self,data):
-        pass
-
-    def readSEQSET1(self,data):
-        pass
-
-    def readSPC(self,data):
-        pass
-
-    def readSPC1(self,data):
-        pass
-
-    def readSPCADD(self,data):
-        pass
-
-    def readSPCD(self,data):
-        pass
-
-    def readSUPORT(self,data):
-        pass
-
-    def readSUPORT1(self,data):
-        pass
-
-# ASET
-# ASET1
-# BNDGRID
 # BSET
 # BSET1
 # CSET
 # CSET1
-# CYAX
-# CYJOIN
+    def readCYAX(self,data):
+        """CYAX(1510,15,328) - Record 8 """
+        self.skippedCardsFile.write('skipping CYAX in GEOM4\n')
+
+    def readCYJOIN(self,data):
+        """CYJOIN(5210,52,257) - Record 9 """
+        self.skippedCardsFile.write('skipping CYJOIN in GEOM4\n')
+
 # CYSUP
-# CYSYM
+    def readCYSYM(self,data):
+        """CYSYM(1710,17,330) - Record 11"""
+        self.skippedCardsFile.write('skipping CYSYM in GEOM4\n')
+
 # EGENDT
 # GMBC
 # GMSPC
-# MPC
-# MPCADD
-# OMIT
-# OMIT1
-# QSET
-# QSET1
-# RBAR
-# RBE1
-# RBE2
-# RBE3
+    def readMPC(self,data):
+        """MPC(4901,49,17) - Record 16"""
+        self.skippedCardsFile.write('skipping MPC in GEOM4\n')
+
+    def readMPCADD(self,data):
+        """MPCADD(4891,60,83) - Record 17"""
+        self.skippedCardsFile.write('skipping MPCADD in GEOM4\n')
+
+    def readOMIT1(self,data):
+        """OMIT1(4951,63,92) - Record 19"""
+        self.skippedCardsFile.write('skipping OMIT1 in GEOM4\n')
+
+    def readQSET1(self,data):
+        """QSET1(610, 6, 316) - Record 21"""
+        self.skippedCardsFile.write('skipping QSET1 in GEOM4\n')
+
+    def readRBAR(self,data):
+        """RBAR(6601,66,292) - Record 22"""
+        self.skippedCardsFile.write('skipping RBAR in GEOM4\n')
+
+    def readRBE1(self,data):
+        """RBE1(6801,68,294) - Record 23"""
+        self.skippedCardsFile.write('skipping RBE1 in GEOM4\n')
+
+    def readRBE2(self,data):
+        """RBE2(6901,69,295) - Record 24"""
+        self.skippedCardsFile.write('skipping RBE2 in GEOM4\n')
+
+    def readRBE3(self,data):
+        """RBE3(7101,71,187) - Record 25"""
+        self.skippedCardsFile.write('skipping RBE3 in GEOM4\n')
+
 # RBJOINT
 # RBJSTIF
 # RELEASE
 # RPNOM
-# RROD
-# RSPLINE
-# RSSCON
+    def readRROD(self,data):
+        """RROD(6501,65,291) - Record 30"""
+        self.skippedCardsFile.write('skipping RROD in GEOM4\n')
+
+    def readRSPLINE(self,data):
+        """RSPLINE(7001,70,186) - Record 31"""
+        self.skippedCardsFile.write('skipping RSPLINE in GEOM4\n')
+
+    def readRSSCON(self,data):
+        """RSSCON(7201,72,398) - Record 32"""
+        self.skippedCardsFile.write('skipping RSSCON in GEOM4\n')
+
 # RTRPLT
 # RWELD
 # SEBSET
@@ -152,27 +129,71 @@ class Geometry4(object):
 # SECSET
 # SECSET1
 # SEQSET
-# SEQSET1
+
+    def readSEQSET1(self,data):
+        """SEQSET1(1210,12,322) - Record 40"""
+        self.skippedCardsFile.write('skipping SEQSET1 in GEOM4\n')
+
 # SESUP
 # SEUSET
 # SEUSET1
-# SPC
-# SPC1
-# SPCADD
-# SPCD
-# SPCDE
-# SPCDF
-# SPCDG
-# SPCE
-# SPCEB
-# SPCF
-# SPCFB
-# SPCGB
+
+    def readSPC(self,data):
+        """SPC(5501,55,16) - Record 44"""
+        self.skippedCardsFile.write('skipping SPC in GEOM4\n')
+
+    def readSPC1(self,data):
+        """SPC1(5481,58,12) - Record 45"""
+        self.skippedCardsFile.write('skipping SPCC1 in GEOM4\n')
+
+    def readSPCADD(self,data):
+        """SPCADD(5491,59,13) - Record 46"""
+        self.skippedCardsFile.write('skipping SPCADD in GEOM4\n')
+
+    def readSPCD(self,data):
+        """SPCD(5110,51,256) - Record 47"""
+        self.skippedCardsFile.write('skipping SPCD in GEOM4\n')
+
+    def readSPCDE(self,data):
+        self.skippedCardsFile.write('skipping SPCDE in GEOM4\n')
+
+    def readSPCDF(self,data):
+        self.skippedCardsFile.write('skipping SPCDF in GEOM4\n')
+
+    def readSPCDG(self,data):
+        self.skippedCardsFile.write('skipping SPCDG in GEOM4\n')
+
+    def readSPCE(self,data):
+        self.skippedCardsFile.write('skipping SPCE in GEOM4\n')
+
+    def readSPCEB(self,data):
+        self.skippedCardsFile.write('skipping SPCEB in GEOM4\n')
+
+    def readSPCF(self,data):
+        self.skippedCardsFile.write('skipping SPCF in GEOM4\n')
+
+    def readSPCFB(self,data):
+        self.skippedCardsFile.write('skipping SPCFB in GEOM4\n')
+
+    def readSPCGB(self,data):
+        self.skippedCardsFile.write('skipping SPCGB in GEOM4\n')
+
 # SPCGRID
 # SPCOFF
 # SPCOFF1
-# SUPORT
-# SUPORT1
+
+    def readSUPORT(self,data):
+        """SUPORT(5601,56, 14) - Record 59"""
+        self.skippedCardsFile.write('skipping SUPORT in GEOM4\n')
+
+    def readSUPORT1(self,data):
+        """SUPORT1(10100,101,472) - Record 60"""
+        self.skippedCardsFile.write('skipping SUPORT1 in GEOM4\n')
+
 # TEMPBC
-# USET
-# USET1
+
+    def readUSET(self,data):
+        self.skippedCardsFile.write('skipping USET in GEOM4\n')
+
+    def readUSET1(self,data):
+        self.skippedCardsFile.write('skipping USET1 in GEOM4\n')

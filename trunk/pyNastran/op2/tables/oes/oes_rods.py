@@ -2,6 +2,16 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
+class rodDamperObject(stressObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
+        stressObject.__init__(self,dataCode,iSubcase)
+        self.eType = 'CBUSH'
+        
+        self.code = [self.formatCode,self.sortCode,self.sCode]
+        self.axial      = {}
+        self.torsion    = {}
+
+
 class rodStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
