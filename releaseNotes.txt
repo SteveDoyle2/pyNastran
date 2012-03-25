@@ -15,8 +15,14 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
------------------------v0.4 released 2012/03/??-----------------------
+-----------------------v0.4 released 2012/04/??-----------------------
 Overall Notes
+   - lots of BDF bug fixes
+   - lots of new BDF cards
+   - new results in OP2
+   - F06 Reader/Writer
+   - OP2 Reader integrates with F06 Writer
+
 Overall BDF
    - reworked format of bdf_crossReferencing.txt to be more like
      bdf_readWrite.txt
@@ -52,7 +58,7 @@ Added BDF
    - DLOAD, SLOAD, RLOAD1, RLOAD2
    - CAERO2, PAERO2, AEFACT
    - CBEND, PBEND, CBEAM3
-   - MATS1
+   - MATS1,***MATHP,
    - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
    - *** TIC
@@ -64,6 +70,14 @@ Overall OP2
    - more embedded BDF reading
 
 Added OP2
+   - SPC Forces
+   - MPC Forces
+   - hyperelastic stress/strain
+        - CQUAD4
+   - nonlinear strain
+        - CTRIA3, CQUAD4
+        - CROD, CONROD, CTUBE
+        - ***CBEAM
 
 Overall F06 Reader/Writer
    - rewrote f06 reader

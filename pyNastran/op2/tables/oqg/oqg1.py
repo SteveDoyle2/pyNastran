@@ -3,7 +3,7 @@ import copy
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.resultObjects.op2_Objects import spcForcesObject
+from oqg_spcForces import spcForcesObject,mpcForcesObject
 from pyNastran.op2.tables.oug.ougv1_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
      fluxObject,                            # analysisCode=1, sortCode=3
@@ -126,8 +126,8 @@ class OQG1(object):
         #elif tfsCode==[3,3,1]:
         #    self.readOQG1_Data_format3_sort1()
         
-        #elif tfsCode==[39,1,0]: # MPC Forces
-        #    self.readOQG1_Data_table39_format1_sort0()
+        elif tfsCode==[39,1,0]: # MPC Forces
+            self.readOQG1_Data_table39_format1_sort0()
         #elif tfsCode==[39,1,1]:
         #    self.readOQG1_Data_format1_sort1()
         else:
@@ -135,6 +135,35 @@ class OQG1(object):
             raise Exception('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
+
+    def readOQG1_Data_table39_format1_sort0(self):
+        if self.thermal==0:
+            if self.analysisCode==1: # displacement
+                print "isSPCForces"
+                self.createTransientObject(self.mpcForces,mpcForcesObject)
+            elif self.analysisCode==6: # transient forces
+                print "isTransientMPCForces"
+                self.createTransientObject(self.mpcForces,mpcForcesObject)
+            else:
+                #self.skipOES_Element()
+                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
+            ###
+        elif self.thermal==1:
+            raise NotImplementedError('thermal not supported for MPC forces...atfsCode=%s' %(self.atfsCode))
+            if 0:
+                pass
+            else:
+                #self.skipOES_Element()
+                print 'unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode)
+                raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            ###
+        ###
+        else:
+            raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        #print "objName = ",self.obj.name()
+        self.readScalars8(self.obj)
+        #self.skipOES_Element()
 
     def readOQG1_Data_format2_sort0(self):
         print 'not supported OQG solution...atfsCode=%s' %(self.atfsCode)
@@ -150,36 +179,36 @@ class OQG1(object):
                 print "isSPCForces"
                 self.createTransientObject(self.spcForces,spcForcesObject)
             #elif self.analysisCode==2: # nonlinear static eigenvector
-            #    print "isEigenvector"
-            #    self.createTransientObject(self.modalSPCForces,eigenVectorObject)
+                #print "isEigenvector"
+                #self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             #elif self.analysisCode==5: # frequency
-            #    print "isFrequencyForces"
-            #    self.createTransientObject(self.modalSPCForces,eigenVectorObject)
+                #print "isFrequencyForces"
+                #self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==6: # transient forces
                 print "isTransientSPCForces"
                 self.createTransientObject(self.spcForces,spcForcesObject)
-            #elif self.analysisCode==10: # nonlinear static displacement
-            #    print "isNonlinearStaticDisplacement"
-            #    self.createTransientObject(self.spcForces,displacementObject)
+            elif self.analysisCode==10: # nonlinear static displacement
+                #print "isNonlinearStaticSPCForces"
+                self.createTransientObject(self.spcForces,spcForcesObject)
             #elif self.analysisCode==11: # Geometric nonlinear statics
-            #    print "isNonlinearStaticDisplacement"
-            #    self.createTransientObject(self.spcForces,displacementObject)
+                #print "isNonlinearStaticDisplacement"
+                #self.createTransientObject(self.spcForces,displacementObject)
             else:
                 #self.skipOES_Element()
                 pass
-                #raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             #if self.analysisCode==1: # temperature
-            #    print "isTemperature"
-            #    self.obj = temperatureObject(self.dataCode,self.iSubcase)
-            #    self.temperatures[self.iSubcase] = self.obj
+                #print "isTemperature"
+                #self.obj = temperatureObject(self.dataCode,self.iSubcase)
+                #self.temperatures[self.iSubcase] = self.obj
             #elif self.analysisCode==6: # transient forces
-            #    print "isTransientForces"
-            #    self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
+                #print "isTransientForces"
+                #self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
             #elif self.analysisCode==10: # nonlinear static displacement
-            #    print "isNonlinearStaticTemperatures"
-            #    self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
+                #print "isNonlinearStaticTemperatures"
+                #self.createTransientObject(self.nonlinearTemperatures,nonlinearTemperatureObject)
             if 0:
                 pass
             else:

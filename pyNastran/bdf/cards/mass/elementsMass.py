@@ -30,8 +30,8 @@ class CMASS1(PointElement):
             self.eid = data[0]
             self.pid = data[1]
             self.g1  = data[2]
-            self.c1  = data[3]
-            self.g2  = data[4]
+            self.g2  = data[3]
+            self.c1  = data[4]
             self.c2  = data[5]
         ###
 
@@ -66,8 +66,8 @@ class CMASS2(PointElement):
             self.eid  = data[0]
             self.mass = data[1]
             self.g1   = data[2]
-            self.c1   = data[3]
-            self.g2   = data[4]
+            self.g2   = data[3]
+            self.c1   = data[4]
             self.c2   = data[5]
         ###
 

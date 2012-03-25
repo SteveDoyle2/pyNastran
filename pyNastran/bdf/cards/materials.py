@@ -761,49 +761,107 @@ class MAT10(Material):
 class MATHP(HyperelasticMaterial):
     def __init__(self,card,data):
         HyperelasticMaterial.__init__(self,card,data)
-        self.mid  = card.field(1)
-        self.a10  = card.field(2,0.) 
-        self.a01  = card.field(3,0.) 
-        self.d1   = card.field(4,(self.a10+self.a01)*1000)
-        self.rho  = card.field(5)
-        self.av   = card.field(6,0.)
-        self.TRef = card.field(7,0.)
-        self.ge   = card.field(8,0.)
+        if card:
+            self.mid  = card.field(1)
+            self.a10  = card.field(2,0.) 
+            self.a01  = card.field(3,0.) 
+            self.d1   = card.field(4,(self.a10+self.a01)*1000)
+            self.rho  = card.field(5)
+            self.av   = card.field(6,0.)
+            self.TRef = card.field(7,0.)
+            self.ge   = card.field(8,0.)
 
-        self.na   = card.field(10,'na')
-        self.nd   = card.field(11,'nd')
+            self.na   = card.field(10,'na')
+            self.nd   = card.field(11,'nd')
 
-        self.a20  = card.field(17,'a20')
-        self.a11  = card.field(18,0.)
-        self.a02  = card.field(19,0.)
-        self.d2   = card.field(20,0.)
-        
-        self.a30 = card.field(25,'a30')
-        self.a21 = card.field(26,0.)
-        self.a12 = card.field(27,0.)
-        self.a03 = card.field(28,0.)
-        self.d3  = card.field(29,0.)
+            self.a20  = card.field(17,'a20')
+            self.a11  = card.field(18,0.)
+            self.a02  = card.field(19,0.)
+            self.d2   = card.field(20,0.)
 
-        self.a40 = card.field(33,'a40')
-        self.a31 = card.field(34,0.)
-        self.a22 = card.field(35,0.)
-        self.a13 = card.field(36,0.)
-        self.a04 = card.field(37,0.)
-        self.d4  = card.field(38,0.)
-        
-        self.a50 = card.field(41,'a50')
-        self.a41 = card.field(42)
-        self.a32 = card.field(43)
-        self.a23 = card.field(44)
-        self.a14 = card.field(45)
-        self.a05 = card.field(46)
-        self.d5  = card.field(47,0.)
-        
-        self.tab1 = card.field(49,'tab1')
-        self.tab2 = card.field(50,'tab2')
-        self.tab3 = card.field(51,'tab3')
-        self.tab4 = card.field(52,'tab4')
-        self.tabd = card.field(56,'tabd')
+            self.a30 = card.field(25,'a30')
+            self.a21 = card.field(26,0.)
+            self.a12 = card.field(27,0.)
+            self.a03 = card.field(28,0.)
+            self.d3  = card.field(29,0.)
+
+            self.a40 = card.field(33,'a40')
+            self.a31 = card.field(34,0.)
+            self.a22 = card.field(35,0.)
+            self.a13 = card.field(36,0.)
+            self.a04 = card.field(37,0.)
+            self.d4  = card.field(38,0.)
+
+            self.a50 = card.field(41,'a50')
+            self.a41 = card.field(42)
+            self.a32 = card.field(43)
+            self.a23 = card.field(44)
+            self.a14 = card.field(45)
+            self.a05 = card.field(46)
+            self.d5  = card.field(47,0.)
+
+            self.tab1 = card.field(49,'tab1')
+            self.tab2 = card.field(50,'tab2')
+            self.tab3 = card.field(51,'tab3')
+            self.tab4 = card.field(52,'tab4')
+            self.tabd = card.field(56,'tabd')
+        else:
+            main = data[0]
+            (mid,a10,a01,d1,rho,alpha,tref,ge,sf,na,nd,kp,
+             a20,a11,a02,d2,
+             a30,a21,a12,a03,d3,
+             a40,a31,a22,a13,a04,d4,
+             a50,a41,a32,a23,a14,a05,d5,
+             continueFlag) = main
+
+            self.mid  = mid
+            self.a10  = a10
+            self.a01  = a01
+            self.d1   = d1
+            self.rho  = rho
+            self.av   = av
+            self.TRef = tref
+            self.ge   = ge
+
+            self.na   = na
+            self.nd   = nd
+
+            self.a20  = a20
+            self.a11  = a11
+            self.a02  = a02
+            self.d2   = d2
+
+            self.a30 = a30
+            self.a21 = a21
+            self.a12 = a12
+            self.a03 = a03
+            self.d3  = d3
+
+            self.a40 = a40
+            self.a31 = a31
+            self.a22 = a22
+            self.a13 = a13
+            self.a04 = a04
+            self.d4  = d4
+
+            self.a50 = a50
+            self.a41 = a41
+            self.a32 = a32
+            self.a23 = a23
+            self.a14 = a14
+            self.a05 = a05
+            self.d5  = d5
+
+            if continueFlag:
+                (tab1,tab2,tab3,tab4,x1,x2,x3,tab5) = data[1]
+            else:
+                tab1=None; tab2=None; tab3=None; tab4=None; tab5=None
+            ###
+            self.tab1 = tab1
+            self.tab2 = tab2
+            self.tab3 = tab3
+            self.tab4 = tab4
+            self.tabd = tab5
 
     def rawFields(self):
         fields = ['MATHP',self.mid,self.a10,self.a01,self.d1,self.rho,self.av,self.TRef,self.ge,
@@ -859,8 +917,11 @@ class MATS1(MaterialDependence):
             (mid,tid,Type,h,yf,hr,limit1,limit2) = data
             self.mid = mid
             self.tid = tid
-            self.Type = Type
-            self.h = h
+            if Type==2:
+                self.Type = 'PLASTIC'
+            else:
+                raise Exception('invalid Type:  Type=%s' %(Type))
+            self.h  = h
             self.yf = yf
             self.hr = hr
             self.limit1 = limit1

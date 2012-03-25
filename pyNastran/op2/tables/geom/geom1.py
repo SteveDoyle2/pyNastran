@@ -159,7 +159,7 @@ class Geometry1(object):
     def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         #print "reading GRID"
-        #return
+        return
         
         n=0
         nEntries = len(data)//32

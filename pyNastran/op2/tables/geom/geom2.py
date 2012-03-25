@@ -37,10 +37,10 @@ class Geometry2(object):
                            (10808,108,406):  self.readCHBDYG,   # record 43
                            (10908,109,407):  self.readCHBDYP,   # record 44 - not done
                            (7308,73,253):    self.readCHEXA,    # record 45
-                          #(1001,10,65):     self.readCMASS1,   # record 51 - not done
-                          #(1101,11,66):     self.readCMASS2,   # record 52 - not done
-                          #(1201,12,67):     self.readCMASS3,   # record 53 - not done
-                          #(1301,13,68):     self.readCMASS4,   # record 54 - not done
+                           (1001,10,65):     self.readCMASS1,   # record 51
+                           (1101,11,66):     self.readCMASS2,   # record 52
+                           (1201,12,67):     self.readCMASS3,   # record 53
+                           (1301,13,68):     self.readCMASS4,   # record 54
                            (2508,25,0):      self.readCMFREE,   # record 55 - not done
                            (1401,14,63):     self.readCONM1,    # record 56 - not done
                            (1501,15,64):     self.readCONM2,    # record 57
@@ -371,9 +371,9 @@ class Geometry2(object):
             dataIn = [eid,pid,ga,gb,g0,x1,x2,x3,cid]
             elem = CGAP(None,dataIn)
             self.addOp2Element(elem)
-            #n+=36
+            n+=36
         ###
-        #data = data[n:]
+        data = data[n:]
 
 # CHACAB
 # CHACBR
@@ -426,10 +426,74 @@ class Geometry2(object):
 # CHEXAL
 # CHEXP
 # CHEXPR
-# CMASS1
-# CMASS2
-# CMASS3
-# CMASS4
+
+    def readCMASS1(self,data):
+        """
+        CMASS1(1001,10,65) - the marker for Record 51
+        """
+        #print "reading CMASS1"
+        n=0
+        nEntries = len(data)//24
+        for i in range(nEntries):
+            eData = data[n:n+24] # 6*4
+            out = unpack('iiiiii',eData)
+            #(eid,pid,g1,g2,c1,c2) = out
+            elem = CMASS1(None,out)
+            self.addOp2Element(elem)
+            n+=24
+        ###
+        data = data[n:]
+
+    def readCMASS2(self,data):
+        """
+        CMASS2(1101,11,66) - the marker for Record 52
+        """
+        #print "reading CMASS2"
+        n=0
+        nEntries = len(data)//24
+        for i in range(nEntries):
+            eData = data[n:n+24] # 6*4
+            out = unpack('ifiiii',eData)
+            #(eid,m,g1,g2,c1,c2) = out
+            elem = CMASS2(None,out)
+            self.addOp2Element(elem)
+            n+=24
+        ###
+        data = data[n:]
+
+    def readCMASS3(self,data):
+        """
+        CMASS3(1201,12,67) - the marker for Record 53
+        """
+        #print "reading CMASS3"
+        n=0
+        nEntries = len(data)//16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
+            out = unpack('iiii',eData)
+            #(eid,pid,s1,s2) = out
+            elem = CMASS3(None,out)
+            self.addOp2Element(elem)
+            n+=16
+        ###
+        data = data[n:]
+
+    def readCMASS4(self,data):
+        """
+        CMASS4(1301,13,68) - the marker for Record 54
+        """
+        #print "reading CMASS4"
+        n=0
+        nEntries = len(data)//16
+        for i in range(nEntries):
+            eData = data[n:n+16] # 4*4
+            out = unpack('ifii',eData)
+            #(eid,m,s1,s2) = out
+            elem = CMASS4(None,out)
+            self.addOp2Element(elem)
+            n+=16
+        ###
+        data = data[n:]
 
     def readCMFREE(self,data):
         """
