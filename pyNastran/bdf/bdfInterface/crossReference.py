@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 from pyNastran.bdf.cards.constraints import constraintObject2
 
@@ -141,7 +142,7 @@ class XrefMesh(object):
         links the loads to nodes, coordinate systems, and other loads
         """
         for lid,sid in self.loads.items():
-            print "lid=%s sid=%s" %(lid,sid)
+            print("lid=%s sid=%s" %(lid,sid))
             for load in sid:
                 try:
                     load.crossReference(self)
