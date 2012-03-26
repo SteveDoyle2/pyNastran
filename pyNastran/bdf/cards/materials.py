@@ -775,28 +775,28 @@ class MATHP(HyperelasticMaterial):
             self.TRef = card.field(7,0.)
             self.ge   = card.field(8,0.)
 
-            self.na   = card.field(10,'na') # 1
-            self.nd   = card.field(11,'nd') # 1
+            self.na   = card.field(10,1) # 1
+            self.nd   = card.field(11,1) # 1
 
-            self.a20  = card.field(17,'a20')
+            self.a20  = card.field(17,0.)
             self.a11  = card.field(18,0.)
             self.a02  = card.field(19,0.)
             self.d2   = card.field(20,0.)
 
-            self.a30 = card.field(25,'a30')
+            self.a30 = card.field(25,0.)
             self.a21 = card.field(26,0.)
             self.a12 = card.field(27,0.)
             self.a03 = card.field(28,0.)
             self.d3  = card.field(29,0.)
 
-            self.a40 = card.field(33,'a40')
+            self.a40 = card.field(33,0.)
             self.a31 = card.field(34,0.)
             self.a22 = card.field(35,0.)
             self.a13 = card.field(36,0.)
             self.a04 = card.field(37,0.)
             self.d4  = card.field(38,0.)
 
-            self.a50 = card.field(41,'a50')
+            self.a50 = card.field(41,0.)
             self.a41 = card.field(42)
             self.a32 = card.field(43)
             self.a23 = card.field(44)
@@ -804,11 +804,11 @@ class MATHP(HyperelasticMaterial):
             self.a05 = card.field(46)
             self.d5  = card.field(47,0.)
 
-            self.tab1 = card.field(49,'tab1')
-            self.tab2 = card.field(50,'tab2')
-            self.tab3 = card.field(51,'tab3')
-            self.tab4 = card.field(52,'tab4')
-            self.tabd = card.field(56,'tabd')
+            self.tab1 = card.field(49)
+            self.tab2 = card.field(50)
+            self.tab3 = card.field(51)
+            self.tab4 = card.field(52)
+            self.tabd = card.field(56)
         else:
             main = data[0]
             (mid,a10,a01,d1,rho,alpha,tref,ge,sf,na,nd,kp,
@@ -869,10 +869,10 @@ class MATHP(HyperelasticMaterial):
 
     def rawFields(self):
         fields = ['MATHP',self.mid,self.a10,self.a01,self.d1,self.rho,self.av,self.TRef,self.ge,
-                          None,    self.na,self.nd,None,None,None,None,None,
-                          self.a20,self.a11,self.a02,self.d2,None,None,None,None,
-                          self.a30,self.a21,self.a12,self.a03,self.d3None,None,None,
-                          self.a40,self.a31,self.a22,self.a13,self.a04,self.d4,None,None,
+                              None,self.na,self.nd,                 None,None,None,None,None,
+                          self.a20,self.a11,self.a02,self.d2,            None,None,None,None,
+                          self.a30,self.a21,self.a12,self.a03,self.d3,        None,None,None,
+                          self.a40,self.a31,self.a22,self.a13,self.a04,self.d4,    None,None,
                           self.a50,self.a41,self.a32,self.a23,self.a14,self.a05,self.d5,None,
                           self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
 
@@ -913,12 +913,12 @@ class MATHP(HyperelasticMaterial):
 
         TRef = self.setBlankIfDefault(self.TRef,0.0)
         ge   = self.setBlankIfDefault(self.ge,0.0)
-        fields = ['MATHP',self.mid,self.a10,self.a01,self.d1,self.rho,self.av,self.TRef,self.ge,
+        fields = ['MATHP',self.mid,a10,a01,d1,self.rho,av,TRef,ge,
                           None,    self.na,self.nd,None,None,None,None,None,
-                          self.a20,self.a11,self.a02,self.d2,None,None,None,None,
-                          self.a30,self.a21,self.a12,self.a03,self.d3None,None,None,
-                          self.a40,self.a31,self.a22,self.a13,self.a04,self.d4,None,None,
-                          self.a50,self.a41,self.a32,self.a23,self.a14,self.a05,self.d5,None,
+                          a20,a11,a02,d2, None,None,None,None,
+                          a30,a21,a12,a03,d3,  None,None,None,
+                          a40,a31,a22,a13,a04,d4,   None,None,
+                          a50,a41,a32,a23,a14,a05,d5,    None,
                           self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
         return fields
 

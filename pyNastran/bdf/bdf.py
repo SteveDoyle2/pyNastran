@@ -292,6 +292,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.params = {}
         ## stores SPOINT, GRID cards
         self.nodes = {}
+        self.spoints = []
         ## stores GRIDSET card
         self.gridSet = None
         ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD, etc.)
