@@ -36,6 +36,8 @@ BDF API Changes
      Mid() now returns Mid1() or Mid2() depending on the form of the PSHELL
      Mass() calculated based on mid1 (or mid2 if mid1=None) per QRG
    - Tri-type elements are now TriShells instead of CTRIA3s (same for QUADs, QuadShells)
+   - component constraints (e.g. 123456) on GRID, SPC, SPC1 and MPC are now strings
+     for easy looping (default='')
 
 BDF Bug Fixes
    - printCard can now handle cards with an embedded line of Nones
@@ -58,7 +60,7 @@ Added BDF
    - DLOAD, SLOAD, RLOAD1, RLOAD2
    - CAERO2, PAERO2, AEFACT
    - CBEND, PBEND, CBEAM3
-   - MATS1,***MATHP,
+   - MATS1,MATHP,
    - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
    - *** TIC
@@ -142,6 +144,11 @@ GUI Bug Fixes
    - "python setup.py install" should work now, but it's still not recommended
 
 Solver
+   - rewriting pyNastran solver (SOL 101)
+      - better support for 3D
+      - uses case control deck to identify loads/BCs
+      - still uses dense matricies, but layout will be easier to add sparse matricies later
+      - still need to build Kgg matrix
    - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.3.1 released 2012/02/??-----------------------
@@ -271,9 +278,7 @@ Overall OP2
      You still need to write the BDF.
 
 BDF Bug Fixes
-   - DCONSTR wasn't processed properly
-   - DDVAL   wasn't processed properly
-   - DAREA   wasn't processed properly
+   - DCONSTR, DDVAL, DAREA weren't processed properly
    - fixed RBE1 bug
    - fixed RBE3 bug & disabled RBE3
    - AERO/AEROS cards split from self.aeros object to avoid overwriting entries
@@ -289,13 +294,10 @@ BDF Bug Fixes
    - fixed issue with the case control deck parsing on some uncommon cards
 
 Added BDF
-   - PBARL
+   - PBARL, PDAMP
    - CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
-   - PDAMP
    - AESTAT
-   - DRESP1
-   - DVPREL1
-   - DRESP1
+   - DRESP1, DVPREL1, DRESP1
 
 OP2 Tables
    - GEOM1/GEOM2/GEOM3/EPT/MPT (basically stores the bdf)

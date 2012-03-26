@@ -115,7 +115,7 @@ class GRDSET(Node):
         self.cd   = card.field(6,0)
         
         ## Default SPC constraint on undefined nodes
-        self.ps   = card.field(7,0)
+        self.ps   = str(card.field(7,''))
         
         ## Superelement ID
         self.seid = card.field(8,0)
@@ -200,7 +200,7 @@ class GRID(Node):
             self.cd = card.field(6,0)
 
             ## SPC constraint
-            self.ps = card.field(7,0)
+            self.ps = str(card.field(7,''))
 
             ## Superelement ID
             self.seid = card.field(8,0)
@@ -221,7 +221,6 @@ class GRID(Node):
         assert self.nid  >   0,  'nid=%s' %(self.nid)
         assert self.cp   >=  0,  'cp=%s'  %(self.cp)
         assert self.cd   >= -1,  'cd=%s'  %(self.cd)
-        assert self.ps   >=  0,  'ps=%s'  %(self.ps)
         assert self.seid >=  0,'seid=%s'  %(self.seid)
 
     def nDOF(self):
@@ -284,8 +283,7 @@ class GRID(Node):
     def reprFields(self):
         cp   = self.setBlankIfDefault(self.Cp(),0)
         cd   = self.setBlankIfDefault(self.Cd(),0)
-        ps   = self.setBlankIfDefault(self.ps,  0)
         seid = self.setBlankIfDefault(self.Seid(),0)
-        fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,ps,seid]
+        fields = ['GRID',self.nid,cp]+list(self.xyz)+[cd,self.ps,seid]
         return fields
 

@@ -2,6 +2,7 @@ import sys
 
 from numpy import pi,matrix,zeros,ones,array,transpose,dot
 from numpy.linalg import norm
+from pyNastran.general.generalMath import printMatrix
 
 from pyNastran.bdf.errors import *
 from pyNastran.bdf.cards.baseCard import Element,Mid
@@ -364,7 +365,7 @@ class CONROD(CROD):
         """returns the material density  \f$ \rho \f$"""
         return self.mid.rho
 
-    def Rmatrix(self,model):
+    def Rmatrix(self,model,is3D):
         """
         where   \f$ [R]_{ij} \f$ is the tranformation matrix
         \f[ \large  [R]_{ij} \left[ 
@@ -390,35 +391,39 @@ class CONROD(CROD):
         g1y = array([0.,1.,0.])
         g1z = array([0.,0.,1.])
 
-        #R = matrix([  #global rod
-        #            [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
-        #            [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
-        #            [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
-        #          ]) # rod
-
-        R = matrix([ # there can be no z component
-                    [dot(v1x,g1x),dot(v1y,g1x)],
-                    [dot(v1x,g1y),dot(v1y,g1y)],
-                  ]) # rod
+        if is3D:
+            R = matrix([  #global rod
+                        [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
+                        [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
+                        [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
+                      ]) # rod
+        else:
+            R = matrix([ # there can be no z component
+                        [dot(v1x,g1x),dot(v1y,g1x)],
+                        [dot(v1x,g1y),dot(v1y,g1y)],
+                      ]) # rod
         return R
         
     def Lambda(self,model):
-        R = self.Rmatrix(model)
-        Lambda = matrix(zeros((2,4),'d'))
-        #Lambda = matrix(zeros((2,6),'d')) # 3D
+        is3D = True
+        R = self.Rmatrix(model,is3D)
+        
+        if is3D:
+            Lambda = matrix(zeros((2,6),'d')) # 3D
+        else:
+            Lambda = matrix(zeros((2,4),'d'))
+
         print "R = \n",R
         Lambda[0,0] = R[0,0]
         Lambda[0,1] = R[1,1]
-        #Lambda[0,2] = R[2,2] # 3D
+        if is3D:
+            Lambda[0,2] = R[2,2] # 3D
 
         Lambda[1,2] = R[0,0]
         Lambda[1,3] = R[1,1]
-
-        # 3D
-        #Lambda[1,3] = R[0,0]
-        #Lambda[1,4] = R[1,1]
-        #Lambda[1,5] = R[2,2]
-        print "Lambda = \n",Lambda
+        if is3D:
+            Lambda[1,5] = R[2,2] # 3D
+        #print "Lambda = \n",Lambda
         return Lambda
 
     def Stiffness(self,model):
@@ -427,11 +432,17 @@ class CONROD(CROD):
         
         k = self.Stiffness1D(model) #/250000.
         #print R
-        #print k
+        print k
         K = dot(dot(transpose(Lambda),k),Lambda)
-        print "K[%s] = \n%s\n" %(self.eid,K)
-        #sys.exit()
-        return K
+        print "K[%s] = \n%s\n" %(self.eid,printMatrix(K))
+        sys.exit()
+
+        nodes = self.nodeIDs()
+        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[0],4),
+                (nodes[1],1),(nodes[1],2),(nodes[1],3),(nodes[1],4),
+               ]
+
+        return K,nIJV
 
     def displacementStress(self,model,q):
         (n1,n2) = self.nodeIDs()
@@ -490,7 +501,9 @@ class CONROD(CROD):
         
         A = self.A
         mat = self.mid
-        E = mat.E
+        E = mat.e
+        #print "A = ",A
+        #print "E = ",E
         #print "L = ",L
         K = A*E/L*matrix([[1.,-1.],[-1.,1.]]) # rod
         

@@ -34,7 +34,7 @@ class constraintObject2(object):
         return self.constraints[spcID]
 
     def crossReference(self,model):
-        return
+        #return
         #addConstraints2 = {}
         for key,addConstraint in sorted(self.addConstraints.items()):
             for i,spcID in enumerate(addConstraint.sets):
@@ -505,7 +505,7 @@ class SPC1(Constraint):
     def __init__(self,card=None,data=None):
         Constraint.__init__(self,card,data)
         self.conid       = card.field(1)
-        self.constraints = card.field(2)  # 246 = y; dx, dz dir
+        self.constraints = str(card.field(2,''))  # 246 = y; dx, dz dir
         nodes = card.fields(3)
         self.nodes = self.expandThru(nodes)
         self.nodes.sort()
