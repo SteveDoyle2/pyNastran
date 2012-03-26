@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 
 from numpy import pi,matrix,zeros,ones,array,transpose,dot
@@ -22,11 +23,11 @@ class LineElement(Element):
     
     def E(self):
         """returns the Young's Modulus  \f$ E \f$"""
-        return self.pid.mid.E
+        return self.pid.mid.E()
      
     def G(self):
         """returns the Shear Modulus   \f$ G \f$"""
-        return self.pid.mid.G
+        return self.pid.mid.G()
 
     def J(self):
         """returns the Polar Moment of Inertia.   \f$ J \f$"""
@@ -229,6 +230,152 @@ class CROD(LineElement):
         #print "self.type = ",self.type
         massPerLength = self.pid.mid.rho*self.pid.A + self.pid.nsm
 
+    def Rmatrix(self,model,is3D):
+        """
+        where   \f$ [R]_{ij} \f$ is the tranformation matrix
+        \f[ \large  [R]_{ij} \left[ 
+          \begin{array}{ccc}
+              g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
+              g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
+              g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
+          \end{array} \right]
+        \f] 
+        """
+        
+        (n1,n2) = self.nodeIDs()
+        p1 = model.Node(n1).xyz
+        p2 = model.Node(n2).xyz
+        v1 = p2-p1
+        v1 = v1/norm(v1)
+        
+        v1x = array([v1[0],0.,0.])
+        v1y = array([0.,v1[1],0.])
+        v1z = array([0.,0.,v1[2]])
+        
+        g1x = array([1.,0.,0.])
+        g1y = array([0.,1.,0.])
+        g1z = array([0.,0.,1.])
+
+        if is3D:
+            R = matrix([  #global rod
+                        [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
+                        [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
+                        [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
+                      ]) # rod
+        else:
+            R = matrix([ # there can be no z component
+                        [dot(v1x,g1x),dot(v1y,g1x)],
+                        [dot(v1x,g1y),dot(v1y,g1y)],
+                      ]) # rod
+        return R
+        
+    def Lambda(self,model):
+        is3D = True
+        R = self.Rmatrix(model,is3D)
+        
+        if is3D:
+            Lambda = matrix(zeros((2,6),'d')) # 3D
+        else:
+            Lambda = matrix(zeros((2,4),'d'))
+
+        print("R = \n",R)
+        Lambda[0,0] = R[0,0]
+        Lambda[0,1] = R[1,1]
+        if is3D:
+            Lambda[0,2] = R[2,2] # 3D
+
+        Lambda[1,2] = R[0,0]
+        Lambda[1,3] = R[1,1]
+        if is3D:
+            Lambda[1,5] = R[2,2] # 3D
+        #print "Lambda = \n",Lambda
+        return Lambda
+
+    def Stiffness(self,model):
+        Lambda = self.Lambda(model)
+        #print "Lambda = \n",Lambda
+        
+        k = self.Stiffness1D(model) #/250000.
+        #print R
+        print(k)
+        K = dot(dot(transpose(Lambda),k),Lambda)
+        print("K[%s] = \n%s\n" %(self.eid,printMatrix(K)))
+        sys.exit()
+
+        nodes = self.nodeIDs()
+        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[0],4),
+                (nodes[1],1),(nodes[1],2),(nodes[1],3),(nodes[1],4),
+               ]
+
+        return K,nIJV
+
+    def displacementStress(self,model,q):
+        (n1,n2) = self.nodeIDs()
+        Lambda = self.Lambda(model)
+        
+        ix1 = (n1-1)*2
+        iy1 = (n1-1)*2+1
+
+        ix2 = (n2-1)*2
+        iy2 = (n2-1)*2+1
+
+        #ix1 = (n1-1)*3
+        #iy1 = (n1-1)*3+1
+        #iyz = (n1-1)*3+2
+
+        #ix2 = (n2-1)*2
+        #iy2 = (n2-1)*2+1
+        #iz2 = (n2-1)*2+2
+
+        #print "q[%s] = %s" %(ix1,q[ix1])
+        #print "q[%s] = %s" %(iy1,q[iy1])
+        #print "q[%s] = %s" %(ix2,q[ix2])
+        #print "q[%s] = %s" %(iy2,q[iy2])
+
+        q2 = array([q[ix1],q[iy1],q[ix2],q[iy2]])
+        print("q[%s] = %s" %(self.eid,q2))
+        #print "Lambda = \n",Lambda
+        
+        #print "Lsize = ",Lambda.shape
+        #print "qsize = ",q.shape
+        u = dot(array(Lambda),q2)
+        #L = self.Length()
+        EL = self.E()/self.Length()
+        
+        stressX = -EL*u[0]+EL*u[1]
+        print("stressX = %s [psi]" %(stressX))
+
+    def Stiffness1D(self,model):
+        """
+        @todo remove this method after making sure it still works
+        """
+        #L = norm(r)
+        (n1,n2) = self.nodeIDs()
+        node1 = model.Node(n1)
+        node2 = model.Node(n2)
+
+        p1 = model.Node(n1).xyz
+        p2 = model.Node(n2).xyz
+        #print "node1 = ",node1
+        #print "node2 = ",node2
+        L = norm(p1-p2)
+        
+        if L==0.0:
+            msg = 'invalid CROD length=0.0\n%s' %(self.__repr__())
+            raise StiffnessMatrixError(msg)
+        
+        A = self.Area()
+        #mat = self.mid
+        E = self.E()
+        print("A = ",A)
+        print("E = ",E)
+        print("L = ",L)
+        K = A*E/L*matrix([[1.,-1.],[-1.,1.]]) # rod
+        
+        print("A=%g E=%g L=%g  AE/L=%g" %(A,E,L,A*E/L))
+        #print "K = \n",K
+        return K
+
     def rawFields(self):
         fields = ['CROD',self.eid,self.Pid()]+self.nodeIDs()
         return fields
@@ -364,152 +511,6 @@ class CONROD(CROD):
     def Rho(self):
         """returns the material density  \f$ \rho \f$"""
         return self.mid.rho
-
-    def Rmatrix(self,model,is3D):
-        """
-        where   \f$ [R]_{ij} \f$ is the tranformation matrix
-        \f[ \large  [R]_{ij} \left[ 
-          \begin{array}{ccc}
-              g_x \dot e_x & g_x \dot e_y &  g_x \dot e_z    \\
-              g_y \dot e_x & g_y \dot e_y &  g_y \dot e_z    \\
-              g_z \dot e_x & g_z \dot e_y &  g_z \dot e_z
-          \end{array} \right]
-        \f] 
-        """
-        
-        (n1,n2) = self.nodeIDs()
-        p1 = model.Node(n1).xyz
-        p2 = model.Node(n2).xyz
-        v1 = p2-p1
-        v1 = v1/norm(v1)
-        
-        v1x = array([v1[0],0.,0.])
-        v1y = array([0.,v1[1],0.])
-        v1z = array([0.,0.,v1[2]])
-        
-        g1x = array([1.,0.,0.])
-        g1y = array([0.,1.,0.])
-        g1z = array([0.,0.,1.])
-
-        if is3D:
-            R = matrix([  #global rod
-                        [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
-                        [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
-                        [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
-                      ]) # rod
-        else:
-            R = matrix([ # there can be no z component
-                        [dot(v1x,g1x),dot(v1y,g1x)],
-                        [dot(v1x,g1y),dot(v1y,g1y)],
-                      ]) # rod
-        return R
-        
-    def Lambda(self,model):
-        is3D = True
-        R = self.Rmatrix(model,is3D)
-        
-        if is3D:
-            Lambda = matrix(zeros((2,6),'d')) # 3D
-        else:
-            Lambda = matrix(zeros((2,4),'d'))
-
-        print "R = \n",R
-        Lambda[0,0] = R[0,0]
-        Lambda[0,1] = R[1,1]
-        if is3D:
-            Lambda[0,2] = R[2,2] # 3D
-
-        Lambda[1,2] = R[0,0]
-        Lambda[1,3] = R[1,1]
-        if is3D:
-            Lambda[1,5] = R[2,2] # 3D
-        #print "Lambda = \n",Lambda
-        return Lambda
-
-    def Stiffness(self,model):
-        Lambda = self.Lambda(model)
-        #print "Lambda = \n",Lambda
-        
-        k = self.Stiffness1D(model) #/250000.
-        #print R
-        print k
-        K = dot(dot(transpose(Lambda),k),Lambda)
-        print "K[%s] = \n%s\n" %(self.eid,printMatrix(K))
-        sys.exit()
-
-        nodes = self.nodeIDs()
-        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[0],4),
-                (nodes[1],1),(nodes[1],2),(nodes[1],3),(nodes[1],4),
-               ]
-
-        return K,nIJV
-
-    def displacementStress(self,model,q):
-        (n1,n2) = self.nodeIDs()
-        Lambda = self.Lambda(model)
-        
-        ix1 = (n1-1)*2
-        iy1 = (n1-1)*2+1
-
-        ix2 = (n2-1)*2
-        iy2 = (n2-1)*2+1
-
-        #ix1 = (n1-1)*3
-        #iy1 = (n1-1)*3+1
-        #iyz = (n1-1)*3+2
-
-        #ix2 = (n2-1)*2
-        #iy2 = (n2-1)*2+1
-        #iz2 = (n2-1)*2+2
-
-        #print "q[%s] = %s" %(ix1,q[ix1])
-        #print "q[%s] = %s" %(iy1,q[iy1])
-        #print "q[%s] = %s" %(ix2,q[ix2])
-        #print "q[%s] = %s" %(iy2,q[iy2])
-
-        q2 = array([q[ix1],q[iy1],q[ix2],q[iy2]])
-        print "q[%s] = %s" %(self.eid,q2)
-        #print "Lambda = \n",Lambda
-        
-        #print "Lsize = ",Lambda.shape
-        #print "qsize = ",q.shape
-        u = dot(array(Lambda),q2)
-        #L = self.Length()
-        EL = self.E()/self.Length()
-        
-        stressX = -EL*u[0]+EL*u[1]
-        print "stressX = %s [psi]" %(stressX)
-
-    def Stiffness1D(self,model):
-        """
-        @todo remove this method after making sure it still works
-        """
-        #L = norm(r)
-        (n1,n2) = self.nodeIDs()
-        node1 = model.Node(n1)
-        node2 = model.Node(n2)
-
-        p1 = model.Node(n1).xyz
-        p2 = model.Node(n2).xyz
-        #print "node1 = ",node1
-        #print "node2 = ",node2
-        L = norm(p1-p2)
-        
-        if L==0.0:
-            msg = 'invalid CROD length=0.0\n%s' %(self.__repr__())
-            raise StiffnessMatrixError(msg)
-        
-        A = self.A
-        mat = self.mid
-        E = mat.e
-        #print "A = ",A
-        #print "E = ",E
-        #print "L = ",L
-        K = A*E/L*matrix([[1.,-1.],[-1.,1.]]) # rod
-        
-        print "A=%g E=%g L=%g  AE/L=%g" %(A,E,L,A*E/L)
-        #print "K = \n",K
-        return K
 
     def writeCodeAster(self):
         msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" %(self.eid)

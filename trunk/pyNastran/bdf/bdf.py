@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import copy
@@ -841,7 +842,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         try:
             if self.autoReject==True:
-                print 'rejecting processed %s' %(card)
+                print('rejecting processed %s' %(card))
                 self.rejectCards.append(card)
             elif card==[] or cardName=='':
                 pass
@@ -1589,13 +1590,13 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 #break
             else:
                 if '=' not in card[0]:  ## warning cards with = signs in them are not announced when they are rejected
-                    print 'rejecting processed %s' %(card)
+                    print('rejecting processed %s' %(card))
                 self.rejectCards.append(card)
             ###
         except:
-            print "cardName = |%r|" %(cardName)
-            print "failed! Unreduced Card=%s\n" %(ListPrint(card))
-            print "filename = %s\n" %(self.bdfFileName)
+            print("cardName = |%r|" %(cardName))
+            print("failed! Unreduced Card=%s\n" %(ListPrint(card)))
+            print("filename = %s\n" %(self.bdfFileName))
             sys.stdout.flush()
             raise
         ### try-except block

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 from numpy import array,zeros,ones
 from numpy.linalg import solve
@@ -85,9 +86,17 @@ def run(bdfName):
 
     #print analysisCases
     for case in analysisCases:
-        print case
-        print "STRESS = ",case.getParameter('STRESS')[1]
-        sys.exit('starting case')
+        print(case)
+        (value,options) = case.getParameter('STRESS')
+        print("STRESS value   = ",value)
+        print("STRESS options = ",options)
+
+        if case.hasParameter('TEMPERATURE(INITIAL)'):
+            (value,options) = case.getParameter('TEMPERATURE(INITIAL)')
+            print('value   = %s' %(value))
+            print('options = %s' %(options))
+            raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
+        #sys.exit('starting case')
         runCase(model,case)
     ###
 
@@ -104,7 +113,7 @@ def runCase(model,case):
         ps = node.ps
         #print ps
         for ips in ps:
-            SPCi.append(i+int(ips)-1)
+            iUs.append(i+int(ips)-1)
             Us.append(0.0)
         ###
         nidComponentToID[(nid,1)] = i
@@ -135,11 +144,11 @@ def runCase(model,case):
 
     Kaa = partitionDenseSymmetric(Kgg,spcDOFs)
     Fa  = partitionDenseVector(Fg,spcDOFs)
-    print "Kaa = ",Kaa
+    print("Kaa = ",Kaa)
 
-    print "Fg = ",Fg
-    print "Fa = ",Fa
-    print "Us = ",Us
+    print("Fg = ",Fg)
+    print("Fa = ",Fa)
+    print("Us = ",Us)
     
     Us = array(Us)
     Um = array(Um)
@@ -179,21 +188,21 @@ def runCase(model,case):
     ###
     Fa = Fa0 + Cam*Fm
     Kaa = Kaa0+Kaa1+Kaa2
-
+    
     Ua = solve(Kaa,Fa)
     Um = Kma*Ua
 
 def assembleGlobalStiffness(model,Kgg,Dofs):
     for eid,elem in sorted(model.elements.items()):  # CROD
         K,nIJV = elem.Stiffness(model)  # nIJV is the position of the values of K in the dof
-        print "K[%s] = "%(eid),K
+        print("K[%s] = "%(eid),K)
         (Ki,Kj) = K.shape
         ij = 0
         for i in range(Ki):
             for j in range(Kj):
                 kij = K[i,j]
                 #if abs(kij)>1e-8:
-                print nIJV[ij]
+                print('niJV = ',nIJV[ij])
                 ii = nIJV[ij][0]
                 jj = nIJV[ij][1]
                 #dof = Dofs[n]
@@ -216,28 +225,28 @@ def assembleGlobalStiffness(model,Kgg,Dofs):
     ###
     return Kgg
 
-def applySPCs(model,case,SPCi,Us,nidComponentToID):
+def applySPCs(model,case,iUs,Us,nidComponentToID):
     isSPC = False
     if case.hasParameter('SPC'):
         isSPC = True
         spcs = model.spcObject2.constraints
         spcID = case.getParameter('SPC')[0]  # get the value, 1 is the options (SPC has no options)
-        print "SPC = ",spcID
+        print("SPC = ",spcID)
         #print model.spcObject2.constraints
         spcset = spcs[spcID]
         
         for spc in spcset:
-            print spc
+            print(spc)
             if isinstance(spc,SPC):
                 ps = spc.constraints
-                print "spc.constraints = ",spc.constraints
-                print "spc.enforced    = ",spc.enforced
+                print("spc.constraints = ",spc.constraints)
+                print("spc.enforced    = ",spc.enforced)
                 raise NotImplementedError('no support for SPC...')
                 Us.append(self.enforced)
                 for ips in ps:
                     key = (nid,int(ips))
                     i = nidComponentToID(key)
-                    SPCi.append(i)
+                    iUs.append(i)
                     Us.append(0.0)
                 ###
             elif isinstance(spc,SPC1):
@@ -250,8 +259,8 @@ def applySPCs(model,case,SPCi,Us,nidComponentToID):
                         key = (nid,ips)
                         i = nidComponentToID[key]
                         #print "i=%s Us=%s" %(i,0.0)
-                        if i not in SPCi:
-                            SPCi.append(i)
+                        if i not in iUs:
+                            iUs.append(i)
                             Us.append(0.0)
                         ###
                     ###
@@ -260,11 +269,11 @@ def applySPCs(model,case,SPCi,Us,nidComponentToID):
                 raise NotImplementedError('Invalid SPC...spc=\n%s' %(spc))
             ###
         ###
-        print "SPCi = ",SPCi
-        print "Us   = ",Us
+        print("iUs = ",iUs)
+        print("Us  = ",Us)
         sys.exit('stopping in applySPCs')
     ###
-    return (SPCi,Us,isSPC)
+    return (iUs,Us,isSPC)
     
 def applyMPCs(model,case,MPCi,Um,nidComponentToID):
     isMPC = False
@@ -272,18 +281,18 @@ def applyMPCs(model,case,MPCi,Um,nidComponentToID):
         isMPC = True
         mpcs = model.mpcObject2.constraints
         mpcID = case.getParameter('MPC')[0]  # get the value, 1 is the options (MPC has no options)
-        print "******"
-        print model.mpcObject2.constraints
-        print "mpcID = ",mpcID
+        print("******")
+        print(model.mpcObject2.constraints)
+        print("mpcID = ",mpcID)
         mpcset = mpcs[mpcID]
         
         for mpc in mpcset:
-            print mpc,type(mpc)
+            print(mpc,type(mpc))
         sys.exit('stopping in applyMPCs')
     return (MPCi,Um,isMPC)
 
 def assembleForces(model,Fg,Dofs):
-    print model.loads
+    print(model.loads)
     for loadSet,loads in model.loads.items():
         ## @todo if loadset in required loadsets...
         #print loads
@@ -292,15 +301,15 @@ def assembleForces(model,Fg,Dofs):
                 loadDir = load.F()
                 #nid = load.nodeID()
                 for nid,F in loadDir.items():
-                    print nid,F
+                    print(nid,F)
                     Fg[Dofs[(nid,1)]] = F[0]
                     Fg[Dofs[(nid,2)]] = F[1]
                     Fg[Dofs[(nid,3)]] = F[2]
-                    print "Fg = ",Fg
+                    print("Fg = ",Fg)
                 ###
             ###
         ###
-    print "Fg = ",Fg
+    print("Fg = ",Fg)
     return Fg
 
 def writeResults(case):

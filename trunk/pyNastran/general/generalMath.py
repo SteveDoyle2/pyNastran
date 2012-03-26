@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 from numpy import array,cross,allclose,zeros,matrix
 
@@ -24,7 +25,7 @@ def integrateLine(x,y):
         out = quad(scipy.splev,0.,1.,args=(spline))  # now integrate the area
         A = out[0]
     except:
-        print 'spline Error x=%s y=%s' %(x,y)
+        print('spline Error x=%s y=%s' %(x,y))
         raise
     return A
 
@@ -105,9 +106,13 @@ def isFloatRanged(a,x,b):
     return True
 
 def printMatrix(A):
+    B = array(A)
     msg = ''
-    for row in A:
-        msg += ListPrint(row)+'\n'
+    (nr,nc) = B.shape
+    for i in range(nr):
+        msg += ListPrint(B[i,:])+'\n'
+    #for row in A:
+    #    msg += ListPrint(row)+'\n'
     ###
     return msg
 ###
@@ -129,7 +134,7 @@ def ListPrint(listA):
             try:
                 msg += ' %g,' %(a)
             except TypeError:
-                print "a = |%s|" %(a)
+                print("a = |%s|" %(a))
                 raise
             ###
         ###
@@ -190,10 +195,10 @@ def AreaNormal(nodes):
     normal = vector/length
     area = 0.5*length
     if allclose(norm(normal),1.)==False:
-        print "a = ",a
-        print "b = ",b
-        print "normal = ",normal
-        print "length = ",length
+        print("a = ",a)
+        print("b = ",b)
+        print("normal = ",normal)
+        print("length = ",length)
         sys.exit('check...')
     return (area,normal)
 

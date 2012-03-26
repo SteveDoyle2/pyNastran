@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 
 import pyNastran
@@ -197,9 +198,9 @@ class BaseCard(BDF_Card):
         dnMax = 1
 
         out = []
-        print "running post..."
+        print("running post...")
         for data in mid:
-            print "data = ",data
+            print("data = ",data)
             nData = len(data)
             if nData == 1:
                 out.append(data[0]) # 1 field only
@@ -208,7 +209,7 @@ class BaseCard(BDF_Card):
                 out += [data[0],'THRU',data[1]]
             ###
         ###
-        print "dataOut = ",out
+        print("dataOut = ",out)
         return out
         ###
 
@@ -219,12 +220,12 @@ class BaseCard(BDF_Card):
         output is [1,7,2]
         """
         out = []
-        print preCollapse
+        print(preCollapse)
         for collapse in preCollapse:
-            print "collapse = ",collapse
+            print("collapse = ",collapse)
             (data,dn) = collapse
-            print "data = ",data
-            print "dn = ",dn
+            print("data = ",data)
+            print("dn = ",dn)
             if len(data)>1:
                 if dn<=dnMax: # 1:11:2 - patran syntax
                     fields = [data[0],data[-1],dn]
@@ -246,20 +247,20 @@ class BaseCard(BDF_Card):
         i=0
         while(i<nFields):
             dn = fields[i+1]-fields[i]
-            print "preFields = ",fields[i:]
+            print("preFields = ",fields[i:])
             (outFields,j) = self._subCollapse(fields[i:],dn,dnMax)
-            print "outFields = ",outFields
+            print("outFields = ",outFields)
             out.append([outFields,dn])
             i+=j
             ###
             #if i==nFields+1:
             #    out.append([[fields[i-1]],1])
-            #    print "lastOut = ",out[-1]
+            #    print("lastOut = ",out[-1])
             ###
         ###
         
-        print "out = ",out,i
-        print "--end of preCollapse"
+        print("out = ",out,i)
+        print("--end of preCollapse")
         return (out,i)
 
     def _subCollapse(self,fields,dn,dnMax=10000000):
@@ -268,13 +269,13 @@ class BaseCard(BDF_Card):
         out = [1,2,3]
         """
         # dn=1
-        print "subIn = ",fields
+        print("subIn = ",fields)
         out = [fields[0]]
         nFields = len(fields)
 
         for i in range(1,nFields):
             dn = fields[i]-fields[i-1]
-            print "i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" %(i,i,fields[i],i-1,fields[i-1],dn,dnMax)
+            print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" %(i,i,fields[i],i-1,fields[i-1],dn,dnMax))
             if dn!=dnMax:
                 #i+=1
                 #out.append(fields[i])
@@ -283,9 +284,9 @@ class BaseCard(BDF_Card):
             #if i==3:
             #    sys.exit()
         #i-=1
-        print "subOut = ",out
+        print("subOut = ",out)
         #i+=1
-        print "iSubEnd = ",i,'\n'
+        print("iSubEnd = %s\n" %(i))
         #sys.exit()
         return (out,i)
     ###
@@ -353,8 +354,8 @@ class BaseCard(BDF_Card):
         try:
             return self.printCard(fields)
         except:
-            print 'problem printing %s card' %(self.type)
-            print "fields = ",fields
+            print('problem printing %s card' %(self.type))
+            print("fields = ",fields)
             raise
 ###
 
@@ -459,7 +460,7 @@ class Element(BaseCard):
 
     def CentroidTriangle(self,n1,n2,n3,debug=False):
         if debug:
-            print "n1=%s \nn2=%s \nn3=%s" %(n1,n2,n3)
+            print("n1=%s \nn2=%s \nn3=%s" %(n1,n2,n3))
         centroid = (n1+n2+n3)/3.
         return centroid
 
