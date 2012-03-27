@@ -179,11 +179,11 @@ class MAT1(Material):
         self.e = E
         self.g = G
         self.nu = nu
-        print "mid = ",self.mid
-        print "E  = ",E
-        print "G  = ",G
-        print "nu = ",nu
-        print ""
+        #print "mid = ",self.mid
+        #print "E  = ",E
+        #print "G  = ",G
+        #print "nu = ",nu
+        #print ""
 
     def writeCodeAster(self):
         msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1\n' %(self.mid,self.e)
@@ -213,7 +213,7 @@ class MAT1(Material):
     def reprFields(self):
         G_default = self.getG_default()
         G    = self.setBlankIfDefault(self.g,G_default)
-        print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
+        #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
 
         rho  = self.setBlankIfDefault(self.rho,1e-8)
         a    = self.setBlankIfDefault(self.a,0.)

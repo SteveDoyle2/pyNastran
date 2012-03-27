@@ -601,7 +601,7 @@ class addMethods(object):
 
     def addDLink(self,dlink):
         key = dlink.oid
-        assert key not in self.dlink
+        assert key not in self.dlinks
         assert key>0
         self.dlinks[key] = dlink
 
