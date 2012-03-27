@@ -127,7 +127,7 @@ def ListPrint(listA):
         if isinstance(a,str):
             msg += ' %s,' %(a)
         elif isinstance(a,float):
-            msg += ' %-4.2f,' %(a)
+            msg += ' %-4.2g,' %(a)
         elif isinstance(a,int):
             msg += ' %g,' %(a)
         else:

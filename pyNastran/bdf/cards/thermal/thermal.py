@@ -182,45 +182,47 @@ class CHBDYP(ThermalElement):
     type = 'CHBDYP'
     def __init__(self,card=None,data=None):
         ThermalElement.__init__(self,card,data)
-        
-        ## Surface element ID
-        self.eid  = card.field(1)
+        if card:
+            ## Surface element ID
+            self.eid  = card.field(1)
 
-        ## PHBDY property entry identification numbers. (Integer > 0)
-        self.pid  = card.field(2)
+            ## PHBDY property entry identification numbers. (Integer > 0)
+            self.pid  = card.field(2)
 
-        self.Type = card.field(3)
-        assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'CHBDYP Type=|%s|' (self.Type)
+            self.Type = card.field(3)
+            assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'],'CHBDYP Type=|%s|' (self.Type)
 
-        ## A VIEW entry identification number for the front face.
-        self.iViewFront = card.field(4,0)
+            ## A VIEW entry identification number for the front face.
+            self.iViewFront = card.field(4,0)
 
-        ## A VIEW entry identification number for the back face.
-        self.iViewBack  = card.field(5,0)
+            ## A VIEW entry identification number for the back face.
+            self.iViewBack  = card.field(5,0)
 
-        ## Grid point identification numbers of grids bounding the surface. (Integer > 0)
-        self.g1 = card.field(6)        
-        ## Grid point identification numbers of grids bounding the surface. (Integer > 0)
-        self.g2 = card.field(7)
-        
-        ## Orientation grid point. (Integer > 0; Default = 0)
-        self.g0 = card.field(8,0)
+            ## Grid point identification numbers of grids bounding the surface. (Integer > 0)
+            self.g1 = card.field(6)        
+            ## Grid point identification numbers of grids bounding the surface. (Integer > 0)
+            self.g2 = card.field(7)
 
-        ## RADM identification number for front face of surface element. (Integer > 0)
-        self.radMidFront = card.field(9,0)
-        
-        ## RADM identification number for back face of surface element. (Integer > 0)
-        self.radMidBack = card.field(10,0)
+            ## Orientation grid point. (Integer > 0; Default = 0)
+            self.g0 = card.field(8,0)
 
-        ## Grid point identification number of a midside node if it is used with the line type surface element.
-        self.gmid = card.field(11)
-        ## Coordinate system for defining orientation vector. (Integer > 0;Default = 0
-        self.ce   = card.field(12,0)
-        
-        ## Components of the orientation vector in coordinate system CE. The origin of the orientation vector is grid point G1. (Real or blank)
-        self.e1   = card.field(13)
-        self.e2   = card.field(14)
-        self.e3   = card.field(15)
+            ## RADM identification number for front face of surface element. (Integer > 0)
+            self.radMidFront = card.field(9,0)
+
+            ## RADM identification number for back face of surface element. (Integer > 0)
+            self.radMidBack = card.field(10,0)
+
+            ## Grid point identification number of a midside node if it is used with the line type surface element.
+            self.gmid = card.field(11)
+            ## Coordinate system for defining orientation vector. (Integer > 0;Default = 0
+            self.ce   = card.field(12,0)
+
+            ## Components of the orientation vector in coordinate system CE. The origin of the orientation vector is grid point G1. (Real or blank)
+            self.e1   = card.field(13)
+            self.e2   = card.field(14)
+            self.e3   = card.field(15)
+        else:
+            raise NotImplementedError()
 
     def crossReference(self,mesh):
         self.pid = mesh.Phbdy(self.pid)
