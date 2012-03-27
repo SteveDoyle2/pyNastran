@@ -3,6 +3,7 @@ import sys
 from numpy import array,zeros,ones
 from numpy.linalg import solve
 
+from pyNastran.general.generalMath import printMatrix
 from pyNastran.bdf.bdf import BDF,SPC,SPC1
 
 def partitionSparse(Is,Js,Vs):
@@ -96,6 +97,7 @@ def run(bdfName):
             print('value   = %s' %(value))
             print('options = %s' %(options))
             raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
+            #integrate(B.T*E*alpha*dt*Ads)
         #sys.exit('starting case')
         runCase(model,case)
     ###
@@ -123,6 +125,7 @@ def runCase(model,case):
         nidComponentToID[(nid,5)] = i+4
         nidComponentToID[(nid,6)] = i+5
         i+=6
+        #i+=4
     ###
     for nid in sorted(model.spoints):  # SPOINTs
         nidComponentToID[(nid,1)] = i
@@ -136,15 +139,20 @@ def runCase(model,case):
 
     Ug  = ones(i)
     Fg  = zeros(i)
+    
     Kgg = zeros((i,i))
     #Mgg = zeros((i,i))
     
     Kgg = assembleGlobalStiffness(model,Kgg,nidComponentToID)
     Fg  = assembleForces(model,Fg,nidComponentToID)
+    print("Kgg = \n",printMatrix(Kgg))
+    print("iSize = ",i)
+    sys.exit('verify Kgg')
+
 
     Kaa = partitionDenseSymmetric(Kgg,spcDOFs)
     Fa  = partitionDenseVector(Fg,spcDOFs)
-    print("Kaa = ",Kaa)
+    print("Kaa = \n",printMatrix(Kaa))
 
     print("Fg = ",Fg)
     print("Fa = ",Fa)
@@ -198,17 +206,22 @@ def assembleGlobalStiffness(model,Kgg,Dofs):
         print("K[%s] = "%(eid),K)
         (Ki,Kj) = K.shape
         ij = 0
+        nij2 = []
+        for ij in nIJV:
+            nij2.append(Dofs[ij])
+        print('nij2',nij2)
+
         for i in range(Ki):
             for j in range(Kj):
                 kij = K[i,j]
                 #if abs(kij)>1e-8:
-                print('niJV = ',nIJV[ij])
-                ii = nIJV[ij][0]
-                jj = nIJV[ij][1]
+                #print('niJV = ',nIJV[ij])
+                ii = nij2[i]
+                jj = nij2[j]
                 #dof = Dofs[n]
                 Kgg[ii,jj] = kij
 
-                ij += 1
+                #ij += 1
             ###
         ###
     if 0:
@@ -427,13 +440,13 @@ def getCards():
         'CTETRA','CPENTA','CHEXA',
         'CSHEAR',
         
-        # rigid elements
+        # rigid elements - represent as MPCs???
         #'RBAR','RBAR1','RBE1','RBE2','RBE3',
 
         # properties
         'PELAS',
         'PROD','PBAR','PBARL','PBEAM','PBEAML','PTUBE','PBEND',
-        'PSHELL','PCOMP','PCOMPG','PSHEAR',
+        'PSHELL','PCOMP','PSHEAR', #'PCOMPG',
         'PSOLID',
 
         # materials

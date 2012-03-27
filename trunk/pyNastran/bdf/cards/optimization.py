@@ -122,7 +122,7 @@ class DLINK(OptConstraint):
         self.Ci  = []
         
         for i in range(0,nFields,2):
-            sekf.IDv.append(fields[i])
+            self.IDv.append(fields[i])
             self.Ci.append(fields[i+1])
         ###
 
@@ -401,7 +401,7 @@ class DVPREL2(OptConstraint):
         ## Maximum value allowed for this property. (Real; Default = 1.0E20)
         self.pmax = card.field(6,1e20)
         ## DEQATN entry identification number. (Integer > 0)
-        self.eqid = card.field(7)
+        self.eqID = card.field(7)
         
         fields = card.fields(9)
         #print "fields = ",fields
@@ -415,8 +415,8 @@ class DVPREL2(OptConstraint):
         
         try:
             iDTable = fields.index('DTABLE')+iOffset
-            #iDesMax  = idTable # the index to start parsing DESVAR
-            iDesStop = idTable # the index to stop  parsing DESVAR
+            #iDesMax  = iDTable # the index to start parsing DESVAR
+            iDesStop = iDTable # the index to stop  parsing DESVAR
         except ValueError:
             iDTable  = None
             iDesStop = iEnd
@@ -451,7 +451,7 @@ class DVPREL2(OptConstraint):
     def crossReference(self,model):
         """@todo add support for DEQATN cards to finish DVPREL2 xref"""
         self.pid = model.Property(self.pid)
-        #self.eqid = model.DEquation(self.eqid)
+        #self.eqID = model.DEquation(self.eqID)
         
     def OptValue(self): ## @todo not implemented
         self.pid.OptValue(self.pnameFid)
@@ -459,8 +459,8 @@ class DVPREL2(OptConstraint):
     def rawFields(self):
         fields = ['DVPREL2',self.oid,self.Type,self.Pid(),self.pnameFid,self.pmin,self.pmax,self.eqID,None]
 
-        if self.desvars:
-            fields2 = ['DESVAR']+self.desvars
+        if self.dvids:
+            fields2 = ['DESVAR']+self.dvids
             fields += self.buildTableLines(fields2,i=1,j=0)
 
         if self.dtables:

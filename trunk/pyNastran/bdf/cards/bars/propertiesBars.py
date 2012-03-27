@@ -1383,9 +1383,9 @@ class PVISC(Property):
     type = 'PVISC'
     def __init__(self,card=None,nPVISC=0,data=None):
         if card:
-            self.pid = card.field(1+4*nCard)
-            self.ce = card.field(2+4*nCard)
-            self.cr = card.field(3+4*nCard,0.)
+            self.pid = card.field(1+4*nPVISC)
+            self.ce = card.field(2+4*nPVISC)
+            self.cr = card.field(3+4*nPVISC,0.)
         else:
             self.pid = data[0]
             self.ce = data[1]

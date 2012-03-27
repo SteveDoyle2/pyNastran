@@ -241,12 +241,12 @@ class CROD(LineElement):
           \end{array} \right]
         \f] 
         """
-        
         (n1,n2) = self.nodeIDs()
         p1 = model.Node(n1).xyz
         p2 = model.Node(n2).xyz
         v1 = p2-p1
         v1 = v1/norm(v1)
+        (l,m,n) = v1
         
         v1x = array([v1[0],0.,0.])
         v1y = array([0.,v1[1],0.])
@@ -262,34 +262,57 @@ class CROD(LineElement):
                         [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
                         [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
                       ]) # rod
+            #R = matrix([
+            #            [],
+            #            [],
+            #            [],
+            #          ])
+                      
         else:
             R = matrix([ # there can be no z component
                         [dot(v1x,g1x),dot(v1y,g1x)],
                         [dot(v1x,g1y),dot(v1y,g1y)],
                       ]) # rod
+            #R = matrix([ # there can be no z component
+            #            [dot(v1x,g1x),dot(v1y,g1x)],
+            #            [dot(v1x,g1y),dot(v1y,g1y)],
+            #          ]) # rod
         return R
         
     def Lambda(self,model):
-        is3D = True
-        R = self.Rmatrix(model,is3D)
+        """
+        2d  [l,m,0,0]
+            [0,0,l,m]
         
+        3d  [l,m,n,0,0,0]
+            [0,0,0,l,m,n]
+        """
+        is3D = False
+        #R = self.Rmatrix(model,is3D)
+        
+        (n1,n2) = self.nodeIDs()
+        p1 = model.Node(n1).Position()
+        p2 = model.Node(n2).Position()
+        v1 = p2-p1
+        print(v1)
+        v1 = v1/norm(v1)
+        (l,m,n) = v1
         if is3D:
             Lambda = matrix(zeros((2,6),'d')) # 3D
         else:
             Lambda = matrix(zeros((2,4),'d'))
 
-        print("R = \n",R)
-        Lambda[0,0] = R[0,0]
-        Lambda[0,1] = R[1,1]
-        if is3D:
-            Lambda[0,2] = R[2,2] # 3D
+        #print("R = \n",R)
+        Lambda[0,0] = Lambda[1,2] = l
+        Lambda[0,1] = Lambda[1,3] = m
 
-        Lambda[1,2] = R[0,0]
-        Lambda[1,3] = R[1,1]
         if is3D:
-            Lambda[1,5] = R[2,2] # 3D
-        #print "Lambda = \n",Lambda
+            Lambda[0,2] = Lambda[1,5] = n # 3D
+        print("Lambda = \n",Lambda)
         return Lambda
+
+    def Stiffness1(self,model):
+        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),]
 
     def Stiffness(self,model):
         Lambda = self.Lambda(model)
@@ -297,42 +320,26 @@ class CROD(LineElement):
         
         k = self.Stiffness1D(model) #/250000.
         #print R
-        print(k)
+        #print(k)
         K = dot(dot(transpose(Lambda),k),Lambda)
-        print("K[%s] = \n%s\n" %(self.eid,printMatrix(K)))
-        sys.exit()
+        #print(K)
+        print("K[%s] = \n%s\n" %(self.eid,K))
+        #sys.exit('stopping in ROD stiffness...elementsBars.py')
 
         nodes = self.nodeIDs()
-        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[0],4),
-                (nodes[1],1),(nodes[1],2),(nodes[1],3),(nodes[1],4),
-               ]
+        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),(nodes[1],2),]
 
         return K,nIJV
 
-    def displacementStress(self,model,q):
+    def displacementStress(self,model,q,dofs):
         (n1,n2) = self.nodeIDs()
         Lambda = self.Lambda(model)
+        n11 = dofs[(n1,1)]
+        n12 = dofs[(n1,2)]
+        n21 = dofs[(n2,1)]
+        n22 = dofs[(n2,2)]
         
-        ix1 = (n1-1)*2
-        iy1 = (n1-1)*2+1
-
-        ix2 = (n2-1)*2
-        iy2 = (n2-1)*2+1
-
-        #ix1 = (n1-1)*3
-        #iy1 = (n1-1)*3+1
-        #iyz = (n1-1)*3+2
-
-        #ix2 = (n2-1)*2
-        #iy2 = (n2-1)*2+1
-        #iz2 = (n2-1)*2+2
-
-        #print "q[%s] = %s" %(ix1,q[ix1])
-        #print "q[%s] = %s" %(iy1,q[iy1])
-        #print "q[%s] = %s" %(ix2,q[ix2])
-        #print "q[%s] = %s" %(iy2,q[iy2])
-
-        q2 = array([q[ix1],q[iy1],q[ix2],q[iy2]])
+        q2 = array( [q[n11],q[n12],q[n21],q[n22]] )
         print("q[%s] = %s" %(self.eid,q2))
         #print "Lambda = \n",Lambda
         
@@ -370,7 +377,9 @@ class CROD(LineElement):
         print("A = ",A)
         print("E = ",E)
         print("L = ",L)
-        K = A*E/L*matrix([[1.,-1.],[-1.,1.]]) # rod
+        f = A*E/L
+        f = 250000.
+        K = 1*matrix([[1.,-1.],[-1.,1.]]) # rod
         
         print("A=%g E=%g L=%g  AE/L=%g" %(A,E,L,A*E/L))
         #print "K = \n",K
@@ -477,11 +486,11 @@ class CONROD(CROD):
 
     def E(self):
         """returns the Young's Modulus  \f$ E \f$"""
-        return self.mid.E
+        return self.mid.E()
      
     def G(self):
         """returns the Shear Modulus   \f$ G \f$"""
-        return self.mid.G
+        return self.mid.G()
 
     def I12(self):
         """the I12 for a rod is 0"""

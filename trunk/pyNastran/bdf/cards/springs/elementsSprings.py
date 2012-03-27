@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 from numpy.linalg import norm
 
@@ -28,6 +29,47 @@ class SpringElement(Element):
 
     def K(self):
         raise Exception('K not implemented in the %s class' %(self.type))
+
+    def Lambda(self,model):
+        """
+        2d  [l,m,0,0]
+            [0,0,l,m]
+        
+        3d  [l,m,n,0,0,0]
+            [0,0,0,l,m,n]
+        """
+        is3D = False
+        #R = self.Rmatrix(model,is3D)
+        
+        (n1,n2) = self.nodeIDs()
+        p1 = model.Node(n1).Position()
+        p2 = model.Node(n2).Position()
+        v1 = p2-p1
+        #print(v1)
+        v1 = v1/norm(v1)
+        (l,m,n) = v1
+        if is3D:
+            Lambda = matrix(zeros((2,6),'d')) # 3D
+        else:
+            Lambda = matrix(zeros((2,4),'d'))
+
+        #print("R = \n",R)
+        Lambda[0,0] = Lambda[1,2] = l
+        Lambda[0,1] = Lambda[1,3] = m
+
+        if is3D:
+            Lambda[0,2] = Lambda[1,5] = n # 3D
+        #print("Lambda = \n",Lambda)
+        return Lambda
+
+    def Stiffness(self,model):
+        ki = self.K()
+        k = ki*matrix([[1,-1,]
+                       [-1, 1]])
+
+        Lambda = self.Lambda(model)
+        K = dot(dot(transpose(Lambda),k),Lambda)
+        return K
 
     def Length(self):
         """

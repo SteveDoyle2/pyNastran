@@ -90,7 +90,7 @@ class EIGC(Method): ## not done
             self.alphaAjs = []
             self.omegaAjs = []
             nFields = len(fields)
-            nRows = nFields//7
+            nRows = nFields//8
             if nFields%7 > 0:
                 nRows += 1
             
@@ -116,13 +116,17 @@ class EIGC(Method): ## not done
             if self.method=='INV':
                 NDJ_default = 3*NEj
 
-            NEj = card.field(9+7*iRow+5)
-            self.alphaAjs.append(card.field(9+7*iRow  ,0.0))
-            self.omegaAjs.append(card.field(9+7*iRow+1,0.0))
-            self.mblkszs.append( card.field(9+7*iRow+2,7))
-            self.iblkszs.append( card.field(9+7*iRow+3,2))
-            self.ksteps.append(  card.field(9+7*iRow+4,5))
-            self.NJIs.append(    card.field(9+7*iRow+6))
+            self.alphaAjs.append(card.field(9+8*iRow  ,0.0))
+            self.omegaAjs.append(card.field(9+8*iRow+1,0.0))
+            self.mblkszs.append( card.field(9+8*iRow+2,7))
+
+            #self.alphaAjs.append(card.field(9+8*iRow  ,'ALPHA%s'%(iRow)))
+            #self.omegaAjs.append(card.field(9+8*iRow+1,'OMEGA%s'%(iRow)))
+            #self.mblkszs.append( card.field(9+8*iRow+2,'MBLOCK%s'%(iRow)))
+
+            self.iblkszs.append( card.field(9+8*iRow+3,2))
+            self.ksteps.append(  card.field(9+8*iRow+4,5))
+            self.NJIs.append(    card.field(9+8*iRow+6))
         ###
 
     def loadHESS_INV(self,nRows,card):
@@ -139,18 +143,18 @@ class EIGC(Method): ## not done
             LJ_default = 1.0
 
         for iRow in range(nRows):
+            NEj = card.field(9+7*iRow+5)
             NDJ_default = None
             if self.method=='INV':
                 NDJ_default = 3*NEj
 
-            NEj = card.field(9+7*iRow+5)
-            self.alphaAjs.append(card.field(9+7*iRow  ,alphaOmega_default))
-            self.omegaAjs.append(card.field(9+7*iRow+1,alphaOmega_default))
-            self.alphaBjs.append(card.field(9+7*iRow+2,alphaOmega_default))
-            self.omegaBjs.append(card.field(9+7*iRow+3,alphaOmega_default))
-            self.LJs.append(     card.field(9+7*iRow+4,LJ_default))
-            self.NEJs.append(    card.field(9+7*iRow+5))
-            self.NDJs.append(    card.field(9+7*iRow+6))
+            self.alphaAjs.append(card.field(9+8*iRow  ,alphaOmega_default))
+            self.omegaAjs.append(card.field(9+8*iRow+1,alphaOmega_default))
+            self.alphaBjs.append(card.field(9+8*iRow+2,alphaOmega_default))
+            self.omegaBjs.append(card.field(9+8*iRow+3,alphaOmega_default))
+            self.LJs.append(     card.field(9+8*iRow+4,LJ_default))
+            self.NEJs.append(    card.field(9+8*iRow+5))
+            self.NDJs.append(    card.field(9+8*iRow+6))
         ###
 
     def crossReference(self,model):
@@ -159,13 +163,6 @@ class EIGC(Method): ## not done
     def rawMethod(self):
         fields = []
         if self.method in ['HESS','INV']:
-            self.alphaAjs.append(card.field(9+7*iRow  ,alphaOmega_default))
-            self.omegaAjs.append(card.field(9+7*iRow+1,alphaOmega_default))
-            self.alphaBjs.append(card.field(9+7*iRow+2,alphaOmega_default))
-            self.omegaBjs.append(card.field(9+7*iRow+3,alphaOmega_default))
-            self.LJs.append(     card.field(9+7*iRow+4,LJ_default))
-            self.NEJs.append(    card.field(9+7*iRow+5))
-            self.NDJs.append(    card.field(9+7*iRow+6))
             for (alphaA,omegaA,alphaB,omegaB,Lj,NEj,NDj) in zip(
                     self.alphaAjs,self.omegaAjs,self.alphaBjs,self.omegaBjs,
                     self.LJs,self.NEJs,self.NDJs):

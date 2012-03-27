@@ -179,9 +179,11 @@ class MAT1(Material):
         self.e = E
         self.g = G
         self.nu = nu
-        #print "E  = ",E
-        #print "G  = ",G
-        #print "nu = ",nu
+        print "mid = ",self.mid
+        print "E  = ",E
+        print "G  = ",G
+        print "nu = ",nu
+        print ""
 
     def writeCodeAster(self):
         msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1\n' %(self.mid,self.e)
@@ -200,10 +202,18 @@ class MAT1(Material):
                   self.St,self.Sc,self.Ss,self.Mcsid]
         return fields
 
+    def getG_default(self):
+        if self.nu==0.:
+            G_default = self.g
+        else:
+            G_default = self.e/2./(1+self.nu)
+        ###
+        return G_default
+
     def reprFields(self):
-        #print "MAT1 - self.E=%s self.nu=%s" %(self.E,self.nu)
-        G_default = self.e/2./(1+self.nu)
+        G_default = self.getG_default()
         G    = self.setBlankIfDefault(self.g,G_default)
+        print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
 
         rho  = self.setBlankIfDefault(self.rho,1e-8)
         a    = self.setBlankIfDefault(self.a,0.)
@@ -763,7 +773,7 @@ class MAT10(Material):
 
 
 class MATHP(HyperelasticMaterial):
-    def __init__(self,card,data):
+    def __init__(self,card=None,data=None):
         HyperelasticMaterial.__init__(self,card,data)
         if card:
             self.mid  = card.field(1)
@@ -883,7 +893,7 @@ class MATHP(HyperelasticMaterial):
 
         a01 = self.setBlankIfDefault(self.a01,0.0)
         a10 = self.setBlankIfDefault(self.a10,0.0)
-        d1  = self.setBlankIfDefault(self.d1,1000*(a01+a10))
+        d1  = self.setBlankIfDefault(self.d1,1000*(self.a01+self.a10))
 
         a20 = self.setBlankIfDefault(self.a20,0.0)
         a11 = self.setBlankIfDefault(self.a11,0.0)
@@ -919,7 +929,7 @@ class MATHP(HyperelasticMaterial):
                           a30,a21,a12,a03,d3,  None,None,None,
                           a40,a31,a22,a13,a04,d4,   None,None,
                           a50,a41,a32,a23,a14,a05,d5,    None,
-                          self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
+                          self.tab1,self.tab2,self.tab3,self.tab4,None,None,None,self.tabd]
         return fields
 
 class MaterialDependence(BaseCard):

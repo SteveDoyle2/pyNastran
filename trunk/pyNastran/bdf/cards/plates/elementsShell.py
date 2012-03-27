@@ -201,6 +201,16 @@ class CTRIA6(TriShell):
     def Thickness(self):
         return self.pid.Thickness()
 
+    def getReprDefaults(self):
+        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
+        TFlag     = self.setBlankIfDefault(self.TFlag,0)
+        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
+
+        T1 = self.setBlankIfDefault(self.T1,1.0)
+        T2 = self.setBlankIfDefault(self.T2,1.0)
+        T3 = self.setBlankIfDefault(self.T3,1.0)
+        return (thetaMcid,zOffset,TFlag,T1,T2,T3)
+
     def rawFields(self):
         fields = ['CTRIA6',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,None]+[
         None,self.TFlag,self.T1,self.T2,self.T3]
@@ -234,6 +244,16 @@ class CTRIAR(TriShell):
 
     def Thickness(self):
         return self.pid.Thickness()
+
+    def getReprDefaults(self):
+        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
+        TFlag     = self.setBlankIfDefault(self.TFlag,0)
+        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
+
+        T1 = self.setBlankIfDefault(self.T1,1.0)
+        T2 = self.setBlankIfDefault(self.T2,1.0)
+        T3 = self.setBlankIfDefault(self.T3,1.0)
+        return (thetaMcid,zOffset,TFlag,T1,T2,T3)
 
     def rawFields(self):
         fields = [self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3]
