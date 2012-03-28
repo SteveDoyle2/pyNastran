@@ -64,6 +64,7 @@ Added BDF
    - MATS1,MATHP,
    - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
+   - SPOINT
    - *** TIC
 
 OP2 API Changes

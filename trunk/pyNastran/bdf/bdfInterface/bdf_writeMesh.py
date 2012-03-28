@@ -212,6 +212,11 @@ class writeMesh(object):
         for key,node in sorted(self.nodes.items()):
             #print "node = ",node
             msg += str(node)
+
+        if self.spoints:
+            msg += '$SPOINTS\n'
+            msg += str(self.spoints)
+        ###
         return msg
 
     def writeElements(self):

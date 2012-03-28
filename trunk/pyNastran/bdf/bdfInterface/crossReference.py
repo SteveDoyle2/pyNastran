@@ -91,6 +91,9 @@ class XrefMesh(object):
                 sys.stderr.write('couldnt cross reference\n%s' %(str(n)))
                 raise
         ###
+        if self.spoints:
+            self.spointi = self.spoints.createSPOINTi()
+        ###
 
     def crossReference_Elements(self):
         """

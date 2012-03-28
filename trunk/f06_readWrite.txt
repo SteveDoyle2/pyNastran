@@ -1,0 +1,65 @@
+***supported***
+Real Eigenvector No.
+Real Eigenvalues
+Complex Eigenvalue Summary
+Element Strain Energies
+Displacement Vector
+Complex Displacement Vector
+Forces Of Single-Point Constraint
+Forces Of Multi-Point  Constraint
+
+Stresses In Bar Elements(CBAR)
+Stresses In Rod Elements(CROD)
+
+Stresses In Triangular Elements(TRIA3)
+Stresses In Quadrilateral Elements(QUAD4)
+Stresses In Quadrilateral Elements(QUAD4) option=bilin
+Stresses In Layered Composite Elements(QUAD4)
+
+Stresses In Tetrahedron Solid Elements(CTETRA)
+Stresses In Hexahedron  Solid Elements(HEXA)
+Stresses In Pentahedron Solid Elements(PENTA)
+
+Strains In Bar Elements(CBAR)
+Strains In Rod Elements(CROD)
+
+Strains In Quadrilateral Elements(QUAD4)
+Strains In Triangular Elements(TRIA3)
+
+Strains In Tetrahedron Solid Elements(CTETRA)
+Strains In Hexahedron  Solid Elements(HEXA)
+Strains In Pentahedron Solid Elements(PENTA)
+
+Temperature Vector
+
+***limited support***
+Finite Element Temperature Gradients And Fluxes
+
+
+***not supported***
+Nastran File And System Parameter Echo
+Nastran Executive Control Echo
+Case Control Echo
+Model Summary
+
+Element Geometry Test Results Summary
+Output From Grid Point Weight Generator
+OLoad Resultant
+Maximum SPC Forces
+Maximum Displacements
+Maximum Applied Loads
+Grid Point Singularity Table
+
+#------------------------
+Non-Dimensional Stability And Control Derivative Coefficients
+Non-Dimensional HingeMoment Derivative Coefficients
+Aerostatic Data Recovery Output Tables
+Structural Monitor Point Integrated Loads
+
+
+Rotor Dynamics Summary
+Rotor Dynamics Mass Summary
+Eigen Value Analysis Summary(Complex Lanczos Method)
+Grid Point Force Balance
+#------------------------
+

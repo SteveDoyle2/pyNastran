@@ -61,7 +61,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
         'PARAM',
-        'GRID','GRDSET', #'RINGAX',
+        'GRID','GRDSET','SPOINT', #'RINGAX',
 
         # elements
         'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
@@ -864,9 +864,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='RINGAX':
             #    node = RINGAX(cardObj)
             #    self.addNode(node)
-            #elif cardName=='SPOINT':  # not done
-            #    node = SPOINT(cardObj)
-            #    self.addNode(node)
+            elif cardName=='SPOINT':
+                spoint = SPOINT(cardObj)
+                self.addSPoint(spoint)
 
             elif cardName=='CQUAD4':
                 elem = CQUAD4(cardObj)

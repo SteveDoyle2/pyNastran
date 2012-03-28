@@ -53,7 +53,7 @@ class RINGAX(Ring):
         self.ps  = card.field(7)
 
     def Position(self):
-        return array(0.,0.,0.)
+        return array([0.,0.,0.])
 
     def rawFields(self):
         fields = ['RINGAX',self.nid,None,self.R,self.z,None,None,self.ps]
@@ -61,6 +61,25 @@ class RINGAX(Ring):
         
     
 class SPOINT(Node):
+    type = 'SPOINT'
+    def __init__(self,nid):
+        Node.__init__(self,card=None,data=None)
+        self.nid = nid
+    
+    def crossReference(self,model):
+        pass
+
+    def Position(self):
+        return array([0.,0.,0.])
+
+    def rawFields(self):
+        """
+        @todo support THRU in output
+        """
+        fields = ['SPOINT']+self.nid
+        return fields
+
+class SPOINTs(Node):
     """
     SPOINT ID1 ID2 ID3 ID4 ID5 ID6 ID7 ID8
     or
@@ -90,17 +109,23 @@ class SPOINT(Node):
     def addSPoints(self,sList):
         self.spoints = list(set(self.spoints+sList))
         
-    def Position(self):
-        return array(0.,0.,0.)
+    def crossReference(self,model):
+        pass
+
+    def createSPOINTi(self):
+        spoints = []
+        for nid in self.spoints:
+            spoints.append(SPOINTi(nid))
+        ###
+        return spoints
 
     def rawFields(self):
-        """
-        @todo support THRU in output
-        """
         spoints = self.collapseThru(self.spoints)
         fields = ['SPOINT']+spoints
         return fields
-        
+
+    def reprFields(self):
+        return self.rawFields()
 
 class GRDSET(Node):
     """
