@@ -311,6 +311,8 @@ class writeMesh(object):
             msg += '$MATERIALS\n'
             for key,material in sorted(self.materials.items()):
                 msg += str(material)
+            for key,material in sorted(self.creepMaterials.items()):
+                msg += str(material)
             for key,material in sorted(self.materialDeps.items()):
                 msg += str(material)
         return msg

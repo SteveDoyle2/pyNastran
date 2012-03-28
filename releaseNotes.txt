@@ -50,7 +50,8 @@ BDF Bug Fixes
    - fixed bugs in CQUADR, CQUADX, CVISC,  CONROD, CGAP,  CTRIAX, PTUBE
    - fixed bugs in NLPARM, PLOAD2, PLOAD4, QBDY1,  QBDY3, FREQ2,  CHBDYE
    - fixed bugs in PMASS,  CSHEAR, CBAR,   CQUAD,  RBE1,  RBE2,   RBE3
-   - fixed bugs in PBEAML, MAT1, MAT3, CTRIAX6
+   - fixed bugs in PBEAML, MAT1, MAT3, CTRIAX6, CREEP
+   - CREEP not lost when writing BDF out
 
 Added BDF
    - enabled CQUAD, RBE3

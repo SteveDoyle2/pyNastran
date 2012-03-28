@@ -70,7 +70,7 @@ class CREEP(Material):
         self.mid = model.Material(self.mid)
 
     def Mid(self): # links up to MAT1, MAT2, MAT9 or same mid
-        if isinstance(self.mid):
+        if isinstance(self.mid,int):
             return self.mid
         return self.mid.mid
 
@@ -161,7 +161,9 @@ class MAT1(Material):
 
         if G is None and E is None:
             raise RuntimeError('G=%s E=%s cannot both be None' %(G,E))
-        if E  is not None and nu is not None:
+        elif E is not None and G is not None and nu is not None:
+            pass
+        elif E is not None and nu is not None:
             G = E/2./(1+nu)
         elif G is not None and nu is not None:
             E = 2*(1+nu)*G
@@ -203,16 +205,16 @@ class MAT1(Material):
         return fields
 
     def getG_default(self):
-        if self.nu==0.:
-            G_default = self.g
+        if self.g==0.0 or self.nu==0.0:
+            G = self.g
         else:
             G_default = self.e/2./(1+self.nu)
+            G = self.e/2./(1+self.nu)
         ###
-        return G_default
+        return G
 
     def reprFields(self):
-        G_default = self.getG_default()
-        G    = self.setBlankIfDefault(self.g,G_default)
+        G = self.getG_default()
         #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
 
         rho  = self.setBlankIfDefault(self.rho,1e-8)

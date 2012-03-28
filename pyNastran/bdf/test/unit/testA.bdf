@@ -9,55 +9,60 @@ DISP(PLOT,PUNCH) = 5
 BEGIN BULK
 GRID,1,
 $ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)
-CONM1   1       11                                                      +51
-+51     17400.                          4.37+7                          +52
-+52             4.35+09
-CHBDYG  2               AREA6
-+       1       13      11      7       12      6
-CMASS2  2005     .5-7   44      5
+CONM1          1      11
+          17400.                          4.37+7
+                  4.35+9
+CHBDYG         2           AREA6
+               1      13      11       7      12       6
+CMASS2      2005    5.-8      44       5
 $CELAS2  7001    1.0+6                   1002    1
 CQUAD   16410   16411   16411   16412   16413   16414   16415   16416   +QD1
 +QD1    16417   16418   16419
-$PROPERTIES
-PBUSH    1       K       100000.
-                 RCV     1.5     1.      1.      1.
-pbeaml, 100, 200,, box
+$UNASSOCIATED_PROPERTIES
+PBUSH          1       K 100000.
+                     RCV     1.5      1.      1.      1.
+PBEAML       100     200             BOX
       , 40., 50., 5., 5.
 $MATERIALS
-MAT1    2       30.+06
+MAT1           1    1.+7                      .1
+          25000.  25000.
+MAT1    2         3.+7
 MAT10   25      1.      0.1
-MATHP   26                      1500.                                   +MAT01
-+MAT01          1       1                                               +MAT02
-+MAT02                                                                  +MAT03
-+MAT03                                                                  +MAT04
-+MAT04                                                                  +MAT05
-+MAT05                                                                  +MAT06
-+MAT06  100     200             400
+MATHP         26                   1500.
+                       1       1
++
++
++
++
+             100     200             400
+CREEP          1   1100.           CRLAW
++CR1    111     6.985-6 2.444   7.032-4 0.1072  6.73-9  0.1479  3.0
+CREEP         16                   TABLE     601     602     603
 $RIGID ELEMENTS
 rbe3,6, ,3,123456,1.0,123456,41,4,+rbe3
 +rbe3,alpha,2.0e-4
-RBE3    51              120     1       .4408175123     10006   .9099256RBE31
-        123     10106   1.309702123     10206   1.590075123     10306   RBE32
-        .74948121235    10806
-RBE3    52              121     2       .4408175123     10706   .9099256RBE33
-        123     10606   1.309702123     10506   1.590075123     10406   RBE34
-        .74948121234    10806
-RBE3    123             50      5       1.0     123     4       6       +
-        40      60
-        UM      4       3
-        ALPHA   1.
+RBE3          51             120       1.4408175     123   10006.9099256
+             123   101061.309702     123   102061.590075     123   10306
+        .7494812    1235   10806
+RBE3          52             121       2.4408175     123   10706.9099256
+             123   106061.309702     123   105061.590075     123   10406
+        .7494812    1234   10806
+RBE3         123              50       5      1.     123       4       6
+              40      60
+              UM       4       3
+           ALPHA      1.
 RBE3         307               3  123456      1.    1234   31201     .25
-RBE1    1001    1000    123456                                          +RB11
-+RB11   UM      1002    123     1003    123     1004    123             +RB12
-+RB12           1005    123     1006    123     1008    123             +RB13
-+RB13           1009    123     1010    123     1011    123             +RB14
-+RB14           1012    123
-RBE3     12225           12043   123456 1.       123     2573    2574
-         2575    2576
+RBE1        1001    1000  123456
+              UM    1002     123    1003     123    1004     123
+                    1005     123    1006     123    1008     123
+                    1009     123    1010     123    1011     123
+                    1012     123
+RBE3       12225           12043  123456      1.     123    2573    2574
+            2575    2576
 $LOADS
 PLOAD4         1    1001  -4005.
-DLOAD   3       1.      1.      10      0.      10
-PLOAD2  13      1.0     2100001  THRU   2100100
+DLOAD          3      1.      1.      10      0.      10
+PLOAD2        13      1. 2100001    THRU 2100100
 QBDY3   33      20.0            1       thru    8
 QBDY3         34     20.               1    THRU       7      BY       2
               10    THRU      40      BY       5      42      45    THRU
@@ -65,7 +70,7 @@ QBDY3         34     20.               1    THRU       7      BY       2
 QBDY3         34     20.               1       2       3       4       5
                6       7       8
 QBDY3,500,50000.0,,10,THRU,60,BY,10
-PLOAD4  510     101     5.                              THRU    112
+PLOAD4       510     101      5.                            THRU     112
 $DYNAMIC
 EIGRL   1       0.      800.    6       4                               +001
 +001    nums=4
@@ -85,6 +90,8 @@ NLPARM         1     100            AUTO       1      40       P     ALL+
 +              9
 NLPARM        2       10           AUTO      5      25        PW      NO
              .01     .01     .01
+$THERMAL
+$CHBDYP,21,,,,,110,111
 $OPTIMIZATION
 DCONSTR 1       16      -999999.1000000.
 DRESP2,1,LBUCK,5,3
@@ -111,8 +118,12 @@ $
 DOPTPRM,P1,1,P2,15,IPRINT,7
 DOPTPRM APRCOD  2       IPRINT  0       DESMAX  8       DELP    0.50
         DPMIN   0.50    P1      3       P2      4
+$TABLES
+TABLED1      310
+              0.      1. 200000.      1.    ENDT
 $REJECT_LINES
 DEQATN  2       F(A,B)=B*A*A*A/12.0
+DSCREEN STRESS  -100.   100
 DSCREEN LAMA    -100.0
 INCLUDE 'testC.bdf'
 ENDDATA
