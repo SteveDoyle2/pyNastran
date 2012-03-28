@@ -105,6 +105,19 @@ def isFloatRanged(a,x,b):
     ###
     return True
 
+def annotatePrintMatrix(A,rowNames):
+    """
+    takes a list/dictionary and annotates the row number with that value
+    indicies go from 0 to N
+    """
+    B = array(A)
+    msg = ''
+    (nr,nc) = B.shape
+    for i in range(nr):
+        rowName = str(rowNames[i])
+        msg += rowName +' '+ListPrint(B[i,:])+'\n'
+    return msg
+
 def printMatrix(A):
     B = array(A)
     msg = ''

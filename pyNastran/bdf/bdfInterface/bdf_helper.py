@@ -36,7 +36,13 @@ class getMethods(object):
         return nids2
 
     def Node(self,nid):
-        return self.nodes[nid]
+        if nid in self.nodes:
+            return self.nodes[nid]
+        elif nid in self.spoints.spoints:
+            return SPOINTi(nid)
+        else:
+            raise RuntimeError('nid=%s is not a GRID or SPOINT' %(nid))
+        ###
 
     def Nodes(self,nids):
         """
@@ -265,6 +271,13 @@ class addMethods(object):
         else:
             assert key>0,'nid=%s node=%s' %(key,node)
             self.nodes[key] = node
+        ###
+
+    def addSPoint(self,spoint):
+        if self.spoints is not None:
+            self.spoints = spoint
+        else:
+            self.spoints.addSPoints(spoint.spoints)
         ###
 
     def addElement(self,elem,allowOverwrites=False):
