@@ -141,6 +141,39 @@ class CTRIA3(TriShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==3
 
+    def Interp(self,un):
+        """
+        Interpolation based on the area coordinates
+        """
+        (n0,n1,n2) = self.nodePositions()
+        nc = (n0+n1+n2)/3.
+
+        a = n0-nc
+        b = n1-nc
+        c = n2-nc
+
+        tA1 = det(cross(b,c))   # 2*A1
+        tA2 = det(cross(c,a))   # 2*A2
+        tA3 = det(cross(a,b))   # 2*A3
+        otA = 1./(tA1+tA2+tA3)  # 1/2A
+
+        S = array([tA1,tA2,tA3])*otA  # Ai/A
+        u = S*un
+        return un
+
+    def Jacob(self):
+        (n0,n1,n2) = self.nodePositions()
+        (nx0,ny0,nz0) = n0
+        (nx1,ny1,nz1) = n1
+        (nx2,ny2,nz2) = n2
+        #J = matrix([n0,n1-n0,n2-n0])
+        
+        J = matrix([ [nx0,nx1-nx0,nx2-nx0],
+                     [ny0,ny1-ny0,ny2-ny0],
+                     [nz0,nz1-nz0,nz2-nz0], ])
+        detJ = J.det()
+        return J
+
     def getReprDefaults(self):
         zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
         TFlag     = self.setBlankIfDefault(self.TFlag,0)
