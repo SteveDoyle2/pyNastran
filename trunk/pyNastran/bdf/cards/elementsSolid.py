@@ -1,4 +1,5 @@
-from numpy import dot,cross,matrix
+from numpy import dot,cross,matrix,sqrt
+from numpy.linalg import solve
 
 # pyNastran
 from elements import Element
@@ -240,6 +241,49 @@ class CTETRA4(SolidElement):
         (n1,n2,n3,n4) = self.nodePositions()
         return (n1+n2+n3+n4)/4.
 
+    def Stiffness(self):
+        ng = 1
+        (P,W) = gauss(1)
+
+        K = zeros((6,6))
+        for i in range(ng):
+            for j in range(ng):
+                for k in range(ng):
+                    p = [ P[i],P[j],P[k] ]
+                    w = W[i]*W[j]*W[k]
+                    pz = zeta(p)
+                    J = self.Jacobian(p)
+                    #N = self.N()
+                    #B = self.B()
+                    K += w*J*BtEB(pz)
+                    #K += w*J*B.T*E*B
+                ###
+            ###
+        ###
+        return K
+    
+    def BtEB(self,pz):
+        E = self.Dsolid()
+
+        #o = E*e
+        #e = [exx,eyy,ezz,2exy,2eyz,2ezx]
+        C = array([[Bxi*E11+Byi*E14+Bzi*E16, Byi*E12+Bxi*E14+Bzi*E15, Bzi*E13+Byi*E15+Bxi*E16]
+                   [Bxi*E12+Byi*E24+Bzi*E26, Byi*E22+Bxi*E24+Bzi*E25, Bzi*E23+Byi*E25+Bxi*E26]
+                   [Bxi*E13+Byi*E34+Bzi*E36, Byi*E23+Bxi*E34+Bzi*E35, Bzi*E33+Byi*E35+Bxi*E36]
+                   [Bxi*E14+Byi*E44+Bzi*E46, Byi*E24+Bxi*E44+Bzi*E45, Bzi*E34+Byi*E45+Bxi*E46]
+                   [Bxi*E15+Byi*E45+Bzi*E56, Byi*E25+Bxi*E45+Bzi*E55, Bzi*E35+Byi*E55+Bxi*E56]
+                   [Bxi*E16+Byi*E46+Bzi*E16, Byi*E26+Bxi*E46+Bzi*E56, Bzi*E36+Byi*E56+Bxi*E66]])
+
+        Qij = array([[Bxj*C11+ Byj*C41+Bzj+Bzj*C61, Bxj*C12+Byj*C42+Bzj*C62, Bxj*C13+Byj*C43+Bzj*C63],
+                     [Byj*C21+ Bxj*C41+Bzj+Bzj*C51, Byj*C22+Bxj*C42+Bzj*C52, Byj*C23+Bxj*C43+Bzj*C53],
+                     [Bzj*C31+ Byj*C51+Bzj+Bxj*C61, Bzj*C32+Byj*C52+Bxj*C62, Bzj*C33+Byj*C53+Bxj*C63]])
+        return Qij
+            
+    def zeta(self,p):
+        p2 = array([1,p[0],p[1],p[2]])
+        zeta = solve(J,p2)
+        return zeta
+
     def Jacobian(self):
         """
         \f[ \large   [J] = 
@@ -286,6 +330,18 @@ class CTETRA10(CTETRA4):
             assert len(data)==12,'len(data)=%s data=%s' %(len(data),data)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)<=10
+
+    def N_10(self,g1,g2,g3,g4):
+        N1 = g1*(2*g1-1)
+        N2 = g2*(2*g2-1)
+        N3 = g3*(2*g3-1)
+        N4 = g4*(2*g4-1)
+        N5 = 4*g1*g2
+        N6 = 4*g2*g3
+        N7 = 4*g3*g1
+        N8 = 4*g1*g4
+        N9 = 4*g2*g4
+        N10 = 4*g3*g4
 
     def Volume(self):
         (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = self.nodePositions()
