@@ -261,7 +261,7 @@ class CTETRA4(SolidElement):
             ###
         ###
         return K
-    
+
     def BtEB(self,pz):
         E = self.Dsolid()
 

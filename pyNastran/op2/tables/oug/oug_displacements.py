@@ -90,6 +90,15 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             self.addNewTransient()
         ###
 
+    def deleteTransient(self,dt):
+        del self.translations[dt]
+        del self.rotations[dt]
+
+    def getTransients(self):
+        k = self.translations.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """
         initializes the transient variables

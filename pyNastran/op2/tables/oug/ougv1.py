@@ -1,5 +1,6 @@
 import sys
 import copy
+from numpy import array
 from struct import unpack
 
 # pyNastran
@@ -31,6 +32,16 @@ from oug_eigenvectors import (
      realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
      )
 
+def getCloseNum(v1,v2,closePoint):
+    numList = [v1,v2]
+    delta = array([v1,v2])-closePoint
+    #print "**delta=%s" %(delta)
+    absDelta = list(abs(delta))
+    closest = min(absDelta)
+    iclose = absDelta.index(closest)
+    actualValue = numList[iclose]
+    return actualValue
+
 class OUGV1(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
 
@@ -38,7 +49,11 @@ class OUGV1(object):
         self.tableName = 'OUG'
         table3 = self.readTable_OUGV1_3
         table4Data = self.readOUGV1_Data
+
+        self.dtMap = {}
+
         self.readResultsTable(table3,table4Data)
+        del self.dtMap
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):
@@ -292,10 +307,15 @@ class OUGV1(object):
             raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         
-        if self.obj:
+        readCase = True
+        if len(self.expectedTimes)>0:
+            readCase = self.updateDtMap()
+        
+        if self.obj and readCase:
             self.readScalarsOut(debug=False)
         else:
-            pass
+            self.skipOES_Element()
+        ###
         #if self.obj:
         #    self.readScalars8(debug=False)
         #else:
@@ -303,6 +323,56 @@ class OUGV1(object):
         ###
         #print self.obj
         #return
+
+    def updateDtMap(self):
+        #numList = array([1.,2.])
+        numList = self.expectedTimes
+        #nums = [0.9,1.11,  1.89,2.1]
+        #numsFound = []
+        num = self.obj.getTransients()[-1]
+        expect = '???'
+
+        readCase = True
+        #expect = expected[i]
+        delta = numList-num
+        absDelta = list(abs(delta))
+        closest = min(absDelta)
+        iclose = absDelta.index(closest)
+        actualValue = numList[iclose]
+
+
+        if iclose in self.dtMap:
+            v1 = self.dtMap[iclose]
+            vact = getCloseNum(v1,num,actualValue)
+            #numList = [v,num]
+            if vact!=self.dtMap[iclose]:
+                del self.dtMap[iclose]
+                self.obj.deleteTransient(v1)
+                print "num=%s expected=%s closest=%s iclose=%s" %(num,expect,actualValue,iclose)
+                print "***deleted v1=%s num=%s vact=%s actual=%s" %(v1,num,vact,actualValue)
+                self.dtMap[iclose] = vact
+                readCase = True
+                print self.dtMap
+                print "A"
+            else:
+                readCase = False
+                print self.dtMap
+                print "B"
+            ###
+        else: # read case
+            self.dtMap[iclose] = num
+            readCase = True
+            print "num=%s expected=%s closest=%s iclose=%s" %(num,expect,actualValue,iclose)
+            print self.dtMap
+            print "C"
+        ###
+        #print "delta = ",delta,'\n'
+
+        print "readCase = ",readCase
+        #if num>=0.14:
+        #    sys.exit('OUG !!!')
+            
+        return readCase
 
     def readThermal4(self):
         print self.codeInformation()

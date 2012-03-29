@@ -378,7 +378,7 @@ class CROD(LineElement):
         print("E = ",E)
         print("L = ",L)
         f = A*E/L
-        f = 250000.
+        #f = 250000.
         K = 1*matrix([[1.,-1.],[-1.,1.]]) # rod
         
         print("A=%g E=%g L=%g  AE/L=%g" %(A,E,L,A*E/L))

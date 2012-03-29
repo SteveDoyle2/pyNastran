@@ -1,5 +1,6 @@
 import os
 import sys
+from numpy import array
 from struct import unpack
 
 from fortranFile import FortranFile
@@ -33,6 +34,14 @@ class OP2(BDF,  # BDF methods
             self.validSubcases = set(iSubcases)
         ###
         self.log.debug("setSubcases - iSubcases = %s" %(self.validSubcases))
+
+    def setTransientTimes(self,times): ## @todo this name sucks...
+        """
+        takes a list of times in a transient case and gets the output closest to those timse
+        """
+        times = list(times)
+        times.sort()
+        self.expectedTimes = array(times)
 
     def isValidSubcase(self):
         """
@@ -77,6 +86,9 @@ class OP2(BDF,  # BDF methods
         ## developer parameter to write the OP2 is ASCII format
         ## to better understand it
         self.makeOp2Debug = False
+        
+        ## limit output DTs
+        self.expectedTimes = array([])
         
         ## file object containing the skipped cards
         self.skippedCardsFile = open('skippedCards.out','a')
