@@ -23,7 +23,9 @@ class OES(ElementsStressStrain):
         self.tableName = 'OES'
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
+        self.dtMap = {}
         self.readResultsTable(table3,table4Data,flag=1) # flag=1 defines old style
+        del self.dtMap
         self.deleteAttributes_OES()
 
     def deleteAttributes_OES(self):
@@ -333,6 +335,14 @@ class OES(ElementsStressStrain):
         msg = ''
         #if self.analysisCode not in [1,6,10]:
             #raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
+
+        readCase = True
+        if len(self.expectedTimes[self.iSubcase])>0:
+            readCase = self.updateDtMap()
+        
+        if readCase==False:
+            self.skipOES_Element()
+            return
 
         if self.elementType in [1,3,10]: # crod/ctube/conrod
             #if self.elementType==1:    self.dataCode['elementName'] = 'CROD'
