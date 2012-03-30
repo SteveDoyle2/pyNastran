@@ -51,6 +51,7 @@ const char op4_type_str[4][3] = { {'R',  'S',  0},
  /* 1}}} */
 
 float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
+                   int     filetype   ,  /* in  1=text, other is binary    */
                    int     nRow       ,  /* in  # rows    in matrix        */
                    int     nCol       ,  /* in  # columns in matrix        */
                    char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
@@ -63,13 +64,19 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
 {
     float  *array;
     double *column;
-    int     r, c, size, NPT, n_nnz;
+    int     r, c, size, NPT, n_nnz, nType;
     int    *unused;
     str_t  *unused_s;
 
-    size = nRow*nCol;
-    NPT  = 1;
-    if (complx) NPT *= 2;
+    int     endian = 0;      /* FIX THIS */
+
+    size  = nRow*nCol;
+    NPT   = 1;
+    nType = 1;
+    if (complx) {
+        NPT   *= 2;
+        nType += 2;
+    }
     array  = malloc(sizeof(float )*size*NPT);
     /* op4_read_col_t() only populates arrays of type double.
      * To minimize memory use, only allocate memory for a single
@@ -78,14 +85,27 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
      */
     column = malloc(sizeof(double)*nRow*NPT);
     for (c = 0; c < nCol; c++) {
-        n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
-                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
-                               complx    , /* in  0=real   1=complex     */
-                               unused    , /* in/out index m.S (if sp1,2)*/
-                     (str_t *) unused_s  , /* out string data (if sp1,2) */
-                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
-                               column
-                              ); /* out numeric data */
+        if (filetype == 1) {
+            n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+                                   storage   ,  /* in 0=dn  1,2=sp1,2  3=ccr  */
+                                   complx    ,  /* in  0=real   1=complex     */
+                                   unused    ,  /* in/out index m.S (if sp1,2)*/
+                         (str_t *) unused_s  ,  /* out string data (if sp1,2) */
+                         (int   *) unused    ,  /* in/out index m.N (sp 1,2)  */
+                                   column    ); /* out numeric data */
+        } else {
+            n_nnz = op4_read_col_b(fp        ,
+                                   endian    ,  /* in  0=native   1=flipped    */
+                                   c+1       ,  /* in  requested column to read   */
+                                   nRow      ,  /* in  # rows    in matrix        */
+                                   nCol      ,  /* in  # columns in matrix        */
+                                   nType     ,  /* in  1=RS 2=RD 3=CS 4=CD        */
+                                   storage   ,  /* in  0=dn; 1=sp1; 2=sp2         */
+                                   unused    ,  /* in/out idx str_data[] (s_o)=1,2*/
+                         (str_t *) unused_s  ,  /* out string data   (s_o)=1,2    */
+                         (int   *) unused    ,  /* in/out idx N[]    (s_o)=1,2    */
+                                   column    ); /* out numeric data               */
+        }
         for (r = 0; r <= nRow*NPT; r++) {
             array[c*nRow*NPT + r] = column[r];
         }
@@ -94,6 +114,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
     return array;
 } /* 1}}} */
 double *op4_load_D(FILE   *fp         ,  /* {{{1 */
+                   int     filetype   ,  /* in  1=text, other is binary    */
                    int     nRow       ,  /* in  # rows    in matrix        */
                    int     nCol       ,  /* in  # columns in matrix        */
                    char   *fmt_str    ,  /* in  eg "%23le%23le%23le"       */
@@ -105,23 +126,44 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                    int    *N_index    )  /* in/out          (s_o) = 1,2    */
 {
     double *array;
-    int     c, size, NPT, n_nnz;
+    int     c, size, NPT, n_nnz, nType;
     int    *unused;
     str_t  *unused_s;
 
-    size = nRow*nCol;
-    NPT  = 1;
-    if (complx) NPT *= 2;
+    int     endian = 0;      /* FIX THIS */
+
+    size  = nRow*nCol;
+    NPT   = 1;
+    nType = 2;
+    if (complx) {
+        NPT   *= 2;
+        nType += 2;
+    }
     array = malloc(sizeof(double)*size*NPT);
     for (c = 0; c < nCol; c++) {
-        n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
-                               storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
-                               complx    , /* in  0=real   1=complex     */
-                               unused    , /* in/out index m.S (if sp1,2)*/
-                     (str_t *) unused_s  , /* out string data (if sp1,2) */
-                     (int   *) unused    , /* in/out index m.N (sp 1,2)  */
-                              &array[c*nRow*NPT]
-                              ); /* out numeric data */
+        if (filetype == 1) {
+            n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+                                   storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
+                                   complx    , /* in  0=real   1=complex     */
+                                   unused    , /* in/out index m.S (if sp1,2)*/
+                         (str_t *) unused_s  , /* out string data (if sp1,2) */
+                         (int   *) unused    , /* in/out index m.N (sp 1,2)  */
+                                  &array[c*nRow*NPT]
+                                  ); /* out numeric data */
+        } else {
+            n_nnz = op4_read_col_b(fp        ,  
+                                   endian    ,  /* in  0=native   1=flipped    */
+                                   c+1       ,  /* in  requested column to read   */
+                                   nRow      ,  /* in  # rows    in matrix        */
+                                   nCol      ,  /* in  # columns in matrix        */
+                                   nType     ,  /* in  1=RS 2=RD 3=CS 4=CD        */
+                                   storage   ,  /* in  0=dn; 1=sp1; 2=sp2         */
+                                   unused    ,  /* in/out idx str_data[] (s_o)=1,2*/
+                         (str_t *) unused_s  ,  /* out string data   (s_o)=1,2    */
+                         (int   *) unused    ,  /* in/out idx N[]    (s_o)=1,2    */
+                                  &array[c*nRow*NPT]     /* out numeric data               */
+                                  );
+        }
     }
     return array;
 } /* 1}}} */
