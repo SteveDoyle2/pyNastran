@@ -177,6 +177,15 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         #print "dt = ",dt
         #raise Exception(self.dataCode)
         
+    def deleteTransient(self,dt):
+        del self.translations[dt]
+        del self.rotations[dt]
+
+    def getTransients(self):
+        k = self.translations.keys()
+        k.sort()
+        return k
+
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
         assert 0<nodeID<1000000000, msg

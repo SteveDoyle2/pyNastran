@@ -23,7 +23,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
             #self.writeOp2 = self.writeOp2Transient
         ###
         self.parseLength()
-    
+
     def addF06Data(self,data,transient):
         if transient is None:
             for line in data:
@@ -100,9 +100,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         return k
 
     def addNewTransient(self):
-        """
-        initializes the transient variables
-        """
+        """initializes the transient variables"""
         if self.dt not in self.translations:
             self.translations[self.dt] = {}
             self.rotations[self.dt]    = {}
@@ -287,8 +285,7 @@ class displacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
         msg.append(pageStamp+str(pageNum))
         msg.append('\n')
         return ('\n'.join(msg),pageNum)
-            
-        
+
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()
