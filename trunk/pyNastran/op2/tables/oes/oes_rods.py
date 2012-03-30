@@ -97,6 +97,17 @@ class rodStressObject(stressObject):
     def getLength_format1_sort0(self):
         return (20,'iffff')
 
+    def deleteTransient(self,dt):
+        del self.axial[dt]
+        del self.torsion[dt]
+        del self.MS_axial[dt]
+        del self.MS_torsion[dt]
+
+    def getTransients(self):
+        k = self.axial.keys()
+        k.sort()
+        return k
+
     def addNewTransient_format1_sort0(self):
         """
         initializes the transient variables
@@ -351,6 +362,17 @@ class rodStrainObject(strainObject):
 
     def getLength_format1_sort0(self):
         return (20,'iffff')
+
+    def deleteTransient(self,dt):
+        del self.axial[dt]
+        del self.torsion[dt]
+        del self.MS_axial[dt]
+        del self.MS_torsion[dt]
+
+    def getTransients(self):
+        k = self.axial.keys()
+        k.sort()
+        return k
 
     def addNewTransient_format1_sort0(self):
         """

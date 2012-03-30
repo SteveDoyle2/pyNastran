@@ -45,6 +45,16 @@ class shearStressObject(stressObject):
     def getLength_format1_sort0(self):
         return (16,'ifff')
 
+    def deleteTransient(self,dt):
+        del self.maxShear[dt]
+        del self.avgShear[dt]
+        del self.margin[dt]
+
+    def getTransients(self):
+        k = self.maxShear.keys()
+        k.sort()
+        return k
+
     def addNewTransient_format1_sort0(self):
         """
         initializes the transient variables
@@ -229,6 +239,16 @@ class shearStrainObject(strainObject):
 
     def getLength_format1_sort0(self):
         return (16,'ifff')
+
+    def deleteTransient(self,dt):
+        del self.maxShear[dt]
+        del self.avgShear[dt]
+        del self.margin[dt]
+
+    def getTransients(self):
+        k = self.maxShear.keys()
+        k.sort()
+        return k
 
     def addNewTransient_format1_sort0(self):
         """

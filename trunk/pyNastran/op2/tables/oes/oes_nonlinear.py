@@ -25,6 +25,27 @@ class nonlinearQuadObject(stressObject):
         self.eps = {}
         self.ecs = {}
 
+    def deleteTransient(self,dt):
+        del self.fiberDistance[dt]
+        del self.oxx[dt]
+        del self.oyy[dt]
+        del self.ozz[dt]
+        del self.txy[dt]
+
+        del self.exx[dt]
+        del self.eyy[dt]
+        del self.ezz[dt]
+        del self.exy[dt]
+
+        del self.es[dt]
+        del self.eps[dt]
+        del self.ecs[dt]
+
+    def getTransients(self):
+        k = self.oxx.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         dt = self.dt
         self.fiberDistance[dt] = {}
@@ -149,6 +170,21 @@ class hyperelasticQuadObject(stressObject):
         self.majorP = {}
         self.minorP = {}
 
+    def deleteTransient(self,dt):
+        del self.fiberDistance[dt]
+        del self.oxx[dt]
+        del self.oyy[dt]
+        del self.txy[dt]
+
+        del self.angle[dt]
+        del self.majorP[dt]
+        del self.minorP[dt]
+
+    def getTransients(self):
+        k = self.oxx.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         dt = self.dt
         self.oxx[dt] = {}
@@ -229,6 +265,20 @@ class nonlinearRodObject(stressObject):
         self.effectiveCreepStrain  = {}
         self.linearTorsionalStress = {}
     
+    def deleteTransient(self,dt):
+        del self.axialStress[dt]
+        del self.equivStress[dt]
+        del self.totalStrain[dt]
+        del self.effectivePlasticCreepStrain[dt]
+
+        del self.effectiveCreepStrain[dt]
+        del self.linearTorsionalStress[dt]
+
+    def getTransients(self):
+        k = self.axialStress.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         dt = self.dt
         self.axialStress[dt] = {}

@@ -68,6 +68,17 @@ class beamStressObject(stressObject):
     def getLength2_format1_sort0(self):
         return (40,'ifffffffff')
 
+    def deleteTransient(self,dt):
+        del self.smax[dt]
+        del self.smin[dt]
+        del self.MS_tension[dt]
+        del self.MS_compression[dt]
+
+    def getTransients(self):
+        k = self.smax.keys()
+        k.sort()
+        return k
+
     def addNewTransient_format1_sort0(self):
         """
         initializes the transient variables
@@ -317,6 +328,17 @@ class beamStrainObject(strainObject):
 
     def getLength2_format1_sort0(self):
         return (40,'ifffffffff')
+
+    def deleteTransient(self,dt):
+        del self.smax[dt]
+        del self.smin[dt]
+        del self.MS_tension[dt]
+        del self.MS_compression[dt]
+
+    def getTransients(self):
+        k = self.smax.keys()
+        k.sort()
+        return k
 
     def addNewTransient_format1_sort0(self):
         """

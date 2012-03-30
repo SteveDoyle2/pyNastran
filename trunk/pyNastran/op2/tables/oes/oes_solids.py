@@ -149,6 +149,22 @@ class solidStressObject(stressObject):
         ###
         del self.data
 
+    def deleteTransient(self,dt):
+        del self.oxx[dt]
+        del self.oyy[dt]
+        del self.ozz[dt]
+        del self.txy[dt]
+        del self.tyz[dt]
+        del self.txz[dt]
+        del self.o1[dt]
+        del self.o2[dt]
+        del self.o3[dt]
+
+    def getTransients(self):
+        k = self.oxx.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """
         initializes the transient variables
@@ -605,6 +621,22 @@ class solidStrainObject(strainObject):
             self.rotations[dt][nodeID]    = array([r1,r2,r3])
         ###
         del self.data
+
+    def deleteTransient(self,dt):
+        del self.exx[dt]
+        del self.eyy[dt]
+        del self.ezz[dt]
+        del self.exy[dt]
+        del self.eyz[dt]
+        del self.exz[dt]
+        del self.e1[dt]
+        del self.e2[dt]
+        del self.e3[dt]
+
+    def getTransients(self):
+        k = self.exx.keys()
+        k.sort()
+        return k
 
     def addNewTransient(self):
         """
