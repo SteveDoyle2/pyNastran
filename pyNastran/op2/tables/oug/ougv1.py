@@ -51,7 +51,6 @@ class OUGV1(object):
         table4Data = self.readOUGV1_Data
 
         self.dtMap = {}
-
         self.readResultsTable(table3,table4Data)
         del self.dtMap
         self.deleteAttributes_OUG()
@@ -325,52 +324,74 @@ class OUGV1(object):
         #return
 
     def updateDtMap(self):
-        #numList = array([1.,2.])
-        numList = self.expectedTimes
+        """
+        Interfaces with setTransientTimes(times) to limit the amount
+        of output that is in the transient results.  This allows
+        for models with 1000s of time steps that would otherwise
+        crash with memory errors to run.  Every result may be extracted
+        if the OP2 is read multiple times.
+        
+        While not ideal, this function prevents having to drastically
+        change the code to support large models, which would
+        make the OP2 reader not as useful for reasonably sized models.
+        
+        The code works by taking the user-provided array of values
+        for a given subcase and b/c it's an array can be subtracted
+        from the current value of dt.  Then the minimum absolute value
+        is found and that is mapped back to the original value.  If a
+        closer value to the target user-specified value is found, the
+        previous result will be deleted, which keeps memory usage down.
+        The new result will then be read.  If a dt is not closer than
+        an existing value to a given case, that case will not be read.
+        """
+        #numArray = array([1.,2.])
+        iSubcase = self.iSubcase
+        numArray = self.expectedTimes[iSubcase]
         #nums = [0.9,1.11,  1.89,2.1]
         #numsFound = []
-        num = self.obj.getTransients()[-1]
-        expect = '???'
+        num = self.obj.getTransients()[-1] # they're sorted so the last value is the current dt
 
         readCase = True
-        #expect = expected[i]
-        delta = numList-num
+        delta = numArray-num
         absDelta = list(abs(delta))
         closest = min(absDelta)
         iclose = absDelta.index(closest)
-        actualValue = numList[iclose]
+        actualValue = numArray[iclose]
 
-
-        if iclose in self.dtMap:
-            v1 = self.dtMap[iclose]
+        if iSubcase not in self.dtMap:
+            self.dtMap[iSubcase] = {}
+        if iclose in self.dtMap[iSubcase]:
+            v1 = self.dtMap[iSubcase][iclose]
             vact = getCloseNum(v1,num,actualValue)
-            #numList = [v,num]
-            if vact!=self.dtMap[iclose]:
-                del self.dtMap[iclose]
+
+            if vact!=self.dtMap[iSubcase][iclose]:
+                del self.dtMap[iSubcase][iclose]
                 self.obj.deleteTransient(v1)
-                print "num=%s expected=%s closest=%s iclose=%s" %(num,expect,actualValue,iclose)
-                print "***deleted v1=%s num=%s vact=%s actual=%s" %(v1,num,vact,actualValue)
-                self.dtMap[iclose] = vact
+                #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
+                #print "***deleted v1=%s num=%s vact=%s actual=%s" %(v1,num,vact,actualValue)
+                self.dtMap[iSubcase][iclose] = vact
                 readCase = True
-                print self.dtMap
-                print "A"
-            else:
+                #print self.dtMap
+                #print "A"
+            else: # cleanup previous creation of empty dt case (happened in updateDt outside this function)
                 readCase = False
-                print self.dtMap
-                print "B"
+                #print self.dtMap
+                #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
+                #print "B"
+                self.obj.deleteTransient(num)
             ###
         else: # read case
-            self.dtMap[iclose] = num
+            self.dtMap[iSubcase][iclose] = num
             readCase = True
-            print "num=%s expected=%s closest=%s iclose=%s" %(num,expect,actualValue,iclose)
-            print self.dtMap
-            print "C"
+            #print "num=%s closest=%s iclose=%s" %(num,actualValue,iclose)
+            #print self.dtMap
+            #print "C"
         ###
         #print "delta = ",delta,'\n'
-
-        print "readCase = ",readCase
+        #print "readCase = ",readCase
         #if num>=0.14:
-        #    sys.exit('OUG !!!')
+            #print self.obj.getTransients()
+            #sys.exit('OUG !!!')
             
         return readCase
 

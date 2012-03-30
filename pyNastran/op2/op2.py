@@ -37,11 +37,18 @@ class OP2(BDF,  # BDF methods
 
     def setTransientTimes(self,times): ## @todo this name sucks...
         """
-        takes a list of times in a transient case and gets the output closest to those timse
+        takes a dictionary of list of times in a transient case and
+        gets the output closest to those timse
+        times = {subcaseID_1: [time1, time2],
+                 subcaseID_2: [time3, time4]}
         """
-        times = list(times)
-        times.sort()
-        self.expectedTimes = array(times)
+        expectedTimes = {}
+        for iSubcase,eTimes in times.items():
+            eTimes = list(times)
+            eTimes.sort()
+            expectedTimes[iSubcase] = array(eTimes)
+        ###
+        self.expectedTimes = expectedTimes
 
     def isValidSubcase(self):
         """
@@ -88,7 +95,8 @@ class OP2(BDF,  # BDF methods
         self.makeOp2Debug = False
         
         ## limit output DTs
-        self.expectedTimes = array([])
+        self.expectedTimes = {}
+        #self.expectedTimes = {1:array([0.1,0.12])}
         
         ## file object containing the skipped cards
         self.skippedCardsFile = open('skippedCards.out','a')

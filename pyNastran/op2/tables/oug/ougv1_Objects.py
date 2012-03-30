@@ -21,6 +21,15 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
             self.addNewTransient()
         ###
 
+    def deleteTransient(self,dt):
+        del self.translations[dt]
+        del self.rotations[dt]
+
+    def getTransients(self):
+        k = self.translations.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """initializes the transient variables"""
         if self.dt not in self.translations:
@@ -82,6 +91,14 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
             self.fluxes = {}
             self.isTransient = True
             raise Exception('transient is supported yet...')
+
+    def deleteTransient(self,dt):
+        del self.fluxes[dt]
+
+    def getTransients(self):
+        k = self.fluxes.keys()
+        k.sort()
+        return k
 
     def add(self,nodeID,gridType,v1,v2,v3,v4=None,v5=None,v6=None):
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)

@@ -23,6 +23,28 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
             #self.writeOp2 = self.writeOp2Transient
         ###
         self.parseLength()
+    
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
+                self.gridTypes[nodeID]    = gridType
+                self.translations[nodeID] = array([t1,t2,t3])
+                self.rotations[nodeID]    = array([r1,r2,r3])
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.translations:
+            self.updateDt(self.dataCode,dt)
+
+        for line in data:
+            (nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
+            self.gridTypes[nodeID]    = gridType
+            self.translations[dt][nodeID] = array([t1,t2,t3])
+            self.rotations[dt][nodeID]    = array([r1,r2,r3])
+        ###
 
     def parseLength(self):
         self.mainHeaders = []
@@ -67,6 +89,15 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
 
     #def setLoadID(self,loadID):
     #    self.loadID = loadID
+
+    def deleteTransient(self,dt):
+        del self.translations[dt]
+        del self.rotations[dt]
+
+    def getTransients(self):
+        k = self.translations.keys()
+        k.sort()
+        return k
 
     def addNewTransient(self):
         """
@@ -210,6 +241,21 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
     def getHeaders(self):
         return (self.mainHeaders,self.headers)
 
+    def writeF06(self,header,pageStamp,pageNum=1):
+        msg = ['                                             A C C E L E R A T I O N   V E C T O R',
+               ' ',
+               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3']
+        for nodeID,translation in sorted(self.translations.items()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+            msg.append('%14i %6s     %13E  %13E  %13E  %13E  %13E  %13E' %(nodeID,gridType,dx,dy,dz,rx,ry,rz))
+        ###
+        msg.append(pageStamp+str(pageNum))
+        msg.append('\n')
+        return ('\n'.join(msg),pageNum)
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()

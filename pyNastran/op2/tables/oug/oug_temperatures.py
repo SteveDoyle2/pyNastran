@@ -91,6 +91,13 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.addNewTransient()
         ###
 
+    def deleteTransient(self,dt):
+        del self.temperatures[dt]
+
+    def getTransients(self):
+        k = self.temperatures.keys()
+        k.sort()
+        return k
     def addNewTransient(self):
         """initializes the transient variables"""
         if self.dt not in self.temperatures:
