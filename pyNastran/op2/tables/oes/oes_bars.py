@@ -86,6 +86,20 @@ class barStressObject(stressObject):
     def getLength100_format1_sort0(self):
         return (40,'ifffffffff')
 
+    def deleteTransient(self,dt):
+        del self.s1[dt]
+        del self.s2[dt]
+        del self.s3[dt]
+        del self.s4[dt]
+        del self.axial[dt]
+        del self.smax[dt]
+        del self.smin[dt]
+
+    def getTransients(self):
+        k = self.s1.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """
         initializes the transient variables
@@ -391,6 +405,20 @@ class barStrainObject(strainObject):
             #self.MS_tension[dt][eid]     = MSt
             #self.MS_compression[dt][eid] = MSc
         ###
+
+    def deleteTransient(self,dt):
+        del self.e1[dt]
+        del self.e2[dt]
+        del self.e3[dt]
+        del self.e4[dt]
+        del self.exial[dt]
+        del self.emax[dt]
+        del self.emin[dt]
+
+    def getTransients(self):
+        k = self.e1.keys()
+        k.sort()
+        return k
 
     def addNewTransient(self):
         """

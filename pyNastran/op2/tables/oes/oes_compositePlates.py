@@ -86,6 +86,22 @@ class compositePlateStressObject(stressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
+    def deleteTransient(self,dt):
+        del self.o11[dt]
+        del self.o22[dt]
+        del self.t12[dt]
+        del self.t1z[dt]
+        del self.t2z[dt]
+        del self.angle[dt]
+        del self.majorP[dt]
+        del self.minorP[dt]
+        del self.ovmShear[dt]
+
+    def getTransients(self):
+        k = self.o11.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """
         initializes the transient variables
@@ -360,6 +376,22 @@ class compositePlateStrainObject(strainObject):
             self.add       = self.addTransient
             self.addNewEid = self.addNewEidTransient
         ###
+
+    def deleteTransient(self,dt):
+        del self.e11[dt]
+        del self.e22[dt]
+        del self.e12[dt]
+        del self.e1z[dt]
+        del self.e2z[dt]
+        del self.angle[dt]
+        del self.majorP[dt]
+        del self.minorP[dt]
+        del self.evmShear[dt]
+
+    def getTransients(self):
+        k = self.e11.keys()
+        k.sort()
+        return k
 
     def addNewTransient(self):
         """

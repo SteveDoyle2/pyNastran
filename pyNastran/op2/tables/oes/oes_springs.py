@@ -43,6 +43,14 @@ class celasStressObject(stressObject):
     def getLength_format1_sort0(self):
         return (8,'if')
 
+    def deleteTransient(self,dt):
+        del self.stress[dt]
+
+    def getTransients(self):
+        k = self.stress.keys()
+        k.sort()
+        return k
+
     def addNewTransient_format1_sort0(self):
         """initializes the transient variables"""
         self.elementName = self.dataCode['elementName']
@@ -210,6 +218,14 @@ class celasStrainObject(strainObject):
 
     def getLength_format1_sort0(self):
         return (8,'if')
+
+    def deleteTransient(self,dt):
+        del self.strain[dt]
+
+    def getTransients(self):
+        k = self.strain.keys()
+        k.sort()
+        return k
 
     def addNewTransient_format1_sort0(self):
         """

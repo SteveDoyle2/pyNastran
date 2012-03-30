@@ -126,6 +126,21 @@ class plateStressObject(stressObject):
             #print line
         raise NotImplementedError('transient results not supported')
 
+    def deleteTransient(self,dt):
+        del self.fiberCurvature[dt]
+        del self.oxx[dt]
+        del self.oyy[dt]
+        del self.txy[dt]
+        del self.angle[dt]
+        del self.majorP[dt]
+        del self.minorP[dt]
+        del self.ovmShear[dt]
+
+    def getTransients(self):
+        k = self.oxx.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """
         initializes the transient variables
@@ -607,6 +622,21 @@ class plateStrainObject(strainObject):
                     raise NotImplementedError('line=%s not supported...' %(line))
             return
         raise NotImplementedError('transient results not supported')
+
+    def deleteTransient(self,dt):
+        del self.fiberCurvature[dt]
+        del self.exx[dt]
+        del self.eyy[dt]
+        del self.exy[dt]
+        del self.angle[dt]
+        del self.majorP[dt]
+        del self.minorP[dt]
+        del self.evmShear[dt]
+
+    def getTransients(self):
+        k = self.exx.keys()
+        k.sort()
+        return k
 
     def addNewTransient(self):
         """
