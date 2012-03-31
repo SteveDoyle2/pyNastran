@@ -36,7 +36,7 @@ class OUGV1(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
 
     def readTable_OUG1(self):
-        self.tableName = 'OUG'
+        #self.tableName = 'OUG'
         table3 = self.readTable_OUGV1_3
         table4Data = self.readOUGV1_Data
 

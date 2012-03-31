@@ -10,7 +10,7 @@ class OEE(object):
     """Table of energy"""
 
     def readTable_OEE1(self):
-        self.tableName = 'OEE'
+        #self.tableName = 'OEE'
 
         table3 = self.readTable_OEE1_3
         table4Data = self.readOEE1_Data

@@ -20,7 +20,7 @@ class OES(ElementsStressStrain):
     """Table of stresses/strains"""
 
     def readTable_OES1(self):
-        self.tableName = 'OES'
+        #self.tableName = 'OES'
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
         self.dtMap = {}
