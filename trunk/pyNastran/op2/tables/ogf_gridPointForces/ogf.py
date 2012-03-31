@@ -140,8 +140,11 @@ class OGF(object):
     def readOGF_Data_table19_format1_sort0(self): # displacement
         print self.codeInformation()
         if self.numWide==10:
+            self.createTransientObject(self.gridPointForces,gridPointForcesObject)
             self.readOGF_numWide10()
+            print self.obj
         elif self.numWide==16:
+            self.createTransientObject(self.gridPointForces,complexGridPointForcesObject)
             self.readOGF_numWide16()
         else:
             raise NotImplementedError('%s-OGF only supports numWide=10,16' %(self.tableName))
@@ -172,13 +175,14 @@ class OGF(object):
             eData     = self.data[0:4*10]
             self.data = self.data[4*10: ]
             out = unpack(Format,eData)
-            (ekey,eid,a,b,c,d,e,f,g,h,f1,f2,f3,m1,m2,m3) = out
-            ekey = scaleValue(ekey)
+            (eKey,eid,a,b,c,d,e,f,g,h,f1,f2,f3,m1,m2,m3) = out
+            eKey = scaleValue(eKey)
             elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
-            data = (eid,elemName,f1,f2,f3,m1,m2,m3)
-            self.obj.add(data)
+            #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
+            self.obj.add(eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
+            #sys.exit('asfd')
         #print len(self.data)
         self.handleResultsBuffer(self.readOGF_numWide10)
 
@@ -189,8 +193,8 @@ class OGF(object):
             eData     = self.data[0:4*16]
             self.data = self.data[4*16: ]
             out = unpack(Format,eData)
-            (ekey,eid,a,b,c,d,e,f,g,h,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i) = out
-            ekey = scaleValue(ekey)
+            (eKey,eid,a,b,c,d,e,f,g,h,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i) = out
+            eKey = scaleValue(eKey)
             f1i = f1i*1j
             f1i = f2i*1j
             f1i = f3i*1j
@@ -199,7 +203,8 @@ class OGF(object):
             m3i = m3i*1j
             elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
-            print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%s f2=%s f3=%s m1=%s m2=%s m3=%s" %(ekey,eid,elemName,f1r+f1i,f2r+f2i,f3r+f3i,m1r+m1i,m2r+m2i,m3r+m3i)
+            #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%s f2=%s f3=%s m1=%s m2=%s m3=%s" %(ekey,eid,elemName,f1r+f1i,f2r+f2i,f3r+f3i,m1r+m1i,m2r+m2i,m3r+m3i)
+            self.obj.add(eKey,eid,elemName,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i)
         self.handleResultsBuffer(self.readOGF_numWide16)
 
     def readThermal4(self):
