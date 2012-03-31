@@ -337,7 +337,7 @@ class OES(ElementsStressStrain):
             #raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
 
         readCase = True
-        if len(self.expectedTimes[self.iSubcase])>0:
+        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
             readCase = self.updateDtMap()
         
         if readCase==False:
@@ -388,25 +388,25 @@ class OES(ElementsStressStrain):
             self.dataCode['elementName'] = 'CTRIA3'
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
-            self.CTRIA3_74() # ctria3
+            self.CTRIA3_74()
         elif self.elementType in [64,144,70,75]: # cquad8/cquad4/ctriar/ctria6
             #print "    found cquad_144"
             if     self.elementType==64:  self.dataCode['elementName'] = 'CQUAD8'
             elif   self.elementType==144: self.dataCode['elementName'] = 'CQUAD4'
             elif   self.elementType==70:  self.dataCode['elementName'] = 'CTRIAR'
             elif   self.elementType==75:  self.dataCode['elementName'] = 'CTRIA6'
-            else:  raise Exception('not implemented error')
+            else:  raise NotImplementedError('card not implemented elementType=%s' %(self.elementType))
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_144()
 
-        elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta
+        elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta (linear)
             #print "    found ctetra_39 / hexa_67 / cpenta_68"
             self.makeOES_Object(self.solidStress,solidStressObject,
                                 self.solidStrain,solidStrainObject)
             self.CSOLID_67()
 
-        elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)
+        elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)  (nonlinear)
             #print "    found ctetra_85 / hexa_93 / cpenta_91"
             self.makeOES_Object(self.solidStress,solidStressObject,
                                 self.solidStrain,solidStrainObject)
@@ -448,7 +448,7 @@ class OES(ElementsStressStrain):
             raise Exception('stoping at end of CBEAM_94')
             #del self.eid2
 
-        elif self.elementType in [139]:   # QUAD4FD
+        elif self.elementType in [139]:   # QUAD4FD (hyperelastic)
             #print "    found QUAD4FD_139"
             self.makeOES_Object(self.plateStress,hyperelasticQuadObject,
                                 self.plateStrain,hyperelasticQuadObject)
@@ -513,7 +513,7 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 69:   # cbend
         #elif self.elementType == 70:   # ctriar
         #elif self.elementType == 74:   # ctria3  (done)
-        #elif self.elementType == 75:   # ctria6  (in progress)
+        #elif self.elementType == 75:   # ctria6  (done)
         #elif self.elementType == 82:   # cquadr
         #elif self.elementType == 95:   # composite CQUAD4    (done)
         #elif self.elementType == 96:   # composite CQUAD8    (done)

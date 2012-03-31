@@ -7,7 +7,7 @@ from struct import unpack
 #    temperatureObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
-from pyNastran.op2.resultObjects.opg_Objects import appliedLoadsObject
+from opg_Objects import appliedLoadsObject
 
 
 class OGP(object):
@@ -16,7 +16,9 @@ class OGP(object):
         self.tableName = 'OGP'
         table3     = self.readTable_OGP_3
         table4Data = self.readOGP1_Data
+        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
+        del self.dtMap
         self.deleteAttributes_OGP()
 
     def deleteAttributes_OGP(self):

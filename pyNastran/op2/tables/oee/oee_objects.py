@@ -73,6 +73,16 @@ class StrainEnergyObject(scalarObject):
         ###
         self.updateNumWide()
 
+    def deleteTransient(self,dt):
+        del self.energy[dt]
+        del self.percent[dt]
+        del self.density[dt]
+
+    def getTransients(self):
+        k = self.energy.keys()
+        k.sort()
+        return k
+
     def addNewTransient(self):
         """
         initializes the transient variables

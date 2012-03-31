@@ -1,5 +1,5 @@
 from numpy import array
-from op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
     def __init__(self,dataCode,iSubcase,dt=None):

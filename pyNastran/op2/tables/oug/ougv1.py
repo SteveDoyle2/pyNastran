@@ -297,7 +297,7 @@ class OUGV1(object):
         ###
         
         readCase = True
-        if len(self.expectedTimes[self.iSubcase])>0:
+        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
             readCase = self.updateDtMap()
         
         if self.obj and readCase:
