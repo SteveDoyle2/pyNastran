@@ -9,12 +9,13 @@ from pyNastran.op2.tables.oqg_constraintForces.oqg1   import OQG1
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oee_energy.oee import OEE
+from pyNastran.op2.tables.ogf_gridPointForces.ogf import OGF
 #from pyNastran.op2.tables.hisadd import HISADD - combined with R1TAB for now
 from pyNastran.op2.tables.r1tab  import R1TAB
 from pyNastran.op2.tables.destab import DESTAB
 
 
-class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
+class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB):
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
@@ -62,9 +63,9 @@ class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
                 self.obj.updateDt(self.dataCode,self.nonlinearFactor)
             except:
                 #try:
-                #    print "objName = ",self.obj.name()
+                    #print "objName = ",self.obj.name()
                 #except:
-                #    print "objName = ",self.obj
+                    #print "objName = ",self.obj
                 raise
             ###
         else:
@@ -442,6 +443,7 @@ class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
         """
         @see readScalars4
         """
+        assert debug==True or debug==False
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -449,7 +451,9 @@ class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
         n = 0
         nEntries = len(data)//32
         if debug:
+            self.log.debug('calling readScalars8 debug')
             print "self.obj = ",self.obj
+            
         for i in range(nEntries):
             #if debug:
             #    self.log.debug(self.printBlock(self.data[n:n+64]))
@@ -487,6 +491,7 @@ class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
         @see readScalars8
         F is Float
         """
+        assert debug==True or debug==False
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -519,10 +524,11 @@ class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
     #def readScalars14(self,debug=False):
     #    self.readScalarsX(self,'iiffffffffffff',56,debug)
 
-    def readScalars14(self,debug=True):
+    def readScalars14(self,debug=False):
         """
         @see readScalars8
         """
+        assert debug==True or debug==False
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)
@@ -566,6 +572,7 @@ class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
         @see readScalars8
         F is Float
         """
+        assert debug==True or debug==False
         data = self.data
         deviceCode = self.deviceCode
         #print type(scalarObject)

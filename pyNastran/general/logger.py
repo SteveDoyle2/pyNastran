@@ -2,6 +2,21 @@ import os
 import sys
 import inspect
 
+def frame(n):
+    return inspect.currentframe(n+4) # jump 4 levels down to get out of the logger code
+
+def lineNum():
+    return frame().f_lineno
+
+def fileNamE():
+    return os.path.basename(frame().f_globals['__file__'])
+
+def fileNameLineNum(n=0):
+    f = frame(n)
+    lineNum = f.f_lineno
+    fname = os.path.basename(f.f_globals['__file__'])
+    return(fname,lineNum)
+    
 class debugLogger(object):
     def __init__(self):
         pass
@@ -12,7 +27,6 @@ class debugLogger(object):
     def frame(self):
        #print help(inspect)
        return inspect.currentframe(4) # jump 4 levels down to get out of the logger code
-
 
     def lineno(self):
         """Returns the current line number in our program."""

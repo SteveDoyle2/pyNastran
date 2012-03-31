@@ -13,7 +13,7 @@ For the BDF Tables (GEOM1/GEOM2/GEOM3/GEOM4/DIT/DYNAMICS/EPT/MPT):
     later, but found out that it was a good way to learn defaults for
     variables that the QRG doesn't list.  For example, on the GRID card
     there is a PS field, which is a nodal SPC.  A 0 value is now used instead of a
-    None.  A FEM code using this should be able to handle both, so it's not that
+    None.  A solver using this should be able to handle both, so it's not that
     big a deal, but it makes it easier when writing the OP2 to not have to
     worry about None values.
     
@@ -192,6 +192,8 @@ OP2 Reader
          - CTETRA  (39, done) - 4 nodes
          - CHEXA   (67, done) - 8 nodes
          - CPENTA  (68, done) - 6 nodes
+         
+         - CTRIAX6 (53) - 4 nodes
 
          - CTRIA3  (74, done) - 1 node
          - CTRIAR  (70, done) - 4 nodes
@@ -228,8 +230,10 @@ OP2 Reader
       - velocity     (done)
       - acceleration (done)
 
+   - OGF (grid point force balance)
+      - grid point forces
 
-   - OPG1 Table (grid point forces)
+   - OGP1 Table (grid point forces)
       - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
       
    - OEE Table (element energy strain/kinetic/loss)
