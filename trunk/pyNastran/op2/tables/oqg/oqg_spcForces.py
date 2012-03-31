@@ -1,11 +1,11 @@
 from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
-class spcForcesObject(scalarObject):
+class constraintForceObject(scalarObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
-        self.dt = dt
 
+        self.dt = dt
         self.forces  = {}
         self.moments = {}
         if self.dt is not None:
@@ -24,6 +24,15 @@ class spcForcesObject(scalarObject):
             self.dt = dt
             self.addNewTransient()
         ###
+
+    def deleteTransient(self,dt):
+        del self.forces[dt]
+        del self.moments[dt]
+
+    def getTransients(self):
+        k = self.forces.keys()
+        k.sort()
+        return k
 
     def addNewTransient(self):
         self.forces[self.dt]  = {}
@@ -57,6 +66,11 @@ class spcForcesObject(scalarObject):
         self.forces[ self.dt][nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
         self.moments[self.dt][nodeID] = array([v4,v5,v6]) # Mx,My,Mz
 
+
+class spcForcesObject(constraintForceObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
+        constraintForceObject.__init__(self,dataCode,iSubcase)
+
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
         if self.dt is not None:
@@ -86,7 +100,6 @@ class spcForcesObject(scalarObject):
                 msg += '\n'
             ###
         return msg
-
 
     def __repr__(self):
         if self.dt is not None:
@@ -118,61 +131,10 @@ class spcForcesObject(scalarObject):
             msg += '\n'
         return msg
 
-class mpcForcesObject(scalarObject):
+class mpcForcesObject(constraintForceObject):
     def __init__(self,dataCode,iSubcase,dt=None):
+        constraintForceObject.__init__(self,dataCode,iSubcase)
         scalarObject.__init__(self,dataCode,iSubcase)
-        self.dt = dt
-
-        self.forces  = {}
-        self.moments = {}
-        if self.dt is not None:
-            assert dt>=0.
-            self.addNewTransient()
-            self.add = self.addTransient
-            #self.__repr__ = self.__reprTransient__  # why cant i do this...
-        ###
-
-    def updateDt(self,dataCode,dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-        ###
-
-    def addNewTransient(self):
-        self.forces[self.dt]  = {}
-        self.moments[self.dt] = {}
-
-    def updateDt(self,dataCode,dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-        ###
-
-    #def addBinary(self,deviceCode,data):
-        #print "*******add********"
-        #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
-
-    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = 'nodeID=%s' %(nodeID)
-        assert 0<nodeID<1000000000,msg
-        assert nodeID not in self.forces
-        self.forces[ nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
-        self.moments[nodeID] = array([v4,v5,v6]) # Mx,My,Mz
-
-    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = 'nodeID=%s' %(nodeID)
-        assert 0<nodeID<1000000000,msg
-        assert nodeID not in self.forces[self.dt]
-        self.forces[ self.dt][nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
-        self.moments[self.dt][nodeID] = array([v4,v5,v6]) # Mx,My,Mz
 
     def __reprTransient__(self):
         msg = '---MPC FORCES---\n'
@@ -203,7 +165,6 @@ class mpcForcesObject(scalarObject):
                 msg += '\n'
             ###
         return msg
-
 
     def __repr__(self):
         if self.dt is not None:

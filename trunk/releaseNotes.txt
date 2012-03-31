@@ -21,7 +21,7 @@ Overall Notes
    - lots of new BDF cards
    - new results in OP2
    - F06 Reader/Writer
-   - OP2 Reader integrates with F06 Writer
+   - F06 Writer integrates with OP2 Reader
 
 Overall BDF
    - reworked format of bdf_crossReferencing.txt to be more like
@@ -61,7 +61,7 @@ Added BDF
    - DLOAD, SLOAD, RLOAD1, RLOAD2
    - CAERO2, PAERO2, AEFACT
    - CBEND, PBEND, CBEAM3
-   - MATS1,MATHP,
+   - MATS1, MATHP
    - DVPREL2, DVMREL1, DOPTPRM, DLINK
    - DRESP2
    - SPOINT
@@ -72,6 +72,11 @@ OP2 Bug Fixes
 Overall OP2
    - supporting F06 reader/writer
    - more embedded BDF reading
+   - added setTransientTimes(times) to explictly extract results at desired times
+     - OUG
+     - OES
+     - OEE
+     - OQG
 
 Added OP2
    - SPC Forces
@@ -92,6 +97,7 @@ Overall F06 Reader/Writer
    - field parsing needs more testing, so beware!
 
 Added F06 Reader
+   - format1, SORT2 supported
    - displacement (static/transient)
    - ***complex displacement
    - temperature  (static/transient)

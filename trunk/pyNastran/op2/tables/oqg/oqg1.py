@@ -23,7 +23,9 @@ class OQG1(object):
         self.tableName = 'OQG'
         table3 = self.readTable_OQG1_3
         table4Data = self.readOQG1_Data
+        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
+        del self.dtMap
         self.deleteAttributes_OQG()
 
     def deleteAttributes_OQG(self):
@@ -221,10 +223,18 @@ class OQG1(object):
         else:
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        #print "objName = ",self.obj.name()
-        self.readScalars8(self.obj)
-        #self.skipOES_Element()
         
+        readCase = True
+        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
+            readCase = self.updateDtMap()
+        
+        if self.obj and readCase:
+            #print "objName = ",self.obj.name()
+            self.readScalars8(self.obj)
+        else:
+            self.skipOES_Element()
+        ###
+
 
     def readOQG1_Data_format1_sort1(self):
         if self.thermal==0:
