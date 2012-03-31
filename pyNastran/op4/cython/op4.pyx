@@ -358,9 +358,15 @@ def Load(op4_handle ,  # in, as created by File()            {{{1
     cdef double *array_RD
     cdef double *array_CD
     cdef np.ndarray ndarray
+    All_Matrices = []
     """ 
     Skip over the first skip matrices then load nmat matrices from the 
-    previously opened op4 file.
+    previously opened op4 file.  For example,
+
+      fh   = op4.File('sol103.op4', 'r')
+      K, M = op4.Load(fh, nmat=2)
+
+    loads the first two matrices from the file sol103.op4 into K and M.
     """
     if nmat < 1 or \
        nmat > len(op4_handle['digits']):
@@ -372,18 +378,19 @@ def Load(op4_handle ,  # in, as created by File()            {{{1
         print('op4.Load: 0 <= skip <= %d' % (len(op4_handle['digits']) - 1))
         raise IOError
 
-    print('Will return %d matrices after skipping %d' % (nmat, skip))
     filetype = op4_filetype(op4_handle['File'])
-    print('File type of %s is %d' % (op4_handle['File'], filetype))
-    for i in range(nmat):
-        offset = i + skip
-        print_header(op4_handle, index=offset)
-        print('Fetching %d. %-8s  %5d x %5d from %s' % (
-            offset + 1, 
-            op4_handle['name'][offset],
-            op4_handle['nRow'][offset],
-            op4_handle['nCol'][offset], 
-            op4_handle['File']))
+    if False: # set to True for debug output
+        print('Will return %d matrices after skipping %d' % (nmat, skip))
+        print('File type of %s is %d' % (op4_handle['File'], filetype))
+        for i in range(nmat):
+            offset = i + skip
+            print_header(op4_handle, index=offset)
+            print('Fetching %d. %-8s  %5d x %5d from %s' % (
+                    offset + 1, 
+                    op4_handle['name'][offset],
+                    op4_handle['nRow'][offset],
+                    op4_handle['nCol'][offset], 
+                    op4_handle['File']))
 
 
 #   if os.path.basename(op4_handle['File']) != 'mat_t_dn.op4': return
@@ -500,6 +507,11 @@ def Load(op4_handle ,  # in, as created by File()            {{{1
 
                 ndarray = np.reshape(ndarray, (op4_handle['nCol'][i], op4_handle['nRow'][i])).T
 
-                return ndarray
+                All_Matrices.append(ndarray)
+
+    if len(All_Matrices) == 1:
+        return All_Matrices[0]
+    else:
+        return All_Matrices
 
 # 1}}}
