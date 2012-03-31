@@ -272,7 +272,7 @@ class OUGV1(object):
                 self.createTransientObject(self.displacements,displacementObject)
             else:
                 #pass
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise Exception('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
 
         elif self.thermal==1:
@@ -287,13 +287,13 @@ class OUGV1(object):
                 self.createTransientObject(self.temperatures,temperatureObject)
                 #self.createTransientObject(self.temperatures,nonlinearTemperatureObject)
             else:
-                raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
                 pass
             ###
         elif self.thermal in [2,4,8]:
             self.readThermal4()
         else:   # self.thermal>1:  ## @warning thermal>0!!!!
-            raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise Exception('invalid %s-OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
         ###
         
         readCase = True
@@ -341,14 +341,14 @@ class OUGV1(object):
                 #print "isPostBucklingEigenvector8"
                 self.createTransientObject(self.eigenvectors,realEigenVectorObject)
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise Exception('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
                 pass
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise Exception('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             pass
         else:
-            raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise Exception('invalid %s-OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
             pass
         ###
         if self.obj:
@@ -370,7 +370,7 @@ class OUGV1(object):
                 #print "isTransientVelocity"
                 self.createTransientObject(self.velocities,velocityObject)
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             #raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
@@ -398,12 +398,12 @@ class OUGV1(object):
                 #print "isTransientAcceleration"
                 self.createTransientObject(self.accelerations,accelerationObject)
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise Exception('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
-            raise Exception('invalid OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise Exception('invalid %s-OUGV1 thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
         ###
         self.readScalarsOut(debug=False)
 
@@ -439,7 +439,7 @@ class OUGV1(object):
                 #print "isNonlinearStaticDisplacement"
                 #self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise Exception('unsupported OUGV1 static table1_format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static table1_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
@@ -469,7 +469,7 @@ class OUGV1(object):
                 #print "isNonlinearStaticDisplacement"
                 #self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise Exception('unsupported OUGV1 static table7_format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
@@ -497,7 +497,7 @@ class OUGV1(object):
                 #print "isNonlinearStaticDisplacement"
                 #self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise Exception('unsupported OUGV1 static table7_format1_sort1 solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
@@ -513,10 +513,10 @@ class OUGV1(object):
                 #print "isTransientDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise Exception('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
@@ -541,10 +541,10 @@ class OUGV1(object):
                 #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
                 #self.readScalars8()
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise Exception('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
@@ -577,10 +577,10 @@ class OUGV1(object):
                 #print "isTransientVelocity"
                 self.createTransientObject(self.velocities,displacementObject,self.dt)
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise Exception('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
@@ -601,10 +601,10 @@ class OUGV1(object):
                 #print "isComplexEigenvalues"
                 #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
             else:
-                raise Exception('unsupported OUGV1 static solution...atfsCode=%s' %(self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
         elif self.thermal==1:
-            raise Exception('unsupported OUGV1 thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise Exception('unsupported %s-OUGV1 thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###

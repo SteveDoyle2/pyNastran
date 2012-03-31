@@ -241,35 +241,35 @@ class OES(ElementsStressStrain):
         #print self.obj
 
     def readOES1_Data_format1_sort1(self):
-        #msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #msg = '%s-OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
             pass
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format1_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format1_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format2_sort0(self):
-        #msg = 'OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #msg = '%s-OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
             pass
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format2_sort1(self):
-        #msg = 'OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #msg = '%s-OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         #if self.elementType==1: # crod
         if self.elementType in [1,3,10]: # crod/ctube/conrod
@@ -282,56 +282,56 @@ class OES(ElementsStressStrain):
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format3_sort0(self):
-        msg = 'OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        msg = '%s-OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         #msg = ''
         if 0:
             pass
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format3_sort1(self):
-        #msg = 'OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #msg = '%s-OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
             pass
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format3_sort2(self):
-        #msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #msg = '%s-OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
             pass
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
             #raise RuntimeError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
     def readOES1_Data_format1_sort0(self):
-        #msg = 'OES elementType=%-3s -> %-6s\n' %(self.elementType,self.ElementType(self.elementType))
+        #msg = '%s-OES elementType=%-3s -> %-6s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType))
         msg = ''
         #if self.analysisCode not in [1,6,10]:
             #raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
