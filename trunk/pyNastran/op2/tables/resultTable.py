@@ -4,7 +4,7 @@ from struct import unpack
 
 from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.ougv1  import OUGV1
-from pyNastran.op2.tables.oes.oes    import OES
+from pyNastran.op2.tables.oes_stressStrain.oes import OES
 from pyNastran.op2.tables.oqg_constraintForces.oqg1   import OQG1
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
