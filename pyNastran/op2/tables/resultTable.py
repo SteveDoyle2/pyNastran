@@ -5,16 +5,16 @@ from struct import unpack
 from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.ougv1  import OUGV1
 from pyNastran.op2.tables.oes.oes    import OES
-from pyNastran.op2.tables.oqg.oqg1   import OQG1
-from pyNastran.op2.tables.oef.oef    import OEF
-from pyNastran.op2.tables.opg.opg    import OPG
-from pyNastran.op2.tables.oee.oee    import OEE
+from pyNastran.op2.tables.oqg_constraintForces.oqg1   import OQG1
+from pyNastran.op2.tables.oef_forces.oef import OEF
+from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
+from pyNastran.op2.tables.oee_energy.oee import OEE
 #from pyNastran.op2.tables.hisadd import HISADD - combined with R1TAB for now
 from pyNastran.op2.tables.r1tab  import R1TAB
 from pyNastran.op2.tables.destab import DESTAB
 
 
-class ResultTable(OQG1,OUGV1,OEF,OGP,OES,OEE,R1TAB,DESTAB):
+class ResultTable(OQG1,OUGV1,OEF,OPG,OES,OEE,R1TAB,DESTAB):
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""

@@ -723,9 +723,9 @@ class ElementsStressStrain(object):
                 self.obj.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             ###
         ###
-        self.handleResultsBuffer(self.CQUAD4_144)
+        self.handleResultsBuffer(self.CQUAD4_82)
 
-   def CQUAD4_144(self): # works
+    def CQUAD4_144(self): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
