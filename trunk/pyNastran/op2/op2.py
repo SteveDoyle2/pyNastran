@@ -257,7 +257,7 @@ class OP2(BDF,  # BDF methods
                    # OQG1 - Forces
                    self.spcForces,self.mpcForces,
                    
-                   # OGP - Applied Force/Moment
+                   # OPG - Applied Force/Moment
                    self.appliedLoads,
 
                    # OES - Stress/Strain
@@ -391,6 +391,7 @@ class OP2(BDF,  # BDF methods
             if tableName==None:
                 break
             elif tableName in self.tablesToRead:
+                self.tableName = tableName
                 try:
                     #print "startTell = ",self.op2.tell()
                     if tableName=='GEOM1': # nodes,coords,etc.
@@ -429,7 +430,7 @@ class OP2(BDF,  # BDF methods
                         self.readTable_R1TAB()
 
                     elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
-                        self.readTable_OGP1()
+                        self.readTable_OPG1()
 
 
                     elif tableName in ['OEF1X','DOEF1']:  # applied loads

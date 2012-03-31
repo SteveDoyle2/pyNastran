@@ -229,7 +229,7 @@ OP2 Reader
       - acceleration (done)
 
 
-   - OGP1 Table (grid point forces)
+   - OPG1 Table (grid point forces)
       - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
       
    - OEE Table (element energy strain/kinetic/loss)

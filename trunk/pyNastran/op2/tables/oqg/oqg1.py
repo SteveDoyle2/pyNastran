@@ -20,7 +20,7 @@ class OQG1(object):
     """Table of spc/mpc forces/momenets"""
 
     def readTable_OQG1(self):
-        self.tableName = 'OQG'
+        #self.tableName = 'OQG'
         table3 = self.readTable_OQG1_3
         table4Data = self.readOQG1_Data
         self.dtMap = {}
