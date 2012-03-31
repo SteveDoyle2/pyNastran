@@ -28,8 +28,8 @@ for in_file in [ '../test/mat_b_dn.op4' ,
         if a is None: 
             print('op4.Load returned None')
         else:
-            print('%2d. %-8s has type %s, contents of' % (
-                  i+1, fh['name'][i], type(a[0,0])))
+#           print('%2d. %-8s has type %s, contents of' % (
+#                 i+1, fh['name'][i], type(a[0,0])))
             print(a)
 
 # print 'It carries a reference to our deallocator: %s ' % a.base
