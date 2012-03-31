@@ -24,7 +24,7 @@ for in_file in [ '../test/mat_b_dn.op4' ,
     op4.print_header(fh)
 
     for i in range(fh['nMat']):
-        a = op4.Load(fh, nmat=1, skip=i)  # n_mat not yet working
+        a = op4.Load(fh, nmat=1, skip=i)
         if a is None: 
             print('op4.Load returned None')
         else:
