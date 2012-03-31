@@ -423,6 +423,33 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
+    def CTRIAX6_53(self):
+        #print "len(data) = %s" %(len(self.data))
+        v1 = len(self.data)
+        while len(self.data)>=132: # (1+8*4) = 33*4 = 132
+            eData     = self.data[0:4*9]
+            self.data = self.data[4*9: ]
+            out = unpack('iifffffff',eData)
+            (eid,loc,rs,azs,As,ss,maxp,tmax,octs) = out
+            eid = (eid-self.deviceCode)//10
+            print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+            #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+
+            for i in range(3):
+                eData     = self.data[0:4*8]
+                self.data = self.data[4*8: ]
+                out = unpack('ifffffff',eData)
+                (loc,rs,azs,As,ss,maxp,tmax,octs) = out
+                print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                #self.obj.add(self.elementType,data)
+            v2 = len(self.data)
+            #print "delta = %s" %(v1-v2)
+            #sys.exit()
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+        ###
+        self.handleResultsBuffer(self.CTRIAX6_53)
+
     def RODNL_89_92(self):
         #print "len(data) = %s" %(len(self.data))
         while len(self.data)>=28:

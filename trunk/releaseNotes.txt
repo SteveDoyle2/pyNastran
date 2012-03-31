@@ -81,6 +81,9 @@ Overall OP2
 Added OP2
    - SPC Forces
    - MPC Forces
+   - grid point forces (***static/***transient)
+   - stress/strain
+        - ***CTRIAX6
    - hyperelastic stress/strain
         - CQUAD4
    - nonlinear strain

@@ -233,6 +233,8 @@ class OP2(BDF,  # BDF methods
         self.mpcForces      = {}
         #self.modalMPCForces = {}
         
+        ## OGF - grid point forces
+        self.gridPointForces = {}
         ## OPG - summation of loads for each element
         self.appliedLoads = {}
         
@@ -257,7 +259,10 @@ class OP2(BDF,  # BDF methods
                    # OQG1 - Forces
                    self.spcForces,self.mpcForces,
                    
-                   # OPG - Applied Force/Moment
+                   # OGF - Grid Point Forces
+                   self.gridPointForces,
+
+                   # OGP - Applied Force/Moment
                    self.appliedLoads,
 
                    # OES - Stress/Strain
@@ -429,8 +434,10 @@ class OP2(BDF,  # BDF methods
                     elif tableName in ['ERRORN']: # not done
                         self.readTable_R1TAB()
 
-                    elif tableName in ['OPG1','OGPFB1','OPNL1','OGS1','OPGV1']: # table of applied loads
+                    elif tableName in ['OPG1','OPNL1','OGS1','OPGV1']: # table of applied loads
                         self.readTable_OPG1()
+                    elif tableName in ['OGPFB1',]:
+                        self.readTable_OGF()
 
 
                     elif tableName in ['OEF1X','DOEF1']:  # applied loads

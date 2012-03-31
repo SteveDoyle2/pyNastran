@@ -384,6 +384,13 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_33()
+
+        #elif self.elementType==53: # ctriax6
+            #self.dataCode['elementName'] = 'CTRIAX6'
+            #self.makeOES_Object(self.plateStress,plateStressObject,
+            #                    self.plateStrain,plateStrainObject)
+            #self.CTRIAX6_53()
+
         elif self.elementType==74:  # ctria
             self.dataCode['elementName'] = 'CTRIA3'
             self.makeOES_Object(self.plateStress,plateStressObject,
@@ -471,14 +478,14 @@ class OES(ElementsStressStrain):
         #                        self.barStrain,barStrainObject)
         #    self.basicElement()
         #elif self.elementType in [75,89,90,92,93]:
-        #    msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+        #    msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         #    raise AddNewElementError(msg)
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
+            msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName.strip())
             self.log.debug(msg)
-            #msg = 'OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
+            #msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
             #raise RuntimeError(msg)
             self.skippedCardsFile.write(msg)
         ###
