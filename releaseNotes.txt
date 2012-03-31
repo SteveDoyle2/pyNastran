@@ -79,9 +79,9 @@ Overall OP2
      - OQG
 
 Added OP2
-   - SPC Forces
-   - MPC Forces
-   - grid point forces (***static/***transient)
+   - SPC Forces (static/transient)
+   - MPC Forces (static/transient)
+   - grid point forces (static/***transient)
    - stress/strain
         - ***CTRIAX6
    - hyperelastic stress/strain

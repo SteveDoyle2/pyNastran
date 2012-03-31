@@ -3,13 +3,101 @@ from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class gridPointForcesObject(scalarObject):
-    def __init__(self,dataCode,iSubcase,freq=None):
+    def __init__(self,dataCode,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
+        self.forces = {}
+        self.moments = {}
+        self.elemName = {}
+        self.eids = {}
+        if dt is not None:
+            self.dt = dt
+            self.isTransient = True
+            self.addNewTransient()
+            self.add       = self.addTransient
+            #self.addNewEid = self.addNewEidTransient
+        ###
+
+    def addNewTransient(self,eKey):
+        """initializes the transient variables"""
+        if self.dt not in self.forces:
+            self.forces[self.dt] = {}
+            self.moments[self.dt] = {}
+            self.elemName[eKey] = []
+            self.eids[eKey] = []
+
+    def add(self,eKey,eid,elemName,f1,f2,f3,m1,m2,m3):
+        if eKey not in self.forces:
+            self.eids[eKey] = []
+            self.forces[eKey] = []
+            self.moments[eKey] = []
+            self.elemName[eKey] = []
+        self.forces[eKey].append( [f1,f2,f3]) # Fx,Fy,Fz
+        self.moments[eKey].append([m1,m2,m3]) # Mx,My,Mz
+        self.elemName[eKey].append(elemName)
+        self.eids[eKey].append(eid)
+
+    def addTransient(self,eKey,eid,elemName,f1,f2,f3,m1,m2,m3):
+        if eKey not in self.forces[self.dt]:
+            self.eids[self.dt][eKey] = []
+            self.forces[self.dt][eKey] = []
+            self.moments[self.dt][eKey] = []
+            self.elemName[self.dt][eKey] = []
+        self.forces[self.dt][eKey].append( [f1,f2,f3]) # Mx,My,Mz
+        self.moments[self.dt][eKey].append([m1,m2,m3]) # Fx,Fy,Fz
+        self.elemName[self.dt][eKey].append(elemName)
+        self.eids[self.dt][eKey].append(eid)
+
+    def updateDt(self,dataCode,freq):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        if freq is not None:
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],freq,self.iSubcase))
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
+    def deleteTransient(self,dt):
+        del self.forces[dt]
+        del self.moments[dt]
+        del self.elemName[dt]
+
+    def getTransients(self):
+        k = self.forces.keys()
+        k.sort()
+        return k
+    
+    #def cleanupObj(self):
+        #k = self.elemName.keys()
+        #self.elemName = self.elemName[k[0]]
+        #self.eids = self.eids[k[0]]
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        msg = header+['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
+               ' \n',
+               '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n',]
+              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        for eKey,force in sorted(self.forces.items()):
+            for iLoad,f in enumerate(force):
+                (f1,f2,f3) = f
+                (m1,m2,m3) = self.moments[eKey][iLoad]
+                (elemName) = self.elemName[eKey][iLoad]
+                eid = self.eids[eKey][iLoad]
+
+                msg.append('   %8s    %10s %10s %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' %(eKey,eid,elemName,f1,f2,f3,m1,m2,m3))
+            ###
+        ###
+        msg.append(pageStamp+str(pageNum))
+        return ''.join(msg)
+    
+    def __repr__(self):
+        return self.writeF06([],'PAGE ',1)
+        #return '---gridPointForceObject---'
 
 class complexGridPointForcesObject(scalarObject):
     def __init__(self,dataCode,iSubcase,freq=None):
         scalarObject.__init__(self,dataCode,iSubcase)
-
 class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,freq=None):
         scalarObject.__init__(self,dataCode,iSubcase)
