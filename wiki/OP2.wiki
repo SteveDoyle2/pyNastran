@@ -25,7 +25,7 @@ This is how the version 0.3 OP2 reading software works.  Make sure you install t
  * automated printing of tables
  
 == Limitations ==
- * no SORT1 support (only SORT2)
+ * no SORT2 support (only SORT1)
  * *skippedCards.out* (run *test_op2 op2Name.op2*) shows the results that were skipped
  * limited thermal support (only temperature)
  * no heat flux
