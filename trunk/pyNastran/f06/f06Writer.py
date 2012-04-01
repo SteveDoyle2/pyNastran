@@ -73,6 +73,7 @@ def makeEnd():
 
 class F06Writer(object):
     def __init__(self,model='tria3'):
+        self.Title = ''
         self.setF06Name(model)
 
     def setF06Name(self,model):
@@ -110,8 +111,9 @@ class F06Writer(object):
         f.write(makePyNastranTitle())
         
         #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
-        Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
-        pageStamp = makeStamp(Title)
+        
+        #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
+        pageStamp = makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
@@ -131,12 +133,20 @@ class F06Writer(object):
                     self.rodStress,self.barStress,self.beamStress,self.shearStress,self.plateStress,self.compositePlateStress,self.solidStress,
                     self.ctriaxStress,
                     self.ctriaxStrain,
+                    self.gridPointForces,
+                    self.loadVectors,
                     ]
 
         for resType in resTypes:
-            for case,result in sorted(resType.items()):
-                header[1] = '0                                                                                                            SUBCASE %i'%(case)
-                (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            for iSubcase,result in sorted(resType.items()):
+                (subtitle,label) = self.iSubcaseNameMap[iSubcase]
+                header[0] = '     %s\n' %(subtitle)
+                header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
+                try:
+                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+                except:
+                    print "result name = %s" %(result.name())
+                    raise
                 f.write(msg)
                 pageNum +=1
             ###

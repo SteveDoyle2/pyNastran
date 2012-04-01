@@ -241,62 +241,11 @@ class OP2(BDF,  # BDF methods
         self.gridPointForces = {}
         ## OPG - summation of loads for each element
         self.appliedLoads = {}
+        self.loadVectors = {}
         
         ## OEE - strain energy density
         self.strainEnergy = {}
 
-    def printResults(self):
-        results = [
-                   # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
-                   #       SPC Forces
-                   #self.displacements,self.temperatures,
-                   self.eigenvectors,
-                   self.velocities,
-                   self.accelerations,
-                   #self.nonlinearTemperatures,self.nonlinearDisplacements,
-                   #self.forces,self.fluxes,
-                   
-                   # OEF - Applied Forces/Temperatures - ???
-                   #self.nonlinearForces,self.nonlinearFluxes,
-                   #self.temperatureForces,
-                   
-                   # OQG1 - Forces
-                   #self.spcForces,self.mpcForces,
-                   
-                   # OGF - Grid Point Forces
-                   #self.gridPointForces,
-
-                   # OGP - Applied Force/Moment
-                   self.appliedLoads,
-
-                   # OES - Stress/Strain
-                   self.celasStress,self.celasStrain,
-                   self.rodStress,self.rodStrain,
-                   self.barStress,self.barStrain,
-                   self.beamStress,self.beamStrain,
-                   self.plateStress,self.plateStrain,
-                   self.solidStress,self.solidStrain,
-                   self.compositePlateStress,self.compositePlateStrain,
-                   self.ctriaxStress,self.ctriaxStrain, # strain not coded
-                   
-                   # OEE - Strain Energy
-                   self.strainEnergy,
-                   ]
-        
-        msg = '---ALL RESULTS---\n'
-        for result in results:
-            for iSubcase,res in sorted(result.items()):
-                msg += 'iSubcase = %s\n' %(iSubcase)
-                try:
-                    msg += str(res) + '\n'
-                except:
-                    print 'failed on %s' %(res.name())
-                    raise
-                ###
-            ###
-        ###
-        return msg
-        
     def readTapeCode(self):
         """
         reads the OP2 header
@@ -673,3 +622,56 @@ class OP2(BDF,  # BDF methods
         """
         return self.tableNames
 
+    def printResults(self):
+        results = [
+                   # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
+                   #       SPC Forces
+                   #self.displacements,self.temperatures,
+                   self.eigenvectors,
+                   self.velocities,
+                   self.accelerations,
+                   #self.nonlinearTemperatures,self.nonlinearDisplacements,
+                   #self.forces,self.fluxes,
+                   
+                   # OEF - Applied Forces/Temperatures - ???
+                   #self.nonlinearForces,self.nonlinearFluxes,
+                   #self.temperatureForces,
+                   
+                   # OQG1 - Forces
+                   #self.spcForces,self.mpcForces,
+                   
+                   # OGF - Grid Point Forces
+                   self.gridPointForces,
+
+                   # OPG - Applied Force/Moment
+                   self.appliedLoads,
+                   self.loadVectors,
+
+                   # OES - Stress/Strain
+                   self.celasStress,self.celasStrain,
+                   self.rodStress,self.rodStrain,
+                   self.barStress,self.barStrain,
+                   self.beamStress,self.beamStrain,
+                   self.plateStress,self.plateStrain,
+                   self.solidStress,self.solidStrain,
+                   self.compositePlateStress,self.compositePlateStrain,
+                   #self.ctriaxStress,self.ctriaxStrain, # strain not coded
+                   
+                   # OEE - Strain Energy
+                   self.strainEnergy,
+                   ]
+        
+        msg = '---ALL RESULTS---\n'
+        for result in results:
+            for iSubcase,res in sorted(result.items()):
+                msg += 'iSubcase = %s\n' %(iSubcase)
+                try:
+                    msg += str(res) + '\n'
+                except:
+                    print 'failed on %s' %(res.name())
+                    raise
+                ###
+            ###
+        ###
+        return msg
+        

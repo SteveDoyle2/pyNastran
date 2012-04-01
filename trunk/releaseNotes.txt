@@ -80,17 +80,22 @@ Overall OP2
      - OQG
 
 Added OP2
-   - SPC Forces (static/transient)
-   - MPC Forces (static/transient)
-   - grid point forces (static/transient)
-   - stress/strain
-        - CTRIAX6 (static/transient)
-   - hyperelastic stress/strain (transient)
-        - CQUAD4
-   - nonlinear strain (transient)
-        - CTRIA3, CQUAD4
-        - CROD, CONROD, CTUBE
-        - ***CBEAM
+   - OQG
+     - SPC Forces (static/transient)
+     - MPC Forces (static/transient)
+   
+   - OES
+     - stress/strain
+       - CTRIAX6 (static/transient)
+     - hyperelastic stress/strain (transient)
+       - CQUAD4
+     - nonlinear strain (transient)
+       - CTRIA3, CQUAD4
+       - CROD, CONROD, CTUBE
+       - ***CBEAM
+   - OGF
+     - grid point forces (static/transient)
+     - load vector (static/transient)
 
 Overall F06 Reader/Writer
    - rewrote f06 reader
@@ -102,55 +107,62 @@ Overall F06 Reader/Writer
 
 Added F06 Reader
    - format1, SORT2 supported
-   - displacement (static/transient)
-   - ***complex displacement
-   - temperature  (static/transient)
+   - OUG
+     - displacement (static/transient)
+     - ***complex displacement
+     - temperature  (static/transient)
+     - eigenvectors (real/complex)
 
-   - solid stress/***strain (static/***transient)
-      - ctetra
-      - cpenta
-      - chexa
-   - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
-      - ctria3
-      - cquad4 (centroid/bilinear)
-   - composite plate stress/strain (static/***transient)
-      - ctria3
-      - cquad4 (centroid)
+   - OES
+     - solid stress/***strain (static/***transient)
+        - ctetra
+        - cpenta
+        - chexa
+     - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
+        - ctria3
+        - cquad4 (centroid/bilinear)
+     - composite plate stress/strain (static/***transient)
+        - ctria3
+        - cquad4 (centroid)
+     - rod stress/strain (static/transient)
+     - bar stress/strain (static/transient)
+     - ***beam  stress/strain (static/transient)
+     - ***shear stress/strain (static/transient)
 
-   - rod stress/strain (static/transient)
-   - bar stress/strain (static/transient)
-   - ***beam  stress/strain (static/transient)
-   - ***shear stress/strain (static/transient)
-
-   - eigenvalues  (real/complex)
-   - eigenvectors (real/complex)
+   - LAMA
+     - eigenvalues  (real/complex)
 
 Added F06 Writer
-   - displacement (static/transient)
-   - velocity     (static/***transient)
-   - acceleration (static/***transient)
+   - OUG
+     - displacement (static/transient)
+     - velocity     (static/***transient)
+     - acceleration (static/***transient)
+     - temperature  (static/transient)
+     - eigenvectors (real/***complex)
 
-   - temperature  (static/transient)
+   - OES
+     - solid stress/strain (static/***transient);  (directional vectors & pressure calculated)
+        - ctetra
+        - cpenta
+        - chexa
+     - isotropic plate stress/strain (static/***transient)
+        - ctria3
+        - cquad4 (centroid/bilinear)
+     - composite plate stress/strain (static/***transient)
+        - ctria3
+        - cquad4 (centroid)
 
-   - solid stress/strain (static/***transient);  (directional vectors & pressure calculated)
-      - ctetra
-      - cpenta
-      - chexa
-   - isotropic plate stress/strain (static/***transient)
-      - ctria3
-      - cquad4 (centroid/bilinear)
-   - composite plate stress/strain (static/***transient)
-      - ctria3
-      - cquad4 (centroid)
+     - rod stress/strain (static/***transient)
+     - bar stress/strain (static/***transient)
+     - ***beam  stress/strain (static/transient)
+     - ***shear stress/strain (static/transient)
 
-   - rod stress/strain (static/***transient)
-   - bar stress/strain (static/***transient)
-   - ***beam  stress/strain (static/transient)
-   - ***shear stress/strain (static/transient)
-
-   - ***eigenvalues  (real/complex)
-   - eigenvectors (real/***complex)
-   - grid point force balance (static/***transient)
+   - LAMA
+     - ***eigenvalues  (real/complex)
+   
+   - OGF
+     - grid point force balance (static/***transient)
+     - load vector (static/transient)
 
 Overall GUI
 Added GUI
@@ -166,10 +178,6 @@ Solver
       - still uses dense matricies, but layout will be easier to add sparse matricies later
       - still need to build Kgg matrix
    - added D matricies for PSHELL, PCOMP, PSOLID
-
------------------------v0.3.1 released 2012/02/??-----------------------
-BDF Bug Fixes
-- fixed bug in CONM2 with inertia terms
 
 -----------------------v0.3 released 2012/02/08-----------------------
 Overall Notes

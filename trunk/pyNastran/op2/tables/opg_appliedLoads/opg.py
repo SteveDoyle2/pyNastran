@@ -8,7 +8,7 @@ from struct import unpack
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
 from opg_Objects import appliedLoadsObject
-
+from opg_loadVector import loadVectorObject
 
 class OPG(object):
     """Table of element forces"""
@@ -107,7 +107,7 @@ class OPG(object):
 
         # grid point force balance
         if   tfsCode==[19,1,0]:
-            self.readOPG1_Data_format1_sort0()
+            self.readOPG1_Data_table19_format1_sort0()
         #elif tfsCode==[19,1,1]:
         #    self.readOPG1_Data_format1_sort1()
         #elif tfsCode==[19,2,1]:
@@ -118,8 +118,8 @@ class OPG(object):
         #    self.readOPG1_Data_format3_sort1()
         
         # load vector
-        #elif tfsCode==[2,1,0]:
-        #    self.readOPG1_Data_format1_sort0()
+        elif tfsCode==[2,1,0]:
+            self.readOPG1_Data_table2_format1_sort0()
         #elif tfsCode==[2,1,1]:
         #    self.readOPG1_Data_format1_sort1()
         #elif tfsCode==[2,2,1]:
@@ -170,7 +170,7 @@ class OPG(object):
         #    self.readOPG1_Data_format3_sort3()
         else:
             #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
-            print 'bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
+            print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
             self.skipOES_Element()
         ###
         #print self.obj
@@ -195,7 +195,7 @@ class OPG(object):
         print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         self.skipOES_Element()
 
-    def readOPG1_Data_format1_sort0(self):
+    def readOPG1_Data_table19_format1_sort0(self):
         if self.thermal==0:
             if self.analysisCode==1: # displacement
                 #print "isAppliedLoads"
@@ -211,6 +211,33 @@ class OPG(object):
             self.skipOES_Element()
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+
+    def readOPG1_Data_table2_format1_sort0(self):
+        if self.thermal==0:
+            if self.analysisCode==1: # load vector
+                #print "isAppliedLoads"
+                self.obj = loadVectorObject(self.dataCode,self.iSubcase)
+                self.loadVectors[self.iSubcase] = self.obj
+            else:
+                self.skipOES_Element()
+                #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
+                raise Exception('not supported %s-OPG solution...' %(self.tableName))
+            ###
+        elif self.thermal==1:
+            self.skipOES_Element()
+        else:
+            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+
+        readCase = True
+        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
+            readCase = self.updateDtMap()
+        
+        if self.obj and readCase:
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
         ###
 
     def readOPGForces(self,data,scalarObject):
