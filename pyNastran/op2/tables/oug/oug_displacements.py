@@ -1,6 +1,5 @@
 import sys
 import copy
-from struct import pack
 
 # pyNastran
 from pyNastran.op2.resultObjects.tableObject import TableObject
@@ -22,17 +21,11 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
             vals = [dx,dy,dz,rx,ry,rz]
-            vals2 = []
-            for v in vals:
-                v2 = '%13E' %(v)
-                if   v2==' 0.000000E+00':
-                    v2 = ' 0.0         '
-                vals2.append(v2)
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
             [dx,dy,dz,rx,ry,rz] = vals2
             msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
-        msg.append('\n')
         return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1):
@@ -51,12 +44,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
                 vals = [dx,dy,dz,rx,ry,rz]
-                vals2 = []
-                for v in vals:
-                    v2 = '%13E' %(v)
-                    if v2==' 0.000000E+00' or v2=='-0.000000E+00':
-                        v2 = ' 0.0         '
-                    vals2.append(v2)
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
             ###
@@ -111,3 +99,4 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
                 msg += '\n'
             ###
         return msg
+

@@ -125,10 +125,11 @@ class F06Writer(object):
             pageNum +=1
 
         # subcase name, subcase ID, transient word & value
-        header = ['     DEFAULT                                                                                                                        ',
-                  '','']
+        header = ['     DEFAULT                                                                                                                        \n',
+                  '\n',' \n']
 
         resTypes = [self.displacements,self.temperatures,
+                    self.spcForces,self.mpcForces,
                     self.rodStrain,self.barStrain,self.beamStrain,self.shearStrain,self.plateStrain,self.compositePlateStrain,#self.solidStrain,  # beam, shear...not done
                     self.rodStress,self.barStress,self.beamStress,self.shearStress,self.plateStress,self.compositePlateStress,self.solidStress,
                     self.ctriaxStress,

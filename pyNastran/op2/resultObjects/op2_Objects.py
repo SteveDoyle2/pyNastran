@@ -11,11 +11,35 @@ class scalarObject(Op2Codes):
         self.applyDataCode()
         self.log.debug(self.codeInformation())
 
+    def isImaginary(self):
+        return bool(self.sortBits[1])
+
     def name(self):
         return self.__class__.__name__
 
-    def isImaginary(self):
-        return bool(self.sortBits[1])
+    def writeF06Floats12E(self,vals):
+        vals2 = []
+        isAllZeros = True
+        for v in vals:
+            v2 = '%12.5E' %(v)
+            if v2==' 0.00000E+00' or v2=='-0.00000E+00':
+                v2 = ' 0.0        '
+            else:
+                isAllZeros = False
+            vals2.append(v2)
+        return (vals2,isAllZeros)
+
+    def writeF06Floats13E(self,vals):
+        vals2 = []
+        isAllZeros = True
+        for v in vals:
+            v2 = '%13E' %(v)
+            if v2==' 0.000000E+00' or v2=='-0.000000E+00':
+                v2 = ' 0.0         '
+            else:
+                isAllZeros = False
+            vals2.append(v2)
+        return (vals2,isAllZeros)
 
     def applyDataCode(self):
         self.log = self.dataCode['log']

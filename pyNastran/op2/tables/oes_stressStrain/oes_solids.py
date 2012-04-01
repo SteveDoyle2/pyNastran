@@ -88,7 +88,7 @@ class solidStressObject(stressObject):
                                Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
-        eMap = {'CTETRA':5,'CHEXA':9,'CPENTA':7}   # +1 for the centroid
+        eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
         if self.dt is None:
             pack = []
             i=0
@@ -363,28 +363,28 @@ class solidStressObject(stressObject):
         else:
             vonMises = 'MAX SHEAR'
 
-        tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s' %(vonMises)]
+        tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
 
-        pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s' %(vonMises)]
+        pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
 
-        hexaMsg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s' %(vonMises)]
+        hexaMsg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
-        if 'CTETRA' in eTypes:
+        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
             isTetra = True
-        if 'CPENTA' in eTypes:
+        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
             isPenta = True
-        if 'CHEXA' in eTypes:
+        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
             isHexa = True
         
-        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8}
+        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
 
@@ -409,37 +409,40 @@ class solidStressObject(stressObject):
                 ovm = self.ovmShear[eid][nid]
                 p = (o1+o2+o3)/-3.
 
-                if nid=='C': nodeID='CENTER'
+                if nid=='C': nid='CENTER'
+                print "nid = |%r|" %(nid)
                 A = [[oxx,txy,txz],
                      [txy,oyy,tyz],
                      [txz,tyz,ozz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
                 msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
-                msgA += '0              %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
-                msgA += '0              %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
+                msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
+                msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
             ###
-            if eType=='CTETRA':
-                tetraMsg.append(msgA[:-1])
-            elif eType=='CPENTA':
-                pentaMsg.append(msgA[:-1])
-            elif eType=='CHEXA':
-                hexaMsg.append(msgA[:-1])
+            if eType=='CTETRA' or eType=='TETRA':
+                tetraMsg.append(msgA)
+            elif eType=='CPENTA' or eType=='PENTA':
+                pentaMsg.append(msgA)
+            elif eType=='CHEXA' or eType=='HEXA':
+                hexaMsg.append(msgA)
+            else:
+                raise NotImplementedError('eType=|%r|' %(eType))
             ###                
         ###
         msg = []
         if isTetra:
             msg += headers+tetraMsg
-            msg.append(pageStamp+str(pageNum))
+            msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isPenta:
             msg += headers+pentaMsg
-            msg.append(pageStamp+str(pageNum))
+            msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isHexa:
             msg += headers+hexaMsg
-            msg.append(pageStamp+str(pageNum))
-        return ('\n'.join(msg),pageNum)
+            msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
 
     def __repr__(self):
         if self.isTransient:
@@ -562,7 +565,7 @@ class solidStrainObject(strainObject):
                                Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
-        eMap = {'CTETRA':5,'CHEXA':9,'CPENTA':7}   # +1 for the centroid
+        eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
         if self.dt is None:
             pack = []
             i=0
@@ -844,28 +847,28 @@ class solidStrainObject(strainObject):
         else:
             vonMises = 'MAX SHEAR'
 
-        tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s' %(vonMises)]
+        tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
 
-        pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s' %(vonMises)]
+        pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
 
-        hexaMsg  = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s' %(vonMises)]
+        hexaMsg  = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
-        if 'CTETRA' in eTypes:
+        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
             isTetra = True
-        if 'CPENTA' in eTypes:
+        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
             isPenta = True
-        if 'CHEXA' in eTypes:
+        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
             isHexa = True
         
-        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8}
+        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
 
@@ -900,27 +903,29 @@ class solidStrainObject(strainObject):
                 msgA += '0              %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', eyy,eyz,e2,v[1,0],v[1,1],v[1,2])
                 msgA += '0              %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ezz,exz,e3,v[2,0],v[2,1],v[2,2])
             ###
-            if eType=='CTETRA':
-                tetraMsg.append(msgA[:-1])
-            elif eType=='CPENTA':
-                pentaMsg.append(msgA[:-1])
-            elif eType=='CHEXA':
-                hexaMsg.append(msgA[:-1])
-            ###                
+            if eType=='CTETRA' or eType=='TETRA':
+                tetraMsg.append(msgA)
+            elif eType=='CPENTA' or eType=='PENTA':
+                pentaMsg.append(msgA)
+            elif eType=='CHEXA' or eType=='HEXA':
+                hexaMsg.append(msgA)
+            else:
+                raise NotImplementedError('eType=|%r|' %(eType))
+            ###
         ###
         msg = []
         if isTetra:
             msg += headers+tetraMsg
-            msg.append(pageStamp+str(pageNum))
+            msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isPenta:
             msg += headers+pentaMsg
-            msg.append(pageStamp+str(pageNum))
+            msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isHexa:
             msg += headers+hexaMsg
-            msg.append(pageStamp+str(pageNum))
-        return ('\n'.join(msg),pageNum)
+            msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
 
     def __repr__(self):
         if self.isTransient:

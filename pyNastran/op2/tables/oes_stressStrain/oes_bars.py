@@ -261,9 +261,13 @@ class barStressObject(stressObject):
             s4   = self.s4[eid]
             smax = self.smax[eid]
             smin = self.smin[eid]
-            
-            msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s\n' %(eid,s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0],MSt))
-            msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s\n'   %('', s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1],MSc))
+            vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0],
+                    s1[1],s2[1],s3[1],s4[1],      smax[1],smin[1]]
+            (vals2,isAllZeros) = self.writeF06Floats(vals)
+            [s10,s20,s30,s40,axial,smax0,smin0,
+             s11,s21,s31,s41,smax1,smin1] = vals2
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' %(eid,  s10,s20,s30,s40,axial,smax0,smin0,MSt.rstrip()))
+            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n'   %('', s11,s21,s31,s41,'',   smax1,smin1,MSc.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
@@ -549,9 +553,14 @@ class barStrainObject(strainObject):
             e4   = self.e4[eid]
             emax = self.emax[eid]
             emin = self.emin[eid]
+            vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0],
+                    e1[1],e2[1],e3[1],e4[1],emax[1],emin[1]]
+            (vals2,isAllZeros) = self.writeF06Floats(vals)
+            [e10,e20,e30,e40,axial,emax0,emin0,
+             e11,e21,e31,e41,emax1,emin1] = vals2
             
-            msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s\n' %(eid,e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0],MSt))
-            msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s\n'   %('', e1[1],e2[1],e3[1],e4[1],'',   emax[1],emin[1],MSc))
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' %(eid,  e10,e20,e30,e40,axial,emax0,emin0,MSt.rstrip()))
+            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n'   %('', e11,e21,e31,e41,'',   emax1,emin1,MSc.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)

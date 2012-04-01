@@ -250,12 +250,12 @@ class compositePlateStressObject(stressObject):
             von   = 'MAX'
             mises = 'SHEAR'
 
-        words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s' %(von),
-                 '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s'  %(mises)]
+        words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' %(von),
+                 '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
 
         eTypes = self.eType.values()
         if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
-            quadMsg = header+['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )']+words
+            quadMsg = header+['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
             isQuad = True
         else:
             quadMsg = []
@@ -263,7 +263,7 @@ class compositePlateStressObject(stressObject):
 
         if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
             isTri = True
-            triMsg = header+['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )']+words
+            triMsg = header+['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n']+words
         else:
             isTri = False
             triMsg = []
@@ -282,27 +282,27 @@ class compositePlateStressObject(stressObject):
                 major = self.majorP[eid][iLayer]
                 minor = self.minorP[eid][iLayer]
                 ovm   = self.ovmShear[eid][iLayer]
-                
-                out += '0 %8s %4s  %12.5E %12.5E %12.5E   %12.5E %12.5E  %6.2F %12.5E %12.5E %12.5E\n' %(eid,iLayer+1,o11,o22,t12,t1z,t2z,angle,major,minor,ovm)
+                (vals2,isAllZeros) = self.writeF06Floats12E([o11,o22,t12,t1z,t2z,major,minor,ovm])
+                [o11,o22,t12,t1z,t2z,major,minor,ovm] = vals2
+                out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' %(eid,iLayer+1,o11,o22,t12,t1z,t2z,angle,major,minor,ovm)
 
             if eType in ['CQUAD4','QUAD4LC']:
-                quadMsg.append(out[:-1])
+                quadMsg.append(out)
             elif eType in ['CTRIA3','TRIA3LC']:
-                triMsg.append(out[:-1])
+                triMsg.append(out)
             else:
                 raise NotImplementedError('eType = |%r|' %(eType))
             ###
         ###
         if isQuad:
-            quadMsg.append(pageStamp+str(pageNum))
-            quadMsg.append('\n')
+            quadMsg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isTri:
-            triMsg.append(pageStamp+str(pageNum))
-            triMsg.append('\n')
+            triMsg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
 
-        msg = '\n'.join(quadMsg+triMsg)
-        return (msg,pageNum+1)
+        msg = ''.join(quadMsg+triMsg)
+        return (msg,pageNum)
 
     def __repr__(self):
         if self.isTransient:
@@ -540,12 +540,12 @@ class compositePlateStrainObject(strainObject):
             von   = 'MAX'
             mises = 'SHEAR'
 
-        words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s' %(von),
-                 '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s'  %(mises)]
+        words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' %(von),
+                 '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
 
         eTypes = self.eType.values()
         if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
-            quadMsg = header+['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )']+words
+            quadMsg = header+['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
             isQuad = True
         else:
             quadMsg = []
@@ -553,7 +553,7 @@ class compositePlateStrainObject(strainObject):
 
         if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
             isTri = True
-            triMsg = header+['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )']+words
+            triMsg = header+['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n']+words
         else:
             isTri = False
             triMsg = []
@@ -573,26 +573,27 @@ class compositePlateStrainObject(strainObject):
                 minor = self.minorP[eid][iLayer]
                 evm   = self.evmShear[eid][iLayer]
                 
-                out += '0 %8s %4s  %12.5E %12.5E %12.5E   %12.5E %12.5E  %6.2F %12.5E %12.5E %12.5E\n' %(eid,iLayer+1,e11,e22,e12,e1z,e2z,angle,major,minor,evm)
+                (vals2,isAllZeros) = self.writeF06Floats12E([e11,e22,e12,e1z,e2z,major,minor,evm])
+                [e11,e22,e12,e1z,e2z,major,minor,evm] = vals2
+                out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' %(eid,iLayer+1,e11,e22,e12,e1z,e2z,angle,major,minor,evm)
 
             if eType in ['CQUAD4','QUAD4LC']:
-                quadMsg.append(out[:-1])
+                quadMsg.append(out)
             elif eType in ['CTRIA3','TRIA3LC']:
-                triMsg.append(out[:-1])
+                triMsg.append(out)
             else:
                 raise NotImplementedError('eType = |%r|' %(eType))
             ###
         ###
         if isQuad:
-            quadMsg.append(pageStamp+str(pageNum))
-            quadMsg.append('\n')
+            quadMsg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isTri:
-            triMsg.append(pageStamp+str(pageNum))
-            triMsg.append('\n')
+            triMsg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
 
-        msg = '\n'.join(quadMsg+triMsg)
-        return (msg,pageNum+1)
+        msg = ''.join(quadMsg+triMsg)
+        return (msg,pageNum)
 
     def __repr__(self):
         if self.isTransient:

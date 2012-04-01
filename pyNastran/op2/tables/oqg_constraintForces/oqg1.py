@@ -164,7 +164,7 @@ class OQG1(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars8()
+        self.readScalarsOut(debug=False)
         #self.skipOES_Element()
 
     def readOQG1_Data_format2_sort0(self):
@@ -230,7 +230,7 @@ class OQG1(object):
         
         if self.obj and readCase:
             #print "objName = ",self.obj.name()
-            self.readScalars8()
+            self.readScalarsOut(debug=False)
         else:
             self.skipOES_Element()
         ###
