@@ -91,7 +91,11 @@ class SPOINTs(Node):
         Node.__init__(self,card,data)
         #nFields = card.nFields()
         
-        fields  = card.fields(1)
+        if card:
+            fields  = card.fields(1)
+        else:
+            fields = data
+
         self.spoints = self.expandThru(fields)
         #i = 0
         #while i<nFields: # =1 ???

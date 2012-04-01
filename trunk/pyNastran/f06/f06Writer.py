@@ -137,19 +137,24 @@ class F06Writer(object):
                     self.loadVectors,
                     ]
 
-        for resType in resTypes:
-            for iSubcase,result in sorted(resType.items()):
-                (subtitle,label) = self.iSubcaseNameMap[iSubcase]
-                header[0] = '     %s\n' %(subtitle)
-                header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-                try:
-                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
-                except:
-                    print "result name = %s" %(result.name())
-                    raise
-                f.write(msg)
-                pageNum +=1
-            ###
+        iSubcases = self.iSubcaseNameMap.keys()
+        for iSubcase in iSubcases:
+            (subtitle,label) = self.iSubcaseNameMap[iSubcase]
+            subtitle = subtitle.strip()
+            label = label.strip()
+            header[0] = '     %s\n' %(subtitle)
+            header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
+            for resType in resTypes:
+                if resType.has_key(iSubcase):
+                    result = resType[iSubcase]
+                    try:
+                        (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+                    except:
+                        print "result name = %s" %(result.name())
+                        raise
+                    f.write(msg)
+                    pageNum +=1
+                ###
         ###
 
         f.write(makeEnd())

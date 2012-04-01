@@ -9,6 +9,7 @@ from pyNastran.bdf.cards.bars.elementsBars import CROD,CBAR,CTUBE,CONROD,CBEAM
 from pyNastran.bdf.cards.mass.elementsMass import CONM1,CONM2,CMASS1,CMASS2,CMASS3,CMASS4
 from pyNastran.bdf.cards.elementsSolid     import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
 from pyNastran.bdf.cards.thermal.thermal   import CHBDYG,CHBDYP
+from pyNastran.bdf.cards.nodes             import SPOINTs
 
 class Geometry2(object):
     def readTable_Geom2(self):
@@ -66,7 +67,7 @@ class Geometry2(object):
                            (3701,37,49):     self.readCTUBE,    # record 103
                            (3901,39, 50):     self.readCVISC,   # record 104 - not done
                           #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
-                          #(5551,49,105):    self.readSPOINT,   # record 118 - not done
+                           (5551,49,105):    self.readSPOINT,   # record 118
                           #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
                           #(2608, 26, 60)
                          }
@@ -123,8 +124,6 @@ class Geometry2(object):
         CBARAO(4001,40,275) - the marker for Record 9
         """
         self.skippedCardsFile.write('skipping CBARAO in GEOM2\n')
-        pass
-
 
     def readCBEAM(self,data):
         """
@@ -917,16 +916,13 @@ class Geometry2(object):
     def readSPOINT(self,data):
         """
         (5551,49,105)    - the marker for Record 118
-        @todo create object
         """
-        self.skippedCardsFile.write('skipping SPOINT in GEOM2\n')
-        #print "reading SPOINT"
         while len(data)>=4: # 4*4
             eData = data[:4]
             data  = data[4:]
             (nid) = unpack('i',eData)
-            #node = SPOINT(None,[nid])
-            #self.addNode(node)
+            spoint = SPOINTs(None,[nid])
+            self.addSPoint(spoint)
         ###
 
 # VUBEAM
