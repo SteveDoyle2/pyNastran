@@ -1,17 +1,12 @@
-***F06 Only***
-Real Eigenvector No.						done
-Real Eigenvalues						done
-Complex Eigenvalue Summary					done
-
-***OEF***
+****OEF - forces****
 Finite Element Temperature Gradients And Fluxes
 
-***OQG***
+****OQG - constraint forces****
 Forces Of Single-Point Constraint				needs object
 Forces Of Multi-Point  Constraint				needs object
 
 
-***OES***
+****OES - stress/strain****
 Stresses In Bar Elements(CBAR)					done
 Stresses In Rod Elements(CROD)					done
 
@@ -35,19 +30,25 @@ Strains In Hexahedron  Solid Elements(HEXA)			done
 Strains In Pentahedron Solid Elements(PENTA)			done
 
 
-***OUG***
+****LAMA - eigenvalues****
+Real Eigenvalues						done
+Complex Eigenvalue Summary					done
+
+****OUG****
 Displacement Vector						done
+Real Eigenvector No.						done
 Complex Displacement Vector					done
 Temperature Vector						done
 
-
-***ONR****
+***OEE - energy****
 Element Strain Energies						???
 
-****???****
+****OGP - grid point force balance****
 Grid Point Force Balance					???
 
-***not supported***
+***OPG - applied loads****
+
+****not supported****
 Nastran File And System Parameter Echo
 Nastran Executive Control Echo
 Case Control Echo

@@ -15,12 +15,12 @@ from oes_plates import plateStressObject,plateStrainObject
 from oes_compositePlates import compositePlateStressObject,compositePlateStrainObject
 from oes_springs   import celasStressObject,celasStrainObject
 from oes_nonlinear import nonlinearRodObject,nonlinearQuadObject,hyperelasticQuadObject
+from oes_triax import ctriaxStressObject
 
 class OES(ElementsStressStrain):
     """Table of stresses/strains"""
 
     def readTable_OES1(self):
-        #self.tableName = 'OES'
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
         self.dtMap = {}
@@ -385,11 +385,12 @@ class OES(ElementsStressStrain):
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_33()
 
-        #elif self.elementType==53: # ctriax6
-            #self.dataCode['elementName'] = 'CTRIAX6'
-            #self.makeOES_Object(self.plateStress,plateStressObject,
-            #                    self.plateStrain,plateStrainObject)
-            #self.CTRIAX6_53()
+        elif self.elementType==53: # ctriax6
+            self.dataCode['elementName'] = 'CTRIAX6'
+            #print self.codeInformation()
+            self.makeOES_Object(self.ctriaxStress,ctriaxStressObject,
+                                self.ctriaxStrain,ctriaxStressObject)
+            self.CTRIAX6_53()
 
         elif self.elementType==74:  # ctria
             self.dataCode['elementName'] = 'CTRIA3'

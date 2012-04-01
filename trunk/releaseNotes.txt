@@ -70,7 +70,8 @@ Added BDF
 OP2 API Changes
 OP2 Bug Fixes
 Overall OP2
-   - supporting F06 reader/writer
+   - more results
+   - integrates with F06 Writer
    - more embedded BDF reading
    - added setTransientTimes(times) to explictly extract results at desired times
      - OUG
@@ -81,12 +82,12 @@ Overall OP2
 Added OP2
    - SPC Forces (static/transient)
    - MPC Forces (static/transient)
-   - grid point forces (static/***transient)
+   - grid point forces (static/transient)
    - stress/strain
-        - ***CTRIAX6
-   - hyperelastic stress/strain
+        - CTRIAX6 (static/transient)
+   - hyperelastic stress/strain (transient)
         - CQUAD4
-   - nonlinear strain
+   - nonlinear strain (transient)
         - CTRIA3, CQUAD4
         - CROD, CONROD, CTUBE
         - ***CBEAM
@@ -125,7 +126,10 @@ Added F06 Reader
    - eigenvectors (real/complex)
 
 Added F06 Writer
-   - displacement (static/***transient)
+   - displacement (static/transient)
+   - velocity     (static/***transient)
+   - acceleration (static/***transient)
+
    - temperature  (static/transient)
 
    - solid stress/strain (static/***transient);  (directional vectors & pressure calculated)
@@ -146,6 +150,7 @@ Added F06 Writer
 
    - ***eigenvalues  (real/complex)
    - eigenvectors (real/***complex)
+   - grid point force balance (static/***transient)
 
 Overall GUI
 Added GUI

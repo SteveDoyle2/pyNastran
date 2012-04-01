@@ -423,35 +423,69 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
+    #def extractDt(self):
+    #    pass
+    #def extractInt(self):
+    #    return 'i',self.scaleEid
+    #def extractFloat(self):
+    #    return 'f',self.scaleDt
+    #def scaleEid(self,eid):
+    #    return (eid-self.deviceCode)//10
+    #def scaleDt(self,dt):
+    #    return dt
+
+    def OES_field1(self):
+        if self.isSort1():
+            #raise NotImplementedError('SORT1 is not supported')
+            return 'i',self.scaleEid
+        elif self.isSort2():
+            if self.analysisCode in [1,2,3,4,7,8,9,11,12]: # eid
+                return 'i',self.scaleEid
+            elif self.analysisCode==5: # freq
+                #freq
+                return 'f',self.scaleDt
+                #raise NotImplementedError('freq is not supported')
+            elif self.analysisCode==6: # time
+                #time
+                return 'f',self.scaleDt
+                #raise NotImplementedError('time is not supported')
+            elif self.analysisCode==10: # fqts:
+                #fqts # freqTime
+                return 'f',self.scaleDt
+                #raise NotImplementedError('freqTime is not supported')
+            else:
+                raise NotImplementedError('invalid SORT2 analysisCode=%s' %(self.analysisCode))
+            ###
+        else:
+            raise NotImplementedError('invalid SORTx code')
+        ###
+
     def CTRIAX6_53(self):
-        #print "len(data) = %s" %(len(self.data))
-        v1 = len(self.data)
+        (Format1,scaleValue) = self.OES_field1()
+        Format = Format1+'ifffffff'
         while len(self.data)>=132: # (1+8*4) = 33*4 = 132
             eData     = self.data[0:4*9]
             self.data = self.data[4*9: ]
-            out = unpack('iifffffff',eData)
+            out = unpack(Format,eData)
             (eid,loc,rs,azs,As,ss,maxp,tmax,octs) = out
-            eid = (eid-self.deviceCode)//10
-            print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-            #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+            eid = scaleValue(eid)
+            #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+            self.obj.addNewEid(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
 
             for i in range(3):
                 eData     = self.data[0:4*8]
                 self.data = self.data[4*8: ]
                 out = unpack('ifffffff',eData)
                 (loc,rs,azs,As,ss,maxp,tmax,octs) = out
-                print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-                #self.obj.add(self.elementType,data)
-            v2 = len(self.data)
-            #print "delta = %s" %(v1-v2)
-            #sys.exit()
+                #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                self.obj.add(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
         self.handleResultsBuffer(self.CTRIAX6_53)
 
     def RODNL_89_92(self):
-        #print "len(data) = %s" %(len(self.data))
         while len(self.data)>=28:
             eData     = self.data[0:4*7]
             self.data = self.data[4*7: ]
@@ -473,7 +507,6 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.RODNL_89_92)
 
     def CQUAD4NL_90(self):
-        print "len(data) = %s" %(len(self.data))
         print "self.numWide = ",self.numWide
         
         deviceCode = self.deviceCode
@@ -639,8 +672,6 @@ class ElementsStressStrain(object):
         #self.printSection(20)
         #term = data[0:4] CEN/
         #data = data[4:]
-        #print "*****"
-        #self.printBlock(self.data)
         assert self.numWide==11,'invalid numWide...numWide=%s' %(self.numWide)
 
         while len(self.data)>=44: # 2+17*5 = 87 -> 87*4 = 348
@@ -672,8 +703,6 @@ class ElementsStressStrain(object):
         Hyperelastic Quad
         36+4*7*4 = 148
         """
-        #print "len(data) = %s" %(len(self.data))
-        
         #x = 0
         while len(self.data)>=148:
             #if x==2:

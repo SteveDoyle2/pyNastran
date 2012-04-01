@@ -251,11 +251,20 @@ class accelerationObject(scalarObject): # approachCode=11, sortCode=0, thermal=0
 
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
-            msg.append('%14i %6s     %13E  %13E  %13E  %13E  %13E  %13E' %(nodeID,gridType,dx,dy,dz,rx,ry,rz))
+            vals = [dx,dy,dz,rx,ry,rz]
+            vals2 = []
+            for v in vals:
+                v2 = '%13E' %(v)
+                if   v2==' 0.000000E+00':
+                    v2 = ' 0.0         '
+                vals2.append(v2)
+            [dx,dy,dz,rx,ry,rz] = vals2
+            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum))
         msg.append('\n')
         return ('\n'.join(msg),pageNum)
+
     def __repr__(self):
         if self.dt is not None:
             return self.__reprTransient__()

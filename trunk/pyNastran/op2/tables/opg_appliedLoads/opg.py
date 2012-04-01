@@ -13,7 +13,6 @@ from opg_Objects import appliedLoadsObject
 class OPG(object):
     """Table of element forces"""
     def readTable_OPG1(self):
-        self.tableName = 'OPG'
         table3     = self.readTable_OPG_3
         table4Data = self.readOPG1_Data
         self.dtMap = {}
@@ -96,7 +95,7 @@ class OPG(object):
         
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        #print self.codeInformation()
+        print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
@@ -149,7 +148,6 @@ class OPG(object):
         # OGS - Grid point stress discontinuities (plane strain)
         #elif tfsCode==[35,1,0]:
         #    self.readOPG1_Data_format1_sort0()
-        
 
         # OFMPF2M - does this belong here?
         #elif tfsCode==[51,3,3]:
@@ -171,30 +169,30 @@ class OPG(object):
         #elif tfsCode==[55,3,3]:
         #    self.readOPG1_Data_format3_sort3()
         else:
-            #raise Exception('bad tableCode/formatCode/sortCode=%s on OPG table' %(self.atfsCode))
-            #print 'bad tableCode/formatCode/sortCode=%s on OPG table' %(self.atfsCode)
+            #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
+            print 'bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
             self.skipOES_Element()
         ###
         #print self.obj
 
     def readOPG1_Data_format1_sort1(self):
-        print 'not supported OPG solution...atfsCode=%s' %(self.atfsCode)
+        print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
         self.skipOES_Element()
 
     def readOPG1_Data_format2_sort1(self):
-        print 'not supported OPG solution...atfsCode=%s' %(self.atfsCode)
+        print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
         self.skipOES_Element()
 
     def readOPG1_Data_format3_sort0(self):
-        print 'not supported OPG solution...atfsCode=%s' %(self.atfsCode)
+        print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         self.skipOES_Element()
 
     def readOPG1_Data_format3_sort1(self):
-        print 'not supported OPG solution...atfsCode=%s' %(self.atfsCode)
+        print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         self.skipOES_Element()
 
     def readOPG1_Data_format3_sort3(self):
-        print 'not supported OPG solution...atfsCode=%s' %(self.atfsCode)
+        print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         self.skipOES_Element()
 
     def readOPG1_Data_format1_sort0(self):
@@ -206,7 +204,7 @@ class OPG(object):
                 self.readOPGForces(self.data,self.obj)
             else:
                 self.skipOES_Element()
-                #print 'not supported OPG solution...atfsCode=%s' %(self.atfsCode)
+                #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
                 #raise Exception('not supported OPG solution...')
             ###
         elif self.thermal==1:
