@@ -265,8 +265,7 @@ class barStressObject(stressObject):
             msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s\n' %(eid,s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0],MSt))
             msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s\n'   %('', s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1],MSc))
         ###
-        msg.append(pageStamp+str(pageNum))
-        msg.append('')
+        msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
         
     def __repr__(self):
@@ -554,8 +553,7 @@ class barStrainObject(strainObject):
             msg.append('0%8i  %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %14.6E %s\n' %(eid,e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0],MSt))
             msg.append(' %8s  %14.6E %14.6E %14.6E %14.6E %14s %14.6E %14.6E %s\n'   %('', e1[1],e2[1],e3[1],e4[1],'',   emax[1],emin[1],MSc))
         ###
-        msg.append(pageStamp+str(pageNum))
-        msg.append('')
+        msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
 
     def __repr__(self):

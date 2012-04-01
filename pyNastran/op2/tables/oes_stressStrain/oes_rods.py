@@ -223,9 +223,9 @@ class rodStressObject(stressObject):
         if self.isTransient:
             raise NotImplementedError()
 
-        msg = header+['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )',
-                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY',
-                 '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN']
+        msg = header+['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
+                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
+                 '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         out = []
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
@@ -240,14 +240,13 @@ class rodStressObject(stressObject):
             #print out[i]
             #print out[i+1]
             #print "-----"
-            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E   %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[i]+out[i+1]))
+            outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         
         if nOut%2==1:
-            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[-1]))
+            outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[-1]))
             msg.append(outLine)
-        msg.append(pageStamp+str(pageNum))
-        msg.append('')
+        msg.append(pageStamp+str(pageNum)+'\n')
         return('\n'.join(msg),pageNum)
 
     def __repr__(self):
@@ -494,9 +493,9 @@ class rodStrainObject(strainObject):
         if self.isTransient:
             raise NotImplementedError()
 
-        msg = header+['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )',
-                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY',
-                 '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN']
+        msg = header+['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
+                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
+                 '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         out = []
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
@@ -507,15 +506,14 @@ class rodStrainObject(strainObject):
         
         nOut = len(out)
         for i in range(0,nOut,2):
-            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E   %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[i]+out[i+1]))
+            outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         
         if nOut%2==1:
-            outLine = '      %8i    %12.6E  %10.4E  %12.6E  %10.4E' %(tuple(out[-1]))
+            outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[-1]))
             msg.append(outLine)
-        msg.append(pageStamp+str(pageNum))
-        msg.append('')
-        return('\n'.join(msg),pageNum)
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return(''.join(msg),pageNum)
 
     def __repr__(self):
         if   self.isTransient and self.code==[1,0,10]:

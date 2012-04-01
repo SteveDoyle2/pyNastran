@@ -10,14 +10,12 @@ class Geometry3(object):
 
     def readTable_Geom3(self):
         self.iTableMap = {
-                         (4201,42,18): self.readFORCE,    # record 3
-                         (4001,40,20): self.readFORCE1,   # record 4
-                         (4101,41,22): self.readFORCE2,   # record 5
-                         (4401,44,26): self.readGRAV,     # record 7 - buggy
-                         (4551,61,84): self.readLOAD,     # record 8
+                         (4201,42,18):  self.readFORCE,   # record 3
+                         (4001,40,20):  self.readFORCE1,  # record 4
+                         (4101,41,22):  self.readFORCE2,  # record 5
+                         (4401,44,26):  self.readGRAV,    # record 7 - buggy
+                         (4551,61,84):  self.readLOAD,    # record 8
                          (3709,37,331): self.readLOADCYH, # record 9 - not done
-
-                         
                          (3609,36,188): self.readLSEQ,    # record 12 - not done
                          (4801,48,19):  self.readMOMENT,  # record 13 - not tested
                          (4601,46,21):  self.readMOMENT1, # record 14 - not tested
@@ -33,8 +31,8 @@ class Geometry3(object):
                          (2109,21,414): self.readQBDY3,   # record 26
                          (5509,55,190): self.readRFORCE,  # record 30 - not done
                          (5401,54,25):  self.readSLOAD,   # record 31 - not done
-                        #(5641,65,98):  self.readTEMP,    # record 32 - buggy
-                         (5701,57,27):  self.readTEMPD,   # record 33
+                         (5701,57,27):  self.readTEMP,    # record 32
+                         (5641,65,98):  self.readTEMPD,   # record 33
                          (8409,84,204): self.readTEMPRB,  # record 40 - not done
                          (8109,81,201): self.readTEMPP1,  # record 37 - not done
                          (8209,82,202): self.readTEMPP2,  # record 38 - not done
@@ -297,7 +295,7 @@ class Geometry3(object):
 # PLOADX - obsolete
 
     def readPLOADX1(self,data):
-        pass
+        self.skippedCardsFile.write('skipping PLOADX1 in GEOM3\n')
 
 # PRESAX
 
