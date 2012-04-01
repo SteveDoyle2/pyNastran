@@ -1,9 +1,47 @@
-"""
-Based on cython_wrapper.pyx from https://gist.github.com/1249305 
-by Gael Varoquaux
+# Copyright (C) 1999-2012  Al Danial <al.danial@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+""" 
+Load matrices from NASTRAN Output 4 (.op4) files.
+Example:
+
+  >>> fh = op4.File('sol103.op4', 'r')
+
+    Creates a read object associated with the file sol103.op4.
+
+  >>> fh.nmat
+
+    Returns the number of matrices contained in the file.
+
+  >>> fh.print_headers()
+
+    Prints detailed information on the matrices stored in the file.
+
+  >>> K, M = fh.Load(skip=1, nmat=2)
+
+    Loads the second and third matrices from the file sol103.op4 into K and M.
+
+Limitations (these will be resolved in future releases):
+    1. only handles dense matrices in text and binary op4 files
+    2. unable to byte-swap files created on a different-endian machine
+    3. unable to save Python arrays to new op4 files
 """
 
-# prototypes of the C function we are interested in calling
+# Early version of op4.pyx was based on cython_wrapper.pyx from
+# https://gist.github.com/1249305 by Gael Varoquaux
 
 cdef extern from "stdio.h":
     cdef int SEEK_SET = 0
@@ -247,271 +285,261 @@ cdef class ArrayWrapper_CD:                                # {{{1
         references to the object are gone. """
         free(<void*>self.data_ptr)
 # 1}}}
-def print_header(op4_handle, index=None):                  # {{{1 
+class File:                                                # {{{1
     type_map = { 1 : 'RS' ,   # real    single precision
                  2 : 'RD' ,   # real    double precision
                  3 : 'CS' ,   # complex single precision
                  4 : 'CD' ,}  # complex double precision
+    def __init__(self          ,                # {{{2
+                 char *filename,
+                 char *mode    ):
+        cdef int  Max_Matrices_Per_OP4 = 100
+        cdef int  nmat_in_file
+#       cdef char name[Max_Matrices_Per_OP4][9]   # not allowed
+        cdef char name[100][9]
+        cdef int  storage[100]
+        cdef int  nRow[100]   
+        cdef int  nCol[100]   
+        cdef int  nStr[100]   
+        cdef int  nNnz[100]   
+        cdef int  Type[100]   
+        cdef int  form[100]   
+        cdef int  digits[100]
+        cdef long offset[100]
+#       print('op4.File got [%s], [%c]' % (filename, mode))
+        if not os.path.exists(filename):
+            print('op4.File: no such file %s' % (filename))
+            raise IOError
+        elif not os.path.isfile(filename):
+            print('op4.File: not a file %s' % (filename))
+            raise IOError
+        self.filename = filename
+        # Scan the file for number of matrices and headers for each matrix.
+        try:
+            rv = op4_scan(filename , # in                            
+                     &nmat_in_file, # out number of matrices        
+                      name         , # out matrix names              
+                      storage      , # out 0=dn; 1=sp1; 2=sp2        
+                      nRow         , # out number of rows            
+                      nCol         , # out number of columns         
+                      nStr         , # out number of strings         
+                      nNnz         , # out number of nonzero terms   
+                      Type         , # out 1=RS; 2=RD; 3=CS; 4=CD    
+                      form         , # out matrix form 6=symm, etc   
+                      digits       , # out size of mantissa          
+                      offset)        # out byte offset to matrix     
 
-    def print_instance(op4_handle, i):
+            if nmat_in_file > Max_Matrices_Per_OP4:
+                print('op4.File: too many matrices in %s' % (filename))
+                raise IOError
+
+            self.nmat      = nmat_in_file
+            self.name      = []
+            self.storage   = []
+            self.nrow      = []
+            self.ncol      = []
+            self.nstr      = []
+            self.nnz       = []
+            self.type      = []
+            self.form      = []
+            self.digits    = []
+            self.offset    = []
+            for i in range(nmat_in_file):
+                self.name.append(    name[i]    )
+                self.storage.append( storage[i] )
+                self.nrow.append(    nRow[i]    )
+                self.ncol.append(    nCol[i]    )
+                self.nstr.append(    nStr[i]    )
+                self.nnz.append(     nNnz[i]    )
+                self.type.append(    Type[i]    )
+                self.form.append(    form[i]    )
+                self.digits.append(  digits[i]  )
+                self.offset.append(  offset[i]  )
+        except:
+            print('op4.File: failed to scan %s' % (filename))
+            raise IOError
+    # 2}}}
+    def print_instance(self, i):                # {{{2 
         print('%2d. %-8s %5d %5d %8d %8d %2s %2d %2d %9d' % (
                i+1          ,
-               op4_handle['name'][i],
-               op4_handle['nRow'][i],
-               op4_handle['nCol'][i],
-               op4_handle['nStr'][i],
-               op4_handle['nNnz'][i],
-               type_map[op4_handle['type'][i]],
-               op4_handle['form'][i],
-               op4_handle['digits'][i],
-               op4_handle['offset'][i],))
+               self.name[i],
+               self.nrow[i],
+               self.ncol[i],
+               self.nstr[i],
+               self.nnz[i],
+               self.type_map[self.type[i]],
+               self.form[i],
+               self.digits[i],
+               self.offset[i],))
+    # 2}}}
+    def print_header(self, index=None):         # {{{2 
 
-    print('    %-8s %5s %5s %8s %8s %2s %2s %2s %9s' % (
-          'Name', 'nRow', 'nCol', 'nStr', 'nNnz', 'T', 'Fr', 'Dg', 'Offset'))
-    if index is None:
-        for i in range(op4_handle['nMat']):
-            print_instance(op4_handle, i)
-    else:
-        print_instance(op4_handle, index)
-# 1}}}
-def File(char *filename,                                   # {{{1
-         char *mode    ):
-    cdef int  Max_Matrices_Per_OP4 = 100
-    cdef int  nmat_in_file
-#   cdef char name[Max_Matrices_Per_OP4][9]   # not allowed
-    cdef char name[100][9]
-    cdef int  storage[100]
-    cdef int  nRow[100]   
-    cdef int  nCol[100]   
-    cdef int  nStr[100]   
-    cdef int  nNnz[100]   
-    cdef int  Type[100]   
-    cdef int  form[100]   
-    cdef int  digits[100]
-    cdef long offset[100]
-#   print('op4.File got [%s], [%c]' % (filename, mode))
-    if not os.path.exists(filename):
-        print('op4.File: no such file %s' % (filename))
-        raise IOError
-    elif not os.path.isfile(filename):
-        print('op4.File: not a file %s' % (filename))
-        raise IOError
-    fh = { 'File' : filename }
-    # Scan the file for number of matrices and headers for each matrix.
-    try:
-        rv = op4_scan(filename , # in                            
-                 &nmat_in_file, # out number of matrices        
-                  name         , # out matrix names              
-                  storage      , # out 0=dn; 1=sp1; 2=sp2        
-                  nRow         , # out number of rows            
-                  nCol         , # out number of columns         
-                  nStr         , # out number of strings         
-                  nNnz         , # out number of nonzero terms   
-                  Type         , # out 1=RS; 2=RD; 3=CS; 4=CD    
-                  form         , # out matrix form 6=symm, etc   
-                  digits       , # out size of mantissa          
-                  offset)        # out byte offset to matrix     
+        print('    %-8s %5s %5s %8s %8s %2s %2s %2s %9s' % (
+              'Name', 'nRow', 'nCol', 'nStr', 'nNnz', 'T', 'Fr', 'Dg', 'Offset'))
+        if index is None:
+            for i in range(self.nmat):
+                self.print_instance(i)
+        else:
+            self.print_instance(index)
+    # 2}}}
+    def Load(self ,                             # {{{2
+             int nmat=1 ,  # in, number of matrices to return
+             int skip=0):  # in, number of matrices to skip before loading
+        cdef FILE   *fp
+        cdef char    line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
+        cdef int     size
+        cdef int     filetype
+        cdef int    *unused
+        cdef str_t  *unused_s
+        cdef float  *array_RS
+        cdef float  *array_CS
+        cdef double *array_RD
+        cdef double *array_CD
+        cdef np.ndarray ndarray
+        All_Matrices = []
 
-        if nmat_in_file > Max_Matrices_Per_OP4:
-            print('op4.File: too many matrices in %s' % (filename))
+        if nmat < 1 or \
+           nmat > len(self.digits):
+            print('op4.Load: 1 <= nmat <= %d' % (len(self.digits)))
             raise IOError
 
-        fh['nMat']    = nmat_in_file
-        fh['name']    = []
-        fh['storage'] = []
-        fh['nRow']    = []
-        fh['nCol']    = []
-        fh['nStr']    = []
-        fh['nNnz']    = []
-        fh['type']    = []
-        fh['form']    = []
-        fh['digits']  = []
-        fh['offset']  = []
-        for i in range(nmat_in_file):
-            fh['name'].append(    name[i]    )
-            fh['storage'].append( storage[i] )
-            fh['nRow'].append(    nRow[i]    )
-            fh['nCol'].append(    nCol[i]    )
-            fh['nStr'].append(    nStr[i]    )
-            fh['nNnz'].append(    nNnz[i]    )
-            fh['type'].append(    Type[i]    )
-            fh['form'].append(    form[i]    )
-            fh['digits'].append(  digits[i]  )
-            fh['offset'].append(  offset[i]  )
-    except:
-        print('op4.File: failed to scan %s' % (filename))
-        raise IOError
+        if skip < 0 or \
+           skip > len(self.digits)-1:
+            print('op4.Load: 0 <= skip <= %d' % (len(self.digits) - 1))
+            raise IOError
 
-    return fh
-# 1}}}
-def Load(op4_handle ,  # in, as created by File()            {{{1
-         int nmat=1 ,  # in, number of matrices to return
-         int skip=0):  # in, number of matrices to skip before loading
-    cdef FILE   *fp
-    cdef char    line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
-    cdef int     size
-    cdef int     filetype
-    cdef int    *unused
-    cdef str_t  *unused_s
-    cdef float  *array_RS
-    cdef float  *array_CS
-    cdef double *array_RD
-    cdef double *array_CD
-    cdef np.ndarray ndarray
-    All_Matrices = []
-    """ 
-    Skip over the first skip matrices then load nmat matrices from the 
-    previously opened op4 file.  For example,
+        filetype = op4_filetype(self.filename)
+        if False: # set to True for debug output
+            print('Will return %d matrices after skipping %d' % (nmat, skip))
+            print('File type of %s is %d' % (self.filename, filetype))
+            for i in range(nmat):
+                offset = i + skip
+                print_header(self, index=offset)
+                print('Fetching %d. %-8s  %5d x %5d from %s' % (
+                        offset + 1, 
+                        self.name[offset],
+                        self.nrow[offset],
+                        self.ncol[offset], 
+                        self.filename))
 
-      fh   = op4.File('sol103.op4', 'r')
-      K, M = op4.Load(fh, nmat=2)
+#       print('Attempting file open of %s' % (self.filename))
+        fp = op4_open_r(self.filename, 0)
+        if fp == NULL:
+            print('unable to open %s' % (self.filename))
+            raise IOError
 
-    loads the first two matrices from the file sol103.op4 into K and M.
-    """
-    if nmat < 1 or \
-       nmat > len(op4_handle['digits']):
-        print('op4.Load: 1 <= nmat <= %d' % (len(op4_handle['digits'])))
-        raise IOError
+        # print(' open successful')
+        for i in range(skip, skip+nmat):
+            complx = False
+            if self.type[i] > 2: complx = True
+            # print('%s complx=%d' % (self.name[i], complx))
+            if self.storage[i]:
+                print('%s is sparse, skipping for now' % (self.name[i]))
+            else:
+                # now read the file contents
+                fseek(fp, self.offset[i], SEEK_SET)
+                if filetype == 1: # text
+                    fgets(line, OP4_TXT_LINE_SIZE, fp)   # skip the header line
+                    # create the scanf format string
+                    col_width = self.digits[i] + 7
+                    fmt_one   = '%%%dle' % col_width
+                    nNum_cols = 80 // col_width
+                    fmt_str   = fmt_one*nNum_cols
+                    # print('fmt_str=[%s]' % (fmt_str))
+                else: # binary
+                    col_width = 0
+                    fmt_str   = ''
 
-    if skip < 0 or \
-       skip > len(op4_handle['digits'])-1:
-        print('op4.Load: 0 <= skip <= %d' % (len(op4_handle['digits']) - 1))
-        raise IOError
+                if self.storage[i]:     # sparse
+                    pass
+                else:                            # dense
+                    size = self.nrow[i] * self.ncol[i]
+                    if   self.type[i] == 1: 
+                        array_RS = op4_load_S(fp        ,
+                                              filetype  , # 1 = text
+                                              self.nrow[i], 
+                                              self.ncol[i], 
+                                              fmt_str   , 
+                                              col_width ,
+                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
 
-    filetype = op4_filetype(op4_handle['File'])
-    if False: # set to True for debug output
-        print('Will return %d matrices after skipping %d' % (nmat, skip))
-        print('File type of %s is %d' % (op4_handle['File'], filetype))
-        for i in range(nmat):
-            offset = i + skip
-            print_header(op4_handle, index=offset)
-            print('Fetching %d. %-8s  %5d x %5d from %s' % (
-                    offset + 1, 
-                    op4_handle['name'][offset],
-                    op4_handle['nRow'][offset],
-                    op4_handle['nCol'][offset], 
-                    op4_handle['File']))
+                        array_wrapper_RS = ArrayWrapper_RS()
+                        array_wrapper_RS.set_data(size, <void*> array_RS) 
+                        ndarray = np.array(array_wrapper_RS, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_RS
+                        Py_INCREF(array_wrapper_RS)
 
+                    elif self.type[i] == 2: 
+                        array_RD = op4_load_D(fp        ,
+                                              filetype  , # 1 = text
+                                              self.nrow[i], 
+                                              self.ncol[i], 
+                                              fmt_str   ,
+                                              col_width ,
+                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
+                        array_wrapper_RD = ArrayWrapper_RD()
+                        array_wrapper_RD.set_data(size, <void*> array_RD) 
+                        ndarray = np.array(array_wrapper_RD, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_RD
+                        Py_INCREF(array_wrapper_RD)
 
-#   if os.path.basename(op4_handle['File']) != 'mat_t_dn.op4': return
+                    elif self.type[i] == 3: 
+                        array_CS = op4_load_S(fp        ,
+                                              filetype  , # 1 = text
+                                              self.nrow[i], 
+                                              self.ncol[i], 
+                                              fmt_str   ,
+                                              col_width ,
+                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
+                        array_wrapper_CS = ArrayWrapper_CS()
+                        array_wrapper_CS.set_data(size, <void*> array_CS) 
+                        ndarray = np.array(array_wrapper_CS, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_CS
+                        Py_INCREF(array_wrapper_CS)
 
-    # print('Attempting file open of %s' % (op4_handle['File']))
-    fp = op4_open_r(op4_handle['File'], 0)
-    if fp == NULL:
-        print('unable to open %s' % (op4_handle['File']))
-        raise IOError
+                    elif self.type[i] == 4: 
+                        array_CD = op4_load_D(fp        ,
+                                              filetype  , # 1 = text
+                                              self.nrow[i], 
+                                              self.ncol[i], 
+                                              fmt_str   ,
+                                              col_width ,
+                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                              complx    , # in  0=real   1=complex     
+                                              unused    , # in/out index m.S (if sp1,2)
+                                              unused_s  , # out string data (if sp1,2) 
+                                              unused    ) # in/out index m.N (sp 1,2)  
+                        array_wrapper_CD = ArrayWrapper_CD()
+                        array_wrapper_CD.set_data(size, <void*> array_CD) 
+                        ndarray = np.array(array_wrapper_CD, copy=False)
+                        ndarray.base = <PyObject*> array_wrapper_CD
+                        Py_INCREF(array_wrapper_CD)
 
-    # print(' open successful')
-    for i in range(skip, skip+nmat):
-        complx = False
-        if op4_handle['type'][i] > 2: complx = True
-        # print('%s complx=%d' % (op4_handle['name'][i], complx))
-        if op4_handle['storage'][i]:
-            print('%s is sparse, skipping for now' % (op4_handle['name'][i]))
+                    else:
+                        print('op4.Load type failure  %s: %d' % (
+                            self.name[i], self.type[i]))
+                        raise IOError
+
+                    ndarray = np.reshape(ndarray, (self.ncol[i], self.nrow[i])).T
+
+                    All_Matrices.append(ndarray)
+
+        if len(All_Matrices) == 1:
+            return All_Matrices[0]
         else:
-            # now read the file contents
-            fseek(fp, op4_handle['offset'][i], SEEK_SET)
-            if filetype == 1: # text
-                fgets(line, OP4_TXT_LINE_SIZE, fp)   # skip the header line
-                # create the scanf format string
-                col_width = op4_handle['digits'][i] + 7
-                fmt_one   = '%%%dle' % col_width
-                nNum_cols = 80 // col_width
-                fmt_str   = fmt_one*nNum_cols
-                # print('fmt_str=[%s]' % (fmt_str))
-            else: # binary
-                col_width = 0
-                fmt_str   = ''
+            return All_Matrices
 
-            if op4_handle['storage'][i]:     # sparse
-                pass
-            else:                            # dense
-                size = op4_handle['nRow'][i] * op4_handle['nCol'][i]
-                if   op4_handle['type'][i] == 1: 
-                    array_RS = op4_load_S(fp        ,
-                                          filetype  , # 1 = text
-                                          op4_handle['nRow'][i], 
-                                          op4_handle['nCol'][i], 
-                                          fmt_str   , 
-                                          col_width ,
-                                          op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                          complx    , # in  0=real   1=complex     
-                                          unused    , # in/out index m.S (if sp1,2)
-                                          unused_s  , # out string data (if sp1,2) 
-                                          unused    ) # in/out index m.N (sp 1,2)  
-
-                    array_wrapper_RS = ArrayWrapper_RS()
-                    array_wrapper_RS.set_data(size, <void*> array_RS) 
-                    ndarray = np.array(array_wrapper_RS, copy=False)
-                    ndarray.base = <PyObject*> array_wrapper_RS
-                    Py_INCREF(array_wrapper_RS)
-
-                elif op4_handle['type'][i] == 2: 
-                    array_RD = op4_load_D(fp        ,
-                                          filetype  , # 1 = text
-                                          op4_handle['nRow'][i], 
-                                          op4_handle['nCol'][i], 
-                                          fmt_str   ,
-                                          col_width ,
-                                          op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                          complx    , # in  0=real   1=complex     
-                                          unused    , # in/out index m.S (if sp1,2)
-                                          unused_s  , # out string data (if sp1,2) 
-                                          unused    ) # in/out index m.N (sp 1,2)  
-                    array_wrapper_RD = ArrayWrapper_RD()
-                    array_wrapper_RD.set_data(size, <void*> array_RD) 
-                    ndarray = np.array(array_wrapper_RD, copy=False)
-                    ndarray.base = <PyObject*> array_wrapper_RD
-                    Py_INCREF(array_wrapper_RD)
-
-                elif op4_handle['type'][i] == 3: 
-                    array_CS = op4_load_S(fp        ,
-                                          filetype  , # 1 = text
-                                          op4_handle['nRow'][i], 
-                                          op4_handle['nCol'][i], 
-                                          fmt_str   ,
-                                          col_width ,
-                                          op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                          complx    , # in  0=real   1=complex     
-                                          unused    , # in/out index m.S (if sp1,2)
-                                          unused_s  , # out string data (if sp1,2) 
-                                          unused    ) # in/out index m.N (sp 1,2)  
-                    array_wrapper_CS = ArrayWrapper_CS()
-                    array_wrapper_CS.set_data(size, <void*> array_CS) 
-                    ndarray = np.array(array_wrapper_CS, copy=False)
-                    ndarray.base = <PyObject*> array_wrapper_CS
-                    Py_INCREF(array_wrapper_CS)
-
-                elif op4_handle['type'][i] == 4: 
-                    array_CD = op4_load_D(fp        ,
-                                          filetype  , # 1 = text
-                                          op4_handle['nRow'][i], 
-                                          op4_handle['nCol'][i], 
-                                          fmt_str   ,
-                                          col_width ,
-                                          op4_handle['storage'][i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                          complx    , # in  0=real   1=complex     
-                                          unused    , # in/out index m.S (if sp1,2)
-                                          unused_s  , # out string data (if sp1,2) 
-                                          unused    ) # in/out index m.N (sp 1,2)  
-                    array_wrapper_CD = ArrayWrapper_CD()
-                    array_wrapper_CD.set_data(size, <void*> array_CD) 
-                    ndarray = np.array(array_wrapper_CD, copy=False)
-                    ndarray.base = <PyObject*> array_wrapper_CD
-                    Py_INCREF(array_wrapper_CD)
-
-                else:
-                    print('op4.Load type failure  %s: %d' % (
-                        op4_handle['name'][i], op4_handle['type'][i]))
-                    raise IOError
-
-                ndarray = np.reshape(ndarray, (op4_handle['nCol'][i], op4_handle['nRow'][i])).T
-
-                All_Matrices.append(ndarray)
-
-    if len(All_Matrices) == 1:
-        return All_Matrices[0]
-    else:
-        return All_Matrices
-
+    # 2}}}
 # 1}}}
