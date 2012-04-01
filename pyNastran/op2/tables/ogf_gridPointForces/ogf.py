@@ -142,7 +142,7 @@ class OGF(object):
         if self.numWide==10:
             self.createTransientObject(self.gridPointForces,gridPointForcesObject)
             self.readOGF_numWide10()
-            print self.obj
+            #print self.obj
         elif self.numWide==16:
             self.createTransientObject(self.gridPointForces,complexGridPointForcesObject)
             self.readOGF_numWide16()

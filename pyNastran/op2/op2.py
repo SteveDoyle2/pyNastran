@@ -193,6 +193,10 @@ class OP2(BDF,  # BDF methods
         ## OES - CELAS1/CELAS2/CELAS3/CELAS4
         self.celasStrain   = {}
         
+        ## OES - CTRIAX6
+        self.ctriaxStress = {}
+        self.ctriaxStrain = {}
+
         ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStress  = {}
         ## OES - isotropic CROD/CONROD/CTUBE
@@ -245,22 +249,22 @@ class OP2(BDF,  # BDF methods
         results = [
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
-                   self.displacements,self.temperatures,
+                   #self.displacements,self.temperatures,
                    self.eigenvectors,
                    self.velocities,
                    self.accelerations,
                    #self.nonlinearTemperatures,self.nonlinearDisplacements,
                    #self.forces,self.fluxes,
                    
-                   # OEF - Applied Forces/Temperatures
+                   # OEF - Applied Forces/Temperatures - ???
                    #self.nonlinearForces,self.nonlinearFluxes,
                    #self.temperatureForces,
                    
                    # OQG1 - Forces
-                   self.spcForces,self.mpcForces,
+                   #self.spcForces,self.mpcForces,
                    
                    # OGF - Grid Point Forces
-                   self.gridPointForces,
+                   #self.gridPointForces,
 
                    # OGP - Applied Force/Moment
                    self.appliedLoads,
@@ -273,6 +277,7 @@ class OP2(BDF,  # BDF methods
                    self.plateStress,self.plateStrain,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
+                   self.ctriaxStress,self.ctriaxStrain, # strain not coded
                    
                    # OEE - Strain Energy
                    self.strainEnergy,
@@ -282,7 +287,12 @@ class OP2(BDF,  # BDF methods
         for result in results:
             for iSubcase,res in sorted(result.items()):
                 msg += 'iSubcase = %s\n' %(iSubcase)
-                msg += str(res) + '\n'
+                try:
+                    msg += str(res) + '\n'
+                except:
+                    print 'failed on %s' %(res.name())
+                    raise
+                ###
             ###
         ###
         return msg

@@ -177,7 +177,7 @@ OP2 Reader
    - OES
    OES1X,OSTR1X,OSTR1C,
       - all midside nodes must be included on elements (for example CQUAD8 can have 6 nodes)
-      - OES1X1/OES1C Table (Isotropic Stresses/Strain)
+      - OES1X1/OSTR1X Table (Isotropic Stresses/Strain)
          - CROD    (1,  done)
          - CBEAM   (2,  done)
          - CSHEAR  (4,  done)
@@ -193,7 +193,7 @@ OP2 Reader
          - CHEXA   (67, done) - 8 nodes
          - CPENTA  (68, done) - 6 nodes
          
-         - CTRIAX6 (53) - 4 nodes
+         - CTRIAX6 (53, done) - 4 nodes
 
          - CTRIA3  (74, done) - 1 node
          - CTRIAR  (70, done) - 4 nodes
@@ -203,8 +203,13 @@ OP2 Reader
          - CQUAD8  (64, done) - 5 nodes
          - CQUAD4  (144,done) - 5 nodes
 
+      - OES1C/OSTR1C Table (Composite Stresses/Strain)
+         - CQUAD4 (95,done) - 1 node
+         - CQUAD8 (96,done) - 1 node
+         - CTRIA3 (97,done) - 1 node
+         - CTRIA6 (98,done) - 1 node
+
        - OESNLXR (nonlinear elements)
-         # nonlinear
          - CTETRA (85,verify object)
          - CTRIA3 (88,done)
          - CROD   (89,done)
@@ -214,12 +219,10 @@ OP2 Reader
          - CHEXA  (93,verify object)
          - CBEAM  (94,in progress)
          - CELASx (???)
-
-      - OSTR1X/OSTR1C Table (Composite Stresses/Strain)
-         - CQUAD4 (95,done) - 1 node
-         - CQUAD8 (96,done) - 1 node
-         - CTRIA3 (97,done) - 1 node
-         - CTRIA6 (98,done) - 1 node
+       
+      - OES??? (hyperelastic)
+         - CQUAD4 (139,done)
+         - 
 
      - OESNLXD
          - ???

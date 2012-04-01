@@ -468,3 +468,11 @@ class Op2Codes(object):
         msg += "  iSubcase     = %-3s\n" %(self.iSubcase)
         #print msg
         return msg
+
+    def isSort1(self):
+        if self.sortBits[0]==0:
+            return True
+        return False
+
+    def isSort2(self):
+        return not(self.isSort1())
