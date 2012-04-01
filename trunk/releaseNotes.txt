@@ -135,8 +135,8 @@ Added F06 Reader
 Added F06 Writer
    - OUG
      - displacement (static/transient)
-     - velocity     (static/***transient)
-     - acceleration (static/***transient)
+     - velocity     (static/transient)
+     - acceleration (static/transient)
      - temperature  (static/transient)
      - eigenvectors (real/***complex)
 
@@ -159,8 +159,12 @@ Added F06 Writer
 
    - LAMA
      - ***eigenvalues  (real/complex)
-   
-   - OGF
+
+   - OQG (constraint forces)
+     - SPC forces (static/***transient)
+     - MPC forces (static/***transient)
+
+   - OGF (grid point forces)
      - grid point force balance (static/***transient)
      - load vector (static/transient)
 

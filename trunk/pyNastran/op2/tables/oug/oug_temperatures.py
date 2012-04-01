@@ -210,24 +210,24 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         #           '0                                                                                                            SUBCASE 1              ',
         #           '     LOAD STEP =  1.00000E+00']
 
-        msgOrig = ['                                              T E M P E R A T U R E   V E C T O R',
-               ' ',
-               '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE']
+        msgOrig = ['                                              T E M P E R A T U R E   V E C T O R\n',
+               ' \n',
+               '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
         if self.isTransient:
             for dt,temperatures in sorted(self.temperatures.items()):
-                dtLine = '%14s = %12.5E'%(self.dataCode['name'],dt)
+                dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
                 header[2] = dtLine
                 msg += header+msgOrig
                 msg += self.printTempLines(temperatures)
-                msg.append(pageStamp+str(pageNum))
+                msg.append(pageStamp+str(pageNum)+'\n')
                 pageNum += 1
             ###
-            return('\n'.join(msg),pageNum) # transient
+            return(''.join(msg),pageNum) # transient
 
         msg += self.printTempLines(self.temperatures)
-        msg.append(pageStamp+str(pageNum))
-        return('\n'.join(msg),pageNum)  # static
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return(''.join(msg),pageNum)  # static
     
     def printTempLines(self,temperatures):
         msg = []
@@ -261,10 +261,10 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             nID = pack[0]
             packOut = pack[:8]
             pack = [nID+6,gType]+pack[8:]
-            msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E' %(tuple(packOut)))
+            msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E\n' %(tuple(packOut)))
         ###
         if pack:
-            fmt = '      %8i   %4s   '+'   %10.6E'*(len(pack)-2)
+            fmt = '      %8i   %4s   '+'   %10.6E'*(len(pack)-2)+'\n'
             out = fmt %(tuple(pack))
             msg.append(out)
         ###

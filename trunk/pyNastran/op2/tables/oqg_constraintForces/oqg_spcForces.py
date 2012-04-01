@@ -1,93 +1,49 @@
 from numpy import array
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.tableObject import TableObject
 
-class constraintForceObject(scalarObject):
+
+class spcForcesObject(TableObject):
     def __init__(self,dataCode,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase)
 
-        self.dt = dt
-        self.forces  = {}
-        self.moments = {}
+    def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
-            assert dt>=0.
-            self.addNewTransient()
-            self.add = self.addTransient
-            #self.__repr__ = self.__reprTransient__  # why cant i do this...
+            return self.writeF06Transient(header,pageStamp,pageNum)
+        msg = header+['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
+               ' \n',
+               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        for nodeID,translation in sorted(self.translations.items()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+            vals = [dx,dy,dz,rx,ry,rz]
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            if not isAllZeros:
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
-
-    def updateDt(self,dataCode,dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-        ###
-
-    def deleteTransient(self,dt):
-        del self.forces[dt]
-        del self.moments[dt]
-
-    def getTransients(self):
-        k = self.forces.keys()
-        k.sort()
-        return k
-
-    def addNewTransient(self):
-        self.forces[self.dt]  = {}
-        self.moments[self.dt] = {}
-
-    def updateDt(self,dataCode,dt):
-        self.dataCode = dataCode
-        self.applyDataCode()
-        #assert dt>=0.
-        #print "updating dt...dt=%s" %(dt)
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-        ###
-
-    #def addBinary(self,deviceCode,data):
-        #print "*******add********"
-        #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
-
-    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = 'nodeID=%s' %(nodeID)
-        assert 0<nodeID<1000000000,msg
-        assert nodeID not in self.forces
-        self.forces[ nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
-        self.moments[nodeID] = array([v4,v5,v6]) # Mx,My,Mz
-
-    def addTransient(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = 'nodeID=%s' %(nodeID)
-        assert 0<nodeID<1000000000,msg
-        assert nodeID not in self.forces[self.dt]
-        self.forces[ self.dt][nodeID] = array([v1,v2,v3]) # Fx,Fy,Fz
-        self.moments[self.dt][nodeID] = array([v4,v5,v6]) # Mx,My,Mz
-
-
-class spcForcesObject(constraintForceObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
-        constraintForceObject.__init__(self,dataCode,iSubcase)
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
-        headers = ['Fx','Fy','Fz','Mx','My','Mz']
+        headers = ['T1','T2','T3','R1','R2','R3']
         msg += '%-8s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,forces in sorted(self.forces.items()):
+        for dt,translations in sorted(self.translations.items()):
             msg += 'dt = %s' %(dt)
-            for nodeID,force in sorted(forces.items()):
-                moment = self.moments[dt][nodeID]
-                (Fx,Fy,Fz) = force
-                (Mx,My,Mz) = moment
+            for nodeID,translation in sorted(translations.items()):
+                rotation = self.rotations[dt][nodeID]
+                (Fx,Fy,Fz) = translatin
+                (Mx,My,Mz) = rotation
 
                 msg += '%-8i ' %(nodeID)
                 vals = [Fx,Fy,Fz,Mx,My,Mx]
@@ -109,16 +65,16 @@ class spcForcesObject(constraintForceObject):
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
-        headers = ['Fx','Fy','Fz','Mx','My','Mz']
+        headers = ['T1','T2','T3','R1','R2','R3']
         msg += '%-8s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for nodeID,force in sorted(self.forces.items()):
-            moment = self.moments[nodeID]
-            (Fx,Fy,Fz) = force
-            (Mx,My,Mz) = moment
+        for nodeID,translation in sorted(self.translations.items()):
+            rotation = self.rotations[nodeID]
+            (Fx,Fy,Fz) = translation
+            (Mx,My,Mz) = rotation
 
             msg += '%-8i ' %(nodeID)
             vals = [Fx,Fy,Fz,Mx,My,Mx]
@@ -131,28 +87,49 @@ class spcForcesObject(constraintForceObject):
             msg += '\n'
         return msg
 
-class mpcForcesObject(constraintForceObject):
+class mpcForcesObject(TableObject):
     def __init__(self,dataCode,iSubcase,dt=None):
-        constraintForceObject.__init__(self,dataCode,iSubcase)
-        scalarObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase)
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.dt is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum)
+        msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
+               ' \n',
+               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        for nodeID,translation in sorted(self.translations.items()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+            vals = [dx,dy,dz,rx,ry,rz]
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            if not isAllZeros:
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            ###
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
 
     def __reprTransient__(self):
         msg = '---MPC FORCES---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
-        headers = ['Fx','Fy','Fz','Mx','My','Mz']
+        headers = ['T1','T2','T3','R1','R2','R3']
         msg += '%-8s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,forces in sorted(self.forces.items()):
+        for dt,translations in sorted(self.translations.items()):
             msg += 'dt = %s' %(dt)
-            for nodeID,force in sorted(forces.items()):
-                moment = self.moments[dt][nodeID]
-                (Fx,Fy,Fz) = force
-                (Mx,My,Mz) = moment
+            for nodeID,translation in sorted(translations.items()):
+                rotation = self.rotations[dt][nodeID]
+                (Fx,Fy,Fz) = translation
+                (Mx,My,Mz) = rotation
 
                 msg += '%-8i ' %(nodeID)
                 vals = [Fx,Fy,Fz,Mx,My,Mx]
@@ -174,16 +151,16 @@ class mpcForcesObject(constraintForceObject):
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
-        headers = ['Fx','Fy','Fz','Mx','My','Mz']
+        headers = ['T1','T2','T3','R1','R2','R3']
         msg += '%-8s ' %('GRID')
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for nodeID,force in sorted(self.forces.items()):
-            moment = self.moments[nodeID]
-            (Fx,Fy,Fz) = force
-            (Mx,My,Mz) = moment
+        for nodeID,translation in sorted(self.translations.items()):
+            rotation = self.rotations[nodeID]
+            (Fx,Fy,Fz) = translation
+            (Mx,My,Mz) = rotation
 
             msg += '%-8i ' %(nodeID)
             vals = [Fx,Fy,Fz,Mx,My,Mx]

@@ -247,7 +247,7 @@ class rodStressObject(stressObject):
             outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[-1]))
             msg.append(outLine)
         msg.append(pageStamp+str(pageNum)+'\n')
-        return('\n'.join(msg),pageNum)
+        return(''.join(msg),pageNum)
 
     def __repr__(self):
         if   self.isTransient and self.code in [[1,0,0],[1,0,1]]:
