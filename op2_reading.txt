@@ -235,6 +235,7 @@ OP2 Reader
 
    - OGF (grid point force balance)
       - grid point forces (static/***transient)
+      - load vector (static/transient)
 
    - OGP1 Table (grid point forces)
       - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)

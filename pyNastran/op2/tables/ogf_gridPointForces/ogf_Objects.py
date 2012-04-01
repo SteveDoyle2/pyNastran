@@ -79,20 +79,32 @@ class gridPointForcesObject(scalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         for eKey,force in sorted(self.forces.items()):
+            zero = '0'
             for iLoad,f in enumerate(force):
                 (f1,f2,f3) = f
                 (m1,m2,m3) = self.moments[eKey][iLoad]
                 (elemName) = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
+                vals = [f1,f2,f3,m1,m2,m3]
+                vals2 = []
+                for v in vals:
+                    v2 = '%13E' %(v)
+                    if v2==' 0.000000E+00' or v2=='-0.000000E+00':
+                        v2 = ' 0.0         '
+                    vals2.append(v2)
+                [f1,f2,f3,m1,m2,m3] = vals2
+                if eid==0:
+                    eid=''
 
-                msg.append('   %8s    %10s %10s %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' %(eKey,eid,elemName,f1,f2,f3,m1,m2,m3))
+                msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' %(zero,eKey,eid,elemName,f1,f2,f3,m1,m2,m3))
+                zero=' '
             ###
         ###
-        msg.append(pageStamp+str(pageNum))
-        return ''.join(msg)
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
     
     def __repr__(self):
-        return self.writeF06([],'PAGE ',1)
+        return self.writeF06([],'PAGE ',1)[0]
         #return '---gridPointForceObject---'
 
 class complexGridPointForcesObject(scalarObject):
