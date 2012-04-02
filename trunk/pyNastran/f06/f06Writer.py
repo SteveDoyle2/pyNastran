@@ -4,6 +4,8 @@ from datetime import date
 import pyNastran
 
 def makeStamp(Title):
+    #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
+    #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
     t = date.today()
     months = ['January','February','March','April','May','June','July','August','September','October','November','December']
     today = '%-9s %s, %s' %(months[t.month],t.day,t.year)
@@ -54,7 +56,7 @@ def makePyNastranTitle():
         n+'* *        Version %8s       * *\n' %(pyNastran.__version__),
         n+'* *                                 * *\n',
         n+'* *                                 * *\n',
-        n+'* *          %15s         * *\n' %(pyNastran.__releaseDate2__),
+        n+'* *          %15s        * *\n' %(pyNastran.__releaseDate2__),
         n+'* *                                 * *\n',
         n+'* *            Questions            * *\n',
         n+'* *        mesheb82@gmail.com       * *\n',
@@ -106,20 +108,22 @@ class F06Writer(object):
         self.compositePlateStress = op2.compositePlateStress
         self.compositePlateStrain = op2.compositePlateStrain
     
-    def writeF06(self):
-        f = open(self.f06OutName,'wb')
+    def writeF06(self,f06OutName):
+        f = open(f06OutName,'wb')
         f.write(makePyNastranTitle())
         
-        #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
-        
-        #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
         pageStamp = makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
         pageNum = 1
-        for case,result in sorted(self.eigenvectors.items()): # has a special header
-            header = ['0                                                                                                            SUBCASE %i'%(case)]
+        header = ['     DEFAULT                                                                                                                        \n',
+                  '\n']
+        for iSubcase,result in sorted(self.eigenvectors.items()): # has a special header
+            (subtitle,label) = self.iSubcaseNameMap[iSubcase]
+            subtitle = subtitle.strip()
+            header[0] = '     %s\n' %(subtitle)
+            header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
             f.write(msg)
             pageNum +=1
@@ -151,7 +155,7 @@ class F06Writer(object):
                     try:
                         (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                     except:
-                        print "result name = %s" %(result.name())
+                        #print "result name = %s" %(result.name())
                         raise
                     f.write(msg)
                     pageNum +=1

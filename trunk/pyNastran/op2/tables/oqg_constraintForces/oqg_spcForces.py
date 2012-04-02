@@ -27,6 +27,31 @@ class spcForcesObject(TableObject):
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
 
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        msg = []
+        for dt,translations in sorted(self.translations.items()):
+            header2 = copy.deepcopy(header)
+            header2[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg.append(header2+words)
+            for nodeID,translation in sorted(self.translations.items()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[dt][nodeID]
+
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                if not isAllZeros:
+                    [dx,dy,dz,rx,ry,rz] = vals2
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                ###
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
+
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
         if self.dt is not None:
@@ -111,6 +136,31 @@ class mpcForcesObject(TableObject):
             ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        words = ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        msg = []
+        for dt,translations in sorted(self.translations.items()):
+            header2 = copy.deepcopy(header)
+            header2[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg.append(header2+words)
+            for nodeID,translation in sorted(self.translations.items()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[dt][nodeID]
+
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                if not isAllZeros:
+                    [dx,dy,dz,rx,ry,rz] = vals2
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                ###
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
 
     def __reprTransient__(self):

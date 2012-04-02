@@ -245,6 +245,8 @@ class GRID(Node):
             self.cd   = data[5]
             self.ps   = data[6]
             self.seid = data[7]
+            if self.ps==0:
+                self.ps=''
             assert len(self.xyz)==3
         ###
         assert self.nid  >   0,  'nid=%s' %(self.nid)

@@ -4,6 +4,7 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2Errors import *
+from elementsStressStrain import ElementsStressStrain
 
 class OESNLXR(ElementsStressStrain):
     """Table of stresses/strains"""

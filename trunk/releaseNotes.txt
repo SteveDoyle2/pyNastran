@@ -141,7 +141,7 @@ Added F06 Writer
      - eigenvectors (real/***complex)
 
    - OES
-     - solid stress/strain (static/***transient);  (directional vectors & pressure calculated)
+     - solid stress/strain (static/transient);  (directional vectors & pressure calculated)
         - ctetra
         - cpenta
         - chexa
@@ -161,8 +161,8 @@ Added F06 Writer
      - ***eigenvalues  (real/complex)
 
    - OQG (constraint forces)
-     - SPC forces (static/***transient)
-     - MPC forces (static/***transient)
+     - SPC forces (static/transient)
+     - MPC forces (static/transient)
 
    - OGF (grid point forces)
      - grid point force balance (static/***transient)

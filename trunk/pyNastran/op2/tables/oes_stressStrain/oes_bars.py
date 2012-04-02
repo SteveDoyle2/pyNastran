@@ -263,7 +263,7 @@ class barStressObject(stressObject):
             smin = self.smin[eid]
             vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0],
                     s1[1],s2[1],s3[1],s4[1],      smax[1],smin[1]]
-            (vals2,isAllZeros) = self.writeF06Floats(vals)
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
             [s10,s20,s30,s40,axial,smax0,smin0,
              s11,s21,s31,s41,smax1,smin1] = vals2
             msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' %(eid,  s10,s20,s30,s40,axial,smax0,smin0,MSt.rstrip()))
@@ -555,7 +555,7 @@ class barStrainObject(strainObject):
             emin = self.emin[eid]
             vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0],
                     e1[1],e2[1],e3[1],e4[1],emax[1],emin[1]]
-            (vals2,isAllZeros) = self.writeF06Floats(vals)
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
             [e10,e20,e30,e40,axial,emax0,emin0,
              e11,e21,e31,e41,emax1,emin1] = vals2
             

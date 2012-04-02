@@ -4,7 +4,7 @@ from numpy import array
 from struct import unpack
 
 # pyNastran
-from ougv1_Objects import (
+from oug_Objects import (
      complexDisplacementObject,             # analysisCode=5  formatCode=3 sortCode=1
     #fluxObject,                            # analysisCode=1, formatCode=1 sortCode=3
     #nonlinearTemperatureObject,            # analysisCode=10,formatCode=1 sortCode=0 ???

@@ -4,7 +4,7 @@ from struct import unpack
 
 # pyNastran
 from oqg_spcForces import spcForcesObject,mpcForcesObject
-from pyNastran.op2.tables.oug.ougv1_Objects import (
+from pyNastran.op2.tables.oug.oug_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
      fluxObject,                            # analysisCode=1, sortCode=3
      #nonlinearTemperatureObject,            # analysisCode=10,sortCode=0

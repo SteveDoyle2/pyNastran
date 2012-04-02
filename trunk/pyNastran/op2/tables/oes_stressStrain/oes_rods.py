@@ -491,7 +491,7 @@ class rodStrainObject(strainObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplementedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
