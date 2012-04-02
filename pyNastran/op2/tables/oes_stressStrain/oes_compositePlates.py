@@ -241,7 +241,7 @@ class compositePlateStressObject(stressObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):  # @todo no transient
         if self.isTransient:
-            raise NotImplementedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
             von   = 'VON'
@@ -531,7 +531,7 @@ class compositePlateStrainObject(strainObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):  # @todo no transient
         if self.isTransient:
-            raise NotImplementedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
             von   = 'VON'

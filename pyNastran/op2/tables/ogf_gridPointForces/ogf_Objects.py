@@ -72,6 +72,9 @@ class gridPointForcesObject(scalarObject):
         #self.eids = self.eids[k[0]]
 
     def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            return self.writeF06Transient(header,pageStamp,pageNum)
+
         msg = header+['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                ' \n',
                '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n',]
@@ -86,12 +89,7 @@ class gridPointForcesObject(scalarObject):
                 (elemName) = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
                 vals = [f1,f2,f3,m1,m2,m3]
-                vals2 = []
-                for v in vals:
-                    v2 = '%13E' %(v)
-                    if v2==' 0.000000E+00' or v2=='-0.000000E+00':
-                        v2 = ' 0.0         '
-                    vals2.append(v2)
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 [f1,f2,f3,m1,m2,m3] = vals2
                 if eid==0:
                     eid=''
@@ -102,6 +100,36 @@ class gridPointForcesObject(scalarObject):
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
+    
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        msg = header+['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
+               ' \n',
+               '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n',]
+              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        for dt,Forces in sorted(self.forces.items()):
+            for eKey,force in sorted(Forces.items()):
+                zero = '0'
+                for iLoad,f in enumerate(force):
+                    (f1,f2,f3) = f
+                    (m1,m2,m3) = self.moments[dt][eKey][iLoad]
+                    (elemName) = self.elemName[dt][eKey][iLoad]
+                    eid = self.eids[dt][eKey][iLoad]
+
+                    vals = [f1,f2,f3,m1,m2,m3]
+                    (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                    [f1,f2,f3,m1,m2,m3] = vals2
+                    if eid==0:
+                        eid=''
+
+                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' %(zero,eKey,eid,elemName,f1,f2,f3,m1,m2,m3))
+                    zero=' '
+                ###
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
     
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]

@@ -326,7 +326,7 @@ class plateStressObject(stressObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplementedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
             vonMises = 'VON MISES'

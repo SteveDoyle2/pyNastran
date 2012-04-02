@@ -115,19 +115,19 @@ Added F06 Reader
 
    - OES
      - solid stress/***strain (static/***transient)
-        - ctetra
-        - cpenta
-        - chexa
+        - CTETRA
+        - CPENTA
+        - CHEXA
      - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
-        - ctria3
-        - cquad4 (centroid/bilinear)
+        - CTRIA3
+        - CQUAD4 (centroid/bilinear)
      - composite plate stress/strain (static/***transient)
-        - ctria3
-        - cquad4 (centroid)
-     - rod stress/strain (static/transient)
-     - bar stress/strain (static/transient)
-     - ***beam  stress/strain (static/transient)
-     - ***shear stress/strain (static/transient)
+        - CTRIA3
+        - CQUAD4 (centroid)
+     - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
+     - bar stress/strain   (static/transient; CBAR)
+     - ***beam  stress/strain (static/transient; CBEAM)
+     - ***shear stress/strain (static/transient; CSHEAR)
 
    - LAMA
      - eigenvalues  (real/complex)
@@ -142,20 +142,20 @@ Added F06 Writer
 
    - OES
      - solid stress/strain (static/transient);  (directional vectors & pressure calculated)
-        - ctetra
-        - cpenta
-        - chexa
+        - CTETRA
+        - CPENTA
+        - CHEXA
      - isotropic plate stress/strain (static/***transient)
-        - ctria3
-        - cquad4 (centroid/bilinear)
+        - CTRIA3
+        - CQUAD4 (centroid/bilinear)
      - composite plate stress/strain (static/***transient)
-        - ctria3
-        - cquad4 (centroid)
+        - CTRIA3
+        - CQUAD4 (centroid)
 
-     - rod stress/strain (static/***transient)
-     - bar stress/strain (static/***transient)
-     - ***beam  stress/strain (static/transient)
-     - ***shear stress/strain (static/transient)
+     - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
+     - bar stress/strain   (static/transient; CBAR)
+     - ***beam  stress/strain (static/transient; CBEAM)
+     - ***shear stress/strain (static/transient; CSHEAR)
 
    - LAMA
      - ***eigenvalues  (real/complex)
@@ -165,7 +165,7 @@ Added F06 Writer
      - MPC forces (static/transient)
 
    - OGF (grid point forces)
-     - grid point force balance (static/***transient)
+     - grid point force balance (static/transient)
      - load vector (static/transient)
 
 Overall GUI
