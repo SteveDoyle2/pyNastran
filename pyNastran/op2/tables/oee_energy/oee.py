@@ -14,9 +14,7 @@ class OEE(object):
 
         table3 = self.readTable_OEE1_3
         table4Data = self.readOEE1_Data
-        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
-        del self.dtMap
         self.deleteAttributes_OEE()
 
     def deleteAttributes_OEE(self): # no thermal
@@ -142,13 +140,4 @@ class OEE(object):
             #raise Exception('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
             pass
         ###
-
-        readCase = True
-        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
-            readCase = self.updateDtMap()
-        
-        if self.obj and readCase:
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
-        ###
+        self.readMappedScalarsOut(debug=False) # handles dtMap

@@ -6,7 +6,7 @@ from pyNastran.op2.resultObjects.tableObject import TableObject
 
 class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
@@ -34,12 +34,11 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt,translations in sorted(self.translations.items()):
-            header2 = copy.deepcopy(header)
-            header2[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg.append(header2+words)
-            for nodeID,translation in sorted(self.translations.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
 
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation

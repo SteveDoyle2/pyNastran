@@ -75,6 +75,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR):
         ###
 
     def readResultsTable(self,table3,table4Data,flag=0):
+        self.dtMap = {}
         tableName = self.readTableName(rewind=False) # OEF
         self.tableInit(tableName)
         #print "tableName = |%r|" %(tableName)
@@ -152,6 +153,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR):
         #print str(self.obj)
         if self.makeOp2Debug:
             self.op2Debug.write("***end of %s table***\n" %(tableName))
+        del self.dtMap
 
     def readTable4(self,table4Data,flag,iTable):
         """loops over repeated table -4s"""
@@ -388,6 +390,17 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR):
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalars4,debug=False)
+
+    def readMappedScalarsOut(self,debug=False):
+        readCase = True
+        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
+            readCase = self.updateDtMap()
+        
+        if self.obj and readCase:
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
+        ###
 
     def readScalarsOut(self,debug=False):
         """

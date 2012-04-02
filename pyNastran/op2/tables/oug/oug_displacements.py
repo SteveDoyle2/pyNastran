@@ -6,7 +6,7 @@ from pyNastran.op2.resultObjects.tableObject import TableObject
 
 class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
@@ -36,9 +36,9 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         for dt,translations in sorted(self.translations.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(self.translations.items()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
 
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
@@ -101,7 +101,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
 
 class complexTableObject(TableObject):
     def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase,dt)
         
     def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
         msg = "nodeID=%s v1r=%s v2r=%s v3r=%s" %(nodeID,v1r,v2r,v3r)
@@ -115,8 +115,8 @@ class complexTableObject(TableObject):
     ###
 
 class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
-    def __init__(self,dataCode,iSubcase,freq=None):
-        complexTableObject.__init__(self,dataCode,iSubcase)
+    def __init__(self,dataCode,iSubcase,dt=None):
+        complexTableObject.__init__(self,dataCode,iSubcase,dt)
 
     def writeF06(header,pageStamp,pageNum=1):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',
