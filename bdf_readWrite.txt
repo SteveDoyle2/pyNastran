@@ -9,7 +9,7 @@ BDF Cards Supported Reading/Writing
 ----Nodes----:
 GRID   (done)
 GRDSET (done)
-SPOINT (not integrated)
+SPOINT (done)
 
 ----Coordinates----:
 CORD1R (done)
@@ -110,13 +110,14 @@ PLSOLID (done)
 PBCOMP
 
 ----Materials----:
-CREEP (done, not well tested)
+CREEP (done)
 MAT1  (done)
 MAT2  (done)
 MAT3  (done)
 MAT8  (done)
 MAT9  (done)
 MAT10 (done, not well tested)
+MATHP (done)
 
 ----Thermal Materials----:
 MAT4  (done)

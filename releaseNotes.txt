@@ -148,7 +148,7 @@ Added F06 Writer
      - isotropic plate stress/strain (static/***transient)
         - CTRIA3
         - CQUAD4 (centroid/bilinear)
-     - composite plate stress/strain (static/***transient)
+     - composite plate stress/strain (static/transient)
         - CTRIA3
         - CQUAD4 (centroid)
 
