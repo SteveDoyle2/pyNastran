@@ -94,7 +94,7 @@ class OEE(object):
         #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
         #if self.numWide==5:
             #print self.codeInformation()
-        print self.codeInformation()
+        #print self.codeInformation()
         #self.printBlock(data)
         self.readTitle()
 

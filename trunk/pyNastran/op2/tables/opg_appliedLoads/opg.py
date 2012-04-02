@@ -95,7 +95,7 @@ class OPG(object):
         
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        print self.codeInformation()
+        #print self.codeInformation()
 
         #self.printBlock(data)
         self.readTitle()
@@ -170,7 +170,7 @@ class OPG(object):
         #    self.readOPG1_Data_format3_sort3()
         else:
             #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
-            print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
+            #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
             self.skipOES_Element()
         ###
         #print self.obj

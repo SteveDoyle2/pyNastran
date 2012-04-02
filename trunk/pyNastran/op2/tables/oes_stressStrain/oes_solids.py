@@ -370,7 +370,7 @@ class solidStressObject(stressObject):
                 p = (o1+o2+o3)/-3.
 
                 if nid=='C': nid='CENTER'
-                print "nid = |%r|" %(nid)
+                #print "nid = |%r|" %(nid)
                 A = [[oxx,txy,txz],
                      [txy,oyy,tyz],
                      [txz,tyz,ozz]]
