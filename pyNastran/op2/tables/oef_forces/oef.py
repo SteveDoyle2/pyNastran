@@ -28,8 +28,8 @@ class OEF(object):
         params = ['elementType','dLoadID','loadID','obj','markerStart','oCode',
                   'eigr','eigi','eign','mode','freq','time','thermal',]
         self.deleteAttributes(params)
-        print self.obj
-        sys.exit('stopping in oef.py')
+        #print self.obj
+        #sys.exit('stopping in oef.py')
 
     def readTable_OEF_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -104,8 +104,10 @@ class OEF(object):
 
     def readOEF1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        #self.skipOES_Element() # skipping entire table
-        #return
+        self.skipOES_Element() # skipping entire table
+        self.skippedCardsFile.write('skipping atfsCode=%s in %s-OEF\n' %(self.atfsCode,self.tableName))
+        return
+
         #print "tfsCode = %s" %(tfsCode)
         # element forces & moments / flux
         if 1:
@@ -247,7 +249,6 @@ class OEF(object):
         else:
             self.skipOES_Element()
         #self.readForces(data,self.obj)
-        #return
 
         
     def setupOEF(self,elementType,elementName,numWide,deviceCode):

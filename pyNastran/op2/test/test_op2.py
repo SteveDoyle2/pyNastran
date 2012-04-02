@@ -97,8 +97,8 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=False,deb
         #tableNamesF06 = parseTableNamesFromF06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if writeF06:
-            op2.setF06Name('model')
-            op2.writeF06()
+            (model,ext) = os.path.splitext(op2file)
+            op2.writeF06(model+'.f06.out')
         print op2.printResults()
         #op2.printResults()
         #print "subcases = ",op2.subcases

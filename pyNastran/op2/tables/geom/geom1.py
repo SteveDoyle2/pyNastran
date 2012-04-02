@@ -18,7 +18,7 @@ class Geometry1(object):
                             (2101,21,8):     self.readCord2R, # record 5
                             (2201,22,10):    self.readCord2S, # record 6
                            #(14301,143,651): self.readCord3G, # record 7
-                            (4501,45,1):     self.readGrid,   # record 17 - slow, but works
+                           #(4501,45,1):     self.readGrid,   # record 17 - slow, but works
                             (5301,53,4):     self.readSEQGP,  # record 27 - not done
 
                             (1101,11, 66):    self.readFake,  # record 
@@ -159,7 +159,7 @@ class Geometry1(object):
     def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         #print "reading GRID"
-        return
+        #return
         
         n=0
         nEntries = len(data)//32

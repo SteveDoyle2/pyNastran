@@ -4,6 +4,8 @@ from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
+from pyNastran.bdf.cards.elementsRigid import RBE2
+from pyNastran.bdf.cards.constraints import SUPORT, SPCD, SPC
 
 class Geometry4(object):
 
@@ -21,16 +23,16 @@ class Geometry4(object):
                          (610, 6, 316):   self.readQSET1,   # record 21 - not done
                          (6601,66,292):   self.readRBAR,    # record 22 - not done
                          (6801,68,294):   self.readRBE1,    # record 23 - not done
-                         (6901,69,295):   self.readRBE2,    # record 24 - not done
+                         (6901,69,295):   self.readRBE2,    # record 24 - buggy
                          (7101,71,187):   self.readRBE3,    # record 25 - not done
                          (6501,65,291):   self.readRROD,    # record 30 - not done
                          (7001,70,186):   self.readRSPLINE, # record 31 - not done
                          (7201,72,398):   self.readRSSCON,  # record 32 - not done
                          (1210,12,322):   self.readSEQSET1, # record 40 - not done
-                         (5501,55,16):    self.readSPC,     # record 44 - not done
+                         (5501,55,16):    self.readSPC,     # record 44 - buggy
                          (5481,58,12):    self.readSPC1,    # record 45 - not done
                          (5491,59,13):    self.readSPCADD,  # record 46 - not done
-                         (5110,51,256):   self.readSPCD,    # record 47 - not done
+                         (5110,51,256):   self.readSPCD,    # record 47 - buggy
                          (5601,56, 14):   self.readSUPORT,  # record 59 - not done
                          (10100,101,472): self.readSUPORT1, # record 60 - not done
                         #(4901,49,420017):self.readFake,    # record 
@@ -101,6 +103,21 @@ class Geometry4(object):
     def readRBE2(self,data):
         """RBE2(6901,69,295) - Record 24"""
         self.skippedCardsFile.write('skipping RBE2 in GEOM4\n')
+        return
+        n=0
+        nData = len(data)  # 5*4
+        if 1:
+            eData = data[:12]
+            (eid,gn,cm,gm) = unpack('iiii',eData)
+
+            eData = data[12:-4]
+            nGm = len(eData)//4
+            Gm = list(unpack('i'*nGm,eData))
+            alpha, = unpack('f',data[-4:])
+        ###
+        elem = RBE2(None,[eid,gn,cm,Gm,alpha])
+        self.addRigidElement(elem)
+        data = data[-1:]
 
     def readRBE3(self,data):
         """RBE3(7101,71,187) - Record 25"""
@@ -140,11 +157,34 @@ class Geometry4(object):
 
     def readSPC(self,data):
         """SPC(5501,55,16) - Record 44"""
-        self.skippedCardsFile.write('skipping SPC in GEOM4\n')
+        #self.skippedCardsFile.write('skipping SPC in GEOM4\n')
+        n=0
+        nEntries = len(data)//20  # 5*4
+        for i in range(nEntries):
+            eData = data[n:n+20]
+            (sid,ID,c,xxx,dx) = unpack('iiiif',eData)
+
+            constraint = SPC(None,[sid,ID,c,dx])
+            self.addConstraint_SPC(constraint)
+            n+=20
+        ###
+        data = data[n:]
 
     def readSPC1(self,data):
         """SPC1(5481,58,12) - Record 45"""
-        self.skippedCardsFile.write('skipping SPCC1 in GEOM4\n')
+        self.skippedCardsFile.write('skipping SPC1 in GEOM4\n')
+        return
+        n=0
+        nEntries = len(data)//20  # 5*4
+        for i in range(nEntries):
+            eData = data[n:n+20]
+            (sid,c,thruFlag) = unpack('iifii',eData)
+
+            load = FORCE1(None,[sid,g,f,n1,n2])
+            self.addLoad(load)
+            n+=20
+        ###
+        data = data[n:]
 
     def readSPCADD(self,data):
         """SPCADD(5491,59,13) - Record 46"""
@@ -152,7 +192,18 @@ class Geometry4(object):
 
     def readSPCD(self,data):
         """SPCD(5110,51,256) - Record 47"""
-        self.skippedCardsFile.write('skipping SPCD in GEOM4\n')
+        #self.skippedCardsFile.write('skipping SPCD in GEOM4\n')
+        n=0
+        nEntries = len(data)//20  # 5*4
+        for i in range(nEntries):
+            eData = data[n:n+20]
+            (sid,ID,c,xxx,dx) = unpack('iiiif',eData)
+
+            constraint = SPCD(None,[sid,ID,c,dx])
+            self.addConstraint_SPC(constraint)
+            n+=20
+        ###
+        data = data[n:]
 
     def readSPCDE(self,data):
         self.skippedCardsFile.write('skipping SPCDE in GEOM4\n')
@@ -184,7 +235,18 @@ class Geometry4(object):
 
     def readSUPORT(self,data):
         """SUPORT(5601,56, 14) - Record 59"""
-        self.skippedCardsFile.write('skipping SUPORT in GEOM4\n')
+        #self.skippedCardsFile.write('skipping SUPORT in GEOM4\n')
+        n=0
+        nEntries = len(data)//8  # 2*4
+        for i in range(nEntries):
+            eData = data[n:n+8]
+            (sid,c) = unpack('ii',eData)
+
+            suport = SUPORT(None,[sid,c])
+            self.addSuport(suport)
+            n+=8
+        ###
+        data = data[n:]
 
     def readSUPORT1(self,data):
         """SUPORT1(10100,101,472) - Record 60"""

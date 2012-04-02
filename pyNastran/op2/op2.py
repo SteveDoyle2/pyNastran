@@ -414,6 +414,9 @@ class OP2(BDF,  # BDF methods
                     elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
                         self.readTable_OES1()
 
+                    elif tableName in ['OESNLXR',]: # ???
+                        self.readTable_OESNLXR()
+                    
                     elif tableName in ['ONRGY1']: # energy
                         self.readTable_OEE1()
 

@@ -298,46 +298,6 @@ class solidStressObject(stressObject):
             headers.append('oMaxShear')
         return headers
 
-    def __reprTransient__(self):
-        msg = '---SOLID STRESS---\n'
-        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%9s ' %(header)
-        msg += '\n'
-
-        for dt,oxxs in sorted(self.oxx.items()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,oxxNodes in sorted(oxxs.items()):
-                eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
-                    oxx = self.oxx[dt][eid][nid]
-                    oyy = self.oyy[dt][eid][nid]
-                    ozz = self.ozz[dt][eid][nid]
-                    txy = self.txy[dt][eid][nid]
-                    tyz = self.tyz[dt][eid][nid]
-                    txz = self.txz[dt][eid][nid]
-
-                    #o1 = self.o1[dt][eid][nid]
-                    #o2 = self.o2[dt][eid][nid]
-                    #o3 = self.o3[dt][eid][nid]
-
-                    ovm = self.ovmShear[dt][eid][nid]
-                    msg += '%-6i %6s %8s ' %(eid,eType,nid)
-                    vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
-                    for val in vals:
-                        if abs(val)<1e-6:
-                            msg += '%9s ' %('0')
-                        else:
-                            msg += '%9i ' %(val)
-                        ###
-                    msg += '\n'
-                    #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-                ###
-            ###
-        ###
-        return msg
-
     def pressure(self,o1,o2,o3):
         """
         returns the hydrostatic pressure
@@ -353,9 +313,9 @@ class solidStressObject(stressObject):
         (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
         return v
     
-    def writeF06(self,headers,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplmentedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
         msg = []
 
         if self.isVonMises():
@@ -430,19 +390,114 @@ class solidStressObject(stressObject):
                 raise NotImplementedError('eType=|%r|' %(eType))
             ###                
         ###
-        msg = []
         if isTetra:
-            msg += headers+tetraMsg
+            msg += header+tetraMsg
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isPenta:
-            msg += headers+pentaMsg
+            msg += header+pentaMsg
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isHexa:
-            msg += headers+hexaMsg
+            msg += header+hexaMsg
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        msg = []
+
+        if self.isVonMises():
+            vonMises = 'VON MISES'
+        else:
+            vonMises = 'MAX SHEAR'
+
+        tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+
+        pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+
+        hexaMsg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+
+        eTypes = self.eType.values()
+        isTetra=False; isPenta=False; isHexa=False
+        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
+            isTetra = True
+        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
+            isPenta = True
+        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
+            isHexa = True
+        
+        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        
+        for dt,oxxs in sorted(self.oxx.items()):            
+            dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
+            header[2] = dtLine
+            for eid,oxxNodes in sorted(oxxs.items()):
+                eType = self.eType[eid]
+
+                k = oxxNodes.keys()
+                #kc = k.index('C')
+                #k.pop(kc)
+                k.sort()
+                k.pop(-1)
+                #print k
+                msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
+                for nid in ['C']+k:
+                    oxx = self.oxx[dt][eid][nid]
+                    oyy = self.oyy[dt][eid][nid]
+                    ozz = self.ozz[dt][eid][nid]
+                    txy = self.txy[dt][eid][nid]
+                    tyz = self.tyz[dt][eid][nid]
+                    txz = self.txz[dt][eid][nid]
+
+                    o1 = self.o1[dt][eid][nid]
+                    o2 = self.o2[dt][eid][nid]
+                    o3 = self.o3[dt][eid][nid]
+                    ovm = self.ovmShear[dt][eid][nid]
+                    p = (o1+o2+o3)/-3.
+
+                    if nid=='C': nid='CENTER'
+                    #print "nid = |%r|" %(nid)
+                    A = [[oxx,txy,txz],
+                         [txy,oyy,tyz],
+                         [txz,tyz,ozz]]
+                    (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
+
+                    msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
+                    msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
+                    msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
+                ###
+                if eType=='CTETRA' or eType=='TETRA':
+                    tetraMsg.append(msgA)
+                elif eType=='CPENTA' or eType=='PENTA':
+                    pentaMsg.append(msgA)
+                elif eType=='CHEXA' or eType=='HEXA':
+                    hexaMsg.append(msgA)
+                else:
+                    raise NotImplementedError('eType=|%r|' %(eType))
+                ###                
+            ###
+            if isTetra:
+                msg += header+tetraMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isPenta:
+                msg += header+pentaMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isHexa:
+                msg += header+hexaMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            ###
+        ###
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         if self.isTransient:
@@ -478,6 +533,46 @@ class solidStressObject(stressObject):
                     ###
                 msg += '\n'
                 #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
+            ###
+        ###
+        return msg
+
+    def __reprTransient__(self):
+        msg = '---SOLID STRESS---\n'
+        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        headers = self.getHeaders()
+        for header in headers:
+            msg += '%9s ' %(header)
+        msg += '\n'
+
+        for dt,oxxs in sorted(self.oxx.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            for eid,oxxNodes in sorted(oxxs.items()):
+                eType = self.eType[eid]
+                for nid in sorted(oxxNodes):
+                    oxx = self.oxx[dt][eid][nid]
+                    oyy = self.oyy[dt][eid][nid]
+                    ozz = self.ozz[dt][eid][nid]
+                    txy = self.txy[dt][eid][nid]
+                    tyz = self.tyz[dt][eid][nid]
+                    txz = self.txz[dt][eid][nid]
+
+                    #o1 = self.o1[dt][eid][nid]
+                    #o2 = self.o2[dt][eid][nid]
+                    #o3 = self.o3[dt][eid][nid]
+
+                    ovm = self.ovmShear[dt][eid][nid]
+                    msg += '%-6i %6s %8s ' %(eid,eType,nid)
+                    vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%9s ' %('0')
+                        else:
+                            msg += '%9i ' %(val)
+                        ###
+                    msg += '\n'
+                    #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
+                ###
             ###
         ###
         return msg
@@ -837,9 +932,9 @@ class solidStrainObject(strainObject):
         (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def writeF06(self,headers,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplmentedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
         msg = []
 
         if self.isVonMises():
@@ -915,15 +1010,15 @@ class solidStrainObject(strainObject):
         ###
         msg = []
         if isTetra:
-            msg += headers+tetraMsg
+            msg += header+tetraMsg
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isPenta:
-            msg += headers+pentaMsg
+            msg += header+pentaMsg
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
         if isHexa:
-            msg += headers+hexaMsg
+            msg += header+hexaMsg
             msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
 

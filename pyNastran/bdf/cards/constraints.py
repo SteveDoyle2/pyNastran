@@ -318,7 +318,10 @@ class SUPORT(Constraint):
     type = 'SUPORT'
     def __init__(self,card=None,data=None):
         Constraint.__init__(self,card,data)
-        fields   = card.fields(1)
+        if card:
+            fields   = card.fields(1)
+        else:
+            fields = data
         
         self.IDs = []
         self.Cs  = []
@@ -404,18 +407,26 @@ class SPC(Constraint):
     type = 'SPC'
     def __init__(self,card=None,data=None):
         Constraint.__init__(self,card,data)
-        self.conid       = card.field(1)
-        self.gids        = [card.field(2),card.field(5,None)]
-        self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
-        self.enforced    = [card.field(4),card.field(7,None)]
         
-        # reduce the size if there are duplicate Nones
-        nConstraints = max(len(self.gids       ),
-                           len(self.constraints),
-                           len(self.enforced   ))
-        self.gids        = self.gids[       0:nConstraints]
-        self.constraints = self.constraints[0:nConstraints]
-        self.enforced    = self.enforced[   0:nConstraints]
+        if card:
+            self.conid       = card.field(1)
+            self.gids        = [card.field(2),card.field(5,None)]
+            self.constraints = [card.field(3),card.field(6,None)] # 0 if scalar point 1-6 if grid
+            self.enforced    = [card.field(4),card.field(7,None)]
+
+            # reduce the size if there are duplicate Nones
+            nConstraints = max(len(self.gids       ),
+                               len(self.constraints),
+                               len(self.enforced   ))
+            self.gids        = self.gids[       0:nConstraints]
+            self.constraints = self.constraints[0:nConstraints]
+            self.enforced    = self.enforced[   0:nConstraints]
+        else:
+            self.conid = data[0]
+            self.gids = [data[1]]
+            self.constraints = [data[2]]
+            self.enforced = [data[3]]
+        ###
 
     def getNodeDOFs(self,mesh):
         pass

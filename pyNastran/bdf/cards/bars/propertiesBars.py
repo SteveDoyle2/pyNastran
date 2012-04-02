@@ -586,8 +586,8 @@ class PBAR(LineProperty):
                 assert self.K2==None
             ###
         else:
-            self.mid = data[0]
-            self.pid = data[1]
+            self.pid = data[0]
+            self.mid = data[1]
             self.A   = data[2]
             self.i1  = data[3]
             self.i2  = data[4]

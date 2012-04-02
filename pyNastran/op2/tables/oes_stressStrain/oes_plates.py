@@ -35,15 +35,15 @@ class plateStressObject(stressObject):
         self.ovmShear = {}
 
         #print "self.code = ",self.code
-        if self.code in [ [1,0,1],[1,0,5],[1,0,15] ]:
-            #self.isVonMises = True
-            assert self.isFiberDistance() == True,self.stressBits
-            assert self.isVonMises()      == True,self.stressBits
-        elif self.code == [1,0,0]:
-            assert self.isFiberDistance() == False,self.stressBits
-            assert self.isVonMises()      == False,self.stressBits
-        else:
-            raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
+        #if self.code in [ [1,0,1],[1,0,5],[1,0,15] ]:
+        #    #self.isVonMises = True
+        #    assert self.isFiberDistance() == True,self.stressBits
+        #    assert self.isVonMises()      == True,self.stressBits
+        #elif self.code == [1,0,0]:
+        #    assert self.isFiberDistance() == False,self.stressBits
+        #    assert self.isVonMises()      == False,self.stressBits
+        #else:
+        #    raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
 
 
