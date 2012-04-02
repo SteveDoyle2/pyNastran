@@ -99,9 +99,9 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
             ###
         return msg
 
-class complexTableObject(tableObject):
+class complexTableObject(TableObject):
     def __init__(self,dataCode,iSubcase,dt=None):
-        tableObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase)
         
     def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
         msg = "nodeID=%s v1r=%s v2r=%s v3r=%s" %(nodeID,v1r,v2r,v3r)
@@ -110,13 +110,37 @@ class complexTableObject(tableObject):
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
-        self.translations[self.dt][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
-        self.rotations[self.dt][nodeID]    = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
+        self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
+        self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
     ###
 
 class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,freq=None):
         complexTableObject.__init__(self,dataCode,iSubcase)
+
+    def writeF06(header,pageStamp,pageNum=1):
+        words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',
+                 '                                                          (REAL/IMAGINARY)\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        msg = []
+        for dt,translations in sorted(self.translations.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            for nodeID,translation in sorted(self.translations.items()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[dt][nodeID]
+
+                (dxr,dxi,dyr,dyi,dzr,dzi) = translation
+                (rxr,rxi,ryr,ryi,rzr,rzi) = rotation
+                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
+                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
+                msg.append('  %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
 
     def __repr__(self):
         msg = '---COMPLEX DISPLACEMENTS---\n'
@@ -133,11 +157,9 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
 
             for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[freq][nodeID]
-                (dx,dy,dz) = translation
-                (rx,ry,rz) = rotation
 
                 msg += '%-10i ' %(nodeID)
-                vals = dx+dy+dz+rx+ry+rz
+                vals = translation+rotation
                 for val in vals:
                     if abs(val)<1e-6:
                         msg += '%10s ' %(0)

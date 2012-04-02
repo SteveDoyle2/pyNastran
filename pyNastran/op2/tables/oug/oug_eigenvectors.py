@@ -107,8 +107,7 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum += 1
         ###
-        out = ''.join(msg)
-        return (out,pageNum)
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'        
@@ -156,7 +155,6 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
              7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
     def __init__(self,dataCode,iSubcase,mode):
-        raise Exception('is this used???')
         scalarObject.__init__(self,dataCode,iSubcase)
         #self.caseVal = mode
         #print "mode = %s" %(mode)
@@ -298,6 +296,32 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
 
     def eigenvalues(self):
         return sorted(self.translations.keys())
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        raise NotImplementedError()
+        msg = []
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+            msg += header
+            freq = self.eigrs[i]
+            msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
+            msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
+            msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
+            for nodeID,displacement in sorted(eigVals.items()):
+                rotation = self.rotations[iMode][nodeID]
+                gridType = self.gridTypes[nodeID]
+                (dx,dy,dz) = displacement
+                (rx,ry,rz) = rotation
+                
+                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
+                msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum += 1
+        ###
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         msg = '---EIGENVECTORS---\n'

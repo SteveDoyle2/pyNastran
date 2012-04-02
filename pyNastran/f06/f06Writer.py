@@ -134,8 +134,11 @@ class F06Writer(object):
 
         resTypes = [self.displacements,self.temperatures,
                     self.spcForces,self.mpcForces,
-                    self.rodStrain,self.barStrain,self.beamStrain,self.shearStrain,self.plateStrain,self.compositePlateStrain,#self.solidStrain,  # beam, shear...not done
-                    self.rodStress,self.barStress,self.beamStress,self.shearStress,self.plateStress,self.compositePlateStress,self.solidStress,
+                    self.rodStrain,self.barStrain,self.plateStrain,self.compositePlateStrain,self.solidStrain,
+                    self.rodStress,self.barStress,self.plateStress,self.compositePlateStress,self.solidStress,
+                    # beam, shear...not done
+                    #self.beamStrain,self.beamStress,
+                    #self.shearStrain,self.shearStress,
                     self.ctriaxStress,
                     self.ctriaxStrain,
                     self.gridPointForces,

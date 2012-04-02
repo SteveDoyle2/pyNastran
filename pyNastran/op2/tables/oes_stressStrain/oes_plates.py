@@ -386,11 +386,84 @@ class plateStressObject(stressObject):
             pageNum+=1
         if isTri:
             triMsg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
 
         #print "quadMsg = ",quadMsg
         #print "triMsg = ",triMsg
-        msg = ''.join(quadMsg+triMsg)
-        return (msg,pageNum+1)
+        return (''.join(quadMsg+triMsg),pageNum-1)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        if self.isVonMises():
+            vonMises = 'VON MISES'
+        else:
+            vonMises = 'MAX SHEAR'
+
+        if self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)\n',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+        else:
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)\n',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)\n',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+
+        eTypes = self.eType.values()
+        if 'CQUAD4' in eTypes:
+            qkey = eTypes.index('CQUAD4')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.oxx[kkey].keys()
+            isBilinear=True
+            quadMsg2 = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg2 = ['                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n \n']+triMsgTemp
+            isQuad = True
+        else:
+            quadMsg2 = []
+            isQuad = False
+
+        if 'CTRIA3' in eTypes:
+            isTri = True
+            triMsg2 = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
+        else:
+            isTri = False
+            triMsg2 = []
+        
+        msg = []
+        for dt,OxxNodes in sorted(self.oxx.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            quadMsg = []
+            triMsg = []
+            if isQuad: quadMsg = header+quadMsg2+words
+            if isTri:  triMsg  = header+triMsg2 +words
+            for eid,oxxNodes in sorted(OxxNodes.items()):
+                eType = self.eType[eid]
+                if eType in 'CQUAD4':
+                    if isBilinear:
+                        out = self.writeF06_Quad4_Bilinear(eid,oxxNodes)
+                    else:
+                        out = self.writeF06_Tri3(eid,oxxNodes)
+                    quadMsg.append(out)
+                elif eType in 'CTRIA3':
+                    out = self.writeF06_Tri3(eid,oxxNodes)
+                    triMsg.append(out)
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType))
+                ###
+            ###
+            if isQuad:
+                quadMsg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isTri:
+                triMsg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            ###
+            msg = ''.join(quadMsg+triMsg)
+        ###
+        return (msg,pageNum-1)
 
     def writeF06_Quad4_Bilinear(self,eid,oxxNodes):
         msg = ''
@@ -759,46 +832,6 @@ class plateStrainObject(strainObject):
             headers.append('maxShear')
         return headers
 
-    def __reprTransient__(self):
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' %('EID','eType','nodeID','iLayer')
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,exx in sorted(self.exx.items()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,exxNodes in sorted(exx.items()):
-                eType = self.eType[eid]
-                for nid in sorted(exxNodes):
-                    for iLayer in range(len(self.exx[dt][eid][nid])):
-                        fd    = self.fiberCurvature[dt][eid][nid][iLayer]
-                        exx   = self.exx[   dt][eid][nid][iLayer]
-                        eyy   = self.eyy[   dt][eid][nid][iLayer]
-                        exy   = self.exy[   dt][eid][nid][iLayer]
-                        angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        evm   = self.evmShear[   dt][eid][nid][iLayer]
-
-                        msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
-                        vals = [exx,eyy,exy,major,minor,evm]
-                        for val in vals:
-                            if abs(val)<1e-6:
-                                msg += '%10s ' %('0.')
-                            else:
-                                msg += '%10.3g ' %(val)
-                            ###
-                        msg += '\n'
-
-                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
-                    ###
-                ###
-            ###
-        ###
-        return msg
-
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
             raise NotImplementedError()
@@ -957,6 +990,46 @@ class plateStrainObject(strainObject):
                     msg += '\n'
 
                     #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                ###
+            ###
+        ###
+        return msg
+
+    def __reprTransient__(self):
+        msg = '---ISOTROPIC PLATE STRAIN---\n'
+        headers = self.getHeaders()
+        msg += '%-6s %6s %8s %7s ' %('EID','eType','nodeID','iLayer')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,exx in sorted(self.exx.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            for eid,exxNodes in sorted(exx.items()):
+                eType = self.eType[eid]
+                for nid in sorted(exxNodes):
+                    for iLayer in range(len(self.exx[dt][eid][nid])):
+                        fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                        exx   = self.exx[   dt][eid][nid][iLayer]
+                        eyy   = self.eyy[   dt][eid][nid][iLayer]
+                        exy   = self.exy[   dt][eid][nid][iLayer]
+                        angle = self.angle[ dt][eid][nid][iLayer]
+                        major = self.majorP[dt][eid][nid][iLayer]
+                        minor = self.minorP[dt][eid][nid][iLayer]
+                        evm   = self.evmShear[   dt][eid][nid][iLayer]
+
+                        msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
+                        vals = [exx,eyy,exy,major,minor,evm]
+                        for val in vals:
+                            if abs(val)<1e-6:
+                                msg += '%10s ' %('0.')
+                            else:
+                                msg += '%10.3g ' %(val)
+                            ###
+                        msg += '\n'
+
+                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                    ###
                 ###
             ###
         ###
