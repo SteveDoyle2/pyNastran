@@ -94,6 +94,8 @@ class OP2(BDF,  # BDF methods
         ## to better understand it
         self.makeOp2Debug = False
         
+        ## BDF Title
+        self.Title = ''
         ## limit output DTs
         self.expectedTimes = {}
         #self.expectedTimes = {1:array([0.1,0.12])}

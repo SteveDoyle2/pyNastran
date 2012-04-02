@@ -99,3 +99,51 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
             ###
         return msg
 
+class complexTableObject(tableObject):
+    def __init__(self,dataCode,iSubcase,dt=None):
+        tableObject.__init__(self,dataCode,iSubcase)
+        
+    def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
+        msg = "nodeID=%s v1r=%s v2r=%s v3r=%s" %(nodeID,v1r,v2r,v3r)
+        #print msg
+        #msg = ''
+        assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+
+        self.translations[self.dt][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
+        self.rotations[self.dt][nodeID]    = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
+    ###
+
+class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
+    def __init__(self,dataCode,iSubcase,freq=None):
+        complexTableObject.__init__(self,dataCode,iSubcase)
+
+    def __repr__(self):
+        msg = '---COMPLEX DISPLACEMENTS---\n'
+        #if self.dt is not None:
+        #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        headers = ['DxReal','DxImag','DyReal','DyImag','DzReal','DyImag','RxReal','RxImag','RyReal','RyImag','RzReal','RzImag']
+        msg += '%-10s ' %('nodeID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for freq,translations in sorted(self.translations.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+
+            for nodeID,translation in sorted(translations.items()):
+                rotation = self.rotations[freq][nodeID]
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+
+                msg += '%-10i ' %(nodeID)
+                vals = dx+dy+dz+rx+ry+rz
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %(0)
+                    else:
+                        msg += '%10.3e ' %(val)
+                    ###
+                msg += '\n'
+            ###
+        return msg

@@ -81,7 +81,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
     
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed))
 
-def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=False,debug=False,stopOnFailure=True):
+def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
     isPassed = False
     stopOnFailure = False
     #debug = True
@@ -99,8 +99,8 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=False,deb
         if writeF06:
             (model,ext) = os.path.splitext(op2file)
             op2.writeF06(model+'.f06.out')
-        print op2.printResults()
-        #op2.printResults()
+        #print op2.printResults()
+        op2.printResults()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
