@@ -868,40 +868,6 @@ class solidStrainObject(strainObject):
             headers.append('maxShear')
         return headers
 
-    def __reprTransient__(self):
-        msg = '---SOLID STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-        for dt,exxs in sorted(self.exx.items()):
-            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-            for eid,exxNodes in sorted(exxs.items()):
-                eType = self.eType[eid]
-                for nid in sorted(exxNodes):
-                    exx = self.exx[dt][eid][nid]
-                    eyy = self.eyy[dt][eid][nid]
-                    ezz = self.ezz[dt][eid][nid]
-                    exy = self.exy[dt][eid][nid]
-                    eyz = self.eyz[dt][eid][nid]
-                    exz = self.exz[dt][eid][nid]
-                    evm = self.evmShear[dt][eid][nid]
-                    msg += '%-6i %6s %8s ' %(eid,eType,nid)
-                    vals = [exx,eyy,ezz,exy,eyz,exz,evm]
-                    for val in vals:
-                        if abs(val)<1e-6:
-                            msg += '%10s ' %('0')
-                        else:
-                            msg += '%10.3e ' %(val)
-                        ###
-                    msg += '\n'
-                    #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
-                ###
-            ###
-        ###
-        return msg
-
     def ovm(self,o11,o22,o33,o12,o13,o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
         ovm = 0.5 * ( (o11-o22)**2+(o22-o33)**2+(o11-o33)**2+6*(o23**2+o31**2+o12**2))
@@ -1020,7 +986,141 @@ class solidStrainObject(strainObject):
         if isHexa:
             msg += header+hexaMsg
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        msg = []
+
+        if self.isVonMises():
+            vonMises = 'VON MISES'
+        else:
+            vonMises = 'MAX SHEAR'
+
+        tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+
+        pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+
+        hexaMsg  = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+
+        eTypes = self.eType.values()
+        isTetra=False; isPenta=False; isHexa=False
+        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
+            isTetra = True
+        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
+            isPenta = True
+        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
+            isHexa = True
+        
+        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        
+        for dt,exxs in sorted(self.exx.items()):            
+            dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
+            header[2] = dtLine
+            for eid,oxxNodes in sorted(exxs.items()):
+                eType = self.eType[eid]
+
+                k = exxNodes.keys()
+                #kc = k.index('C')
+                #k.pop(kc)
+                k.sort()
+                k.pop(-1)
+                #print k
+                msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
+                for nid in ['C']+k:
+                    exx = self.exx[dt][eid][nid]
+                    eyy = self.eyy[dt][eid][nid]
+                    ezz = self.ezz[dt][eid][nid]
+                    exy = self.exy[dt][eid][nid]
+                    eyz = self.eyz[dt][eid][nid]
+                    exz = self.exz[dt][eid][nid]
+
+                    e1 = self.e1[dt][eid][nid]
+                    e2 = self.e2[dt][eid][nid]
+                    e3 = self.e3[dt][eid][nid]
+                    evm = self.evmShear[dt][eid][nid]
+                    p = (o1+o2+o3)/-3.
+
+                    if nid=='C': nid='CENTER'
+                    #print "nid = |%r|" %(nid)
+                    A = [[exx,exy,exz],
+                         [exy,eyy,eyz],
+                         [exz,eyz,ezz]]
+                    (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
+
+                    msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,exx,exy,o1,v[0,0],v[0,1],v[0,2],p,evm)
+                    msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', eyy,eyz,o2,v[1,0],v[1,1],v[1,2])
+                    msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ezz,exz,o3,v[2,0],v[2,1],v[2,2])
+                ###
+                if eType=='CTETRA' or eType=='TETRA':
+                    tetraMsg.append(msgA)
+                elif eType=='CPENTA' or eType=='PENTA':
+                    pentaMsg.append(msgA)
+                elif eType=='CHEXA' or eType=='HEXA':
+                    hexaMsg.append(msgA)
+                else:
+                    raise NotImplementedError('eType=|%r|' %(eType))
+                ###                
+            ###
+            if isTetra:
+                msg += header+tetraMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isPenta:
+                msg += header+pentaMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isHexa:
+                msg += header+hexaMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            ###
+        ###
+        return (''.join(msg),pageNum-1)
+
+    def __repr__(self):
+        if self.isTransient:
+            return self.__reprTransient__()
+
+        msg = '---SOLID STRESS---\n'
+        headers = self.getHeaders()
+        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        for header in headers:
+            msg += '%9s ' %(header)
+        msg += '\n'
+        for eid,oxxNodes in sorted(self.oxx.items()):
+            eType = self.eType[eid]
+            for nid in sorted(oxxNodes):
+                oxx = self.oxx[eid][nid]
+                oyy = self.oyy[eid][nid]
+                ozz = self.ozz[eid][nid]
+                txy = self.txy[eid][nid]
+                tyz = self.tyz[eid][nid]
+                txz = self.txz[eid][nid]
+
+                #o1 = self.o1[eid][nid]
+                #o2 = self.o2[eid][nid]
+                #o3 = self.o3[eid][nid]
+                ovm = self.ovmShear[eid][nid]
+                msg += '%-6i %6s %8s ' %(eid,eType,nid)
+                vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%9s ' %('0')
+                    else:
+                        msg += '%9i ' %(val)
+                    ###
+                msg += '\n'
+                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
+            ###
+        ###
+        return msg
 
     def __repr__(self):
         if self.isTransient:
@@ -1056,3 +1156,36 @@ class solidStrainObject(strainObject):
         ###
         return msg
 
+    def __reprTransient__(self):
+        msg = '---SOLID STRAIN---\n'
+        headers = self.getHeaders()
+        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+        for dt,exxs in sorted(self.exx.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+            for eid,exxNodes in sorted(exxs.items()):
+                eType = self.eType[eid]
+                for nid in sorted(exxNodes):
+                    exx = self.exx[dt][eid][nid]
+                    eyy = self.eyy[dt][eid][nid]
+                    ezz = self.ezz[dt][eid][nid]
+                    exy = self.exy[dt][eid][nid]
+                    eyz = self.eyz[dt][eid][nid]
+                    exz = self.exz[dt][eid][nid]
+                    evm = self.evmShear[dt][eid][nid]
+                    msg += '%-6i %6s %8s ' %(eid,eType,nid)
+                    vals = [exx,eyy,ezz,exy,eyz,exz,evm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10.3e ' %(val)
+                        ###
+                    msg += '\n'
+                    #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
+                ###
+            ###
+        ###
+        return msg

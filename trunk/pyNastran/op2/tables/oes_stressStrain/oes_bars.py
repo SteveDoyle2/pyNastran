@@ -186,60 +186,9 @@ class barStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def __reprTransient__(self):
-        msg = '---BAR STRESS---\n'
-        msg += '%-6s %6s ' %('EID','eType')
-        headers = ['s1','s2','s3','s4','Axial','sMax','sMin']
-        for header in headers:
-            msg += '%8s ' %(header)
-        msg += '\n'
-
-        for dt,S1ss in sorted(self.s1.items()):
-            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-            for eid,S1s in sorted(S1ss.items()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                #MSt = self.MSt[dt][eid]
-                #MSc = self.MSc[dt][eid]
-
-                s1   = self.s1[dt][eid]
-                s2   = self.s2[dt][eid]
-                s3   = self.s3[dt][eid]
-                s4   = self.s4[dt][eid]
-                smax = self.smax[dt][eid]
-                smin = self.smin[dt][eid]
-                msg += '%-6i %6s ' %(eid,eType)
-                vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0]]
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%8s ' %('0')
-                    else:
-                        msg += '%8i ' %(val)
-                    ###
-                msg += '\n'
-
-                msg += '%s ' %(' '*13)
-                vals = [s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1]]
-                for val in vals:
-                    if isinstance(val,str):
-                        msg += '%8s ' %(val)
-                    elif abs(val)<1e-6:
-                        msg += '%8s ' %('0')
-                    else:
-                        msg += '%8i ' %(val)
-                    ###
-                msg += '\n'
-
-
-                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-            ###
-        ###
-        return msg
-
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplementedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+[
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -271,7 +220,43 @@ class barStressObject(stressObject):
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
-        
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        words = [
+                '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
+                '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
+                '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
+              ]
+        msg = []
+        for dt,S1s in sorted(self.s1.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header + words
+            for eid,S1 in sorted(S1s.items()):
+                eType = self.eType[eid]
+                axial = self.axial[dt][eid]
+                #MSt = self.MSt[eid]
+                #MSc = self.MSc[eid]
+                MSt = ''
+                MSc = ''
+
+                s1   = self.s1[dt][eid]
+                s2   = self.s2[dt][eid]
+                s3   = self.s3[dt][eid]
+                s4   = self.s4[dt][eid]
+                smax = self.smax[dt][eid]
+                smin = self.smin[dt][eid]
+                vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0],
+                        s1[1],s2[1],s3[1],s4[1],      smax[1],smin[1]]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [s10,s20,s30,s40,axial,smax0,smin0,
+                 s11,s21,s31,s41,smax1,smin1] = vals2
+                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' %(eid,  s10,s20,s30,s40,axial,smax0,smin0,MSt.rstrip()))
+                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n'   %('', s11,s21,s31,s41,'',   smax1,smin1,MSc.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
+
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
@@ -323,6 +308,55 @@ class barStressObject(stressObject):
         ###
         return msg
 
+    def __reprTransient__(self):
+        msg = '---BAR STRESS---\n'
+        msg += '%-6s %6s ' %('EID','eType')
+        headers = ['s1','s2','s3','s4','Axial','sMax','sMin']
+        for header in headers:
+            msg += '%8s ' %(header)
+        msg += '\n'
+
+        for dt,S1ss in sorted(self.s1.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+            for eid,S1s in sorted(S1ss.items()):
+                eType = self.eType[eid]
+                axial = self.axial[dt][eid]
+                #MSt = self.MSt[dt][eid]
+                #MSc = self.MSc[dt][eid]
+
+                s1   = self.s1[dt][eid]
+                s2   = self.s2[dt][eid]
+                s3   = self.s3[dt][eid]
+                s4   = self.s4[dt][eid]
+                smax = self.smax[dt][eid]
+                smin = self.smin[dt][eid]
+                msg += '%-6i %6s ' %(eid,eType)
+                vals = [s1[0],s2[0],s3[0],s4[0],axial,smax[0],smin[0]]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%8s ' %('0')
+                    else:
+                        msg += '%8i ' %(val)
+                    ###
+                msg += '\n'
+
+                msg += '%s ' %(' '*13)
+                vals = [s1[1],s2[1],s3[1],s4[1],'',smax[1],smin[1]]
+                for val in vals:
+                    if isinstance(val,str):
+                        msg += '%8s ' %(val)
+                    elif abs(val)<1e-6:
+                        msg += '%8s ' %('0')
+                    else:
+                        msg += '%8i ' %(val)
+                    ###
+                msg += '\n'
+
+                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
+                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
+            ###
+        ###
+        return msg
 
 class barStrainObject(strainObject):
     """
@@ -476,69 +510,15 @@ class barStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def __reprTransient__(self):
-        """
-        @warning untested
-        """
-        msg = '---BAR STRAIN---\n'
-        msg += '%-8s %6s ' %('EID','eType')
-        headers = ['e1','e2','e3','e4','Axial','eMax','eMin']
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,E1s in sorted(self.e1.items()):
-            msg += "%s = %g\n" %(self.dataCode['name'],self.dt)
-            for eid,e1s in sorted(Els.items()):
-                eType = self.eType[eid]
-                axial = self.axial[dt][eid]
-                #MSt  = self.MS_tension[dt][eid]
-                #MSc  = self.MS_compression[dt][eid]
-
-                e1   = self.e1[dt][eid]
-                e2   = self.e2[dt][eid]
-                e3   = self.e3[dt][eid]
-                e4   = self.e4[dt][eid]
-                emax = self.emax[dt][eid]
-                emin = self.emin[dt][eid]
-                msg += '%-8i %6s ' %(eid,eType)
-                vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0]]
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%10s ' %('0')
-                    else:
-                        msg += '%10.3g ' %(val)
-                    ###
-                msg += '\n'
-
-                msg += '%s ' %(' '*17)
-                vals = [e1[1],e2[1],e3[1],e4[1],'',emax[1],emin[1]]
-                for val in vals:
-                    if isinstance(val,str):
-                        msg += '%10s ' %(val)
-                    elif abs(val)<1e-6:
-                        msg += '%10s ' %('0')
-                    else:
-                        msg += '%10.3g ' %(val)
-                    ###
-                msg += '\n'
-
-                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
-                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
-            ###
-        ###
-        return msg
-
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplementedError()
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
-        msg = [
+        msg = header+[
                 '                                   S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-
         for eid,E1s in sorted(self.e1.items()):
             eType = self.eType[eid]
             axial = self.axial[eid]
@@ -564,6 +544,43 @@ class barStrainObject(strainObject):
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        words = [
+                '                                   S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )\n',
+                '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
+                '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
+              ]
+        msg = []
+        for dt,E1s in sorted(self.e1.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header + words
+            for eid,e1s in sorted(E1s.items()):
+                eType = self.eType[eid]
+                axial = self.axial[eid]
+                #MSt = self.MSt[eid]
+                #MSc = self.MSc[eid]
+                MSt = ''
+                MSc = ''
+
+                e1   = self.e1[eid]
+                e2   = self.e2[eid]
+                e3   = self.e3[eid]
+                e4   = self.e4[eid]
+                emax = self.emax[eid]
+                emin = self.emin[eid]
+                vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0],
+                        e1[1],e2[1],e3[1],e4[1],emax[1],emin[1]]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [e10,e20,e30,e40,axial,emax0,emin0,
+                 e11,e21,e31,e41,emax1,emin1] = vals2
+
+                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' %(eid,  e10,e20,e30,e40,axial,emax0,emin0,MSt.rstrip()))
+                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n'   %('', e11,e21,e31,e41,'',   emax1,emin1,MSc.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         if self.isTransient:
@@ -612,5 +629,55 @@ class barStrainObject(strainObject):
 
             #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
             #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
+        ###
+        return msg
+
+    def __reprTransient__(self):
+        msg = '---BAR STRAIN---\n'
+        msg += '%-8s %6s ' %('EID','eType')
+        headers = ['e1','e2','e3','e4','Axial','eMax','eMin']
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,E1s in sorted(self.e1.items()):
+            msg += "%s = %g\n" %(self.dataCode['name'],self.dt)
+            for eid,e1s in sorted(Els.items()):
+                eType = self.eType[eid]
+                axial = self.axial[dt][eid]
+                #MSt  = self.MS_tension[dt][eid]
+                #MSc  = self.MS_compression[dt][eid]
+
+                e1   = self.e1[dt][eid]
+                e2   = self.e2[dt][eid]
+                e3   = self.e3[dt][eid]
+                e4   = self.e4[dt][eid]
+                emax = self.emax[dt][eid]
+                emin = self.emin[dt][eid]
+                msg += '%-8i %6s ' %(eid,eType)
+                vals = [e1[0],e2[0],e3[0],e4[0],axial,emax[0],emin[0]]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10.3g ' %(val)
+                    ###
+                msg += '\n'
+
+                msg += '%s ' %(' '*17)
+                vals = [e1[1],e2[1],e3[1],e4[1],'',emax[1],emin[1]]
+                for val in vals:
+                    if isinstance(val,str):
+                        msg += '%10s ' %(val)
+                    elif abs(val)<1e-6:
+                        msg += '%10s ' %('0')
+                    else:
+                        msg += '%10.3g ' %(val)
+                    ###
+                msg += '\n'
+
+                #msg += "eid=%-4s eType=%s s1=%-4i s2=%-4i s3=%-4i s4=%-4i axial=-%5i smax=%-5i smax=%-4i\n" %(eid,eType,s1[0],s2[0],s3[0],s4[0],axial, smax[0],smin[0])
+                #msg += "%s                s1=%-4i s2=%-4i s3=%-4i s4=%-4i %s         smax=%-5i smax=%-4i\n" %(' '*4,    s1[1],s2[1],s3[1],s4[1],'    ',smax[1],smin[1])
+            ###
         ###
         return msg
