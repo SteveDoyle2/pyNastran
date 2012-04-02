@@ -15,9 +15,7 @@ class OPG(object):
     def readTable_OPG1(self):
         table3     = self.readTable_OPG_3
         table4Data = self.readOPG1_Data
-        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
-        del self.dtMap
         self.deleteAttributes_OPG()
 
     def deleteAttributes_OPG(self):
@@ -197,10 +195,17 @@ class OPG(object):
 
     def readOPG1_Data_table19_format1_sort0(self):
         if self.thermal==0:
-            if self.analysisCode==1: # displacement
+            if self.analysisCode==1: # static
                 #print "isAppliedLoads"
-                self.obj = appliedLoadsObject(self.dataCode,self.iSubcase)
-                self.appliedLoads[self.iSubcase] = self.obj
+                self.createTransientObject(self.appliedLoads,appliedLoadsObject)
+                self.readOPGForces(self.data,self.obj)
+            elif self.analysisCode==6: # transient
+                #print "isAppliedLoads"
+                self.createTransientObject(self.appliedLoads,appliedLoadsObject)
+                self.readOPGForces(self.data,self.obj)
+            elif self.analysisCode==10: # nonlinear static
+                #print "isAppliedLoads"
+                self.createTransientObject(self.appliedLoads,appliedLoadsObject)
                 self.readOPGForces(self.data,self.obj)
             else:
                 self.skipOES_Element()
@@ -212,13 +217,29 @@ class OPG(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
+        
+        #readCase = True
+        #if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
+        #    readCase = self.updateDtMap()
+        
+        #if self.obj and readCase:
+        #    self.readScalarsOut(debug=False)
+        #else:
+        #    self.skipOES_Element()
+        ###
+        
 
     def readOPG1_Data_table2_format1_sort0(self):
         if self.thermal==0:
             if self.analysisCode==1: # load vector
                 #print "isAppliedLoads"
-                self.obj = loadVectorObject(self.dataCode,self.iSubcase)
-                self.loadVectors[self.iSubcase] = self.obj
+                self.createTransientObject(self.loadVectors,loadVectorObject)
+            elif self.analysisCode==6: # transient
+                #print "isAppliedLoads"
+                self.createTransientObject(self.loadVectors,loadVectorObject)
+            elif self.analysisCode==10: # nonlinear static
+                #print "isAppliedLoads"
+                self.createTransientObject(self.loadVectors,loadVectorObject)
             else:
                 self.skipOES_Element()
                 #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
@@ -229,16 +250,7 @@ class OPG(object):
         else:
             raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-
-        readCase = True
-        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
-            readCase = self.updateDtMap()
-        
-        if self.obj and readCase:
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
-        ###
+        self.readMappedScalarsOut(debug=False) # handles dtMap
 
     def readOPGForces(self,data,scalarObject):
         deviceCode = self.deviceCode

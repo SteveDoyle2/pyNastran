@@ -12,10 +12,7 @@ class OGF(object):
     def readTable_OGF(self):
         table3 = self.readTable_OGF_3
         table4Data = self.readOGF_Data
-
-        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
-        del self.dtMap
         self.deleteAttributes_OGF()
 
     def deleteAttributes_OGF(self):

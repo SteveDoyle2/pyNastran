@@ -109,6 +109,7 @@ Added F06 Reader
    - format1, SORT2 supported
    - OUG
      - displacement (static/transient)
+       - real
      - ***complex displacement
      - temperature  (static/transient)
      - eigenvectors (real/complex)
@@ -135,6 +136,8 @@ Added F06 Reader
 Added F06 Writer
    - OUG
      - displacement (static/transient)
+        - real
+        - complex
      - velocity     (static/transient)
      - acceleration (static/transient)
      - temperature  (static/transient)
@@ -145,7 +148,7 @@ Added F06 Writer
         - CTETRA
         - CPENTA
         - CHEXA
-     - isotropic plate stress/strain (static/***transient)
+     - isotropic plate stress/strain (static/transient)
         - CTRIA3
         - CQUAD4 (centroid/bilinear)
      - composite plate stress/strain (static/transient)

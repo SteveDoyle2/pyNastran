@@ -33,9 +33,8 @@ class spcForcesObject(TableObject):
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt,translations in sorted(self.translations.items()):
-            header2 = copy.deepcopy(header)
-            header2[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg.append(header2+words)
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg+= header+words
             for nodeID,translation in sorted(self.translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[dt][nodeID]
@@ -144,9 +143,8 @@ class mpcForcesObject(TableObject):
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt,translations in sorted(self.translations.items()):
-            header2 = copy.deepcopy(header)
-            header2[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg.append(header2+words)
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
             for nodeID,translation in sorted(self.translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[dt][nodeID]

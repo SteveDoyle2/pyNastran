@@ -23,9 +23,7 @@ class OQG(object):
         #self.tableName = 'OQG'
         table3 = self.readTable_OQG1_3
         table4Data = self.readOQG1_Data
-        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
-        del self.dtMap
         self.deleteAttributes_OQG()
 
     def deleteAttributes_OQG(self):
@@ -134,7 +132,8 @@ class OQG(object):
         #    self.readOQG1_Data_format1_sort1()
         else:
             #self.skipOES_Element()
-            raise Exception('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
+            print self.codeInformation()
+            raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -148,7 +147,8 @@ class OQG(object):
                 self.createTransientObject(self.mpcForces,mpcForcesObject)
             else:
                 #self.skipOES_Element()
-                raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
+                print self.codeInformation()
+                raise NotImplementedError('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             raise NotImplementedError('thermal not supported for MPC forces...atfsCode=%s' %(self.atfsCode))
@@ -164,8 +164,7 @@ class OQG(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        self.readScalarsOut(debug=False)
-        #self.skipOES_Element()
+        self.readMappedScalarsOut(debug=False) # handles dtMap
 
     def readOQG1_Data_format2_sort0(self):
         print 'not supported OQG solution...atfsCode=%s' %(self.atfsCode)
@@ -220,17 +219,7 @@ class OQG(object):
         else:
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
-        
-        readCase = True
-        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
-            readCase = self.updateDtMap()
-        
-        if self.obj and readCase:
-            #print "objName = ",self.obj.name()
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
-        ###
+        self.readMappedScalarsOut(debug=False) # handles dtMap
 
 
     def readOQG1_Data_format1_sort1(self):

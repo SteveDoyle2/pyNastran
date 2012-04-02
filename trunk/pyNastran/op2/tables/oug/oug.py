@@ -39,10 +39,7 @@ class OUG(object):
         #self.tableName = 'OUG'
         table3 = self.readTable_OUGV1_3
         table4Data = self.readOUGV1_Data
-
-        self.dtMap = {}
         self.readResultsTable(table3,table4Data)
-        del self.dtMap
         self.deleteAttributes_OUG()
 
     def deleteAttributes_OUG(self):
@@ -227,10 +224,10 @@ class OUG(object):
         else:
             #print "***start skipping***"
             #self.log.debug('skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
-            #self.skipOES_Element()
+            self.skipOES_Element()
             #print "***end skipping***"
-            print self.codeInformation()
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
+            #print self.codeInformation()
+            #raise NotImplementedError('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -299,15 +296,8 @@ class OUG(object):
             raise Exception('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
         ###
         
-        readCase = True
-        if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
-            readCase = self.updateDtMap()
-        
-        if self.obj and readCase:
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
-        ###
+        self.readMappedScalarsOut(debug=False) # handles dtMap
+
         #if self.obj:
         #    self.readScalars8(debug=False)
         #else:
@@ -343,6 +333,9 @@ class OUG(object):
             elif self.analysisCode==8: # post-buckling eigenvector
                 #print "isPostBucklingEigenvector8"
                 self.createTransientObject(self.eigenvectors,realEigenVectorObject)
+            elif self.analysisCode==9: # complex eigenvector
+                #print "isComplexEigenvector9"
+                self.createTransientObject(self.eigenvectors,complexEigenVectorObject)
             else:
                 print self.codeInformation()
                 raise Exception('unsupported %s-OUGV1 static solution...atfsCode=%s' %(self.tableName,self.atfsCode))

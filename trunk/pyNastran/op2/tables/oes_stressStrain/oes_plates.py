@@ -456,14 +456,15 @@ class plateStressObject(stressObject):
             ###
             if isQuad:
                 quadMsg.append(pageStamp+str(pageNum)+'\n')
+                msg += header+quadMsg2+quadMsg
                 pageNum+=1
             if isTri:
                 triMsg.append(pageStamp+str(pageNum)+'\n')
+                msg += header+triMsg2+triMsg
                 pageNum+=1
             ###
-            msg = ''.join(quadMsg+triMsg)
         ###
-        return (msg,pageNum-1)
+        return (''.join(msg),pageNum-1)
 
     def writeF06_Quad4_Bilinear(self,eid,oxxNodes):
         msg = ''
@@ -883,26 +884,99 @@ class plateStrainObject(strainObject):
                     out = self.writeF06_Quad4_Bilinear(eid,exxNodes)
                 else:
                     out = self.writeF06_Tri3(eid,exxNodes)
-                quadMsg.append(out[:-1])
+                quadMsg.append(out)
             elif eType in 'CTRIA3':
                 out = self.writeF06_Tri3(eid,exxNodes)
-                triMsg.append(out[:-1])
+                triMsg.append(out)
             else:
                 raise NotImplementedError('eType = |%r|' %(eType))
             ###
         ###
         if isQuad:
             quadMsg.append(pageStamp+str(pageNum)+'\n')
-            quadMsg.append('\n')
             pageNum+=1
         if isTri:
             triMsg.append(pageStamp+str(pageNum)+'\n')
-            triMsg.append('\n')
+            pageNum+=1
 
         #print "quadMsg = ",quadMsg
         #print "triMsg = ",triMsg
         msg = ''.join(quadMsg+triMsg)
-        return (msg,pageNum+1)
+        return (msg,pageNum-1)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        if self.isVonMises():
+            vonMises = 'VON MISES'
+        else:
+            vonMises = 'MAX SHEAR'
+
+        if self.isFiberDistance(): 
+            quadMsgTemp = ['    ELEMENT              FIBER                STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)\n',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
+            triMsgTemp = ['  ELEMENT      FIBER               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)\n',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+        else:
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)\n',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)\n',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+        ###
+
+        eTypes = self.eType.values()
+        if 'CQUAD4' in eTypes:
+            qkey = eTypes.index('CQUAD4')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.exx[kkey].keys()
+            isBilinear=True
+            quadMsg2 = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg2 = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
+            isQuad = True
+        else:
+            quadMsg2 = []
+            isQuad = False
+
+        if 'CTRIA3' in eTypes:
+            isTri = True
+            triMsg2 = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
+        else:
+            isTri = False
+            triMsg2 = []
+
+        msg = []
+        for dt,OxxNodes in sorted(self.oxx.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            quadMsg = []
+            triMsg = []
+            if isQuad: quadMsg = header+quadMsg2+words
+            if isTri:  triMsg  = header+triMsg2 +words
+            for eid,oxxNodes in sorted(OxxNodes.items()):
+                eType = self.eType[eid]
+                if eType in 'CQUAD4':
+                    if isBilinear:
+                        out = self.writeF06_Quad4_Bilinear(eid,oxxNodes)
+                    else:
+                        out = self.writeF06_Tri3(eid,oxxNodes)
+                    quadMsg.append(out)
+                elif eType in 'CTRIA3':
+                    out = self.writeF06_Tri3(eid,oxxNodes)
+                    triMsg.append(out)
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType))
+                ###
+            ###
+            if isQuad:
+                quadMsg.append(pageStamp+str(pageNum)+'\n')
+                msg += header+quadMsg2+quadMsg
+                pageNum+=1
+            if isTri:
+                triMsg.append(pageStamp+str(pageNum)+'\n')
+                msg += header+triMsg2+triMsg
+                pageNum+=1
+            ###
+        ###
+        return (''.join(msg),pageNum-1)
 
     def writeF06_Quad4_Bilinear(self,eid,exxNodes):
         msg = ''
