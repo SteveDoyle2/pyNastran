@@ -202,44 +202,7 @@ class compositePlateStressObject(stressObject):
             headers.append('maxShear')
         return headers
 
-    def __reprTransient__(self):
-        msg = '---COMPOSITE PLATE STRESS---\n'
-        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
-        headers = self.getHeaders()
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,O11s in sorted(self.o11.items()):
-            msg += "dt = %s\n" %(dt)
-            for eid,o11s in sorted(O11s.items()):
-                eType = self.eType[eid]
-                for iLayer in range(len(o11s)):
-                    o11 = self.o11[dt][eid][iLayer]
-                    o22 = self.o22[dt][eid][iLayer]
-                    t12 = self.t12[dt][eid][iLayer]
-                    t1z = self.t1z[dt][eid][iLayer]
-                    t2z = self.t2z[dt][eid][iLayer]
-
-                    angle = self.angle[dt][eid][iLayer]
-                    major = self.majorP[dt][eid][iLayer]
-                    minor = self.minorP[dt][eid][iLayer]
-                    ovm   = self.ovmShear[dt][eid][iLayer]
-
-                    msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
-                    vals = [o11,o22,t12,t1z,t2z,ovm]
-                    for val in vals:
-                        if abs(val)<1e-6:
-                            msg += '%10s ' %('0')
-                        else:
-                            msg += '%10i ' %(val)
-                        ###
-                    msg += '\n'
-                ###
-        ###
-        return msg
-
-    def writeF06(self,header,pageStamp,pageNum=1):  # @todo no transient
+    def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
@@ -304,6 +267,80 @@ class compositePlateStressObject(stressObject):
         msg = ''.join(quadMsg+triMsg)
         return (msg,pageNum)
 
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        if self.isVonMises():
+            von   = 'VON'
+            mises = 'MISES'
+        else:
+            von   = 'MAX'
+            mises = 'SHEAR'
+
+        words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' %(von),
+                 '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
+
+        eTypes = self.eType.values()        
+        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+            quadWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
+            isQuad = True
+        else:
+            quadWords = []
+            isQuad = False
+
+        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+            isTri = True
+            triWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n']+words
+        else:
+            isTri = False
+            triWords = []
+        ###
+        
+        msg = []
+        for dt,O11s in sorted(self.o11.items()):
+            quadMsg = []
+            triMsg = []
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            if isQuad:
+                quadMsg = header + quadWords
+            if isTri:
+                triMsg = header + triWords
+
+            for eid,o11s in sorted(O11.items()):
+                out = ''
+                eType = self.eType[eid]
+                for iLayer in range(len(o11s)):
+                    o11 = self.o11[dt][eid][iLayer]
+                    o22 = self.o22[dt][eid][iLayer]
+                    t12 = self.t12[dt][eid][iLayer]
+                    t1z = self.t1z[dt][eid][iLayer]
+                    t2z = self.t2z[dt][eid][iLayer]
+
+                    angle = self.angle[dt][eid][iLayer]
+                    major = self.majorP[dt][eid][iLayer]
+                    minor = self.minorP[dt][eid][iLayer]
+                    ovm   = self.ovmShear[dt][eid][iLayer]
+                    (vals2,isAllZeros) = self.writeF06Floats12E([o11,o22,t12,t1z,t2z,major,minor,ovm])
+                    [o11,o22,t12,t1z,t2z,major,minor,ovm] = vals2
+                    out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' %(eid,iLayer+1,o11,o22,t12,t1z,t2z,angle,major,minor,ovm)
+
+                if eType in ['CQUAD4','QUAD4LC']:
+                    quadMsg.append(out)
+                elif eType in ['CTRIA3','TRIA3LC']:
+                    triMsg.append(out)
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType))
+                ###
+            ###
+            if isQuad:
+                quadMsg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isTri:
+                triMsg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            ###
+            msg += quadMsg+triMsg
+        ###
+        return (''.join(msg),pageNum-1)
+
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
@@ -339,6 +376,43 @@ class compositePlateStressObject(stressObject):
                     ###
                 msg += '\n'
             ###
+        ###
+        return msg
+
+    def __reprTransient__(self):
+        msg = '---COMPOSITE PLATE STRESS---\n'
+        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
+        headers = self.getHeaders()
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,O11s in sorted(self.o11.items()):
+            msg += "dt = %s\n" %(dt)
+            for eid,o11s in sorted(O11s.items()):
+                eType = self.eType[eid]
+                for iLayer in range(len(o11s)):
+                    o11 = self.o11[dt][eid][iLayer]
+                    o22 = self.o22[dt][eid][iLayer]
+                    t12 = self.t12[dt][eid][iLayer]
+                    t1z = self.t1z[dt][eid][iLayer]
+                    t2z = self.t2z[dt][eid][iLayer]
+
+                    angle = self.angle[dt][eid][iLayer]
+                    major = self.majorP[dt][eid][iLayer]
+                    minor = self.minorP[dt][eid][iLayer]
+                    ovm   = self.ovmShear[dt][eid][iLayer]
+
+                    msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
+                    vals = [o11,o22,t12,t1z,t2z,ovm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10i ' %(val)
+                        ###
+                    msg += '\n'
+                ###
         ###
         return msg
 
@@ -492,43 +566,6 @@ class compositePlateStrainObject(strainObject):
             headers.append('maxShear')
         return headers
 
-    def __reprTransient__(self):
-        msg = '---COMPOSITE PLATE STAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,E11s in sorted(self.e11.items()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,e11s in sorted(E11s.items()):
-                eType = self.eType[eid]
-                for iLayer in range(len(e11s)):
-                    e11 = self.e11[dt][eid][iLayer]
-                    e22 = self.e22[dt][eid][iLayer]
-                    e12 = self.e12[dt][eid][iLayer]
-                    e1z = self.e1z[dt][eid][iLayer]
-                    e2z = self.e2z[dt][eid][iLayer]
-
-                    angle = self.angle[dt][eid][iLayer]
-                    major = self.majorP[dt][eid][iLayer]
-                    minor = self.minorP[dt][eid][iLayer]
-                    evm   = self.evmShear[dt][eid][iLayer]
-
-                    msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
-                    vals = [e11,e22,e12,e1z,e2z,evm]
-                    for val in vals:
-                        if abs(val)<1e-6:
-                            msg += '%10s ' %('0')
-                        else:
-                            msg += '%10.3g ' %(val)
-                        ###
-                    msg += '\n'
-                ###
-        ###
-        return msg
-
     def writeF06(self,header,pageStamp,pageNum=1):  # @todo no transient
         if self.isTransient:
             return self.writeF06Transient(header,pageStamp,pageNum)
@@ -595,6 +632,80 @@ class compositePlateStrainObject(strainObject):
         msg = ''.join(quadMsg+triMsg)
         return (msg,pageNum)
 
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        if self.isVonMises():
+            von   = 'VON'
+            mises = 'MISES'
+        else:
+            von   = 'MAX'
+            mises = 'SHEAR'
+
+        words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' %(von),
+                 '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n'  %(mises)]
+
+        eTypes = self.eType.values()        
+        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+            quadWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n']+words
+            isQuad = True
+        else:
+            quadWords = []
+            isQuad = False
+
+        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+            isTri = True
+            triWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n']+words
+        else:
+            isTri = False
+            triWords = []
+        ###
+        
+        msg = []
+        for dt,E11s in sorted(self.e11.items()):
+            quadMsg = []
+            triMsg = []
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            if isQuad:
+                quadMsg = header + quadWords
+            if isTri:
+                triMsg = header + triWords
+
+            for eid,e11s in sorted(E11.items()):
+                out = ''
+                eType = self.eType[eid]
+                for iLayer in range(len(e11s)):
+                    e11 = self.e11[dt][eid][iLayer]
+                    e22 = self.e22[dt][eid][iLayer]
+                    e12 = self.e12[dt][eid][iLayer]
+                    e1z = self.e1z[dt][eid][iLayer]
+                    e2z = self.e2z[dt][eid][iLayer]
+
+                    angle = self.angle[dt][eid][iLayer]
+                    major = self.majorP[dt][eid][iLayer]
+                    minor = self.minorP[dt][eid][iLayer]
+                    evm   = self.evmShear[dt][eid][iLayer]
+                    (vals2,isAllZeros) = self.writeF06Floats12E([e11,e22,e12,e1z,e2z,major,minor,evm])
+                    [e11,e22,e12,e1z,e2z,major,minor,evm] = vals2
+                    out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' %(eid,iLayer+1,e11,e22,e12,e1z,e2z,angle,major,minor,evm)
+
+                if eType in ['CQUAD4','QUAD4LC']:
+                    quadMsg.append(out)
+                elif eType in ['CTRIA3','TRIA3LC']:
+                    triMsg.append(out)
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType))
+                ###
+            ###
+            if isQuad:
+                quadMsg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            if isTri:
+                triMsg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
+            ###
+            msg += quadMsg+triMsg
+        ###
+        return (''.join(msg),pageNum-1)
+
     def __repr__(self):
         if self.isTransient:
             return self.__reprTransient__()
@@ -629,6 +740,44 @@ class compositePlateStrainObject(strainObject):
                         msg += '%10.3g ' %(val)
                     ###
                 msg += '\n'
+            ###
+        ###
+        return msg
+
+    def __reprTransient__(self):
+        msg = '---COMPOSITE PLATE STAIN---\n'
+        headers = self.getHeaders()
+        msg += '%-6s %8s %8s ' %('EID','eType','iLayer')
+        for header in headers:
+            msg += '%10s ' %(header)
+        msg += '\n'
+
+        for dt,E11s in sorted(self.e11.items()):
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            for eid,e11s in sorted(E11s.items()):
+                eType = self.eType[eid]
+                for iLayer in range(len(e11s)):
+                    e11 = self.e11[dt][eid][iLayer]
+                    e22 = self.e22[dt][eid][iLayer]
+                    e12 = self.e12[dt][eid][iLayer]
+                    e1z = self.e1z[dt][eid][iLayer]
+                    e2z = self.e2z[dt][eid][iLayer]
+
+                    angle = self.angle[dt][eid][iLayer]
+                    major = self.majorP[dt][eid][iLayer]
+                    minor = self.minorP[dt][eid][iLayer]
+                    evm   = self.evmShear[dt][eid][iLayer]
+
+                    msg += '%-6i %8s %8s ' %(eid,eType,iLayer+1,)
+                    vals = [e11,e22,e12,e1z,e2z,evm]
+                    for val in vals:
+                        if abs(val)<1e-6:
+                            msg += '%10s ' %('0')
+                        else:
+                            msg += '%10.3g ' %(val)
+                        ###
+                    msg += '\n'
+                ###
             ###
         ###
         return msg
