@@ -673,7 +673,7 @@ class OP2(BDF,  # BDF methods
                 try:
                     msg += str(res) + '\n'
                 except:
-                    print 'failed on %s' %(res.name())
+                    print 'failed on %s' %(res.__class__.__name__)
                     raise
                 ###
             ###

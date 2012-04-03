@@ -353,9 +353,10 @@ class Geometry2(object):
         CGAP(1908,19,104) - the marker for Record 39
         """
         #print "reading CGAP"
-        while len(data)>=36: # 9*4
-            eData = data[:36]
-            data  = data[36:]
+        n=0
+        nEntries = len(data)//36
+        for i in range(nEntries):
+            eData = data[n:n+36] # 9*4
             out = unpack('iiiifffii',eData)
             (eid,pid,ga,gb,x1,x2,x3,f,cid) = out # f=0,1
             g0 = None

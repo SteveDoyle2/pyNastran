@@ -92,8 +92,8 @@ class bdfMethods(object):
             self.log.info("case=%s F=%s\n\n" %(key,F))
         ###
 
-    def sumMoments(self):
-        p = array([0.,0.5,0.])
+    def sumMoments(self,p0):
+        p = array(p0)
         for key,loadCase in self.loads.items():
             M = array([0.,0.,0.])
             F = array([0.,0.,0.])

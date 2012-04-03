@@ -412,8 +412,9 @@ class plateStressObject(stressObject):
         eTypes = self.eType.values()
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
+            print qkey
             kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            ekey = self.oxx[0][kkey].keys()
             isBilinear=True
             quadMsg2 = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
             if len(ekey)==1:
@@ -434,24 +435,24 @@ class plateStressObject(stressObject):
         msg = []
         for dt,OxxNodes in sorted(self.oxx.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg += header+words
+            #msg += header+words
             quadMsg = []
             triMsg = []
-            if isQuad: quadMsg = header+quadMsg2+words
-            if isTri:  triMsg  = header+triMsg2 +words
+            if isQuad: quadMsg = header+quadMsg2
+            if isTri:  triMsg  = header+triMsg2
             for eid,oxxNodes in sorted(OxxNodes.items()):
                 eType = self.eType[eid]
                 if eType in 'CQUAD4':
                     if isBilinear:
-                        out = self.writeF06_Quad4_Bilinear(eid,oxxNodes)
+                        out = self.writeF06_Quad4_BilinearTransient(dt,eid,oxxNodes)
                     else:
-                        out = self.writeF06_Tri3(eid,oxxNodes)
+                        out = self.writeF06_Tri3Transient(dt,eid,oxxNodes)
                     quadMsg.append(out)
                 elif eType in 'CTRIA3':
-                    out = self.writeF06_Tri3(eid,oxxNodes)
+                    out = self.writeF06_Tri3Transient(dt,eid,oxxNodes)
                     triMsg.append(out)
-                else:
-                    raise NotImplementedError('eType = |%r|' %(eType))
+                #else:
+                #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8
                 ###
             ###
             if isQuad:
@@ -495,6 +496,35 @@ class plateStressObject(stressObject):
         ###
         return msg
 
+    def writeF06_Quad4_BilinearTransient(self,dt,eid,oxxNodes):
+        msg = ''
+        k = oxxNodes.keys()
+        k.sort()
+        k.pop(-1)
+        for nid in ['C']+k:
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
+                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                oxx   = self.oxx[dt][eid][nid][iLayer]
+                oyy   = self.oyy[dt][eid][nid][iLayer]
+                txy   = self.txy[dt][eid][nid][iLayer]
+                angle = self.angle[dt][eid][nid][iLayer]
+                major = self.majorP[dt][eid][nid][iLayer]
+                minor = self.minorP[dt][eid][nid][iLayer]
+                ovm = self.ovmShear[dt][eid][nid][iLayer]
+
+                if nid=='C' and iLayer==0:
+                    msg += '0  %8i %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %(eid,'CEN/4',fd,oxx,oyy,txy,angle,major,minor,ovm)
+                elif iLayer==0:
+                    msg += '   %8s %8i  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('',nid,    fd,oxx,oyy,txy,angle,major,minor,ovm)
+                elif iLayer==1:
+                    msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n\n' %('','',      fd,oxx,oyy,txy,angle,major,minor,ovm)
+                else:
+                    raise Exception('Invalid option for cquad4')
+                ###
+            ###
+        ###
+        return msg
+
     def writeF06_Tri3(self,eid,oxxNodes):
         msg = ''
         for nid in sorted(oxxNodes):
@@ -507,6 +537,28 @@ class plateStressObject(stressObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 ovm = self.ovmShear[eid][nid][iLayer]
+
+                if iLayer==0:
+                    msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm)
+                else:
+                    msg += '   %6s   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %('',fd,oxx,oyy,txy,angle,major,minor,ovm)
+                ###
+            ###
+        ###
+        return msg
+
+    def writeF06_Tri3Transient(self,dt,eid,oxxNodes):
+        msg = ''
+        for nid in sorted(oxxNodes):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
+                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                oxx   = self.oxx[dt][eid][nid][iLayer]
+                oyy   = self.oyy[dt][eid][nid][iLayer]
+                txy   = self.txy[dt][eid][nid][iLayer]
+                angle = self.angle[dt][eid][nid][iLayer]
+                major = self.majorP[dt][eid][nid][iLayer]
+                minor = self.minorP[dt][eid][nid][iLayer]
+                ovm = self.ovmShear[dt][eid][nid][iLayer]
 
                 if iLayer==0:
                     msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm)
@@ -835,7 +887,7 @@ class plateStrainObject(strainObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplementedError()
+            self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -949,21 +1001,21 @@ class plateStrainObject(strainObject):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             quadMsg = []
             triMsg = []
-            if isQuad: quadMsg = header+quadMsg2+words
-            if isTri:  triMsg  = header+triMsg2 +words
+            if isQuad: quadMsg = header+quadMsg2
+            if isTri:  triMsg  = header+triMsg2
             for eid,oxxNodes in sorted(OxxNodes.items()):
                 eType = self.eType[eid]
                 if eType in 'CQUAD4':
                     if isBilinear:
-                        out = self.writeF06_Quad4_Bilinear(eid,oxxNodes)
+                        out = self.writeF06_Quad4_BilinearTransient(eid,oxxNodes)
                     else:
-                        out = self.writeF06_Tri3(eid,oxxNodes)
+                        out = self.writeF06_Tri3Transient(eid,oxxNodes)
                     quadMsg.append(out)
                 elif eType in 'CTRIA3':
-                    out = self.writeF06_Tri3(eid,oxxNodes)
+                    out = self.writeF06_Tri3Transient(eid,oxxNodes)
                     triMsg.append(out)
-                else:
-                    raise NotImplementedError('eType = |%r|' %(eType))
+                #else:
+                #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8
                 ###
             ###
             if isQuad:
@@ -1007,6 +1059,35 @@ class plateStrainObject(strainObject):
         ###
         return msg
 
+    def writeF06_Quad4_BilinearTransient(self,dt,eid,exxNodes):
+        msg = ''
+        k = exxNodes.keys()
+        k.sort()
+        k.pop(-1)
+        for nid in ['C']+k:
+            for iLayer in range(len(self.exx[dt][eid][nid])):
+                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                exx   = self.exx[dt][eid][nid][iLayer]
+                eyy   = self.eyy[dt][eid][nid][iLayer]
+                exy   = self.exy[dt][eid][nid][iLayer]
+                angle = self.angle[dt][eid][nid][iLayer]
+                major = self.majorP[dt][eid][nid][iLayer]
+                minor = self.minorP[dt][eid][nid][iLayer]
+                evm   = self.evmShear[dt][eid][nid][iLayer]
+
+                if nid=='C' and iLayer==0:
+                    msg += '0  %8i %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm)
+                elif iLayer==0:
+                    msg += '   %8s %8i  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm)
+                elif iLayer==1:
+                    msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm)
+                else:
+                    raise Exception('Invalid option for cquad4')
+                ###
+            ###
+        ###
+        return msg
+
     def writeF06_Tri3(self,eid,exxNodes):
         msg = ''
         for nid in sorted(exxNodes):
@@ -1019,6 +1100,28 @@ class plateStrainObject(strainObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 evm   = self.evmShear[eid][nid][iLayer]
+
+                if iLayer==0:
+                    msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
+                else:
+                    msg += '   %6s   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %('', fd,exx,eyy,exy,angle,major,minor,evm)
+                ###
+            ###
+        ###
+        return msg
+
+    def writeF06_Tri3Transient(self,dt,eid,exxNodes):
+        msg = ''
+        for nid in sorted(exxNodes):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
+                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                exx   = self.exx[dt][eid][nid][iLayer]
+                eyy   = self.eyy[dt][eid][nid][iLayer]
+                exy   = self.exy[dt][eid][nid][iLayer]
+                angle = self.angle[dt][eid][nid][iLayer]
+                major = self.majorP[dt][eid][nid][iLayer]
+                minor = self.minorP[dt][eid][nid][iLayer]
+                evm   = self.evmShear[dt][eid][nid][iLayer]
 
                 if iLayer==0:
                     msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)

@@ -123,9 +123,11 @@ Added F06 Reader
      - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
         - CTRIA3
         - CQUAD4 (centroid/bilinear)
+        - ***CQUAD8
      - composite plate stress/strain (static/***transient)
         - CTRIA3
         - CQUAD4 (centroid)
+        - ***CQUAD8
      - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
      - bar stress/strain   (static/transient; CBAR)
      - ***beam  stress/strain (static/transient; CBEAM)
@@ -135,6 +137,7 @@ Added F06 Reader
      - eigenvalues  (real/complex)
 
 Added F06 Writer
+   - print out 0.000000E00 as 0.0
    - OUG
      - displacement (static/transient)
         - real
@@ -152,9 +155,11 @@ Added F06 Writer
      - isotropic plate stress/strain (static/transient)
         - CTRIA3
         - CQUAD4 (centroid/bilinear)
+        - ***CQUAD8
      - composite plate stress/strain (static/transient)
         - CTRIA3
         - CQUAD4 (centroid)
+        - ***CQUAD8
 
      - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
      - bar stress/strain   (static/transient; CBAR)
@@ -180,6 +185,7 @@ GUI Bug Fixes
    - "python setup.py install" should work now, but it's still not recommended
 
 Solver
+   - not released
    - rewriting pyNastran solver (SOL 101)
       - better support for 3D
       - uses case control deck to identify loads/BCs

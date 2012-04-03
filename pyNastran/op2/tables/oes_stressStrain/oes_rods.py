@@ -232,16 +232,21 @@ class rodStressObject(stressObject):
             MSa     = self.MS_axial[eid]
             torsion = self.torsion[eid]
             MSt     = self.MS_torsion[eid]
-            
+            (vals2,isAllZeros) = self.writeF06Floats13E([axial,torsion])
+            (axial,torsion) = vals2
             out.append([eid,axial,MSa,torsion,MSt])
         
         nOut = len(out)
-        for i in range(0,nOut,2):
-            outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[i]+out[i+1]))
+        nWrite = nOut
+        if nOut%2==1:
+            nWrite = nOut-1
+        for i in range(0,nWrite,2):
+            print i,out[i:]
+            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         
         if nOut%2==1:
-            outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[-1]))
+            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[-1]))
             msg.append(outLine)
         msg.append(pageStamp+str(pageNum)+'\n')
         return(''.join(msg),pageNum)
@@ -261,16 +266,17 @@ class rodStressObject(stressObject):
                 MSa     = self.MS_axial[dt][eid]
                 torsion = self.torsion[dt][eid]
                 MSt     = self.MS_torsion[dt][eid]
-
+                (vals2,isAllZeros) = self.writeF06Floats13E([axial,torsion])
+                (axial,torsion) = vals2
                 out.append([eid,axial,MSa,torsion,MSt])
 
             nOut = len(out)
             for i in range(0,nOut,2):
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[i]+out[i+1]))
+                outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
                 msg.append(outLine)
 
             if nOut%2==1:
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[-1]))
+                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[-1]))
                 msg.append(outLine)
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1

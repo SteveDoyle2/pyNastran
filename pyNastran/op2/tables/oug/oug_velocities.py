@@ -11,7 +11,7 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
-        msg = ['                                                   V E L O C I T Y   V E C T O R\n',
+        msg = header+['                                                   V E L O C I T Y   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID,translation in sorted(self.translations.items()):
