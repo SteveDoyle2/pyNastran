@@ -103,7 +103,7 @@ class cardMethods(object):
         #while iline=='':
         #    i+=1
         #    iline = self.lines[i].rstrip()
-
+        
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
         isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
         if debug:
@@ -235,7 +235,7 @@ class cardMethods(object):
                 else:
                     #debug = True
                     try:
-                        value = getValue(valueIn,debug=debug)
+                        value = self.getValue(valueIn,sline,debug=debug)
                     except:
                         self.log.error("card = |%r|" %(card))
                         raise
@@ -287,99 +287,125 @@ class cardMethods(object):
         #print "cardOut = ",cardOut
         return cardOut
         #return collapse(cardOut)
-        
-def getValue(valueRaw,debug=False):
-    """converts a value from nastran format into python format."""
-    if debug:
-        print "v1 = |%s|" %(valueRaw)
-    valueIn = valueRaw.lstrip().rstrip(' *').upper()
 
-    if debug:
-        pass
-        #print "v2 = |%s|" %(valueIn)
-    if len(valueIn)==0:
-        if debug:
-            print "BLANK!"
-        return None
+    def setDynamicSyntax(self,dictOfVars):
+       """
+       uses the OpenMDAO syntax of %varName in an embedded BDF to
+       update the values for an optimization study.
+       Variables should be 7 characters to fit in an 8-character field.
+       %varName
+       dictOfVars = {'varName': 10}
+       """
+       self.dictOfVars = {}
+       for key,value in dictOfVars.items():
+           assert len(key)<=7,'max length for key is 7; len(%s)=%s' %(key,len(key))
+           self.dictOfVars[key.upper()] = value
+       ###
+       self.isDynamicSyntax = True
 
-    if valueIn[0].isalpha():
-        if debug:
-            print "STRING!"
-        return valueIn
+    def parseDynamicSyntax(self,key):
+        #print "*** valueRaw.lstrip() = |%r|" %(valueRaw.lstrip())
+        #key = key.lstrip('%%')
+        key = key[1:]
+        print "dynamic key = |%r|" %(key)
+        #self.dictOfVars = {'P5':0.5,'ONEK':1000.}
+        return self.dictOfVars[key]
 
-    if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
+    def getValue(self,valueRaw,card,debug=False):
+        """converts a value from nastran format into python format."""
         if debug:
-            print "=(! - special formatting"
-        return valueRaw.strip()
-    #valueIn = valueIn.upper()
-    # int, float, string, exponent
-    valuePositive = valueIn.strip('+-')
-    if debug:
-        print "isDigit = ",valuePositive.isdigit()
-    if valuePositive.isdigit():
+            print "v1 = |%s|" %(valueRaw)
+        lvalue = valueRaw.lstrip()
+        if self.isDynamicSyntax and '%' in lvalue[0:1]:
+            return self.parseDynamicSyntax(valueRaw)
+        valueIn = valueRaw.lstrip().rstrip(' *').upper()
+
         if debug:
-            print "INT!"
-        return int(valueIn)
-    try:
-        value = float(valueIn)
+            pass
+            #print "v2 = |%s|" %(valueIn)
+        if len(valueIn)==0:
+            if debug:
+                print "BLANK!"
+            return None
+
+        if valueIn[0].isalpha():
+            if debug:
+                print "STRING!"
+            return valueIn
+
+        if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
+            if debug:
+                print "=(! - special formatting"
+            return valueRaw.strip()
+        #valueIn = valueIn.upper()
+        # int, float, string, exponent
+        valuePositive = valueIn.strip('+-')
         if debug:
-            print "FLOAT!"
+            print "isDigit = ",valuePositive.isdigit()
+        if valuePositive.isdigit():
+            if debug:
+                print "INT!"
+            return int(valueIn)
+        try:
+            value = float(valueIn)
+            if debug:
+                print "FLOAT!"
+            return value
+        except:
+             pass
+
+        #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
+        #    print "=()!"
+        #    return valueIn
+
+        noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
+        word = ''.join(noED)
+        #print "word=|%s|" %word
+        if word.isalpha():
+            if debug:
+                print "WORD!"
+            return valueIn
+
+        v0 = valueIn[0]
+        if '-'==v0 or '+'==v0:
+            valueLeft = valueIn[1:] # truncate the sign for now
+        else:
+            v0 = '+' # inplied positive value
+            valueLeft = valueIn
+
+        #print "valueIn = |%s|" %(valueIn)
+        #print "v0 = |%s|" %v0
+        if v0=='-':
+            vFactor=-1.
+        elif v0=='+' or v0.isdigit():
+            vFactor=1.
+        else:
+            msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s| card=%s' %(valueRaw,v0,card)
+            raise FloatScientificParseError(msg)
+
+        vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
+        vp = valueIn.find('+',1)
+        if vm>0:
+            sline = valueLeft.split('-')
+            expFactor = -1.
+        elif vp>0:
+            sline = valueLeft.split('+')
+            expFactor = 1.
+        else:
+            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s' %(valueRaw,valueLeft,card)
+            raise ScientificParseError(msg)
+
+        s0 = vFactor*float(sline[0])
+        s1 = expFactor*int(sline[1])
+        #except:
+        #    print "vm=%s vp=%s valueRaw=|%s| sline=|%s|" %(vm,vp,valueRaw,sline)
+
+        value = s0*10**(s1)
+        #print "valueOut = |%s|" %value
+
+        if debug:
+            print "SCIENTIFIC!"
         return value
-    except:
-         pass
-
-    #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
-    #    print "=()!"
-    #    return valueIn
-
-    noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
-    word = ''.join(noED)
-    #print "word=|%s|" %word
-    if word.isalpha():
-        if debug:
-            print "WORD!"
-        return valueIn
-
-    v0 = valueIn[0]
-    if '-'==v0 or '+'==v0:
-        valueLeft = valueIn[1:] # truncate the sign for now
-    else:
-        v0 = '+' # inplied positive value
-        valueLeft = valueIn
-
-    #print "valueIn = |%s|" %(valueIn)
-    #print "v0 = |%s|" %v0
-    if v0=='-':
-        vFactor=-1.
-    elif v0=='+' or v0.isdigit():
-        vFactor=1.
-    else:
-        msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s|' %(valueRaw,v0)
-        raise FloatScientificParseError(msg)
-
-    vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
-    vp = valueIn.find('+',1)
-    if vm>0:
-        sline = valueLeft.split('-')
-        expFactor = -1.
-    elif vp>0:
-        sline = valueLeft.split('+')
-        expFactor = 1.
-    else:
-        msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s|' %(valueRaw,valueLeft)
-        raise ScientificParseError(msg)
-
-    s0 = vFactor*float(sline[0])
-    s1 = expFactor*int(sline[1])
-    #except:
-    #    print "vm=%s vp=%s valueRaw=|%s| sline=|%s|" %(vm,vp,valueRaw,sline)
-
-    value = s0*10**(s1)
-    #print "valueOut = |%s|" %value
-
-    if debug:
-        print "SCIENTIFIC!"
-    return value
     
 
 def stringParser(stringIn):
