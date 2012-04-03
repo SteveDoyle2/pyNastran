@@ -192,9 +192,9 @@ class OQG(object):
                 self.createTransientObject(self.spcForces,spcForcesObject)
             elif self.analysisCode==10: # nonlinear static SPC forces
                 self.createTransientObject(self.spcForces,spcForcesObject)
-            #elif self.analysisCode==11: # Geometric nonlinear statics
+            elif self.analysisCode==11: # Geometric nonlinear statics
                 #print "isNonlinearStaticDisplacement"
-                #self.createTransientObject(self.spcForces,displacementObject)
+                self.createTransientObject(self.spcForces,spcForcesObject)
             else:
                 #self.skipOES_Element()
                 pass

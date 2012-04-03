@@ -48,7 +48,8 @@ class spcForcesObject(TableObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
@@ -159,7 +160,8 @@ class complexSpcForcesObject(complexTableObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'

@@ -156,6 +156,7 @@ class F06Writer(object):
                 if resType.has_key(iSubcase):
                     result = resType[iSubcase]
                     try:
+                        print result.__class__.__name__
                         (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                     except:
                         #print "result name = %s" %(result.name())

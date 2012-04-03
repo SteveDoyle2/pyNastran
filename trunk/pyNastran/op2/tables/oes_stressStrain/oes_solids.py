@@ -170,21 +170,23 @@ class solidStressObject(stressObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.oxx[self.dt] = {}
-        self.oyy[self.dt] = {}
-        self.ozz[self.dt] = {}
-        self.txy[self.dt] = {}
-        self.tyz[self.dt] = {}
-        self.txz[self.dt] = {}
-        self.o1[self.dt] = {}
-        self.o2[self.dt] = {}
-        self.o3[self.dt] = {}
+        if self.dt not in self.oxx:
+            self.oxx[self.dt] = {}
+            self.oyy[self.dt] = {}
+            self.ozz[self.dt] = {}
+            self.txy[self.dt] = {}
+            self.tyz[self.dt] = {}
+            self.txz[self.dt] = {}
+            self.o1[self.dt] = {}
+            self.o2[self.dt] = {}
+            self.o3[self.dt] = {}
         
-        #self.aCos[self.dt] = {}
-        #self.bCos[self.dt] = {}
-        #self.cCos[self.dt] = {}
-        #self.pressure[self.dt] = {}
-        self.ovmShear[self.dt]  = {}
+            #self.aCos[self.dt] = {}
+            #self.bCos[self.dt] = {}
+            #self.cCos[self.dt] = {}
+            #self.pressure[self.dt] = {}
+            self.ovmShear[self.dt]  = {}
+        ###
 
     def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
@@ -218,13 +220,14 @@ class solidStressObject(stressObject):
         dt = self.dt
         assert eid not in self.oxx[dt]
         self.eType[eid] = eType
+        #print "eid=%s eType=%s" %(eid,eType)
         self.cid[eid]   = cid
-        self.oxx[dt][eid]  = {nodeID: oxx}
-        self.oyy[dt][eid]  = {nodeID: oyy}
-        self.ozz[dt][eid]  = {nodeID: ozz}
-        self.txy[dt][eid]  = {nodeID: txy}
-        self.tyz[dt][eid]  = {nodeID: tyz}
-        self.txz[dt][eid]  = {nodeID: txz}
+        self.oxx[dt][eid] = {nodeID: oxx}
+        self.oyy[dt][eid] = {nodeID: oyy}
+        self.ozz[dt][eid] = {nodeID: ozz}
+        self.txy[dt][eid] = {nodeID: txy}
+        self.tyz[dt][eid] = {nodeID: tyz}
+        self.txz[dt][eid] = {nodeID: txz}
         
         self.o1[dt][eid]  = {nodeID: o1}
         self.o2[dt][eid]  = {nodeID: o2}
@@ -271,10 +274,12 @@ class solidStressObject(stressObject):
         #print self.oxx
         #print self.fiberDistance
         dt = self.dt
+        #self.eType[eid] = eType
+        #print "eid=%s nid=%s oxx=%s" %(eid,nodeID,oxx)
         self.oxx[dt][eid][nodeID] = oxx
         self.oyy[dt][eid][nodeID] = oyy
         self.ozz[dt][eid][nodeID] = ozz
-
+        #print self.oxx
         self.txy[dt][eid][nodeID] = txy
         self.tyz[dt][eid][nodeID] = tyz
         self.txz[dt][eid][nodeID] = txz
@@ -426,6 +431,7 @@ class solidStressObject(stressObject):
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
+        #print eTypes
         if 'CTETRA' in eTypes or 'TETRA' in eTypes:
             isTetra = True
         if 'CPENTA' in eTypes or 'PENTA' in eTypes:
@@ -437,9 +443,12 @@ class solidStressObject(stressObject):
         
         for dt,oxxs in sorted(self.oxx.items()):            
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
-            header[2] = dtLine
+            header[1] = dtLine
+            #print oxxs
             for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
+                #self.eType[eid] = eType
+                #print "eid=%s eType=%s" %(eid,eType)
 
                 k = oxxNodes.keys()
                 #kc = k.index('C')
@@ -459,6 +468,7 @@ class solidStressObject(stressObject):
                     o1 = self.o1[dt][eid][nid]
                     o2 = self.o2[dt][eid][nid]
                     o3 = self.o3[dt][eid][nid]
+                    #print self.ovmShear
                     ovm = self.ovmShear[dt][eid][nid]
                     p = (o1+o2+o3)/-3.
 
@@ -473,6 +483,7 @@ class solidStressObject(stressObject):
                     msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
                     msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
                 ###
+                #print eType
                 if eType=='CTETRA' or eType=='TETRA':
                     tetraMsg.append(msgA)
                 elif eType=='CPENTA' or eType=='PENTA':
@@ -741,21 +752,23 @@ class solidStrainObject(strainObject):
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        self.exx[self.dt] = {}
-        self.eyy[self.dt] = {}
-        self.ezz[self.dt] = {}
-        self.exy[self.dt] = {}
-        self.eyz[self.dt] = {}
-        self.exz[self.dt] = {}
-        self.e1[self.dt] = {}
-        self.e2[self.dt] = {}
-        self.e3[self.dt] = {}
-        
-        #self.aCos[self.dt] = {}
-        #self.bCos[self.dt] = {}
-        #self.cCos[self.dt] = {}
-        #self.pressure[self.dt] = {}
-        self.evmShear[self.dt]      = {}
+        if self.dt not in self.exx:
+            self.exx[self.dt] = {}
+            self.eyy[self.dt] = {}
+            self.ezz[self.dt] = {}
+            self.exy[self.dt] = {}
+            self.eyz[self.dt] = {}
+            self.exz[self.dt] = {}
+            self.e1[self.dt] = {}
+            self.e2[self.dt] = {}
+            self.e3[self.dt] = {}
+
+            #self.aCos[self.dt] = {}
+            #self.bCos[self.dt] = {}
+            #self.cCos[self.dt] = {}
+            #self.pressure[self.dt] = {}
+            self.evmShear[self.dt]      = {}
+        ###
 
     def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
@@ -1022,7 +1035,7 @@ class solidStrainObject(strainObject):
         
         for dt,exxs in sorted(self.exx.items()):            
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
-            header[2] = dtLine
+            header[1] = dtLine
             for eid,oxxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
 
