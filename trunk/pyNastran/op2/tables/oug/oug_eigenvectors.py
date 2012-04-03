@@ -164,6 +164,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         #assert mode>=0.
         self.gridTypes = {}
         self.translations = {self.caseVal: {}}
+        self.rotations    = {self.caseVal: {}}
 
     def updateDt(self,dataCode,dt):
         #print " self.dataCode = ",self.dataCode
@@ -174,7 +175,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         
         #print "*self.dataCode = ",self.dataCode
         self.translations[self.caseVal] = {}
-        #self.rotations[self.caseVal] = {}
+        self.rotations[self.caseVal]    = {}
         #print "dt = ",dt
         #raise Exception(self.dataCode)
         
@@ -189,6 +190,8 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
 
     def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        msg += "           v4=%s v5=%s v6=%s" %(v4,v5,v6)
+        #print msg
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations
 
@@ -204,7 +207,8 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         self.gridTypes[nodeID] = Type
         #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
         #print "d = ",self.translations
-        self.translations[self.caseVal][nodeID] = v1
+        self.translations[self.caseVal][nodeID] = [v1,v2,v3]
+        self.rotations[self.caseVal][nodeID]    = [v4,v5,v6]
     ###
 
     def modes(self):
@@ -212,6 +216,40 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
 
     def eigenvalues(self):
         return self.eigrs
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        """
+        EIGENVALUE =  6.158494E+07
+                                           R E A L   E I G E N V E C T O R   N O .          1
+
+        POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+               1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
+            2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+            2003      G      0.0            0.0            0.0            0.0            0.0            0.0
+        """
+        msg = []
+        #print self.dataCode
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+            msg += header
+            freq = self.eigrs[i]
+            msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
+            msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
+            msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
+            for nodeID,translation in sorted(eigVals.items()):
+                rotation = self.rotations[iMode][nodeID]
+                gridType = self.gridTypes[nodeID]
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+                
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum += 1
+        ###
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         msg = '---REAL EIGENVECTORS---\n'
@@ -224,18 +262,24 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for mode,eigVals in sorted(self.translations.items()):
-            msg += '%s = %s\n' %(name,mode)
+        for iMode,eigVals in sorted(self.translations.items()):
+            msg += '%s = %s\n' %(name,iMode)
             msg += headerLine
-            for nodeID,T in sorted(eigVals.items()):
+            for nodeID,translation in sorted(eigVals.items()):
                 Type = self.gridTypes[nodeID]
                 
+                rotation = self.rotations[iMode][nodeID]
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+                
+                vals = [dx,dy,dz,rx,ry,rz]
                 msg += '%-8i %8s ' %(nodeID,Type)
-
-                if abs(T)<1e-6:
-                    msg += '%10s ' %(0)
-                else:
-                    msg += '%10.3f ' %(T)
+                for v in vals:
+                    if abs(v)<1e-6:
+                        msg += '%10s ' %(0)
+                    else:
+                        msg += '%10.3f ' %(v)
+                    ###
                 ###
                 msg += '\n'
             ###

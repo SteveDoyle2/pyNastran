@@ -253,8 +253,8 @@ class compositePlateStressObject(stressObject):
                 quadMsg.append(out)
             elif eType in ['CTRIA3','TRIA3LC']:
                 triMsg.append(out)
-            else:
-                raise NotImplementedError('eType = |%r|' %(eType))
+            #else:
+            #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
             ###
         ###
         if isQuad:
@@ -326,8 +326,8 @@ class compositePlateStressObject(stressObject):
                     quadMsg.append(out)
                 elif eType in ['CTRIA3','TRIA3LC']:
                     triMsg.append(out)
-                else:
-                    raise NotImplementedError('eType = |%r|' %(eType))
+                #else:
+                #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
                 ###
             ###
             if isQuad:

@@ -470,12 +470,12 @@ class FORCE1(Force):
         self.Normalize()
     
     def G1(self):
-        if isinstance(self.g1,int):
+        if isinstance(self.g1,int) or isinstance(self.g1,float):
             return self.g1
         return self.g1.nid
 
     def G2(self):
-        if isinstance(self.g2,int):
+        if isinstance(self.g2,int) or isinstance(self.g1,float):
             return self.g2
         return self.g2.nid
 

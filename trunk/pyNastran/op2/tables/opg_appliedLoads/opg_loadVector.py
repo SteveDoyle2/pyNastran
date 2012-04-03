@@ -3,7 +3,7 @@ from pyNastran.op2.resultObjects.tableObject import TableObject
 
 class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase)
+        TableObject.__init__(self,dataCode,iSubcase,dt)
 
     def __reprTransient__(self):
         msg = '---TRANSIENT LOAD VECTOR---\n'
@@ -31,6 +31,9 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            self.writeF06Transient(header,pageStamp,pageNum)
+
         msg = header+['                                                     L O A D   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -41,18 +44,36 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
             vals = [dx,dy,dz,rx,ry,rz]
-            vals2 = []
-            for v in vals:
-                v2 = '%13E' %(v)
-                if   v2==' 0.000000E+00':
-                    v2 = ' 0.0         '
-                vals2.append(v2)
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
             [dx,dy,dz,rx,ry,rz] = vals2
             msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
-        msg.append(pageStamp+str(pageNum))
-        msg.append('')
+        msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+
+        words = ['                                                     L O A D   V E C T O R\n',
+               ' \n',
+               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+
+        for dt,translations in sorted(self.translations.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            for nodeID,translation in sorted(translations.items()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
+
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         if self.dt is not None:
@@ -78,3 +99,6 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
                 ###
             msg += '\n'
         return msg
+
+    def __reprTransient__(self):
+        return self.writeF06Transient([],'PAGE ',1)[0]

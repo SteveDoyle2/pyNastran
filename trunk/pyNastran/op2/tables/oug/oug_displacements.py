@@ -11,7 +11,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
-        msg = ['                                             D I S P L A C E M E N T   V E C T O R\n',
+        msg = header+['                                             D I S P L A C E M E N T   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID,translation in sorted(self.translations.items()):
