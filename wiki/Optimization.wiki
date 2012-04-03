@@ -96,4 +96,4 @@ The *User Parametrization Method* is preferred for a simple scripting process.
 
 4. It's easy to go outside of the 8-character field.
 
-5.  It only works for the BDF
+5.  It only works for the Bulk Data Deck (not the Executive Control or Case Control decks)
