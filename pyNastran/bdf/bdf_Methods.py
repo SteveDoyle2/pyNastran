@@ -22,7 +22,8 @@ class bdfMethods(object):
         @warning centroid isnt coded across the board
         """
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
-        I = array(0., 0., 0.,  0.,  0., 0.,)
+        I = array([0., 0., 0.,  0.,  0., 0.,])
+        cg = array([0., 0., 0.])
         mass = 0.
         for element in self.elements:
             p = e.Centroid()  # not really coded across the board
@@ -34,15 +35,18 @@ class bdfMethods(object):
             I[3] = m*x*y  # Ixy
             I[4] = m*x*z  # Ixz
             I[5] = m*y*z  # Iyz
+            cg += m*p
         ###
-        return (m,I)
+        cg = cg/mass
+        return (mass,cg,I)
 
     def Mass(self):
         """Caclulates mass in the global coordinate system"""
         mass = 0.
         for element in self.elements:
             m = e.Mass()
-        return (m)
+            mass += m
+        return (mass)
 
     def resolveGrids(self,cid=0):
         """
