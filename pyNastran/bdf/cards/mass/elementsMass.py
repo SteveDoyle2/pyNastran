@@ -192,6 +192,7 @@ class CONM1(PointElement):
               [                    M66]
         """
         PointElement.__init__(self,card,data)
+        m = zeros((6,6))
         if card:
             #self.nids  = [ card[1] ]
             #del self.nids
@@ -200,7 +201,6 @@ class CONM1(PointElement):
             self.nid = card.field(2)
             self.cid = card.field(3,0)
             
-            m = zeros((6,6))
             m[0,0] = card.field(4,0.)   # M11
             m[1,0] = card.field(5,0.)   # M21
             m[1,1] = card.field(6,0.)   # M22
@@ -224,7 +224,32 @@ class CONM1(PointElement):
             m[5,5] = card.field(24,0.)  # M66
         ###
         else:
-            raise NotImplementedError('COMN1 data')
+            (eid,nid,cid,m1, m2a,m2b, m3a,m3b,m3c, m4a,m4b,m4c,m4d,
+             m5a,m5b,m5c,m5d,m5e,  m6a,m6b,m6c,m6d,m6e,m6f) = data
+            self.eid = eid
+            self.nid = nid
+            self.cid = cid
+            m[0,0] = m1   # M11
+            m[1,0] = m2a  # M21
+            m[1,1] = m2b  # M22
+            m[2,0] = m3a  # M31
+            m[2,1] = m3b  # M32
+            m[2,2] = m3c  # M33
+            m[3,0] = m4a  # M41
+            m[3,1] = m4b  # M42
+            m[3,2] = m4c  # M43
+            m[3,3] = m4d  # M44
+            m[4,0] = m5a  # M51
+            m[4,1] = m5b  # M52
+            m[4,2] = m5c  # M53
+            m[4,3] = m5d  # M54
+            m[4,4] = m5e  # M55
+            m[5,0] = m6a  # M61
+            m[5,1] = m6b  # M62
+            m[5,2] = m6c  # M63
+            m[5,3] = m6d  # M64
+            m[5,4] = m6e  # M65
+            m[5,5] = m6f  # M66
         ###
         self.massMatrix = m
 

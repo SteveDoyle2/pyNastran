@@ -3,7 +3,9 @@ import copy
 from struct import unpack
 
 # pyNastran
-from oqg_spcForces import spcForcesObject,mpcForcesObject
+from oqg_spcForces import spcForcesObject,complexSpcForcesObject
+from oqg_mpcForces import mpcForcesObject,complexMpcForcesObject
+
 from pyNastran.op2.tables.oug.oug_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
      fluxObject,                            # analysisCode=1, sortCode=3
@@ -68,6 +70,7 @@ class OQG(object):
             #self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
+            self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
             #print "DT(5)=%s" %(self.dt)
@@ -77,6 +80,7 @@ class OQG(object):
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)         ## load set number
             self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
+            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
             #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)         ## mode number
@@ -115,8 +119,8 @@ class OQG(object):
 
         if tfsCode==[3,1,0]:  # SPC Force vector
             self.readOQG1_Data_table3_format1_sort0()
-        #elif tfsCode==[3,1,1]:
-        #    self.readOQG1_Data_format1_sort1()
+        elif tfsCode==[3,1,1]:
+            self.readOQG1_Data_table3_format1_sort1()
         #elif tfsCode==[3,2,0]:
         #    self.readOQG1_Data_format2_sort0()
         #elif tfsCode==[3,2,1]:
@@ -222,14 +226,14 @@ class OQG(object):
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
 
-    def readOQG1_Data_format1_sort1(self):
+    def readOQG1_Data_table3_format1_sort1(self):
         if self.thermal==0:
             if self.analysisCode==5: # frequency
-                print "isFrequencyForces"
-                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
+                #print "isFrequencyForces"
+                self.createTransientObject(self.spcForces,complexSpcForcesObject)
             elif self.analysisCode==9: # frequency
-                print "isComplexEigenvalueForces"
-                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
+                #print "isComplexEigenvalueForces"
+                self.createTransientObject(self.spcForces,complexSpcForcesObject)
             ###
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
@@ -240,13 +244,13 @@ class OQG(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(self.obj)
+        self.readScalars14(debug=False)
 
     def readOQG1_Data_format2_sort1(self):
         if self.thermal==0:
             if self.analysisCode==5: # frequency
                 #print "isFrequencyForces"
-                self.createTransientObject(self.modalSPCForces,complexEigenVectorObject)
+                self.createTransientObject(self.spcForces,complexSpcForcesObject)
             else:
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -256,7 +260,7 @@ class OQG(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(self.obj) # readImaginary
+        self.readScalars14(debug=True) # readImaginary
 
     def readOQG1_Data_format3_sort1(self):
         if self.thermal==0:
@@ -282,5 +286,5 @@ class OQG(object):
             raise Exception('invalid OQG1 thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(self.obj) # readImaginary
+        self.readScalars14(debug=True) # readImaginary
 

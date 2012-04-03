@@ -2,7 +2,7 @@ import sys
 import copy
 
 # pyNastran
-from pyNastran.op2.resultObjects.tableObject import TableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
 class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
@@ -98,21 +98,6 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
                 msg += '\n'
             ###
         return msg
-
-class complexTableObject(TableObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase,dt)
-        
-    def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
-        msg = "nodeID=%s v1r=%s v2r=%s v3r=%s" %(nodeID,v1r,v2r,v3r)
-        #print msg
-        #msg = ''
-        assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
-
-        self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
-        self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
-    ###
 
 class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,iSubcase,dt=None):
