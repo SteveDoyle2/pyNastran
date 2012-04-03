@@ -287,9 +287,6 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         return msg
 
 class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
-    """
-    @todo add table data
-    """
     def __init__(self,dataCode,iSubcase,mode):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.caseVal = mode
@@ -334,33 +331,34 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
         self.gridTypes[nodeID] = Type
         #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
         #print "d = ",self.translations
-        self.translations[self.caseVal][nodeID] = [[v1r,v1i],[v2r,v2i],[v3r,v3i]] # dx,dy,dz
-        self.rotations[self.caseVal][nodeID]    = [[v4r,v4i],[v5r,v5i],[v6r,v6i]] # rx,ry,rz
+        self.translations[self.caseVal][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
+        self.rotations[self.caseVal][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
     ###
 
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        raise NotImplementedError()
         msg = []
+        #print self.dataCode
         for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             msg += header
             freq = self.eigrs[i]
+            #freq = 0.0
             msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
             msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
-                (dx,dy,dz) = displacement
-                (rx,ry,rz) = rotation
+                (v1r,v2r,v3r,v1i,v2i,v3i) = displacement
+                (v4r,v5r,v6r,v4i,v5i,v6i) = rotation
                 
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
+                vals = [v1r,v2r,v3r,v1i,v2i,v3i,v4r,v5r,v6r,v4i,v5i,v6i]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
-                msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+                [v1r,v2r,v3r,v1i,v2i,v3i,v4r,v5r,v6r,v4i,v5i,v6i] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r.rstrip()))
+                msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          v1i,v2i,v3i,v4i,v5i,v6i.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum += 1
@@ -371,24 +369,24 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
         msg = '---EIGENVECTORS---\n'
         msg += self.printDataMembers()
 
-        headers = ['Tx','Ty','Tz','Rx','Ry','Rz']
+        headers = ['T1','T2','T3','R1','R2','R3']
         headerLine = '%-8s %8s ' %('nodeID','GridType',)
         for header in headers:
             headerLine += '%10s ' %(header)
         headerLine += '\n'
         name = self.dataCode['name']
 
-        for i,(mode,eigVals) in enumerate(sorted(self.translations.items())):
-            msg += '%s = %g\n' %(name,mode)
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+            msg += '%s = %g\n' %(name,iMode)
             msg += headerLine
-            for nodeID,displacement in sorted(eigVals.items()):
-                rotation = self.rotations[mode][nodeID]
+            for nodeID,translation in sorted(eigVals.items()):
+                rotation = self.rotations[iMode][nodeID]
                 Type = self.gridTypes[nodeID]
-                (dx,dy,dz) = displacement
-                (rx,ry,rz) = rotation
+                #(dx,dy,dz) = displacement
+                #(rx,ry,rz) = rotation
 
                 msg += '%-8i %8s ' %(nodeID,Type)
-                vals = [dx,dy,dz,rx,ry,rz]
+                vals = translation+rotation
                 for val in vals:
                     if abs(val)<1e-6:
                         msg += '%10s ' %(0)

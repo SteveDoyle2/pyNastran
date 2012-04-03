@@ -569,9 +569,10 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR):
             grid = (gridDevice-deviceCode) // 10
             #if grid<100:
             if debug:
-                self.log.debug("grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx,dy,dz,rx,ry,rz))
-            self.obj.add(grid,gridType,dx, dy, dz, rx, ry, rz,
-                                           dxi,dyi,dzi,rxi,ryi,rzi)
+                self.log.debug("grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx, dy, dz, rx, ry, rz))
+                self.log.debug("     %-7s dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %('',  dxi,dyi,dzi,rxi,ryi,rzi))
+            self.obj.add([grid,gridType,dx, dy, dz, rx, ry, rz,
+                                        dxi,dyi,dzi,rxi,ryi,rzi])
             n+=56
         ###
         self.data = data[n:]

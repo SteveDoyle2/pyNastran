@@ -1,14 +1,14 @@
 from numpy import array
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
-class spcForcesObject(TableObject):
+class mpcForcesObject(TableObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
-        msg = header+['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
+        msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID,translation in sorted(self.translations.items()):
@@ -22,18 +22,19 @@ class spcForcesObject(TableObject):
             if not isAllZeros:
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1):
-        words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
+        words = ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt,translations in sorted(self.translations.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg+= header+words
+            msg += header+words
             for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
@@ -51,7 +52,7 @@ class spcForcesObject(TableObject):
         return (''.join(msg),pageNum)
 
     def __reprTransient__(self):
-        msg = '---SPC FORCES---\n'
+        msg = '---MPC FORCES---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
@@ -65,7 +66,7 @@ class spcForcesObject(TableObject):
             msg += 'dt = %s' %(dt)
             for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
-                (Fx,Fy,Fz) = translatin
+                (Fx,Fy,Fz) = translation
                 (Mx,My,Mz) = rotation
 
                 msg += '%-8i ' %(nodeID)
@@ -84,7 +85,7 @@ class spcForcesObject(TableObject):
         if self.dt is not None:
             return self.__reprTransient__()
 
-        msg = '---SPC FORCES---\n'
+        msg = '---MPC FORCES---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
@@ -110,14 +111,14 @@ class spcForcesObject(TableObject):
             msg += '\n'
         return msg
 
-class complexSpcForcesObject(complexTableObject):
+class complexMpcForcesObject(complexTableObject):
     def __init__(self,dataCode,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
-        msg = header+['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
+        msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID,translation in sorted(self.translations.items()):
@@ -136,7 +137,7 @@ class complexSpcForcesObject(complexTableObject):
         return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1):
-        words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n',
+        words = ['                         C O M P L E X   F O R C E S   O F   M U L T I   P O I N T   C O N S T R A I N T\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -159,10 +160,10 @@ class complexSpcForcesObject(complexTableObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+        return (''.join(msg),pageNum-1)
 
     def __reprTransient__(self):
-        msg = '---COMPLEX SPC FORCES---\n'
+        msg = '---COMPLEX MPC FORCES---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
@@ -192,7 +193,7 @@ class complexSpcForcesObject(complexTableObject):
         if self.dt is not None:
             return self.__reprTransient__()
 
-        msg = '---COMPLEX SPC FORCES---\n'
+        msg = '---COMPLEX MPC FORCES---\n'
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
