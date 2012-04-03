@@ -10,14 +10,15 @@ pyNastran handles most elements/properties.
 {{{
 bdf = BDF()
 bdf.readBDF(bdfName)
-(mass,I) = bdf.MassProperties() # exists in v0.3, but no mass
+(mass,cg,I) = bdf.MassProperties() # exists in v0.3, but no mass/cg
 (Ixx,Iyy,Izz,Ixy,Ixz,Iyz) = I
+(xCG,yCG,zCG) = cg
 
 #or
 mass = bdf.Mass()
 }}}
 
-== API Parameterization Method ==
+== API Parametrization Method ==
 pyNastran can be used in an optimization process.
 {{{
 bdf = BDF()
@@ -94,3 +95,5 @@ The *User Parametrization Method* is preferred for a simple scripting process.
 4. It's easy to go outside of the 8-character field.
 
 5.  It only works for the Bulk Data Deck (not the Executive Control or Case Control decks)
+
+6. Not affected by API changes
