@@ -377,8 +377,8 @@ class plateStressObject(stressObject):
             elif eType in 'CTRIA3':
                 out = self.writeF06_Tri3(eid,oxxNodes)
                 triMsg.append(out)
-            else:
-                raise NotImplementedError('eType = |%r|' %(eType))
+            #else:
+            #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
             ###
         ###
         if isQuad:

@@ -524,7 +524,7 @@ class ElementsStressStrain(object):
             
             if numWide==13:
                 out = unpack('iffffffffffff',eData) # numWide=13
-                (eid,fd1,sx1,sy1,sz1,txy1,es1,esp1,ecs1,ex1,ey1,ez1,exy1) = out
+                (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1) = out
                 eid = (eid - deviceCode) // 10
                 data = (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1)
                 self.obj.addNewEid(self.elementType,data)

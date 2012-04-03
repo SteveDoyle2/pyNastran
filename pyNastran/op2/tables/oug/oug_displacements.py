@@ -103,7 +103,7 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
     def __init__(self,dataCode,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,iSubcase,dt)
 
-    def writeF06(header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -112,9 +112,9 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
         for dt,translations in sorted(self.translations.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(self.translations.items()):
+            for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
 
                 (dxr,dxi,dyr,dyi,dzr,dzi) = translation
                 (rxr,rxi,ryr,ryi,rzr,rzi) = rotation
@@ -125,7 +125,7 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                 msg.append('  %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         msg = '---COMPLEX DISPLACEMENTS---\n'
