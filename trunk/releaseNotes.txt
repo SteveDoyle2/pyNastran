@@ -22,6 +22,7 @@ Overall Notes
    - new results in OP2
    - F06 Reader/Writer
    - F06 Writer integrates with OP2 Reader
+   - added support for OpenMDAO user-defined parameterization syntax
 
 Overall BDF
    - reworked format of bdf_crossReferencing.txt to be more like

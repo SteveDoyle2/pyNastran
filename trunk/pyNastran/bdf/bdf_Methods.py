@@ -23,6 +23,7 @@ class bdfMethods(object):
         """
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
         I = array(0., 0., 0.,  0.,  0., 0.,)
+        mass = 0.
         for element in self.elements:
             p = e.Centroid()  # not really coded across the board
             m = e.Mass()
@@ -34,8 +35,15 @@ class bdfMethods(object):
             I[4] = m*x*z  # Ixz
             I[5] = m*y*z  # Iyz
         ###
-        return I
-            
+        return (m,I)
+
+    def Mass(self):
+        """Caclulates mass in the global coordinate system"""
+        mass = 0.
+        for element in self.elements:
+            m = e.Mass()
+        return (m)
+
     def resolveGrids(self,cid=0):
         """
         puts all nodes in a common coordinate system (mainly for cid testing)
