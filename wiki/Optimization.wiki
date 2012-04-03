@@ -32,14 +32,11 @@ m10 = bdf.Material(100)
 m10.e = 50E6
 m10.nu = 0.29
 
-# change the thickness of the 0th layer (n-1) of the PCOMP
+# triple the thickness of the 0th layer (n-1) of the PCOMP
 p11 = bdf.Property(11)
 
-zeroLayer = p.layers[0]  # the 0th layer
-zeroLayer[1] *= 2
-
 n=0
-p.layers[n][1] *=2  [mid,t,sout,ge]  1->t
+p.layers[n][1] *=3  # [mid,t,sout,ge]  1->t
 
 # write out the model
 bdf.writeBDF(bdfNameOut)
