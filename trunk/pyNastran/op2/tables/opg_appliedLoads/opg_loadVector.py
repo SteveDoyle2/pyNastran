@@ -31,8 +31,8 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
-            self.writeF06Transient(header,pageStamp,pageNum)
+        if self.dt is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                                     L O A D   V E C T O R\n',
                ' \n',
@@ -45,14 +45,16 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
             (rx,ry,rz) = rotation
             vals = [dx,dy,dz,rx,ry,rz]
             (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-            [dx,dy,dz,rx,ry,rz] = vals2
-            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            if not isAllZeros:
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1):
-
+        msg = []
         words = ['                                                     L O A D   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -69,8 +71,10 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
 
                 vals = [dx,dy,dz,rx,ry,rz]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dx,dy,dz,rx,ry,rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                if not isAllZeros:
+                    [dx,dy,dz,rx,ry,rz] = vals2
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum-1)
@@ -101,4 +105,4 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
         return msg
 
     def __reprTransient__(self):
-        return self.writeF06Transient([],'PAGE ',1)[0]
+        return self.writeF06Transient(['',''],'PAGE ',1)[0]

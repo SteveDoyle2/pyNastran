@@ -218,6 +218,9 @@ class OP2(BDF,  # BDF methods
         self.plateStress = {}
         ## OES - isotropic CTRIA3/CQUAD4
         self.plateStrain = {}
+        ## OESNLXR - CTRIA3/CQUAD4
+        self.nonlinearPlateStress = {}
+        self.nonlinearPlateStrain = {}
 
         ## OES - isotropic CTETRA/CHEXA/CPENTA
         self.solidStress = {}
@@ -360,6 +363,8 @@ class OP2(BDF,  # BDF methods
             self.log.debug("tableName = |%r|" %(tableName))
             if tableName==None:
                 break
+            elif tableName in ['LAMA']:  # special tables to crash on
+                raise NotImplementedError('%s in not implemented and needs to be...' %(tableName))
             elif tableName in self.tablesToRead:
                 self.tableName = tableName
                 try:
@@ -513,6 +518,7 @@ class OP2(BDF,  # BDF methods
         (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
         ## the local subcase ID
         self.iSubcase = iSubcase
+        #print "iSubcase = ",iSubcase
         self.subcases.add(self.iSubcase) # set notation
 
         ## the type of result being processed

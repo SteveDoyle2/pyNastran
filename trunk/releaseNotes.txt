@@ -124,10 +124,12 @@ Added F06 Reader
         - CTRIA3
         - CQUAD4 (centroid/bilinear)
         - ***CQUAD8
+        - ***CTRIA6
      - composite plate stress/strain (static/***transient)
         - CTRIA3
         - CQUAD4 (centroid)
         - ***CQUAD8
+        - ***CTRIA6
      - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
      - bar stress/strain   (static/transient; CBAR)
      - ***beam  stress/strain (static/transient; CBEAM)
@@ -137,11 +139,10 @@ Added F06 Reader
      - eigenvalues  (real/complex)
 
 Added F06 Writer
-   - print out 0.000000E00 as 0.0
+   - prints out 0.000000E00 as 0.0
    - OUG
      - displacement (static/transient)
-        - real
-        - complex
+       - real/complex
      - velocity     (static/transient)
      - acceleration (static/transient)
      - temperature  (static/transient)
@@ -156,14 +157,16 @@ Added F06 Writer
         - CTRIA3
         - CQUAD4 (centroid/bilinear)
         - ***CQUAD8
+        - ***CTRIA6
      - composite plate stress/strain (static/transient)
         - CTRIA3
         - CQUAD4 (centroid)
         - ***CQUAD8
+        - ***CTRIA6
 
      - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
      - bar stress/strain   (static/transient; CBAR)
-     - ***beam  stress/strain (static/transient; CBEAM)
+     - beam  stress/***strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
 
    - LAMA
@@ -171,7 +174,9 @@ Added F06 Writer
 
    - OQG (constraint forces)
      - SPC forces (static/transient)
+       - real/complex
      - MPC forces (static/transient)
+       - real/complex
 
    - OGF (grid point forces)
      - grid point force balance (static/transient)

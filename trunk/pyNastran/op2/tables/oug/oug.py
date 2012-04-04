@@ -101,34 +101,27 @@ class OUG(object):
             self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
-            #self.log.debug("DT(5)=%s" %(self.dt))
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
             self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
             self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
-            #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
             self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
-            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
             self.applyDataCodeValue('dataNames',['lftsfq'])
-            #print "LFTSFQ(5) = %s" %(self.lftsfq)
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         # tCode=2

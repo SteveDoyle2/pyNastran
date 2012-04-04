@@ -59,6 +59,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR):
         if self.iSubcase in storageObj:
             #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
+            #print self.obj.writeF06(['',''],'PAGE ',1)[0]
             
             try:
                 self.obj.updateDt(self.dataCode,self.nonlinearFactor)

@@ -140,7 +140,7 @@ class TableObject(scalarObject):  # displacement style table
         nodeID = (nodeID-self.deviceCode) // 10
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
-        print msg
+        #print msg
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
 
@@ -320,7 +320,18 @@ class complexTableObject(scalarObject):
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
-        self.gridTypes[nodeID] = gridType
+        #if gridType==0:
+        #    Type = 'S'
+        if gridType==1:
+            Type = 'G'
+        elif gridType==2:
+            Type = 'S'
+        elif gridType==7:
+            Type = 'L'
+        else:
+            raise Exception('invalid grid type...gridType=%s' %(gridType))
+
+        self.gridTypes[nodeID] = Type
         self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
         self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
     ###

@@ -116,7 +116,7 @@ class barStressObject(stressObject):
             #self.MS_compression[self.dt] = {}
 
     def addNewEid100(self,out):
-        print "out = ",out
+        #print "out = ",out
         #return
         (eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc) = out
         (eid-self.deviceCode) // 10

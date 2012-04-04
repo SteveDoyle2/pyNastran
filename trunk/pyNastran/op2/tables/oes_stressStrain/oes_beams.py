@@ -20,10 +20,6 @@ class beamStressObject(stressObject):
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.xxb = {}
         self.grids = {}
-        #self.sxc = {}
-        #self.sxd = {}
-        #self.sxe = {}
-        #self.sxf = {}
         self.smax = {}
         self.smin = {}
         self.MS_tension = {}
@@ -32,6 +28,11 @@ class beamStressObject(stressObject):
         if self.code in [[1,0,0]]: # ,[1,0,1]
             #self.MS_axial   = {}
             #self.MS_torsion = {}
+            self.sd = {}
+            self.sxc = {}
+            self.sxd = {}
+            self.sxe = {}
+            self.sxf = {}
             self.getLength1     = self.getLength1_format1_sort0
             self.getLength2     = self.getLength2_format1_sort0
             self.getLengthTotal = self.getLengthTotal_format1_sort0
@@ -111,6 +112,11 @@ class beamStressObject(stressObject):
         #assert isinstance(grid,int)
         self.grids[eid] = [grid]
         self.xxb[eid]  = [sd]
+        self.sd[eid] = [sd]
+        self.sxc[eid] = [sxc]
+        self.sxd[eid] = [sxd]
+        self.sxe[eid] = [sxe]
+        self.sxf[eid] = [sxf]
         self.smax[eid] = [smax]
         self.smin[eid] = [smin]
         self.MS_tension[eid] = [mst]
@@ -156,6 +162,11 @@ class beamStressObject(stressObject):
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
+            self.sd[eid].append(sd)
+            self.sxc[eid].append(sxc)
+            self.sxd[eid].append(sxd)
+            self.sxe[eid].append(sxe)
+            self.sxf[eid].append(sxf)
             self.smax[eid].append(smax)
             self.smin[eid].append(smin)
             self.MS_tension[eid].append(mst)
@@ -169,11 +180,75 @@ class beamStressObject(stressObject):
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
+            self.sd[dt][eid].append(sd)
+            self.sxc[dt][eid].append(sxc)
+            self.sxd[dt][eid].append(sxd)
+            self.sxe[dt][eid].append(sxe)
+            self.sxf[dt][eid].append(sxf)
             self.smax[dt][eid].append(smax)
             self.smin[dt][eid].append(smin)
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
         ###
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            return self.writeF06Transient(header,pageStamp,pageNum)
+
+        msg = header + ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+                        '                    STAT DIST/\n',
+                        '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+
+        for eid in sorted(self.smax):
+            msg.append('0  %8i\n' %(eid))
+            #print self.xxb[eid]
+            for i,nid in enumerate(self.grids[eid]):
+                #print i,nid
+                xxb  = self.xxb[eid][i]
+                sd  = self.sd[eid][i]
+                sxc = self.sxc[eid][i]
+                sxd = self.sxd[eid][i]
+                sxe = self.sxe[eid][i]
+                sxf = self.sxf[eid][i]
+                sMax = self.smax[eid][i]
+                sMin = self.smin[eid][i]
+                SMt  = self.MS_tension[eid][i]
+                SMc  = self.MS_compression[eid][i]
+                (vals2,isAllZeros) = self.writeF06Floats13E([sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                (sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        words = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+                 '                    STAT DIST/\n',
+                 '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+        msg = []
+        for dt,SMaxs in sorted(self.smax.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header + words
+            for eid,Smax in sorted(SMaxs.items()):
+                msg.append('0  %8i\n' %(eid))
+                for i,nid in enumerate(self.grids[eid]):
+                    xxb  = self.xxb[eid][i]
+                    sd  = self.sd[eid][i]
+                    sxc = self.sxc[eid][i]
+                    sxd = self.sxd[eid][i]
+                    sxe = self.sxe[eid][i]
+                    sxf = self.sxf[eid][i]
+                    sMax = self.smax[eid][i]
+                    sMin = self.smin[eid][i]
+                    SMt  = self.MS_tension[eid][i]
+                    SMc  = self.MS_compression[eid][i]
+                    (vals2,isAllZeros) = self.writeF06Floats13E([sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                    (sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                    msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __reprTransient_format1_sort0__(self):
         msg = '---BEAM STRESSES---\n'
