@@ -14,9 +14,11 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf import OGF
 #from pyNastran.op2.tables.hisadd import HISADD - combined with R1TAB for now
 from pyNastran.op2.tables.r1tab  import R1TAB
 from pyNastran.op2.tables.destab import DESTAB
+from pyNastran.op2.tables.lama import LAMA
 
 
-class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR):
+
+class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""

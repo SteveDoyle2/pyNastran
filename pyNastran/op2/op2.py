@@ -364,7 +364,7 @@ class OP2(BDF,  # BDF methods
             if tableName==None:
                 break
             elif tableName in ['LAMA']:  # special tables to crash on
-                raise NotImplementedError('%s in not implemented and needs to be...' %(tableName))
+                self.readTable_LAMA()
             elif tableName in self.tablesToRead:
                 self.tableName = tableName
                 try:
