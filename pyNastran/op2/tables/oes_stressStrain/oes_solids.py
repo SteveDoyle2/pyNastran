@@ -1036,7 +1036,7 @@ class solidStrainObject(strainObject):
         for dt,exxs in sorted(self.exx.items()):            
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[1] = dtLine
-            for eid,oxxNodes in sorted(exxs.items()):
+            for eid,exxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
 
                 k = exxNodes.keys()

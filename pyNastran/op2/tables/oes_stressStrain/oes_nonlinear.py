@@ -24,6 +24,7 @@ class nonlinearQuadObject(stressObject):
         self.es  = {}
         self.eps = {}
         self.ecs = {}
+        self.dt = dt
 
     def deleteTransient(self,dt):
         del self.fiberDistance[dt]
@@ -108,21 +109,24 @@ class nonlinearQuadObject(stressObject):
         self.ecs[dt][eid].append(ecs)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        msgStart = ['      ELEMENT-ID =     129'
-                    '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )'
-                    ' ',
-                    '    TIME         FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP'
-                    '               DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN']
+        msgStart = ['      ELEMENT-ID =     129\n'
+                    '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
+                    ' \n',
+                    '    TIME         FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+                    '               DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n']
 #0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
         msgE = {}
         msgT = {}
         for (dt,Oxxs) in sorted(self.oxx.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+
             for (eid,oxxs) in sorted(Oxxs.items()):
-                msgE[eid] = '      ELEMENT-ID = %8i' %(eid)
+                msgE[eid] = header+['      ELEMENT-ID = %8i\n' %(eid)]
                 if eid not in msgT:
                     msgT[eid] = []
                 for i,oxx in enumerate(oxxs):
                     fd = self.fiberDistance[dt][eid][i]
+                    oxx = self.oxx[dt][eid][i]
                     oyy = self.oyy[dt][eid][i]
                     ozz = self.ozz[dt][eid][i]
                     txy = self.txy[dt][eid][i]
@@ -135,21 +139,22 @@ class nonlinearQuadObject(stressObject):
                     es  = self.es[dt][eid][i]
                     eps = self.eps[dt][eid][i]
                     ecs = self.ecs[dt][eid][i]
-                    
+                    ([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy])
                     if i==0:
-                        msgT[eid].append('0 %9.3E %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E  %13.6E\n' %(dt,fd,oxx,oyy,ozz,txy,es,eps,ecs))
+                        msgT[eid].append(       '0 %9.3E %13s  %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' %(dt,fd,oxx,oyy,ozz,txy,es,eps,ecs))
                     else:
-                        msgT[eid].append('  %9s %13s  %13.6E  %13.6E  %13.6E  %13.6E\n' %('','',exx,eyy,ezz,exy))
+                        msgT[eid].append('     %9s %13s  %13s  %13s  %13s  %13s\n' %('','',exx,eyy,ezz,exy))
                     ###
                 ###
             ###
         ###
         msg = []
         for eid,e in sorted(msgE.items()):
-            msg += header+[e]+msgStart+msgT[eid]
-            msg.append(pageStamp+str(pageNum))
+            msg += header+e+msgStart+msgT[eid]
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
 
-        return (''.join(msg),pageNum)    
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]
