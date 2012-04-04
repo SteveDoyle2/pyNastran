@@ -824,7 +824,13 @@ class plateStrainObject(strainObject):
         dt = self.dt
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
-        assert eid not in self.exx[dt]
+
+        if eid in self.evmShear[dt]:  # SOL200, erase the old result
+            nid = nodeID
+            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+            self.deleteTransient(dt)
+            self.addNewTransient()
+        
         self.eType[eid] = eType
         self.fiberCurvature[dt][eid] = {nodeID: [curvature]}
         self.exx[dt][eid]    = {nodeID: [exx]}
