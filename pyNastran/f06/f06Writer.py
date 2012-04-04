@@ -133,39 +133,49 @@ class F06Writer(object):
                   '\n',' \n']
 
         resTypes = [self.displacements,self.temperatures,
+                    self.loadVectors,
+
                     self.spcForces,self.mpcForces,
-                    self.rodStrain,self.barStrain,self.plateStrain,self.compositePlateStrain,self.solidStrain,
-                    self.rodStress,self.barStress,self.plateStress,self.compositePlateStress,self.solidStress,
+                    self.rodStrain,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
+                    self.rodStress,self.barStress,self.plateStress,self.nonlinearPlateStress,self.compositePlateStress,self.solidStress,
                     # beam, shear...not done
-                    #self.beamStrain,self.beamStress,
+                    self.beamStrain,self.beamStress,
                     #self.shearStrain,self.shearStress,
                     self.ctriaxStress,
                     self.ctriaxStrain,
                     self.gridPointForces,
-                    self.loadVectors,
                     ]
 
-        iSubcases = self.iSubcaseNameMap.keys()
-        for iSubcase in iSubcases:
-            (subtitle,label) = self.iSubcaseNameMap[iSubcase]
-            subtitle = subtitle.strip()
-            label = label.strip()
-            header[0] = '     %s\n' %(subtitle)
-            header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-            for resType in resTypes:
-                if resType.has_key(iSubcase):
-                    result = resType[iSubcase]
-                    try:
-                        print result.__class__.__name__
-                        (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
-                    except:
-                        #print "result name = %s" %(result.name())
-                        raise
+        if 1:
+            iSubcases = self.iSubcaseNameMap.keys()
+            for iSubcase in sorted(iSubcases):
+                (subtitle,label) = self.iSubcaseNameMap[iSubcase]
+                subtitle = subtitle.strip()
+                label = label.strip()
+                header[0] = '     %s\n' %(subtitle)
+                header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
+                for resType in resTypes:
+                    if resType.has_key(iSubcase):
+                        result = resType[iSubcase]
+                        try:
+                            print result.__class__.__name__
+                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+                        except:
+                            #print "result name = %s" %(result.name())
+                            raise
+                        f.write(msg)
+                        pageNum +=1
+                    ###
+                ###
+            ###
+        if 0:
+            for res in resTypes:
+                for iSubcase,result in sorted(res.items()):
+                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                     f.write(msg)
                     pageNum +=1
                 ###
-        ###
-
+            ###
         f.write(makeEnd())
         f.close()
         

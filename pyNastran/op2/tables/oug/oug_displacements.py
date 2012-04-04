@@ -110,7 +110,7 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
         for dt,translations in sorted(self.translations.items()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
             for nodeID,translation in sorted(translations.items()):
                 rotation = self.rotations[dt][nodeID]
@@ -122,12 +122,14 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
                 msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
-                msg.append('  %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+                msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
+        return self.writeF06(['','',''],'PAGE ',1)[0]
+
         msg = '---COMPLEX DISPLACEMENTS---\n'
         #if self.dt is not None:
         #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)

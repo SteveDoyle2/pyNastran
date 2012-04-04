@@ -161,6 +161,7 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 print 'unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode)
+                print self.codeInformation()
                 raise Exception('unsupported OQG1 thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
@@ -182,13 +183,15 @@ class OQG(object):
         if self.thermal==0:
             if self.analysisCode==1: # static SPC forces
                 self.createTransientObject(self.spcForces,spcForcesObject)
-            #elif self.analysisCode==2: # nonlinear static eigenvector
+            elif self.analysisCode==2: # nonlinear static eigenvector
                 #print "isEigenvector"
-                #self.createTransientObject(self.modalSPCForces,eigenVectorObject)
+                self.createTransientObject(self.spcForces,spcForcesObject)
             #elif self.analysisCode==5: # frequency
                 #print "isFrequencyForces"
                 #self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==6: # transient SPC forces
+                self.createTransientObject(self.spcForces,spcForcesObject)
+            elif self.analysisCode==8: # post-buckling SPC forces
                 self.createTransientObject(self.spcForces,spcForcesObject)
             elif self.analysisCode==10: # nonlinear static SPC forces
                 self.createTransientObject(self.spcForces,spcForcesObject)
@@ -198,6 +201,7 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 pass
+                print self.codeInformation()
                 raise Exception('unsupported OQG1 static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:

@@ -135,7 +135,7 @@ class ctriaxStressObject(stressObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            raise NotImplementedError()
+            self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -157,14 +157,7 @@ class ctriaxStressObject(stressObject):
                     Eid=eid
                 else:
                     Eid=''
-                vals = [radial,azimuth,axial,shear,omax,oms,ovm]
-                vals2 = []
-                for v in vals:
-                    v2 = '%13.6E' %(v)
-                    if   v2==' 0.000000E+00':
-                        v2 = ' 0.0         '
-                    vals2.append(v2)
-                [radial,azimuth,axial,shear,omax,oms,ovm] = vals2
+                [radial,azimuth,axial,shear,omax,oms,ovm] = self.writeF06Floats13E([radial,azimuth,axial,shear,omax,oms,ovm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,omax,oms,ovm.rstrip()))
             ###
             msg.append('\n')
@@ -173,5 +166,41 @@ class ctriaxStressObject(stressObject):
         msg.append(pageStamp+str(pageNum)+'\n')
         return(''.join(msg),pageNum)
 
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            self.writeF06Transient(header,pageStamp,pageNum)
+
+        words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
+               '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
+               '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
+              #'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
+              #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
+
+        msg = []
+        for dt,Radial in sorted(self.radial.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            for eid,radial in sorted(Radial.items()):
+                for nid in sorted(radial):
+                    radial   = self.radial[dt][eid][nid]
+                    azimuth  = self.azimuthal[dt][eid][nid]
+                    axial = self.axial[dt][eid][nid]
+                    shear = self.shear[dt][eid][nid]
+                    omax  = self.omax[dt][eid][nid]
+                    oms   = self.oms[dt][eid][nid]
+                    ovm   = self.ovm[dt][eid][nid]
+                    if nid==0:
+                        Eid=eid
+                    else:
+                        Eid=''
+                    [radial,azimuth,axial,shear,omax,oms,ovm] = self.writeF06Floats13E([radial,azimuth,axial,shear,omax,oms,ovm])
+                    msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,omax,oms,ovm.rstrip()))
+                ###
+                msg.append('\n')
+            ###
+
+            msg.append(pageStamp+str(pageNum)+'\n')
+        return(''.join(msg),pageNum-1)
+
     def __repr__(self):
-        return self.writeF06([],'PAGE ',1)[0]
+        return self.writeF06(['',''],'PAGE ',1)[0]

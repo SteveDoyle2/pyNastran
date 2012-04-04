@@ -241,7 +241,7 @@ class rodStressObject(stressObject):
         if nOut%2==1:
             nWrite = nOut-1
         for i in range(0,nWrite,2):
-            print i,out[i:]
+            #print i,out[i:]
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         
@@ -270,6 +270,7 @@ class rodStressObject(stressObject):
                 (axial,torsion) = vals2
                 out.append([eid,axial,MSa,torsion,MSt])
 
+            nOut = len(out)
             nWrite = nOut
             if nOut%2==1:
                 nWrite = nOut-1
@@ -541,6 +542,7 @@ class rodStrainObject(strainObject):
             (axial,torsion) = vals2
             out.append([eid,axial,MSa,torsion,MSt])
         
+        nOut = len(out)
         nWrite = nOut
         if nOut%2==1:
             nWrite = nOut-1
@@ -573,7 +575,10 @@ class rodStrainObject(strainObject):
                 out.append([eid,axial,MSa,torsion,MSt])
 
             nOut = len(out)
-            for i in range(0,nOut,2):
+            nWrite = nOut
+            if nOut%2==1:
+                nWrite = nOut-1
+            for i in range(0,nWrite,2):
                 outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' %(tuple(out[i]+out[i+1]))
                 msg.append(outLine)
 

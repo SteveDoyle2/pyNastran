@@ -73,6 +73,7 @@ class OES(ElementsStressStrain):
             self.addDataParameter(data,'mode',     'i',5)         ## mode number
             self.addDataParameter(data,'eign',     'f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
+            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         #elif self.analysisCode==4: # differential stiffness
@@ -80,29 +81,30 @@ class OES(ElementsStressStrain):
 
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
+            self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
-            #print "DT(5)=%s" %(self.dt)
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn','i',5)   ## load set
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn','i',5)       ## mode number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
-            #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
+            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
-            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
-            #print "LFTSFQ(5) = %s" %(self.lftsfq)
+            self.applyDataCodeValue('dataNames',['lftsfq'])
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn','i',5)   ## load set number
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'dt','f',5)   ## Time step ??? --> straight from DMAP
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         ###
@@ -273,7 +275,7 @@ class OES(ElementsStressStrain):
         if self.elementType in [1,3,10]: # crod/ctube/conrod
             #print "    found crod_1"
             self.makeOES_Object(self.rodStress,rodStressObject,
-                                               self.rodStrain,rodStrainObject)
+                                self.rodStrain,rodStrainObject)
             self.basicElement()
         #elif self.elementType in [10,11,12,33,74]:
             #raise AddNewElementError('add element=%s' %(self.elementType))
@@ -382,6 +384,7 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.CQUAD4_33()
+            #print self.obj.writeF06(['',''],'PAGE ',1)[0]
 
         elif self.elementType==53: # ctriax6
             self.dataCode['elementName'] = 'CTRIAX6'
@@ -426,8 +429,8 @@ class OES(ElementsStressStrain):
 
         elif self.elementType in [88,90]: # CTRIA3NL, CQUAD4NL
             #print "cquad4_90"
-            self.makeOES_Object(self.plateStress,nonlinearQuadObject,
-                                self.plateStrain,nonlinearQuadObject)
+            self.makeOES_Object(self.nonlinearPlateStress,nonlinearQuadObject,
+                                self.nonlinearPlateStrain,nonlinearQuadObject)
             self.CQUAD4NL_90()
 
         #elif self.elementType in [91]: # CPENTANL
@@ -593,4 +596,5 @@ class OES(ElementsStressStrain):
         else:
             self.createTransientObject(strain,strainObject)
         ###
+        print "loading",self.obj.__class__.__name__
         return self.obj

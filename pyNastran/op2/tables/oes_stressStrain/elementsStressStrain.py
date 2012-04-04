@@ -495,7 +495,7 @@ class ElementsStressStrain(object):
             eid = (eid - self.deviceCode) // 10
             data = (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
             
-            print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+            #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
@@ -507,7 +507,7 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.RODNL_89_92)
 
     def CQUAD4NL_90(self):
-        print "self.numWide = ",self.numWide
+        #print "self.numWide = ",self.numWide
         
         deviceCode = self.deviceCode
         numWide = self.numWide
@@ -634,7 +634,7 @@ class ElementsStressStrain(object):
 
         n1 = 24
         format1 = 'ssssfffff'
-        print "len(data) = ",len(self.data)
+        #print "len(data) = ",len(self.data)
         while len(self.data)>=nTotal:
             eData     = self.data[0:8]
             self.data = self.data[8: ]

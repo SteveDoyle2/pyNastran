@@ -41,9 +41,21 @@ class scalarObject(Op2Codes):
         vals2 = []
         isAllZeros = True
         for v in vals:
-            v2 = '%13E' %(v)
+            v2 = '%13.6E' %(v)
             if v2==' 0.000000E+00' or v2=='-0.000000E+00':
                 v2 = ' 0.0         '
+            else:
+                isAllZeros = False
+            vals2.append(v2)
+        return (vals2,isAllZeros)
+
+    def writeF06Floats8p4F(self,vals):
+        vals2 = []
+        isAllZeros = True
+        for v in vals:
+            v2 = '%8.4f' %(v)
+            if v2=='  0.0000' or v2==' -0.0000':
+                v2 = '  0.0000'
             else:
                 isAllZeros = False
             vals2.append(v2)
