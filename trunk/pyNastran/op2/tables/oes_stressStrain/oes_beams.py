@@ -28,7 +28,6 @@ class beamStressObject(stressObject):
         if self.code in [[1,0,0]]: # ,[1,0,1]
             #self.MS_axial   = {}
             #self.MS_torsion = {}
-            self.sd = {}
             self.sxc = {}
             self.sxd = {}
             self.sxe = {}
@@ -70,6 +69,10 @@ class beamStressObject(stressObject):
         return (40,'ifffffffff')
 
     def deleteTransient(self,dt):
+        del self.sxc[dt]
+        del self.sxd[dt]
+        del self.sxe[dt]
+        del self.sxf[dt]
         del self.smax[dt]
         del self.smin[dt]
         del self.MS_tension[dt]
@@ -87,6 +90,10 @@ class beamStressObject(stressObject):
         """
         #print "addNewTransient_beam+1+0"
         if self.dt not in self.smax:
+            self.sxc[self.dt] = {}
+            self.sxd[self.dt] = {}
+            self.sxe[self.dt] = {}
+            self.sxf[self.dt] = {}
             self.smax[self.dt] = {}
             self.smin[self.dt] = {}
             self.MS_tension[self.dt]     = {}
@@ -112,7 +119,6 @@ class beamStressObject(stressObject):
         #assert isinstance(grid,int)
         self.grids[eid] = [grid]
         self.xxb[eid]  = [sd]
-        self.sd[eid] = [sd]
         self.sxc[eid] = [sxc]
         self.sxd[eid] = [sxd]
         self.sxe[eid] = [sxe]
@@ -140,6 +146,11 @@ class beamStressObject(stressObject):
         assert eid  >= 0
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
+        #self.sd[dt][eid] = [sd]
+        self.sxc[dt][eid] = [sxc]
+        self.sxd[dt][eid] = [sxd]
+        self.sxe[dt][eid] = [sxe]
+        self.sxf[dt][eid] = [sxf]
         self.smax[dt][eid] = [smax]
         self.smin[dt][eid] = [smin]
         self.MS_tension[dt][eid] = [mst]
@@ -162,7 +173,7 @@ class beamStressObject(stressObject):
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
-            self.sd[eid].append(sd)
+            #self.sd[eid].append(sd)
             self.sxc[eid].append(sxc)
             self.sxd[eid].append(sxd)
             self.sxe[eid].append(sxe)
@@ -180,7 +191,7 @@ class beamStressObject(stressObject):
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
-            self.sd[dt][eid].append(sd)
+            #self.sd[dt][eid].append(sd)
             self.sxc[dt][eid].append(sxc)
             self.sxd[dt][eid].append(sxd)
             self.sxe[dt][eid].append(sxe)
@@ -205,7 +216,7 @@ class beamStressObject(stressObject):
             for i,nid in enumerate(self.grids[eid]):
                 #print i,nid
                 xxb  = self.xxb[eid][i]
-                sd  = self.sd[eid][i]
+                #sd  = self.sd[eid][i]
                 sxc = self.sxc[eid][i]
                 sxd = self.sxd[eid][i]
                 sxe = self.sxe[eid][i]
@@ -214,8 +225,8 @@ class beamStressObject(stressObject):
                 sMin = self.smin[eid][i]
                 SMt  = self.MS_tension[eid][i]
                 SMc  = self.MS_compression[eid][i]
-                (vals2,isAllZeros) = self.writeF06Floats13E([sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
-                (sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                (vals2,isAllZeros) = self.writeF06Floats13E([xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                (xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
@@ -233,17 +244,17 @@ class beamStressObject(stressObject):
                 msg.append('0  %8i\n' %(eid))
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]
-                    sd  = self.sd[eid][i]
-                    sxc = self.sxc[eid][i]
-                    sxd = self.sxd[eid][i]
-                    sxe = self.sxe[eid][i]
-                    sxf = self.sxf[eid][i]
-                    sMax = self.smax[eid][i]
-                    sMin = self.smin[eid][i]
-                    SMt  = self.MS_tension[eid][i]
-                    SMc  = self.MS_compression[eid][i]
-                    (vals2,isAllZeros) = self.writeF06Floats13E([sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
-                    (sd,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                    #sd  = self.sd[eid][i]
+                    sxc = self.sxc[dt][eid][i]
+                    sxd = self.sxd[dt][eid][i]
+                    sxe = self.sxe[dt][eid][i]
+                    sxf = self.sxf[dt][eid][i]
+                    sMax = self.smax[dt][eid][i]
+                    sMin = self.smin[dt][eid][i]
+                    SMt  = self.MS_tension[dt][eid][i]
+                    SMc  = self.MS_compression[dt][eid][i]
+                    (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                    (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
@@ -358,10 +369,10 @@ class beamStrainObject(strainObject):
         
         self.xxb = {}
         self.grids = {}
-        #self.sxc = {}
-        #self.sxd = {}
-        #self.sxe = {}
-        #self.sxf = {}
+        self.sxc = {}
+        self.sxd = {}
+        self.sxe = {}
+        self.sxf = {}
         self.smax = {}
         self.smin = {}
         self.MS_tension = {}

@@ -69,6 +69,10 @@ Added BDF
    - *** TIC
 
 OP2 API Changes
+   - more results in CBEAM stress/strain
+   - complex displacement reworked
+   - added writeF06 method to most objects
+
 OP2 Bug Fixes
 Overall OP2
    - more results
@@ -81,11 +85,18 @@ Overall OP2
      - OQG
 
 Added OP2
-   - OQG
+   - LAMA (requires an ESE = ALL to create table)
+     - eigenvalues (real)
+
+   - OUG (DISPLACMENTS=ALL)
+     - better complex displacements
+     - ***complex velocity
+     - ***complex acceleration
+   - OQG (SPCFORCES=ALL, MPCFORCES=ALL)
      - SPC Forces (static/transient)
      - MPC Forces (static/transient)
    
-   - OES
+   - OES (STRESS=ALL, STRAIN=ALL)
      - stress/strain
        - CTRIAX6 (static/transient)
      - hyperelastic stress/strain (transient)
@@ -94,7 +105,7 @@ Added OP2
        - CTRIA3, CQUAD4
        - CROD, CONROD, CTUBE
        - ***CBEAM
-   - OGF
+   - OGF (???=ALL)
      - grid point forces (static/transient)
      - load vector (static/transient)
 
@@ -108,15 +119,16 @@ Overall F06 Reader/Writer
 
 Added F06 Reader
    - format1, SORT2 supported
-   - OUG
+   - OUG (DISPLACMENTS=ALL)
      - displacement (static/transient)
-       - real
-     - ***complex displacement
+       - real/complex
+     - velocity/acceleration (static/transient)
+       - ***real/***complex
      - temperature  (static/transient)
      - eigenvectors (real/complex)
 
-   - OES
-     - solid stress/***strain (static/***transient)
+   - OES (STRESS=ALL, STRAIN=ALL)
+     - solid stress/strain (static/***transient)
         - CTETRA
         - CPENTA
         - CHEXA
@@ -135,20 +147,22 @@ Added F06 Reader
      - ***beam  stress/strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
 
-   - LAMA
-     - eigenvalues  (real/complex)
+   - LAMA (automatic for modal solution)
+     - eigenvalues  (real/complex)   no OP2 object support yet
 
 Added F06 Writer
    - prints out 0.000000E00 as 0.0
-   - OUG
+   - OUG (DISPLACMENTS=ALL)
      - displacement (static/transient)
        - real/complex
      - velocity     (static/transient)
+       - real
      - acceleration (static/transient)
+       - real
      - temperature  (static/transient)
      - eigenvectors (real/***complex)
 
-   - OES
+   - OES (STRESS=ALL, STRAIN=ALL)
      - solid stress/strain (static/transient);  (directional vectors & pressure calculated)
         - CTETRA
         - CPENTA
@@ -163,22 +177,21 @@ Added F06 Writer
         - CQUAD4 (centroid)
         - ***CQUAD8
         - ***CTRIA6
-
      - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
      - bar stress/strain   (static/transient; CBAR)
      - beam  stress/***strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
 
-   - LAMA
+   - LAMA (requires an ESE = ALL to create table)
      - ***eigenvalues  (real/complex)
 
-   - OQG (constraint forces)
+   - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
      - SPC forces (static/transient)
        - real/complex
      - MPC forces (static/transient)
        - real/complex
 
-   - OGF (grid point forces)
+   - OGF (grid point forces; ???=ALL)
      - grid point force balance (static/transient)
      - load vector (static/transient)
 
@@ -192,10 +205,10 @@ GUI Bug Fixes
 Solver
    - not released
    - rewriting pyNastran solver (SOL 101)
-      - better support for 3D
+      - improved support for 3D
       - uses case control deck to identify loads/BCs
       - still uses dense matricies, but layout will be easier to add sparse matricies later
-      - still need to build Kgg matrix
+      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.3 released 2012/02/08-----------------------

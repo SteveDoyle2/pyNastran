@@ -39,9 +39,9 @@ class LAMA(object):
         self.readTable_LAMA_4(-4)
 
         self.readMarkers([-5,1,0],'LAMA')
-        data = self.getData(4*30)
-        print self.printBlock(data)
-
+        #data = self.getData(4*30)
+        #print self.printBlock(data)
+        return
         sys.exit('stopping in LAMA')
         if 0:
             iTable = -3
@@ -124,3 +124,4 @@ class LAMA(object):
 #                       '        1         1        8.232776E+06        2.869281E+03        4.566603E+02        8.719168E-03        7.178296E+04
 #                       '        2         2        8.232776E+06        2.869281E+03        4.566603E+02        8.719168E-03        7.178296E+04
 
+        data = self.getData(4)
