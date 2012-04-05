@@ -570,8 +570,9 @@ class PSHEAR(ShellProperty):
             self.f1  = card.field(5,0.0)
             self.f2  = card.field(6,0.0)
         else:
+            #(pid,mid,t,nsm,f1,f2) = out
             self.pid = data[0]
-            self.b   = data[1]
+            self.mid = data[1]
             self.t   = data[2]
             self.nsm = data[3]
             self.f1  = data[4]

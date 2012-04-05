@@ -179,7 +179,7 @@ Added F06 Writer
         - ***CTRIA6
      - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
      - bar stress/strain   (static/transient; CBAR)
-     - beam  stress/***strain (static/transient; CBEAM)
+     - beam  stress/strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
 
    - LAMA (requires an ESE = ALL to create table)

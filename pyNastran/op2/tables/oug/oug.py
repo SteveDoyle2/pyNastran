@@ -201,8 +201,8 @@ class OUG(object):
             self.readOUG_Data_table11_format1_sort0()
         #elif tfsCode==[11,1,1]:
         #    self.readOUG_Data_table11_format1_sort1()
-        #elif tfsCode==[11,2,0]:
-        #    self.readOUG_Data_table11_format2_sort0()
+        elif tfsCode==[11,2,0]:
+            self.readOUG_Data_table11_format2_sort0()
         #elif tfsCode==[11,2,1]:
         #    self.readOUG_Data_table11_format2_sort1()
         #elif tfsCode==[11,2,2]:
@@ -217,10 +217,10 @@ class OUG(object):
         else:
             #print "***start skipping***"
             #self.log.debug('skipping approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
-            #self.skipOES_Element()
+            self.skipOES_Element()
             #print "***end skipping***"
             print self.codeInformation()
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
+            #raise NotImplementedError('bad approach/table/format/sortCode=%s on OUG table' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -382,6 +382,38 @@ class OUG(object):
         #    self.skipOES_Element()
         ###
 
+    def readOUG_Data_table10_format2_sort0(self): # velocity
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==0   # Real
+        if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
+            if 0:
+                pass
+            #if self.analysisCode==1: # velocity
+                #print "isVelocity"
+                #self.createTransientObject(self.velocities,velocityObject)
+            elif self.analysisCode==6: # transient velocity
+                self.createTransientObject(self.velocities,velocityObject)
+            else:
+                print self.codeInformation()
+                raise NotImplementedError('unsupported OUG static solution...atfsCode=%s' %(self.atfsCode))
+            ###
+        elif self.thermal==1:
+            print self.codeInformation()
+            raise Exception('unsupported OUG thermal solution...atfsCode=%s' %(self.atfsCode))
+            pass
+        else:
+            print self.codeInformation()
+            raise Exception('invalid OUG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+        ###
+        self.readMappedScalarsOut(debug=False) # handles dtMap
+
+        #if self.obj:
+        #    self.readScalarsOut(debug=False)
+        #    #self.readScalars8(debug=False)
+        #else:
+        #    self.skipOES_Element()
+        ###
+
     def readOUG_Data_table11_format1_sort0(self): # acceleration
         #assert self.formatCode==1 # Real
         #assert self.sortCode==0   # Real
@@ -389,6 +421,31 @@ class OUG(object):
             if self.analysisCode==1: # acceleration
                 #print "isAcceleration"
                 self.createTransientObject(self.accelerations,accelerationObject)
+            elif self.analysisCode==6: # transient acceleration
+                #print "isTransientAcceleration"
+                self.createTransientObject(self.accelerations,accelerationObject)
+            else:
+                print self.codeInformation()
+                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            ###
+        elif self.thermal==1:
+            print self.codeInformation()
+            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+        else:
+            print self.codeInformation()
+            raise Exception('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+        ###
+        self.readMappedScalarsOut(debug=False) # handles dtMap
+
+    def readOUG_Data_table11_format2_sort0(self): # acceleration
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==0   # Real
+        if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
+            if 0:
+                pass
+            #if self.analysisCode==1: # acceleration
+                #print "isAcceleration"
+                #self.createTransientObject(self.accelerations,accelerationObject)
             elif self.analysisCode==6: # transient acceleration
                 #print "isTransientAcceleration"
                 self.createTransientObject(self.accelerations,accelerationObject)

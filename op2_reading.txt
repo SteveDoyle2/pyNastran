@@ -192,7 +192,7 @@ OP2 Reader
      - SPCADD
      - USET1   (63)
    
-   - EPT (element properties table; 10/63)
+   - EPT (element properties table; 11/63)
    	 (properties may be created that are too large >100000000.  this is how
           properties created by the solution are identified)
      - NSM     (2, done)
@@ -217,7 +217,7 @@ OP2 Reader
      - PSOLID  (51,done)
      - PSHELL  (52,done)
      - PTUBE   (56,done)
-     - PVISC   (59)
+     - PVISC   (59,done)
      - VIEW3D  (63)
 
    - MPT / MPTS (material properties table; 12/29)

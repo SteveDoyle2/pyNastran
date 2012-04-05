@@ -269,6 +269,7 @@ class nonlinearRodObject(stressObject):
         self.effectivePlasticCreepStrain = {}
         self.effectiveCreepStrain  = {}
         self.linearTorsionalStress = {}
+        self.dt = dt
     
     def deleteTransient(self,dt):
         del self.axialStress[dt]
@@ -330,6 +331,7 @@ class nonlinearRodObject(stressObject):
                 epcs = self.effectivePlasticCreepStrain[dt][eid]
                 ecs  = self.effectiveCreepStrain[dt][eid]
                 lts  = self.linearTorsionalStress[dt][eid]
+                #print "dt=%s axials=%s eqs=%s ts=%s epcs=%s ecs=%s lts=%s" %(dt,axial,eqs,ts,epcs,ecs,lts)
                 msgE[eid] = '      ELEMENT-ID = %8i\n' %(eid)
                 if eid not in msgT:
                     msgT[eid] = []

@@ -31,7 +31,7 @@ class EPT(object):
                         #(11001,110,411): self.readPCONV,   # record 25 - not done
                          (202,   2,  45): self.readPDAMP,   # record 27 - not done
                         #(2802, 28, 236): self.readPHBDY,   # record 43 - not done
-                         (1802, 18,  31): self.readPVISC,   # record 59 - not done
+                         (1802, 18,  31): self.readPVISC,   # record 59
                         #(10201,102,400): self.readPVAL,    # record 58 - not done
                         #(2606, 26, 289): self.readVIEW,    # record 62 - not done
                         #(1402, 14, 37):   self.readFake,    # record 
@@ -314,7 +314,7 @@ class EPT(object):
             data  = data[24:]
             out = unpack('iiffff',eData)
             (pid,mid,t,nsm,f1,f2) = out
-            prop = PSHEAR(None,out)
+            prop = PSHEAR(data=out)
             self.addOp2Property(prop)
         ###
 

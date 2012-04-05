@@ -271,12 +271,12 @@ class OES(ElementsStressStrain):
     def readOES_Data_format2_sort1(self):
         #msg = '%s-OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
-        #if self.elementType==1: # crod
-        if self.elementType in [1,3,10]: # crod/ctube/conrod
-            #print "    found crod_1"
-            self.makeOES_Object(self.rodStress,rodStressObject,
-                                self.rodStrain,rodStrainObject)
-            self.basicElement()
+        if 0:
+            pass
+        #if self.elementType in [1,3,10]: # crod/ctube/conrod
+            #self.makeOES_Object(self.rodStress,rodStressObject,
+            #                    self.rodStrain,rodStrainObject)
+            #self.basicElement()
         #elif self.elementType in [10,11,12,33,74]:
             #raise AddNewElementError('add element=%s' %(self.elementType))
         else:
@@ -423,8 +423,8 @@ class OES(ElementsStressStrain):
 
         elif self.elementType in [87,89,92]:   # CTUBENL, RODNL, CONRODNL
             #print "    found RODNL_89"
-            self.makeOES_Object(self.rodStress,nonlinearRodObject,
-                                self.rodStrain,nonlinearRodObject)
+            self.makeOES_Object(self.nonlinearRodStress,nonlinearRodObject,
+                                self.nonlinearRodStrain,nonlinearRodObject)
             self.RODNL_89_92()
 
         elif self.elementType in [88,90]: # CTRIA3NL, CQUAD4NL
@@ -448,19 +448,19 @@ class OES(ElementsStressStrain):
             self.CQUAD4_95()
             del self.eid2
 
-        elif self.elementType in [94]: # CBEAM (nonlinear)
+        #elif self.elementType in [94]: # CBEAM (nonlinear)
             #print "    found a 94!"
             #self.eid2 = None # stores the previous elementID
             self.makeOES_Object(self.beamStress,beamStressObject,
                                 self.beamStrain,beamStrainObject)
-            self.CBEAM_94()
-            raise Exception('stoping at end of CBEAM_94')
+            #self.CBEAM_94()
+            #raise Exception('stoping at end of CBEAM_94')
             #del self.eid2
 
         elif self.elementType in [139]:   # QUAD4FD (hyperelastic)
             #print "    found QUAD4FD_139"
-            self.makeOES_Object(self.plateStress,hyperelasticQuadObject,
-                                self.plateStrain,hyperelasticQuadObject)
+            self.makeOES_Object(self.hyperelasticPlateStress,hyperelasticQuadObject,
+                                self.hyperelasticPlateStrain,hyperelasticQuadObject)
             self.QUAD4FD_139()
 
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:

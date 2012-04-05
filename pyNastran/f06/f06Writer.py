@@ -108,10 +108,20 @@ class F06Writer(object):
         self.compositePlateStress = op2.compositePlateStress
         self.compositePlateStrain = op2.compositePlateStrain
     
-    def writeF06(self,f06OutName):
-        f = open(f06OutName,'wb')
+    def writeF06(self,f06OutName,makeFile=False):
+        """
+        Writes an F06 file based on the data we have stored in the object
+        @param self the object pointer
+        @param f06OutName the name of the F06 file to write
+        @param makeFile True->makes a file, False->makes a StringIO object for testing (default=True)
+        """
+        if makeFile:
+            f = open(f06OutName,'wb')
+        else:
+            import StringIO
+            f = StringIO.StringIO()
+
         f.write(makePyNastranTitle())
-        
         pageStamp = makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
@@ -136,13 +146,17 @@ class F06Writer(object):
                     self.loadVectors,
 
                     self.spcForces,self.mpcForces,
-                    self.rodStrain,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
-                    self.rodStress,self.barStress,self.plateStress,self.nonlinearPlateStress,self.compositePlateStress,self.solidStress,
+                    self.rodStrain,self.nonlinearRodStress,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
+                    self.beamStrain,self.ctriaxStrain,self.hyperelasticPlateStress,
+
+                    self.rodStress,self.nonlinearRodStrain,self.barStress,self.plateStress,self.nonlinearPlateStress,self.compositePlateStress,self.solidStress,
+                    self.beamStress,self.ctriaxStress,self.hyperelasticPlateStrain,
+                    
+                    
                     # beam, shear...not done
-                    self.beamStrain,self.beamStress,
                     #self.shearStrain,self.shearStress,
-                    self.ctriaxStress,
-                    self.ctriaxStrain,
+                    
+                    
                     self.gridPointForces,
                     ]
 
@@ -177,8 +191,10 @@ class F06Writer(object):
                 ###
             ###
         f.write(makeEnd())
+        if not makeFile:
+            print f.getvalue()
+        ###
         f.close()
-        
 
 if __name__=='__main__':
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
