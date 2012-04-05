@@ -108,7 +108,7 @@ class F06Writer(object):
         self.compositePlateStress = op2.compositePlateStress
         self.compositePlateStrain = op2.compositePlateStrain
     
-    def writeF06(self,f06OutName,makeFile=False):
+    def writeF06(self,f06OutName,makeFile=True):
         """
         Writes an F06 file based on the data we have stored in the object
         @param self the object pointer
@@ -129,6 +129,15 @@ class F06Writer(object):
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
+        for iSubcase,result in sorted(self.eigenvalues.items()): # goes first
+            (subtitle,label) = self.iSubcaseNameMap[iSubcase]
+            subtitle = subtitle.strip()
+            header[0] = '     %s\n' %(subtitle)
+            header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            f.write(msg)
+            pageNum +=1
+        
         for iSubcase,result in sorted(self.eigenvectors.items()): # has a special header
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
@@ -142,7 +151,8 @@ class F06Writer(object):
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n',' \n']
 
-        resTypes = [self.displacements,self.temperatures,
+        resTypes = [
+                    self.displacements,self.temperatures,
                     self.loadVectors,
 
                     self.spcForces,self.mpcForces,

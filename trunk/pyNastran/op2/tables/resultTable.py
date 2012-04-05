@@ -14,7 +14,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf import OGF
 #from pyNastran.op2.tables.hisadd import HISADD - combined with R1TAB for now
 from pyNastran.op2.tables.r1tab  import R1TAB
 from pyNastran.op2.tables.destab import DESTAB
-from pyNastran.op2.tables.lama import LAMA
+from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 
 
 

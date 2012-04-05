@@ -2,17 +2,9 @@ from numpy import array
 from pyNastran.op2.op2Errors import *
 from pyNastran.op2.op2Codes import Op2Codes
 
-class scalarObject(Op2Codes):
-    def __init__(self,dataCode,iSubcase):
-        self.iSubcase = iSubcase
-        self.isTransient = False
-        self.dt = None
-        self.dataCode = dataCode
-        self.applyDataCode()
-        self.log.debug(self.codeInformation())
-
-    def isImaginary(self):
-        return bool(self.sortBits[1])
+class baseScalarObject(Op2Codes):
+    def __init__(self):
+        pass
 
     def name(self):
         return self.__class__.__name__
@@ -60,6 +52,20 @@ class scalarObject(Op2Codes):
                 isAllZeros = False
             vals2.append(v2)
         return (vals2,isAllZeros)
+
+
+class scalarObject(baseScalarObject):
+    def __init__(self,dataCode,iSubcase):
+        baseScalarObject.__init__(self)
+        self.iSubcase = iSubcase
+        self.isTransient = False
+        self.dt = None
+        self.dataCode = dataCode
+        self.applyDataCode()
+        self.log.debug(self.codeInformation())
+
+    def isImaginary(self):
+        return bool(self.sortBits[1])
 
     def applyDataCode(self):
         self.log = self.dataCode['log']

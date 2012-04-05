@@ -108,6 +108,7 @@ class OP2(BDF,  # BDF methods
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # tables
+                             'LAMA',
 
                             'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC',#'EDOM',
                              'DESTAB',                # design variables
@@ -161,6 +162,8 @@ class OP2(BDF,  # BDF methods
         ## mainly for debugging
         self.tableNames = []
 
+        ## ESE
+        self.eigenvalues = {}
 
         ## OUG - displacement
         self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
@@ -241,15 +244,15 @@ class OP2(BDF,  # BDF methods
         self.shearStrain = {}
         
 
-        # OQG
+        # OQG - spc/mpc forces
         self.spcForces      = {}
         #self.modalSPCForces = {}
-
         self.mpcForces      = {}
         #self.modalMPCForces = {}
         
         ## OGF - grid point forces
         self.gridPointForces = {}
+
         ## OPG - summation of loads for each element
         self.appliedLoads = {}
         self.loadVectors = {}
@@ -648,6 +651,7 @@ class OP2(BDF,  # BDF methods
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
                    #self.displacements,self.temperatures,
+                   self.eigenvalues,
                    self.eigenvectors,
                    self.velocities,
                    self.accelerations,
