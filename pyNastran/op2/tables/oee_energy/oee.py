@@ -9,11 +9,9 @@ from oee_objects import *
 class OEE(object):
     """Table of energy"""
 
-    def readTable_OEE1(self):
-        #self.tableName = 'OEE'
-
-        table3 = self.readTable_OEE1_3
-        table4Data = self.readOEE1_Data
+    def readTable_OEE(self):
+        table3 = self.readTable_OEE_3
+        table4Data = self.readOEE_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEE()
 
@@ -21,7 +19,7 @@ class OEE(object):
         params = ['lsdvm','mode','eigr','freq','dt','lftsfq','formatCode','numWide']
         self.deleteAttributes(params)
     
-    def readTable_OEE1_3(self,iTable): # iTable=-3
+    def readTable_OEE_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
@@ -96,19 +94,19 @@ class OEE(object):
         #self.printBlock(data)
         self.readTitle()
 
-    def readOEE1_Data(self):
+    def readOEE_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         
         if tfsCode==[18,1,0]:
             self.readStrainEnergy_table18_format1_sort0()
         #elif fsCode==[18,1,1]:
-        #    self.readOEE1_Data_format1_sort1()
+        #    self.readOEE_Data_format1_sort1()
         #elif fsCode==[18,2,1]:
-        #    self.readOEE1_Data_format2_sort1()
+        #    self.readOEE_Data_format2_sort1()
         else:
-            self.skipOES_Element()
-            #raise Exception('unsupported OEE1 static solution...aftsCode=%s' %(self.atfsCode))
+            #self.skipOES_Element()
+            raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
         ###
         #print str(self.obj)
 

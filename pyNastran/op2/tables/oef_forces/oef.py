@@ -17,7 +17,7 @@ from oef_Objects import (nonlinearFluxObject)
 
 class OEF(object):
     """Table of element forces"""
-    def readTable_OEF1(self):
+    def readTable_OEF(self):
         table3     = self.readTable_OEF_3
         table4Data = self.readOEF1_Data
         self.readResultsTable(table3,table4Data)

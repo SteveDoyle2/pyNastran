@@ -381,9 +381,10 @@ class solidStressObject(stressObject):
                      [txz,tyz,ozz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
-                msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
-                msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
+                ([oxx,oyy,ozz,oxy,oyz,oxz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,oxy,oyz,oxz,o1,o2,o3,p,ovm])
+                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
+                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
+                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
             ###
             if eType=='CTETRA' or eType=='TETRA':
                 tetraMsg.append(msgA)
@@ -441,7 +442,7 @@ class solidStressObject(stressObject):
         
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         
-        for dt,oxxs in sorted(self.oxx.items()):            
+        for dt,oxxs in sorted(self.oxx.items()):
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[1] = dtLine
             #print oxxs
@@ -479,9 +480,10 @@ class solidStressObject(stressObject):
                          [txz,tyz,ozz]]
                     (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                    msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
-                    msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
-                    msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
+                    ([oxx,oyy,ozz,oxy,oyz,oxz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,oxy,oyz,oxz,o1,o2,o3,p,ovm])
+                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
+                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
+                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
                 ###
                 #print eType
                 if eType=='CTETRA' or eType=='TETRA':
@@ -973,9 +975,10 @@ class solidStrainObject(strainObject):
                      [exz,eyz,ezz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,exx,exy,e1,v[0,0],v[0,1],v[0,2],p,evm)
-                msgA += '0              %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', eyy,eyz,e2,v[1,0],v[1,1],v[1,2])
-                msgA += '0              %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ezz,exz,e3,v[2,0],v[2,1],v[2,2])
+                ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
+                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,0],v[0,1],v[0,2],p,evm.strip())
+                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,0],v[1,1],v[1,2])
+                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,0],v[2,1],v[2,2])
             ###
             if eType=='CTETRA' or eType=='TETRA':
                 tetraMsg.append(msgA)
@@ -1058,7 +1061,7 @@ class solidStrainObject(strainObject):
                     e2 = self.e2[dt][eid][nid]
                     e3 = self.e3[dt][eid][nid]
                     evm = self.evmShear[dt][eid][nid]
-                    p = (o1+o2+o3)/-3.
+                    p = (e1+e2+e3)/-3.
 
                     if nid=='C': nid='CENTER'
                     #print "nid = |%r|" %(nid)
@@ -1067,9 +1070,10 @@ class solidStrainObject(strainObject):
                          [exz,eyz,ezz]]
                     (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                    msgA += '0              %8s  X  %13.6E  XY  %13.6E   A  %13.6E  LX%5.2f%5.2f%5.2f  %13.6E   %13.6E\n' %(nid,exx,exy,o1,v[0,0],v[0,1],v[0,2],p,evm)
-                    msgA += '               %8s  Y  %13.6E  YZ  %13.6E   B  %13.6E  LY%5.2f%5.2f%5.2f\n'                  %('', eyy,eyz,o2,v[1,0],v[1,1],v[1,2])
-                    msgA += '               %8s  Z  %13.6E  ZX  %13.6E   C  %13.6E  LZ%5.2f%5.2f%5.2f\n'                  %('', ezz,exz,o3,v[2,0],v[2,1],v[2,2])
+                    ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
+                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,0],v[0,1],v[0,2],p,evm.strip())
+                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,0],v[1,1],v[1,2])
+                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,0],v[2,1],v[2,2])
                 ###
                 if eType=='CTETRA' or eType=='TETRA':
                     tetraMsg.append(msgA)
