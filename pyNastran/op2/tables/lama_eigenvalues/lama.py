@@ -3,6 +3,7 @@ import sys
 import struct
 from struct import unpack
 
+from lama_objects import RealEigenvalues,ComplexEigenvalues
 #from pyNastran.op2.op2Errors import *
 #from pyNastran.bdf.cards.nodes import GRID
 #from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD2R,CORD2C,CORD3G #CORD1C,CORD1S,CORD2S
@@ -11,8 +12,7 @@ from struct import unpack
 class LAMA(object):
 
     def readTable_LAMA(self):
-        #self.tableName = 'DESTAB'
-        tableName = self.readTableName(rewind=False) # DESTAB
+        tableName = self.readTableName(rewind=False) # LAMA
         self.tableInit(tableName)
         print "tableName1 = |%r|" %(tableName)
         print "tableName2 = |%r|" %(self.tableName)
@@ -26,7 +26,7 @@ class LAMA(object):
         print "bufferWords = ",bufferWords
         
         
-        word = self.readStringBlock() # DESTAB
+        word = self.readStringBlock() # LAMA
         print "word = |%s|" %(word)
         self.readMarkers([-3,1,0],'LAMA')
 
@@ -108,19 +108,21 @@ class LAMA(object):
         #print "280/3 = ",280/4
         nModes = bufferWords//7
 
-        msg = ['                                              R E A L   E I G E N V A L U E S\n',
-               '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
-               '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
-        
+        lama = RealEigenvalues(self.iSubcase)
+        self.eigenvalues[self.iSubcase] = lama
         for i in range(nModes):
             data = self.getData(28) # 4*7
-            (mode,order,eigen,omega,freq,mass,stiff) = unpack('iifffff',data)
-            print "mode=%s order=%s eigen=%s omega=%s freq=%s mass=%s stiff=%s" %(mode,order,eigen,omega,freq,mass,stiff)
-
-
-            msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n'%(mode,order,eigen,omega,freq,mass,stiff))
+            out = unpack('iifffff',data)
+            #(iMode,order,eigen,omega,freq,mass,stiff) = out
+            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
+            print out
+            lama.addF06Line(out)
+            #print "mode=%s order=%s eigen=%s omega=%s freq=%s mass=%s stiff=%s" %(mode,order,eigen,omega,freq,mass,stiff)
+        #print ""
         #print ''.join(msg)
-        print "self.iSubcase = ",self.iSubcase
+        #print "self.iSubcase = ",self.iSubcase
+        #print lama.writeF06([],'PAGE',1)[0]
+        #sys.exit()
 #                       '        1         1        8.232776E+06        2.869281E+03        4.566603E+02        8.719168E-03        7.178296E+04
 #                       '        2         2        8.232776E+06        2.869281E+03        4.566603E+02        8.719168E-03        7.178296E+04
 

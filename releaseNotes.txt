@@ -71,7 +71,7 @@ Added BDF
 OP2 API Changes
    - more results in CBEAM stress/strain
    - complex displacement reworked
-   - added writeF06 method to most objects
+   - added writeF06 method to most objects (no strain energy, shear stress/strain, celas stress/strain)
 
 OP2 Bug Fixes
 Overall OP2
@@ -111,11 +111,13 @@ Added OP2
 
 Overall F06 Reader/Writer
    - rewrote f06 reader
-   - limited transient support
-   - F06Writer integrates with OP2 reader
+      - limited transient support
+      - F06 Reader not nearly as complete as the OP2 Reader
+      - F06 field parsing needs more testing, so beware!
+      - use the OP2 reader
+   - F06 Writer integrates with OP2 reader
      - transient variable names may not be correct (e.g. 'lftsfq' mean 'LOAD STEP', but it should write 'LOAD STEP')
-   - The op2 or f06 readers feed the F06Writer or another solver/user's own results.
-   - field parsing needs more testing, so beware!
+   - The op2 or f06 readers feed the f06 writer or another solver/user's own results.
 
 Added F06 Reader
    - format1, SORT2 supported
@@ -182,8 +184,8 @@ Added F06 Writer
      - beam  stress/strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
 
-   - LAMA (requires an ESE = ALL to create table)
-     - ***eigenvalues  (real/complex)
+   - LAMA (requires an ESE = ALL to create op2 table)
+     - eigenvalues  (real/***complex)
 
    - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
      - SPC forces (static/transient)

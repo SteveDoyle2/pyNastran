@@ -90,6 +90,20 @@ class F06(OES,OUG,F06Writer):
         self.SpcForces = {}
         self.iSubcases = []
         self.temperatureGrad = {}
+        
+        self.iSubcaseNameMap = {}
+        self.loadVectors = {}
+        self.spcForces = {}
+        self.mpcForces = {}
+        self.nonlinearRodStress = {}
+        self.nonlinearRodStrain = {}
+        self.nonlinearPlateStress = {}
+        self.nonlinearPlateStrain = {}
+        self.ctriaxStress = {}
+        self.ctriaxStrain = {}
+        self.hyperelasticPlateStress = {}
+        self.hyperelasticPlateStrain = {}
+        self.gridPointForces = {}
         OES.__init__(self)
         OUG.__init__(self)
         self.startLog()
@@ -150,6 +164,7 @@ class F06(OES,OUG,F06Writer):
 
     def readSubcaseNameID(self):
         subcaseName = self.storedLines[-3].strip()
+        self.Title = subcaseName #'no title'
         #print "subcaseLine = |%r|" %(subcaseName)
         if subcaseName=='':
             iSubcase = 1
@@ -158,6 +173,7 @@ class F06(OES,OUG,F06Writer):
             iSubcase = int(iSubcase.strip('SUBCASE '))
             #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
         ###
+        self.iSubcaseNameMap[iSubcase] = [subcaseName,'SUBCASE %s' %(iSubcase)]
         transient   = self.storedLines[-1].strip()
         isSort1 = False
         if transient:
@@ -268,6 +284,7 @@ class F06(OES,OUG,F06Writer):
                     'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
                     'dataNames':['mode','eigr','modeCycle'],
                     'name':'mode',
+                    'tableName':'OUGV1',
                     #'sCode':0,
                     #'elementName':'CBAR','elementType':34,'stressBits':stressBits,
                     }
@@ -538,7 +555,6 @@ if __name__=='__main__':
     f06 = F06(f06Name)
     f06.readF06()
 
-    f06.setF06Name(model)
-    f06.writeF06()
+    f06.writeF06(model+'f06.out')
     print f06
 

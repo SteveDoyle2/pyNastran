@@ -90,8 +90,8 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
             msg += header
             freq = self.eigrs[i]
-            msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
-            msg.append('%16s = %12E          R E A L   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
+            msg.append('%16s = %13E\n' %('EIGENVALUE',freq))
+            msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID,displacement in sorted(eigVals.items()):
                 rotation = self.rotations[iMode][nodeID]

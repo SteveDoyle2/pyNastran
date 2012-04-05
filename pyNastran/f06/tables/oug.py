@@ -1,6 +1,5 @@
-from pyNastran.op2.tables.oug.oug_displacements import displacementObject
+from pyNastran.op2.tables.oug.oug_displacements import displacementObject,complexDisplacementObject
 from pyNastran.op2.tables.oug.oug_temperatures  import temperatureObject
-from pyNastran.op2.tables.oug.ougv1_Objects     import complexDisplacementObject
 
 
 class OUG(object):
