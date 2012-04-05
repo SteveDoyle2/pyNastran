@@ -205,6 +205,8 @@ class OP2(BDF,  # BDF methods
         self.rodStress  = {}
         ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStrain  = {}
+        self.nonlinearRodStress = {}
+        self.nonlinearRodStrain = {}
         ## OES - isotropic CBAR
         self.barStress  = {}
         ## OES - isotropic CBAR
@@ -221,6 +223,8 @@ class OP2(BDF,  # BDF methods
         ## OESNLXR - CTRIA3/CQUAD4
         self.nonlinearPlateStress = {}
         self.nonlinearPlateStrain = {}
+        self.hyperelasticPlateStress = {}
+        self.hyperelasticPlateStrain = {}
 
         ## OES - isotropic CTETRA/CHEXA/CPENTA
         self.solidStress = {}
@@ -361,6 +365,7 @@ class OP2(BDF,  # BDF methods
             except:
                 raise
             self.log.debug("tableName = |%r|" %(tableName))
+            #print "tableName = |%r|" %(tableName)
             if tableName==None:
                 break
             elif tableName in self.tablesToRead:
@@ -590,7 +595,8 @@ class OP2(BDF,  # BDF methods
         bufferWords = self.getMarker()
         #print "buffMarker = |%s|" %(bufferWords)
         #print "bufferWords = ",bufferWords,bufferWords*4
-        assert bufferWords >0
+        if bufferWords <=0:
+            raise BufferError('An invalid buffersize was found...bufferWords=%s tableName=%s section=\n%s' %(bufferWords,self.tableName,self.printSection(200)))
         return bufferWords
 
     def verifyBufferSize(self,bufferWords):
@@ -665,6 +671,8 @@ class OP2(BDF,  # BDF methods
                    # OES - Stress/Strain
                    self.celasStress,self.celasStrain,
                    self.rodStress,self.rodStrain,
+                   self.nonlinearRodStress,self.nonlinearRodStrain,
+
                    self.barStress,self.barStrain,
                    self.beamStress,self.beamStrain,
                    self.plateStress,self.plateStrain,

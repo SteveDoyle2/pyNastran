@@ -140,6 +140,8 @@ class OQG(object):
         if self.thermal==0:
             if self.analysisCode==1: # static MPC forces
                 self.createTransientObject(self.mpcForces,mpcForcesObject)
+            elif self.analysisCode==2: # eigenvector
+                self.createTransientObject(self.mpcForces,mpcForcesObject)
             elif self.analysisCode==6: # transient MPC forces
                 self.createTransientObject(self.mpcForces,mpcForcesObject)
             elif self.analysisCode==10: # nonlinear MPC forces

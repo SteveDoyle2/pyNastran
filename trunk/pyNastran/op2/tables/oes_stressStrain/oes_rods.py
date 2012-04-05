@@ -266,6 +266,7 @@ class rodStressObject(stressObject):
                 MSa     = self.MS_axial[dt][eid]
                 torsion = self.torsion[dt][eid]
                 MSt     = self.MS_torsion[dt][eid]
+
                 (vals2,isAllZeros) = self.writeF06Floats13E([axial,torsion])
                 (axial,torsion) = vals2
                 out.append([eid,axial,MSa,torsion,MSt])
@@ -547,7 +548,7 @@ class rodStrainObject(strainObject):
         if nOut%2==1:
             nWrite = nOut-1
         for i in range(0,nWrite,2):
-            outLine = '      %8i   %13.6E  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
+            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' %(tuple(out[i]+out[i+1]))
             msg.append(outLine)
         
         if nOut%2==1:

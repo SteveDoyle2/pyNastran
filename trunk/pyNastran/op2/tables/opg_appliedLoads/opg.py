@@ -207,6 +207,8 @@ class OPG(object):
                 #print "isAppliedLoads"
                 self.createTransientObject(self.appliedLoads,appliedLoadsObject)
                 self.readOPGForces(self.data,self.obj)
+            #elif self.analysisCode==11: # old nonlinear static
+                #self.createTransientObject(self.appliedLoads,appliedLoadsObject)
             else:
                 self.skipOES_Element()
                 #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
@@ -232,13 +234,14 @@ class OPG(object):
     def readOPG1_Data_table2_format1_sort0(self):
         if self.thermal==0:
             if self.analysisCode==1: # load vector
-                #print "isAppliedLoads"
                 self.createTransientObject(self.loadVectors,loadVectorObject)
             elif self.analysisCode==6: # transient
-                #print "isAppliedLoads"
+                self.createTransientObject(self.loadVectors,loadVectorObject)
+            elif self.analysisCode==7: # pre-buckling
                 self.createTransientObject(self.loadVectors,loadVectorObject)
             elif self.analysisCode==10: # nonlinear static
-                #print "isAppliedLoads"
+                self.createTransientObject(self.loadVectors,loadVectorObject)
+            elif self.analysisCode==11: # old nonlinear static
                 self.createTransientObject(self.loadVectors,loadVectorObject)
             else:
                 self.skipOES_Element()

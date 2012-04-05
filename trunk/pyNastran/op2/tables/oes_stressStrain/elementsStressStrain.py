@@ -698,7 +698,7 @@ class ElementsStressStrain(object):
         self.printSection(100)
         self.handleResultsBuffer(self.CQUAD4_95)
 
-    def QUAD4FD_139(self):
+    def QUAD4FD_139(self): # hyperelastic
         """
         Hyperelastic Quad
         36+4*7*4 = 148

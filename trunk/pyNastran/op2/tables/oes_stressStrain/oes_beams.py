@@ -146,7 +146,6 @@ class beamStressObject(stressObject):
         assert eid  >= 0
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
-        #self.sd[dt][eid] = [sd]
         self.sxc[dt][eid] = [sxc]
         self.sxd[dt][eid] = [sxd]
         self.sxe[dt][eid] = [sxe]
@@ -173,7 +172,6 @@ class beamStressObject(stressObject):
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
-            #self.sd[eid].append(sd)
             self.sxc[eid].append(sxc)
             self.sxd[eid].append(sxd)
             self.sxe[eid].append(sxe)
@@ -216,7 +214,6 @@ class beamStressObject(stressObject):
             for i,nid in enumerate(self.grids[eid]):
                 #print i,nid
                 xxb  = self.xxb[eid][i]
-                #sd  = self.sd[eid][i]
                 sxc = self.sxc[eid][i]
                 sxd = self.sxd[eid][i]
                 sxe = self.sxe[eid][i]
@@ -225,8 +222,8 @@ class beamStressObject(stressObject):
                 sMin = self.smin[eid][i]
                 SMt  = self.MS_tension[eid][i]
                 SMc  = self.MS_compression[eid][i]
-                (vals2,isAllZeros) = self.writeF06Floats13E([xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
-                (xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
@@ -416,6 +413,10 @@ class beamStrainObject(strainObject):
         return (40,'ifffffffff')
 
     def deleteTransient(self,dt):
+        del self.sxc[dt]
+        del self.sxd[dt]
+        del self.sxe[dt]
+        del self.sxf[dt]
         del self.smax[dt]
         del self.smin[dt]
         del self.MS_tension[dt]
@@ -433,6 +434,10 @@ class beamStrainObject(strainObject):
         """
         #print "addNewTransient_beam+1+0"
         if self.dt not in self.smax:
+            self.sxc[self.dt] = {}
+            self.sxd[self.dt] = {}
+            self.sxe[self.dt] = {}
+            self.sxf[self.dt] = {}
             self.smax[self.dt] = {}
             self.smin[self.dt] = {}
             self.MS_tension[self.dt]     = {}
@@ -459,6 +464,10 @@ class beamStrainObject(strainObject):
         #assert isinstance(grid,int)
         self.grids[eid] = [grid]
         self.xxb[eid]  = [sd]
+        self.sxc[eid] = [sxc]
+        self.sxd[eid] = [sxd]
+        self.sxe[eid] = [sxe]
+        self.sxf[eid] = [sxf]
         self.smax[eid] = [smax]
         self.smin[eid] = [smin]
         self.MS_tension[eid] = [mst]
@@ -482,6 +491,10 @@ class beamStrainObject(strainObject):
         assert eid  >= 0
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
+        self.sxc[dt][eid] = [sxc]
+        self.sxd[dt][eid] = [sxd]
+        self.sxe[dt][eid] = [sxe]
+        self.sxf[dt][eid] = [sxf]
         self.smax[dt][eid] = [smax]
         self.smin[dt][eid] = [smin]
         self.MS_tension[dt][eid] = [mst]
@@ -503,6 +516,10 @@ class beamStrainObject(strainObject):
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
+            self.sxc[eid].append(sxc)
+            self.sxd[eid].append(sxd)
+            self.sxe[eid].append(sxe)
+            self.sxf[eid].append(sxf)
             self.smax[eid].append(smax)
             self.smin[eid].append(smin)
             self.MS_tension[eid].append(mst)
@@ -521,6 +538,63 @@ class beamStrainObject(strainObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
         ###
+
+    def writeF06(self,header,pageStamp,pageNum=1):
+        if self.isTransient:
+            return self.writeF06Transient(header,pageStamp,pageNum)
+
+        msg = header + ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+                        '                    STAT DIST/\n',
+                        '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+
+        for eid in sorted(self.smax):
+            msg.append('0  %8i\n' %(eid))
+            #print self.xxb[eid]
+            for i,nid in enumerate(self.grids[eid]):
+                #print i,nid
+                xxb  = self.xxb[eid][i]
+                sxc = self.sxc[eid][i]
+                sxd = self.sxd[eid][i]
+                sxe = self.sxe[eid][i]
+                sxf = self.sxf[eid][i]
+                sMax = self.smax[eid][i]
+                sMin = self.smin[eid][i]
+                SMt  = self.MS_tension[eid][i]
+                SMc  = self.MS_compression[eid][i]
+                (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+        return (''.join(msg),pageNum)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
+        words = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+                 '                    STAT DIST/\n',
+                 '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+        msg = []
+        for dt,SMaxs in sorted(self.smax.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header + words
+            for eid,Smax in sorted(SMaxs.items()):
+                msg.append('0  %8i\n' %(eid))
+                for i,nid in enumerate(self.grids[eid]):
+                    xxb  = self.xxb[eid][i]
+                    sxc = self.sxc[dt][eid][i]
+                    sxd = self.sxd[dt][eid][i]
+                    sxe = self.sxe[dt][eid][i]
+                    sxf = self.sxf[dt][eid][i]
+                    sMax = self.smax[dt][eid][i]
+                    sMin = self.smin[dt][eid][i]
+                    SMt  = self.MS_tension[dt][eid][i]
+                    SMc  = self.MS_compression[dt][eid][i]
+                    (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                    (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
+                    msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __reprTransient_format2_sort1__(self):
         raise Exception('not supported')
