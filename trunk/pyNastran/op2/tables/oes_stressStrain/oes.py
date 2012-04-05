@@ -20,7 +20,7 @@ from oes_triax import ctriaxStressObject
 class OES(ElementsStressStrain):
     """Table of stresses/strains"""
 
-    def readTable_OES1(self):
+    def readTable_OES(self):
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
         self.readResultsTable(table3,table4Data,flag=1) # flag=1 defines old style
@@ -212,20 +212,20 @@ class OES(ElementsStressStrain):
             # Stress / Strain
             self.dataCode['elementName'] = self.ElementType(self.elementType)
             if   tfsCode==[5,1,0]:
-                self.readOES1_Data_format1_sort0()
+                self.readOES_Data_format1_sort0()
             elif tfsCode==[5,1,1]:
-                self.readOES1_Data_format1_sort1()
+                self.readOES_Data_format1_sort1()
             elif tfsCode==[5,2,0]:
-                self.readOES1_Data_format2_sort0()
+                self.readOES_Data_format2_sort0()
             elif tfsCode==[5,2,1]:
-                self.readOES1_Data_format2_sort1()
+                self.readOES_Data_format2_sort1()
             elif tfsCode==[5,3,0]:
             
-                self.readOES1_Data_format3_sort0()
+                self.readOES_Data_format3_sort0()
             elif tfsCode==[5,3,1]:
-                self.readOES1_Data_format3_sort1()
+                self.readOES_Data_format3_sort1()
             elif tfsCode==[5,3,2]:
-                self.readOES1_Data_format3_sort2()
+                self.readOES_Data_format3_sort2()
             else:
                 #raise InvalidATFSCodeError('invalid atfsCode=%s' %(self.atfsCode))
                 self.skipOES_Element()
@@ -240,7 +240,7 @@ class OES(ElementsStressStrain):
         
         #print self.obj
 
-    def readOES1_Data_format1_sort1(self):
+    def readOES_Data_format1_sort1(self):
         #msg = '%s-OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
@@ -254,7 +254,7 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
 
-    def readOES1_Data_format2_sort0(self):
+    def readOES_Data_format2_sort0(self):
         #msg = '%s-OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
@@ -268,7 +268,7 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
 
-    def readOES1_Data_format2_sort1(self):
+    def readOES_Data_format2_sort1(self):
         #msg = '%s-OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         #if self.elementType==1: # crod
@@ -288,7 +288,7 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
 
-    def readOES1_Data_format3_sort0(self):
+    def readOES_Data_format3_sort0(self):
         msg = '%s-OES format3_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         #msg = ''
         if 0:
@@ -302,7 +302,7 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
 
-    def readOES1_Data_format3_sort1(self):
+    def readOES_Data_format3_sort1(self):
         #msg = '%s-OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
@@ -316,7 +316,7 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
 
-    def readOES1_Data_format3_sort2(self):
+    def readOES_Data_format3_sort2(self):
         #msg = '%s-OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         msg = ''
         if 0:
@@ -330,7 +330,7 @@ class OES(ElementsStressStrain):
         ###
         self.skippedCardsFile.write(msg)
 
-    def readOES1_Data_format1_sort0(self):
+    def readOES_Data_format1_sort0(self):
         #msg = '%s-OES elementType=%-3s -> %-6s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType))
         msg = ''
         #if self.analysisCode not in [1,6,10]:

@@ -363,8 +363,6 @@ class OP2(BDF,  # BDF methods
             self.log.debug("tableName = |%r|" %(tableName))
             if tableName==None:
                 break
-            elif tableName in ['LAMA']:  # special tables to crash on
-                self.readTable_LAMA()
             elif tableName in self.tablesToRead:
                 self.tableName = tableName
                 try:
@@ -388,16 +386,16 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DYNAMICS()
                     elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
                         self.readTable_DIT()
+                    elif tableName in ['LAMA']: # eigenvalue
+                        self.readTable_LAMA()
+
                     elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OMM2','OGPWG',]:
                         self.readTable_DUMMY_GEOM(tableName)
-
                     elif tableName in ['DESTAB']:  # design variable table
                         self.readTable_DesTab()
-
                     elif tableName in ['R1TABRG']: # not done - response table
                         self.readTable_R1TAB()
                         self.isOptimization = True
-
                     elif tableName in ['HISADD']: # not done
                         self.readTable_R1TAB()
                         self.isOptimization = True
@@ -405,33 +403,33 @@ class OP2(BDF,  # BDF methods
                         self.readTable_R1TAB()
 
                     elif tableName in ['OPG1','OPNL1','OGS1','OPGV1']: # table of applied loads
-                        self.readTable_OPG1()
+                        self.readTable_OPG()
                     elif tableName in ['OGPFB1',]:
                         self.readTable_OGF()
 
 
                     elif tableName in ['OEF1X','DOEF1']:  # applied loads
-                        self.readTable_OEF1()
+                        self.readTable_OEF()
                     elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
-                        self.readTable_OQG1()
+                        self.readTable_OQG()
 
                     elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
-                        self.readTable_OUG1()
+                        self.readTable_OUG()
                     elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
-                        self.readTable_OUG1()
+                        self.readTable_OUG()
 
                     elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXD','OESCP','OESRT','OESRMS2','OESNO2','OESCRM2',]: # stress
-                        self.readTable_OES1()  # 'OESNLXR','OESNL1X'
+                        self.readTable_OES()  # 'OESNLXR','OESNL1X'
                     elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
-                        self.readTable_OES1()
+                        self.readTable_OES()
 
                     elif tableName in ['OESNLXR',]: # ???
                         self.readTable_OESNLXR()
                     
                     elif tableName in ['ONRGY1']: # energy
-                        self.readTable_OEE1()
+                        self.readTable_OEE()
                     elif tableName in ['ONRGY2']:
-                        self.readTable_OEE1()
+                        self.readTable_OEE()
 
                     elif tableName in ['PCOMPTS']:
                         self.readTable_PCOMPTS() # 'SDF',

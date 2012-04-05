@@ -28,6 +28,8 @@ class ctriaxStressObject(stressObject):
             self.isTransient = True
             self.dt = self.nonlinearFactor
             self.addNewTransient()
+            self.add = self.addTransient
+            self.addNewEid = self.addNewEidTransient
         ###
 
     def addF06Data(self,data,transient):
@@ -111,10 +113,11 @@ class ctriaxStressObject(stressObject):
         self.oms[eid][nid]       = tmax
         self.ovm[eid][nid]       = octs
 
-    def addNewEidTransient(self,eid,loc,rs,azs,As,ss,maxp,tmax,octs):
+    def addNewEidTransient(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         dt = self.dt
         #assert isinstance(eid,int)
         #assert eid >= 0
+        #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[dt][eid]    = {nid: rs}
         self.azimuthal[dt][eid] = {nid: azs}
         self.axial[dt][eid]     = {nid: As}
@@ -125,6 +128,7 @@ class ctriaxStressObject(stressObject):
 
     def addTransient(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
+        dt = self.dt
         self.radial[dt][eid][nid]    = rs
         self.azimuthal[dt][eid][nid] = azs
         self.axial[dt][eid][nid]     = As
@@ -135,7 +139,7 @@ class ctriaxStressObject(stressObject):
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.isTransient:
-            self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -146,9 +150,9 @@ class ctriaxStressObject(stressObject):
         #out = []
         for eid,radial in sorted(self.radial.items()):
             for nid in sorted(radial):
-                radial   = self.radial[eid][nid]
+                rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
-                axial = self.axial[eid][nid]
+                axial = self.axial[eid][nid] 
                 shear = self.shear[eid][nid]
                 omax  = self.omax[eid][nid]
                 oms   = self.oms[eid][nid]
@@ -157,7 +161,7 @@ class ctriaxStressObject(stressObject):
                     Eid=eid
                 else:
                     Eid=''
-                [radial,azimuth,axial,shear,omax,oms,ovm] = self.writeF06Floats13E([radial,azimuth,axial,shear,omax,oms,ovm])
+                ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,omax,oms,ovm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,omax,oms,ovm.rstrip()))
             ###
             msg.append('\n')
@@ -166,10 +170,7 @@ class ctriaxStressObject(stressObject):
         msg.append(pageStamp+str(pageNum)+'\n')
         return(''.join(msg),pageNum)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
-            self.writeF06Transient(header,pageStamp,pageNum)
-
+    def writeF06Transient(self,header,pageStamp,pageNum=1):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
@@ -182,7 +183,7 @@ class ctriaxStressObject(stressObject):
             msg += header+words
             for eid,radial in sorted(Radial.items()):
                 for nid in sorted(radial):
-                    radial   = self.radial[dt][eid][nid]
+                    rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]
                     axial = self.axial[dt][eid][nid]
                     shear = self.shear[dt][eid][nid]
@@ -193,8 +194,8 @@ class ctriaxStressObject(stressObject):
                         Eid=eid
                     else:
                         Eid=''
-                    [radial,azimuth,axial,shear,omax,oms,ovm] = self.writeF06Floats13E([radial,azimuth,axial,shear,omax,oms,ovm])
-                    msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,omax,oms,ovm.rstrip()))
+                    ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,omax,oms,ovm])
+                    msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,rad,azimuth,axial,shear,omax,oms,ovm.rstrip()))
                 ###
                 msg.append('\n')
             ###
