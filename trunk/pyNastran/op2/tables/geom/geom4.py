@@ -60,6 +60,7 @@ class Geometry4(object):
 # BSET1
 # CSET
 # CSET1
+
     def readCYAX(self,data):
         """CYAX(1510,15,328) - Record 8 """
         self.skippedCardsFile.write('skipping CYAX in GEOM4\n')
@@ -180,8 +181,8 @@ class Geometry4(object):
             eData = data[n:n+20]
             (sid,c,thruFlag) = unpack('iifii',eData)
 
-            load = FORCE1(None,[sid,g,f,n1,n2])
-            self.addLoad(load)
+            constraint = SPC1(None,[sid,g,f,n1,n2])
+            self.addConstraint_SPC(constraint)
             n+=20
         ###
         data = data[n:]

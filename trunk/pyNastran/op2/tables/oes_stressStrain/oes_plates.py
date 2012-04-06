@@ -35,15 +35,15 @@ class plateStressObject(stressObject):
         self.ovmShear = {}
 
         #print "self.code = ",self.code
-        #if self.code in [ [1,0,1],[1,0,5],[1,0,15] ]:
-        #    #self.isVonMises = True
-        #    assert self.isFiberDistance() == True,self.stressBits
-        #    assert self.isVonMises()      == True,self.stressBits
-        #elif self.code == [1,0,0]:
-        #    assert self.isFiberDistance() == False,self.stressBits
-        #    assert self.isVonMises()      == False,self.stressBits
-        #else:
-        #    raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
+        if self.code in [ [1,0,1],[1,0,5],[1,0,15] ]:
+            #self.isVonMises = True
+            assert self.isFiberDistance() == True,self.stressBits
+            assert self.isVonMises()      == True,self.stressBits
+        elif self.code == [1,0,0]:
+            assert self.isFiberDistance() == False,self.stressBits
+            assert self.isVonMises()      == False,self.stressBits
+        else:
+            raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
 
 
@@ -341,7 +341,7 @@ class plateStressObject(stressObject):
         if self.isFiberDistance():
             quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)\n',
                            '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)',
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR\n',
                           '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         else:
             quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)\n',
@@ -526,13 +526,13 @@ class plateStressObject(stressObject):
                 ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,oxx,oyy,txy,angle,major,minor,ovm.strip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,    fd,oxx,oyy,txy,angle,major,minor,ovm.strip())
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',      fd,oxx,oyy,txy,angle,major,minor,ovm.strip())
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 else:
-                    #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',      fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy,angle,major,minor,ovm)
                     raise Exception('Invalid option for cquad4')
                 ###
             ###
@@ -555,9 +555,9 @@ class plateStressObject(stressObject):
                 ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm.strip())
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s   %-s\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('',fd,oxx,oyy,txy,angle,major,minor,ovm.strip())
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s   %-s\n' %('', fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 ###
             ###
         ###
@@ -925,9 +925,9 @@ class plateStrainObject(strainObject):
                           '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         else:
             quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
+                           '      ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
             triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+                          '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         ###
 
         triMsg = []
@@ -993,9 +993,9 @@ class plateStrainObject(strainObject):
                           '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         else:
             quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
+                           '      ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s\n' %(vonMises)]
             triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+                          '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         ###
 
         eTypes = self.eType.values()
@@ -1075,13 +1075,15 @@ class plateStrainObject(strainObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 evm   = self.evmShear[eid][nid][iLayer]
+                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
+                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -1105,12 +1107,15 @@ class plateStrainObject(strainObject):
                 minor = self.minorP[dt][eid][nid][iLayer]
                 evm   = self.evmShear[dt][eid][nid][iLayer]
 
+                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
+                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -1131,10 +1136,12 @@ class plateStrainObject(strainObject):
                 minor = self.minorP[eid][nid][iLayer]
                 evm   = self.evmShear[eid][nid][iLayer]
 
+                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
+                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
                 if iLayer==0:
-                    msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 else:
-                    msg += '   %6s   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %('', fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 ###
             ###
         ###
@@ -1153,10 +1160,12 @@ class plateStrainObject(strainObject):
                 minor = self.minorP[dt][eid][nid][iLayer]
                 evm   = self.evmShear[dt][eid][nid][iLayer]
 
+                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
+                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
                 if iLayer==0:
-                    msg += '0  %6i   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
                 else:
-                    msg += '   %6s   %13E     %13E  %13E  %13E   %8.4F   %13E   %13E  %13E\n' %('', fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy,angle,major,minor,evm)
                 ###
             ###
         ###

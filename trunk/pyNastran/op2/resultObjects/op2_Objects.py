@@ -47,7 +47,7 @@ class baseScalarObject(Op2Codes):
         for v in vals:
             v2 = '%8.4f' %(v)
             if v2=='  0.0000' or v2==' -0.0000':
-                v2 = '  0.0000'
+                v2 = '  0.0   '
             else:
                 isAllZeros = False
             vals2.append(v2)

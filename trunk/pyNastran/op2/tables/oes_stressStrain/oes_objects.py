@@ -7,20 +7,33 @@ class OES_Object(scalarObject):
         self.log.debug("starting OES...elementName=%s iSubcase=%s" %(self.elementName,self.iSubcase))
         #print self.dataCode
 
-    def isCurvature(self):
+    def isCurvatureOld(self):
         if self.stressBits[2]==0:
             return True
         return False
+
+    def isCurvature(self):
+        if self.sCode in [0,1,14,15,16,17,27,30,31]: # fiber distance
+            return False
+        elif self.sCode in [10,11,26,]: # fiber curvature
+            return True
+        raise NotImplementedError('add sCode=%s' %(self.sCode))
 
     def isFiberDistance(self):
         return not(self.isCurvature())
 
     def isVonMises(self):
+        #print self.stressBits
+        #iMs = not(self.isMaxShear())
+        #print 'isVonMises = ',iMs
         return not(self.isMaxShear())
 
     def isMaxShear(self):
-        if self.stressBits[0]==0:
+        #print self.stressBits
+        if self.stressBits[4]==0:
+            #print 'isMaxShear = True'
             return True
+        #print 'isMaxShear = False'
         return False
 
 class stressObject(OES_Object):

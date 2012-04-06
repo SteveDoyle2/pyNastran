@@ -62,8 +62,8 @@ class Geometry2(object):
                            (5508,55,217):    self.readCTETRA,   # record 87
                            (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
                            (4801,48,327):    self.readCTRIA6,   # record 95 - buggy
-                           (9200,92,385):    self.readCTRIAR,   # record 98 - not tested
-                           (6108,61,107):    self.readCTRIAX6,  # record 100 - not tested
+                           (9200,92,385):    self.readCTRIAR,   # record 98  - not done
+                           (6108,61,107):    self.readCTRIAX6,  # record 100 - not done
                            (3701,37,49):     self.readCTUBE,    # record 103
                            (3901,39, 50):     self.readCVISC,   # record 104 - not done
                           #(5201,52,11):      self.readPLOTEL,  # record 114 - not done

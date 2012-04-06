@@ -187,9 +187,17 @@ OP2 Reader
      - TEMPD   (33,done)
      - PEDGE   (42)
    
-   - GEOM4   (constraints; 0/63)
-     - SPC1
-     - SPCADD
+   - GEOM4   (constraints; 3/63)
+     - RBAR    (22)
+     - RBE1    (23)
+     - RBE2    (24)
+     - RBE3    (25)
+     - SPC     (44,done)
+     - SPC1    (45)
+     - SPCADD  (46)
+     - SPCD    (47,done)
+     - SUPORT  (59,done)
+     - SUPORT1 (60)
      - USET1   (63)
    
    - EPT (element properties table; 11/63)

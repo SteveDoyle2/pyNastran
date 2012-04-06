@@ -31,6 +31,7 @@ class EPT(object):
                         #(11001,110,411): self.readPCONV,   # record 25 - not done
                          (202,   2,  45): self.readPDAMP,   # record 27 - not done
                         #(2802, 28, 236): self.readPHBDY,   # record 43 - not done
+                         (402,   4,  44): self.readPMASS,   # record 48
                          (1802, 18,  31): self.readPVISC,   # record 59
                         #(10201,102,400): self.readPVAL,    # record 58 - not done
                         #(2606, 26, 289): self.readVIEW,    # record 62 - not done
@@ -288,7 +289,22 @@ class EPT(object):
 # PINTS
 # PLPLANE
 # PLSOLID
-# PMASS
+
+    def readPMASS(self,data):
+        """
+        PMASS(402,4,44) - the marker for Record 48
+        """
+        n=0
+        nEntries = len(data)//8  # 2*4
+        for i in range(nEntries):
+            eData = data[n:n+8]
+            out = unpack('ii',eData)
+            #out = (pid,mass)
+            prop = PMASS(data=out)
+            self.addOp2Property(prop)
+            n+=8
+        ###
+        data = data[n:]
 
     def readPROD(self,data):
         """
