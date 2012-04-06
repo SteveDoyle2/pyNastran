@@ -46,10 +46,15 @@ class NSM(PointProperty):
 class PMASS(PointProperty):
     def __init__(self,card=None,nOffset=0,data=None):
         PointProperty.__init__(self,card,data)
-        nOffset *= 2
-        ## Property ID
-        self.pid  = card.field(1+nOffset)
-        self.mass = card.field(2+nOffset,0.)
+        if card:
+            nOffset *= 2
+            ## Property ID
+            self.pid  = card.field(1+nOffset)
+            self.mass = card.field(2+nOffset,0.)
+        else:
+            self.pid = data[0]
+            self.mass = data[1]
+        ###
 
     def Mass(self):
         return self.mass

@@ -330,14 +330,14 @@ class Op2Codes(object):
         if(  sCode==0):  sWord += 'Coordinate Element - Stress Max Shear (Octahedral)'
         elif(sCode==14): sWord += 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
 
-        elif(sCode==1):  sWord += 'Coordinate Element - Stress von Mises Max Shear (Octahedral)'
-        elif(sCode==10): sWord += 'Coordinate Element - Strain Curvature Max Shear'
+        elif(sCode==1):  sWord += 'Coordinate Element - Stress von Mises'
+        elif(sCode==10): sWord += 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
 
         elif(sCode==11): sWord += 'Coordinate Element - Strain Curvature von Mises'
         elif(sCode==15): sWord += 'Coordinate Element - Strain Fiber von Mises'
 
         elif(sCode==16): sWord += 'Coordinate Material - Stress Max Shear (Octahedral)'
-        elif(sCode==17): sWord += 'Coordinate Material - Stress von Mises Max Shear (Octahedral)'
+        elif(sCode==17): sWord += 'Coordinate Material - Stress von Mises'
 
         elif(sCode==26): sWord += 'Coordinate Material - Strain Curvature Max Shear'
         elif(sCode==30): sWord += 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
