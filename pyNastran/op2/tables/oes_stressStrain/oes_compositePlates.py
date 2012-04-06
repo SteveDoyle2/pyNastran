@@ -342,6 +342,7 @@ class compositePlateStressObject(stressObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
+        return self.writeF06(['','',''],'PAGE ',1)[0]
         if self.isTransient:
             return self.__reprTransient__()
 
@@ -707,6 +708,7 @@ class compositePlateStrainObject(strainObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
+        return self.writeF06(['','',''],'PAGE ',1)[0]
         if self.isTransient:
             return self.__reprTransient__()
 

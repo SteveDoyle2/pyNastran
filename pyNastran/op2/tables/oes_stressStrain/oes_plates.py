@@ -355,7 +355,7 @@ class plateStressObject(stressObject):
             kkey = self.eType.keys()[qkey]
             ekey = self.oxx[kkey].keys()
             isBilinear=True
-            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
                 isBilinear=False
                 quadMsg = header+['                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n \n']+triMsgTemp
@@ -427,7 +427,7 @@ class plateStressObject(stressObject):
             nLayers = len(self.oxx[dt][eid])
             #print "elementKeys = ",elementKeys
             isBilinear=True
-            quadMsg2 = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
+            quadMsg2 = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if nLayers==1:
                 isBilinear=False
                 quadMsg2 = ['                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n \n']+triMsgTemp
@@ -937,7 +937,7 @@ class plateStrainObject(strainObject):
             kkey = self.eType.keys()[qkey]
             ekey = self.exx[kkey].keys()
             isBilinear=True
-            quadMsg = header+['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
+            quadMsg     = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if len(ekey)==1:
                 isBilinear=False
                 quadMsg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
@@ -1010,7 +1010,7 @@ class plateStrainObject(strainObject):
             nLayers = len(self.exx[dt][eid])
             #print "elementKeys = ",elementKeys
             isBilinear=True
-            quadMsg2 = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN\n \n']+quadMsgTemp
+            quadMsg2     = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if nLayers==1:
                 isBilinear=False
                 quadMsg2 = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp

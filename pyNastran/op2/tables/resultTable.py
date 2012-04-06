@@ -61,6 +61,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
         if self.iSubcase in storageObj:
             #print "updating dt..."
             self.obj = storageObj[self.iSubcase]
+            #print "obj = ",self.obj.__class__.__name__
             #print self.obj.writeF06(['',''],'PAGE ',1)[0]
             
             try:
@@ -74,6 +75,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
             ###
         else:
             self.obj = classObj(self.dataCode,self.iSubcase,self.nonlinearFactor)
+            #print "obj2 = ",self.obj.__class__.__name__
         storageObj[self.iSubcase] = self.obj
         ###
 

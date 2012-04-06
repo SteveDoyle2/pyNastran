@@ -162,9 +162,65 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         return (tableName,isNextTable,isNextSubTable,isFileDone)
 
     def readTable_PCOMPTS(self):
-        self.iTableMap = {
-                         }
-        self.readRecordTable('PCOMPTS')
+        #self.iTableMap = {
+        #                 }
+        #self.readRecordTable('PCOMPTS')
+
+        tableName = self.readTableName(rewind=False) # PCOMP
+        self.tableInit(tableName)
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()  # ??? ints
+        print ints
+        #data = self.readBlock()
+        #print self.printBlock(data) 
+        #print "fields = ",fields
+
+        #-------------------------------------------
+        self.readMarkers([-2,1,0]) # 2
+        self.readMarkers([2]) # 2
+        strings = self.readStringBlock()  # IPCOMPT
+        print strings
+
+        #-------------------------------------------
+        self.readMarkers([-3,1,0]) # 3
+        #-------------------------------------------
+        self.readMarkers([-4,1,0]) # 4
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+
+        print "bufferSize = ",bufferSize
+        data = self.getData(bufferWords*4)
+        #print self.printBlock(data)
+
+        data = self.getData(4)
+
+        #-------------------------------------------
+        self.readMarkers([-5,1,0]) # 5
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords,bufferWords*4
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+        print "bufferSize = ",bufferSize
+        data = self.getData(bufferWords*4)
+        data = self.getData(4)
+
+        #-------------------------------------------
+        self.readMarkers([-6,1,0]) # 5
+        #-------------------------------------------
+        print self.printSection(220)
+        #sys.exit('asdf')
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
     def readTable_DUMMY_GEOM(self,tableName):
         self.iTableMap = {}

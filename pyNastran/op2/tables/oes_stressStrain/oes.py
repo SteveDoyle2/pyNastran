@@ -213,19 +213,18 @@ class OES(ElementsStressStrain):
             self.dataCode['elementName'] = self.ElementType(self.elementType)
             if   tfsCode==[5,1,0]:
                 self.readOES_Data_format1_sort0()
-            elif tfsCode==[5,1,1]:
-                self.readOES_Data_format1_sort1()
-            elif tfsCode==[5,2,0]:
-                self.readOES_Data_format2_sort0()
-            elif tfsCode==[5,2,1]:
-                self.readOES_Data_format2_sort1()
-            elif tfsCode==[5,3,0]:
-            
-                self.readOES_Data_format3_sort0()
-            elif tfsCode==[5,3,1]:
-                self.readOES_Data_format3_sort1()
-            elif tfsCode==[5,3,2]:
-                self.readOES_Data_format3_sort2()
+            #elif tfsCode==[5,1,1]:
+                #self.readOES_Data_format1_sort1()
+            #elif tfsCode==[5,2,0]:
+                #self.readOES_Data_format2_sort0()
+            #elif tfsCode==[5,2,1]:
+                #self.readOES_Data_format2_sort1()
+            #elif tfsCode==[5,3,0]:
+                #self.readOES_Data_format3_sort0()
+            #elif tfsCode==[5,3,1]:
+                #self.readOES_Data_format3_sort1()
+            #elif tfsCode==[5,3,2]:
+                #self.readOES_Data_format3_sort2()
             else:
                 #raise InvalidATFSCodeError('invalid atfsCode=%s' %(self.atfsCode))
                 self.skipOES_Element()
@@ -344,6 +343,7 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             return
 
+        #print 'self.elementType  = ',self.elementType
         if self.elementType in [1,3,10]: # crod/ctube/conrod
             #if self.elementType==1:    self.dataCode['elementName'] = 'CROD'
             #if self.elementType==3:    self.dataCode['elementName'] = 'CTUBE'
@@ -451,8 +451,8 @@ class OES(ElementsStressStrain):
         #elif self.elementType in [94]: # CBEAM (nonlinear)
             #print "    found a 94!"
             #self.eid2 = None # stores the previous elementID
-            self.makeOES_Object(self.beamStress,beamStressObject,
-                                self.beamStrain,beamStrainObject)
+            #self.makeOES_Object(self.beamStress,beamStressObject,
+            #                    self.beamStrain,beamStrainObject)
             #self.CBEAM_94()
             #raise Exception('stoping at end of CBEAM_94')
             #del self.eid2

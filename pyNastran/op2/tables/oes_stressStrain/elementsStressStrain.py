@@ -1,5 +1,6 @@
 import sys
 from struct import unpack
+sys.setrecursionlimit(2000)
 
 from pyNastran.op2.op2Errors import *
 
