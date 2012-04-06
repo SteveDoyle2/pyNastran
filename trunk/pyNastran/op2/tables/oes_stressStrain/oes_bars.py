@@ -361,7 +361,7 @@ class barStressObject(stressObject):
 class barStrainObject(strainObject):
     """
     # sCode=10
-                                    S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )
+                                     S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )
     ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
       ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
 
