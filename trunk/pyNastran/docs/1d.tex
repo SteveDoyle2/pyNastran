@@ -1,0 +1,29 @@
+\section{1D Elements}
+   \subsection{Spring Element}
+     \[ [K_e] = 
+            \left[ \begin{array}{cc}
+               k & -k \\
+              -k &  k 
+            \end{array}\right]\]
+     \[ [K_e] \left\{ \begin{array}{c}  
+              u_1 \\ u_2 \end{array}\right\} \]
+
+         \[      \left\{ \begin{array}{c}
+              X_1 \\ X_2 \end{array}\right\} \]
+       
+   \subsection{Rod Element}
+     The rod element is the same as the spring, except k must be calculated.
+       \[ k = \frac{AE}{L} \]
+       \[ [K_e] = 
+            \left[ \begin{array}{cc}
+               k & -k \\
+              -k &  k 
+            \end{array}\right]\]
+       
+       %verify
+       \[   \epsilon_{xx} = u_{x2}-u_{x1}           \]
+       \[ 2 \epsilon_{xy} = \theta_{x2}-\theta_{x1} \]
+
+       \[ \sigma_{xx} = \epsilon_{xx} E \]
+       \[ \sigma_{xy} = \epsilon_{xy} G \]
+
