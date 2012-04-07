@@ -16,26 +16,34 @@ class bdfMethods(object):
     def MassProperties(self):
         """
         Caclulates mass properties in the global system about 0,0,0
-        I = mass*centroid*centroid
-        Ixx = mass*x*x
-        Iyz = mass*y*z
-        @warning centroid isnt coded across the board
+        I   = mass*centroid*centroid
+        Ixx =  mass*(y^2+z^2)
+        Iyz = -mass*y*z
+        http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
         """
                  #Ixx Iyy Izz, Ixy, Ixz Iyz
-        I = array([0., 0., 0.,  0.,  0., 0.,])
+        I  = array([0., 0., 0.,  0.,  0., 0.,])
         cg = array([0., 0., 0.])
         mass = 0.
-        for element in self.elements:
-            p = e.Centroid()  # not really coded across the board
-            m = e.Mass()
-            (x,y,z) = p
-            I[0] = m*x*x  # Ixx
-            I[1] = m*y*y  # Iyy
-            I[2] = m*z*z  # Izz
-            I[3] = m*x*y  # Ixy
-            I[4] = m*x*z  # Ixz
-            I[5] = m*y*z  # Iyz
-            cg += m*p
+        for eid,element in self.elements.items():
+            try:
+                p = e.Centroid()  # not really coded across the board
+                m = e.Mass()
+                (x,y,z) = p
+                x2 = x*x
+                y2 = y*y
+                z2 = z*z
+                I[0] += m*(y2+z2)  # Ixx
+                I[1] += m*(x2+z2)  # Iyy
+                I[2] += m*(x2+y2)  # Izz
+                I[3] -= m*x*y      # Ixy
+                I[4] -= m*x*z      # Ixz
+                I[5] -= m*y*z      # Iyz
+                mass += m
+                cg += m*p
+            except:
+                self.log().warning("could not get inertia for element...\n%s" %(element))
+            ###
         ###
         cg = cg/mass
         return (mass,cg,I)
@@ -69,7 +77,7 @@ class bdfMethods(object):
         puts all nodes back to original coordinate system
         @param self the object pointer
         @param femOld the old model that hasnt lost it's connection to the node cids
-        @warning hasnt been tested...
+        @warning hasnt been tested well...
         """
         for nid,nodeOld in femOld.nodes.items():
             coord = femOld.node.cp
@@ -86,7 +94,7 @@ class bdfMethods(object):
                 #print "load = ",load
                 if isinstance(load,Force):
                     f = load.mag*load.xyz
-                    print "f = ",f
+                    #print "f = ",f
                     F += f
                 ###
             self.log.info("case=%s F=%s\n\n" %(key,F))
