@@ -39,7 +39,7 @@ Copyright \copyright\ Steve P. Doyle 2012
     $\theta$   & rotation (radians)
 \end {tabular}
 
-\section{1D Elements}
+\section{General}
    \subsection{Transformation}
      \subsubsection{Overview}
      \[ [T] = 
@@ -59,190 +59,19 @@ Copyright \copyright\ Steve P. Doyle 2012
       \[ [K] = [T]^{-T} [K_e] [T]  \]
 
   \subsection{Moments of Inertia}
-    \[ [I] = \Sigma_{i=0}^n m_i \left[ \begin{array}{cccc}
+    Moments of Inertia are calculated as follows \cite{momentInertia}:
+    \[ [I] = \Sigma_{i=0}^n m_i \left[ \begin{array}{ccc}
                y_i^2+z_i^2 & -x_i y_i    & -x_i z_i  \\
                -x_i y_i    & x_i^2+z_i^2 & -y_i z_i  \\
-               -x_i z_i    & -y_i z_i    & x_i^2+y_i^2  \\
+               -x_i z_i    & -y_i z_i    & x_i^2+y_i^2
             \end{array}\right]\]
 
+include{1d.tex}
+include{2d.tex}
+include{3d.tex}
 
-\section{1D Elements}
-   \subsection{Spring Element}
-     \[ [K_e] = 
-            \left[ \begin{array}{cc}
-               k & -k \\
-              -k &  k 
-            \end{array}\right]\]
-     \[ [K_e] \left\{ \begin{array}{c}  
-              u_1 \\ u_2 \end{array}\right\} \]
-
-         \[      \left\{ \begin{array}{c}
-              X_1 \\ X_2 \end{array}\right\} \]
-       
-   \subsection{Rod Element}
-     The rod element is the same as the spring, except k must be calculated.
-       \[ k = \frac{AE}{L} \]
-       \[ [K_e] = 
-            \left[ \begin{array}{cc}
-               k & -k \\
-              -k &  k 
-            \end{array}\right]\]
-       \[ \epsilon_{xx} = u_{x2}-u_{x1} \]
-       \[ 2 \epsilon_{xy} = \theta_{x2}-\theta_{x1} \]
-       \[ \sigma_{xx} = \epsilon_{xx} E \]
-       \[ \sigma_{xy} = \epsilon_{xy} G \]
-
-\section{2D Elements}
-   \subsection{CTRIA3 Element}
-     \[ A = \frac{1}{2} |(p_1-p_2) \times (p_1-p_3)| \]
-     \[ m = (\rho +nsm) A t \]
-    \[ [J] = \left[ \begin{array}{ccc}
-               1 &     1 & 1   \\
-               x_1 & x_2 & x_3 \\
-               y_1 & y_2 & y_3
-            \end{array}\right]\]
-     \[ [J]^-1 = \frac{1}{2A} \left[ \begin{array}{ccc}
-               x2y3-x3y2 & y2-y3 & x3-x2 \\
-               x3y1-x1y3 & y3-y1 & x3-x1 \\
-               x1y2-x2y1 & y1-y2 & x2-x1
-            \end{array}\right]\]
-     \[ [J]^-1 = \frac{1}{2A} \left[ \begin{array}{ccc}
-               2A_{23} & y_{23} & x_{32} \\
-               2A_{31} & y_{31} & x_{31} \\
-               2A_{12} & y_{12} & x_{21}
-            \end{array}\right]\]
-     \[ A_{23} = A_{31} = A{12} = \frac{A}{3} \]
-
-     \[ [N] = \left[ \begin{array}{cccccc}
-               N1 &  0 & N2 &  0 & N3 & 0  \\
-               0  & N1 &  0 & N2 &  0 & N3
-            \end{array}\right]\]
-     \[ [B] = \frac{1}{2A} \left[ \begin{array}{cccccc}
-               y_23 &   0 & y31 &   0 & y12 &   0 \\
-               0    & x32 &   0 & x13 &   0 & x21 \\
-               x32  & x23 & x13 & y31 & x21 & y12
-            \end{array}\right]\]
-     \[ e=[D] [N] u_e = [B] u_e    \]
-     \[  [K_e] = |J| [B]^T [D] [B] \]
-
-   \subsection{CTRIA6 Element}
-     \[ A = \frac{1}{2} |(p_1-p_2) \times (p_1-p_3)| \]
-     \[ m = (\rho +nsm) A t \]
-
-   \subsection{CQUAD4 Element}
-     \[ A = \frac{1}{2} |(p_1-p_3) \times (p_2-p_4)| \]
-     \[ m = (\rho +nsm) A t \]
-    \[ [J] = \left[ \begin{array}{cccc}
-               1 &     1 & 1   & 1   \\
-               x_1 & x_2 & x_3 & x_4 \\
-               y_1 & y_2 & y_3 & y_4 
-            \end{array}\right]\]
-     \[  [K_e] = |J| [B]^T [D] [B] \]
-
-   \subsection{CQUAD8 Element}
-     \[ A = \frac{1}{2} |(p_1-p_3) \times (p_2-p_4)| \]
-     \[ m = (\rho +nsm) A t \]
-
-\section{3D Elements}
-   \subsection{CTETRA Element (4 Nodes)}
-     \[ m = \rho V \]
-    \[ V = \frac{1}{6} |J| \]
-    \[ [J] = \left[ \begin{array}{cccc}
-               1 & 1 & 1 & 1 \\
-               x_1 & x_2 & x_3 & x_4 \\
-               y_1 & y_2 & y_3 & y_4 \\
-               z_1 & z_2 & z_3 & z_4 \\
-            \end{array}\right]\]
-
-   \[  [D] = \frac{E}{1-\nu^2} \left[ \begin{array}{ccc}
-               1   & \nu & 0  \\
-               \nu & 1   & 0 \\
-               0   & 0   & \frac{1}{2} (1-\nu)  \\
-            \end{array}\right] \]
-    \[ [N] = \frac{1}{4} \left[ \begin{array}{c}
-               (1+\zeta)(1-\eta) \\
-               (1+\zeta)(1+\eta) \\
-               (1-\zeta)(1-\eta) \\
-               (1-\zeta)(1+\eta) \\
-            \end{array}\right]\]
-    \[ [dN_\zeta] = \frac{1}{4} \left[ \begin{array}{c}
-               -\eta +1 \\
-               \eta + 1 \\
-               \eta-1 \\
-               -\eta-1 \\
-            \end{array}\right]\]
-    \[ [dN_\eta] = \frac{1}{4} \left[ \begin{array}{c}
-               -\zeta -1 \\
-               \zeta + 1 \\
-               \zeta-1 \\
-               -\zeta+1 \\
-            \end{array}\right]\]
-    \[ [B] = \left[ \begin{array}{cccc}
-               dN_1 & 0 & 0 & 0 \\
-               0 & dN_2 & 0 & 0 \\
-               0 & 0 & dN_3 & 0 \\
-               0 & 0 & 0 & dN_4 \\
-            \end{array}\right]\]
-     \[  [K_e] = |J| [B]^T [D] [B] \]
-      \[ [K] = [T]^{-T} [K_e] [T]  \]
-
-   \subsection{CPENTA Element (6 Nodes)}
-     \[ m = \rho V \]
-     \[ A_1 = Area(p_1, p_2, p_3) \]
-     \[ A_2 = Area(p_4, p_5, p_6) \]
-     \[ p_{c1} = Centroid(p_1, p_2 ,p_3) \]
-     \[ p_{c2} = Centroid(p_4, p_5 ,p_6) \]
-     \[ V = (p_{c2}-p_{c1}) \frac{(A_2 - A_1)}{2} \]
-
-   \subsection{CHEXA Element (8 Nodes)}
-     \[ m = \rho V \]
-     \[ A_1 = Area(p_1, p_2, p_3, p_4) \]
-     \[ A_2 = Area(p_5, p_6, p_7, p_8) \]
-     \[ p_{c1} = Centroid(p_1, p_2 ,p_3, p_4) \]
-     \[ p_{c2} = Centroid(p_5, p_6 ,p_7, p_8) \]
-     \[ V = (p_{c2}-p_{c1}) \frac{(A_2 - A_1)}{2} \]
-
-    \[ [N] = \frac{1}{8} \left[ \begin{array}{c}
-               (1-\zeta)(1-\eta)(1-\chi) \\
-               (1+\zeta)(1-\eta)(1-\chi) \\
-               (1+\zeta)(1+\eta)(1-\chi) \\
-               (1-\zeta)(1+\eta)(1-\chi) \\
-               (1-\zeta)(1-\eta)(1+\chi) \\
-               (1+\zeta)(1-\eta)(1+\chi) \\
-               (1+\zeta)(1+\eta)(1+\chi) \\
-               (1-\zeta)(1+\eta)(1+\chi)
-            \end{array}\right]\]
-    \[ [N_\zeta] = \frac{1}{8} \left[ \begin{array}{c}
-               -(1-\eta)(1-\chi) \\
-                (1-\eta)(1-\chi) \\
-                (1+\eta)(1-\chi) \\
-               -(1+\eta)(1-\chi) \\
-               -(1-\eta)(1+\chi) \\
-                (1-\eta)(1+\chi) \\
-                (1+\eta)(1+\chi) \\
-               -(1+\eta)(1+\chi)
-            \end{array}\right]\]
-    \[ [N_\eta] = \frac{1}{8} \left[ \begin{array}{c}
-               -(1-\zeta)(1-\chi) \\
-               -(1+\zeta)(1-\chi) \\
-                (1+\zeta)(1-\chi) \\
-                (1-\zeta)(1-\chi) \\
-               -(1-\zeta)(1+\chi) \\
-               -(1+\zeta)(1+\chi) \\
-                (1+\zeta)(1+\chi) \\
-                (1-\zeta)(1+\chi)
-            \end{array}\right]\]
-    \[ [N_\chi] = \frac{1}{8} \left[ \begin{array}{c}
-               -(1-\zeta)(1-\eta) \\
-               -(1+\zeta)(1-\eta) \\
-               -(1+\zeta)(1+\eta) \\
-               -(1-\zeta)(1+\eta) \\
-                (1-\zeta)(1-\eta) \\
-                (1+\zeta)(1-\eta) \\
-                (1+\zeta)(1+\eta) \\
-                (1-\zeta)(1+\eta)
-            \end{array}\right]\]
-
+\bibliography{foo}
+\bibliographystyle{unsrt}
 
 \end{document}
 
