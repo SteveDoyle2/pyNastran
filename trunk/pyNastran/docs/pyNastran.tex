@@ -1,77 +1,36 @@
 \documentclass[a4paper,12pt]{article}
+
 \begin{document}
-\title{pyNastran Theory Document}
-\author{Steven P. Doyle}
+\title{pyNastran Theory Document \\
+\small http://code.google.com/p/pynastran/ }
+\author{Steven P. Doyle\\
+{\small mesheb82@gmail.com}
+}
+
 \maketitle
+
+\begin{abstract}
+This document is intended to be a reference guide for developers.  It is a work in progress and should not be considered to be accurate.  However, whenever a method is finally coded, the method that's coded and what's in this document should be the same.
+\end{abstract}
+
 Copyright \copyright\ Steve P. Doyle 2012
+\newpage
 
 \tableofcontents
+\newpage
 
-\section{Nonmenclature}
+\input{nomenclature.tex}
+\newpage
 
-\begin{tabular}{ll}
-    $[T]$      & Transformation matrix                \\
-    $[K]$      & Global stiffness matrix              \\
-    $[K_e]$    & Element stiffness matrix ( $\frac{F}{L^2}$ ) \\
-    $k$        & Spring stiffness ( $\frac{F}{L^2}$ ) \\
-    $L$        & Length (L)                           \\
-    $[J]$      & Jacobian Matrix                      \\
-    $[B]$      & B Matrix                             \\
-    $[D]$      & D Matrix                             \\
-    $V$        & Volume  ( $L^3$ )                    \\
-    $V_i$      & ith Volume  ( $L^3$ )                \\
-    $X$        & X Force (F)                          \\
-    $Y$        & Y Force (F)                          \\
-    $Z$        & Z Force (F)                          \\
-    $L$        & X Moment (FL)                        \\
-    $M$        & Y Moment (FL)                        \\
-    $N$        & Z Moment (FL)                        \\
-    $E$        & Young's Modulus ($\frac{F}{L^2}$)    \\
-    $G$        & Shear Modulus ($\frac{F}{L^2}$)      \\
-    $m$        & mass (M)                             \\
-    $t$        & thickness (L)                        \\
-    $\rho$     & density ($M/L^3$)                    \\
-    nsm        & non-structural mass (M)              \\
-    $\sigma$   & normal stress ($F/L^2$)              \\
-    $\tau$     & shear  stress ($F/L^2$)              \\
-    $\epsilon$ & strain ($L/L$)                       \\
-    $u,v,w$    & displacement (L)                     \\
-    $\theta$   & rotation (radians)
-\end {tabular}
 
-\section{General}
-   \subsection{Transformation}
-     \subsubsection{Overview}
-     \[ [T] = 
-            \left[ \begin{array}{ccc}
-               g_1 \cdot p_1 & g_1 \cdot p_2 & g_1 \cdot p_3 \\
-               g_1 \cdot p_2 & g_2 \cdot p_2 & g_2 \cdot p_3 \\
-               g_1 \cdot p_3 & g_2 \cdot p_3 & g_3 \cdot p_3 \\
-            \end{array}\right]\]
-     \subsubsection{Coordinates}
-      \[ \{p_{Global}\}  = [T]\{p_{Local,XYZ}\} \]
-      \[ \{p_{Local,XYZ}\} = [x_0,y_0,z_0]+[x,y,z] \]
-      \[ \{p_{Local,RTZ}\} = [x_0,y_0,z_0]+transform([r,\theta,   z]) \]
-      \[ \{p_{Local,RTP}\} = [x_0,y_0,z_0]+transform([r,\theta,\phi]) \]
+\input{fem.tex}
+\input{general.tex}
+\input{1d.tex}
+\input{2d.tex}
+\input{3d.tex}
 
-     \subsubsection{FEM}
-
-      \[ [K] = [T]^{-T} [K_e] [T]  \]
-
-  \subsection{Moments of Inertia}
-    Moments of Inertia are calculated as follows \cite{momentInertia}:
-    \[ [I] = \Sigma_{i=0}^n m_i \left[ \begin{array}{ccc}
-               y_i^2+z_i^2 & -x_i y_i    & -x_i z_i  \\
-               -x_i y_i    & x_i^2+z_i^2 & -y_i z_i  \\
-               -x_i z_i    & -y_i z_i    & x_i^2+y_i^2
-            \end{array}\right]\]
-
-include{1d.tex}
-include{2d.tex}
-include{3d.tex}
-
-\bibliography{foo}
-\bibliographystyle{unsrt}
+%\bibliography{foo}
+%\bibliographystyle{unsrt}
 
 \end{document}
 
