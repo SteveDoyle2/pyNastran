@@ -182,45 +182,34 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         print strings
 
         #-------------------------------------------
-        self.readMarkers([-3,1,0]) # 3
-        #-------------------------------------------
-        self.readMarkers([-4,1,0]) # 4
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        data = self.getData(4)
-        bufferSize, = unpack('i',data)
+        print "3"
+        iTable=-3
+        while 1:
+            self.readMarkers([iTable,1,0]) # 3
+            n = self.op2.tell()
+            try:
+                bufferWords = self.getMarker()
+                if bufferWords==0:
+                    self.goto(n)
+                    #print "returning from table=-3"
+                    return
+                elif bufferWords<0:
+                    self.goto(n)
+                else:
+                    #print "bufferWords = ",bufferWords,bufferWords*4
+                    data = self.getData(4)
+                    bufferSize, = unpack('i',data)
 
-        print "bufferSize = ",bufferSize
-        data = self.getData(bufferWords*4)
-        #print self.printBlock(data)
-
-        data = self.getData(4)
-
-        #-------------------------------------------
-        self.readMarkers([-5,1,0]) # 5
-        bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords,bufferWords*4
-        data = self.getData(4)
-        bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
-        data = self.getData(bufferWords*4)
-        data = self.getData(4)
-
-        #-------------------------------------------
-        self.readMarkers([-6,1,0]) # 5
-        #-------------------------------------------
-        print self.printSection(220)
-        #sys.exit('asdf')
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+                    #print "bufferSize = ",bufferSize
+                    data = self.getData(bufferWords*4)
+                    data = self.getData(4)
+                ###
+            except:
+                raise Exception('error in iTable=% of %s...' %(self.iTable,self.tableName))
+            ###
+            iTable-=1
+            ###
+        ###
 
     def readTable_DUMMY_GEOM(self,tableName):
         self.iTableMap = {}

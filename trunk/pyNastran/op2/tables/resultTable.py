@@ -198,7 +198,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
         isTable4Done = False
         isBlockDone  = False
 
-        bufferWords = self.getMarker('OUGV1') ## @todo replace with table name
+        bufferWords = self.getMarker(self.tableName)
         #print "bufferWords = ",bufferWords
         #print len(bufferWords)
         self.data = self.readBlock()
