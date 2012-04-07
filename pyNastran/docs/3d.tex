@@ -11,18 +11,18 @@
     \[ 6V = |J| = x_{21}(y_{23}z_{34} - y_{34}z_{23}) + x23(y_{34}z_{12}-y_{12}z_{34})+x_{43}(y_{12}z_{23})-y_{23}z_{12}\]
     \[ x_{ij} = x_i-x_j \]
 
-    The shape functions come from \cite{colorado16}
+    %The shape functions come from \cite{colorado16}
     \[ [N_i] = \frac{1}{6V} \left[ \begin{array}{cccc}
                 6V_{01} & y_{42}z{32}-y{32}z_{42} & x_{32}z_{42}-x_{42}z_{32} & x_{42}y_{32}-x_{32}y_{42} \\
                 6V_{02} & y_{42}z{32}-y{32}z_{42} & y_{43}z_{31}-x_{13}z_{34} & x_{31}y_{43}-x_{34}y_{13} \\
                 6V_{03} & y_{42}z{32}-y{32}z_{42} & x_{14}z_{24}-x_{24}z_{14} & x_{24}y_{14}-x_{14}y_{24} \\
-                6V_{04} & y_{42}z{32}-y{32}z_{42} & x_{21}z_{13}-x_{31}z_{12} & x_{13}y_{21}-x_{12}y_{31} \\
-                
-                6V_{01} = x_2(y_3z_4-y_4z_3) + x_3(y_4z_2-y_2z_4)+x_4(y_2z_3-y_3z_2})
-                6V_{02} = x_1(y_4z_3-y_3z_4) + x_3(y_1z_4-y_4z_1)+x_4(y_3z_1-y_1z_3})
-                6V_{03} = x_1(y_2z_4-y_4z_2) + x_2(y_4z_1-y_1z_4)+x_4(y_1z_2-y_2z_1})
-                6V_{04} = x_1(y_3z_2-y_2z_3) + x_2(y_1z_3-y_3z_1)+x_3(y_2z_1-y_1z_2})
+%                6V_{04} & y_{42}z{32}-y{32}z_{42} & x_{21}z_{13}-x_{31}z_{12} & x_{13}y_{21}-x_{12}y_{31} \]
             \end{array}\right]\]
+
+    \[ 6V_{01} = x_2(y_3z_4-y_4z_3) + x_3(y_4z_2-y_2z_4)+x_4(y_2z_3-y_3z_2) \]
+    \[ 6V_{02} = x_1(y_4z_3-y_3z_4) + x_3(y_1z_4-y_4z_1)+x_4(y_3z_1-y_1z_3) \]
+    \[ 6V_{03} = x_1(y_2z_4-y_4z_2) + x_2(y_4z_1-y_1z_4)+x_4(y_1z_2-y_2z_1) \]
+    \[ 6V_{04} = x_1(y_3z_2-y_2z_3) + x_2(y_1z_3-y_3z_1)+x_3(y_2z_1-y_1z_2) \]
 
     \[  [E] = \frac{E}{(1-2\nu)(1+\nu)} \left[ \begin{array}{cccccc}
                1   & \nu & \nu & 0   &   0             & 0 \\
@@ -69,13 +69,15 @@
             \end{array}\right]\]
      \[  [K_e] = |J| [B]^T [D] [B] \]
      If the elastic moduli do not vary over the element:
-     \[  [K_e] = V [B]^T [D] [B] \del \eta_1 \del \eta_12\del \eta_3 \]
-     \[ [u] = [u_{x1} u_{y1} u_{z1}
-               u_{x2} u_{y2} u_{z2}
-               u_{x3} u_{y3} u_{z3} ]^T \]
+     \[  [K_e] = V [B]^T [D] [B] \partial \eta_1 \partial \eta_12\partial \eta_3 \]
+     \[ [u] = \left[ \begin{array}{cccccccccccc}
+               u_{x1} & u_{y1} & u_{z1} & 
+               u_{x2} & u_{y2} & u_{z2} & 
+               u_{x3} & u_{y3} & u_{z3}
+            \end{array}\right]^T\]
       \[ [K] = [T]^{-T} [K_e] [T]  \]
       
-      \[ [M_e] = integrate_V{\rho [N][N]^T dV} \]
+      \[ [M_e] = \int_V{\rho [N][N]^T dV} \]
 
    \subsection{CPENTA Element (6 Nodes)}
      \[ m = \rho V \]
@@ -102,8 +104,8 @@
                (1+\eta_1)(1-\eta_2)(1+\eta_3) \\
                (1+\eta_1)(1+\eta_2)(1+\eta_3) \\
                (1-\eta_1)(1+\eta_2)(1+\eta_3)
-            \end{array}\right]\]
-    \[ [N_\eta_1] = \frac{1}{8} \left[ \begin{array}{c}
+            \end{array}\right] \]
+    \[ [N_{\eta1}] = \frac{1}{8} \left[ \begin{array}{c}
                -(1-\eta_2)(1-\eta_3) \\
                 (1-\eta_2)(1-\eta_3) \\
                 (1+\eta_2)(1-\eta_3) \\
@@ -113,7 +115,7 @@
                 (1+\eta_2)(1+\eta_3) \\
                -(1+\eta_2)(1+\eta_3)
             \end{array}\right]\]
-    \[ [N_\eta_2] = \frac{1}{8} \left[ \begin{array}{c}
+    \[ [N_{\eta2}] = \frac{1}{8} \left[ \begin{array}{c}
                -(1-\eta_1)(1-\eta_3) \\
                -(1+\eta_1)(1-\eta_3) \\
                 (1+\eta_1)(1-\eta_3) \\
@@ -123,7 +125,7 @@
                 (1+\eta_1)(1+\eta_3) \\
                 (1-\eta_1)(1+\eta_3)
             \end{array}\right]\]
-    \[ [N_\eta_3] = \frac{1}{8} \left[ \begin{array}{c}
+    \[ [N_{\eta3}] = \frac{1}{8} \left[ \begin{array}{c}
                -(1-\eta_1)(1-\eta_2) \\
                -(1+\eta_1)(1-\eta_2) \\
                -(1+\eta_1)(1+\eta_2) \\
@@ -135,3 +137,5 @@
             \end{array}\right]\]
 
 	This is a citation. \cite{bar}
+        This is another.. \cite{colorado16}
+        
