@@ -34,19 +34,6 @@ class plateStressObject(stressObject):
         self.minorP = {}
         self.ovmShear = {}
 
-        #print "self.code = ",self.code
-        if self.code in [ [1,0,1],[1,0,5],[1,0,15] ]:
-            #self.isVonMises = True
-            assert self.isFiberDistance() == True,self.stressBits
-            assert self.isVonMises()      == True,self.stressBits
-        elif self.code == [1,0,0]:
-            assert self.isFiberDistance() == False,self.stressBits
-            assert self.isVonMises()      == False,self.stressBits
-        else:
-            raise InvalidCodeError('plateStress - get the format/sort/stressCode=%s' %(self.code))
-        ###
-
-
         #print "%%%%%dt = ",dt
         if dt is not None:
             self.dt = dt
@@ -668,29 +655,6 @@ class plateStrainObject(strainObject):
         self.minorP = {}
         self.evmShear = {}
 
-        if self.code == [1,0,10]:
-            #self.isFiberDistance = False
-            #self.isVonMises = False
-            self.isBilinear = True
-            assert self.isFiberDistance() == False
-            assert self.isVonMises()      == True
-
-        elif self.code == [1,0,11]:
-            #self.isFiberDistance = False
-            #self.isVonMises = True
-            self.isBilinear = True
-            assert self.isFiberDistance() == False
-            assert self.isVonMises()      == True
-
-        elif self.code == [1,0,15]:
-            #self.isFiberDistance = True
-            #self.isVonMises = True
-            self.isBilinear = False
-            assert self.isFiberDistance() == True
-            assert self.isVonMises()      == True
-        else:
-            raise InvalidCodeError('plateStrain - get the format/sort/stressCode=%s' %(self.code))
-        ###
         if dt is not None:
             self.dt = dt
             self.addNewTransient()
