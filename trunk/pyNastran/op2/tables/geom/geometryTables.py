@@ -170,7 +170,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         self.tableInit(tableName)
         self.readMarkers([-1,7])
         ints = self.readIntBlock()  # ??? ints
-        print ints
+        #print ints
         #data = self.readBlock()
         #print self.printBlock(data) 
         #print "fields = ",fields
@@ -179,10 +179,10 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         self.readMarkers([-2,1,0]) # 2
         self.readMarkers([2]) # 2
         strings = self.readStringBlock()  # IPCOMPT
-        print strings
+        #print strings
 
         #-------------------------------------------
-        print "3"
+        #print "3"
         iTable=-3
         while 1:
             self.readMarkers([iTable,1,0]) # 3
@@ -210,6 +210,40 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
             iTable-=1
             ###
         ###
+
+    def readTable_OMM2(self):
+        #-------------------------------------------
+        tableName = self.readTableName(rewind=False) # PCOMP
+        self.tableInit(tableName)
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()  # ??? ints
+        #print ints
+
+        #-------------------------------------------
+        iTable=-2
+        while 1:
+            self.readMarkers([iTable,1,0]) # 2
+            try:
+                n = self.op2.tell()
+                #print "iTable = ",iTable
+                bufferWords = self.getMarker()
+                #print "bufferWords = ",bufferWords
+                data = self.getData(4)
+                bufferSize, = unpack('i',data)
+                #print "bufferSize = ",bufferSize
+                data = self.getData(bufferWords*4)
+                #print self.printBlock(data)
+                data = self.getData(4)
+                iTable-=1
+            except:
+                self.goto(n)
+                break
+            ###
+        ###
+
+        #-------------------------------------------
+        #print self.printSection(400)
+        #sys.exit('OMM2...stop...')
 
     def readTable_DUMMY_GEOM(self,tableName):
         self.iTableMap = {}

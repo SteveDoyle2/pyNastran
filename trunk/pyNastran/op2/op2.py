@@ -111,48 +111,53 @@ class OP2(BDF,  # BDF methods
                              'LAMA',
 
                             'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC',#'EDOM',
-                             'DESTAB',                # design variables
-                             'OQG1','OQGV1','OQMG1',  # spc/mpc forces
+                             'DESTAB',                      # design variables
+                             'OQG1','OQGV1','OQMG1',        # spc/mpc forces
                              
-                             'OUGV1',                 # displacements
-                             'OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2',
+                             'OUGV1',                       # displacements                             
+                             'OGPFB1','OGS1',               # grid point forces/stresses
                              
-                             'OEF1X','DOEF1','OEFIT', # applied forces
-                             'OGPFB1','OGS1',         # grid point forces/stresses
-                             
+                             'OEF1X', 'DOEF1','OEFIT',      # applied forces
                              'OES1X','OES1X1','OES1C',      # stress
                              'OSTR1C','OSTR1X',             # strains
-                             'OESNLXR','OESNLXD','OESNL1X','OESTRCP', # nonlinear stress
+                             'OESNLXR','OESNLXD','OESNL1X','OESNLBR', # nonlinear stress
+
                              'OESCP',                       # cylinder stress???
                              'OESTRCP',                     # cylinder strain???
                              'OESRT',                       # rotational stress?
 
                              'ONRGY1', # energy
-                             'ONRGY2',
-                             
+                             'ONRGY2', # energy (sort2, unsupported)
+
                              'R1TABRG','HISADD',  # SOL 200
 
+                              # unsupported frequency results
+                              'OAGPSD2', 'OAGATO2', 'OAGRMS2', 'OAGNO2', 'OAGCRM2',
+                              'OEFPSD2', 'OEFATO2', 'OEFRMS2', 'OEFNO2', 'OEFCRM2',
+                              'OESPSD2', 'OESATO2', 'OESRMS2', 'OESNO2', 'OESCRM2',
+                              'OPGPSD2', 'OPGATO2', 'OPGRMS2', 'OPGNO2', 'OPGCRM2',
+                              'OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2', 'OQGCRM2',
+                             'OSTRPSD2','OSTRATO2','OSTRRMS2','OSTRNO2','OSTRCRM2',
+                              'OUGPSD2', 'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGRMS2',
+                              'OVGPSD2', 'OVGATO2', 'OVGRMS2', 'OVGNO2', 'OVGCRM2',
+                             
                              ## @todo what do these do???
-                             'OPG1','OPGV1', # think this is an OUG table...
+                             'OPG1','OPGV1',
                              'OPNL1',
                              'OUPV1',
                              'VIEWTB','ERRORN',
-                             'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OPGPSD2',
+                             'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
                              'PCOMPTS',
                              'OMM2',
-                             'OGPWG','EDOM',
+                             'EDOM',
+                             'STDISP','SDF','MONITOR','AEMONPT',
+                             'OGPWG', # grid point weight
 
                              # new
-                             'OUGCRM2','OUGNO2','OUGRMS2','OUGATO2','OUGPSD2','OMM2',
-                             'OVGNO2','OVGRMS2','OVGATO2','OVGPSD2',
-                             'STDISP','SDF','MONITOR','PMRF','PERF','PFRF','AEMONPT','AFRF','AGRF',
+                             'AFRF',             'AGRF',
+                             'PMRF','PERF','PFRF',
                              'FOL','GEOM1N',
                              
-                             'OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2','OESRMS2','OESNO2','OESCRM2',
-                             'OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2',
-                             'OVGCRM2',
-                             'OPGATO2','OPGPSD2','OPGPSD2','OPGRMS2','OPGNO2','OPGCRM2',
-                             'OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2',
                              ]
         
         ## a dictionary that maps an integer of the subcaseName to the subcaseID
@@ -255,7 +260,7 @@ class OP2(BDF,  # BDF methods
 
         ## OPG - summation of loads for each element
         self.appliedLoads = {}
-        self.loadVectors = {}
+        self.loadVectors  = {}
         
         ## OEE - strain energy density
         self.strainEnergy = {}
@@ -368,7 +373,7 @@ class OP2(BDF,  # BDF methods
             except:
                 raise
             self.log.debug("tableName = |%r|" %(tableName))
-            #print "tableName = |%r|" %(tableName)
+            print "tableName = |%r|" %(tableName)
             if tableName==None:
                 break
             elif tableName in self.tablesToRead:
@@ -397,8 +402,11 @@ class OP2(BDF,  # BDF methods
                     elif tableName in ['LAMA']: # eigenvalue
                         self.readTable_LAMA()
 
-                    elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OMM2','OGPWG',]:
+                    elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OGPWG',]:
                         self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['OMM2']:
+                        print "hiiii"
+                        self.readTable_OMM2()
                     elif tableName in ['DESTAB']:  # design variable table
                         self.readTable_DesTab()
                     elif tableName in ['R1TABRG']: # not done - response table
@@ -416,7 +424,7 @@ class OP2(BDF,  # BDF methods
                         self.readTable_OGF()
 
 
-                    elif tableName in ['OEF1X','DOEF1']:  # applied loads
+                    elif tableName in ['OEF1X','DOEF1',  'OEFPSD2','OEFATO2','OEFRMS2','OEFNO2','OEFCRM2',]:  # applied loads
                         self.readTable_OEF()
                     elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
                         self.readTable_OQG()
@@ -426,13 +434,19 @@ class OP2(BDF,  # BDF methods
                     elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
                         self.readTable_OUG()
 
-                    elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESNLXD','OESCP','OESRT','OESRMS2','OESNO2','OESCRM2',]: # stress
-                        self.readTable_OES()  # 'OESNLXR','OESNL1X'
-                    elif tableName in ['OSTR1X','OSTR1C','OESTRCP']: # strain
+                    elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
+                        self.readTable_OES()  # 
+                    elif tableName in ['OSTR1X','OSTR1C',]: # strain
+                        self.readTable_OES()
+                    elif tableName in ['OESTRCP','OESNLXD','OESNLXR',]: # ??? stress/strain
+                        self.readTable_OES()
+                    elif tableName in ['OSTRATO2','OSTRPSD2','OESRMS2','OESNO2','OESCRM2','OSTRRMS2','OESRMS2','OSTRNO2','OESCRM2','OSTRCRM2',]: # unhandled
                         self.readTable_OES()
 
-                    elif tableName in ['OESNLXR',]: # ???
-                        self.readTable_OESNLXR()
+                    #elif tableName in ['OESNLXD',]: # dont use this, testing only
+                        #self.readTable_OES() # NLXD
+                    #elif tableName in ['OESNLXR',]: # dont use this
+                        #self.readTable_OES()  # NLXR
                     
                     elif tableName in ['ONRGY1']: # energy
                         self.readTable_OEE()

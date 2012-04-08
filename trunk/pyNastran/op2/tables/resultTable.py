@@ -6,6 +6,8 @@ from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.oug  import OUG
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 from pyNastran.op2.tables.oes_stressStrain.oesnlxr import OESNLXR
+from pyNastran.op2.tables.oes_stressStrain.oesnlxd import OESNLXD
+
 from pyNastran.op2.tables.oqg_constraintForces.oqg   import OQG
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
@@ -18,7 +20,7 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 
 
 
-class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
+class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,OESNLXD,LAMA):
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
@@ -32,7 +34,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
         table3     = self.readTable_DUMMY_3
         table4Data = self.readDUMMY_Data
         self.readResultsTable(table3,table4Data)
-        self.deleteAttributes_OGP()
+        self.deleteAttributes_OPG()
 
     def readTable_DUMMY_3(self,iTable):
         """sets dummy parameters"""
@@ -101,6 +103,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
         iTable=-3
         self.readMarkers([iTable,1,0],tableName)
 
+        exitFast = False
         while [markerA,markerB]!=[0,2]:
             self.isBufferDone = False
             #print self.printSection(140)
@@ -112,6 +115,15 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
             ## dt/loadFactor/frequency/loadStep value (or None for static)
             self.nonlinearFactor = None
             self.dataCode = {}
+
+            n = self.op2.tell()
+            marker = self.getMarker()
+            self.goto(n)
+            if marker!=146:
+                print "marker = ",marker
+                exitFast = True
+                break
+
             table3(iTable)
             self.dataCode['tableName'] = self.tableName
             ## developer parameter - Analysis/Table/Format/Sort Codes
@@ -143,7 +155,8 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
         ###
         nOld = self.op2.tell()
         #try:
-        self.readMarkers([iTable,1,0],tableName)
+        if not(exitFast):
+            self.readMarkers([iTable,1,0],tableName)
         #except InvalidMarkersError:
         #    self.goto(nOld)
             #print self.printBlock(self.data)
@@ -398,10 +411,11 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
 
     def readMappedScalarsOut(self,debug=False):
         readCase = True
+        #print "isSort1() = ",self.isSort1()
         if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
             readCase = self.updateDtMap()
         
-        if self.obj and readCase:
+        if self.obj and readCase and self.isSort1():
             self.readScalarsOut(debug=False)
         else:
             self.skipOES_Element()
@@ -438,6 +452,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,OESNLXR,LAMA):
         """
         unused...
         """
+        assert debug==True or debug==False
         data = self.data
         deviceCode = self.deviceCode
         #print type(self.boj)
