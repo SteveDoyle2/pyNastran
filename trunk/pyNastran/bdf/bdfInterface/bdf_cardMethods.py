@@ -17,7 +17,10 @@ class cardMethods(object):
             line = line.split('$')[0].rstrip('\n\r\t ')
             if '\t' in line:
                 #raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
-                line = line.expandtabs()
+                line2 = line.expandtabs()
+                if ',' in line2:
+                    raise TabCommaCharacterError('tabs and commas in the same line are not supported...line=|%r|' %(line))
+                line = line2
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)
