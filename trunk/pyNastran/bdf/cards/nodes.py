@@ -65,7 +65,7 @@ class SPOINT(Node):
     def __init__(self,nid):
         Node.__init__(self,card=None,data=None)
         self.nid = nid
-    
+
     def crossReference(self,model):
         pass
 
@@ -76,7 +76,11 @@ class SPOINT(Node):
         """
         @todo support THRU in output
         """
-        fields = ['SPOINT']+self.nid
+        if isinstance(self.nid,int):
+            fields = ['SPOINT']+[self.nid]
+        else:
+            print "self.nid = ",self.nid
+            fields = ['SPOINT']+self.nid
         return fields
 
 class SPOINTs(Node):
@@ -119,7 +123,7 @@ class SPOINTs(Node):
     def createSPOINTi(self):
         spoints = []
         for nid in self.spoints:
-            spoints.append(SPOINTi(nid))
+            spoints.append(SPOINT(nid))
         ###
         return spoints
 

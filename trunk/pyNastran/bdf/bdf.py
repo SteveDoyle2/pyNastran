@@ -47,7 +47,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## useful in debugging errors in input
         self.debug = debug
         self._initSolution()
-
+        
+        ## flag that allows for OpenMDAO-style optimization syntax to be used
+        self.isDynamicSyntax = False
         ## lines that were rejected b/c they were for a card
         ## that isnt supported
         self.rejects = []
@@ -865,7 +867,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    node = RINGAX(cardObj)
             #    self.addNode(node)
             elif cardName=='SPOINT':
-                spoint = SPOINT(cardObj)
+                spoint = SPOINTs(cardObj)
                 self.addSPoint(spoint)
 
             elif cardName=='CQUAD4':

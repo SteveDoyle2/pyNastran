@@ -24,9 +24,11 @@ PBUSH          1       K 100000.
 PBEAML       100     200             BOX
       , 40., 50., 5., 5.
 $MATERIALS
-MAT1           1    1.+7                      .1
+MAT1    1           1.+7                      .1
           25000.  25000.
+SPOINT,11
 MAT1    2         3.+7
+MAT1    3       8.5977+63.2554+6        0.097464                        ALUMINUM
 MAT10   25      1.      0.1
 MATHP         26                   1500.
                        1       1

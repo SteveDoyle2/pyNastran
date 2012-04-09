@@ -16,7 +16,8 @@ class cardMethods(object):
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0].rstrip('\n\r\t ')
             if '\t' in line:
-                raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
+                #raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
+                line = line.expandtabs()
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)
@@ -202,7 +203,7 @@ class cardMethods(object):
             #print "i = ",i
             if debug:
                 self.log.debug("  line  = |%r|" %(line))
-            sline = line[0:73]
+            sline = line[0:72]
             if not(sline):
                 break
             if debug:
@@ -396,9 +397,12 @@ class cardMethods(object):
             raise ScientificParseError(msg)
 
         s0 = vFactor*float(sline[0])
-        s1 = expFactor*int(sline[1])
-        #except:
-        #    print "vm=%s vp=%s valueRaw=|%s| sline=|%s|" %(vm,vp,valueRaw,sline)
+        
+        try:
+            s1 = expFactor*int(sline[1])
+        except ValueError:
+            msg = "vm=%s vp=%s valueRaw=|%s| sline=|%s|\ncard=%s" %(vm,vp,valueRaw,sline,card)
+            raise ValueError('invalid value for int(sline[1])\n%s' %(msg))
 
         value = s0*10**(s1)
         #print "valueOut = |%s|" %value

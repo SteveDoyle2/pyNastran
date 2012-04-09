@@ -1,6 +1,7 @@
 import sys
 import copy
 
+from pyNastran.bdf.cards.nodes import SPOINT
 from pyNastran.bdf.fieldWriter import printCard
 
 class getMethods(object):
@@ -36,10 +37,11 @@ class getMethods(object):
         return nids2
 
     def Node(self,nid):
+        print "self.spoints = ",self.spoints,type(self.spoints)
         if nid in self.nodes:
             return self.nodes[nid]
-        elif nid in self.spoints.spoints:
-            return SPOINTi(nid)
+        elif self.spoints and nid in self.spoints.spoints:
+            return SPOINT(nid)
         else:
             raise RuntimeError('nid=%s is not a GRID or SPOINT' %(nid))
         ###
