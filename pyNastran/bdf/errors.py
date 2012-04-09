@@ -4,6 +4,9 @@ class BDF_SyntaxError(SyntaxError):
 class TabCharacterError(SyntaxError):
     pass
 
+class TabCommaCharacterError(SyntaxError):
+    pass
+
 class ClosedBDFError(RuntimeError):
     pass
 
