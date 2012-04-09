@@ -211,6 +211,88 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
             ###
         ###
 
+    def readTable_SDF(self):
+        tableName = self.readTableName(rewind=False) # SDF
+        self.tableInit(tableName)
+        self.readMarkers([-1,7])
+        ints = self.readIntBlock()  # ??? ints
+        #print ints
+
+        #-------------------------------------------
+        
+        iTable = -2
+        
+        print "iTable = ",iTable
+        self.readMarkers([iTable,1,0]) # 2
+        bufferWords = self.getMarker()
+        print "bufferWords = ",bufferWords
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+        data = self.getData(bufferWords*4)
+        print self.printBlock(data)
+        data = self.getData(4)
+        iTable-=1
+
+        self.readMarkers([iTable,1,1]) # 3
+        bufferWords = self.getMarker() # 12
+        data = self.getData(4)
+        bufferSize, = unpack('i',data) # 52
+        data = self.getData(bufferSize)
+        print self.printBlock(data)
+        data = self.getData(4)
+        iTable-=1
+
+        self.readMarkers([iTable,1,0]) # 4
+
+
+
+        #-------------------------------------------
+        #print self.printSection(240)
+        #sys.exit('SDF...')
+
+    def readTable_CASECC(self):
+        tableName = self.readTableName(rewind=False) # PCOMP
+        print '*tableName = ',tableName
+        self.tableInit(tableName)
+        self.readMarkers([-1,7])
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+        print "bufferSize = ",bufferSize
+        data = self.getData(bufferSize)
+        print self.printBlock(data)
+        data = self.getData(4)
+        print "---------------"
+        
+        
+        self.readMarkers([-2,1,0])
+        bufferWords = self.getMarker()
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+        print "bufferSize = ",bufferSize
+        data = self.getData(bufferSize)
+        print self.printBlock(data)
+        data = self.getData(4)
+        
+        #data = self.readBlock()
+        #print self.printBlock(data)
+        print "---------------"
+        self.readMarkers([-3,1,0])
+        bufferWords = self.getMarker()
+        data = self.getData(4)
+        bufferSize, = unpack('i',data)
+        print "bufferWords = ",bufferWords
+        #print "bufferSize = ",bufferSize
+        data = self.getData(bufferSize)
+        print self.printBlock(data)
+        data = self.getData(4)
+
+        print "---------------"
+        self.readMarkers([-4,1,0])
+
+
+        print self.printSection(240)
+        sys.exit('CASECC...')
+
     def readTable_OMM2(self):
         #-------------------------------------------
         tableName = self.readTableName(rewind=False) # PCOMP

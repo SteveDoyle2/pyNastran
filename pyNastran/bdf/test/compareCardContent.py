@@ -13,7 +13,7 @@ def assertFields(card1,card2):
         for i,(f1,f2) in enumerate(zip(fields1,fields2)):
             v1=printField(f1)
             v2=printField(f2)
-            assert v1==v2,'cardName=%s ID=%s i=%s f1=%r f2=%r\n%r\n%r' %(fields1[0],fields1[1],i,v1,v2,fields1,fields2)
+            assert v1==v2,'cardName=%s ID=%s i=%s f1=%r f2=%r v1=%r v2=%r\n%r\n%r' %(fields1[0],fields1[1],i,f1,f2,v1,v2,fields1,fields2)
             
 def compareCardContent(fem1,fem2):
     assert len(fem1.params)         == len(fem2.params)

@@ -73,19 +73,54 @@ class CMASS2(PointElement):
 
     def Mass(self):
         return self.mass
+    
+    def Centroid(self):
+        """
+        Centroid is assumed to be c=(g1+g2)/2.
+        If g2 is blank, then the centroid is the location of g1.
+        """
+        f=0.
+        print str(self)
+        p1=array([0.,0.,0.])
+        p2=array([0.,0.,0.])
+        if self.g1 is not None:
+            p1 = self.g1.Position()
+            f+=1.
+        if self.g2 is not None:
+            p2 = self.g2.Position()
+            f+=1.
+
+        c = (p1+p2)/f
+        return c
 
     def crossReference(self,mesh):
-        #self.g1 = mesh.Node(self.g1)
-        #self.g2 = mesh.Node(self.g2)
-        pass
+        if isinstance(self.g1,int):
+            self.g1 = mesh.Node(self.g1)
+        if isinstance(self.g2,int):
+            self.g2 = mesh.Node(self.g2)
+        ###
+
+    def G1(self):
+        if isinstance(self.g1,int):
+            return self.g1
+        elif self.g1 is None:
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2,int):
+            return self.g2
+        elif self.g2 is None:
+            return self.g2
+        return self.g2.nid
 
     def rawFields(self):
-        fields = ['CMASS2',self.eid,self.mass,self.g1,self.c1,self.g2,self.c2]
+        fields = ['CMASS2',self.eid,self.mass,self.G1(),self.c1,self.G2(),self.c2]
         return fields
 
     def reprFields(self):
         mass = self.setBlankIfDefault(self.mass,0.)
-        fields = ['CMASS2',self.eid,mass,self.g1,self.c1,self.g2,self.c2]
+        fields = ['CMASS2',self.eid,mass,self.G1(),self.c1,self.G2(),self.c2]
         #print "cmass2 fields = ",fields
         return fields
 

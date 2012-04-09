@@ -159,6 +159,7 @@ def printFloat8(value,tol=1e-8):
                 #print "big"
                 field = "%8.1f" %(value)
                 if field.index('.')<8:
+                    field = '%8.1f' %(round(value))
                     field = field[0:8]
                     assert '.' != field[0],field
                 else:
