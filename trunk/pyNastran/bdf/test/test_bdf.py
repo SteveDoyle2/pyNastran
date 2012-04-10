@@ -32,16 +32,16 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        except MissingFileError:
-            pass
-        except TabCharacterError:
-            pass
-        except ScientificParseError:
-            pass
-        except ClosedBDFError:
-            pass
-        except BDF_SyntaxError:
-            pass
+        #except MissingFileError:
+        #    pass
+        #except TabCharacterError:
+        #    pass
+        #except ScientificParseError:
+        #    pass
+        #except ClosedBDFError:
+        #    pass
+        #except BDF_SyntaxError:
+        #    pass
         except SystemExit:
             sys.exit('sys.exit...')
         except:
@@ -110,16 +110,16 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,meshForm='combined'
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except MissingFileError:
-        pass
-    except TabCharacterError:
-        pass
-    except ScientificParseError:
-        pass
-    except BDF_SyntaxError:
-        pass
-    except ClosedBDFError:
-        pass
+    #except MissingFileError:
+    #    pass
+    #except TabCharacterError:
+    #    pass
+    #except ScientificParseError:
+    #    pass
+    #except BDF_SyntaxError:
+    #    pass
+    #except ClosedBDFError:
+    #    pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:

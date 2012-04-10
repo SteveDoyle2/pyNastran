@@ -77,15 +77,18 @@ class debugLogger(object):
 
     def warning(self,msg):
         (n,fname,funcName) = self.properties()
-        sys.stderr.write('WARNING: fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
+        sys.stdout.write('WARNING: fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
+        #sys.stderr.write('WARNING: fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
 
     def error(self,msg):
         (n,fname,funcName) = self.properties()
-        print 'ERROR:   fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg)
+        sys.stdout.write('ERROR:   fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
+        #sys.stderr.write('ERROR:   fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
 
     def critical(self,msg):
         (n,fname,funcName) = self.properties()
-        sys.stderr.write('CRITICAL fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
+        sys.stdout.write('CRITICAL fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
+        #sys.stderr.write('CRITICAL fname=%-25s lineNo=%-4s   %s\n' %(fname,n,msg))
     ###
 
 class infoLogger(debugLogger):
@@ -122,4 +125,6 @@ if __name__=='__main__':
     logger = dummyLogger()
     log = logger.startLog('debug') # or info
     log.debug('test message')
+    log.warning('asf')
+    
 

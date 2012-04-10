@@ -1,5 +1,4 @@
 import sys
-#import copy
 #from BDF_Card import collapse
 from pyNastran.bdf.errors import *
 
@@ -17,10 +16,10 @@ class cardMethods(object):
             line = line.split('$')[0].rstrip('\n\r\t ')
             if '\t' in line:
                 #raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
-                line2 = line.expandtabs()
-                if ',' in line2:
+                if ',' in line:
+                    #expandTabCommas(line2)
                     raise TabCommaCharacterError('tabs and commas in the same line are not supported...line=|%r|' %(line))
-                line = line2
+                line = line.expandtabs()
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)
@@ -136,6 +135,10 @@ class cardMethods(object):
             #    iline = ''
 
             sCardName = iline[0:8].strip()  # trying to find if it's blank...
+            #slot0 = iline[0:8]
+            #if '\t' in slot0:
+            #    slot0 = slot0.expandtabs()
+            #sCardName = slot0.strip()  # trying to find if it's blank...
             isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
             if debug:
                 self.log.debug("CRITERIA")
@@ -256,6 +259,36 @@ class cardMethods(object):
         #return self.makeSingleStreamedCard(card)
         return card
         
+    def expandTabCommas(self,line):
+        """
+        The only valid tab/commas format in nastran is having the 
+        first field be a tab and the rest of the fields be separated by commas.
+        """
+        fields = []
+        isWord = True
+        field = ''
+        for i,letter in enumerate(line):
+            if letter not in ['\t',',',' ']: # tab or comma
+                if isWord:
+                    field+=letter
+                else:
+                    isWord = True
+                    fields.append(field)
+                    #break
+                    field = ''
+                    field+=letter
+                ###
+            elif letter==' ' or letter==',':
+                isWord = False
+                break
+            ###
+        ###
+        #fields.append(field)
+        sline = [field]+line[i:72].split(',')
+        print "expandTabCommas = |%r|" %(sline)
+        #print field
+        return fields
+
     def parseCSV(self,sline):
         #if 1:
         slineA = sline.split(',')[:9]
@@ -267,7 +300,6 @@ class cardMethods(object):
         #print "sline2 = ",sline2
         #sline = sline2
         #sline = sline.split(',')[0:9]  # doesnt fill all fields on line
-        #sline = copy.deepcopy(sline2)
         return sline2
 
     def makeSingleStreamedCard(self,card,debug=False):
@@ -396,16 +428,15 @@ class cardMethods(object):
             sline = valueLeft.split('+')
             expFactor = 1.
         else:
-            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s' %(valueRaw,valueLeft,card)
+            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s\nYou also might have mixed tabs/spaces/commas.' %(valueRaw,valueLeft,card)
             raise ScientificParseError(msg)
 
-        s0 = vFactor*float(sline[0])
-        
         try:
+            s0 = vFactor*float(sline[0])
             s1 = expFactor*int(sline[1])
         except ValueError:
-            msg = "vm=%s vp=%s valueRaw=|%s| sline=|%s|\ncard=%s" %(vm,vp,valueRaw,sline,card)
-            raise ValueError('invalid value for int(sline[1])\n%s' %(msg))
+            msg = "vm=%s vp=%s valueRaw=|%s| sline=%s\ncard=%s" %(vm,vp,valueRaw,sline,card)
+            raise ScientificParseError('cannot parse sline[0] into a float and sline[1] into an integer\n%s\nYou HAVE mixed tabs/spaces/commas!  Fix it!' %(msg))
 
         value = s0*10**(s1)
         #print "valueOut = |%s|" %value
@@ -416,6 +447,7 @@ class cardMethods(object):
     
 
 def stringParser(stringIn):
+    """not used"""
     typeCheck = ''
     n=0
     for i,s in enumerate(stringIn):

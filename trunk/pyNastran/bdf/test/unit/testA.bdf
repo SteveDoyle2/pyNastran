@@ -1,5 +1,7 @@
+$EXECUTIVE CONTROL DECK
 SOL 123  $ made up solution
 CEND
+$CASE CONTROL DECK
 SET 101 = 61 THRU 69
 SET 102 = 1 THRU 6
 STRESS(PLOT,PUNCH) = 5
@@ -8,6 +10,8 @@ $back from testB
 DISP(PLOT,PUNCH) = 5
 BEGIN BULK
 GRID,1,
+$SPOINTS
+SPOINT,11
 $ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)
 CONM1          1      11
           17400.                          4.37+7
@@ -26,11 +30,11 @@ PBEAML       100     200             BOX
 $MATERIALS
 MAT1    1           1.+7                      .1
           25000.  25000.
-SPOINT,11
 MAT1    2         3.+7
 MAT1    3       8.5977+63.2554+6        0.097464                        ALUMINUM
 MAT10   25      1.      0.1
-MATHP         26                   1500.
+MAT10   26      0.1425  1.205-12
+MATHP         27                   1500.
                        1       1
 +
 +
@@ -120,9 +124,15 @@ $
 DOPTPRM,P1,1,P2,15,IPRINT,7
 DOPTPRM APRCOD  2       IPRINT  0       DESMAX  8       DELP    0.50
         DPMIN   0.50    P1      3       P2      4
+DOPTPRM IPRINT  3       DESMAX  15      DELP    0.5	P1	1	
+	P2	15		
 $TABLES
+TABLED1 1
+        1.0     1.0     2.0     2.0     3.0     3.0     ENDT
 TABLED1      310
               0.      1. 200000.      1.    ENDT
+TLOAD2  310     320             1       0.      .10472  4.77465 -90.
+        0.0     0.0
 $REJECT_LINES
 DEQATN  2       F(A,B)=B*A*A*A/12.0
 DSCREEN STRESS  -100.   100

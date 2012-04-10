@@ -334,7 +334,7 @@ POINTAX
 CCONEAX
 CTRIAX  (done)
 CTRIAX6 (done)
-CQUADX (done)
+CQUADX  (done)
 RINGAX
 
 ----Axial Properties----:
