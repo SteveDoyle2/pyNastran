@@ -110,7 +110,7 @@ class OP2(BDF,  # BDF methods
                              'DIT',  # tables
                              'LAMA',
 
-                            'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC',#'EDOM',
+                            'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
                              'DESTAB',                      # design variables
                              'OQG1','OQGV1','OQMG1',        # spc/mpc forces
                              
@@ -454,12 +454,14 @@ class OP2(BDF,  # BDF methods
                         self.readTable_OEE()
 
                     elif tableName in ['PCOMPTS']:
-                        self.readTable_PCOMPTS() # 'SDF',
+                        self.readTable_PCOMPTS()
+                    elif tableName in ['SDF']: # ???
+                        self.readTable_SDF()
+                    #elif tableName in ['CASECC']:
+                        #self.readTable_CASECC()
 
                     # not done
                     elif tableName in []:
-                        self.readTableB_DUMMY()
-                    elif tableName in ['SDF']:
                         self.readTableB_DUMMY()
                     elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
                         self.readTableB_DUMMY()

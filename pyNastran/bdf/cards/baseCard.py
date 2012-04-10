@@ -42,10 +42,10 @@ class BaseCard(BDF_Card):
         """removes blank fields at the end of a card object"""
         self.wipeEmptyFields(fields)
 
-    def printCard(self,fields,tol=1e-8):
+    def printCard(self,fields):
         """prints a card object"""
         #print "fields = ",fields
-        return printCard(fields,tol)
+        return printCard(fields)
 
     def setDefaultIfBlank(self,value,default):
         """used to initialize default values"""

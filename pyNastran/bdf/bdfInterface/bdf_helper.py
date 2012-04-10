@@ -251,7 +251,9 @@ class addMethods(object):
         key = param.key
         if key in self.params and allowOverwrites==False:
             if not param.isSameCard(self.params[key]):
-                assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
+                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
+                self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
+                self.params[key] = param
         else:
             self.params[key] = param
         ###

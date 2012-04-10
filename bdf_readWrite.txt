@@ -95,7 +95,7 @@ PROD    (done)
 PBAR    (done)
 PBARL   (done)
 PBEAM   (done)
-PBEAML  (done, not well tested)
+PBEAML  (disabled)
 PBEAM3
 PBEND   (done)
 PTUBE   (done)
@@ -347,8 +347,8 @@ SECTAX
 
 -----------------------------------------------
 
-Potential (v0.4) - these will be added in groupings...maybe (not necessarily in order):
-If you want a certain group...ask!
+Not supported - ask for the cards you want
+
 **************
 BAROR
 BEAMOR
