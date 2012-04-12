@@ -85,15 +85,15 @@ def printScientific8(value):
     #print "scientific...value=%s field=%s" %(value, field)
     return field
 
-def printFloat8(value):
+def printFloat8(value,tol=0.):
     """
     Prints a float in nastran 8-character width syntax.
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
-    """
+    @warning hasnt really be tested for tolerancing    """
     #value = round(value,4)
     #print "float...%s" %value
-    if value==0.:  # tol=0 b/c of a few screwy cards (e.g. MAT10)
+    if abs(value)<=tol:  # tol=1e-8
         #print "below tol %s" %(value)
         field = "%8s" %('0.')
     else:
@@ -102,6 +102,7 @@ def printFloat8(value):
 
             if value<5e-8:  ## @todo does this work properly with tol
                 field = printScientific8(value)
+                return field
             elif value<0.0001:
                 #print "A"
                 if 1:
@@ -137,6 +138,7 @@ def printFloat8(value):
                         assert '.' == field[0],field
                     else:
                         field = printScientific8(value)
+                        return field
                     ###
                     #print "field = ",field
                 ###
@@ -171,6 +173,7 @@ def printFloat8(value):
             if value>-5e-7:  ## @todo does this work properly with tol
                 #print "really small"
                 field = printScientific8(value)
+                return field
             elif value>-0.01:  # -0.001
                 #print "tiny"
                 field = printScientific8(value)
@@ -229,11 +232,11 @@ def printFloat8(value):
     assert len(field)==8,'value=|%s| field=|%s| is not 8 characters long, its %s' %(value,field,len(field))
     return field
 
-def printField(value):
+def printField(value,tol=0.):
     """
     prints a single 8-character width field
     @param value the value to print
-    @retval field an 8-character (tested) string
+    @param tol the abs(tol) to consider value=0 (default=0.)    @retval field an 8-character (tested) string
     """
     if isinstance(value,int):
         field = "%8s" %(value)
@@ -258,7 +261,7 @@ def printField(value):
     #    return self.printCard_16(fields)
     ###
 
-def printCard(fields):
+def printCard(fields,tol=0.):
     """
     Prints a nastran-style card with 8-character width fields.
     
@@ -279,7 +282,7 @@ def printCard(fields):
     for i in range(1,len(fields)):
         field = fields[i]
         try:
-            out += printField(field)
+            out += printField(field,tol=tol)
             #print "|%r|" %(printField(field))
         except AssertionError:
             print "bad fields = ",fields
