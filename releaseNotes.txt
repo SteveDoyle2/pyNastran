@@ -61,6 +61,7 @@ Overall BDF
    - added new custom Exceptions to make errors messages clearer
 
 BDF API Changes
+   - removeCards(['GRID','CQUAD4']) is now called disableCards(cards)
    - removed obsolete isPrintable and Is methods from BDF class
    - added Mid1(), Mid2(), Mid3(), Mid4() methods for PSHELL.
      Mid() now returns Mid1() or Mid2() depending on the form of the PSHELL

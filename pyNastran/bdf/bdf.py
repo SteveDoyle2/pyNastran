@@ -24,9 +24,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
     modelType = 'nastran'
     isStructured = False
     
-    #def setCardsToInclude():
-    #    pass
-
     def __init__(self,debug=True,log=None,nCardLinesMax=1000):
         """
         Initializes the BDF object
@@ -177,14 +174,14 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ## was playing around with an idea...does nothing for now...
         self.cardsToWrite = self.cardsToRead
 
-    def removeCards(cards):
+    def disableCards(self,cards):
         """
         Method for removing broken cards from the reader
         @param self the object pointer
         @param cards a list/set of cards that should not be read
         """
-        removeSet = set(cards)
-        self.cardsToRead.difference(removeSet)
+        disableSet = set(cards)
+        self.cardsToRead.difference(disableSet)
 
     def IsThermalSolution():
         """

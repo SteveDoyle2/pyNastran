@@ -37,7 +37,6 @@ class getMethods(object):
         return nids2
 
     def Node(self,nid):
-        print "self.spoints = ",self.spoints,type(self.spoints)
         if nid in self.nodes:
             return self.nodes[nid]
         elif self.spoints and nid in self.spoints.spoints:
