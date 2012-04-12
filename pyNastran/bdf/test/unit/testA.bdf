@@ -77,8 +77,8 @@ RBE3       12225           12043  123456      1.     123    2573    2574
 $LOADS
 PLOAD4         1    1001  -4005.
 DLOAD          3      1.      1.      10      0.      10
-PLOAD2        13      1. 2100001    THRU 2100100
 QHBDY   10      AREA4   70.             30000   31000   31100   30100
+PLOAD2        13      1. 2100001    THRU 2100100
 QBDY3   33      20.0            1       thru    8
 QBDY3         34     20.               1    THRU       7      BY       2
               10    THRU      40      BY       5      42      45    THRU
@@ -145,6 +145,8 @@ TABLED1      310
               0.      1. 200000.      1.    ENDT
 TLOAD2  310     320             1       0.      .10472  4.77465 -90.
         0.0     0.0
+$SETS
+SESET   0       1       THRU    10
 $REJECT_LINES
 DEQATN  2       F(A,B)=B*A*A*A/12.0
 DSCREEN STRESS  -100.   100

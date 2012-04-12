@@ -1,5 +1,6 @@
 from numpy import array,log,exp
 from baseCard import BaseCard
+from pyNastran.bdf.fieldWriter import printIntCard
 
 class Set(BaseCard):
     type = 'Set'
@@ -19,6 +20,9 @@ class Set(BaseCard):
     def reprFields(self):
         fields = self.rawFields()
         return fields
+
+    def __repr__(self):
+        return printIntCard(self.reprFields())
 
 class SetSuper(Set):
     def __init__(self,card,data):

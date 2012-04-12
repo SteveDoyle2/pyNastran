@@ -302,6 +302,35 @@ def printCard(fields,tol=0.):
     out = out.rstrip(' \n+')+'\n'  # removes blank lines at the end of cards
     return out
 
+def printIntCard(fields,tol=0.):
+    """
+    All fields (other than the first field must be integers.
+    This is used to speed up SET cards.
+    Prints a nastran-style card with 8-character width fields.
+    @warning Blanks are not allowed!
+    """
+    try:
+        out = '%-8s' %(fields[0])
+    except:
+        print "ERROR!  fields=%s" %(fields)
+        sys.stdout.flush()
+        raise
+    
+    for i in range(1,len(fields)):
+        field = fields[i]
+        try:
+            out += "%8i" %(field) # balks if you have None or string fields
+        except AssertionError:
+            print "bad fields = ",fields
+            raise
+        if i%8==0: # allow 1+8 fields per line
+            out = out.rstrip(' ')
+            out += '\n%8s' %('')
+        ###
+    ###
+    out = out.rstrip(' \n+')+'\n'  # removes blank lines at the end of cards
+    return out
+
 def displayCard(fields):
     """
     Prints a cards fields in an easy to read/debug format.
