@@ -25,7 +25,7 @@ class OUG(object):
         (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':1,
-                    'sortCode':0,'sortBits':[0,0,0],'numWide':8}
+                    'sortCode':0,'sortBits':[0,0,0],'numWide':8,'tableName':'OUG',}
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
 
@@ -118,7 +118,7 @@ class OUG(object):
         data = self.readTemperatureTable()
         
         dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':1,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,
+                    'sortBits':[0,0,0],'numWide':8,'tableName':'OUG',
                     #'thermalCode':1,
                     #'formatCode':1,
                     #'elementName':eType,'sCode':0,'stressBits':stressBits

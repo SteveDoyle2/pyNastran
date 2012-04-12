@@ -106,6 +106,8 @@ class F06(OES,OUG,F06Writer):
         self.gridPointForces = {}
         OES.__init__(self)
         OUG.__init__(self)
+        
+        self.Title = ''
         self.startLog()
 
     def startLog(self,log=None,debug=False):
@@ -557,4 +559,5 @@ if __name__=='__main__':
 
     f06.writeF06(model+'f06.out')
     print f06
+    print "done..."
 
