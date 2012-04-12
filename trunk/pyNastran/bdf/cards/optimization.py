@@ -432,7 +432,7 @@ class DVPREL2(OptConstraint):
             ###
         ###
         if iDTable:
-            for i in range(iDTable,iEnd):
+            for i in range(iDTable+1,iEnd):
                 dtable = card.field(i)
                 if dtable:
                     assert dtable is not 'DTABLE'

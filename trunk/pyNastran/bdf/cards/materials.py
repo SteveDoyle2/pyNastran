@@ -356,14 +356,14 @@ class MAT3(AnisotropicMaterial):
             self.nuxth = card.field(5)
             self.nuthz = card.field(6)
             self.nuzx  = card.field(7)
+            self.rho   = card.field(8)
 
-            self.rho  = card.field(8)
-            self.gzx  = card.field(9)
-            self.ax   = card.field(10)
-            self.ath  = card.field(11)
-            self.az   = card.field(12)
-            self.TRef = card.field(13,0.0)
-            self.ge   = card.field(14,0.0)
+            self.gzx  = card.field(11)
+            self.ax   = card.field(12)
+            self.ath  = card.field(13)
+            self.az   = card.field(14)
+            self.TRef = card.field(15,0.0)
+            self.ge   = card.field(16,0.0)
         else:
             self.mid   = data[0]
             self.ex    = data[1]
