@@ -417,10 +417,10 @@ class writeMesh(object):
                 msg += str(dlink)
             for ID,dresp in sorted(self.dresps.items()):
                 msg += str(dresp)
-            for ID,dvprel in sorted(self.dvprels.items()):
-                msg += str(dvprel)
             for ID,dvmrel in sorted(self.dvmrels.items()):
                 msg += str(dvmrel)
+            for ID,dvprel in sorted(self.dvprels.items()):
+                msg += str(dvprel)
             for ID,equation in sorted(self.dequations.items()):
                 msg += str(equation)
             if self.doptprm is not None:
