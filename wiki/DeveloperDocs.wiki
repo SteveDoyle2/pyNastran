@@ -8,7 +8,7 @@ The documentation is a bit confusing the first time you use them, but once you g
 == Building the docs ==
 If you downloaded the software, skip this step.  
 
-If you checked it out, you'll need Doxygen.  If you're not on Windows, with Python 2.7, open "Doxyfile", search for "Python27" and fix the path to python.  Then call "doxygen Doxyfile".  This should make a docs folder assuming you had no errors.
+If you checked it out, you'll need Doxygen.  If you're not on Windows, with Python 2.7, open *Doxyfile*, search for "Python27" and fix the path to python.  Then call *doxygen Doxyfile*.  This should make a docs folder assuming you had no errors.
 
 =Using the docs/html to make use of the BDF class=
 There are tons of methods or object attributes that you can access.  The docs are laid out for a developer (someone using pyNastran in their code).
@@ -16,9 +16,12 @@ There are tons of methods or object attributes that you can access.  The docs ar
 Open the docs/html folder:
 click on any html file.  Your browser will open.  Click the "Directories" tab.
 
-Let's look at the main bdf files.  Click pyNastran/bdf.  You should see things like "bdf.py", "fieldWriter.py", "caseControl.py", etc.  Click on "bdf.py".  It will give you a list of classes.  Click "pyNastran.bdf.bdf.BDF" and it will bring you to the "Classes" tab.  
+== Investigating BDF methods ==
+Let's look at the main bdf files.  Click *pyNastran/bdf*.  You should see things like *bdf.py*, *fieldWriter.py*, *caseControl.py*, etc.  Files in this folder have functions that will probably be useful to you.  Files in *pyNastran/bdf/bdfInterface* deal with the reader and creating objects.  Generally you don't need to look at those.
 
-You'll see the list of public member functions with a brief docstring.  Click on "readBDF" or just scroll down to the method for a more detailed description.  You'll see:
+Click on *bdf.py*.  It will give you a list of classes.  Click *pyNastran.bdf.bdf.BDF* and it will bring you to the *Classes* tab.  
+
+You'll see the list of public member functions with a brief docstring.  Click on *readBDF* or just scroll down to the method for a more detailed description.  You'll see:
 {{{
 def pyNastran.bdf.bdf.BDF.readBDF( self,
 		  	           infilename,
@@ -54,9 +57,12 @@ Parameters:
 Definition at line 540 of file bdf.py.
 }}}
 
-Go back to Directories.  Click "pyNastran/bdf/cards/plates" to see things like elementsShell.py and propertiesShell.py.  Click on "propertiesShell.py" to see the ShellProperty, PSHELL, PCOMP, PCOMPG classes.  Click on "ShellProperty" and look at the class diagram.  The ShellProperty class points to all the other shell classes and is useful when coding.  Click on the "PCOMP" box in the class diagram.
+== Investigating Card methods ==
+Go back to Directories.  Click *pyNastran/bdf/cards*.  The files in this sub-folder and any levels lower are the interfaces to all the BDF objects.  You should be referencing this directory and it's sub-directories frequently.
 
-Again you'll see the Public Member Functions.  Find and click on "MassPerArea".  You'll see:
+Go back to Directories.  Click *pyNastran/bdf/cards/plates* to see things like *elementsShell.py* and *propertiesShell.py*.  Click on "propertiesShell.py" to see the ShellProperty, PSHELL, PCOMP, PCOMPG classes.  Click on *ShellProperty* and look at the class diagram.  The ShellProperty class points to all the other shell classes and is useful when coding.  Click on the *PCOMP* box in the class diagram.
+
+Again you'll see the Public Member Functions.  Find and click on *MassPerArea*.  You'll see:
 {{{
 def pyNastran.bdf.cards.plates.propertiesShell.PCOMP.MassPerArea(self,
       		                                                 iPly = 'all') 		
