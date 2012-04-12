@@ -461,11 +461,11 @@ class DVPREL2(OptConstraint):
 
         if self.dvids:
             fields2 = ['DESVAR']+self.dvids
-            fields += self.buildTableLines(fields2,i=1,j=0)
+            fields += self.buildTableLines(fields2,nStart=1,nEnd=0)
 
         if self.dtables:
             fields2 = ['DTABLE']+self.dtables
-            fields += self.buildTableLines(fields2,i=1,j=0)
+            fields += self.buildTableLines(fields2,nStart=1,nEnd=0)
         return fields
 
     def reprFields(self):
