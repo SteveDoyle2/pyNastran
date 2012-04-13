@@ -431,7 +431,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         @param infilename the input bdf
         @param includeDir the relative path to any include files (default=None if no include files)
         @param xref should the bdf be cross referenced (default=True)
-        @param log a logger object (default=None -> a simplified one will be created)
         """
         self._setInfile(infilename,includeDir)
 
@@ -545,6 +544,21 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         ###
         #print "sol=%s method=%s" %(self.sol,self.solMethod)
         
+
+    def setDynamicSyntax(self,dictOfVars):
+       """
+       uses the OpenMDAO syntax of %varName in an embedded BDF to
+       update the values for an optimization study.
+       Variables should be 7 characters to fit in an 8-character field.
+       %varName
+       dictOfVars = {'varName': 10}
+       """
+       self.dictOfVars = {}
+       for key,value in dictOfVars.items():
+           assert len(key)<=7,'max length for key is 7; len(%s)=%s' %(key,len(key))
+           self.dictOfVars[key.upper()] = value
+       ###
+       self.isDynamicSyntax = True
 
     def isCaseControlDeck(self,line):
         """@todo not done..."""

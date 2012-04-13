@@ -324,21 +324,6 @@ class cardMethods(object):
         return cardOut
         #return collapse(cardOut)
 
-    def setDynamicSyntax(self,dictOfVars):
-       """
-       uses the OpenMDAO syntax of %varName in an embedded BDF to
-       update the values for an optimization study.
-       Variables should be 7 characters to fit in an 8-character field.
-       %varName
-       dictOfVars = {'varName': 10}
-       """
-       self.dictOfVars = {}
-       for key,value in dictOfVars.items():
-           assert len(key)<=7,'max length for key is 7; len(%s)=%s' %(key,len(key))
-           self.dictOfVars[key.upper()] = value
-       ###
-       self.isDynamicSyntax = True
-
     def parseDynamicSyntax(self,key):
         #print "*** valueRaw.lstrip() = |%r|" %(valueRaw.lstrip())
         #key = key.lstrip('%%')
