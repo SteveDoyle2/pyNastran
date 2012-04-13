@@ -4,6 +4,7 @@ from numpy import array
 
 from tables.oes import *  # OES
 from tables.oug import *  # OUG
+from tables.oqg import *  # OUG
 from f06_classes import * # classes not in op2
 from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
 from f06Writer import F06Writer
@@ -11,7 +12,7 @@ from f06Writer import F06Writer
 class EndOfFileError(Exception):
     pass
 
-class F06(OES,OUG,F06Writer):
+class F06(OES,OUG,OQG,F06Writer):
     def __init__(self,f06name):
         self.f06name = f06name
         self.i = 0
@@ -27,9 +28,9 @@ class F06(OES,OUG,F06Writer):
           #'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y'
           'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R':self.getGridWeight,
           #'OLOAD    RESULTANT':self.oload,
-          'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
-          'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
-          'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
+          #'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
+          #'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
+          #'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
           #'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self.gridPointSingularities,
 
 
@@ -45,7 +46,7 @@ class F06(OES,OUG,F06Writer):
 #------------------------
 
           'R E A L   E I G E N V A L U E S':self.getRealEigenvalues,
-          'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
+          #'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self.getComplexEigenvalues,
           'E L E M E N T   S T R A I N   E N E R G I E S':self.getElementStrainEnergies,
           'D I S P L A C E M E N T   V E C T O R':self.getDisplacement,
           'C O M P L E X   D I S P L A C E M E N T   V E C T O R':self.getComplexDisplacement,
@@ -87,24 +88,15 @@ class F06(OES,OUG,F06Writer):
         self.eigenvalues = {}
         self.eigenvectors = {}
 
-        self.SpcForces = {}
         self.iSubcases = []
         self.temperatureGrad = {}
         
         self.iSubcaseNameMap = {}
         self.loadVectors = {}
-        self.spcForces = {}
-        self.mpcForces = {}
-        self.nonlinearRodStress = {}
-        self.nonlinearRodStrain = {}
-        self.nonlinearPlateStress = {}
-        self.nonlinearPlateStrain = {}
-        self.ctriaxStress = {}
-        self.ctriaxStrain = {}
-        self.hyperelasticPlateStress = {}
-        self.hyperelasticPlateStrain = {}
         self.gridPointForces = {}
+
         OES.__init__(self)
+        OQG.__init__(self)
         OUG.__init__(self)
         
         self.Title = ''
@@ -166,7 +158,10 @@ class F06(OES,OUG,F06Writer):
 
     def readSubcaseNameID(self):
         subcaseName = self.storedLines[-3].strip()
+        #print ''.join(self.storedLines)
         self.Title = subcaseName #'no title'
+        #print "Title = ",self.Title
+        #sys.exit()
         #print "subcaseLine = |%r|" %(subcaseName)
         if subcaseName=='':
             iSubcase = 1
@@ -400,33 +395,6 @@ class F06(OES,OUG,F06Writer):
             ###
         return out
     
-    def getSpcForces(self):  # @todo not done
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
-        headers = self.skip(2)
-        return
-        #print "headers = %s" %(headers)
-        data = self.readTable([int,str,float,float,float,float,float,float])
-
-        if iSubcase in self.SpcForces:
-            self.SpcForces[iSubcase].addData(data)
-        else:
-            self.SpcForces[iSubcase] = DisplacementObject(iSubcase,data)
-        self.iSubcases.append(iSubcase)
-        #print self.SpcForces[iSubcase]
-        
-    def getMpcForces(self):
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
-        headers = self.skip(2)
-        #print "headers = %s" %(headers)
-        data = self.readTable([int,str,float,float,float,float,float,float])
-
-        if iSubcase in self.MpcForces:
-            self.MpcForces[iSubcase].addData(data)
-        else:
-            self.MpcForces[iSubcase] = DisplacementObject(iSubcase,data)
-        self.iSubcases.append(iSubcase)
-        #print self.SpcForces[iSubcase]
-
     def readTable(self,Format):
         """reads displacement, spc/mpc forces"""
         sline = True
@@ -524,7 +492,7 @@ class F06(OES,OUG,F06Writer):
             ###
         ###
         return True
-            
+
     def skip(self,iskip):
         for i in range(iskip-1):
             self.infile.readline()
@@ -533,7 +501,7 @@ class F06(OES,OUG,F06Writer):
     
     def __repr__(self):
         msg = ''
-        data = [self.displacements,self.SpcForces,self.barStress,self.solidStress,self.temperatures]
+        data = [self.displacements,self.spcForces,self.barStress,self.solidStress,self.temperatures]
         #data = [self.displacements,self.solidStress,self.temperatures,self.barStress]
         #data = [self.eigenvalues,self.eigenvectors]
         data = [self.rodStress,self.rodStrain,
@@ -558,6 +526,6 @@ if __name__=='__main__':
     f06.readF06()
 
     f06.writeF06(model+'f06.out')
-    print f06
+    #print f06
     print "done..."
 

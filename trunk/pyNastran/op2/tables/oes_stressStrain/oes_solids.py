@@ -119,7 +119,9 @@ class solidStressObject(stressObject):
                     (blank,nodeID,x,oxx,xy,txy,a,o1,lx,d1,d2,d3,pressure,ovmShear) = self.data[n]
                     (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
                     (blank,blank, z,ozz,zx,txz,c,o3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
-                    if nodeID.strip()=='CENTER': nodeID='C'
+                    if    nodeID.strip()=='CENTER': nodeID='C'
+                    else: nodeID = int(nodeID)
+
                     self.oxx[eid][nodeID] = float(oxx)
                     self.oyy[eid][nodeID] = float(oyy)
                     self.ozz[eid][nodeID] = float(ozz)
@@ -329,16 +331,16 @@ class solidStressObject(stressObject):
             vonMises = 'MAX SHEAR'
 
         tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         hexaMsg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
@@ -382,9 +384,9 @@ class solidStressObject(stressObject):
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
                 ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
-                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
-                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
-                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
+                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,2],v[0,0],v[0,1],p,ovm)
+                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,2],v[1,0],v[1,1])
+                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,2],v[2,0],v[2,1])
             ###
             if eType=='CTETRA' or eType=='TETRA':
                 tetraMsg.append(msgA)
@@ -419,16 +421,16 @@ class solidStressObject(stressObject):
             vonMises = 'MAX SHEAR'
 
         tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
-        hexaMsg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN\n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+        hexaMsg  = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
@@ -481,9 +483,9 @@ class solidStressObject(stressObject):
                     (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
                     ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
-                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,0],v[0,1],v[0,2],p,ovm)
-                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,0],v[1,1],v[1,2])
-                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,0],v[2,1],v[2,2])
+                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,2],v[0,0],v[0,1],p,ovm)
+                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,2],v[1,0],v[1,1])
+                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,2],v[2,0],v[2,1])
                 ###
                 #print eType
                 if eType=='CTETRA' or eType=='TETRA':
@@ -704,7 +706,8 @@ class solidStrainObject(strainObject):
                     (blank,nodeID,x,exx,xy,exy,a,e1,lx,d1,d2,d3,pressure,evmShear) = self.data[n]
                     (blank,blank, y,eyy,yz,eyz,b,e2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
                     (blank,blank, z,ezz,zx,exz,c,e3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
-                    if nodeID.strip()=='CENTER': nodeID='C'
+                    if    nodeID.strip()=='CENTER': nodeID='C'
+                    else: nodeID = int(nodeID)
                     self.exx[eid][nodeID] = float(exx)
                     self.eyy[eid][nodeID] = float(eyy)
                     self.ezz[eid][nodeID] = float(ezz)
@@ -925,15 +928,15 @@ class solidStrainObject(strainObject):
 
         tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         hexaMsg  = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
@@ -976,9 +979,9 @@ class solidStrainObject(strainObject):
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
                 ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
-                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,0],v[0,1],v[0,2],p,evm.strip())
-                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,0],v[1,1],v[1,2])
-                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,0],v[2,1],v[2,2])
+                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,2],v[0,0],v[0,1],p,evm.strip())
+                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,2],v[1,0],v[1,1])
+                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,2],v[2,0],v[2,1])
             ###
             if eType=='CTETRA' or eType=='TETRA':
                 tetraMsg.append(msgA)
@@ -1015,15 +1018,15 @@ class solidStrainObject(strainObject):
 
         tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         hexaMsg  = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s\n' %(vonMises)]
+                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
         eTypes = self.eType.values()
         isTetra=False; isPenta=False; isHexa=False
@@ -1071,9 +1074,9 @@ class solidStrainObject(strainObject):
                     (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
                     ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
-                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,0],v[0,1],v[0,2],p,evm.strip())
-                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,0],v[1,1],v[1,2])
-                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,0],v[2,1],v[2,2])
+                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,1],v[0,2],v[0,0],p,evm.strip())
+                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,1],v[1,2],v[1,0])
+                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0])
                 ###
                 if eType=='CTETRA' or eType=='TETRA':
                     tetraMsg.append(msgA)

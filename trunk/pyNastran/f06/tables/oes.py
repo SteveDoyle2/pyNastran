@@ -2,7 +2,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_rods   import rodStressObject,rod
 from pyNastran.op2.tables.oes_stressStrain.oes_bars   import barStressObject,barStrainObject
 #from pyNastran.op2.tables.oes_stressStrain.oes_beams   import beamStressObject
 #from pyNastran.op2.tables.oes_stressStrain.oes_shear   import shearStressObject
-from pyNastran.op2.tables.oes_stressStrain.oes_solids import solidStressObject
+from pyNastran.op2.tables.oes_stressStrain.oes_solids import solidStressObject,solidStrainObject
 from pyNastran.op2.tables.oes_stressStrain.oes_plates import plateStressObject,plateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.oes_compositePlates import compositePlateStressObject
 
@@ -10,19 +10,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_compositePlates import compositeP
 
 class OES(object):
     def __init__(self):
-        # not done...
-        self.celasStress   = {} # CELASi
-        self.celasStrain   = {}
-        
-        self.beamStress = {} # CBEAM
-        self.beamStrain = {}
-
-        self.shearStress = {} # CSHEAR
-        self.shearStrain = {}
-        
-        #-------------
-        
-        self.rodStress  = {} # CROD
+        self.rodStress  = {} # CROD, CONROD, CTUBE
         self.rodStrain  = {}
 
         self.barStress  = {} # CBAR
@@ -37,6 +25,22 @@ class OES(object):
         self.compositePlateStress = {}  # composite CTRIA3/CQUAD4
         self.compositePlateStrain = {}
 
+        #-------------
+        # not supported
+        self.celasStress   = {} # CELASi
+        self.celasStrain   = {}        
+        self.beamStress = {} # CBEAM
+        self.beamStrain = {}
+        self.shearStress = {} # CSHEAR
+        self.shearStrain = {}        
+        self.nonlinearRodStress = {}  # CROD, CONROD, CTUBE
+        self.nonlinearRodStrain = {}
+        self.nonlinearPlateStress = {}  # CTRIA3, CTRIA6, CQUAD4, CQUAD8
+        self.nonlinearPlateStrain = {}
+        self.ctriaxStress = {} # CTRIAX6
+        self.ctriaxStrain = {}
+        self.hyperelasticPlateStress = {} # CTRIA3, CTRIA6, CQUAD4, CQUAD8
+        self.hyperelasticPlateStrain = {}
 
     def getRodStress(self):
         """
@@ -80,7 +84,7 @@ class OES(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
-        (stressBits,sCode) = self.makeStressBits(isStrain=False,isRod=True)
+        (stressBits,sCode) = self.makeStressBits(isStrain=False,isRodOrSolid=True)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
                     'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
                     'formatCode':1,'elementName':'ROD','elementType':1,
@@ -154,7 +158,7 @@ class OES(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
-        (stressBits,sCode) = self.makeStressBits(isStrain=isStrain,isRod=True)
+        (stressBits,sCode) = self.makeStressBits(isStrain=isStrain,isRodOrSolid=True)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
                     'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
                     'formatCode':1,'elementName':'CBAR','elementType':34,
@@ -460,7 +464,7 @@ class OES(object):
         if 'VON MISES' in headers:
             isMaxShear = False
             
-        (stressBits,sCode) = self.makeStressBits(isMaxShear=False,isStrain=isStrain)
+        (stressBits,sCode) = self.makeStressBits(isMaxShear=False,isStrain=isStrain,isRodOrSolid=True)
         dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':5,
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8,'elementName':eType,'formatCode':1,
                     'sCode':sCode,'stressBits':stressBits}
@@ -481,22 +485,21 @@ class OES(object):
         ###
         return data
 
-    def makeStressBits(self,isFiberDistance=False,isMaxShear=True,isStrain=True,isRod=False):
+    def makeStressBits(self,isFiberDistance=False,isMaxShear=True,isStrain=True,isRodOrSolid=False):
         #print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear,isFiberDistance)
         
-
        #code = (isVonMises,isFiberCurvatur,isStress,isNotRod)
-        code = (isMaxShear,isFiberDistance,isStrain,isRod)
+        code = (isMaxShear,isFiberDistance,isStrain,isRodOrSolid)
         mapper = {
-                  (True, False,False, True): ([0,0,0,0,0],0),  # 0    
-                  (False,False,False, True): ([0,0,0,0,1],1),  # 1
+                  # element coordinate system (no material support)
+                  (True, False,False, True): ([0,0,0,0,0],0),  # 0,  rod/csolid
+                  (False,False,False, True): ([0,0,0,0,1],1),  # 1,  rod/csolid
                   (True, False, True,False): ([0,1,0,1,0],10), # 10
                   (False,False, True,False): ([0,1,0,1,1],11), # 11
                   (True,  True, True,False): ([0,1,1,1,0],14), # 14
                   (False, True, True,False): ([0,1,1,1,1],15), # 15
 
-                  (False, True,False,False): ([0,1,1,1,1],15), # ???
-                  (False,False,False,False): ([0,0,0,0,0],0),  # ???
+                  (False, True,False,False): ([0,0,0,0,1],1), # cquad4 bilinear ??? why do i need this...
                  }
         (stressBits,sCode) = mapper[code]
 
@@ -507,7 +510,7 @@ class OES(object):
         #    stressBits[1] = stressBits[3] = 1 # Strain
         #if isFiberDistance:
         #    stressBits[2] = 1 # FiberDistance
-        print stressBits       
+        #print stressBits
         #sCode = 0
         #for i,bit in enumerate(stressBits):
         #    sCode += bit*2**i
