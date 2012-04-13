@@ -5,25 +5,27 @@
 
 The developer docs are distributed with pyNastran.  They're the way to find out what method you'll need to call assuming you know what you want to do.
 
-The documentation is a bit confusing the first time you use them, but once you get the hang of them, they're pretty easy.  The documentation is an extensive html document that lists all the methods and all the variables that you can access, as well as all the source code.  If you're confused, open the QRG (for the BDF) or the DMAP guide (for the OP2) to help you.
+The documentation is a bit confusing the first time you use them, but once you get the hang of them, they're pretty easy.  The documentation is an extensive auto-generated html document that lists ALL the methods and ALL the variables that you can access, as well as all the source code.  If you're confused, open the QRG (for the BDF) or the DMAP guide (for the OP2) to help you.
 
 Most of the BDF/OP2/F06 methods that you'll want to use are documented.  Methods that are not documented, you probably want to stay away from as they're probably internal methods that just haven't been documented yet.  
 
-For the BDF cards, those are largely undocumented.  There are tons of variables and methods, so it's a bit of work.  Having the QRG handy will help.
+For the BDF cards, those are largely undocumented.  There are tons of variables and methods, so it's a bit of work.  Having the QRG handy will help.  As always, if you find a bug, make a ticket.
 
 == Building the docs ==
 If you downloaded the software, skip this step.
 
-If you checked it out, you'll need Doxygen.  If you're not on Windows, with Python 2.7, open *Doxyfile*, search for "Python27" and fix the path to python.  Then call *doxygen Doxyfile*.  This should make a docs folder assuming you had no errors.
+If you checked it out, you'll need Doxygen.  If you're not on Windows, with Python 2.7, open *Doxyfile*, search for *Python27* and fix the path to python.  Then call *doxygen Doxyfile*.  This should make a docs folder assuming you had no errors.
 
 =Using the docs/html to make use of the BDF class=
 There are tons of methods or object attributes that you can access.  The docs are laid out for a developer (someone using pyNastran in their code).
 
-Open the docs/html folder:
-click on any html file.  Your browser will open.  Click the "Directories" tab.
+Open the *docs/html* folder:
+click on *any html file*.  Your browser will open.
 
 == Investigating BDF methods ==
-Let's look at the main bdf files.  Click *pyNastran/bdf*.  You should see things like *bdf.py*, *fieldWriter.py*, *caseControl.py*, etc.  Files in this folder have functions that will probably be useful to you.  Files in *pyNastran/bdf/bdfInterface* deal with the reader and creating objects.  Generally you don't need to look at those.
+Let's look at the main bdf files.
+
+Click the *Directories* tab.  Click *pyNastran/bdf*.  You should see things like *bdf.py*, *fieldWriter.py*, *caseControl.py*, etc.  Files in this folder have functions that will probably be useful to you.  Files in *pyNastran/bdf/bdfInterface* deal with the reader and creating objects.  Generally you don't need to look at those.
 
 Click on *bdf.py*.  It will give you a list of classes.  Click *pyNastran.bdf.bdf.BDF* and it will bring you to the *Classes* tab.  
 
@@ -40,7 +42,6 @@ Parameters:
     infilename	the input bdf
     includeDir	the relative path to any include files (default=None if no include files)
     xref	should the bdf be cross referenced (default=True)
-    log 	a logger object (default=None -> a simplified one will be created)
 
 Definition at line 442 of file bdf.py.
 
@@ -113,4 +114,4 @@ Click on "line 449" and you'll see the following.  You can verify the method or 
 00451             return rho*t+self.nsm
 00452         ###
 }}}
-In this version of the docs, you'll see the docstring is wrong and that non-structural mass is considered in the massPerArea method.  The docstring also made no mention of symmetry or core layers, but handles that.
+In this version of the docs, you'll see the docstring is wrong and that non-structural mass is considered in the massPerArea method.  The docstring also made no mention of symmetry or core layers, but the function handles that.
