@@ -3,10 +3,16 @@
 
 = Introduction =
 
-The documentation is a bit confusing the first time you use them, but once you get the hang of them, they're pretty easy.  The documentation is an extensive html document that lists all the methods and all the variables that you can access, as well as all the source code.  If you're confused at all, open the QRG to help you.
+The developer docs are distributed with pyNastran.  They're the way to find out what method you'll need to call assuming you know what you want to do.
+
+The documentation is a bit confusing the first time you use them, but once you get the hang of them, they're pretty easy.  The documentation is an extensive html document that lists all the methods and all the variables that you can access, as well as all the source code.  If you're confused, open the QRG (for the BDF) or the DMAP guide (for the OP2) to help you.
+
+Most of the BDF/OP2/F06 methods that you'll want to use are documented.  Methods that are not documented, you probably want to stay away from as they're probably internal methods that just haven't been documented yet.  
+
+For the BDF cards, those are largely undocumented.  There are tons of variables and methods, so it's a bit of work.  Having the QRG handy will help.
 
 == Building the docs ==
-If you downloaded the software, skip this step.  
+If you downloaded the software, skip this step.
 
 If you checked it out, you'll need Doxygen.  If you're not on Windows, with Python 2.7, open *Doxyfile*, search for "Python27" and fix the path to python.  Then call *doxygen Doxyfile*.  This should make a docs folder assuming you had no errors.
 
