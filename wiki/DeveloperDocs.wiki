@@ -63,7 +63,7 @@ Parameters:
 Definition at line 540 of file bdf.py.
 }}}
 
-== Investigating Card methods ==
+== Investigating BDF Card methods ==
 Go back to Directories.  Click *pyNastran/bdf/cards*.  The files in this sub-folder and any levels lower are the interfaces to all the BDF objects.  You should be referencing this directory and it's sub-directories frequently.
 
 Go back to Directories.  Click *pyNastran/bdf/cards/plates* to see things like *elementsShell.py* and *propertiesShell.py*.  Click on "propertiesShell.py" to see the ShellProperty, PSHELL, PCOMP, PCOMPG classes.  Click on *ShellProperty* and look at the class diagram.  The ShellProperty class points to all the other shell classes and is useful when coding.  Click on the *PCOMP* box in the class diagram.
