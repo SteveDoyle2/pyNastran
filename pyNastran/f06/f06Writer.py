@@ -8,7 +8,7 @@ def makeStamp(Title):
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
     t = date.today()
     months = ['January','February','March','April','May','June','July','August','September','October','November','December']
-    today = '%-9s %s, %s' %(months[t.month],t.day,t.year)
+    today = '%-9s %s, %s' %(months[t.month-1],t.day,t.year)
     
     releaseDate = '02/08/12'#pyNastran.__releaseDate__
     releaseDate = ''
@@ -16,7 +16,7 @@ def makeStamp(Title):
     out = '1    %-67s %20s  %-22s PAGE ' %(Title,today,build)
     return out
 
-def makePyNastranTitle():
+def makeF06Header():
     n = ''
     lines1 = [
     n+'/* -------------------------------------------------------------------  */\n',
@@ -108,6 +108,14 @@ class F06Writer(object):
         self.compositePlateStress = op2.compositePlateStress
         self.compositePlateStrain = op2.compositePlateStrain
     
+    def makeF06Header(self):
+        """If this class is inherited, the F06 Header may be overwritten"""
+        return makeF06Header()
+
+    def makeStamp(self,Title):
+        """If this class is inherited, the PAGE stamp may be overwritten"""
+        return makeStamp(Title)
+
     def writeF06(self,f06OutName,makeFile=True):
         """
         Writes an F06 file based on the data we have stored in the object
@@ -121,8 +129,8 @@ class F06Writer(object):
             import StringIO
             f = StringIO.StringIO()
 
-        f.write(makePyNastranTitle())
-        pageStamp = makeStamp(self.Title)
+        f.write(self.makeF06Header())
+        pageStamp = self.makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 

@@ -54,11 +54,15 @@ Overall Notes
    - added support for OpenMDAO user-defined parameterization syntax
 
 Overall BDF
+   - 180 total cards
+   - added tab support (no mixed tabs, spaces, commas)
    - reworked format of bdf_crossReferencing.txt to be more like
      bdf_readWrite.txt
    - added test code that compares cards values from one run to the next
-   - added support for THRU-BY on certain cards (QBDY3, ???)
+   - added support for THRU-BY on certain cards (e.g. QBDY3)
    - added new custom Exceptions to make errors messages clearer
+   - added support for user defined optimization values (using %varName)
+     values set with "bdf.setDynamicSytax(dictOfVars)"
 
 BDF API Changes
    - removeCards(['GRID','CQUAD4']) is now called disableCards(cards)
@@ -83,11 +87,12 @@ BDF Bug Fixes
    - fixed bugs in PMASS,  CSHEAR, CBAR,   CQUAD,  RBE1,  RBE2,   RBE3
    - fixed bugs in PBEAML, MAT1, MAT3, CTRIAX6, CREEP
    - CREEP not lost when writing BDF out
+   - disabled PBEAML
 
 Added BDF
    - enabled CQUAD, RBE3
    - EIGB, EIGC, EIGP, EIGR, EIGRL
-   - CBUSH, PBUSH, PDAMPT, CFAST, PFAST, CONM1, CVISC,PVISC
+   - CBUSH, PBUSH, PDAMPT, CFAST, PFAST, CONM1, CVISC, PVISC
    - TSTEP, TSTEPNL
    - DLOAD, SLOAD, RLOAD1, RLOAD2
    - CAERO2, PAERO2, AEFACT
@@ -101,7 +106,6 @@ OP2 API Changes
    - more results in CBEAM stress/strain
    - complex displacement reworked
    - added writeF06 method to most objects (no strain energy, shear stress/strain, celas stress/strain)
-   - disabled PBEAML
 
 OP2 Bug Fixes
 Overall OP2
@@ -150,7 +154,11 @@ Overall F06 Reader/Writer
    - The op2 or f06 readers feed the f06 writer or another solver/user's own results.
 
 Added F06 Reader
-   - format1, SORT2 supported
+   - format1, real, SORT1 supported
+
+   - LAMA/CLAMA (requires an ESE = ALL to create op2 table)
+     - eigenvalues  (real/***complex - no object)
+
    - OUG (DISPLACMENTS=ALL)
      - displacement (static/transient)
        - real/complex
@@ -158,6 +166,10 @@ Added F06 Reader
        - ***real/***complex
      - temperature  (static/transient)
      - eigenvectors (real/complex)
+
+   - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
+     - SPC Forces (static/***transient)
+     - MPC Forces (static/***transient)
 
    - OES (STRESS=ALL, STRAIN=ALL)
      - solid stress/strain (static/***transient)
@@ -178,9 +190,6 @@ Added F06 Reader
      - bar stress/strain   (static/transient; CBAR)
      - ***beam  stress/strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
-
-   - LAMA (automatic for modal solution)
-     - eigenvalues  (real/complex)   no OP2 object support yet
 
 Added F06 Writer
    - prints out 0.000000E00 as 0.0
@@ -214,7 +223,7 @@ Added F06 Writer
      - beam  stress/strain (static/transient; CBEAM)
      - ***shear stress/strain (static/transient; CSHEAR)
 
-   - LAMA (requires an ESE = ALL to create op2 table)
+   - LAMA/CLAMA (requires an ESE = ALL to create op2 table)
      - eigenvalues  (real/***complex)
 
    - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)

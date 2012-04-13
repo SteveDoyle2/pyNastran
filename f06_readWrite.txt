@@ -2,8 +2,8 @@
 Finite Element Temperature Gradients And Fluxes
 
 ****OQG - constraint forces****
-Forces Of Single-Point Constraint				needs object
-Forces Of Multi-Point  Constraint				needs object
+Forces Of Single-Point Constraint				done
+Forces Of Multi-Point  Constraint				done
 
 
 ****OES - stress/strain****
@@ -32,7 +32,7 @@ Strains In Pentahedron Solid Elements(PENTA)			done
 
 ****LAMA - eigenvalues****
 Real Eigenvalues						done
-Complex Eigenvalue Summary					done
+Complex Eigenvalue Summary					no object
 
 ****OUG****
 Displacement Vector						done
@@ -47,6 +47,8 @@ Element Strain Energies						???
 Grid Point Force Balance					???
 
 ***OPG - applied loads****
+appliedLoadsObject						no
+loadVectorObject						no
 
 ****not supported****
 Nastran File And System Parameter Echo
@@ -63,13 +65,13 @@ Maximum Applied Loads
 Grid Point Singularity Table
 
 #------------------------
-***aero***
+***aero - not supported***
 Non-Dimensional Stability And Control Derivative Coefficients
 Non-Dimensional HingeMoment Derivative Coefficients
 Aerostatic Data Recovery Output Tables
 Structural Monitor Point Integrated Loads
 
-***rotor***
+***rotor - not supported***
 Rotor Dynamics Summary
 Rotor Dynamics Mass Summary
 Eigen Value Analysis Summary(Complex Lanczos Method)
