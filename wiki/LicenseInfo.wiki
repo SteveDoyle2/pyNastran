@@ -15,9 +15,9 @@ The precise conditions of the license for pyNastran are found in the General Pub
 
 
 || *Software Version* || *License* ||
-|| v0.1.x - v0.2.x || [http://www.gnu.org/licenses/gpl.html GPL] ||
-|| v0.3.x || [http://www.gnu.org/licenses/lgpl.html LGPL] ||
-|| v0.4.x || [http://www.gnu.org/licenses/lgpl.html LGPL] (not final) ||
+|| v0.1 - v0.2 || [http://www.gnu.org/licenses/gpl.html GPL] ||
+|| v0.3 || [http://www.gnu.org/licenses/lgpl.html LGPL] ||
+|| v0.4 || [http://www.gnu.org/licenses/lgpl.html LGPL] (not final) ||
 
 Note, if you want to integrate parts of pyNastran from a GPL version into a closed-source software program (even as an import), you are unable to, even if you do not modify the software.  Your proprietary code (assuming you distribute it) will also become GPL and you must release the source code for it.
 
