@@ -1,0 +1,36 @@
+#summary How to use the OP4 Reader
+
+= Introduction (v0.4) =
+The OP4 reader is a an ASCII (text) or binary reader for Nastran OP4 files.  It can *ONLY* read *dense* matrices.  Sparse matrices are not supported yet.
+
+=Load Matrices from NASTRAN Output 4 (.op4) Files=
+Example:
+
+  >>> from pyNastran.op4.op4 import OP4
+
+    Load the OP4 reader
+  
+  >>> fh = OP4('sol103.op4', 'r')
+
+    Creates a read object associated with the file sol103.op4.
+
+  >>> fh.nmat
+
+    Returns the number of matrices contained in the file.
+
+  >>> fh.print_header()
+
+    Prints detailed information on the matrices stored in the file.
+
+  >>> K, M = fh.Load(skip=1, nmat=2)
+
+    Loads the second and third matrices from the file sol103.op4 into K and M.
+
+==Limitations==
+These will be resolved in future releases:
+    1. Only handles dense matrices in text and binary op4 files
+    2. Unable to byte-swap files created on a different-endian machine
+    3. Unable to save Python arrays to new op4 files
+
+==Special Thanks==
+Al Danial has done a great job of putting the OP4 reader together.  It's written using Cython and generates numpy matrices, so it's very fast.
