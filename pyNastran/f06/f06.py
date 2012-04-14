@@ -13,8 +13,15 @@ class EndOfFileError(Exception):
     pass
 
 class F06(OES,OUG,OQG,F06Writer):
-    def __init__(self,f06name):
-        self.f06name = f06name
+    def __init__(self,f06FileName,debug=False,log=None):
+        """
+        Initializes the F06 object
+        @param f06FileName the file to be parsed
+        @param makeGeom    reads the BDF tables (default=False)
+        @param debug       prints data about how the F06 was parsed (default=False)
+        @param log         a logging object to write debug messages to (@see import logging)
+        """
+        self.f06FileName = f06FileName
         self.i = 0
         self.lineMarkerMap = {
           'R E A L   E I G E N V E C T O R   N O':self.getRealEigenvectors,
@@ -82,7 +89,7 @@ class F06(OES,OUG,OQG,F06Writer):
           #'* * * END OF JOB * * *': self.end(),
          }
         self.markers = self.markerMap.keys()
-        self.infile = open(self.f06name,'r')
+        self.infile = open(self.f06FileName,'r')
         self.storedLines = []
 
         self.eigenvalues = {}
@@ -100,7 +107,7 @@ class F06(OES,OUG,OQG,F06Writer):
         OUG.__init__(self)
         
         self.Title = ''
-        self.startLog()
+        self.startLog(log,debug)
 
     def startLog(self,log=None,debug=False):
         if log is None:
@@ -468,7 +475,7 @@ class F06(OES,OUG,OQG,F06Writer):
             self.i+=1
         print "i=%i" %(self.i)
         self.infile.close()
-        f06.processF06()
+        self.processF06()
 
     def processF06(self):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
@@ -499,7 +506,7 @@ class F06(OES,OUG,OQG,F06Writer):
         self.i += iskip
         return self.infile.readline()
     
-    def __repr__(self):
+    def printResults(self):
         msg = ''
         data = [self.displacements,self.spcForces,self.barStress,self.solidStress,self.temperatures]
         #data = [self.displacements,self.solidStress,self.temperatures,self.barStress]
@@ -526,6 +533,6 @@ if __name__=='__main__':
     f06.readF06()
 
     f06.writeF06(model+'f06.out')
-    #print f06
+    f06.printResults()
     print "done..."
 
