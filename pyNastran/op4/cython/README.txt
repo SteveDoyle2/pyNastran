@@ -18,7 +18,7 @@ Load matrices from NASTRAN Output 4 (.op4) files.
 Example:
 
   >>> import import pyNastran.op4.cython.op4 as op4
-  >>> fh = op4.File(r'C:\work\sol103.op4', 'r')  # this should be the full path
+  >>> fh = op4.File(r'C:\work\sol103.op4', 'r')
 
     Creates a read object associated with the file sol103.op4.
 

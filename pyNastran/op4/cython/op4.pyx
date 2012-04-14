@@ -313,7 +313,7 @@ class File:                                                # {{{1
         elif not os.path.isfile(filename):
             print('op4.File: not a file %s' % (filename))
             raise IOError
-        self.filename = filename
+        self.filename = os.path.abspath(filename)
         # Scan the file for number of matrices and headers for each matrix.
         try:
             rv = op4_scan(filename , # in                            
