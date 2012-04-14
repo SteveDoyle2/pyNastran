@@ -4,15 +4,15 @@ import numpy as np
 import op4
 
 """
-for in_file in [ '../test/mat_b_dn.op4' ,
-                 '../test/mat_b_s2.op4' ,
-                 '../test/mat_b_s1.op4' ,
-                 '../test/mat_t_dn.op4' ,
-                 '../test/mat_t_s1.op4' ,
-                 '../test/mat_t_s2.op4' , ]:
+for in_file in [ 'test/mat_b_dn.op4' ,
+                 'test/mat_b_s2.op4' ,
+                 'test/mat_b_s1.op4' ,
+                 'test/mat_t_dn.op4' ,
+                 'test/mat_t_s1.op4' ,
+                 'test/mat_t_s2.op4' , ]:
 """
-for in_file in [ '../test/mat_b_dn.op4' ,
-                 '../test/mat_t_dn.op4' ]:
+for in_file in [ 'test/mat_b_dn.op4' ,
+                 'test/mat_t_dn.op4' ]:
     try:
         op4fh = op4.File(in_file, 'r')
     except:
