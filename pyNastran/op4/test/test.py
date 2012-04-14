@@ -1,9 +1,10 @@
-import pyNastran.op4.op4 as OP4
+import os
+from pyNastran.op4.op4 import OP4
 #print "f = ",op4.__file__
 
 
 def pass_test1():
-    fh = OP4.File(r'C:\Users\steve\Desktop\pyNastran\pyNastran\op4\test\mat_b_dn.op4','r')
+    fh = OP4(os.path.abspath('mat_b_dn.op4'),'r')
     fh.print_header()
     #print fh.nmat = 9
     
@@ -14,7 +15,7 @@ def pass_test1():
     print c
 
 def failed_test1():
-    fh = OP4.File('mat_b_dn.op4','r')
+    fh = OP4('mat_b_dn.op4','r')
     fh.print_header()
     #print fh.nmat = 9
     
@@ -24,7 +25,7 @@ def failed_test1():
     print c
 
 def pass_test2():
-    fh = OP4.File(r'C:\Users\steve\Desktop\pyNastran\pyNastran\op4\test\mat_b_dn.op4','r')
+    fh = OP4(os.path.abspath('mat_b_dn.op4'),'r')
     #print fh.nmat = 9
 
     # crash with "unnamed is sparse, skipping for now"
@@ -34,7 +35,7 @@ def pass_test2():
     print c
 
 def failed_test2():
-    fh = OP4.File('mat_b_dn.op4','r')
+    fh = OP4('mat_b_dn.op4','r')
     #print fh.nmat = 9
 
     # ValueError:  need more than 8 values to unpack
