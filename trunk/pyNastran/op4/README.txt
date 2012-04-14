@@ -21,7 +21,7 @@ Example:
 
     Load the OP4 reader
   
-  >>> fh = OP4(r'C:\work\sol103.op4', 'r')
+  >>> fh = OP4('sol103.op4', 'r')
 
     Creates a read object associated with the file sol103.op4.
 
