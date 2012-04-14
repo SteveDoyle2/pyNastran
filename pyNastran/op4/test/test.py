@@ -1,4 +1,4 @@
-import pyNastran.op4.cython.op4 as OP4
+import pyNastran.op4.op4 as OP4
 #print "f = ",op4.__file__
 
 
