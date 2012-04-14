@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-import op4
+from op4 import OP4
 
 """
 for in_file in [ 'test/mat_b_dn.op4' ,
@@ -14,7 +14,7 @@ for in_file in [ 'test/mat_b_dn.op4' ,
 for in_file in [ 'test/mat_b_dn.op4' ,
                  'test/mat_t_dn.op4' ]:
     try:
-        op4fh = op4.File(in_file, 'r')
+        op4fh = OP4(in_file, 'r')
     except:
         print('Failed to get header of %s' % (in_file))
         raise SystemExit

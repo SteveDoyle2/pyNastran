@@ -285,7 +285,7 @@ cdef class ArrayWrapper_CD:                                # {{{1
         references to the object are gone. """
         free(<void*>self.data_ptr)
 # 1}}}
-class File:                                                # {{{1
+class OP4:                                                # {{{1
     type_map = { 1 : 'RS' ,   # real    single precision
                  2 : 'RD' ,   # real    double precision
                  3 : 'CS' ,   # complex single precision
