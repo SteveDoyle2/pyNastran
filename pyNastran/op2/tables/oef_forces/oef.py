@@ -199,7 +199,6 @@ class OEF(object):
         else:
             self.skipOES_Element()
         ###
-        #return
 
     def readOEF1_Data_format1_sort1(self):
         assert self.formatCode==1
@@ -222,7 +221,6 @@ class OEF(object):
         ###
         self.skipOES_Element()
         #self.readForces(data,self.obj)
-        #return
         
 
     def readOEF1_Data_format2_sort1(self):
@@ -302,7 +300,7 @@ class OEF(object):
         #    raise Exception('need to define the word size for elementType=%s=%s' %(self.elementType,elementName))
         ###
         self.deviceCode = deviceCode
-        return (recordLength,func,isSkipped) # 8*4
+        return(recordLength,func,isSkipped) # 8*4
 
     def skipMe(self,data):
         pass
@@ -315,7 +313,7 @@ class OEF(object):
         (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
         print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
         
-        return (grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+        return(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
 
     def readOEF_CHBDY(self,data):
         print "read_CHBDYx"
@@ -323,7 +321,7 @@ class OEF(object):
         grid = (gridDevice-self.deviceCode)/10
         eType = ''.join(unpack('cccccccc',data[4:12]))
         (fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
-        return (grid,eType,fApplied,freeConv,forceConv,fRad,fTotal)
+        return(grid,eType,fApplied,freeConv,forceConv,fRad,fTotal)
 
     def readForces(self,scalarObject):
         #print "readForces..."
@@ -366,7 +364,7 @@ class OEF(object):
     #    grid = (gridDevice-self.deviceCode)/10
     #    eType = ''.join(unpack('cccccccc',data[4:12]))
     #    (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
-    #    return (grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+    #    return(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
 
     def getOEF_nWords(self):
         if self.thermal==0:

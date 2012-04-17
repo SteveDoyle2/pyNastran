@@ -232,7 +232,7 @@ class OES(ElementsStressStrain):
             ###
         elif self.thermal==1:
             self.OES_Thermal()
-            #raise Exception('thermal stress')
+            #raise NotImplementedError('thermal stress')
         else:
             raise Exception('invalid thermal option...')
         ###
@@ -263,7 +263,7 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             msg = '%s-OES format2_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
-            #raise RuntimeError(msg)
+            #raise NotImplementedError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
@@ -283,7 +283,7 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             msg = '%s-OES format2_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
-            #raise RuntimeError(msg)
+            #raise NotImplementedError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
@@ -311,7 +311,7 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             msg = '%s-OES format3_sort1 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
-            #raise RuntimeError(msg)
+            #raise NotImplementedError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
@@ -325,7 +325,7 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             msg = '%s-OES format3_sort2 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
             self.log.debug(msg)
-            #raise RuntimeError(msg)
+            #raise NotImplementedError(msg)
         ###
         self.skippedCardsFile.write(msg)
 
@@ -487,9 +487,8 @@ class OES(ElementsStressStrain):
             self.skipOES_Element()
             msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName.strip())
             self.log.debug(msg)
-            #msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported' %(self.elementType,self.ElementType(self.elementType))
-            #raise RuntimeError(msg)
             self.skippedCardsFile.write(msg)
+            #raise NotImplementedError(msg)
         ###
         #elif self.elementType == 1:    # crod     (done)
         #elif self.elementType == 2:    # cbeam    (done)

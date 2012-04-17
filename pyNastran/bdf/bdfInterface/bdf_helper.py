@@ -68,8 +68,6 @@ class getMethods(object):
         return self.getElementIDsWithPIDs([pid])
 
     def getElementIDsWithPIDs(self,pids):
-        #self.log.info("pids = %s" %(pids))
-
         eids = self.elementIDs()
         eids2 = []
         #print "eids = ",eids
@@ -78,9 +76,81 @@ class getMethods(object):
             if element.Pid() in pids:
                 eids2.append(eid)
             ###
-            #print ""
         ###
         return (eids2)
+
+    def getNodeIDToElementIDsMap(self):
+        """
+        Returns a dictionary that maps a node ID to a list of elemnents
+        @todo support 0d or 1d elements
+        @todo support elements with missing nodes (e.g. CQUAD8 with missing nodes)
+        """
+        nidToElementsMap = {}
+        for nid in self.nodes: # initalize the mapper
+            nidToElementsMap[nid] = []
+
+        if self.spoints: # SPOINTs
+            for nid in sorted(self.spoints.spoints): # SPOINTs
+                nidToElementsMap[nid] = []
+            ###
+        ###
+        for eid,element in self.elements.items(): # load the mapper
+            try:
+                nids = element.nodeIDs() # not supported for 0-D and 1-D elements
+                for nid in nids:  # (e.g. CQUAD8 with missing node)
+                    nidToElementsMap[nid].append(eid)
+            except:
+                pass
+            ###
+        ###
+        return nidToElementsMap
+
+    def getPropertyIDToElementIDsMap(self):
+        """
+        Returns a dictionary that maps a property ID to a list of elemnents
+        """
+        pidToEidsMap = {}
+        pids = self.propertyIDs()
+        for pid in pids:
+            pidToEidsMap[pid] = []
+
+        for eid in self.elementIDs():
+            element = self.Element(eid)
+            #print dir(element)
+            if hasattr(element,'pid'):
+                pid = element.Pid()
+                if pid==0: # CONM2
+                    continue
+                pidToEidsMap[pid].append(eid)
+            ###
+        ###
+        return (pidToEidsMap)
+
+    def getMaterialIDToPropertyIDsMap(self):
+        """
+        Returns a dictionary that maps a material ID to a list of properties
+        @note all properties require an mid to be counted (except for PCOMP, which has multiple mids)
+        """
+        midToPidsMap = {}
+        for mid in self.materialIDs():
+            midToPidsMap[mid] = []
+
+        for pid in self.propertyIDs():
+            prop = self.Property(pid)
+            if prop.type == 'PCOMP':
+                mids = prop.Mids()
+                
+                for mid in mids:
+                    if pid not in midToPidsMap[mid]:
+                        midToPidsMap[mid].append(pid)
+            else: # PCOMP
+                if hasattr(prop,'mid') and prop.Mid() in mids:
+                    if pid not in midToPidsMap[mid]:
+                        midToPidsMap[mid].append(pid)
+                ###
+            ###
+        ###
+        return (midToPidsMap)
 
     def Element(self,eid):
         return self.elements[eid]

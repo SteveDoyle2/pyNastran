@@ -263,7 +263,7 @@ class OUG(object):
             else:
                 #pass
                 print self.codeInformation()
-                raise Exception('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             ###
 
         elif self.thermal==1:
@@ -286,7 +286,7 @@ class OUG(object):
             self.readThermal4()
         else:   # self.thermal>1:  ## @warning thermal>0!!!!
             print self.codeInformation()
-            raise Exception('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            raise NotImplementedError('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
         ###
         
         self.readMappedScalarsOut(debug=False) # handles dtMap
@@ -331,16 +331,16 @@ class OUG(object):
                 self.createTransientObject(self.eigenvectors,complexEigenVectorObject)
             else:
                 print self.codeInformation()
-                raise Exception('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
                 pass
             ###
         elif self.thermal==1:
             print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             pass
         else:
             print self.codeInformation()
-            raise Exception('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            raise NotImplementedError('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
             pass
         ###
         if self.obj:
@@ -348,7 +348,7 @@ class OUG(object):
         else:
             self.skipOES_Element()
         #if self.analysisCode not in [2,8]:
-        #    raise Exception('check_format1...')
+        #    raise NotImplementedError('check_format1...')
         ###
 
     def readOUG_Data_table10_format1_sort0(self): # velocity
@@ -367,11 +367,11 @@ class OUG(object):
             ###
         elif self.thermal==1:
             print self.codeInformation()
-            raise Exception('unsupported OUG thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise NotImplementedError('unsupported OUG thermal solution...atfsCode=%s' %(self.atfsCode))
             pass
         else:
             print self.codeInformation()
-            raise Exception('invalid OUG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid OUG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -399,11 +399,11 @@ class OUG(object):
             ###
         elif self.thermal==1:
             print self.codeInformation()
-            raise Exception('unsupported OUG thermal solution...atfsCode=%s' %(self.atfsCode))
+            raise NotImplementedError('unsupported OUG thermal solution...atfsCode=%s' %(self.atfsCode))
             pass
         else:
             print self.codeInformation()
-            raise Exception('invalid OUG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid OUG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -430,10 +430,10 @@ class OUG(object):
             ###
         elif self.thermal==1:
             print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
             print self.codeInformation()
-            raise Exception('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            raise NotImplementedError('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -455,10 +455,10 @@ class OUG(object):
             ###
         elif self.thermal==1:
             print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
         else:
             print self.codeInformation()
-            raise Exception('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            raise NotImplementedError('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -471,12 +471,12 @@ class OUG(object):
                 self.readScalarsF8(debug)
             else:
                 print self.codeInformation()
-                raise Exception('not supported format...')
+                raise RuntimeError('not supported format...')
             ###
         ###
         else:
             print self.codeInformation()
-            raise Exception('not supported format...')
+            raise RuntimeError('not supported format...')
         ###
 
     def readOUG_Data_table1_format1_sort1(self): # displacement
@@ -501,7 +501,7 @@ class OUG(object):
             ###
         else:
             print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
         self.readScalars14(debug=False)
@@ -533,7 +533,7 @@ class OUG(object):
             ###
         else:
             print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         #print "objName = ",self.obj.name()
         self.readScalars14()
@@ -558,17 +558,21 @@ class OUG(object):
                 #print "isNonlinearStaticDisplacement"
                 #self.createTransientObject(self.displacements,displacementObject)
             else:
-                print self.codeInformation()
-                raise NotImplementedError('unsupported %s-OUG static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported %s-OUG static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         else:
-            print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #print self.codeInformation()
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14()
         #print self.obj
-        #return
+        if self.obj:
+            self.readScalars14()
+        else:
+            self.skipOES_Element()
 
     def readOUG_Data_table1_format2_sort0(self): # displacement
         if self.thermal==0:
@@ -576,18 +580,24 @@ class OUG(object):
                 #print "isTransientDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
             else:
-                print self.codeInformation()
-                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #print self.codeInformation()
+            #raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #print self.codeInformation()
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
-        #self.readScalars8()
-        self.readScalarsOut(debug=False)
+        if self.obj:
+            #self.readScalars8()
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
 
     def readOUG_Data_table1_format2_sort1(self): # displacement
         #assert self.formatCode==2 # Real/Imaginary
@@ -607,15 +617,18 @@ class OUG(object):
                 #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
                 #self.readScalars8()
             else:
-                print self.codeInformation()
-                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #print self.codeInformation()
+            #raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #print self.codeInformation()
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print self.obj
         #return
@@ -626,7 +639,7 @@ class OUG(object):
         #print self.codeInformation()
         if self.thermal==0:
             print self.codeInformation()
-            raise Exception('unsupported OUG static solution...atfsCode=%s' %(self.atfsCode))
+            raise NotImplementedError('unsupported OUG static solution...atfsCode=%s' %(self.atfsCode))
             if self.analysisCode==1: # displacement
                 #print "isDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
@@ -646,15 +659,18 @@ class OUG(object):
                 #print "isTransientVelocity"
                 self.createTransientObject(self.velocities,displacementObject,self.dt)
             else:
-                print self.codeInformation()
-                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #print self.codeInformation()
+            #raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #print self.codeInformation()
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #self.readScalars8()
         self.readMappedScalarsOut(debug=False) # handles dtMap
@@ -673,15 +689,21 @@ class OUG(object):
                 #print "isComplexEigenvalues"
                 #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
             else:
-                print self.codeInformation()
-                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            print self.codeInformation()
-            raise Exception('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #print self.codeInformation()
+            #raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            print self.codeInformation()
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #print self.codeInformation()
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
-        self.readScalars14()
+        if self.obj:
+            self.readScalars14()
+        else:
+            self.skipOES_Element()
 

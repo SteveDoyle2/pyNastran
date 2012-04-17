@@ -114,25 +114,25 @@ class OQG(object):
             self.readOQG_Data_table3_format1_sort1()
         elif tfsCode==[3,2,0]:
             self.readOQG_Data_table3_format2_sort0()
-        elif tfsCode==[3,2,1]:
-            self.skipOES_Element()
+        #elif tfsCode==[3,2,1]:
+            #self.skipOES_Element()
             #self.readOQG_Data_table3_format2_sort1()
-        elif tfsCode==[3,3,0]:
+        #elif tfsCode==[3,3,0]:
             #self.readOQG_Data_table3_format3_sort0()
-            self.skipOES_Element()
-        elif tfsCode==[3,3,1]:
-            self.skipOES_Element()
+            #self.skipOES_Element()
+        #elif tfsCode==[3,3,1]:
+            #self.skipOES_Element()
             #self.readOQG_Data_table3_format3_sort1()
         
         elif tfsCode==[39,1,0]: # MPC Forces
             self.readOQG_Data_table39_format1_sort0()
-        elif tfsCode==[39,1,1]:
-            self.skipOES_Element()
+        #elif tfsCode==[39,1,1]:
+            #self.skipOES_Element()
             #self.readOQG_Data_table39_format1_sort1()
         else:
-            #self.skipOES_Element()
-            print self.codeInformation()
-            raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
+            self.skipOES_Element()
+            #print self.codeInformation()
+            #raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -148,22 +148,23 @@ class OQG(object):
                 self.createTransientObject(self.mpcForces,mpcForcesObject)
             else:
                 #self.skipOES_Element()
-                print self.codeInformation()
-                raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
-            raise NotImplementedError('thermal not supported for MPC forces...atfsCode=%s' %(self.atfsCode))
+            #raise NotImplementedError('thermal not supported for MPC forces...atfsCode=%s' %(self.atfsCode))
             if 0:
                 pass
             else:
                 #self.skipOES_Element()
                 print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
-                print self.codeInformation()
-                raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
         self.readMappedScalarsOut(debug=False) # handles dtMap
@@ -190,8 +191,8 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 pass
-                print self.codeInformation()
-                raise Exception('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             #if self.analysisCode==1: # temperature
@@ -210,11 +211,12 @@ class OQG(object):
                 #self.skipOES_Element()
                 #pass
                 print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
-                raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+                #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -240,8 +242,8 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 pass
-                print self.codeInformation()
-                raise Exception('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             #if self.analysisCode==1: # temperature
@@ -260,11 +262,12 @@ class OQG(object):
                 #self.skipOES_Element()
                 #pass
                 print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
-                raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+                #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -290,8 +293,8 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 pass
-                print self.codeInformation()
-                raise Exception('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #print self.codeInformation()
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
             ###
         elif self.thermal==1:
             #if self.analysisCode==1: # temperature
@@ -310,11 +313,12 @@ class OQG(object):
                 #self.skipOES_Element()
                 pass
                 print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
-                #raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+                #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
@@ -329,15 +333,21 @@ class OQG(object):
                 self.createTransientObject(self.spcForces,complexSpcForcesObject)
             ###
             else:
-                raise Exception('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                pass
             ###
         elif thermal==1:
-            raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+            #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+            pass
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(debug=False)
+        if self.obj:
+            self.readScalars14(debug=False)
+        else:
+            self.skipOES_Element()
 
     def readOQG_Data_format2_sort1(self):
         if self.thermal==0:
@@ -345,15 +355,21 @@ class OQG(object):
                 #print "isFrequencyForces"
                 self.createTransientObject(self.spcForces,complexSpcForcesObject)
             else:
-                raise Exception('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                pass
             ###
         elif thermal==1:
-            raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+            #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+            pass
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(debug=True) # readImaginary
+        if self.obj:
+            self.readScalars14(debug=True) # readImaginary
+        else:
+            self.skipOES_Element()
 
     def readOQG_Data_format3_sort1(self):
         if self.thermal==0:
@@ -370,14 +386,20 @@ class OQG(object):
                 #print "isFrequencyForces"
                 self.createTransientObject(self.nonlinearForces,eigenVectorObject)
             else:
-                raise Exception('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
+                pass
             ###
         elif thermal==1:
-            raise Exception('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+            #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
+            pass
         ###
         else:
-            raise Exception('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid OQG thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(debug=True) # readImaginary
+        if self.obj:
+            self.readScalars14(debug=True) # readImaginary
+        else:
+            self.skipOES_Element()
 

@@ -368,6 +368,17 @@ class PCOMP(ShellProperty):
             return Mid
         return Mid.mid
 
+    def Mids(self):
+        """
+        gets the material IDs of all the plies
+        @param self the object pointer
+        @retval mids the material IDs
+        """
+        mids = []
+        for iPly in range(len(self.plies)):
+            mids.append(self.Mid(iPly))
+        return mids
+
     def Rho(self,iPly):
         """
         gets the density of the ith ply
