@@ -41,7 +41,10 @@ I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your ve
 
 == Install OP4 Reader ==
  * Navigate to pyNastran/op4 directory on the command line
+
+===Windows===
  * run *make* to install the OP4 code
+ * if that doesnt work, try *python setup.py build_ext --compiler=mingw32 --inplace*
 
 Enjoy!
 
