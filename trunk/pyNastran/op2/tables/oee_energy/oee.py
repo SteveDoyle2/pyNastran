@@ -105,8 +105,8 @@ class OEE(object):
         #elif fsCode==[18,2,1]:
         #    self.readOEE_Data_format2_sort1()
         else:
-            #self.skipOES_Element()
-            raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
+            self.skipOES_Element()
+            #raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
         ###
         #print str(self.obj)
 
@@ -135,7 +135,7 @@ class OEE(object):
             #print "isNonlinearStrainEnergy"
             self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         else:
-            #raise Exception('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
+            #raise NotImplementedError('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
             pass
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap

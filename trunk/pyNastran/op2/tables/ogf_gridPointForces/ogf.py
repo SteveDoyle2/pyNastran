@@ -126,25 +126,26 @@ class OGF(object):
 
         else:
             #print "***start skipping***"
-            #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
+            self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
             #print self.codeInformation()
-            #self.skipOES_Element()
+            self.skipOES_Element()
             #print "***end skipping***"
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName,))
+            #raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName,))
         ###
         #print self.obj
 
-    def readOGF_Data_table19_format1_sort0(self): # displacement
+    def readOGF_Data_table19_format1_sort0(self): # grid point forces
         print self.codeInformation()
         if self.numWide==10:
             self.createTransientObject(self.gridPointForces,gridPointForcesObject)
             self.readOGF_numWide10()
-            #print self.obj
         elif self.numWide==16:
             self.createTransientObject(self.gridPointForces,complexGridPointForcesObject)
             self.readOGF_numWide16()
         else:
-            raise NotImplementedError('%s-OGF only supports numWide=10,16' %(self.tableName))
+            self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
+            self.skipOES_Element()
+            #raise NotImplementedError('%s-OGF only supports numWide=10,16' %(self.tableName))
 
         #sys.exit('stopping in OGF')        
         
@@ -232,14 +233,14 @@ class OGF(object):
                 #print "isPostBucklingEigenvector8"
                 self.createTransientObject(self.eigenvectors,realEigenVectorObject)
             else:
-                raise Exception('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise Exception('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
                 pass
             ###
         elif self.thermal==1:
-            raise Exception('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
             pass
         else:
-            raise Exception('invalid %s-OGF thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            #raise NotImplementedError('invalid %s-OGF thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
             pass
         ###
         if self.obj:
@@ -267,13 +268,18 @@ class OGF(object):
                 #print "isNonlinearStaticDisplacement"
                 #self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise NotImplementedError('unsupported %s-OGF static table1_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise NotImplementedError('unsupported %s-OGF static table1_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14(debug=False)
+        if self.obj:
+            self.readScalars14(debug=False)
+        else:
+            self.skipOES_Element()
         #print "---OBJ---"
         #print self.obj
         #raise Exception('format1_sort1')
@@ -297,13 +303,18 @@ class OGF(object):
                 #print "isNonlinearStaticDisplacement"
                 #self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise NotImplementedError('unsupported %s-OGF static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise NotImplementedError('unsupported %s-OGF static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise Not ImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
         #print "objName = ",self.obj.name()
-        self.readScalars14()
+        if self.obj:
+            self.readScalars14()
+        else:
+            self.skipOES_Element()
         #print self.obj
         #return
 
@@ -313,15 +324,21 @@ class OGF(object):
                 #print "isTransientDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
             else:
-                raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            raise Exception('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
-        #self.readScalars8()
-        self.readScalarsOut(debug=False)
+        if self.obj:
+            #self.readScalars8()
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
 
     def readOGF_Data_table1_format2_sort1(self): # displacement
         #assert self.formatCode==2 # Real/Imaginary
@@ -331,23 +348,28 @@ class OGF(object):
             if self.analysisCode==5: # frequency displacement
                 #print "isFrequencyDisplacement"
                 self.createTransientObject(self.displacements,complexDisplacementObject)
-                self.readScalarsF14()
             elif self.analysisCode==7: # pre-buckling displacement
                 #print "isPreBucklingDisplacement"
                 self.createTransientObject(self.displacements,displacementObject)
-                self.readScalarsF14()
             #elif self.analysisCode==9 and self.sortCode==1: # nonlinear static eigenvector
                 #print "isComplexEigenvalues"
                 #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
                 #self.readScalars8()
             else:
-                raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            raise Exception('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
+        if self.obj:
+            self.readScalarsF14()
+        else:
+            self.skipOES_Element()
         #print self.obj
         #return
 
@@ -376,15 +398,21 @@ class OGF(object):
                 #print "isTransientVelocity"
                 self.createTransientObject(self.velocities,displacementObject,self.dt)
             else:
-                raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            raise Exception('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
-        #self.readScalars8()
-        self.readScalarsOut(debug=False)
+        if self.obj:
+            #self.readScalars8()
+            self.readScalarsOut(debug=False)
+        else:
+            self.skipOES_Element()
 
     def readOGF_Data_table1_format3_sort1(self): # displacemnt
         #assert self.formatCode==3 # Magnitude/Phase
@@ -400,12 +428,17 @@ class OGF(object):
                 #print "isComplexEigenvalues"
                 #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
             else:
-                raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
             ###
         elif self.thermal==1:
-            raise Exception('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            pass
         ###
-        self.readScalars14()
-
+        if self.obj:
+            self.readScalars14()
+        else:
+            self.skipOES_Element()

@@ -217,7 +217,7 @@ class OPG(object):
         elif self.thermal==1:
             self.skipOES_Element()
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         
         #readCase = True
@@ -244,15 +244,16 @@ class OPG(object):
             elif self.analysisCode==11: # old nonlinear static
                 self.createTransientObject(self.loadVectors,loadVectorObject)
             else:
-                self.skipOES_Element()
+                #self.skipOES_Element()
+                pass
                 #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
-                print self.codeInformation()
-                raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
+                #print self.codeInformation()
+                #raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
             ###
         elif self.thermal==1:
             self.skipOES_Element()
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
 
