@@ -368,10 +368,10 @@ class Op2Codes(object):
         #elif(self.sortCode==1): sortWord = 'Real/Imaginary'
         #elif(self.sortCode==2): sortWord = 'Random Responses'
         #else:
-        #    sortWord = '???'
-        #    msg = 'unsupported sortCode:  sortCode=%s\n' %(sortCode)
-        #    print msg
-        #    #raise Exception(msg)
+            #sortWord = '???'
+            #msg = 'unsupported sortCode:  sortCode=%s\n' %(sortCode)
+            #print msg
+            #raise RuntimeError(msg)
 
         if(  thermal==0): thermalWord = 'isHeatTransfer = False'
         elif(thermal==1): thermalWord = 'isHeatTransfer = True'

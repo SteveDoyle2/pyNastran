@@ -10,7 +10,7 @@ def getFilesOfType(dirname,extension='.txt'):
         #print f
         #print ext
         if extension in ext:
-            files2.append(fname)
+            files2.append(os.path.join(dirname,fname))
         ###
     ###
     return files2

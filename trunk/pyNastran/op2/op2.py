@@ -275,29 +275,29 @@ class OP2(BDF,  # BDF methods
 
         if 0:
             marker = 0
-            print self.printSection(200)
+            #print self.printSection(200)
             sys.exit()
             while marker != -1:
                 ints = self.readIntBlock()
                 marker = ints[0]
-                print "ints1 = ",ints
-            print ""
+                #print "ints1 = ",ints
+            #print ""
 
             while marker != -2:
                 ints = self.readIntBlock()
                 marker = ints[0]
-                print "ints2 = ",ints
-            print ""
+                #print "ints2 = ",ints
+            #print ""
             while marker != -3:
                 ints = self.readIntBlock()
                 marker = ints[0]
-                print "ints3 = ",ints
-            print ""
+                #print "ints3 = ",ints
+            #print ""
             while marker != -4:
                 ints = self.readIntBlock()
                 marker = ints[0]
-                print "ints4 = ",ints
-            print ""
+                #print "ints4 = ",ints
+            #print ""
             #while marker != -1:
             #    ints = self.readIntBlock()
             #    marker = ints[0]
@@ -305,11 +305,11 @@ class OP2(BDF,  # BDF methods
             #print ""
             self.readMarkers([2])
 
-            print self.printSection(200)
+            #print self.printSection(200)
             ints2 = self.readIntBlock()
             ints3 = self.readIntBlock()
-            print "ints2 = ",ints2
-            print "ints3 = ",ints3
+            #print "ints2 = ",ints2
+            #print "ints3 = ",ints3
             sys.exit('stopping...')
 
         self.readMarkers([3])
@@ -373,7 +373,7 @@ class OP2(BDF,  # BDF methods
             except:
                 raise
             self.log.debug("tableName = |%r|" %(tableName))
-            print "tableName = |%r|" %(tableName)
+            #print "tableName = |%r|" %(tableName)
             if tableName==None:
                 break
             elif tableName in self.tablesToRead:
@@ -405,7 +405,6 @@ class OP2(BDF,  # BDF methods
                     elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OGPWG',]:
                         self.readTable_DUMMY_GEOM(tableName)
                     elif tableName in ['OMM2']:
-                        print "hiiii"
                         self.readTable_OMM2()
                     elif tableName in ['DESTAB']:  # design variable table
                         self.readTable_DesTab()
@@ -666,7 +665,7 @@ class OP2(BDF,  # BDF methods
         results = [
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
-                   #self.displacements,self.temperatures,
+                   self.displacements,self.temperatures,
                    self.eigenvalues,
                    self.eigenvectors,
                    self.velocities,
@@ -698,7 +697,7 @@ class OP2(BDF,  # BDF methods
                    self.plateStress,self.plateStrain,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
-                   #self.ctriaxStress,self.ctriaxStrain, # strain not coded
+                   self.ctriaxStress,self.ctriaxStrain, # strain not coded???
                    
                    # OEE - Strain Energy
                    self.strainEnergy,

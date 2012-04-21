@@ -66,13 +66,13 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.mainHeaders.append('NodeID')
             self.strFormat += 'ii'
         else:
-            raise Exception('invalid analysisCode=%s' %(self.analysisCode))
+            raise NotImplementedError('invalid analysisCode=%s' %(self.analysisCode))
         self.mainHeaders.append('GridType')
 
         if self.isImaginary():  # elif self.dataFormat==1:
             self.strFormat += 'ffffffffffff'
             self.headers = ['Temperature']
-            raise Exception('verify...add imaginary...')
+            raise NotImplementedError('verify...add imaginary...')
         else:
             self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]
             self.headers = ['Temperature']
@@ -280,7 +280,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         for nodeID,T in sorted(self.temperatures.items()):
             gridType = self.gridTypes[nodeID]
             msg += '%10s %8s ' %(nodeID,gridType)
-            print "nodeID=%s T=%s" %(nodeID,T)
+            #print "nodeID=%s T=%s" %(nodeID,T)
             if abs(T)<1e-6:
                 msg += '%10s\n' %(0)
             else:

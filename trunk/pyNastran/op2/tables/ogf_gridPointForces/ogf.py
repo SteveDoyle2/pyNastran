@@ -135,7 +135,7 @@ class OGF(object):
         #print self.obj
 
     def readOGF_Data_table19_format1_sort0(self): # grid point forces
-        print self.codeInformation()
+        #print self.codeInformation()
         if self.numWide==10:
             self.createTransientObject(self.gridPointForces,gridPointForcesObject)
             self.readOGF_numWide10()
@@ -143,7 +143,7 @@ class OGF(object):
             self.createTransientObject(self.gridPointForces,complexGridPointForcesObject)
             self.readOGF_numWide16()
         else:
-            self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
+            #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
             self.skipOES_Element()
             #raise NotImplementedError('%s-OGF only supports numWide=10,16' %(self.tableName))
 
@@ -206,8 +206,8 @@ class OGF(object):
         self.handleResultsBuffer(self.readOGF_numWide16)
 
     def readThermal4(self):
-        print self.codeInformation()
-        print self.printBlock(self.data)
+        #print self.codeInformation()
+        #print self.printBlock(self.data)
         n=0
         nEntries = len(self.data)//32
         for i in range(nEntries):
@@ -215,9 +215,9 @@ class OGF(object):
             out = unpack('iiffffff',eData)
             nid = (out[0]-self.deviceCode)//10
 
-            print out
+            #print out
             n+=32
-            print "nid = ",nid
+            #print "nid = ",nid
         #sys.exit('thermal4...')
 
     def readOGF_Data_table7_format1_sort0(self):  # modes

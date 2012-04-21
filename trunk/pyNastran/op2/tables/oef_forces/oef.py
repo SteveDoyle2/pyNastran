@@ -141,50 +141,50 @@ class OEF(object):
 
         if self.thermal==0:
             if self.analysisCode==1: # displacement
-                print "isForces"
+                #print "isForces"
                 self.createTransientObject(self.forces,displacementObject)
             elif self.analysisCode==2 and self.sortCode==1: # buckling forces
-                print "isBucklingForces"
+                #print "isBucklingForces"
                 self.createTransientObject(self.forces,displacementObject)
             elif self.analysisCode==5: # frequency forces
-                print "isFrequencyForces"
+                #print "isFrequencyForces"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==6: # transient displacement
-                print "isTransientForces"
+                #print "isTransientForces"
                 self.createTransientObject(self.forces,displacementObject)
             elif self.analysisCode==9: # complex eigenvalue forces
-                print "isComplexEigenvalues"
+                #print "isComplexEigenvalues"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==10: # nonlinear static displacement
-                print "isNonlinearStaticForces"
+                #print "isNonlinearStaticForces"
                 self.createTransientObject(self.forces,displacementObject)
             else:
                 pass
-                raise Exception('not supported OEF static solution...')
+                raise NotImplementedError('not supported OEF static solution...')
             ###
 
         elif self.thermal==1:
             #if self.analysisCode==1: # temperature
-            #    print "isTemperature"
-            #    raise Exception('verify...')
-            #    self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
+                #print "isTemperature"
+                #raise Exception('verify...')
+                #self.temperatures[self.iSubcase] = temperatureObject(self.iSubcase)
             #elif self.analysisCode==1 and self.sortCode==1: # heat fluxes
-            #    print "isFluxes"
-            #    raise Exception('verify...')
-            #    self.createTransientObject(self.fluxes,fluxObject)
+                #print "isFluxes"
+                #raise Exception('verify...')
+                #self.createTransientObject(self.fluxes,fluxObject)
             if self.analysisCode==5: # frequency forces
-                print "isFrequencyForces"
+                #print "isFrequencyForces"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==6: # transient temperature
-                print "isTransientTemperature"
+                #print "isTransientTemperature"
                 self.createTransientObject(self.temperatureForces,temperatureObject)
             elif self.analysisCode==10: # nonlinear static displacement
-                print "isNonlinearStaticTemperatures"
+                #print "isNonlinearStaticTemperatures"
                 self.createTransientObject(self.fluxes,nonlinearFluxObject)
             else:
                 msg = 'OEF_thermal format1_sort0 elementType=%-3s -> %-6s is not supported - fname=%s\n' %(self.elementType,self.ElementType(self.elementType),self.op2FileName)
                 self.skippedCardsFile.write(msg)
-                raise Exception('not supported OEF thermal solution...')
+                raise NotImplementedError('not supported OEF thermal solution...')
             ###
         else:
             msg = 'invalid thermal flag...not 0 or 1...flag=%s\n' %(self.thermal)
@@ -204,20 +204,20 @@ class OEF(object):
         assert self.formatCode==1
         assert self.sortCode==1
 
-        print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
+        #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         if self.thermal==0:
             if self.analysisCode==5: # frequency forces
-                print "isFrequencyForces"
+                #print "isFrequencyForces"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
                 #self.readForces(self.obj)
             elif self.analysisCode==9: # complex eigenvalue forces
-                print "isComplexEigenvalues"
+                #print "isComplexEigenvalues"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             else:
-                raise Exception('not supported OEF static solution...')
+                raise NotImplementedError('not supported OEF static solution...')
             ###
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         self.skipOES_Element()
         #self.readForces(data,self.obj)
@@ -227,20 +227,20 @@ class OEF(object):
         assert self.formatCode==2
         assert self.sortCode==1
 
-        print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
+        #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         if self.thermal==0:
             if self.analysisCode==5: # frequency forces
-                print "isFrequencyForces"
+                #print "isFrequencyForces"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             elif self.analysisCode==9: # complex eigenvalue forces
-                print "isComplexEigenvalues"
+                #print "isComplexEigenvalues"
                 self.createTransientObject(self.modalSPCForces,eigenVectorObject)
             else:
-                raise Exception('not supported OEF static solution...')
+                raise NotImplementedError('not supported OEF static solution...')
             ###
 
         else:
-            raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
+            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
         ###
         if self.obj:
             self.skipOES_Element()
@@ -251,7 +251,7 @@ class OEF(object):
         
     def setupOEF(self,elementType,elementName,numWide,deviceCode):
         """length of result"""
-        print "elementType=%s numWide=%s type=%s" %(elementType,numWide,elementName)
+        #print "elementType=%s numWide=%s type=%s" %(elementType,numWide,elementName)
         
         fCode = self.formatCode
         eType = self.elementType
@@ -306,17 +306,17 @@ class OEF(object):
         pass
 
     def readOEF_2D_3D(self,data):
-        print "read_2D_3D"
+        #print "read_2D_3D"
         gridDevice, = unpack('i',data[0:4])
         grid = (gridDevice-self.deviceCode)/10
         eType = ''.join(unpack('cccccccc',data[4:12]))
         (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
-        print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+        #print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
         
         return(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
 
     def readOEF_CHBDY(self,data):
-        print "read_CHBDYx"
+        #print "read_CHBDYx"
         gridDevice, = unpack('i',data[0:4])
         grid = (gridDevice-self.deviceCode)/10
         eType = ''.join(unpack('cccccccc',data[4:12]))
@@ -381,10 +381,10 @@ class OEF(object):
         return nWords
 
     def readForcesNonlinear(self,scalarObject):
-        print "readForcesNonlinear..."
+        #print "readForcesNonlinear..."
         data = self.data
 
-        print 'thermal skipping elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType))
+        #print 'thermal skipping elementType=%s=%s' %(self.elementType,self.ElementType(self.elementType))
         sys.stderr.write('thermal skipping elementType=%s=%s\n' %(self.elementType,self.ElementType(self.elementType)))
         
         nWords = self.getOEF_nWords()

@@ -7,31 +7,8 @@ import pyNastran
 from pyNastran.f06.f06    import F06,EndOfFileError
 from pyNastran.bdf.errors import *
 #from pyNastran.f06.f06Errors import *
+from pyNastran.op2.test.test_op2 import parseTableNamesFromF06, getFailedFiles
 
-def parseTableNamesFromF06(f06Name):
-   """gets the f06 names from the f06"""
-   infile = open(f06Name,'r')
-   marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
-   names = []
-   for line in infile:
-
-       if marker in line:
-           word = line.replace(marker,'').strip().strip('.')
-           names.append(word)
-       ###
-   ###
-   infile.close()
-   return names
-
-def getFailedFiles(filename):
-    infile = open(filename,'r')
-    lines = infile.readlines()
-    infile.close()
-    
-    files = []
-    for line in lines:
-        files.append(line.strip())
-    return files
 
 def runLotsOfFiles(files,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
     n = ''
@@ -80,7 +57,6 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
         f06 = F06(f06file,debug=debug)
         #f06.setSubcases(iSubcases)  ## @todo not supported
 
-        #print "os.getcwd() = ",os.getcwd()
         #f06.readBDF(f06.bdfFileName,includeDir=None,xref=False)
         f06.readF06()
         #tableNamesF06 = parseTableNamesFromF06(f06.f06FileName)
@@ -106,13 +82,6 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    #except TapeCodeError: # the f06 is bad, not my fault
-    #    isPassed = True
-    #    if stopOnFailure:
-    #        raise
-    #    else:
-    #        isPassed = True
-    #    ###
     except IOError: # missing file
         pass
     #except AssertionError:
@@ -183,9 +152,7 @@ def runArgParse():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
-
     parser.add_argument('-f','--writeF06', dest='writeF06', action='store_true',help='Writes the f06 to fem.f06.out')
-
     parser.add_argument('-v','--version',action='version',version=ver)
     
     if len(sys.argv)==1:
