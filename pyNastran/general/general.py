@@ -1,9 +1,25 @@
+import os
 from numpy import matrix
 from types import NoneType
+
+def getFilesOfType(dirname,extension='.txt'):
+    files = os.listdir(dirname)
+    files2 = []
+    for fname in files:
+        (f,ext) = os.path.splitext(fname)
+        #print f
+        #print ext
+        if extension in ext:
+            files2.append(fname)
+        ###
+    ###
+    return files2
 
 def deObscure(num):
     """
     unpacks an "obscured" number...similar to binary, but base 52
+    A base 52 value takes up a fewer characters than a base 10 number
+    which helps to do Mat12345678 when there's an 8 character limit on variable names.
     """
     print "***"
     print "type(num) = ",type(num)
@@ -28,6 +44,8 @@ def deObscure(num):
 def obscure(num):
     """
     takes a large number and shrinks it down...similar to binary, but base 52
+    A base 52 value takes up a fewer characters than a base 10 number
+    which helps to do Mat12345678 when there's an 8 character limit on variable names.
     """
     lenNum = len(str(num))
     vals = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
@@ -57,6 +75,12 @@ def obscure(num):
     
 
 def ListPrint(listA):
+    """
+    Prints a list, numpy array, or numpy matrix in an abbreviated format.
+    Useful for debugging.
+    @param listA list, numpy array, or numpy matrix
+    @retval msg the clean string representation of the object
+    """
     if len(listA)==0:
         return '[]'
     ###

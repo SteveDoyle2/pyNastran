@@ -147,6 +147,7 @@ class OQG(object):
             elif self.analysisCode==10: # nonlinear MPC forces
                 self.createTransientObject(self.mpcForces,mpcForcesObject)
             else:
+                pass
                 #self.skipOES_Element()
                 #print self.codeInformation()
                 #raise NotImplementedError('unsupported OQG static solution...atfsCode=%s' %(self.atfsCode))
