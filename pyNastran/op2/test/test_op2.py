@@ -23,15 +23,6 @@ def parseTableNamesFromF06(f06Name):
    infile.close()
    return names
 
-def getOp2Files(dirname,files):
-    files2 = []
-    for fname in files:
-        if '.op2' in fname:
-            files2.append(os.path.join(dirname,fname))
-        ###
-    ###
-    return files2
-
 def getFailedFiles(filename):
     infile = open(filename,'r')
     lines = infile.readlines()
