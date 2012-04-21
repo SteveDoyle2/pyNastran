@@ -2,10 +2,10 @@ import os
 import sys
 import time
 from traceback import print_exc
-from pyNastran.op2.op2    import OP2,EndOfFileError
+from pyNastran.f06.f06    import F06
 from pyNastran.bdf.errors import *
-from pyNastran.op2.op2Errors import *
-from pyNastran.op2.test.test_op2 import getFailedFiles,runOP2,getOp2Files,runLotsOfFiles
+#from pyNastran.f06.f06Errors import *
+from pyNastran.f06.test.test_f06 import getFailedFiles,runF06,getF06Files,runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
 def parseSkippedCards(fname):
@@ -46,17 +46,15 @@ def parseSkippedCards(fname):
 
 if __name__=='__main__':
     # works
-    files = getFilesOfType('tests','.op2')
+    files = getFilesOfType('tests','.f06')
     
     #moveDir = r'D:\work\move\hard_demo'
     moveDir = r'D:\work\move\move_tpl'
     #moveDir = r'D:\work\move\solid_shell_bar'
-    #files2 = ['ann6611.op2']
+    #files2 = ['ann6611.f06']
 
     iSubcases = []
     debug     = False
-    makeGeom  = False
-    writeBDF  = False
     saveCases = True
     regenerate = True
     stopOnFailure = False
@@ -65,21 +63,22 @@ if __name__=='__main__':
     if getSkipCards:
         files2 = parseSkippedCards('skippedCards.out')
     elif regenerate:
-        files2 = getFilesOfType(moveDir,'.op2')
+        files2 = getFilesOfType(moveDir,'.f06')
+        files2 = []
         files2 += files
     else:
         files2 = getFailedFiles('failedCases.in')
     
-    #files2 = [r'D:\work\move\move_tpl\ar29sadl.op2']
+    #files2 = [r'D:\work\move\move_tpl\ar29sadl.f06']
     #files = files+files2
     files = files2
-    #files = [r'D:\work\move\move_tpl\see101hs.op2']
+    #files = [r'D:\work\move\move_tpl\see101hs.f06']
     #print len(files)
     #files = []
     
     #            HIS, R1B        EQEXIN
-    #skipFiles = ['accopt3.op2','acms111m.op2','adjoint.op2','aerobeam.op2',] # tpl
-    skipFiles = ['nltrot99.op2','rot12901.op2'] # giant
+    #skipFiles = ['accopt3.f06','acms111m.f06','adjoint.f06','aerobeam.f06',] # tpl
+    skipFiles = ['nltrot99.f06','rot12901.f06'] # giant
     #print files
 
     nStart = 0
@@ -90,8 +89,7 @@ if __name__=='__main__':
         pass
 
     print "nFiles = ",len(files)
-    runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
-    #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
+    runLotsOfFiles(files,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
+    #runLotsOfFiles(files,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
-
 

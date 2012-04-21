@@ -28,11 +28,13 @@ setup(name='pyNastran',
 #          'scipy >= 0.6.0',
 #          'vtk >= 5.8.0',
 #          'wx >= 2.8.12.0',
+#          'cython',
       ],
       entry_points = {
         'console_scripts': [
                             'test_bdf = pyNastran.bdf.test.test_bdf:main',
                             'test_op2 = pyNastran.op2.test.test_op2:main',
+                            'test_f06 = pyNastran.f06.test.test_f06:main',
                             'pyNastranGUI = pyNastran.gui.gui:main',
                            ]
       },
