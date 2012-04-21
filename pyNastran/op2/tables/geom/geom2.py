@@ -758,23 +758,23 @@ class Geometry2(object):
         CTETP(12201,122,9013)    - the marker for Record 86
         @todo create object
         """
-        print "reading CTETP"
-        raise Exception('needs work...')
+        #print "reading CTETP"
+        raise NotImplementedError('needs work...')
         while len(data)>=108: # 27*4
             eData = data[:108]
             data  = data[108:]
             out = unpack('iiiiiiiiiiiiiiiiiiiiiiiiiii',eData)
             (eid,pid,n1,n2,n3,n4,e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,
             f1,f2,f3,f4,b1,ee1,ee2,ee3,ee4) = out
-            print "out = ",out
+            #print "out = ",out
             e = [e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12]
             f = [f1,f2,f3,f4]
             ee = [ee1,ee2,ee3,ee4]
             
-            print "e  = ",e
-            print "f  = ",f
-            print "b1  = ",b1
-            print "ee = ",ee
+            #print "e  = ",e
+            #print "f  = ",f
+            #print "b1  = ",b1
+            #print "ee = ",ee
             dataIn = [eid,pid,n1,n2,n2,n3,n4]
             elem = CTETRA4(None,dataIn)
             self.addOp2Element(elem)

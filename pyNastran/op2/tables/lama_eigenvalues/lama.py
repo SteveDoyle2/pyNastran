@@ -14,20 +14,20 @@ class LAMA(object):
     def readTable_LAMA(self):
         tableName = self.readTableName(rewind=False) # LAMA
         self.tableInit(tableName)
-        print "tableName1 = |%r|" %(tableName)
-        print "tableName2 = |%r|" %(self.tableName)
+        #print "tableName1 = |%r|" %(tableName)
+        #print "tableName2 = |%r|" %(self.tableName)
 
         self.readMarkers([-1,7],'LAMA')
         ints = self.readIntBlock()
-        print "*ints = ",ints
+        #print "*ints = ",ints
 
         self.readMarkers([-2,1,0],'LAMA')
         bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords
+        #print "bufferWords = ",bufferWords
         
         
         word = self.readStringBlock() # LAMA
-        print "word = |%s|" %(word)
+        #print "word = |%s|" %(word)
         self.readMarkers([-3,1,0],'LAMA')
 
         #data = self.getData(4*50)
@@ -84,7 +84,7 @@ class LAMA(object):
         self.addDataParameter(data,'resFlag','i',11,False)   ## residual vector augmentation flag
         self.addDataParameter(data,'fldFlag','i',12,False)   ## fluid modes Flag
         
-        print self.dataCode
+        #print self.dataCode
         #self.addDataParameter(data,'formatCode',  'i',9,False)   ## format code
         #self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
         
@@ -101,10 +101,10 @@ class LAMA(object):
         bufferWords = self.getMarker() # 70*4=280
         if self.makeOp2Debug:
             self.op2Debug.write('bufferWords=%s\n' %(str(bufferWords)))
-        print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
+        #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4) # dummy - 70*4=280
-        print self.printBlock(data)
+        #print self.printBlock(data)
         #print "280/3 = ",280/4
         nModes = bufferWords//7
 
@@ -115,7 +115,7 @@ class LAMA(object):
             out = unpack('iifffff',data)
             #(iMode,order,eigen,omega,freq,mass,stiff) = out
             #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
-            print out
+            #print out
             lama.addF06Line(out)
             #print "mode=%s order=%s eigen=%s omega=%s freq=%s mass=%s stiff=%s" %(mode,order,eigen,omega,freq,mass,stiff)
         #print ""

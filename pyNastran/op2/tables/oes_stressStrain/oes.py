@@ -454,7 +454,7 @@ class OES(ElementsStressStrain):
             #self.makeOES_Object(self.beamStress,beamStressObject,
             #                    self.beamStrain,beamStrainObject)
             #self.CBEAM_94()
-            #raise Exception('stoping at end of CBEAM_94')
+            #raise NotImplementedError('stoping at end of CBEAM_94')
             #del self.eid2
 
         elif self.elementType in [139]:   # QUAD4FD (hyperelastic)
@@ -595,5 +595,5 @@ class OES(ElementsStressStrain):
         else:
             self.createTransientObject(strain,strainObject)
         ###
-        print "loading",self.obj.__class__.__name__
+        #print "loading",self.obj.__class__.__name__
         return self.obj

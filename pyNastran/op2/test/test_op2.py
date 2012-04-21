@@ -14,7 +14,6 @@ def parseTableNamesFromF06(f06Name):
    marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
    names = []
    for line in infile:
-
        if marker in line:
            word = line.replace(marker,'').strip().strip('.')
            names.append(word)
@@ -79,7 +78,7 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
     try:
         op2 = OP2(op2file,makeGeom=makeGeom,debug=debug)
         op2.setSubcases(iSubcases)
-        #print "os.getcwd() = ",os.getcwd()
+
         #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
         #op2.writeBDFAsPatran()
         op2.readOP2()

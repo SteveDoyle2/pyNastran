@@ -205,7 +205,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
                     data = self.getData(4)
                 ###
             except:
-                raise Exception('error in iTable=% of %s...' %(self.iTable,self.tableName))
+                raise RuntimeError('error in iTable=% of %s...' %(self.iTable,self.tableName))
             ###
             iTable-=1
             ###
@@ -222,14 +222,14 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         
         iTable = -2
         
-        print "iTable = ",iTable
+        #print "iTable = ",iTable
         self.readMarkers([iTable,1,0]) # 2
         bufferWords = self.getMarker()
-        print "bufferWords = ",bufferWords
+        #print "bufferWords = ",bufferWords
         data = self.getData(4)
         bufferSize, = unpack('i',data)
         data = self.getData(bufferWords*4)
-        print self.printBlock(data)
+        #print self.printBlock(data)
         data = self.getData(4)
         iTable-=1
 
@@ -238,7 +238,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         data = self.getData(4)
         bufferSize, = unpack('i',data) # 52
         data = self.getData(bufferSize)
-        print self.printBlock(data)
+        #print self.printBlock(data)
         data = self.getData(4)
         iTable-=1
 
@@ -251,42 +251,42 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         #sys.exit('SDF...')
 
     def readTable_CASECC(self):
-        tableName = self.readTableName(rewind=False) # PCOMP
-        print '*tableName = ',tableName
+        tableName = self.readTableName(rewind=False) # CASECC
+        #print '*tableName = ',tableName
         self.tableInit(tableName)
         self.readMarkers([-1,7])
         data = self.getData(4)
         bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
+        #print "bufferSize = ",bufferSize
         data = self.getData(bufferSize)
-        print self.printBlock(data)
+        #print self.printBlock(data)
         data = self.getData(4)
-        print "---------------"
+        #print "---------------"
         
         
         self.readMarkers([-2,1,0])
         bufferWords = self.getMarker()
         data = self.getData(4)
         bufferSize, = unpack('i',data)
-        print "bufferSize = ",bufferSize
+        #print "bufferSize = ",bufferSize
         data = self.getData(bufferSize)
-        print self.printBlock(data)
+        #print self.printBlock(data)
         data = self.getData(4)
         
         #data = self.readBlock()
         #print self.printBlock(data)
-        print "---------------"
+        #print "---------------"
         self.readMarkers([-3,1,0])
         bufferWords = self.getMarker()
         data = self.getData(4)
         bufferSize, = unpack('i',data)
-        print "bufferWords = ",bufferWords
+        #print "bufferWords = ",bufferWords
         #print "bufferSize = ",bufferSize
         data = self.getData(bufferSize)
-        print self.printBlock(data)
+        #print self.printBlock(data)
         data = self.getData(4)
 
-        print "---------------"
+        #print "---------------"
         self.readMarkers([-4,1,0])
 
 

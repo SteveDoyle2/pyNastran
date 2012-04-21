@@ -44,7 +44,7 @@ class DYNAMICS(object):
 
     def readDArea(self,data):
         """DAREA(27,17,182) - the marker for Record 2"""
-        print "reading DAREA"
+        #print "reading DAREA"
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]

@@ -158,7 +158,7 @@ class OQG(object):
                 pass
             else:
                 #self.skipOES_Element()
-                print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
+                self.log.debug('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
                 #print self.codeInformation()
                 #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
@@ -211,7 +211,7 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 #pass
-                print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
+                self.log.debug('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
                 #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
@@ -262,7 +262,7 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 #pass
-                print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
+                self.log.debug('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
                 #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
@@ -313,7 +313,7 @@ class OQG(object):
             else:
                 #self.skipOES_Element()
                 pass
-                print 'unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode)
+                self.log.debug('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
                 #raise NotImplementedError('unsupported OQG thermal solution...atfsCode=%s' %(self.atfsCode))
             ###
         ###
