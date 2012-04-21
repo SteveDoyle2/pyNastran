@@ -22,7 +22,7 @@ class OUG(object):
         sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':1,
                     'sortCode':0,'sortBits':[0,0,0],'numWide':8,'tableName':'OUG',}
@@ -55,13 +55,14 @@ class OUG(object):
         analysisCode = 5 (Frequency)
         sortCode = 2 (Random Response)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(3)
         data = []
 
         dataCode = {'log':self.log,'analysisCode':5,'deviceCode':1,'tableCode':1,'sortCode':2,
-                    'sortBits':[0,1,1],'numWide':8,
+                    'sortBits':[0,1,1],'numWide':14,
                     'formatCode':3,
+                    'tableName':'OUGV1',
                     #'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
                     #'dataNames':['mode','eigr','modeCycle'],
                     #'name':'mode',
@@ -110,7 +111,7 @@ class OUG(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         #print transient
         
         headers = self.skip(2)

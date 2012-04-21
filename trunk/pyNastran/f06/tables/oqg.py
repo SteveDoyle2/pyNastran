@@ -8,7 +8,7 @@ class OQG(object):
         self.mpcForces = {}
 
     def getSpcForces(self):
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -26,7 +26,7 @@ class OQG(object):
         self.iSubcases.append(iSubcase)
 
     def getMpcForces(self):
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 

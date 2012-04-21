@@ -5,7 +5,7 @@ from traceback import print_exc
 from pyNastran.f06.f06    import F06
 from pyNastran.bdf.errors import *
 #from pyNastran.f06.f06Errors import *
-from pyNastran.f06.test.test_f06 import getFailedFiles,runF06,getF06Files,runLotsOfFiles
+from pyNastran.f06.test.test_f06 import getFailedFiles,runF06,runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
 def parseSkippedCards(fname):

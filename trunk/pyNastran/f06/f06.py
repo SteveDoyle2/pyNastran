@@ -106,10 +106,17 @@ class F06(OES,OUG,OQG,F06Writer):
         OQG.__init__(self)
         OUG.__init__(self)
         
+        ## the TITLE in the Case Control Deck
         self.Title = ''
         self.startLog(log,debug)
 
     def startLog(self,log=None,debug=False):
+        """
+        Sets up a dummy logger if one is not provided
+        @param self the object pointer
+        @param log a python logging object
+        @param debug adds debug messages (True/False)
+        """
         if log is None:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
@@ -134,7 +141,7 @@ class F06(OES,OUG,OQG,F06Writer):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
-        print "max SPC Forces   ",data
+        #print "max SPC Forces   ",data
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
 
@@ -142,9 +149,9 @@ class F06(OES,OUG,OQG,F06Writer):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
-        print "max Displacements",data
+        #print "max Displacements",data
         disp = MaxDisplacement(data)
-        print disp.writeF06()
+        #print disp.writeF06()
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
     
@@ -152,7 +159,7 @@ class F06(OES,OUG,OQG,F06Writer):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,float,float,float,float,float,float])
-        print "max Applied Loads",data
+        #print "max Applied Loads",data
         #self.disp[iSubcase] = DisplacementObject(iSubcase,data)
         #print self.disp[iSubcase]
 
@@ -174,7 +181,12 @@ class F06(OES,OUG,OQG,F06Writer):
             iSubcase = 1
         else:
             iSubcase   = self.storedLines[-2].strip()[1:]
-            iSubcase = int(iSubcase.strip('SUBCASE '))
+            if iSubcase=='': # no subcase specified
+                iSubcase=1
+            else:
+                iSubcase = int(iSubcase.strip('SUBCASE '))
+            ###
+            #assert isinstance(iSubcase,int),'iSubcase=|%r|' %(iSubcase)
             #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
         ###
         self.iSubcaseNameMap[iSubcase] = [subcaseName,'SUBCASE %s' %(iSubcase)]
@@ -204,7 +216,10 @@ class F06(OES,OUG,OQG,F06Writer):
             transient = None
             analysisCode = 1
 
-        return (subcaseName,iSubcase,transient,analysisCode,isSort1)
+        dt = None
+        if transient is not None:
+            dt = transient[1]
+        return (subcaseName,iSubcase,transient,dt,analysisCode,isSort1)
 
     def getRealEigenvalues(self):
         """
@@ -213,7 +228,7 @@ class F06(OES,OUG,OQG,F06Writer):
           NO.       ORDER                                                                       MASS              STIFFNESS
               1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         
         headers = self.skip(2)
         data = self.readTable([int,int,float,float,float,float,float])
@@ -233,7 +248,7 @@ class F06(OES,OUG,OQG,F06Writer):
              1           6          0.0              6.324555E+01          1.006584E+01          0.0
              2           5          0.0              6.324555E+01          1.006584E+01          0.0
         """
-        #(subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        #(subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         iSubcase = 1  # @todo fix this...
 
         headers = self.skip(2)
@@ -279,7 +294,7 @@ class F06(OES,OUG,OQG,F06Writer):
         #iSubcase = self.storedLines[-2].strip()[1:]
         #iSubcase = int(iSubcase.strip('SUBCASE '))
         #print "subcaseName=%s iSubcase=%s" %(subcaseName,iSubcase)
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':7,'sortCode':0,
@@ -321,14 +336,14 @@ class F06(OES,OUG,OQG,F06Writer):
 
         eigenvalue = self.storedLines[-2][1:].strip()
         eigenvalue = float(eigenvalue.split('=')[1])
-        print "eigenvalue=%s cycle=%s" %(eigenvalue,cycles)
+        #print "eigenvalue=%s cycle=%s" %(eigenvalue,cycles)
 
         eTypeLine = self.skip(2)[1:]
         modeLine  = self.skip(1)[1:]
         eType=eTypeLine[30:40];  totalEnergy1=eTypeLine[99:114]
         iMode=modeLine[24:40];   totalEnergy2=modeLine[99:114]
-        print "eType=%s totalEnergy1=|%s|" %(eType,totalEnergy1)
-        print "iMode=%s totalEnergy2=|%s|" %(iMode,totalEnergy2)
+        #print "eType=%s totalEnergy1=|%s|" %(eType,totalEnergy1)
+        #print "iMode=%s totalEnergy2=|%s|" %(iMode,totalEnergy2)
         headers = self.skip(2)
 
         data = []
@@ -364,7 +379,7 @@ class F06(OES,OUG,OQG,F06Writer):
         ###
 
     def getTempGradientsFluxes(self):
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
@@ -403,7 +418,11 @@ class F06(OES,OUG,OQG,F06Writer):
         return out
     
     def readTable(self,Format):
-        """reads displacement, spc/mpc forces"""
+        """
+        reads displacement, spc/mpc forces
+        @param self the object pointer
+        @param Format @see parseLine
+        """
         sline = True
         data = []
         while sline:
@@ -418,6 +437,11 @@ class F06(OES,OUG,OQG,F06Writer):
         return data
     
     def parseLine(self,sline,Format):
+        """
+        @param self the object pointer
+        @param sline list of strings (split line)
+        @param Format list of types [int,str,float,float,float] that maps to sline
+        """
         out = []
         for entry,iFormat in zip(sline,Format):
             try:
@@ -441,11 +465,15 @@ class F06(OES,OUG,OQG,F06Writer):
         return out
     
     def readF06(self):
+        """
+        Reads the F06 file
+        @param self the object pointer
+        """
         #print "reading..."
         blank = 0
         while 1:
-            if self.i%1000==0:
-                print "i=%i" %(self.i)
+            #if self.i%1000==0:
+                #print "i=%i" %(self.i)
             line = self.infile.readline()
             marker = line[1:].strip()
             
@@ -473,7 +501,7 @@ class F06(OES,OUG,OQG,F06Writer):
             ###
             self.storedLines.append(line)
             self.i+=1
-        print "i=%i" %(self.i)
+        #print "i=%i" %(self.i)
         self.infile.close()
         self.processF06()
 
@@ -508,10 +536,9 @@ class F06(OES,OUG,OQG,F06Writer):
     
     def printResults(self):
         msg = ''
-        data = [self.displacements,self.spcForces,self.barStress,self.solidStress,self.temperatures]
-        #data = [self.displacements,self.solidStress,self.temperatures,self.barStress]
-        #data = [self.eigenvalues,self.eigenvectors]
-        data = [self.rodStress,self.rodStrain,
+        data = [self.displacements,self.spcForces,self.mpcForces,self.temperatures,
+                self.eigenvalues,self.eigenvectors,
+                self.rodStress,self.rodStrain,
                 self.barStress,self.barStrain,
                 self.plateStress,self.plateStrain,
                 self.compositePlateStress,self.compositePlateStrain,
