@@ -644,7 +644,7 @@ class ElementsStressStrain(object):
             eData     = self.data[0:8]
             self.data = self.data[8: ]
             (eid,gridA) = unpack('ii', eData)
-            print "eid=%s gridA=%s" %(eid,gridA)
+            #print "eid=%s gridA=%s" %(eid,gridA)
 
             for i in range(1):
                 for j in range(4): # c,d,e,f @ A;    c,d,e,f @ B
@@ -653,7 +653,7 @@ class ElementsStressStrain(object):
                     out = unpack(format1, eData)
                     (loc1,loc2,loc3,loc4,nsx,nse,te,epe,ece) = out
                     loc = loc1+loc2+loc3+loc4
-                    print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" %(loc,nsx,nse,te,epe,ece)
+                    #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" %(loc,nsx,nse,te,epe,ece)
                 ###
                 #self.obj.add(eid,out)
             ###
