@@ -80,7 +80,7 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -130,31 +130,31 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (iSubcase,transient,dataCode) = self.getBarHeader(False)
+        (iSubcase,transient,dt,dataCode) = self.getBarHeader(False)
 
         data = self.readBarStress()
         dataCode['tableName'] = 'OES1X'
         if iSubcase in self.barStress:
             self.barStress[iSubcase].addF06Data(data,transient)
         else:
-            self.barStress[iSubcase] = barStressObject(dataCode,iSubcase,transient)
+            self.barStress[iSubcase] = barStressObject(dataCode,iSubcase,dt)
             self.barStress[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
     
     def getBarStrain(self):
-        (iSubcase,transient,dataCode) = self.getBarHeader(False)
+        (iSubcase,transient,dt,dataCode) = self.getBarHeader(False)
         dataCode['tableName'] = 'OSTR1X'
 
         data = self.readBarStress()
         if iSubcase in self.barStrain:
             self.barStrain[iSubcase].addF06Data(data,transient)
         else:
-            self.barStrain[iSubcase] = barStrainObject(dataCode,iSubcase,transient)
+            self.barStrain[iSubcase] = barStrainObject(dataCode,iSubcase,dt)
             self.barStrain[iSubcase].addF06Data(data,transient)
         self.iSubcases.append(iSubcase)
 
     def getBarHeader(self,isStrain):
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -163,7 +163,8 @@ class OES(object):
                     'sortBits':[0,0,0],'numWide':8,'sCode':sCode,'stressBits':stressBits,
                     'formatCode':1,'elementName':'CBAR','elementType':34,
                     }
-        return (iSubcase,transient,dataCode)
+        
+        return (iSubcase,transient,dt,dataCode)
 
     def readBarStress(self):
         """
@@ -183,7 +184,7 @@ class OES(object):
             out = ['CBAR']+out
             #data.append(sline)
             line = self.infile.readline()[1:].rstrip('\r\n ')
-            sline = [line[11:26],line[26:41],line[41:56],line[56:68],line[86:101],line[101:116],line[116:131]]
+            sline = [line[11:26],line[26:41],line[41:56],line[56:69],line[86:101],line[101:116],line[116:131]]
             #print sline
             out += self.parseLineBlanks(sline,[    float,float,float,float,        float,float,float]) # line 2
             #print "*",out
@@ -207,13 +208,14 @@ class OES(object):
         
         elementType = 33 b/c not bilinear
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data = self.readTable([int,int,float,float,float,float,float,float,float,float,float])
 
         isMaxShear = False  # Von Mises/Max Shear
-        if 'SHEAR' in headers.strip():
+        sHeaders = headers.rstrip()
+        if 'SHEAR' in sHeaders[-5:]: # last 5 letters of the line to avoid 'SHEAR YZ-MAT'
             isMaxShear = True
         (stressBits,sCode) = self.makeStressBits(isMaxShear=isMaxShear,isStrain=False)
         dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':5,'sortCode':0,
@@ -274,7 +276,7 @@ class OES(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         
@@ -362,7 +364,7 @@ class OES(object):
         self.iSubcases.append(iSubcase)
 
     def getQuadHeader(self,nHeaderLines,isStrain,elementNumber):
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
         
@@ -456,7 +458,7 @@ class OES(object):
         sCode        = 0 (Stress/Strain)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -499,6 +501,7 @@ class OES(object):
                   (True,  True, True,False): ([0,1,1,1,0],14), # 14
                   (False, True, True,False): ([0,1,1,1,1],15), # 15
 
+                  (True, False,False,False): ([0,0,0,0,0],0),  # 0,  composite
                   (False, True,False,False): ([0,0,0,0,1],1), # cquad4 bilinear ??? why do i need this...
                  }
         (stressBits,sCode) = mapper[code]

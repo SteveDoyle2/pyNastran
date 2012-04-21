@@ -1,12 +1,22 @@
-****OEF - forces****
+------------------------------F06 Info------------------------------
+
+In order for a table to be supported, it must read AND write ALL fields.
+Important calculated parameters are nice, but not required.
+
+*** Not done....
+
+#----------------------------------------------------------------------------
+
+
+----OEF - forces----
 Finite Element Temperature Gradients And Fluxes
 
-****OQG - constraint forces****
+----OQG - constraint forces----
 Forces Of Single-Point Constraint				done
 Forces Of Multi-Point  Constraint				done
 
 
-****OES - stress/strain****
+----OES - stress/strain----
 Stresses In Bar Elements(CBAR)					done
 Stresses In Rod Elements(CROD)					done
 
@@ -30,27 +40,27 @@ Strains In Hexahedron  Solid Elements(HEXA)			done
 Strains In Pentahedron Solid Elements(PENTA)			done
 
 
-****LAMA - eigenvalues****
+----LAMA - eigenvalues----
 Real Eigenvalues						done
 Complex Eigenvalue Summary					no object
 
-****OUG****
+----OUG----
 Displacement Vector						done
 Real Eigenvector No.						done
 Complex Displacement Vector					done
 Temperature Vector						done
 
-***OEE - energy****
+***OEE - energy----
 Element Strain Energies						???
 
-****OGP - grid point force balance****
+----OGP - grid point force balance----
 Grid Point Force Balance					???
 
-***OPG - applied loads****
+***OPG - applied loads----
 appliedLoadsObject						no
 loadVectorObject						no
 
-****not supported****
+----not supported - main----
 Nastran File And System Parameter Echo
 Nastran Executive Control Echo
 Case Control Echo
@@ -64,16 +74,101 @@ Maximum Displacements
 Maximum Applied Loads
 Grid Point Singularity Table
 
-#------------------------
-***aero - not supported***
+----aero - not supported----
 Non-Dimensional Stability And Control Derivative Coefficients
 Non-Dimensional HingeMoment Derivative Coefficients
 Aerostatic Data Recovery Output Tables
 Structural Monitor Point Integrated Loads
 
-***rotor - not supported***
+----rotor - not supported----
 Rotor Dynamics Summary
 Rotor Dynamics Mass Summary
 Eigen Value Analysis Summary(Complex Lanczos Method)
 #------------------------
 
+
+
+
+#----------------------------------------------------------------------------
+
+F06 Reader
+   - LAMA/CLAMA (requires an ESE = ALL to create op2 table)
+     - eigenvalues  (real/***complex - no object)
+
+   - OUG (DISPLACMENTS=ALL)
+     - displacement (static/transient)
+       - real/complex
+     - velocity/acceleration (static/transient)
+       - ***real/***complex
+     - temperature  (static/transient)
+     - eigenvectors (real/complex)
+
+   - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
+     - SPC Forces (static/***transient)
+     - MPC Forces (static/***transient)
+
+   - OES (STRESS=ALL, STRAIN=ALL)
+     - solid stress/strain (static/***transient)
+        - CTETRA
+        - CPENTA
+        - CHEXA
+     - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
+        - CTRIA3
+        - CQUAD4 (centroid/bilinear)
+        - ***CQUAD8
+        - ***CTRIA6
+     - composite plate stress/strain (static/***transient)
+        - CTRIA3
+        - CQUAD4 (centroid)
+        - ***CQUAD8
+        - ***CTRIA6
+     - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
+     - bar stress/strain   (static/transient; CBAR)
+     - ***beam  stress/strain (static/transient; CBEAM)
+     - ***shear stress/strain (static/transient; CSHEAR)
+
+#----------------------------------------------------------------------------
+
+F06 Writer
+   - OUG (DISPLACMENTS=ALL)
+     - displacement (static/transient)
+       - real/complex
+     - velocity     (static/transient)
+       - real
+     - acceleration (static/transient)
+       - real
+     - temperature  (static/transient)
+     - eigenvectors (real/***complex)
+
+   - OES (STRESS=ALL, STRAIN=ALL)
+     - solid stress/strain (static/transient);  (directional vectors & pressure calculated)
+        - CTETRA
+        - CPENTA
+        - CHEXA
+     - isotropic plate stress/strain (static/transient)
+        - CTRIA3
+        - CQUAD4 (centroid/bilinear)
+        - ***CQUAD8
+        - ***CTRIA6
+     - composite plate stress/strain (static/transient)
+        - CTRIA3
+        - CQUAD4 (centroid)
+        - ***CQUAD8
+        - ***CTRIA6
+     - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
+     - bar stress/strain   (static/transient; CBAR)
+     - beam  stress/strain (static/transient; CBEAM)
+     - ***shear stress/strain (static/transient; CSHEAR)
+
+   - LAMA/CLAMA (requires an ESE = ALL to create op2 table)
+     - eigenvalues  (real/***complex)
+
+   - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
+     - SPC forces (static/transient)
+       - real/complex
+     - MPC forces (static/transient)
+       - real/complex
+
+   - OGF (grid point forces; GPFORCES=ALL)
+     - grid point force balance (static/transient)
+     - load vector (static/transient)

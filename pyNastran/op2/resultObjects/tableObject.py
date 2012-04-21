@@ -257,6 +257,32 @@ class complexTableObject(scalarObject):
         ###
         self.parseLength()
         
+    def addF06Data(self,data,transient):
+        if transient is None:
+            for line in data:
+                (nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r, v1i,v2i,v3i,v4i,v5i,v6i) = line
+                self.gridTypes[nodeID]    = gridType
+                self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
+                self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
+                #self.translations[nodeID] = array([t1,t2,t3])
+                #self.rotations[nodeID]    = array([r1,r2,r3])
+            ###
+            return
+
+        (dtName,dt) = transient
+        self.dataCode['name'] = dtName
+        if dt not in self.translations:
+            self.updateDt(self.dataCode,dt)
+
+        for line in data:
+            (nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r, v1i,v2i,v3i,v4i,v5i,v6i) = line
+            self.gridTypes[nodeID]    = gridType
+            self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
+            self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
+            #self.translations[dt][nodeID] = array([t1,t2,t3])
+            #self.rotations[dt][nodeID]    = array([r1,r2,r3])
+        ###
+
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()

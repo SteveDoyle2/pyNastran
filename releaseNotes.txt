@@ -44,14 +44,19 @@ Solver
       - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.4 released 2012/04/??-----------------------
+-----------------------v0.4 released 2012/04/23-----------------------
 Overall Notes
+   - new ASCII/binary OP4 reader for dense matrices
    - lots of BDF bug fixes
    - lots of new BDF cards
+   - added support for OpenMDAO user-defined parameterization syntax %varname
    - new results in OP2
-   - F06 Reader/Writer
+   - new F06 Reader/Writer
    - F06 Writer integrates with OP2 Reader
-   - added support for OpenMDAO user-defined parameterization syntax
+
+Overall OP4
+   - ASCII/binary reader
+   - sparse matrices not supported
 
 Overall BDF
    - 180 total cards
@@ -62,7 +67,7 @@ Overall BDF
    - added support for THRU-BY on certain cards (e.g. QBDY3)
    - added new custom Exceptions to make errors messages clearer
    - added support for user defined optimization values (using %varName)
-     values set with "bdf.setDynamicSytax(dictOfVars)"
+     values set with "bdf.setDynamicSyntax(dictOfVars)"
 
 BDF API Changes
    - removeCards(['GRID','CQUAD4']) is now called disableCards(cards)
@@ -72,7 +77,10 @@ BDF API Changes
      Mass() calculated based on mid1 (or mid2 if mid1=None) per QRG
    - Tri-type elements are now TriShells instead of CTRIA3s (same for QUADs, QuadShells)
    - component constraints (e.g. 123456) on GRID, SPC, SPC1 and MPC are now strings
-     for easy looping (default='')
+     for easy looping instead of a single integer (default='')
+   - added Mids() for PCOMP/PCOMPG
+   - added getNodeIDToElementIDsMap(), getPropertyIDToElementIDsMap(), getMaterialIDToPropertyIDsMap()
+     limited 0D,1D element support (e.g. CBAR, CBEAM, CELAS1, etc.) for these methods
 
 BDF Bug Fixes
    - printCard can now handle cards with an embedded line of Nones
@@ -102,12 +110,6 @@ Added BDF
    - DRESP2
    - SPOINT
 
-OP2 API Changes
-   - more results in CBEAM stress/strain
-   - complex displacement reworked
-   - added writeF06 method to most objects (no strain energy, shear stress/strain, celas stress/strain)
-
-OP2 Bug Fixes
 Overall OP2
    - more results
    - integrates with F06 Writer
@@ -118,12 +120,17 @@ Overall OP2
      - OEE
      - OQG
 
+OP2 API Changes
+   - more results in CBEAM stress/strain
+   - complex displacement reworked
+   - added writeF06 method to most objects (no strain energy, shear stress/strain, celas stress/strain)
+
 Added OP2
    - LAMA (requires an ESE = ALL to create table)
      - eigenvalues (real)
 
    - OUG (DISPLACMENTS=ALL)
-     - better complex displacements
+     - improved complex displacements
      - ***complex velocity
      - ***complex acceleration
    - OQG (SPCFORCES=ALL, MPCFORCES=ALL)
@@ -139,108 +146,24 @@ Added OP2
        - CTRIA3, CQUAD4
        - CROD, CONROD, CTUBE
        - ***CBEAM
-   - OGF (???=ALL)
+   - OGF (GPFORCES=ALL)
      - grid point forces (static/transient)
      - load vector (static/transient)
 
 Overall F06 Reader/Writer
    - rewrote f06 reader
+      - format1, real, SORT1 supported
       - limited transient support
       - F06 Reader not nearly as complete as the OP2 Reader
       - F06 field parsing needs more testing, so beware!
-      - use the OP2 reader
+      - juat use the OP2 reader
    - F06 Writer integrates with OP2 reader
      - transient variable names may not be correct (e.g. 'lftsfq' mean 'LOAD STEP', but it should write 'LOAD STEP')
    - The op2 or f06 readers feed the f06 writer or another solver/user's own results.
-
-Added F06 Reader
-   - format1, real, SORT1 supported
-
-   - LAMA/CLAMA (requires an ESE = ALL to create op2 table)
-     - eigenvalues  (real/***complex - no object)
-
-   - OUG (DISPLACMENTS=ALL)
-     - displacement (static/transient)
-       - real/complex
-     - velocity/acceleration (static/transient)
-       - ***real/***complex
-     - temperature  (static/transient)
-     - eigenvectors (real/complex)
-
-   - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
-     - SPC Forces (static/***transient)
-     - MPC Forces (static/***transient)
-
-   - OES (STRESS=ALL, STRAIN=ALL)
-     - solid stress/strain (static/***transient)
-        - CTETRA
-        - CPENTA
-        - CHEXA
-     - isotropic plate stress/strain (static/***transient);  (directional vectors & pressure will be calculated, not stored)
-        - CTRIA3
-        - CQUAD4 (centroid/bilinear)
-        - ***CQUAD8
-        - ***CTRIA6
-     - composite plate stress/strain (static/***transient)
-        - CTRIA3
-        - CQUAD4 (centroid)
-        - ***CQUAD8
-        - ***CTRIA6
-     - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
-     - bar stress/strain   (static/transient; CBAR)
-     - ***beam  stress/strain (static/transient; CBEAM)
-     - ***shear stress/strain (static/transient; CSHEAR)
-
-Added F06 Writer
-   - prints out 0.000000E00 as 0.0
-   - OUG (DISPLACMENTS=ALL)
-     - displacement (static/transient)
-       - real/complex
-     - velocity     (static/transient)
-       - real
-     - acceleration (static/transient)
-       - real
-     - temperature  (static/transient)
-     - eigenvectors (real/***complex)
-
-   - OES (STRESS=ALL, STRAIN=ALL)
-     - solid stress/strain (static/transient);  (directional vectors & pressure calculated)
-        - CTETRA
-        - CPENTA
-        - CHEXA
-     - isotropic plate stress/strain (static/transient)
-        - CTRIA3
-        - CQUAD4 (centroid/bilinear)
-        - ***CQUAD8
-        - ***CTRIA6
-     - composite plate stress/strain (static/transient)
-        - CTRIA3
-        - CQUAD4 (centroid)
-        - ***CQUAD8
-        - ***CTRIA6
-     - rod stress/strain   (static/transient; CROD, CONROD, CTUBE)
-     - bar stress/strain   (static/transient; CBAR)
-     - beam  stress/strain (static/transient; CBEAM)
-     - ***shear stress/strain (static/transient; CSHEAR)
-
-   - LAMA/CLAMA (requires an ESE = ALL to create op2 table)
-     - eigenvalues  (real/***complex)
-
-   - OQG (constraint forces; SPCFORCES=ALL, MPCFORCES=ALL)
-     - SPC forces (static/transient)
-       - real/complex
-     - MPC forces (static/transient)
-       - real/complex
-
-   - OGF (grid point forces; ???=ALL)
-     - grid point force balance (static/transient)
-     - load vector (static/transient)
+   - see f06_readWrite.txt for more info
 
 Overall GUI
-Added GUI
    - CSHEAR, CTRIAX6 support
-
-GUI Bug Fixes
    - "python setup.py install" should work now, but it's still not recommended
 
 -----------------------v0.3 released 2012/02/08-----------------------
