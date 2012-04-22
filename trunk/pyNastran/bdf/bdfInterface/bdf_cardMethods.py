@@ -47,9 +47,9 @@ class cardMethods(object):
         #if debug:
             #print '-------------------------------------------------'
             #print "pack = \n",'\n'.join(linesPack)
-        if linesPack[0][0] in ['+','*',' ']: # fix for unhandled card at end of deck
-            self.doneReading=True
-            return(None,None,None)
+        #if linesPack[0][0] in ['+','*',' ']: # fix for unhandled card at end of deck
+            #self.doneReading=True
+            #return(None,None,None)
 
         if linesPack == []:
             self.closeFile()
@@ -117,9 +117,6 @@ class cardMethods(object):
         ###
 
     def getMultiLineCard(self,i,tempcard,isCSV=False,debug=False):
-        #print "get MultiLineCard...i=%s" %(i)
-        if debug:
-            print "tempcard1 = ",tempcard
         iline = self.linesPack[-1][i].rstrip()
         #while iline=='':
         #    i+=1
@@ -127,30 +124,40 @@ class cardMethods(object):
         
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
         isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
+        #debug = True
         if debug:
+            print "get MultiLineCard...i=%s" %(i)
+            print "tempcard1 = ",tempcard
+
             self.log.debug("CRITERIA A")
-            self.log.debug("  iline       = |%r|" %(iline))
+            self.log.debug("  iline      = |%r|" %(iline))
             self.log.debug("  len(iline) = %-10s -> len(iline)>0         = %s" %('|'+str(len(iline))+'|',str(len(iline)>0)))
             self.log.debug("  iline[0]   = %-10s -> line[0] in [*,+,','] = %s" %('|'+iline[0]+'|',iline.strip()[0] in ['*','+',',']  ))
             self.log.debug("  sCardName  = %-10s -> name=''              = %s" %('|'+sCardName+'|',sCardName=='' ))
             self.log.debug("  iline = |%s|" %(iline))
-            print ""
-            print "isNotDone A = %s" %(isNotDone)
+            self.log.debug("isNotDone A = %s" %(isNotDone))
         
         while(isNotDone):
-            #print "not done...i=%s" %(i)
+            if debug:
+                print "not done...i=%s" %(i)
             tempcard.append(iline)
             i+=1
             #if debug:
             #    print card
             if 'ENDDATA' in iline:
-                print "********"
+                #print "********"
+                self.log.debug('found ENDDATA')
                 self.doneReading=True
                 break
             if i+1==len(self.linesPack[-1]):
                 if debug:
                     self.log.debug("breaking b/c empty pack???")
                 break
+            if i==len(self.linesPack[-1]): # pre-catching the raise...
+                self.doneReading = True
+                break
+            #ilineA = self.linesPack[-1]
+            #print "iLineA = |%r|" %(ilineA)
             iline = self.linesPack[-1][i]
             #try:
             #    iline = self.linesPack[-1][i]
@@ -164,6 +171,7 @@ class cardMethods(object):
             #sCardName = slot0.strip()  # trying to find if it's blank...
             isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
             if debug:
+                print tempcard
                 self.log.debug("CRITERIA B")
                 self.log.debug("  iline       = |%r|" %(iline))
                 self.log.debug("  len(iline) = %-10s -> len(iline)>0         = %s" %('|'+str(len(iline))+'|',str(len(iline)>0)))
@@ -175,7 +183,9 @@ class cardMethods(object):
         #self.log.debug("tempcard2 = |%s|" %(tempcard))
             #print ""
         #sys.exit('asdf')
-        #print "done...i=%s" %(i)
+        if debug:
+            print "done...i=%s" %(i)
+            print ""
         return (i,tempcard)
     
     def nastranSplit(self,line,isLargeField,debug=False):
