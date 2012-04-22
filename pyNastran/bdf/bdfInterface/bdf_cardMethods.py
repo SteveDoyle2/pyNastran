@@ -14,12 +14,6 @@ class cardMethods(object):
         while len(self.linesPack[-1])<self.nCardLinesMax:
             line = self.infilesPack[-1].readline()
             line = line.split('$')[0].rstrip('\n\r\t ')
-            if '\t' in line:
-                #raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
-                if ',' in line:
-                    #expandTabCommas(line2)
-                    raise TabCommaCharacterError('tabs and commas in the same line are not supported...line=|%r|' %(line))
-                line = line.expandtabs()
             if('$' not in line and len(line)>0):
                 if debug:
                     print "line = |%r|" %(line)
@@ -31,11 +25,32 @@ class cardMethods(object):
                 break
         return self.linesPack[-1]
 
+    def updateCardLines(self,lines):
+        """expands a card with tabs in it"""
+        lines2 = []
+        for line in lines:
+            if '\t' in line:
+                #raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
+                if ',' in line:
+                    #expandTabCommas(line2)
+                    raise TabCommaCharacterError('tabs and commas in the same line are not supported...line=|%r|' %(line))
+                line = line.expandtabs()
+            ###
+            lines2.append(line)
+        return lines2
+
     def getCard(self,debug=False):
         """gets a single unparsed card"""
         #debug = True
         
         linesPack = self.makeLinesPack(debug=debug)
+        #if debug:
+            #print '-------------------------------------------------'
+            #print "pack = \n",'\n'.join(linesPack)
+        if linesPack[0][0] in ['+','*',' ']: # fix for unhandled card at end of deck
+            self.doneReading=True
+            return(None,None,None)
+
         if linesPack == []:
             self.closeFile()
             linesPack = self.makeLinesPack(debug=debug)
@@ -62,6 +77,7 @@ class cardMethods(object):
             self.doneReading=True
             #raise
         ###
+        #print "i = ",i
         
         #try:
         linesPack[:] = linesPack[i:]
@@ -70,6 +86,7 @@ class cardMethods(object):
         
         #print "tempcard = ",''.join(tempcard)
         
+        tempcard = self.updateCardLines(tempcard)
         upperCard = [line.upper() for line in tempcard]
         cardName = self.getCardName(upperCard)
         #print "|%s|" %(cardName)
@@ -100,6 +117,7 @@ class cardMethods(object):
         ###
 
     def getMultiLineCard(self,i,tempcard,isCSV=False,debug=False):
+        #print "get MultiLineCard...i=%s" %(i)
         if debug:
             print "tempcard1 = ",tempcard
         iline = self.linesPack[-1][i].rstrip()
@@ -110,14 +128,17 @@ class cardMethods(object):
         sCardName = iline[0:8].strip()  # trying to find if it's blank...
         isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
         if debug:
-            self.log.debug("  len(iline) = |%s|" %(len(iline)))
-            self.log.debug("  iline[0]   = |%s|" %(iline[0]  ))
-            self.log.debug("  sCardName  = |%s|" %(sCardName ))
+            self.log.debug("CRITERIA A")
+            self.log.debug("  iline       = |%r|" %(iline))
+            self.log.debug("  len(iline) = %-10s -> len(iline)>0         = %s" %('|'+str(len(iline))+'|',str(len(iline)>0)))
+            self.log.debug("  iline[0]   = %-10s -> line[0] in [*,+,','] = %s" %('|'+iline[0]+'|',iline.strip()[0] in ['*','+',',']  ))
+            self.log.debug("  sCardName  = %-10s -> name=''              = %s" %('|'+sCardName+'|',sCardName=='' ))
             self.log.debug("  iline = |%s|" %(iline))
             print ""
             print "isNotDone A = %s" %(isNotDone)
         
         while(isNotDone):
+            #print "not done...i=%s" %(i)
             tempcard.append(iline)
             i+=1
             #if debug:
@@ -127,6 +148,8 @@ class cardMethods(object):
                 self.doneReading=True
                 break
             if i+1==len(self.linesPack[-1]):
+                if debug:
+                    self.log.debug("breaking b/c empty pack???")
                 break
             iline = self.linesPack[-1][i]
             #try:
@@ -141,20 +164,31 @@ class cardMethods(object):
             #sCardName = slot0.strip()  # trying to find if it's blank...
             isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
             if debug:
-                self.log.debug("CRITERIA")
-                self.log.debug("iline       = |%r|" %(iline))
-                self.log.debug("sCardName   = %s" %sCardName)
-                self.log.debug("len(iline)  = %s" %len(iline))
-                self.log.debug("iline[0]    = %s" %iline[0])
-                self.log.debug("isNotDone B = %s" %isNotDone)
+                self.log.debug("CRITERIA B")
+                self.log.debug("  iline       = |%r|" %(iline))
+                self.log.debug("  len(iline) = %-10s -> len(iline)>0         = %s" %('|'+str(len(iline))+'|',str(len(iline)>0)))
+                self.log.debug("  iline[0]   = %-10s -> line[0] in [*,+,','] = %s" %('|'+iline[0]+'|',iline.strip()[0] in ['*','+',',']  ))
+                self.log.debug("  sCardName  = %-10s -> name=''              = %s" %('|'+sCardName+'|',sCardName=='' ))
+                self.log.debug("  isNotDone B = %s" %isNotDone)
         ###
         #if debug:
         #self.log.debug("tempcard2 = |%s|" %(tempcard))
             #print ""
         #sys.exit('asdf')
+        #print "done...i=%s" %(i)
         return (i,tempcard)
     
     def nastranSplit(self,line,isLargeField,debug=False):
+        """
+        Splits a single BDF line into large field or small field format
+        @param self the object pointer
+        @param line the BDF line
+        @param a flag indicating small/large field format (True/False)
+        @param debug extra developer debug
+        @retval fields the 9 (small) or 5 (large) fields for the line
+        @note CSV Format is handled by parseCSV
+        @note tabs are handled prior to running this
+        """
         if debug:
             print "isLargeField = %s" %(isLargeField)
         if isLargeField:
@@ -263,6 +297,8 @@ class cardMethods(object):
         """
         The only valid tab/commas format in nastran is having the 
         first field be a tab and the rest of the fields be separated by commas.
+        @param self the object pointer
+        @param line a BDF line
         """
         fields = []
         isWord = True
@@ -325,10 +361,19 @@ class cardMethods(object):
         #return collapse(cardOut)
 
     def parseDynamicSyntax(self,key):
+        """
+        Applies the dynamic syntax for %varName
+        @param self the object pointer
+        @param key the uppercased key
+        @retval value the dynamic value defined by dictOfVars
+        @note %varName is actually %VARNAME b/c of auto-uppercasing the string, 
+              so the setDynamicSyntax method uppercases the key prior to this step
+        @see setDynamicSyntax
+        """
         #print "*** valueRaw.lstrip() = |%r|" %(valueRaw.lstrip())
         #key = key.lstrip('%%')
         key = key[1:]
-        print "dynamic key = |%r|" %(key)
+        self.log.info("dynamic key = |%r|" %(key))
         #self.dictOfVars = {'P5':0.5,'ONEK':1000.}
         return self.dictOfVars[key]
 

@@ -87,7 +87,7 @@ class bdfReader(object):
         linesPack = self.makeLinesPack(debug=False)
         #print "len(linesPack) = ",len(linesPack)
         #for line in linesPack:
-            #print "$  |%r|" %(line)
+            #print("$  |%r|" %(line))
 
         if len(linesPack)==0:
             self.closeFile()
