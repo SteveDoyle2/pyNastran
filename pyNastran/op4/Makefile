@@ -9,3 +9,6 @@ all:
 
 clean:
 	rm -rf build *.so op4.c libop4.o
+
+test: ./test_loadop4.py
+	./test_loadop4.py
