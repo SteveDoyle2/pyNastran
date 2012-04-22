@@ -739,7 +739,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 reject = '$ INCLUDE processed:  %s\n' %(filename)
                 self.rejects.append([reject])
                 continue
-            
+            elif cardName is None:
+                self.closeFile()
+                continue
+                
             passCard = False
             #if self.isSpecialCard(cardName):
             #    passCard = True
