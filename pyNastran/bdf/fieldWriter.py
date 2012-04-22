@@ -101,9 +101,10 @@ def printFloat8(value,tol=0.):
             #print "positive"
 
             if value<5e-8:  ## @todo does this work properly with tol
+                #print "scientific"
                 field = printScientific8(value)
                 return field
-            elif value<0.0001:
+            elif value<0.001:
                 #print "A"
                 if 1:
                     #print value
@@ -350,18 +351,21 @@ if __name__=='__main__':
     #print printField(8.17272e-6)
     #print printField(10300000.0)
     #print printField(-10300000.0)
-    printField(-0.021004)
-    
-    field = printField(1e20);       assert '   1.+20' == field,'|%s|' %(field)
-    field = printField(-.723476);   assert '-.723476' == field,'|%s|' %(field)
-    field = printField(125000. );   assert ' 125000.' == field,'|%s|' %(field)
-    field = printField(12500000.);  assert '  1.25+7' == field,'|%s|' %(field)
-    field = printField(47.77267);   assert '47.77267' == field,'|%s|' %(field)
-    field = printField(.001);       assert '    .001' == field,'|%s|' %(field)
-    field = printField(.0000001);   assert '.0000001' == field,'|%s|' %(field)
-    field = printField(-5.007e-3);  assert '-5.007-3' == field,'|%s|' %(field)
-    field = printField(-0.0748662); assert '-.074866' == field,'|%s|' %(field)
-    field = printField(-999999.);   assert '-999999.' == field,'|%s|' %(field)
+    if 1: # works
+        printField(-0.021004)
+
+        field = printField(1e20);       assert '   1.+20' == field,'|%s|' %(field)
+        field = printField(-.723476);   assert '-.723476' == field,'|%s|' %(field)
+        field = printField(125000. );   assert ' 125000.' == field,'|%s|' %(field)
+        field = printField(12500000.);  assert '  1.25+7' == field,'|%s|' %(field)
+        field = printField(47.77267);   assert '47.77267' == field,'|%s|' %(field)
+        field = printField(.001);       assert '    .001' == field,'|%s|' %(field)
+        field = printField(.0000001);   assert '.0000001' == field,'|%s|' %(field)
+        field = printField(-5.007e-3);  assert '-5.007-3' == field,'|%s|' %(field)
+        field = printField(-0.0748662); assert '-.074866' == field,'|%s|' %(field)
+        field = printField(-999999.);   assert '-999999.' == field,'|%s|' %(field)
+    field = printField(7.4851e-4);  assert '7.4851-4' == field,'|%s|' %(field)
+
     #print printField(12500000. )
     #print printField(47.77267)
     #print printField(.0000001)
