@@ -159,7 +159,7 @@ class MAT1(Material):
         G  = card.field(3)
         nu = card.field(4)
 
-        if G is None and E is None:
+        if G is None and E is None: # no E,G
             raise RuntimeError('G=%s E=%s cannot both be None' %(G,E))
         elif E is not None and G is not None and nu is not None:
             pass
@@ -211,11 +211,11 @@ class MAT1(Material):
             G_default = self.e/2./(1+self.nu)
             G = self.e/2./(1+self.nu)
         ###
+        #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
         return G
 
     def reprFields(self):
         G = self.getG_default()
-        #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
 
         rho  = self.setBlankIfDefault(self.rho,1e-8)
         a    = self.setBlankIfDefault(self.a,0.)

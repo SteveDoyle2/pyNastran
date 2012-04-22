@@ -14,7 +14,7 @@ import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
 #print "testPath = ",testPath
 
-def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
+def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
     #debug = True
     print "folder = ",folder
     filenames  = os.listdir(folder)
@@ -28,7 +28,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
     for filename in filenames2:
         print "filename = ",os.path.abspath(os.path.join(folder,filename))
         try:
-            (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,cid=cid,isFolder=True)
+            (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,check=check,cid=cid,isFolder=True)
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
@@ -58,7 +58,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,cid=None):
         print "diffCards2 = ",diffCards
 ###
 
-def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,meshForm='combined',isFolder=False):
+def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm='combined',isFolder=False):
     bdfModel = str(bdfFilename)
     print "bdfModel = ",bdfModel
     if isFolder:
@@ -105,7 +105,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,cid=None,meshForm='combined'
         outModel2 = bdfModel+'_out2'
         fem2.writeBDFAsPatran(outModel2)
         #fem2.writeAsCTRIA3(outModel2)
-        diffCards = compare(fem1,fem2,xref=xref)
+        diffCards = compare(fem1,fem2,xref=xref,check=check)
         os.remove(outModel2)
 
     except KeyboardInterrupt:
@@ -276,9 +276,9 @@ def getElementStats(fem1,fem2):
         ###
     ###
 
-def compare(fem1,fem2,xref=True):
+def compare(fem1,fem2,xref=True,check=True):
     diffCards = compareCardCount(fem1,fem2)
-    if xref:
+    if xref and check:
         getElementStats(fem1,fem2)
     compareCardContent(fem1,fem2)
     #compareParams(fem1,fem2)
@@ -307,7 +307,8 @@ def main():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument( '-q','--quiet',  dest='quiet',action='store_true',  help='Prints   debug messages (default=False)')
-    parser.add_argument('-x','--xref',   dest='xref', action='store_false', help='Disables cross-referencing of the BDF')
+    parser.add_argument('-x','--xref',   dest='xref', action='store_false', help='Disables cross-referencing and checks of the BDF')
+    parser.add_argument('-c','--checks', dest='check',action='store_false', help='Disables BDF checks.  Checks run the methods on every element/property to test them.  May fails if a card is not supported.')
     parser.add_argument('-v','--version',action='version',version=ver,help="Shows pyNastran's version number and exits")
     
     if len(sys.argv)==1:
@@ -317,13 +318,15 @@ def main():
 
     print "bdfFile     = ",args.bdfFileName[0]
     print "xref        = ",args.xref
+    print "check       = ",args.check
     print "debug       = ",not(args.quiet)
 
     xref        = args.xref
+    check       = args.check
     debug       = not(args.quiet)
     bdfFileName = args.bdfFileName[0]
 
-    runBDF('.',bdfFileName,debug=debug,xref=xref)
+    runBDF('.',bdfFileName,debug=debug,xref=xref,check=check)
 
 if __name__=='__main__':
     main()
