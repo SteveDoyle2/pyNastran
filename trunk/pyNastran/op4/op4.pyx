@@ -1,18 +1,22 @@
-# Copyright (C) 1999-2012  Al Danial <al.danial@gmail.com>
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# {{{1 GNU Lesser General Public License
 # 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# Copyright (C) 1999-2012  <al.danial@gmail.com>
 # 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# This program is free software; you can redistribute it and/or   
+# modify it under the terms of the GNU Lesser General Public      
+# License as published by the Free Software Foundation;           
+# version 3 of the License.                                       
+#                                                                 
+# This program is distributed in the hope that it will be useful, 
+# but WITHOUT ANY WARRANTY; without even the implied warranty of  
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the    
+# GNU Lesser General Public License for more details.             
+#                                                                 
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the           
+# Free Software Foundation, Inc.,                                 
+# 675 Mass Ave, Cambridge, MA 02139, USA.                         
+# 1}}}
 
 """ 
 Load matrices from NASTRAN Output 4 (.op4) files.
