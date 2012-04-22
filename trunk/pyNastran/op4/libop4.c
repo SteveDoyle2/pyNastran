@@ -59,18 +59,21 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                    int     col_width  ,  /* in  # characters in format str */
                    int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
                    int     complx     ,  /* in  0=real   1=complex         */
+                   int     n_Nnz      ,  /* in  number of nonzero terms    */
+                   int    *col_ptr    ,  /* out col index   (s_o) = 1,2    */
                    int    *n_str      ,  /* out # strings   (s_o) = 1,2    */
                    str_t  *str_data   ,  /* out string data (s_o) = 1,2    */
                    int    *N_index    )  /* in/out          (s_o) = 1,2    */
 {
     float  *array;
     double *column;
-    int     r, c, size, NPT, n_nnz, nType;
+    int     r, c, size, NPT, nnz, nType;
     int    *unused;
     str_t  *unused_s;
 
     int     endian = 0;      /* FIX THIS */
 
+    nnz   = 0;
     size  = nRow*nCol;
     NPT   = 1;
     nType = 1;
@@ -87,7 +90,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
     column = malloc(sizeof(double)*nRow*NPT);
     for (c = 0; c < nCol; c++) {
         if (filetype == 1) {
-            n_nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+            nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
                                    storage   ,  /* in 0=dn  1,2=sp1,2  3=ccr  */
                                    complx    ,  /* in  0=real   1=complex     */
                                    unused    ,  /* in/out index m.S (if sp1,2)*/
@@ -95,7 +98,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                          (int   *) unused    ,  /* in/out index m.N (sp 1,2)  */
                                    column    ); /* out numeric data */
         } else {
-            n_nnz = op4_read_col_b(fp        ,
+            nnz = op4_read_col_b(fp        ,
                                    endian    ,  /* in  0=native   1=flipped    */
                                    c+1       ,  /* in  requested column to read   */
                                    nRow      ,  /* in  # rows    in matrix        */

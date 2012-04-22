@@ -52,6 +52,9 @@ cdef extern from "stdio.h":
     ctypedef void* FILE
     int   fseek (FILE *stream, long int off, int whence)
     char *fgets (char *s, int n, FILE *stream)
+cdef extern from "stdlib.h":
+    void free(void* ptr)
+    void* malloc(size_t size)
 
 cdef extern from "libop4.c":
     ctypedef struct str_t:
@@ -68,6 +71,8 @@ cdef extern from "libop4.c":
                        int     col_width  ,  #/* in  # characters in format str */
                        int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
                        int     complx     ,  #/* in  0=real   1=complex         */
+                       int     n_Nnz      ,  #/* in  number of nonzero terms    */
+                       int    *col_ptr    ,  #/* out col index   (s_o) = 1,2    */
                        int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
                        str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
                        int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
@@ -394,7 +399,10 @@ class OP4:                                                # {{{1
         cdef int     size
         cdef int     filetype
         cdef int    *unused
+        cdef int     n_str
         cdef str_t  *unused_s
+        cdef str_t  *str_data
+        cdef int    *N_index
         cdef float  *array_RS
         cdef float  *array_CS
         cdef double *array_RD
@@ -467,6 +475,8 @@ class OP4:                                                # {{{1
                                               col_width ,
                                               self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                               complx    , # in  0=real   1=complex     
+                                              self.nnz[i],# in number of nonzero terms
+                                              unused    , # out column index to strings (sp1,2)
                                               unused    , # in/out index m.S (if sp1,2)
                                               unused_s  , # out string data (if sp1,2) 
                                               unused    ) # in/out index m.N (sp 1,2)  
@@ -504,6 +514,8 @@ class OP4:                                                # {{{1
                                               col_width ,
                                               self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                               complx    , # in  0=real   1=complex     
+                                              self.nnz[i],# in number of nonzero terms
+                                              unused    , # out column index to strings (sp1,2)
                                               unused    , # in/out index m.S (if sp1,2)
                                               unused_s  , # out string data (if sp1,2) 
                                               unused    ) # in/out index m.N (sp 1,2)  
