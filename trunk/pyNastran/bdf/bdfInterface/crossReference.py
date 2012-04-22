@@ -8,10 +8,10 @@ class XrefMesh(object):
 
     def crossReference(self,xref=True):
         """
-        links up all the cards to the cards they reference
+        Links up all the cards to the cards they reference
         """
         if xref:
-            self.log.info("cross Referencing...")
+            self.log.info("Cross Referencing...")
             #for key,e in self.elements.items():
             #    print(e)
 
@@ -57,7 +57,7 @@ class XrefMesh(object):
 
     def crossReference_Coordinates(self):
         """
-        links up all the coordinate cards to other coordinate cards and nodes
+        Links up all the coordinate cards to other coordinate cards and nodes
         """
         for cid,c in self.coords.items(): # CORD2x: links the rid to coordinate systems
             c.crossReference(self)        # CORD1x: links g1,g2,g3 to grid points
@@ -70,7 +70,7 @@ class XrefMesh(object):
 
     def crossReference_Aero(self):
         """
-        links up all the aero cards
+        Links up all the aero cards
         """
         for ID,caero in self.caeros.items():
             caero.crossReference(self)
@@ -81,14 +81,14 @@ class XrefMesh(object):
 
     def crossReference_Nodes(self):
         """
-        links the nodes to coordinate systems
+        Links the nodes to coordinate systems
         """
         gridSet = self.gridSet
         for nid,n in self.nodes.items():
             try:
                 n.crossReference(self,gridSet)
             except:
-                sys.stderr.write('couldnt cross reference\n%s' %(str(n)))
+                sys.stderr.write("Couldn't cross reference GRID.  Are all Coordinate Systemes supported?\n%s" %(str(n)))
                 raise
         ###
         if self.spoints:
@@ -97,60 +97,60 @@ class XrefMesh(object):
 
     def crossReference_Elements(self):
         """
-        links the elements to nodes, properties (and materials depending on the card)
+        Links the elements to nodes, properties (and materials depending on the card)
         """
         for eid,e in self.elements.items():
             try:
                 e.crossReference(self)
             except:
-                sys.stderr.write('couldnt cross reference\n%s' %(str(e)))
+                sys.stderr.write("Couldn't cross reference Element.  Are all Properties supported?\n%s" %(str(e)))
                 raise
         ###
 
     def crossReference_Properties(self):
         """
-        links the properties to materials
+        Links the properties to materials
         """
         for pid,p in self.properties.items():
             #print p
             try:
                 p.crossReference(self)
             except:
-                sys.stderr.write('couldnt cross reference\n%s' %(str(p)))
+                sys.stderr.write("Couldn't cross reference Property.  Are all Materials supported?\n%s" %(str(p)))
                 raise
         ###
 
     def crossReference_Materials(self):
         """
-        links the materials to materials (e.g. CREEP)
+        Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
         """
-        for mid,m in self.materials.items():
+        for mid,m in self.materials.items(): # MAT1
             try:
                 m.crossReference(self)
             except:
-                sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
+                sys.stderr.write("Couldn't cross reference Material\n%s" %(str(m)))
                 raise
         ###
-        for mid,m in self.materialDeps.items():
+        for mid,m in self.materialDeps.items(): # CREEP - depends on MAT1
             try:
                 m.crossReference(self)
             except:
-                sys.stderr.write('couldnt cross reference\n%s' %(str(m)))
+                sys.stderr.write("Couldn't cross reference Material\n%s" %(str(m)))
                 raise
         ###
 
     def crossReference_Loads(self):
         """
-        links the loads to nodes, coordinate systems, and other loads
+        Links the loads to nodes, coordinate systems, and other loads
         """
         for lid,sid in self.loads.items():
-            print("lid=%s sid=%s" %(lid,sid))
+            self.log.debug("lid=%s sid=%s" %(lid,sid))
             for load in sid:
                 try:
                     load.crossReference(self)
                 except:
-                    sys.stderr.write('couldnt cross reference\n%s' %(str(load)))
+                    sys.stderr.write("Couldn't cross reference Load\n%s" %(str(load)))
                     raise
         ###
 
