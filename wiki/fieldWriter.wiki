@@ -1,5 +1,4 @@
 #summary How to use fieldWriter.py
-#labels Featured
 
 = Introduction =
 
