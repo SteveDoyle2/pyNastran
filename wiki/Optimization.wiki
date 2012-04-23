@@ -42,6 +42,7 @@ p.layers[n][1] *=3  # [mid,t,sout,ge]  1->t
 # write out the model
 bdf.writeBDF(bdfNameOut)
 }}}
+see the [http://code.google.com/p/pynastran/wiki/DeveloperDocs Developer Docs] for more infomation on how to interface with a BDF.
 
 == User Parametrization Method (Version 0.4 Only)===
 The user may also parametrize the file themselves and provide a code
@@ -51,17 +52,17 @@ The developer only needs to feed pyNastran a dictionary of the key-value pairs t
 Cards that are not supported in pyNastran will not be deparametrized.  
 Luckily many cards are supported, so this shouldn't be much of an issue.
 {{{
----old---
+---original line---
 FORCE    1       9       0      1000.   1.       0.      0.
 
---parametrized---
+--parametrized line using small field format---
 FORCE    1       9       0      %oneK   1.       0.      0.
 
---parametrized 2---
+--parametrized line using CSV format---
 FORCE,1,9,0,%oneK,1.,0.,0.
 
 }}}
-Large field format is supported as well.  Variable names have a *maximum of 7-characters* excluding the % sign.
+Large field format and tabs are supported as well.  Variable names have a *maximum of 7-characters* excluding the % sign.
 Now we call the code to update the model.  Note that variable names are NOT case sensitive.
 {{{
 
@@ -92,8 +93,8 @@ The *User Parametrization Method* is preferred for a simple scripting process.
 
 3. It's bad for changing more complicated parameters, such as the number of layers in a PCOMP or adding materials in order to do a Progressive Failure analysis.  
 
-4. It's easy to go outside of the 8-character field.
+4. It's easy to go outside of the 8-character field.  The program will complain if you do.
 
 5.  It only works for the Bulk Data Deck (not the Executive Control or Case Control decks)
 
-6. Not affected by API changes
+6. Not affected by API changes.
