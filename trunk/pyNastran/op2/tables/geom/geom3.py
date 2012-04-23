@@ -50,7 +50,6 @@ class Geometry3(object):
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
-        return
         #print "reading FORCE"
         n=0
         nEntries = len(data)//28  # 7*4
