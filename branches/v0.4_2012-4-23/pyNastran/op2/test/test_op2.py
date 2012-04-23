@@ -131,15 +131,15 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    except TapeCodeError: # the op2 is bad, not my fault
-        isPassed = True
-        if stopOnFailure:
-            raise
-        else:
-            isPassed = True
-        ###
-    except IOError: # missing file
-        pass
+    #except TapeCodeError: # the op2 is bad, not my fault
+    #    isPassed = True
+    #    if stopOnFailure:
+    #        raise
+    #    else:
+    #        isPassed = True
+    #    ###
+    #except IOError: # missing file
+    #    pass
     #except AssertionError:
     #    isPassed = True
 
@@ -174,9 +174,9 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except MissingFileError: # missing bdf file
-        isPassed = False
-        raise
+    #except MissingFileError: # missing bdf file
+    #    isPassed = False
+    #    raise
     #except InvalidSubcaseParseError:
     #    isPassed = True
     #except ScientificParseError:  # bad value parsing
