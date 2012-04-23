@@ -12,7 +12,7 @@ def getFoldersFiles(dirname):
     files = []
     folders = []
     for fileFolder in filesFolders:
-        if '.svn' not in fileFolder:
+        if '.svn' not in fileFolder and 'op4' not in fileFolder:
             fullPath = os.path.join(dirname,fileFolder)
             if os.path.isdir(fullPath):
                 (subFolders,fullPaths) = getFoldersFiles(fullPath)

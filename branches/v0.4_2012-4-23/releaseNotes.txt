@@ -15,35 +15,6 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
------------------------v0.5 released 2012/04/??-----------------------
-Overall Notes
-Overall BDF
-BDF API Changes
-Added BDF
-   - *** TIC
-
-OP2 API Changes
-OP2 Bug Fixes
-Overall OP2
-Added OP2
-
-Overall F06 Reader/Writer
-Added F06 Reader
-Added F06 Writer
-
-Overall GUI
-Added GUI
-GUI Bug Fixes
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
 -----------------------v0.4 released 2012/04/23-----------------------
 Overall Notes
    - new ASCII/binary OP4 reader for dense matrices

@@ -5,7 +5,7 @@
 ## 
 ## Authors and copyright holders of pyNastran
 ## Steven Doyle <mesheb82@gmail.com>
-## Al Danials <al.danials@gmail.com>
+## Al Danial    <al.danial@gmail.com>
 ## 
 ## This file is part of pyNastran.
 ## 
