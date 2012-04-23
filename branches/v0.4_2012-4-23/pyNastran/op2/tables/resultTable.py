@@ -5,8 +5,6 @@ from struct import unpack
 from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.oug  import OUG
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
-#from pyNastran.op2.tables.oes_stressStrain.oesnlxr import OESNLXR
-#from pyNastran.op2.tables.oes_stressStrain.oesnlxd import OESNLXD
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg   import OQG
 from pyNastran.op2.tables.oef_forces.oef import OEF
@@ -20,7 +18,7 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 
 
 
-class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OESNLXD,
+class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
