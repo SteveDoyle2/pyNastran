@@ -42,7 +42,7 @@ p.layers[n][1] *=3  # [mid,t,sout,ge]  1->t
 # write out the model
 bdf.writeBDF(bdfNameOut)
 }}}
-see the [http://code.google.com/p/pynastran/wiki/DeveloperDocs Developer Docs] for more infomation on how to interface with a BDF.
+See the [http://code.google.com/p/pynastran/wiki/DeveloperDocs Developer Docs] for more infomation on how to interface with a BDF.
 
 == User Parametrization Method (Version 0.4 Only)===
 The user may also parametrize the file themselves and provide a code
