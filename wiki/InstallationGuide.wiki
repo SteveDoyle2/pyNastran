@@ -28,7 +28,9 @@ I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your ve
  * wxPython 2.8.12.0
  * Cython 0.15.1
 
-== Install Cython ==
+== Install Cython and C compiler==
+ * Windows: Install [http://www.cygwin.com/ Cygwin] and Microsoft Visual Studio 2008 ([http://wiki.tiker.net/PyCuda/Installation/Windows follow this]).  The version of Visual Studio is important as Python is built against MSVC 2008.  Don't worry, it's free.
+ * Linux/Mac: Install gcc
  * Open a command prompt / terminal
  * run *easy_install cython==0.15.1* to install Cython
 
