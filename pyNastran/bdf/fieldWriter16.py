@@ -5,7 +5,7 @@ def printScientific16(value):
     @warning not tested...
     """
     #print "scientific...%s" %(value)
-    pythonValue = '%16.14e' %(value)
+    pythonValue = '%16.14e' %(value) # -1.e-2
     #print "pythonValue = ",pythonValue
     svalue,sExponent = pythonValue.strip().split('e')
     exponent = int(sExponent) # removes 0s
@@ -21,7 +21,7 @@ def printScientific16(value):
     value2 = float(svalue)
     #lenSValue = len(svalue)
     
-    lenSExp   = len(sExp2)+1 # the plus 1 is for the sign
+    lenSExp  = len(sExp2)+1 # the plus 1 is for the sign
     leftover = 16-lenSExp
     
     svalue2 = svalue.strip('0')
@@ -49,25 +49,26 @@ def printFloat16(value,tol=1e-8):
     """
     strVal = printFloat8(value,tol)
     return '%16s' %(strVal)
+
     #value = round(value,4)
     #print "float...%s" %value
     if abs(value)<=tol:  # tol=1e-8
         #print "below tol %s" %(value)
-        field = "%8s" %('0.')
+        field = "%16s" %('0.')
     else:
         if value>0.:  # positive, not perfect...
             #print "positive"
 
-            if value<5e-8:  ## @todo does this work properly with tol
+            if value<5e-16:  ## @todo does this work properly with tol
                 #print "scientific"
-                field = printScientific8(value)
+                field = printScientific16(value)
                 return field
             elif value<0.001:
                 #print "A"
                 if 1:
                     #print value
-                    field = printScientific8(value)
-                    field2 = "%8.7f" %(value) # small value
+                    field = printScientific16(value)
+                    field2 = "%16.15f" %(value) # small value
                     field2 = field2.strip('0 ')
 
                     #if 'e' not in field:
@@ -76,8 +77,8 @@ def printFloat16(value,tol=1e-8):
                     #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
                     #print "same - ",float(field1)==float(field2)
                     if field2=='.':
-                        return "%8s" %(field)
-                    if len(field2)<=8 and float(field1)==float(field2):
+                        return "%16s" %(field)
+                    if len(field2)<=16 and float(field1)==float(field2):
                         field = field2
                         #print "*field = ",field
                         field = field.strip(' 0')
@@ -90,53 +91,60 @@ def printFloat16(value,tol=1e-8):
                     ###
                 ###
                 if 0:
-                    field = "%8.7f" %(value)
+                    field = "%16.7f" %(value)
                     #print "field = ",field
                     field = field.strip('0')
-                    if len(field)<8:
+                    if len(field)<16:
                         assert '.' == field[0],field
                     else:
-                        field = printScientific8(value)
+                        field = printScientific16(value)
                         return field
                     ###
                     #print "field = ",field
                 ###
             elif value<0.1:
                 #print "B*"
-                field = "%8.7f" %(value)
+                field = "%16.15f" %(value)
                 #field = field.strip('0 ')
                 #print field
                 #field = field[1:]
-            elif value<1.:       field = "%8.7f" %(value)
-            elif value<10:       field = "%8.6f" %(value)
-            elif value<100.:     field = "%8.5f" %(value)
-            elif value<1000.:    field = "%8.4f" %(value)
-            elif value<10000.:   field = "%8.3f" %(value)
-            elif value<100000.:  field = "%8.2f" %(value)
-            elif value<1000000.: field = "%8.1f" %(value)
-            else: # big value
-                #print "big"
-                field = "%8.1f" %(value)
-                if field.index('.')<8:
-                    field = '%8.1f' %(round(value))
-                    field = field[0:8]
+            elif value<1.:               field = "%16.15f" %(value)
+            elif value<10.:              field = "%16.14f" %(value)
+            elif value<100.:             field = "%16.13f" %(value)
+            elif value<1000.:            field = "%16.12f" %(value)
+            elif value<10000.:           field = "%16.11f" %(value)
+            elif value<100000.:          field = "%16.10f" %(value)
+            elif value<1000000.:         field = "%16.9f" %(value)
+            elif value<10000000.:        field = "%16.8f" %(value)
+            elif value<100000000.:       field = "%16.7f" %(value)
+            elif value<1000000000.:      field = "%16.6f" %(value)
+            elif value<10000000000.:     field = "%16.5f" %(value)
+            elif value<100000000000.:    field = "%16.4f" %(value)
+            elif value<1000000000000.:   field = "%16.3f" %(value)
+            elif value<10000000000000.:  field = "%16.2f" %(value)
+            elif value<100000000000000.: field = "%16.1f" %(value)
+            else: # big value  # 123456789012345.
+                #print "big"   # 100000000000000.
+                field = "%16.1f" %(round(value))
+                if field.index('.')<16:
+                    field = field[0:16] # drop off the .1f
                     assert '.' != field[0],field
                 else:
-                    field = printScientific8(value)
+                    field = printScientific16(value)
                 ###
                 return field
             ###
         ###
         else:
             #print "negative"
-            if value>-5e-7:  ## @todo does this work properly with tol
+            if value>-5e-15:  ## @todo does this work properly with tol
                 #print "really small"
-                field = printScientific8(value)
+                field = printScientific16(value)
                 return field
             elif value>-0.01:  # -0.001
                 #print "tiny"
-                field = printScientific8(value)
-                field2 = "%8.6f" %(value) # small value
+                field = printScientific16(value)
+                field2 = "%16.14f" %(value) # small value
                 field2 = field2.strip('0 ')
 
                 #if 'e' not in field:
@@ -172,6 +180,21 @@ def printFloat16(value,tol=1e-8):
             elif value>-1000:    field = "%8.3f" %(value)   # -100  >x>-1000
             elif value>-10000:   field = "%8.2f" %(value)   # -1000 >x>-10000
             elif value>-100000:  field = "%8.1f" %(value)   # -10000>x>-100000
+
+            elif value>-10.:              field = "%16.14f" %(value)
+            elif value>-100.:             field = "%16.13f" %(value)
+            elif value>-1000.:            field = "%16.12f" %(value)
+            elif value>-10000.:           field = "%16.11f" %(value)
+            elif value>-100000.:          field = "%16.10f" %(value)
+            elif value>-1000000.:         field = "%16.9f" %(value)
+            elif value>-10000000.:        field = "%16.8f" %(value)
+            elif value>-100000000.:       field = "%16.7f" %(value)
+            elif value>-1000000000.:      field = "%16.6f" %(value)
+            elif value>-10000000000.:     field = "%16.5f" %(value)
+            elif value>-100000000000.:    field = "%16.4f" %(value)
+            elif value>-1000000000000.:   field = "%16.3f" %(value)
+            elif value>-10000000000000.:  field = "%16.2f" %(value)
+            elif value>-100000000000000.: field = "%16.1f" %(value)
             else:
                 field = "%8.1f" %(value)
                 if field.index('.')<8:
