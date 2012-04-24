@@ -40,23 +40,23 @@ This is how the version 0.4 OP2 reading software works.  Make sure you install t
 
 == Results Table ==
 The following tables are supported, unless otherwise stated.
-|| *Result Type*      || *BDF Line*       || *F06/OP2 Table* ||
-|| Displacement       || DISPLACEMENT=ALL || OUG  ||
-|| Velocity           || VELOCITY=ALL     || OUG  ||
-|| Acceleration       || ACCEL=ALL        || OUG  ||
+|| *Result Type*      || *BDF Line*        || *F06/OP2 Table* ||
+|| Displacement       || DISPLACEMENT=ALL  || OUG  ||
+|| Velocity           || VELOCITY=ALL      || OUG  ||
+|| Acceleration       || ACCELERATION=ALL  || OUG  ||
 || Eigenvector        || DISPLACEMENT/VECTOR=ALL  || OUG  ||
-|| Temperature        || DISPLACEMENT/THERMAL=ALL || OUG  ||
-|| Eigenvalue Order   || ESE=ALL          || LAMA ||
-|| SPC Forces         || SPCFORCES=ALL    || OQG  ||
-|| MPC Forces         || MPCFORCES=ALL    || OQG  ||
-|| Grid Point Forces  || GPFORCE=ALL      || OGF  ||
-|| Applied Forces     || ???              || OGP  ||
-|| Load Vector        || ???              || OGP  ||
-|| Stress             || STRESS=ALL       || OES  ||
-|| Strain             || STRAIN=ALL       || OES  ||
-|| Element Strain Energy || ESE=ALL ???     || OEE  ||
-|| Forces             || ELFORCE=ALL        || OEF (not supported)  ||
-|| Heat Flux          || ELFORCE/FLUX=ALL   || OEF (not supported)  ||
+|| Temperature        || THERMAL=ALL       || OUG  ||
+|| Eigenvalue Order   || ESE=ALL           || LAMA ||
+|| SPC Forces         || SPCFORCES=ALL     || OQG  ||
+|| MPC Forces         || MPCFORCES=ALL     || OQG  ||
+|| Grid Point Forces  || GPFORCE=ALL       || OGF  ||
+|| Applied Forces     || ???               || OGP  ||
+|| Load Vector        || ???               || OGP  ||
+|| Stress             || STRESS=ALL        || OES  ||
+|| Strain             || STRAIN=ALL        || OES  ||
+|| Element Strain Energy || ESE=ALL ???    || OEE  ||
+|| Forces             || FORCE/ELFORCE=ALL || OEF (not supported)  ||
+|| Heat Flux          || FLUX=ALL          || OEF (not supported)  ||
 
 
 = Making an OP2 =
