@@ -36,7 +36,7 @@ This is how the version 0.4 OP2 reading software works.  Make sure you install t
  * no applied forces
  * limited nonlinear/hyperelastic element support (e.g. SOL 106, SOL 129)
  * VERY limited frequency support
- * see <A href="http://code.google.com/p/pynastran/source/browse/tags/v0.4.0/op2_reading.txt"> v0.4 OP2 Support</A>
+ * see <A href="https://pynastran.googlecode.com/svn/tags/0.4.0/op2_reading.txt"> v0.4 OP2 Support</A>
 
 == Results Table ==
 The following tables are supported, unless otherwise stated.
