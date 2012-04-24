@@ -8,6 +8,12 @@ packages = find_packages()+['gui/icons/*.*']
 #print "packages = ",packages
 #sys.exit()
 
+extra = {}
+if sys.version_info >= (3,):
+    extra['use_2to3'] = True
+    #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
+    #extra['use_2to3_fixers'] = ['your.fixers']
+
 setup(name='pyNastran',
       version=pyNastran.__version__,
       description=pyNastran.__desc__,
@@ -24,8 +30,8 @@ setup(name='pyNastran',
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
-#          'numpy >= 1.3.0',
-#          'scipy >= 0.6.0',
+          'numpy >= 1.3.0',
+          'scipy >= 0.6.0',
 #          'vtk >= 5.8.0',
 #          'wx >= 2.8.12.0',
 #          'cython',
@@ -38,4 +44,6 @@ setup(name='pyNastran',
                             'pyNastranGUI = pyNastran.gui.gui:main',
                            ]
       },
+      test_suite = 'pyNastran.all_tests',
+      #**extra
       )
