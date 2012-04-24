@@ -1,7 +1,9 @@
 #summary How to use the OP4 Reader
 
-= Introduction (v0.4) =
+= Introduction =
 The OP4 reader is a an ASCII (text) or binary reader for Nastran OP4 files.  It can *ONLY* read *dense* matrices.  Sparse matrices are not supported yet.
+
+See the InstallationGuide for how to install the OP4 Reader.
 
 =Load Matrices from NASTRAN Output 4 (.op4) Files=
 Example:
