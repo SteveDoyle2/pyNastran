@@ -164,7 +164,7 @@ class FrameVTK(object):
         nidMap = {}
         i=0
         #elem.SetNumberOfPoints(nNodes)
-        for nid,node in sorted(model.nodes.items()):
+        for nid,node in sorted(model.nodes.iteritems()):
             #print "i = ",i
             point = node.Position()
             #print "point = ",point
@@ -185,7 +185,7 @@ class FrameVTK(object):
         j = 0
         points2 = vtk.vtkPoints()
         points2.SetNumberOfPoints(nCAeros*4+nCONM2)
-        for eid,element in sorted(model.caeros.items()):
+        for eid,element in sorted(model.caeros.iteritems()):
             if isinstance(element,CAERO1):
                 cpoints = element.Points()
                 elem = vtkQuad()
@@ -202,7 +202,7 @@ class FrameVTK(object):
         self.mapElements(points,points2,nidMap,model,j)
 
     def mapElements(self,points,points2,nidMap,model,j):
-        for eid,element in sorted(model.elements.items()):
+        for eid,element in sorted(model.elements.iteritems()):
             if isinstance(element,CTRIA3):
                 #print "ctria3"
                 elem = vtkTriangle()

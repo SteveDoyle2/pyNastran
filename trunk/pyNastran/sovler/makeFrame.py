@@ -194,7 +194,7 @@ def buildGlobalStiffness(model):
     nElements = model.nElements()
     Kg = matrix(zeros((nDOF,nDOF),'d') ) # K_global
     
-    for id,element in sorted(model.elements.items()):
+    for id,element in sorted(model.elements.iteritems()):
         #nodes = element.nodes
         print element
         Ke = element.Stiffness(model)
@@ -235,7 +235,7 @@ def buildGlobalStiffness(model):
 def applyBoundaryConditions(model,Kg):
     nids = []
     allNodes = []
-    for (eid,element) in model.elements.items():
+    for (eid,element) in model.elements.iteritems():
         nodes = element.nodeIDs()
         allNodes += nodes
         for nid in nodes:
@@ -275,14 +275,14 @@ def setCol(Kg,nid,value):
 def getForces(model,Dofs):
     Fvector = zeros( model.nNodes()*3,'d')
     print model.loads
-    for loadSet,loads in model.loads.items():
+    for loadSet,loads in model.loads.iteritems():
         ## @todo if loadset in required loadsets...
         #print loads
         for load in loads:
             if load.type=='FORCE':
                 loadDir = load.F()
                 #nid = load.nodeID()
-                for nodeID,F in loadDir.items():
+                for nodeID,F in loadDir.iteritems():
                     dof = Dofs[nodeID]
                     print "dof[%s] = %s" %(nodeID,dof)
                     Fvector[dof[0]] = F[0]
@@ -297,7 +297,7 @@ def getForces(model,Dofs):
 def runTruss():
     model = makeTruss2()
     model.crossReference()
-    #for id,e in model.elements.items():
+    #for id,e in model.elements.iteritems():
     #    print "K = \n",e.Stiffness(model),'\n'
     
     Kglobal,Dofs  = buildGlobalStiffness(model)
@@ -308,7 +308,7 @@ def runTruss():
     q = solveKF(model,Kglobal,F,Dofs)
     
     print q
-    for eid,elem in model.elements.items():
+    for eid,elem in model.elements.iteritems():
         elem.displacementStress(model,q)
     
     #x = solve(Kreduced,F) # deflections
@@ -321,7 +321,7 @@ def solveKF(model,Kg,F,Dofs):
     
     dofmap = {}
     i=0
-    for nid,node in model.nodes.items():
+    for nid,node in model.nodes.iteritems():
         #constrained=[]; unconstrained=[]
         BCs = str(node.ps)
         dofs = Dofs[nid]

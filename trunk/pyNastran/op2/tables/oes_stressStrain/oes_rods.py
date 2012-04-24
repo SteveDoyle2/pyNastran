@@ -173,7 +173,7 @@ class rodStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -201,7 +201,7 @@ class rodStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -256,7 +256,7 @@ class rodStressObject(stressObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         msg = []
-        for dt,axials in sorted(self.axial.items()):
+        for dt,axials in sorted(self.axial.iteritems()):
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[2] = dtLine
             msg += header+words
@@ -480,7 +480,7 @@ class rodStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -508,7 +508,7 @@ class rodStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -562,7 +562,7 @@ class rodStrainObject(strainObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         msg = []
-        for dt,axials in sorted(self.axial.items()):
+        for dt,axials in sorted(self.axial.iteritems()):
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[2] = dtLine
             msg += header+words

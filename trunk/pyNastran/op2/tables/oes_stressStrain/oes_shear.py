@@ -123,7 +123,7 @@ class shearStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,maxShears in sorted(self.maxShear.items()):
+        for dt,maxShears in sorted(self.maxShear.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(maxShears):
                 maxShear = self.maxShear[dt][eid]
@@ -151,7 +151,7 @@ class shearStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -320,7 +320,7 @@ class shearStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,maxShears in sorted(self.maxShear.items()):
+        for dt,maxShears in sorted(self.maxShear.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(maxShears):
                 maxShear = self.maxShear[dt][eid]
@@ -348,7 +348,7 @@ class shearStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]

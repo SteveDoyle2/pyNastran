@@ -10,7 +10,7 @@ class CodeAsterConverter(BDF):
         props = {}
         for pid in self.properties:
             props[pid] = []
-        for eid,element in self.elements.items():
+        for eid,element in self.elements.iteritems():
             pid = element.Pid()
             props[pid].append(eid)
         ###
@@ -22,7 +22,7 @@ class CodeAsterConverter(BDF):
         
         for mid in self.materials:
             mats[mid] = []
-        for eid,element in self.elements.items():
+        for eid,element in self.elements.iteritems():
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
@@ -36,7 +36,7 @@ class CodeAsterConverter(BDF):
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []
-        for eid,element in self.elements.items():
+        for eid,element in self.elements.iteritems():
             Type = element.type
             if Type not in elems:
                 elems[Type] = []
@@ -53,7 +53,7 @@ class CodeAsterConverter(BDF):
         
         for mid in self.materials:
             mats[mid] = []
-        for pid,property in self.properties.items():
+        for pid,property in self.properties.iteritems():
             try:
                 mid = property.Mid()
                 mats[mid].append(pid)
@@ -84,7 +84,7 @@ class CodeAsterConverter(BDF):
         msg += 'COORD_3D\n'
         form = '    grid%-'+str(self.maxNIDlen)+'s %8g %8g %8g\n'
 
-        for nid,node in sorted(self.nodes.items()):
+        for nid,node in sorted(self.nodes.iteritems()):
             p = node.Position()
             msg += form %(nid,p[0],p[1],p[2])
         ###
@@ -103,7 +103,7 @@ class CodeAsterConverter(BDF):
 
         formE = '    elem%-'+str(self.maxEIDlen)+'s '
         formG =     'grid%-'+str(self.maxNIDlen)+'s '
-        for Type,eids in sorted(elems.items()):
+        for Type,eids in sorted(elems.iteritems()):
             msg += '%s\n' %(Type)
             for eid in eids:
                 msg += formE %(eid)
@@ -122,7 +122,7 @@ class CodeAsterConverter(BDF):
             msg = ''
         
         #p = []
-        #for pid,prop in sorted(self.properties.items()):
+        #for pid,prop in sorted(self.properties.iteritems()):
         #    p.append('%s_%s' %(prop.type,pid))
         #p = str(p)[1:-1] # chops the [] signs
         #msg += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
@@ -133,7 +133,7 @@ class CodeAsterConverter(BDF):
         msg += "Prop = AFFE_CARA_ELEM(MODELE=FEMODL,\n"
         pyCA = ''
         iCut=0; iFace=0; iStart=0
-        for pid,prop in sorted(self.properties.items()):
+        for pid,prop in sorted(self.properties.iteritems()):
             if isinstance(prop,PBARL) or isinstance(prop,PBEAML):
                 (pyCAi,iCut,iFace,iStart) = prop.writeCodeAster(iCut,iFace,iStart)
                 pyCA += pyCAi
@@ -154,7 +154,7 @@ class CodeAsterConverter(BDF):
             msg = ''
         if self.loads or self.gravs:
             msg += '# LOADS\n'
-            for key,loadcase in sorted(self.loads.items()):
+            for key,loadcase in sorted(self.loads.iteritems()):
                 for load in loadcase:
                     try:
                         msg += load.writeCodeAster()
@@ -162,7 +162,7 @@ class CodeAsterConverter(BDF):
                         print 'failed printing load...type=%s key=%s' %(load.type,key)
                         raise
                     ###
-            for ID,grav in sorted(self.gravs.items()):
+            for ID,grav in sorted(self.gravs.iteritems()):
                 msg += grav.writeCodeAster()
             ###
         ###
@@ -178,7 +178,7 @@ class CodeAsterConverter(BDF):
         else:
             msg = ''
         mats = self.getElementsByMid()
-        for mid,material in sorted(self.materials.items()):
+        for mid,material in sorted(self.materials.iteritems()):
             #msg += 'GROUP_MA name = %s_%s\n' %(material.type,mid)
             msg += material.writeCodeAster()
 
@@ -209,7 +209,7 @@ class CodeAsterConverter(BDF):
         msg += '                      AFFE=(\n'
 
         mat2Props = self.getPropertiesByMid()
-        for mid,material in sorted(self.materials.items()):
+        for mid,material in sorted(self.materials.iteritems()):
             msg += '                      _F(GROUP_MA=('
             pids = mat2Props[mid]
             #msg += "                      "
@@ -224,7 +224,7 @@ class CodeAsterConverter(BDF):
         return msg
 
     def CA_SPCs(self):
-        #for spcID,spcs in self.spcObject2.items():
+        #for spcID,spcs in self.spcObject2.iteritems():
         pass
 
     def breaker(self):

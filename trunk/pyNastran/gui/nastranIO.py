@@ -94,7 +94,7 @@ class NastranIO(object):
         if 0:
             i=0
             fraction = 1./nNodes # so you can color the nodes by ID
-            for nid,node in sorted(model.nodes.items()):
+            for nid,node in sorted(model.nodes.iteritems()):
                 #print "i = ",i
                 point = node.Position()
                 #print "point = ",point
@@ -111,7 +111,7 @@ class NastranIO(object):
                 i+=1
         if 1:
             i = 0
-            for nid,node in sorted(model.nodes.items()):
+            for nid,node in sorted(model.nodes.iteritems()):
                 point = node.Position()
                 points.InsertPoint(i, *point)
                 self.nidMap[nid] = i
@@ -121,7 +121,7 @@ class NastranIO(object):
         j = 0
         points2 = vtk.vtkPoints()
         points2.SetNumberOfPoints(nCAeros*4+nCONM2)
-        for eid,element in sorted(model.caeros.items()):
+        for eid,element in sorted(model.caeros.iteritems()):
             if isinstance(element,CAERO1):
                 cpoints = element.Points()
                 elem = vtkQuad()
@@ -140,7 +140,7 @@ class NastranIO(object):
     def mapElements(self,points,points2,nidMap,model,j):
         self.eidMap = {}
         i = 0
-        for eid,element in sorted(model.elements.items()):
+        for eid,element in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
             #print element.type
             if isinstance(element,CTRIA3):
@@ -358,7 +358,7 @@ class NastranIO(object):
         
         #case = op2.displacements[1]
         #print "case = ",case
-        #for nodeID,translation in sorted(case.translations.items()):
+        #for nodeID,translation in sorted(case.translations.iteritems()):
             #print "nodeID=%s t=%s" %(nodeID,translation)
         #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
 
@@ -373,14 +373,14 @@ class NastranIO(object):
         for ID in subcaseIDs:
             if nidsSet:
                 nids = zeros(self.nNodes,'d')
-                for nid,nid2 in self.nidMap.items():
+                for nid,nid2 in self.nidMap.iteritems():
                     nids[nid2] = nid
                 cases[(ID,'Node_ID',1,'node','%.0f')] = nids
                 nidsSet = True
 
             if eidsSet:
                 eids = zeros(nElements,'d')
-                for eid,eid2 in self.eidMap.items():
+                for eid,eid2 in self.eidMap.iteritems():
                     eids[eid2] = eid
                
                 eKey = (ID,'isElementOn',1,'centroid','%.0g')
@@ -399,7 +399,7 @@ class NastranIO(object):
                     #print case
                     temps = zeros(self.nNodes)
                     key = (ID,'Temperature',1,'node','%g')
-                    for nid,T in case.temperatures.items():
+                    for nid,T in case.temperatures.iteritems():
                         #print T
                         nid2 = self.nidMap[nid]
                         temps[nid2] = T

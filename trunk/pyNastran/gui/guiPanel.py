@@ -376,11 +376,11 @@ class Pan(wx.Panel,NastranIO):
         self.iText+=1
         
     def TurnTextOff(self):
-        for i,text in self.textActors.items():
+        for i,text in self.textActors.iteritems():
             text.VisibilityOff()
         
     def TurnTextOn(self):
-        for i,text in self.textActors.items():
+        for i,text in self.textActors.iteritems():
             text.VisibilityOn()
 
     def getWindow(self):

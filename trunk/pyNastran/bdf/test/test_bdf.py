@@ -36,6 +36,8 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
         #    pass
         #except TabCharacterError:
         #    pass
+        #except TabCommaCharacterError:
+        #    pass
         #except ScientificParseError:
         #    pass
         #except ClosedBDFError:
@@ -110,16 +112,18 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except MissingFileError:
-    #    pass
-    #except TabCharacterError:
-    #    pass
-    #except ScientificParseError:
-    #    pass
-    #except BDF_SyntaxError:
-    #    pass
-    #except ClosedBDFError:
-    #    pass
+    except MissingFileError:
+        pass
+    except TabCharacterError:
+        pass
+    except TabCommaCharacterError:
+        pass
+    except ScientificParseError:
+        pass
+    except ClosedBDFError:
+        pass
+    except BDF_SyntaxError:
+        pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:
@@ -216,7 +220,7 @@ def compute(cards1,cards2):
     ###
 
 def getElementStats(fem1,fem2):
-    for key,e in sorted(fem1.elements.items()):
+    for key,e in sorted(fem1.elements.iteritems()):
         try:
             if isinstance(e,ShellElement):
                 a   = e.Area()
@@ -289,7 +293,7 @@ def compareParams(fem1,fem2):
     compute(fem1.params,fem2.params)
 
 def printPoints(fem1,fem2):
-    for nid,n1 in sorted(fem1.nodes.items()):
+    for nid,n1 in sorted(fem1.nodes.iteritems()):
         print "%s   xyz=%s  n1=%s  n2=%s" %(nid,n1.xyz,n1.Position(True),  fem2.Node(nid).Position())
         break
     ###

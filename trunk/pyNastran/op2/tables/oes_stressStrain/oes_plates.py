@@ -282,9 +282,9 @@ class plateStressObject(stressObject):
         msg += '\n'
 
         #print self.oxx.keys()
-        for dt,oxxs in sorted(self.oxx.items()):
+        for dt,oxxs in sorted(self.oxx.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,oxxNodes in sorted(oxxs.items()):
+            for eid,oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
                     for iLayer in range(len(self.oxx[dt][eid][nid])):
@@ -358,7 +358,7 @@ class plateStressObject(stressObject):
             isTri = False
             triMsg = []
 
-        for eid,oxxNodes in sorted(self.oxx.items()):
+        for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
             if eType in 'CQUAD4':
                 if isBilinear:
@@ -431,12 +431,12 @@ class plateStressObject(stressObject):
             triMsg2 = []
         
         msg = []
-        for dt,OxxNodes in sorted(self.oxx.items()):
+        for dt,OxxNodes in sorted(self.oxx.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             #msg += header+words
             quadMsg = []
             triMsg = []
-            for eid,oxxNodes in sorted(OxxNodes.items()):
+            for eid,oxxNodes in sorted(OxxNodes.iteritems()):
                 eType = self.eType[eid]
                 if eType in 'CQUAD4':
                     if isBilinear:
@@ -587,7 +587,7 @@ class plateStressObject(stressObject):
         msg += '\n'
 
         #print self.oxx.keys()
-        for eid,oxxNodes in sorted(self.oxx.items()):
+        for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
                 for iLayer in range(len(self.oxx[eid][nid])):
@@ -917,7 +917,7 @@ class plateStrainObject(strainObject):
             isTri = False
             triMsg = []
 
-        for eid,exxNodes in sorted(self.exx.items()):
+        for eid,exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
             if eType in 'CQUAD4':
                 if isBilinear:
@@ -991,13 +991,13 @@ class plateStrainObject(strainObject):
             triMsg2 = []
 
         msg = []
-        for dt,ExxNodes in sorted(self.exx.items()):
+        for dt,ExxNodes in sorted(self.exx.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             quadMsg = []
             triMsg = []
             if isQuad: quadMsg = header+quadMsg2
             if isTri:  triMsg  = header+triMsg2
-            for eid,exxNodes in sorted(ExxNodes.items()):
+            for eid,exxNodes in sorted(ExxNodes.iteritems()):
                 eType = self.eType[eid]
                 if eType in 'CQUAD4':
                     if isBilinear:
@@ -1146,7 +1146,7 @@ class plateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,exxNodes in sorted(self.exx.items()):
+        for eid,exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
                 for iLayer in range(len(self.exx[eid][nid])):
@@ -1183,9 +1183,9 @@ class plateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,exx in sorted(self.exx.items()):
+        for dt,exx in sorted(self.exx.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,exxNodes in sorted(exx.items()):
+            for eid,exxNodes in sorted(exx.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
                     for iLayer in range(len(self.exx[dt][eid][nid])):

@@ -43,7 +43,7 @@ class OP2(BDF,  # BDF methods
                  subcaseID_2: [time3, time4]}
         """
         expectedTimes = {}
-        for iSubcase,eTimes in times.items():
+        for iSubcase,eTimes in times.iteritems():
             eTimes = list(times)
             eTimes.sort()
             expectedTimes[iSubcase] = array(eTimes)
@@ -705,7 +705,7 @@ class OP2(BDF,  # BDF methods
         
         msg = '---ALL RESULTS---\n'
         for result in results:
-            for iSubcase,res in sorted(result.items()):
+            for iSubcase,res in sorted(result.iteritems()):
                 msg += 'iSubcase = %s\n' %(iSubcase)
                 try:
                     msg += str(res) + '\n'

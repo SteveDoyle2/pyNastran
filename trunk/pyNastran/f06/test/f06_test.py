@@ -34,7 +34,7 @@ def parseSkippedCards(fname):
         ###
     
     filesToAnalyze = []
-    for (key,value) in sorted(results.items()):
+    for (key,value) in sorted(results.iteritems()):
         #print key,value
         filesToAnalyze.append(value)
     

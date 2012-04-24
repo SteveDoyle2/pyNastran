@@ -117,10 +117,10 @@ class nonlinearQuadObject(stressObject):
 #0 5.000E-05  -5.000000E-01  -4.484895E+01  -1.561594E+02                 -2.008336E-02   1.392609E+02   0.0            0.0
         msgE = {}
         msgT = {}
-        for (dt,Oxxs) in sorted(self.oxx.items()):
+        for (dt,Oxxs) in sorted(self.oxx.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
 
-            for (eid,oxxs) in sorted(Oxxs.items()):
+            for (eid,oxxs) in sorted(Oxxs.iteritems()):
                 msgE[eid] = header+['      ELEMENT-ID = %8i\n' %(eid)]
                 if eid not in msgT:
                     msgT[eid] = []
@@ -149,7 +149,7 @@ class nonlinearQuadObject(stressObject):
             ###
         ###
         msg = []
-        for eid,e in sorted(msgE.items()):
+        for eid,e in sorted(msgE.iteritems()):
             msg += header+e+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum)+'\n')
             pageNum+=1
@@ -229,10 +229,10 @@ class hyperelasticQuadObject(stressObject):
                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
         
-        for dt,Oxxs in sorted(self.oxx.items()):
+        for dt,Oxxs in sorted(self.oxx.iteritems()):
             #header[-1] = '     LOAD STEP = %12.5E' %(dt)
             msg += header
-            for eid,oxxs in sorted(Oxxs.items()):
+            for eid,oxxs in sorted(Oxxs.iteritems()):
                 gauss = self.Type[eid]
                 oxx = self.oxx[dt][eid]
                 oyy = self.oyy[dt][eid]
@@ -324,8 +324,8 @@ class nonlinearRodObject(stressObject):
                '                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n']
         msgE = {}
         msgT = {}
-        for dt,axials in sorted(self.axialStress.items()):
-            for eid,axial in sorted(axials.items()):
+        for dt,axials in sorted(self.axialStress.iteritems()):
+            for eid,axial in sorted(axials.iteritems()):
                 eqs  = self.equivStress[dt][eid]
                 ts   = self.totalStrain[dt][eid]
                 epcs = self.effectivePlasticCreepStrain[dt][eid]
@@ -338,7 +338,7 @@ class nonlinearRodObject(stressObject):
                 msgT[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n'%(dt,axial,eqs,ts,epcs,ecs,lts))
             ###
         ###
-        for eid,e in sorted(msgE.items()):
+        for eid,e in sorted(msgE.iteritems()):
             msg += header+[e]+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum))
 

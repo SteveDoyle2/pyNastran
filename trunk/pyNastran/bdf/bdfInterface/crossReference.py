@@ -12,7 +12,7 @@ class XrefMesh(object):
         """
         if xref:
             self.log.info("Cross Referencing...")
-            #for key,e in self.elements.items():
+            #for key,e in self.elements.iteritems():
             #    print(e)
 
             self.crossReference_Nodes()
@@ -34,20 +34,20 @@ class XrefMesh(object):
         pass
         
         #self.spcObject2 = constraintObject2()
-        for key,spcadd in sorted(self.spcadds.items()):
+        for key,spcadd in sorted(self.spcadds.iteritems()):
             self.spcObject2.Add(spcadd)
 
-        for key,spcs in sorted(self.spcs.items()):
+        for key,spcs in sorted(self.spcs.iteritems()):
             #print spcs
             for spc in spcs:
                 self.spcObject2.append(spc)
         ###
 
         #self.mpcObject2 = constraintObject2()
-        for key,mpcadd in sorted(self.mpcadds.items()):
+        for key,mpcadd in sorted(self.mpcadds.iteritems()):
             self.mpcObject2.Add(mpcadd)
 
-        for key,mpcs in sorted(self.mpcs.items()):
+        for key,mpcs in sorted(self.mpcs.iteritems()):
             #print spcs
             for mpc in mpcs:
                 self.mpcObject2.append(mpc)
@@ -59,10 +59,10 @@ class XrefMesh(object):
         """
         Links up all the coordinate cards to other coordinate cards and nodes
         """
-        for cid,c in self.coords.items(): # CORD2x: links the rid to coordinate systems
-            c.crossReference(self)        # CORD1x: links g1,g2,g3 to grid points
+        for cid,c in self.coords.iteritems(): # CORD2x: links the rid to coordinate systems
+            c.crossReference(self)            # CORD1x: links g1,g2,g3 to grid points
         ###
-        for cid,c in self.coords.items(): # CORD1x: Since the grid points were already referenced,
+        for cid,c in self.coords.iteritems(): # CORD1x: Since the grid points were already referenced,
             c.resolveCid()                # we can now resolve the coordinate systems.
         ###                               # We couldnt do it in the previous step b/c
                                           # the grid's coordinate system might have been
@@ -72,10 +72,10 @@ class XrefMesh(object):
         """
         Links up all the aero cards
         """
-        for ID,caero in self.caeros.items():
+        for ID,caero in self.caeros.iteritems():
             caero.crossReference(self)
         ###
-        for ID,spline in self.splines.items():
+        for ID,spline in self.splines.iteritems():
             spline.crossReference(self)
         ###
 
@@ -84,7 +84,7 @@ class XrefMesh(object):
         Links the nodes to coordinate systems
         """
         gridSet = self.gridSet
-        for nid,n in self.nodes.items():
+        for nid,n in self.nodes.iteritems():
             try:
                 n.crossReference(self,gridSet)
             except:
@@ -99,7 +99,7 @@ class XrefMesh(object):
         """
         Links the elements to nodes, properties (and materials depending on the card)
         """
-        for eid,e in self.elements.items():
+        for eid,e in self.elements.iteritems():
             try:
                 e.crossReference(self)
             except:
@@ -111,7 +111,7 @@ class XrefMesh(object):
         """
         Links the properties to materials
         """
-        for pid,p in self.properties.items():
+        for pid,p in self.properties.iteritems():
             #print p
             try:
                 p.crossReference(self)
@@ -125,14 +125,14 @@ class XrefMesh(object):
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
         """
-        for mid,m in self.materials.items(): # MAT1
+        for mid,m in self.materials.iteritems(): # MAT1
             try:
                 m.crossReference(self)
             except:
                 sys.stderr.write("Couldn't cross reference Material\n%s" %(str(m)))
                 raise
         ###
-        for mid,m in self.materialDeps.items(): # CREEP - depends on MAT1
+        for mid,m in self.materialDeps.iteritems(): # CREEP - depends on MAT1
             try:
                 m.crossReference(self)
             except:
@@ -144,7 +144,7 @@ class XrefMesh(object):
         """
         Links the loads to nodes, coordinate systems, and other loads
         """
-        for lid,sid in self.loads.items():
+        for lid,sid in self.loads.iteritems():
             self.log.debug("lid=%s sid=%s" %(lid,sid))
             for load in sid:
                 try:

@@ -19,7 +19,7 @@ class getMethods(object):
         
     def getNodes(self):
         nodes = []
-        for nid,node in sorted(self.nodes.items()):
+        for nid,node in sorted(self.nodes.iteritems()):
             nodes.append(node)
         return nodes
 
@@ -94,7 +94,7 @@ class getMethods(object):
                 nidToElementsMap[nid] = []
             ###
         ###
-        for eid,element in self.elements.items(): # load the mapper
+        for eid,element in self.elements.iteritems(): # load the mapper
             try:
                 nids = element.nodeIDs() # not supported for 0-D and 1-D elements
                 for nid in nids:  # (e.g. CQUAD8 with missing node)

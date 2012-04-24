@@ -509,7 +509,7 @@ class F06(OES,OUG,OQG,F06Writer):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
         dataPack = [self.solidStress]
         for dataSet in dataPack:
-            for key,data in dataSet.items():
+            for key,data in dataSet.iteritems():
                 data.processF06Data()
         
     def isMarker(self,marker):

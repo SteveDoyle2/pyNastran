@@ -712,7 +712,7 @@ class TEMP(ThermalLoad):
 
     def add(self,tempObj):
         assert self.sid==tempObj.sid
-        for gid,temp in self.tempObj.temperatures.items():
+        for gid,temp in self.tempObj.temperatures.iteritems():
             self.temperatures[gid] = temp
         ###
 
@@ -724,7 +724,7 @@ class TEMP(ThermalLoad):
         fields = ['TEMP',self.sid]
 
         nTemps = len(self.temperatures)-1
-        for i,(gid,temp) in enumerate(sorted(self.temperatures.items())):
+        for i,(gid,temp) in enumerate(sorted(self.temperatures.iteritems())):
             fields += [gid,temp]
             if i%3==2 and nTemps>i: # start a new TEMP card
                 fields += [None,'TEMP',self.sid]
@@ -762,7 +762,7 @@ class TEMPD(ThermalLoadDefault):
         ###
 
     def add(self,tempdObj):
-        for sid,tempd in self.tempdObj.temperatures.items():
+        for sid,tempd in self.tempdObj.temperatures.iteritems():
             self.temperatures[gid] = temp
         ###
 
@@ -776,7 +776,7 @@ class TEMPD(ThermalLoadDefault):
         nTemps = len(self.temperatures)-1
         #print "self.temperatures = ",self.temperatures
         #print "nTemps = ",nTemps
-        for i,(gid,temp) in enumerate(sorted(self.temperatures.items())):
+        for i,(gid,temp) in enumerate(sorted(self.temperatures.iteritems())):
             fields += [gid,temp]
             if i%4==3 and nTemps>i: # start a new TEMP card
                 fields += ['TEMPD']

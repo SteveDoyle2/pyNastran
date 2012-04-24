@@ -69,7 +69,7 @@ class scalarObject(baseScalarObject):
 
     def applyDataCode(self):
         self.log = self.dataCode['log']
-        for key,value in sorted(self.dataCode.items()):
+        for key,value in sorted(self.dataCode.iteritems()):
             if key is not 'log':
                 self.__setattr__(key,value)
                 self.log.debug("  key=%s value=%s" %(key,value))

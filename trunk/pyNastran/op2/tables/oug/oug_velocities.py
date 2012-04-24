@@ -14,7 +14,7 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
         msg = header+['                                                   V E L O C I T Y   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.items()):
+        for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -33,10 +33,10 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt,translations in sorted(self.translations.items()):
+        for dt,translations in sorted(self.translations.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -57,7 +57,7 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
         msg = '---VELOCITIES---\n'
         msg += self.writeHeader()
 
-        for nodeID,translation in sorted(self.translations.items()):
+        for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -79,9 +79,9 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
         msg = '---TRANSIENT VELOCITY---\n'
         msg += self.writeHeader()
         
-        for dt,translations in sorted(self.translations.items()):
+        for dt,translations in sorted(self.translations.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
