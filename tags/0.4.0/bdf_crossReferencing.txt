@@ -1,0 +1,361 @@
+------------------------------BDF Cross Referencing Info------------------------------
+
+For a card to meet the criteria of "done" in this list,
+it must Read/Write ALL fields AND link to interfacing cards.
+
+NOTES:  (1) See the documentation (in the folder) for a list of methods for the card.
+        (2) If a card interfaces with other cards, the other card doesn't
+            need to be linked for the first card to be considered "done".
+
+For example, an element (e.g. CQUAD4) links to 4 nodes, and a property (e.g. PSHELL).
+The nodes then link to coordinate systems (e.g. CORD2R).
+The property then links to a material (e.g. MAT1).
+The CQUAD4 must ONLY link to the nodes and the property to be considered done.  The
+nodes and property do not have to be linked.
+
+
+Notations
+ - done - finished
+ - NA   - card doesn't have any cross-referencing (e.g. a MAT1 card) and is done
+ - ??? no check has been done on this card
+ - any other note means a card isn't done
+ - no label means the card isnt done and probably isnt even added in readWrite
+
+----Nodes----:
+GRID   (done)
+GRDSET   (NA)
+SPOINT   (NA)
+
+----Coordinates----:
+CORD1R (done)
+CORD2R (done)
+CORD1C (done)
+CORD2C (done)
+CORD1S (done)
+CORD2S (done)
+CORD3G
+
+----Elements----:
+CONM1   (done, does this card need cross-referencing???)
+CONM2   (cid!=0, cid=0 requires CG location...)
+CBUSH   (???)
+CFAST   (no)
+CGAP    (no spoints)
+
+CDAMP1  (???)
+CDAMP2  (???)
+CDAMP3  (???)
+CDAMP4  (???)
+CDAMP5  (???)
+
+CELAS1 (no spoints)
+CELAS2 (no spoints)
+CELAS3 (no spoints)
+CELAS4 (no spoints)
+
+CBAR   (done)
+CROD   (done)
+CTUBE  (done)
+CBEAM  (done)
+CBEAM3 (???)
+CBEND  (partial)
+CONROD (done)
+
+CTRIA3  (done)
+CTRIA6  (done)
+CTRIAR  (done)
+
+CQUAD  (done)
+CQUAD4 (done)
+CQUAD8 (done)
+CQUADR (done)
+
+CSHEAR (done)
+CVISC  (???)
+
+CTETRA (done)
+CPENTA (done)
+CHEXA  (done)
+
+CMASS1 (no)
+CMASS2 (no)
+CMASS3 (no)
+CMASS4 (no)
+
+CRAC2D (???)
+CRAC3D (???)
+
+----Rigid Elements----:
+RROD
+RTRPLT
+RBAR  (???)
+RBAR1 (???)
+RBE1  (???)
+RBE2  (???)
+RBE3  (???)
+
+----Properties----:
+PGAP    (???)
+PMASS    (NA)
+
+PELAS    (NA)
+PDAMP   (???)
+PDAMP5  (???)
+PDAMPT  (???)
+PBUSH   (???)
+PBUSHT
+PFAST   (no)
+
+PROD    (done)
+PBAR    (done)
+PBARL   (done)
+PBEAM   (done)
+PBEAML  (done)
+PBEAM3
+PBEND   (done)
+PTUBE   (done)
+
+PSHELL  (done)
+PCOMP   (done)
+PCOMPG  (done)
+PSHEAR  (done)
+PSOLID  (done)
+PLSOLID (done)
+PBCOMP
+
+----Materials----:
+CREEP (???)
+MAT1  (NA)
+MAT2  (NA)
+MAT3  (NA)
+MAT8  (NA)
+MAT9  (NA)
+MAT10 (NA)
+
+----Thermal Materials----:
+MAT4  (NA)
+MAT5  (NA)
+
+----Nonlinear Materials----:
+MATS1  (done)
+MATT1
+MATT2
+MATT3
+MATT4
+MATT5
+MATT8
+MATT9
+
+----Constraints----:
+SPC     (done)
+SPC1    (done)
+SPCD    (done)
+SPCADD  (???)
+
+MPC     (done)
+MPCADD  (???)
+
+SUPORT  (???)
+SUPORT1 (???)
+
+----Loads----:
+LOAD    (done)
+LSEQ    (???)
+
+RFORCE
+FORCE   (done)
+FORCE1  (done)
+FORCE2  (done)
+
+GRAV    (???)
+
+PLOAD   (done)
+PLOAD1  (done)
+PLOAD2  (done)
+PLOAD4  (done)
+PLOADB3
+
+MOMENT  (done)
+MOMENT1 (done)
+MOMENT2 (done)
+
+DLOAD   (???)
+RLOAD1  (???)
+RLOAD2  (???)
+SLOAD   (???)
+TLOAD1
+
+----Thermal Loads----:
+TEMP   (???)
+TEMPD
+TEMPD1
+
+QHBDY  (???)
+QBDY1  (???)
+QBDY2  (???)
+QBDY3  (???)
+
+----Thermal Elements----:
+CHBDYE (???)
+CHBDYG (???)
+CHBDYP (???)
+CONVM
+
+----Thermal BCs----:
+CONV   (???)
+RADBC  (???)
+RADM
+TEMPBC
+RADCAV
+RADSET
+
+----Thermal Properties----:
+PCONV  (???)
+PCONVM (???)
+PHBDY  (???)
+
+----Aero----:
+AERO    (???)
+AEROS   (???)
+GUST    (???)
+FLUTTER (???)
+FLFACT  (???)
+
+AEFACT  (NA)
+AELINK  (???)
+AELIST  (???)
+AEPARAM (???)
+AESTAT  (???)
+AESURF  (???)
+AESURFS
+
+CAERO1  (done)
+CAERO2  (done)
+CAERO3
+CAERO4
+CAERO5
+
+PAERO1  (NA)
+PAERO2  (NA)
+PAERO3
+PAERO4
+PAERO5
+
+SPLINE1 (done)
+SPLINE2 (???)
+SPLINE3
+SPLINE4
+SPLINE5
+SPLINE6
+SPLINE7
+
+CSSCHD
+TRIM    (???)
+
+----Dynamic----:
+DAREA   (???)
+NLPARM  (???)
+TSTEP   (???)
+TSTEPNL (???)
+
+----Modal Cards----:
+FREQ    (NA)
+FREQ1   (NA)
+FREQ2   (NA)
+FREQ3
+FREQ4
+FREQ5
+
+----Optimization----:
+DCONSTR  (???)
+DESVAR   (???)
+DDVAL    (???)
+DOPTPRM  (NA)
+DRESP1   (???)
+DRESP2   (???)
+DRESP3
+DVGRID
+DVCREL1         # element  DV
+DVCREL2
+DVPREL1  (???)
+DVPREL2  (???)
+DVMREL1  (???)
+DVMREL2
+DLINK   (???)
+DMIG
+DEQATN
+
+---Tables---
+DTABLE
+TABLED1  (???)
+TABLED2  (???)
+TABLED3  (???)
+TABLED4
+TABLEHT
+TABLEH1
+TABLEM1  (???)
+TABLEM2  (???)
+TABLEM3  (???)
+TABLEM4  (???)
+TABLES1  (???)
+TABLEST  (???)
+TABRND1  (???)
+TABRNDG
+TIC
+
+----Sets----:
+SET1   (???)
+SET2
+SET3   (???)
+SESET  (???)
+SEQSEP
+SEQSET1
+RADSET
+
+----Methods----:
+EIGB    (???)
+EIGC    (???)
+EIGP    (???)
+EIGR    (???)
+EIGRL   (???)
+MKAERO1  (NA)
+MKAERO2  (NA)
+
+----Other----:
+INCLUDE (NA)
+PARAM   (???)
+
+-----------------------------------------------
+
+----Axial Nodes----:
+RINGAX
+POINTAX
+----Axial Elements----:
+CCONEAX
+CTRIAX  (done)
+CTRIAX6 (done)
+CQUADX  (done)
+RINGAX
+
+----Axial Properties----:
+PCONEAX
+
+----Axial Loads----:
+FORCEAX
+PLOADX1
+MOMAX
+TEMPAX
+PRESAX
+
+----Axial Constraints----:
+MPCAX
+SPCAX   (???)
+SUPAX
+
+----Axial Other----:
+AXIC
+OMITAX
+SECTAX
+
+-----------------------------------------------
+
