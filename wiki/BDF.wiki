@@ -75,7 +75,10 @@ print m.G()   # calculated based on E, nu
 }}}
 
 =Specific Examples=
-Check out the DeveloperDocs for more detail on the specific method that was implemented in teh various examples
+Check out the DeveloperDocs for more detail on the specific method that was implemented in the various examples.
+
+Examples 4-6 require v0.4.  The new version (v0.4) makes these examples much easier by adding a few new methods.
+
 ==1-Print all the Grid details (Nodes, Coords) to an Output File==
 {{{
 from pyNastran.bdf.bdf import BDF
