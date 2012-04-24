@@ -112,16 +112,16 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except MissingFileError:
-        pass
-    except TabCharacterError:
-        pass
-    except TabCommaCharacterError:
-        pass
-    except ScientificParseError:
-        pass
-    except ClosedBDFError:
-        pass
+    #except MissingFileError:
+    #    pass
+    #except TabCharacterError:
+    #    pass
+    #except TabCommaCharacterError:
+    #    pass
+    #except ScientificParseError:
+    #    pass
+    #except ClosedBDFError:
+    #    pass
     except BDF_SyntaxError:
         pass
     except SystemExit:

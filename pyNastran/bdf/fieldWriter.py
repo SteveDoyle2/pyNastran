@@ -87,10 +87,11 @@ def printScientific8(value):
 
 def printFloat8(value,tol=0.):
     """
-    Prints a float in nastran 8-character width syntax.
+    Prints a float in nastran 8-character width syntax
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
-    @warning hasnt really be tested for tolerancing    """
+    @warning hasnt really be tested for tolerancing
+    """
     #value = round(value,4)
     #print "float...%s" %value
     if abs(value)<=tol:  # tol=1e-8
@@ -237,7 +238,8 @@ def printField(value,tol=0.):
     """
     prints a single 8-character width field
     @param value the value to print
-    @param tol the abs(tol) to consider value=0 (default=0.)    @retval field an 8-character (tested) string
+    @param tol the abs(tol) to consider value=0 (default=0.)
+    @retval field an 8-character (tested) string
     """
     if isinstance(value,int):
         field = "%8s" %(value)
@@ -251,9 +253,12 @@ def printField(value,tol=0.):
     assert len(field)==8,'field=|%s| is not 8 characters long...rawValue=|%s|' %(field,value)
     return field
 
-#def printCard(fields,size=8):
+#def printCard(fields,size=8,tol=0.):
     #"""
     #prints a nastran-style card with 8 or 16-character width fields
+    #@param fields all the fields in the BDF card (no blanks)
+    #@param tol the abs(tol) to consider value=0 (default=0.)
+    #@param size the width of a field (size=8 or 16)
     #@warning 8 or 16 is required, but 16 is not checked for
     #"""
     #if size==8:
@@ -265,7 +270,8 @@ def printField(value,tol=0.):
 def printCard(fields,tol=0.):
     """
     Prints a nastran-style card with 8-character width fields.
-    
+    @param fields all the fields in the BDF card (no blanks)
+    @param tol the abs(tol) to consider value=0 (default=0.)
     @note A small field format follows the  8-8-8-8-8-8-8-8 = 80
     format where the first 8 is the card name or blank (continuation).
     The last 8-character field indicates an optional continuation,
