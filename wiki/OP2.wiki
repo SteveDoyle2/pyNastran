@@ -3,16 +3,18 @@
 
 = Introduction =
 
-This is how the version 0.3 OP2 reading software works.  Make sure you install the software first!
+This is how the version 0.4 OP2 reading software works.  Make sure you install the software first!  See InstallationGuide for instructions.
 
 = Features =
  * multiple subcases
- * ability to set list of subcases to extract
+ * ability to set list of subcases to extract using setSubcases
+ * extract specific times from a transient solution using setTransientTimes
  * lots of transient/static results
-   * displacements
+   * displacements (real/complex)
    * temperature
-   * eigenvectors
-   * stress/strain (no nonlinear/hyperelastic results)
+   * eigenvectors (real/complex)
+   * SPC/MPC Forces (real/complex)
+   * linear stress/strain
       * spring (CELASi)
       * rod (CROD, CONROD)
       * beam (CBEAM)
@@ -21,6 +23,8 @@ This is how the version 0.3 OP2 reading software works.  Make sure you install t
       * composite plate (CQUAD4 centroidal, CTRIA3)
         * maxShear/vonMises support
       * solid elements (CTETRA, CPENTA, CHEXA)
+   * nonlinear stress/strain
+      * CQUAD4, CTRIA3, CROD, CONROD, CTUBE, CTETRA
    * element strain energy support (limited)
  * automated printing of tables
  
@@ -29,10 +33,10 @@ This is how the version 0.3 OP2 reading software works.  Make sure you install t
  * *skippedCards.out* (run *test_op2 op2Name.op2*) shows the results that were skipped
  * limited thermal support (only temperature)
  * no heat flux
- * no applied/SPC/MPC forces
- * no nonlinear element support (e.g. SOL 106)
+ * no applied forces
+ * limited nonlinear/hyperelastic element support (e.g. SOL 106, SOL 129)
  * VERY limited frequency support
- * see <A href="http://code.google.com/p/pynastran/source/browse/branches/v0.3_2012-2-8/op2_reading.txt"> v0.3 OP2 Support</A>
+ * see <A href="http://code.google.com/p/pynastran/source/browse/tags/v0.4.0/op2_reading.txt"> v0.4 OP2 Support</A>
 
 = Making an OP2 =
 If you cant make an op2, check your bdf:
@@ -41,7 +45,8 @@ CEND
 $ case control deck...
 BEGIN BULK
 $PARAM,POST,0      $ makes an xdb for Patran
-PARAM,POST,-1      $ the line that makes an op2
+PARAM,POST,-1      $ the line that makes a good op2
+PARAM,POST,-2      $ makes an op2 that WILL fail
 $NODES
 GRID,1,0,1.,2.,3.
 $ rest of bulk data deck
@@ -49,22 +54,22 @@ $ rest of bulk data deck
 
 
 = Getting Started = 
-First install pyNastran v0.2 and on the command line type:
+First install pyNastran v0.4 and on the command line type:
 {{{
 >> test_op2 fem.op2 > test.out
 }}}
 
 The "hardest" test would be the following:
 {{{
->> test_op2 -g -w fem.op2 > test.out
+>> test_op2 -fgw fem.op2 > test.out
 }}}
-This will read all sections of the op2 and print out a copy of the geometry to fem.bdf.out
+This will read all sections of the op2, print out a copy of the geometry to fem.bdf.out, and print an F06 of the majority of the OP2 results to fem.f06.out
 
 This following will run the model and print out all the results to the screen.  Additional options can be seen by typing:
 {{{
 >> test_op2 --help
 
-usage: test_op2-script.py [-h] [-q] [-g] [-w] [-v] op2FileName
+usage: test_op2-script.py [-h] [-q] [-g] [-w] [-f] [-v] op2FileName
 
 Tests to see if an OP2 will work with pyNastran.
 
@@ -75,9 +80,9 @@ optional arguments:
   -h, --help      show this help message and exit
   -q, --quiet     Prints debug messages (default=True)
   -g, --geometry  Reads the OP2 for geometry, which can be written out
-  -w, --writeBDF  Writes the bdf to fem.bdf.out (requires --geometry)
-  -v, --version   show programs version number and exit
-
+  -w, --writeBDF  Writes the bdf to fem.bdf.out
+  -f, --writeF06  Writes the f06 to fem.f06.out
+  -v, --version   show program's version number and exit
 }}}
 
 = Using the OP2 Reader =
@@ -93,8 +98,13 @@ op2Obj = OP2('fem.op2',makeGeom=False,debug=False,log=None)
 # log is None (dummy logger) or a python logging module object
 # see http://docs.python.org/library/logging.html
 
-# limits reading to subcase 100 & 200; be careful with SOL 200, it may ONLY has 1 subcase, despite analyzing 2 cases
-op2.setSubcases([100,200])
+# limits reading to subcase 100 & 204; be careful with SOL 200, it may ONLY has 1 subcase, despite analyzing 2 cases
+op2.setSubcases([100,204])
+
+# limits reading of transient results (good for large models)
+# the nearest times will be found, if no time is close, the time will be skipped
+times = {100:[0.1,0.2,0.3,1.0], 204:[] }  # 1:[]=all (just like setSubcases)
+op2.setTransientTimes(times)  # added in v0.4
 
 # read the OP2
 op2Obj.readOP2()
@@ -397,12 +407,27 @@ The list of data members in the various results:
     * gridType[nid]
     * T[dt][nid]
 
- * Displacement
+ * Displacement / Velocity / Acceleration / SPC Forces / MPC Forces (Real)
    * gridType[nid]
-   * displacements[dt][nid]
+   * translations[dt][nid]
      * numpy array of length 3
    * rotations[dt][nid]
      * numpy array of length 3
+
+ * Displacement / SPC Forces / MPC Forces (Complex)
+   * gridType[nid]
+   * translations[dt][nid]
+     * numpy array of length 6
+   * rotations[dt][nid]
+     * numpy array of length 6
+
+ * Real Eigenvalue Order
+   * extractionOrder[modeNum]
+   * eigenvalues[modeNum]
+   * radians[modeNum]
+   * cycles[modeNum]
+   * generalizedMass[modeNum]
+   * generalizedStiffness[modeNum]
 
  * Eigenvectors
    * gridType[nid]
@@ -410,6 +435,13 @@ The list of data members in the various results:
      * numpy array of length 3
    * rotations[dt][nid]
      * numpy array of length 3
+
+ * Complex Eigenvectors
+   * gridType[nid]
+   * translations[dt][nid]
+     * numpy array of length 6
+   * rotations[dt][nid]
+     * numpy array of length 6
 
  * Strain Energy Density
     * energy[dt][eid]
