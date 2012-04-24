@@ -82,7 +82,7 @@ optional arguments:
   -g, --geometry  Reads the OP2 for geometry, which can be written out
   -w, --writeBDF  Writes the bdf to fem.bdf.out
   -f, --writeF06  Writes the f06 to fem.f06.out
-  -v, --version   show program's version number and exit
+  -v, --version   show program version number and exits
 }}}
 
 = Using the OP2 Reader =
