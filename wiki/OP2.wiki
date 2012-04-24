@@ -52,12 +52,11 @@ The following tables are supported, unless otherwise stated.
 || Grid Point Forces  || GPFORCE=ALL      || OGF  ||
 || Applied Forces     || ???              || OGP  ||
 || Load Vector        || ???              || OGP  ||
-|| Forces             || ELFORCE=ALL        || OEF (not supported)  ||
-|| Heat Flux          || ELFORCE/FLUX=ALL   || OEF (not supported)  ||
-
 || Stress             || STRESS=ALL       || OES  ||
 || Strain             || STRAIN=ALL       || OES  ||
-|| Element Strain Energy || ESE=ALL       || OEE  ||
+|| Element Strain Energy || ESE=ALL ???     || OEE  ||
+|| Forces             || ELFORCE=ALL        || OEF (not supported)  ||
+|| Heat Flux          || ELFORCE/FLUX=ALL   || OEF (not supported)  ||
 
 
 = Making an OP2 =
