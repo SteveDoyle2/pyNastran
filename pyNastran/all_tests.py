@@ -22,3 +22,14 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
+from pyNastran.bdf.test.test_fieldWriter import TestFieldWriter
+from pyNastran.bdf.test.bdf_unitTests import BDF_Test
+from pyNastran.op2.test.op2_unitTests import OP2_Test
+
+import unittest
+
+class AllTests(TestFieldWriter,BDF_Test,OP2_Test):
+    pass
+
+if __name__ == "__main__":
+    unittest.main()

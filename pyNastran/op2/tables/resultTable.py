@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 import sys
 import copy
 from struct import unpack
@@ -5,8 +29,6 @@ from struct import unpack
 from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.oug  import OUG
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
-#from pyNastran.op2.tables.oes_stressStrain.oesnlxr import OESNLXR
-#from pyNastran.op2.tables.oes_stressStrain.oesnlxd import OESNLXD
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg   import OQG
 from pyNastran.op2.tables.oef_forces.oef import OEF
@@ -20,7 +42,7 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 
 
 
-class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OESNLXD,
+class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""

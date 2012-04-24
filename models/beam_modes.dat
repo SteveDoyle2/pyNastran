@@ -41,7 +41,7 @@ PARAM   AUTOSPC YES
 PARAM   GRDPNT         0
 PARAM   K6ROT   100.0000
 PARAM   OUGCORD GLOBAL
-PARAM   POST          -2
+PARAM   POST          -1
 PARAM   POSTEXT YES 
 $*
 EIGRL          1                      10                             MAX
