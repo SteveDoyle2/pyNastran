@@ -58,7 +58,7 @@ def printScientific8(value):
     value2 = float(svalue)
     #lenSValue = len(svalue)
     
-    lenSExp   = len(sExp2)+1 # the plus 1 is for the sign
+    lenSExp  = len(sExp2)+1 # the plus 1 is for the sign
     leftover = 8-lenSExp
     
     svalue2 = svalue.strip('0')
