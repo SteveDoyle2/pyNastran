@@ -14,7 +14,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         msg = header+['                                             D I S P L A C E M E N T   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.items()):
+        for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -33,10 +33,10 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt,translations in sorted(self.translations.items()):
+        for dt,translations in sorted(self.translations.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -57,7 +57,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         msg = '---DISPLACEMENTS---\n'
         msg += self.writeHeader()
 
-        for nodeID,translation in sorted(self.translations.items()):
+        for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
@@ -79,9 +79,9 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         msg = '---TRANSIENT DISPLACEMENTS---\n'
         msg += self.writeHeader()
         
-        for dt,translations in sorted(self.translations.items()):
+        for dt,translations in sorted(self.translations.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -109,10 +109,10 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt,translations in sorted(self.translations.items()):
+        for dt,translations in sorted(self.translations.iteritems()):
             header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
@@ -139,10 +139,10 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for freq,translations in sorted(self.translations.items()):
+        for freq,translations in sorted(self.translations.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
 
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]
 
                 msg += '%-10i ' %(nodeID)

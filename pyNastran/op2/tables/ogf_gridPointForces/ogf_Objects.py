@@ -81,7 +81,7 @@ class gridPointForcesObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey,force in sorted(self.forces.items()):
+        for eKey,force in sorted(self.forces.iteritems()):
             zero = '0'
             for iLoad,f in enumerate(force):
                 (f1,f2,f3) = f
@@ -108,8 +108,8 @@ class gridPointForcesObject(scalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt,Forces in sorted(self.forces.items()):
-            for eKey,force in sorted(Forces.items()):
+        for dt,Forces in sorted(self.forces.iteritems()):
+            for eKey,force in sorted(Forces.iteritems()):
                 zero = '0'
                 for iLoad,f in enumerate(force):
                     (f1,f2,f3) = f
@@ -193,11 +193,11 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for freq,translations in sorted(self.translations.items()):
+        for freq,translations in sorted(self.translations.iteritems()):
             msg += 'freq = %g\n' %(freq)
             #print "freq = ",freq
             #print translations
-            for nodeID,translation in sorted(translations.items()):
+            for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
@@ -247,7 +247,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
         @warning hasnt been tested...
         """
         msg = block3
-        for nodeID,flux in sorted(self.fluxes.items()):
+        for nodeID,flux in sorted(self.fluxes.iteritems()):
             grid = nodeID*10+deviceCode
             msg += pack('iffffff',grid,flux[0],flux[1],flux[2],0,0,0)
         ###
@@ -259,7 +259,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
 
         msg = '---HEAT FLUX---\n'
         msg += '%-10s %-8s %-8s %-8s\n' %('NodeID','xFlux','yFlux','zFlux')
-        for nodeID,flux in sorted(self.fluxes.items()):
+        for nodeID,flux in sorted(self.fluxes.iteritems()):
             msg += '%10i ' %(nodeID)
 
             for val in flux:

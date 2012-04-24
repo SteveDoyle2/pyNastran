@@ -166,7 +166,7 @@ class TableObject(scalarObject):  # displacement style table
         @warning hasnt been tested...
         """
         msg = block3
-        for nodeID,translation in sorted(self.translations.items()):
+        for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
@@ -182,12 +182,12 @@ class TableObject(scalarObject):  # displacement style table
     #    @warning dt slot needs to be fixed...
     #    """
     #    msg = ''
-    #    for dt,displacements in sorted(self.displacements.items()):
+    #    for dt,displacements in sorted(self.displacements.iteritems()):
     #        XXX = 50 ## this isnt correct... @todo update dt
     #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
     #        #msg += '%s = %g\n' %(self.dataCode['name'],dt)
     #
-    #        for nodeID,displacement in sorted(displacements.items()):
+    #        for nodeID,displacement in sorted(displacements.iteritems()):
     #            rotation = self.rotations[nodeID]
     #            (dx,dy,dz) = displacement
     #            (rx,ry,rz) = rotation
@@ -216,19 +216,19 @@ class TableObject(scalarObject):  # displacement style table
         if self.dt is not None:
             return self.__reprTransient__()
 
-            for dt,translations in sorted(self.translations.items()):
+            for dt,translations in sorted(self.translations.iteritems()):
                 nodeIDs = translations.keys()
                 for nodeID in nodeIDs:
                     translations2[nodeID] = {}
                     rotations2[nodeID] = {}
 
-                for nodeID,translation in sorted(translations.items()):
+                for nodeID,translation in sorted(translations.iteritems()):
                     rotation = self.rotations[dt][nodeID]
                     translations2[nodeID][dt] = translation
                     rotations2[nodeID][dt]    = rotation
                 ###
         else:
-            for nodeID,translation in sorted(self.translations.items()):
+            for nodeID,translation in sorted(self.translations.iteritems()):
                 rotation = self.rotations[nodeID]
                 translations2[nodeID] = translation
                 rotations2[nodeID]    = rotation

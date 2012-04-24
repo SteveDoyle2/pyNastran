@@ -151,7 +151,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         @warning hasnt been tested...
         """
         msg = block3
-        for nodeID,T in sorted(self.temperatures.items()):
+        for nodeID,T in sorted(self.temperatures.iteritems()):
             grid = nodeID*10+deviceCode
             msg += pack('iffffff',grid,T,0,0,0,0,0)
         ###
@@ -164,12 +164,12 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         @warning dt slot needs to be fixed...
         """
         msg = ''
-        for dt,temperatures in sorted(self.temperatures.items()):
+        for dt,temperatures in sorted(self.temperatures.iteritems()):
             XXX = 50 ## this isnt correct... @todo update dt
             msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
             #msg += '%s = %g\n' %(self.dataCode['name'],dt)
     
-            for nodeID,T in sorted(temperatures.items()):
+            for nodeID,T in sorted(temperatures.iteritems()):
                 grid = nodeID*10+deviceCode
                 msg += pack('iffffff',grid,T,0,0,0,0,0)
             ###
@@ -191,9 +191,9 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         msg = '---TRANSIENT TEMPERATURE---\n'
         msg += self.writeHeader()
 
-        for dt,temperatures in sorted(self.temperatures.items()):
+        for dt,temperatures in sorted(self.temperatures.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,T in sorted(temperatures.items()):
+            for nodeID,T in sorted(temperatures.iteritems()):
                 gridType = self.gridTypes[nodeID]
                 msg += '%10s %8s ' %(nodeID,gridType)
 
@@ -215,7 +215,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
         if self.isTransient:
-            for dt,temperatures in sorted(self.temperatures.items()):
+            for dt,temperatures in sorted(self.temperatures.iteritems()):
                 dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
                 header[2] = dtLine
                 msg += header+msgOrig
@@ -234,7 +234,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         pack = []
         oldNodeID = -1
         oldGridType = None
-        for nodeID,T in sorted(temperatures.items()):
+        for nodeID,T in sorted(temperatures.iteritems()):
             gridType = self.gridTypes[nodeID]
 
             if oldNodeID+1==nodeID and gridType==oldGridType:
@@ -277,7 +277,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         msg = '---TEMPERATURE---\n'
         msg += self.writeHeader()
         #print "self.dataCode=",self.dataCode
-        for nodeID,T in sorted(self.temperatures.items()):
+        for nodeID,T in sorted(self.temperatures.iteritems()):
             gridType = self.gridTypes[nodeID]
             msg += '%10s %8s ' %(nodeID,gridType)
             #print "nodeID=%s T=%s" %(nodeID,T)

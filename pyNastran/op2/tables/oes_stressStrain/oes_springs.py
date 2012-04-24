@@ -111,9 +111,9 @@ class celasStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,stress in sorted(self.stress.items()):
+        for dt,stress in sorted(self.stress.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,istress in sorted(stress.items()):
+            for eid,istress in sorted(stress.iteritems()):
                 msg += '%-6g %6s ' %(eid,self.eType[eid])
                 if abs(istress)<1e-6:
                     msg += '%10s ' %('0')
@@ -133,7 +133,7 @@ class celasStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -164,7 +164,7 @@ class celasStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
         #print "self.code = ",self.code
-        for eid,istress in sorted(self.stress.items()):
+        for eid,istress in sorted(self.stress.iteritems()):
             #print "eid=",eid
             #print "eType",self.eType
             msg += '%-8i %6s ' %(eid,self.eType[eid])
@@ -292,7 +292,7 @@ class celasStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -323,7 +323,7 @@ class celasStrainObject(strainObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for eid,strain in sorted(self.strain.items()):
+        for eid,strain in sorted(self.strain.iteritems()):
             #strain = self.strain[eid]
             msg += '%-8i %6s ' %(eid,self.eType[eid])
 

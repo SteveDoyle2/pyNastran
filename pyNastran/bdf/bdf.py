@@ -554,7 +554,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
        dictOfVars = {'varName': 10}
        """
        self.dictOfVars = {}
-       for key,value in dictOfVars.items():
+       for key,value in dictOfVars.iteritems():
            assert len(key)<=7,'max length for key is 7; len(%s)=%s' %(key,len(key))
            self.dictOfVars[key.upper()] = value
        ###
@@ -813,9 +813,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         #self.debug = True
         if self.debug:
-            #for nid,node in self.nodes.items():
+            #for nid,node in self.nodes.iteritems():
                 #print node
-            #for eid,element in self.elements.items():
+            #for eid,element in self.elements.iteritems():
                 #print element
             
             #self.log.debug("\n$REJECTS")

@@ -98,7 +98,7 @@ class DOPTPRM(OptConstraint):
     
     def rawFields(self):
         fields = ['DOPTPRM']
-        for param,val in sorted(self.params.items()):
+        for param,val in sorted(self.params.iteritems()):
             fields += [param,val]
         return fields
 
@@ -202,7 +202,7 @@ class DRESP2(OptConstraint):
         del self.params['$NULL$']
 
         #print "--Params--"
-        #for key,valueList in sorted(self.params.items()):
+        #for key,valueList in sorted(self.params.iteritems()):
         #    print "  key=%s params=%s" %(key,valueList)
         
         #print self
@@ -227,7 +227,7 @@ class DRESP2(OptConstraint):
                         'DESVAR' : [1,0],
                      }
         fields = []
-        for key,valueList in sorted(self.params.items()):
+        for key,valueList in sorted(self.params.iteritems()):
             fields2 = [key]+valueList
             try:
                 (i,j) = packLength[key]

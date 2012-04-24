@@ -37,7 +37,7 @@ class RealEigenvalues(baseScalarObject):
         msg = header+['                                              R E A L   E I G E N V A L U E S\n',
                       '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                       '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
-        for (iMode,order) in sorted(self.extractionOrder.items()):
+        for (iMode,order) in sorted(self.extractionOrder.iteritems()):
             eigen = self.eigenvalues[iMode]
             omega = self.radians[iMode]
             freq  = self.cycles[iMode]
@@ -51,7 +51,7 @@ class RealEigenvalues(baseScalarObject):
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' %('ModeNum','ExtractionOrder','Eigenvalue','Radians','Cycles','GenMass','GenStiffness')
-        for modeNum,extractOrder in sorted(self.extractionOrder.items()):
+        for modeNum,extractOrder in sorted(self.extractionOrder.iteritems()):
             eigenvalue = self.eigenvalues[modeNum]
             radian = self.radians[modeNum]
             cycle = self.cycles[modeNum]
@@ -90,7 +90,7 @@ class ComplexEigenvalues(baseScalarObject):
         msg = header+['                                        C O M P L E X   E I G E N V A L U E S\n',
                       '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
                       '    NO.       ORDER\n']
-        for (iMode,order) in sorted(self.extractionOrder.items()):
+        for (iMode,order) in sorted(self.extractionOrder.iteritems()):
             eigen = self.eigenvalues[iMode]
             freq  = self.cycles[iMode]
             damping  = self.damping[iMode]
@@ -103,7 +103,7 @@ class ComplexEigenvalues(baseScalarObject):
     def __repr__(self):
         msg  = '%-7s %15s %15s %10s %10s %10s\n' %('RootNum','ExtractionOrder','Eigenvalue','','Cycles','Damping')
         msg += '%-7s %15s %15s %10s\n' %('','','Real','Imaginary')
-        for rootNum,extractOrder in sorted(self.extractionOrder.items()):
+        for rootNum,extractOrder in sorted(self.extractionOrder.iteritems()):
             eigenvalue = self.eigenvalues[rootNum]
             cycle      = self.cycles[rootNum]
             damping    = self.damping[rootNum]

@@ -36,7 +36,7 @@ class constraintObject2(object):
     def crossReference(self,model):
         #return
         #addConstraints2 = {}
-        for key,addConstraint in sorted(self.addConstraints.items()):
+        for key,addConstraint in sorted(self.addConstraints.iteritems()):
             for i,spcID in enumerate(addConstraint.sets):
                 addConstraint.sets[i] = self._spc(spcID)
             ###
@@ -45,7 +45,7 @@ class constraintObject2(object):
         #self.addConstraints = addConstraints2
 
         constraints2 = {}
-        for key,constraints in sorted(self.constraints.items()):
+        for key,constraints in sorted(self.constraints.iteritems()):
             constraints2[key] = []
             for constraint in constraints:
                 constraints2[key].append( constraint.crossReference(model) )
@@ -66,7 +66,7 @@ class constraintObject2(object):
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
-        for key,addConstraint in sorted(self.addConstraints.items()):
+        for key,addConstraint in sorted(self.addConstraints.iteritems()):
             constraints = []
             for i,spcID in enumerate(addConstraint.sets):
                 constraintIDs = addConstraint.getConstraintIDs()
@@ -78,7 +78,7 @@ class constraintObject2(object):
             constraints2[key] = constraints
 
         ## not needed b/c there are no MPCADD/SPCADD
-        #for key,constraints in sorted(self.constraints.items()):
+        #for key,constraints in sorted(self.constraints.iteritems()):
             #for constraint in constraints:
                 #conID = constraint.ConID()
                 #constraints2[conID] 
@@ -109,12 +109,12 @@ class constraintObject2(object):
 
     def getConstraintIDs(self):
         IDs = []
-        for key,constraints in sorted(self.addConstraints.items()):
+        for key,constraints in sorted(self.addConstraints.iteritems()):
             conID = constraint.ConID()
             IDs.append(conID)
         ###
 
-        for key,constraints in sorted(self.constraints.items()):
+        for key,constraints in sorted(self.constraints.iteritems()):
             for constraint in constraints:
                 conID = constraint.ConID()
                 IDs.append(conID)
@@ -127,10 +127,10 @@ class constraintObject2(object):
     def __repr__(self):
         msg = ''
         # write the SPCADD/MPCADD cards
-        for key,addConstraint in sorted(self.addConstraints.items()):
+        for key,addConstraint in sorted(self.addConstraints.iteritems()):
             msg += str(addConstraint)
         
-        for key,constraints in sorted(self.constraints.items()):
+        for key,constraints in sorted(self.constraints.iteritems()):
             for constraint in constraints:
                 msg += str(constraint)
         return msg
@@ -156,7 +156,7 @@ class constraintObject(object):
     
     def getConstraintIDs(self):
         IDs = []
-        for key,constraints in sorted(self.constraints.items()):
+        for key,constraints in sorted(self.constraints.iteritems()):
             for constraint in constraints:
                 conID = constraint.ConID()
                 IDs.append(conID)
@@ -173,7 +173,7 @@ class constraintObject(object):
         #print "xref spcadds..."
         #print "spcadds = ",self.addConstraints
         if self.addConstraints:
-            for (key,addConstraint) in sorted(self.addConstraints.items()):  # SPCADDs
+            for (key,addConstraint) in sorted(self.addConstraints.iteritems()):  # SPCADDs
                 self.crossReference_AddConstraint(key,addConstraint)
             #print "spcadds2 = ",self.addConstraints
         else:
@@ -183,7 +183,7 @@ class constraintObject(object):
         # xrefs nodes...not done...
         #print "xref spc/spc1/spcd..."
         return
-        for key,constraints in sorted(self.constraints.items()): # SPC, SPC1, SPCD
+        for key,constraints in sorted(self.constraints.iteritems()): # SPC, SPC1, SPCD
             for constraint in constraints:
                 #constraint.crossR
                 pass
@@ -248,17 +248,17 @@ class constraintObject(object):
 
     def __repr__(self):
         msg = ''
-        for addID,spcadd in sorted(self.addConstraints.items()):
+        for addID,spcadd in sorted(self.addConstraints.iteritems()):
             msg += str(spcadd)  # deceptively this writes the SPC cards as well
         return msg
 
         msg = ''
         #print "repr %s" %(self.addConstraints)
         if self.addConstraints:
-            for addID,spcadd in sorted(self.addConstraints.items()):
+            for addID,spcadd in sorted(self.addConstraints.iteritems()):
                 msg += str(spcadd)  # deceptively this writes the SPC cards as well
         else:
-            for key,constraintSets in sorted(self.constraints.items()):
+            for key,constraintSets in sorted(self.constraints.iteritems()):
                 for constraint in constraintSets:
                     msg += str(constraint)
                 ###
@@ -269,7 +269,7 @@ class constraintObject(object):
         return msg
         
         # works for spc, spc1, spcd
-        #for key,constraintSets in sorted(self.constraints.items()):
+        #for key,constraintSets in sorted(self.constraints.iteritems()):
         #    for constraint in constraintSets:
         #        msg += str(constraint)
         return msg
@@ -565,7 +565,7 @@ class ConstraintADD(Constraint):
             else:
                 #print 'dict'
                 #outSPCs += str(spcsets.conid)
-                for key,spcset in sorted(spcsets.items()):
+                for key,spcset in sorted(spcsets.iteritems()):
                     fieldSets.append(spcsets.conid)
                 ###
             ###

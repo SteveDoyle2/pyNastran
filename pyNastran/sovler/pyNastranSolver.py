@@ -73,7 +73,7 @@ def dePartitionDenseVector(n,IsVs):
     
 def reverseDict(A):
     B = {}
-    for key,value in A.items():
+    for key,value in A.iteritems():
         B[value] = key
     return B
 
@@ -97,7 +97,7 @@ class solver(object):
         cc = model.caseControlDeck
         #print cc.subcases
         analysisCases = []
-        for isub,subcase in sorted(cc.subcases.items()):
+        for isub,subcase in sorted(cc.subcases.iteritems()):
             if subcase.hasParameter('LOAD'):
                 analysisCases.append(subcase)
 
@@ -134,7 +134,7 @@ class solver(object):
     def buildNidComponentToID(self,model):
         i=0
         nidComponentToID = {}
-        for nid,node in sorted(model.nodes.items()):  # GRIDs
+        for nid,node in sorted(model.nodes.iteritems()):  # GRIDs
             ps = node.ps
             #print ps
             for ips in ps:
@@ -245,7 +245,7 @@ class solver(object):
         self.Um = Kma*Ua
 
     def assembleGlobalStiffness(self,model,Kgg,Dofs):
-        for eid,elem in sorted(model.elements.items()):  # CROD
+        for eid,elem in sorted(model.elements.iteritems()):  # CROD
             K,nIJV = elem.Stiffness(model)  # nIJV is the position of the values of K in the dof
             print("K[%s] = \n%s" %(eid,K))
             (Ki,Kj) = K.shape
@@ -353,14 +353,14 @@ class solver(object):
 
     def assembleForces(self,model,Fg,Dofs):
         print(model.loads)
-        for loadSet,loads in model.loads.items():
+        for loadSet,loads in model.loads.iteritems():
             ## @todo if loadset in required loadsets...
             #print loads
             for load in loads:
                 if load.type=='FORCE':
                     loadDir = load.F()
                     #nid = load.nodeID()
-                    for nid,F in loadDir.items():
+                    for nid,F in loadDir.iteritems():
                         #print(nid,load.lid)
                         Fg[Dofs[(nid,1)]] = F[0]
                         Fg[Dofs[(nid,2)]] = F[1]

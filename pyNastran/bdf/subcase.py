@@ -414,13 +414,13 @@ class Subcase(object):
         if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
             sol = self.solCodeMap[sol]
 
-        for key,param in self.params.items():
+        for key,param in self.params.iteritems():
             key = key.upper()
             (value,options,paramType) = param
             msg = "  -key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
 
         thermal = 0
-        for key,param in self.params.items():
+        for key,param in self.params.iteritems():
             key = key.upper()
             (value,options,paramType) = param
             msg = "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
@@ -474,7 +474,7 @@ class Subcase(object):
         op2Params['thermal'] = thermal
         
         print "\nThe estimated results..."
-        for key,value in sorted(op2Params.items()):
+        for key,value in sorted(op2Params.iteritems()):
             if value is not None:
                 print "   key=|%s| value=|%s|" %(key,value)
         #sys.exit('exit subcase.py in bdf/subcase.py')
@@ -602,7 +602,7 @@ class Subcase(object):
             msg = str(self)
         else:
             msg = 'SUBCASE %s\n' %(self.id)
-            for (key,param) in sorted(self.params.items()):
+            for (key,param) in sorted(self.params.iteritems()):
                 if key in subcase0.params and subcase0.params[key]==param:
                     pass
                 else:
@@ -630,7 +630,7 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' %(self.id)
         ###
 
-        for (key,param) in sorted(self.params.items()):
+        for (key,param) in sorted(self.params.iteritems()):
             if 'key'=='BEGIN':
                 continue
             else:

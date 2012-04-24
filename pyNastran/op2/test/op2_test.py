@@ -34,7 +34,7 @@ def parseSkippedCards(fname):
         ###
     
     filesToAnalyze = []
-    for (key,value) in sorted(results.items()):
+    for (key,value) in sorted(results.iteritems()):
         #print key,value
         filesToAnalyze.append(value)
     
@@ -93,5 +93,5 @@ if __name__=='__main__':
     runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
-
+    
 

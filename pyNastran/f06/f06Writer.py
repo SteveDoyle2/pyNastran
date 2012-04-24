@@ -137,7 +137,7 @@ class F06Writer(object):
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
-        for iSubcase,result in sorted(self.eigenvalues.items()): # goes first
+        for iSubcase,result in sorted(self.eigenvalues.iteritems()): # goes first
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
@@ -146,7 +146,7 @@ class F06Writer(object):
             f.write(msg)
             pageNum +=1
         
-        for iSubcase,result in sorted(self.eigenvectors.items()): # has a special header
+        for iSubcase,result in sorted(self.eigenvectors.iteritems()): # has a special header
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
@@ -202,7 +202,7 @@ class F06Writer(object):
             ###
         if 0:
             for res in resTypes:
-                for iSubcase,result in sorted(res.items()):
+                for iSubcase,result in sorted(res.iteritems()):
                     (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                     f.write(msg)
                     pageNum +=1

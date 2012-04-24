@@ -75,7 +75,7 @@ class CaseControlDeck(object):
         else:
             if not hasSubcase(iToSubcase):
                 raise RuntimeError('iToSubcase=|%s| does not exist' %(iToSubcase))
-            for key,param in subcaseFrom.items():
+            for key,param in subcaseFrom.iteritems():
                 subcaseTo[key] = copy.deepcopy(param)
             ###
         ###
@@ -336,7 +336,7 @@ class CaseControlDeck(object):
         removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
         """
-        for (iSubcase,subcase) in sorted(self.subcases.items()):
+        for (iSubcase,subcase) in sorted(self.subcases.iteritems()):
             subcase.finishSubcase()
         ###
     ###
@@ -372,7 +372,7 @@ class CaseControlDeck(object):
     #    return self.__repr__()
 
     def crossReference(self,mesh):
-        for (iSubcase,subcase) in sorted(self.subcases.items()):
+        for (iSubcase,subcase) in sorted(self.subcases.iteritems()):
             subcase.crossReference(mesh)
 
     def getOp2Data(self):
@@ -380,7 +380,7 @@ class CaseControlDeck(object):
         returns the relevant op2 parameters required for a given subcase
         """
         cases = {}
-        for (iSubcase,subcase) in sorted(self.subcases.items()):
+        for (iSubcase,subcase) in sorted(self.subcases.iteritems()):
             if iSubcase != 0:
                 cases[iSubcase] = subcase.getOp2Data(self.sol,self.solmap_toValue)
             ###
@@ -390,7 +390,7 @@ class CaseControlDeck(object):
     def __repr__(self):
         msg = ''
         subcase0 = self.subcases[0]
-        for (iSubcase,subcase) in sorted(self.subcases.items()):
+        for (iSubcase,subcase) in sorted(self.subcases.iteritems()):
             #if iSubcase==0:
             msg += subcase.writeSubcase(subcase0)
             #msg += str(subcase)

@@ -200,7 +200,7 @@ class barStressObject(stressObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
 
-        for eid,S1s in sorted(self.s1.items()):
+        for eid,S1s in sorted(self.s1.iteritems()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -232,10 +232,10 @@ class barStressObject(stressObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         msg = []
-        for dt,S1s in sorted(self.s1.items()):
+        for dt,S1s in sorted(self.s1.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,S1 in sorted(S1s.items()):
+            for eid,S1 in sorted(S1s.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
@@ -272,7 +272,7 @@ class barStressObject(stressObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for eid,S1s in sorted(self.s1.items()):
+        for eid,S1s in sorted(self.s1.iteritems()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -320,9 +320,9 @@ class barStressObject(stressObject):
             msg += '%8s ' %(header)
         msg += '\n'
 
-        for dt,S1ss in sorted(self.s1.items()):
+        for dt,S1ss in sorted(self.s1.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-            for eid,S1s in sorted(S1ss.items()):
+            for eid,S1s in sorted(S1ss.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[dt][eid]
@@ -523,7 +523,7 @@ class barStrainObject(strainObject):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        for eid,E1s in sorted(self.e1.items()):
+        for eid,E1s in sorted(self.e1.iteritems()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -556,10 +556,10 @@ class barStrainObject(strainObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         msg = []
-        for dt,E1s in sorted(self.e1.items()):
+        for dt,E1s in sorted(self.e1.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,e1s in sorted(E1s.items()):
+            for eid,e1s in sorted(E1s.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[eid]
                 #MSt = self.MSt[eid]
@@ -597,7 +597,7 @@ class barStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,E1s in sorted(self.e1.items()):
+        for eid,E1s in sorted(self.e1.iteritems()):
             eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt  = self.MS_tension[eid]
@@ -644,9 +644,9 @@ class barStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,E1s in sorted(self.e1.items()):
+        for dt,E1s in sorted(self.e1.iteritems()):
             msg += "%s = %g\n" %(self.dataCode['name'],self.dt)
-            for eid,e1s in sorted(Els.items()):
+            for eid,e1s in sorted(Els.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt  = self.MS_tension[dt][eid]

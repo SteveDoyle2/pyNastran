@@ -75,7 +75,7 @@ class MarginChecker(object):
 
     def readFiles(self):
         i = 0
-        for fname,subcaseList in sorted(self.cases.items()):
+        for fname,subcaseList in sorted(self.cases.iteritems()):
             #print "case[%s] = %s" %(key,self.cases[key])
             subcaseList = list(set(subcaseList))
             print "subcaseList[%s] = %s" %(fname,subcaseList)

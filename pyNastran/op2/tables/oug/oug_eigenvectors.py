@@ -87,13 +87,13 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             2003      G      0.0            0.0            0.0            0.0            0.0            0.0
         """
         msg = []
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %13E\n' %('EIGENVALUE',freq))
             msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID,displacement in sorted(eigVals.items()):
+            for nodeID,displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
@@ -120,13 +120,13 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             freq = self.eigrs[i]
             msg += '%s = %g\n' %(name,iMode)
             msg += 'eigenvalueReal = %g\n' %(freq)
             #msg += 'eigenvalueReal = %f\n' %(freq)
             msg += headerLine
-            for nodeID,displacement in sorted(eigVals.items()):
+            for nodeID,displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = displacement
@@ -229,13 +229,13 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         """
         msg = []
         #print self.dataCode
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
             msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID,translation in sorted(eigVals.items()):
+            for nodeID,translation in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
@@ -262,10 +262,10 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             headerLine += '%10s ' %(header)
         headerLine += '\n'
 
-        for iMode,eigVals in sorted(self.translations.items()):
+        for iMode,eigVals in sorted(self.translations.iteritems()):
             msg += '%s = %s\n' %(name,iMode)
             msg += headerLine
-            for nodeID,translation in sorted(eigVals.items()):
+            for nodeID,translation in sorted(eigVals.iteritems()):
                 Type = self.gridTypes[nodeID]
                 
                 rotation = self.rotations[iMode][nodeID]
@@ -341,14 +341,14 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
     def writeF06(self,header,pageStamp,pageNum=1):
         msg = []
         #print self.dataCode
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
             #freq = 0.0
             msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
             msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID,displacement in sorted(eigVals.items()):
+            for nodeID,displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (v1r,v2r,v3r,v1i,v2i,v3i) = displacement
@@ -376,10 +376,10 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
         headerLine += '\n'
         name = self.dataCode['name']
 
-        for i,(iMode,eigVals) in enumerate(sorted(self.translations.items())):
+        for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += '%s = %g\n' %(name,iMode)
             msg += headerLine
-            for nodeID,translation in sorted(eigVals.items()):
+            for nodeID,translation in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
                 Type = self.gridTypes[nodeID]
                 #(dx,dy,dz) = displacement

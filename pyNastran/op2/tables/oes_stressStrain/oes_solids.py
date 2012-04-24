@@ -352,7 +352,7 @@ class solidStressObject(stressObject):
             isHexa = True
         
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        for eid,oxxNodes in sorted(self.oxx.items()):
+        for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
 
             k = oxxNodes.keys()
@@ -444,11 +444,11 @@ class solidStressObject(stressObject):
         
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         
-        for dt,oxxs in sorted(self.oxx.items()):
+        for dt,oxxs in sorted(self.oxx.iteritems()):
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[1] = dtLine
             #print oxxs
-            for eid,oxxNodes in sorted(oxxs.items()):
+            for eid,oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 #self.eType[eid] = eType
                 #print "eid=%s eType=%s" %(eid,eType)
@@ -524,7 +524,7 @@ class solidStressObject(stressObject):
         for header in headers:
             msg += '%9s ' %(header)
         msg += '\n'
-        for eid,oxxNodes in sorted(self.oxx.items()):
+        for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
                 oxx = self.oxx[eid][nid]
@@ -560,9 +560,9 @@ class solidStressObject(stressObject):
             msg += '%9s ' %(header)
         msg += '\n'
 
-        for dt,oxxs in sorted(self.oxx.items()):
+        for dt,oxxs in sorted(self.oxx.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,oxxNodes in sorted(oxxs.items()):
+            for eid,oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
                     oxx = self.oxx[dt][eid][nid]
@@ -948,7 +948,7 @@ class solidStrainObject(strainObject):
             isHexa = True
         
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        for eid,exxNodes in sorted(self.exx.items()):
+        for eid,exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
 
             k = exxNodes.keys()
@@ -1039,10 +1039,10 @@ class solidStrainObject(strainObject):
         
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         
-        for dt,exxs in sorted(self.exx.items()):            
+        for dt,exxs in sorted(self.exx.iteritems()):            
             dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
             header[1] = dtLine
-            for eid,exxNodes in sorted(exxs.items()):
+            for eid,exxNodes in sorted(exxs.iteritems()):
                 eType = self.eType[eid]
 
                 k = exxNodes.keys()
@@ -1114,7 +1114,7 @@ class solidStrainObject(strainObject):
         for header in headers:
             msg += '%9s ' %(header)
         msg += '\n'
-        for eid,oxxNodes in sorted(self.oxx.items()):
+        for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
                 oxx = self.oxx[eid][nid]
@@ -1152,7 +1152,7 @@ class solidStrainObject(strainObject):
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
-        for eid,exxNodes in sorted(self.exx.items()):
+        for eid,exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
                 exx = self.exx[eid][nid]
@@ -1183,9 +1183,9 @@ class solidStrainObject(strainObject):
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
-        for dt,exxs in sorted(self.exx.items()):
+        for dt,exxs in sorted(self.exx.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-            for eid,exxNodes in sorted(exxs.items()):
+            for eid,exxNodes in sorted(exxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
                     exx = self.exx[dt][eid][nid]

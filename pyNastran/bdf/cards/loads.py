@@ -214,7 +214,7 @@ class LOAD(Load):
         msg += "                                   DZ=0.0,),),\n"
 
         mags = {}
-        for node,load in sorted(forceLoads.items()):
+        for node,load in sorted(forceLoads.iteritems()):
             pass
         return msg
 

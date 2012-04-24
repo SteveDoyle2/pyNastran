@@ -234,10 +234,10 @@ class beamStressObject(stressObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
-        for dt,SMaxs in sorted(self.smax.items()):
+        for dt,SMaxs in sorted(self.smax.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,Smax in sorted(SMaxs.items()):
+            for eid,Smax in sorted(SMaxs.iteritems()):
                 msg.append('0  %8i\n' %(eid))
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]
@@ -266,7 +266,7 @@ class beamStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,smax in sorted(self.smax.items()):
+        for dt,smax in sorted(self.smax.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(smax):
                 for i,nid in enumerate(self.grids[eid]):
@@ -299,7 +299,7 @@ class beamStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]
@@ -573,10 +573,10 @@ class beamStrainObject(strainObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
-        for dt,SMaxs in sorted(self.smax.items()):
+        for dt,SMaxs in sorted(self.smax.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header + words
-            for eid,Smax in sorted(SMaxs.items()):
+            for eid,Smax in sorted(SMaxs.iteritems()):
                 msg.append('0  %8i\n' %(eid))
                 for i,nid in enumerate(self.grids[eid]):
                     xxb  = self.xxb[eid][i]
@@ -605,7 +605,7 @@ class beamStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,axial in sorted(self.axial.items()):
+        for dt,axial in sorted(self.axial.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid in sorted(axial):
                 axial   = self.axial[dt][eid]

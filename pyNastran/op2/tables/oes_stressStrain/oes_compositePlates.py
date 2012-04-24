@@ -231,7 +231,7 @@ class compositePlateStressObject(stressObject):
             isTri = False
             triMsg = []
         ###
-        for eid,o11s in sorted(self.o11.items()):
+        for eid,o11s in sorted(self.o11.iteritems()):
             out = ''
             eType = self.eType[eid]
             for iLayer in range(len(o11s)):
@@ -295,7 +295,7 @@ class compositePlateStressObject(stressObject):
         ###
         
         msg = []
-        for dt,O11s in sorted(self.o11.items()):
+        for dt,O11s in sorted(self.o11.iteritems()):
             quadMsg = []
             triMsg = []
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
@@ -304,7 +304,7 @@ class compositePlateStressObject(stressObject):
             if isTri:
                 triMsg = header + triWords
 
-            for eid,o11s in sorted(O11s.items()):
+            for eid,o11s in sorted(O11s.iteritems()):
                 out = ''
                 eType = self.eType[eid]
                 for iLayer in range(len(o11s)):
@@ -353,7 +353,7 @@ class compositePlateStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,o11s in sorted(self.o11.items()):
+        for eid,o11s in sorted(self.o11.iteritems()):
             eType = self.eType[eid]
             for iLayer in range(len(o11s)):
                 o11 = self.o11[eid][iLayer]
@@ -388,9 +388,9 @@ class compositePlateStressObject(stressObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,O11s in sorted(self.o11.items()):
+        for dt,O11s in sorted(self.o11.iteritems()):
             msg += "dt = %s\n" %(dt)
-            for eid,o11s in sorted(O11s.items()):
+            for eid,o11s in sorted(O11s.iteritems()):
                 eType = self.eType[eid]
                 for iLayer in range(len(o11s)):
                     o11 = self.o11[dt][eid][iLayer]
@@ -596,7 +596,7 @@ class compositePlateStrainObject(strainObject):
             isTri = False
             triMsg = []
         ###
-        for eid,e11s in sorted(self.e11.items()):
+        for eid,e11s in sorted(self.e11.iteritems()):
             out = ''
             eType = self.eType[eid]
             for iLayer in range(len(e11s)):
@@ -661,7 +661,7 @@ class compositePlateStrainObject(strainObject):
         ###
         
         msg = []
-        for dt,e11s in sorted(self.e11.items()):
+        for dt,e11s in sorted(self.e11.iteritems()):
             quadMsg = []
             triMsg = []
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
@@ -670,7 +670,7 @@ class compositePlateStrainObject(strainObject):
             if isTri:
                 triMsg = header + triWords
 
-            for eid,e11s in sorted(e11s.items()):
+            for eid,e11s in sorted(e11s.iteritems()):
                 out = ''
                 eType = self.eType[eid]
                 for iLayer in range(len(e11s)):
@@ -719,7 +719,7 @@ class compositePlateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for eid,e11s in sorted(self.e11.items()):
+        for eid,e11s in sorted(self.e11.iteritems()):
             eType = self.eType[eid]
             for iLayer in range(len(e11s)):
                 e11 = self.e11[eid][iLayer]
@@ -754,9 +754,9 @@ class compositePlateStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
 
-        for dt,E11s in sorted(self.e11.items()):
+        for dt,E11s in sorted(self.e11.iteritems()):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid,e11s in sorted(E11s.items()):
+            for eid,e11s in sorted(E11s.iteritems()):
                 eType = self.eType[eid]
                 for iLayer in range(len(e11s)):
                     e11 = self.e11[dt][eid][iLayer]

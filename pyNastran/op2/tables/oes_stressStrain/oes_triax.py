@@ -148,7 +148,7 @@ class ctriaxStressObject(stressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid,radial in sorted(self.radial.items()):
+        for eid,radial in sorted(self.radial.iteritems()):
             for nid in sorted(radial):
                 rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
@@ -178,10 +178,10 @@ class ctriaxStressObject(stressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt,Radial in sorted(self.radial.items()):
+        for dt,Radial in sorted(self.radial.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for eid,radial in sorted(Radial.items()):
+            for eid,radial in sorted(Radial.iteritems()):
                 for nid in sorted(radial):
                     rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]
@@ -325,7 +325,7 @@ class ctriaxStrainObject(strainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid,radial in sorted(self.radial.items()):
+        for eid,radial in sorted(self.radial.iteritems()):
             for nid in sorted(radial):
                 rad   = self.radial[eid][nid]
                 azimuth  = self.azimuthal[eid][nid]
@@ -355,10 +355,10 @@ class ctriaxStrainObject(strainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt,Radial in sorted(self.radial.items()):
+        for dt,Radial in sorted(self.radial.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            for eid,radial in sorted(Radial.items()):
+            for eid,radial in sorted(Radial.iteritems()):
                 for nid in sorted(radial):
                     rad   = self.radial[dt][eid][nid]
                     azimuth  = self.azimuthal[dt][eid][nid]

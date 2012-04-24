@@ -26,7 +26,7 @@ class PanelBuckling(object):
         
         ## maps elements to edges
         Edges = {}
-        for eid,element in sorted(self.bdf.elements.items()):
+        for eid,element in sorted(self.bdf.elements.iteritems()):
             if isinstance(element,ShellElement):
                 Edges[eid] = []
                 self.shells[eid] = element
@@ -37,7 +37,7 @@ class PanelBuckling(object):
         ## maps edges to elements
         Edges2 = {}
         Normals = {}
-        for eid,element in sorted(self.shells.items()):
+        for eid,element in sorted(self.shells.iteritems()):
             edges = []
             Normals[eid] = element.Normal()
             nodeIDs = element.nodeIDs()
@@ -56,7 +56,7 @@ class PanelBuckling(object):
             #Edges[eid] = edges
         del key,edges,element
 
-        for eid,edges in sorted(Edges.items()):
+        for eid,edges in sorted(Edges.iteritems()):
             for edge in edges:
                 Edges2[edge].append(eid)
                 #print "Edges2[edge=%s] = %s" %(edge,Edges2[edge])
@@ -74,7 +74,7 @@ class PanelBuckling(object):
         #Edges2 = {}  ## maps edges to elements
         #print "Edges[edge=%s] = %s" %(edge,Edges2[edge]) # edges to elements
         self.edgeCount = {}
-        for edge,elements in sorted(Edges2.items()):
+        for edge,elements in sorted(Edges2.iteritems()):
             #elements = self.removeExtraElements2(elements)
             self.edgeCount[edge] = len(elements)
             print "edge=%s elements=%s edgeCount=%s" %(edge,elements,self.edgeCount[edge])
@@ -168,7 +168,7 @@ class PanelBuckling(object):
         maxPanelID = -1
 
         self.eidsDone = set([])
-        for eid,edges in sorted(Edges.items()):
+        for eid,edges in sorted(Edges.iteritems()):
             print "eid = ",eid
             self.eidsDone = self.eidsDone.union([eid])
             # what panel are we working on
@@ -231,15 +231,15 @@ class PanelBuckling(object):
         
         reversedPanelEids = {}
         # i dont like initializing lists within dictionaries, messy
-        for eid,panelID in panelEids.items():
+        for eid,panelID in panelEids.iteritems():
             reversedPanelEids[panelID] = []
 
         IDsToKeep = [74]
-        for eid,panelID in panelEids.items():
+        for eid,panelID in panelEids.iteritems():
             reversedPanelEids[panelID].append(eid)
 
         eidsToRemove = []
-        for panelID,eids in sorted(reversedPanelEids.items()):
+        for panelID,eids in sorted(reversedPanelEids.iteritems()):
             print "panelID=%s nEids=%s eids=%s" %(panelID,len(eids),eids)
             if panelID not in IDsToKeep:
                 print "****removing ",panelID
