@@ -152,7 +152,7 @@ def printFloat16(value,tol=1e-8):
 
                 #print "value=%s field=%s field1=%s field2=%s" %(value,field[1:],field1,field2)
                 #print "same - ",float(field1)==float(field2)
-                if len(field2)<=8 and float(field1)==float(field2):
+                if len(field2)<=16 and float(field1)==float(field2):
                     field = field2
                     #print "*field = ",field
                     field = field.strip(' 0')
@@ -165,27 +165,21 @@ def printFloat16(value,tol=1e-8):
                 ###
             #elif value>-0.01:
             #    #print "A"
-            #    field = "%8.8f" %(value)   # -0.001>x>-0.01..should be 4
+            #    field = "%16.16f" %(value)   # -0.001>x>-0.01..should be 4
             #    field = '-'+field[2:]
             elif value>-0.1:
                 #print "B"
-                field = "%8.6f" %(value)   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
+                field = "%16.14f" %(value)   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
                 field = field.replace('-0.','-.')
             elif value>-1.:
                 #print "C"
-                field = "%8.6f" %(value)   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
+                field = "%16.14f" %(value)   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
                 field = field.replace('-0.','-.')
-            elif value>-10.:     field = "%8.5f" %(value)   # -1    >x>-10
-            elif value>-100:     field = "%8.4f" %(value)   # -10   >x>-100
-            elif value>-1000:    field = "%8.3f" %(value)   # -100  >x>-1000
-            elif value>-10000:   field = "%8.2f" %(value)   # -1000 >x>-10000
-            elif value>-100000:  field = "%8.1f" %(value)   # -10000>x>-100000
-
-            elif value>-10.:              field = "%16.14f" %(value)
-            elif value>-100.:             field = "%16.13f" %(value)
-            elif value>-1000.:            field = "%16.12f" %(value)
-            elif value>-10000.:           field = "%16.11f" %(value)
-            elif value>-100000.:          field = "%16.10f" %(value)
+            elif value>-10.:              field = "%16.14f" %(value)   # -1    >x>-10
+            elif value>-100.:             field = "%16.13f" %(value)   # -10   >x>-100
+            elif value>-1000.:            field = "%16.12f" %(value)   # -100  >x>-1000
+            elif value>-10000.:           field = "%16.11f" %(value)   # -1000 >x>-10000
+            elif value>-100000.:          field = "%16.10f" %(value)   # -10000>x>-100000
             elif value>-1000000.:         field = "%16.9f" %(value)
             elif value>-10000000.:        field = "%16.8f" %(value)
             elif value>-100000000.:       field = "%16.7f" %(value)
@@ -196,22 +190,22 @@ def printFloat16(value,tol=1e-8):
             elif value>-10000000000000.:  field = "%16.2f" %(value)
             elif value>-100000000000000.: field = "%16.1f" %(value)
             else:
-                field = "%8.1f" %(value)
-                if field.index('.')<8:
-                    field = field[0:8]
+                field = "%16.1f" %(value)
+                if field.index('.')<16:
+                    field = field[0:16]
                     assert '.' != field[0],field
                 else:
-                    field = printScientific8(value)
+                    field = printScientific16(value)
                 ###
                 return field
             ###
         ###
         field = field.strip(' 0')
-        field = '%8s' %(field)
+        field = '%16s' %(field)
     ###
     #print len(field)
     #print "value=|%s| field=|%s|\n" %(value,field)
-    assert len(field)==8,'value=|%s| field=|%s| is not 8 characters long, its %s' %(value,field,len(field))
+    assert len(field)==16,'value=|%s| field=|%s| is not 16 characters long, its %s' %(value,field,len(field))
     return field
 
 def printField16(value,tol=0.):

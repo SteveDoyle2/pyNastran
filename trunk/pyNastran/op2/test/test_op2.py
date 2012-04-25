@@ -32,7 +32,7 @@ def getFailedFiles(filename):
         files.append(line.strip())
     return files
 
-def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
+def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=True,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -49,7 +49,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n,op2file))
             nTotal += 1
-            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
+            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,deleteF06=deleteF06,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
                 sys.stderr.write('**file=%s\n' %(op2file))
                 failedCases.append(op2file)
@@ -71,12 +71,13 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
     
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed))
 
-def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
+def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,deleteF06=False,iSubcases=[],debug=False,stopOnFailure=True):
+    assert '.op2' in op2FileName.lower(),'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
     #debug = True
     try:
-        op2 = OP2(op2file,makeGeom=makeGeom,debug=debug)
+        op2 = OP2(op2FileName,makeGeom=makeGeom,debug=debug)
         op2.setSubcases(iSubcases)
 
         #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
@@ -87,8 +88,10 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
         #tableNamesF06 = parseTableNamesFromF06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if writeF06:
-            (model,ext) = os.path.splitext(op2file)
+            (model,ext) = os.path.splitext(op2FileName)
             op2.writeF06(model+'.f06.out')
+            if deleteF06:
+                os.remove(model+'.f06.out')
         #print op2.printResults()
         op2.printResults()
         #print "subcases = ",op2.subcases
@@ -103,7 +106,7 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' %(op2file))
+        sys.stderr.write('**file=%s\n' %(op2FileName))
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
@@ -209,6 +212,7 @@ def runArgParse():
 
 def main():
     (op2FileName,makeGeom,writeBDF,writeF06,debug) = runArgParse()
+
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
     runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,debug=debug)
