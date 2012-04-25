@@ -1,11 +1,11 @@
 # CFLAGS='-isysroot /Developer/SDKs/MacOSX10.6.sdk -arch i386'
 # LDFLAGS='-arch i386'
-# CFLAGS=
-# LDFLAGS=
+CFLAGS= -g
+LDFLAGS= -g
 
-all:
-	python setup.py build_ext --inplace
-	# CFLAGS=$(CFLAGS) LDFLAGS=$(LDFLAGS) python setup.py build_ext --inplace
+all: op4.pyx libop4.c op4.h
+	LDFLAGS=$(LDFLAGS) CFLAGS=$(CFLAGS) python setup.py build_ext --inplace
+	# python setup.py build_ext --inplace
 
 clean:
 	rm -rf build *.so op4.c libop4.o
