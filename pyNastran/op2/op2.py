@@ -191,8 +191,12 @@ class OP2(BDF,  # BDF methods
         # rename to staticLoads/thermalLoads
         #self.forces = {}
         #self.fluxes = {}
+        self.thermalLoad_CONV  = {}
         self.thermalLoad_CHBDY = {}
+        self.thermalLoad_1D    = {}
         self.thermalLoad_2D_3D = {}
+        self.thermalLoad_VU    = {}
+        self.thermalLoad_VU_3D = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
         #self.modalForces = {}
