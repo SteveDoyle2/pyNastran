@@ -6,7 +6,7 @@ Make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGu
 
 = Introduction =
 
-The Graphical User Interface (GUI) was first introduced in version 0.3.0 (unreleased).  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
+The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
 
 The GUI looks like:
 
@@ -52,6 +52,7 @@ The solidBending.bdf and solidBending.op2 files have been included as examples t
  * CTETRA4 / CTETRA10
  * CHEXA8 / CHEXA20
  * CPENTA6 / CPENTA15
+ * CSHEAR
  * CBAR/CBEAM/CROD/CONROD/CELASx (displayed as lines)
  * CAERO1 (shown in yellow)
  * CONM2 (shown in yellow as points)
@@ -59,7 +60,6 @@ The solidBending.bdf and solidBending.op2 files have been included as examples t
 
 = BDF Requirements =
  * Entire model can be cross-referenced
- * No SPOINTs
  * Same requirements as BDF (include an executive/case control deck, define all cross-referenced cards, etc.)
 
 = Mouse Controls =
