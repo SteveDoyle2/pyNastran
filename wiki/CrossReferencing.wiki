@@ -75,3 +75,8 @@ mass = L*(A*rho+nsm)  # gets the mass; equivalent to element1.Mass()
 }}}
 
 So in short (assuming it works on your model), cross-referencing is really nice and lets you make use of the true functionality of the software.
+
+== Why Cross Referencing Fails ==
+ * You're missing cards in the BDF.
+ * There is a reference to an unsupported card.  For example, the PBCOMP (CBEAM Property) is not supported.  It is referenced by a CBEAM, so the property cannot be found.  The PBEAM3 is also not supported, but the CBEAM3 is not supported either.  In this case you're alright.
+ * All element midside nodes must exist.
