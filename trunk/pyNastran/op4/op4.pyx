@@ -72,10 +72,8 @@ cdef extern from "libop4.c":
                        int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
                        int     complx     ,  #/* in  0=real   1=complex         */
                        int     n_Nnz      ,  #/* in  number of nonzero terms    */
-                       int    *col_ptr    ,  #/* out col index   (s_o) = 1,2    */
-                       int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
-                       str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
-                       int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                       int    *I_coo      ,  #/* out sparse row ind             */
+                       int    *J_coo      ,  #/* out sparse col ind             */
                        )
     double *op4_load_D(FILE   *fp         ,
                        int     filetype   ,  #/* in  1=text, other is binary    */
@@ -85,9 +83,9 @@ cdef extern from "libop4.c":
                        int     col_width  ,  #/* in  # characters in format str */
                        int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
                        int     complx     ,  #/* in  0=real   1=complex         */
-                       int    *n_str      ,  #/* out # strings   (s_o) = 1,2    */
-                       str_t  *str_data   ,  #/* out string data (s_o) = 1,2    */
-                       int    *N_index    ,  #/* in/out          (s_o) = 1,2    */
+                       int     n_Nnz      ,  #/* in  number of nonzero terms    */
+                       int    *I_coo      ,  #/* out sparse row ind             */
+                       int    *J_coo      ,  #/* out sparse col ind             */
                        )
     int    op4_scan(char *filename  , #/* in                          */
                     int  *nmat     , #/* out number of matrices      */
@@ -462,11 +460,12 @@ class OP4:                                                # {{{1
                     col_width = 0
                     fmt_str   = ''
 
-                if self.storage[i]:     # sparse
+                if self.storage[i]:          # sparse
+                    print("matrix %d is sparse, skipping" % i)
                     pass
-                else:                            # dense
+                else:                        # dense
                     size = self.nrow[i] * self.ncol[i]
-                    if   self.type[i] == 1: 
+                    if   self.type[i] == 1:  # real single precision
                         array_RS = op4_load_S(fp        ,
                                               filetype  , # 1 = text
                                               self.nrow[i], 
@@ -476,10 +475,8 @@ class OP4:                                                # {{{1
                                               self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                               complx    , # in  0=real   1=complex     
                                               self.nnz[i],# in number of nonzero terms
-                                              unused    , # out column index to strings (sp1,2)
-                                              unused    , # in/out index m.S (if sp1,2)
-                                              unused_s  , # out string data (if sp1,2) 
-                                              unused    ) # in/out index m.N (sp 1,2)  
+                                              unused    , # out sparse row ind
+                                              unused    ) # out sparse col ind
 
                         array_wrapper_RS = ArrayWrapper_RS()
                         array_wrapper_RS.set_data(size, <void*> array_RS) 
@@ -487,7 +484,7 @@ class OP4:                                                # {{{1
                         ndarray.base = <PyObject*> array_wrapper_RS
                         Py_INCREF(array_wrapper_RS)
 
-                    elif self.type[i] == 2: 
+                    elif self.type[i] == 2:   # real double precision
                         array_RD = op4_load_D(fp        ,
                                               filetype  , # 1 = text
                                               self.nrow[i], 
@@ -496,16 +493,16 @@ class OP4:                                                # {{{1
                                               col_width ,
                                               self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                               complx    , # in  0=real   1=complex     
-                                              unused    , # in/out index m.S (if sp1,2)
-                                              unused_s  , # out string data (if sp1,2) 
-                                              unused    ) # in/out index m.N (sp 1,2)  
+                                              self.nnz[i],# in number of nonzero terms
+                                              unused    , # out sparse row ind
+                                              unused    ) # out sparse col ind
                         array_wrapper_RD = ArrayWrapper_RD()
                         array_wrapper_RD.set_data(size, <void*> array_RD) 
                         ndarray = np.array(array_wrapper_RD, copy=False)
                         ndarray.base = <PyObject*> array_wrapper_RD
                         Py_INCREF(array_wrapper_RD)
 
-                    elif self.type[i] == 3: 
+                    elif self.type[i] == 3:   # complex single precision
                         array_CS = op4_load_S(fp        ,
                                               filetype  , # 1 = text
                                               self.nrow[i], 
@@ -515,17 +512,15 @@ class OP4:                                                # {{{1
                                               self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                               complx    , # in  0=real   1=complex     
                                               self.nnz[i],# in number of nonzero terms
-                                              unused    , # out column index to strings (sp1,2)
-                                              unused    , # in/out index m.S (if sp1,2)
-                                              unused_s  , # out string data (if sp1,2) 
-                                              unused    ) # in/out index m.N (sp 1,2)  
+                                              unused    , # out sparse row ind
+                                              unused    ) # out sparse col ind
                         array_wrapper_CS = ArrayWrapper_CS()
                         array_wrapper_CS.set_data(size, <void*> array_CS) 
                         ndarray = np.array(array_wrapper_CS, copy=False)
                         ndarray.base = <PyObject*> array_wrapper_CS
                         Py_INCREF(array_wrapper_CS)
 
-                    elif self.type[i] == 4: 
+                    elif self.type[i] == 4:   # complex double precision
                         array_CD = op4_load_D(fp        ,
                                               filetype  , # 1 = text
                                               self.nrow[i], 
@@ -534,9 +529,9 @@ class OP4:                                                # {{{1
                                               col_width ,
                                               self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                               complx    , # in  0=real   1=complex     
-                                              unused    , # in/out index m.S (if sp1,2)
-                                              unused_s  , # out string data (if sp1,2) 
-                                              unused    ) # in/out index m.N (sp 1,2)  
+                                              self.nnz[i],# in number of nonzero terms
+                                              unused    , # out sparse row ind
+                                              unused    ) # out sparse col ind
                         array_wrapper_CD = ArrayWrapper_CD()
                         array_wrapper_CD.set_data(size, <void*> array_CD) 
                         ndarray = np.array(array_wrapper_CD, copy=False)

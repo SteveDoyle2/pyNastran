@@ -20,6 +20,8 @@ def configuration(parent_package='', top_path=None):
                          sources=['op4.pyx'],
                          # libraries=['m'],
                          depends=['op4.c'],
+                         extra_compile_args=["-g"],
+                         extra_link_args=["-g"],
                          include_dirs=[numpy.get_include()])
     return config
 
