@@ -189,8 +189,10 @@ class OP2(BDF,  # BDF methods
 
         # OEF
         # rename to staticLoads/thermalLoads
-        self.forces = {}
-        self.fluxes = {}
+        #self.forces = {}
+        #self.fluxes = {}
+        self.thermalLoad_CHBDY = {}
+        self.thermalLoad_2D_3D = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
         #self.modalForces = {}
@@ -352,8 +354,10 @@ class OP2(BDF,  # BDF methods
             msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
             msg += '  If the F06 is OK:\n'
             msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            msg += '      2.  Run the problem on a different Operating System'
+            msg += '      2.  Run the problem on a different Operating System\n'
+            msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
             raise TapeCodeError(msg)
+            #raise
         ###
 
         isAnotherTable = True
