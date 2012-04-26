@@ -14,10 +14,12 @@ from pyNastran.op2.tables.oug.oug_displacements import displacementObject
 #    displacementObject,temperatureObject)
 #from pyNastran.op2.tables.oug.oug_eigenvectors import (
 #    eigenVectorObject)
+from thermal_elements import ThermalElements
 from oef_Objects import (nonlinearFluxObject)
 from oef_thermalObjects import *
+from oef_forceObjects import *
 
-class OEF(object):
+class OEF(ThermalElements):
     """Table of element forces"""
     def readTable_OEF(self):
         table3     = self.readTable_OEF_3
@@ -123,349 +125,306 @@ class OEF(object):
         #gridDevice, = unpack('i',data)
         return timeFreq
     
-    def OEF_CHBDYx(self): # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
-        if self.makeOp2Debug:
-            self.op2Debug.write('---OEF_CHBDYx---\n')
+    def OEF_Rod(self): # 1-CROD, 3-CTUBE, 10-CONROD
         deviceCode = self.deviceCode
         
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iccccccccfffff' # SORT1
+            format1 = 'iff' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fccccccccfffff' # SORT2
+            format1 = 'fff' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.thermalLoad_CHBDY,CHBDYx,isSort1)
+        self.createThermalTransientObject(self.forces,ROD,isSort1)
 
-        while len(self.data)>=32: # 8*4
-            eData     = self.data[0:32]
-            self.data = self.data[32: ]
+        while len(self.data)>=12: # 3*4
+            eData     = self.data[0:12]
+            self.data = self.data[12: ]
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,fApplied,freeConv,forceConv,fRad,fTotal) = out
+            (eid,axial,torque) = out
             eid2  = extract(eid,dt)
-            eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
             
-            dataIn = [eid2,eType,fApplied,freeConv,forceConv,fRad,fTotal]
+            dataIn = [eid2,axial,torque]
             #print dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CHBDYx)
-        if self.makeOp2Debug:
-            print "done with OEF_CHBDYx"
+        self.handleResultsBuffer(self.OEF_Rod)
+        #print self.forces
         
-        #print self.thermalLoad_CHBDY
-
-    def OEF_CONV(self): # [110]  CONV
-        if self.makeOp2Debug:
-            self.op2Debug.write('---OEF_CONV---\n')
+    def OEF_Beam(self): # 2-CBEAM
         deviceCode = self.deviceCode
         
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ifif' # SORT1
+            format1 = 'iiffffffff' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ffif' # SORT2
+            format1 = 'fiffffffff' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.thermalLoad_CONV,tCONV,isSort1)
+        self.createThermalTransientObject(self.beamForces,CBEAM,isSort1)
 
-        while len(self.data)>=16: # 4*4
-            eData     = self.data[0:16]
-            self.data = self.data[16: ]
+        while len(self.data)>=40: # 10*4
+            eData     = self.data[0:40]
+            self.data = self.data[40: ]
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,cntlNode,freeConv,freeConvK) = out
+            (eidTemp,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq) = out
+            #print "eidTemp = ",eidTemp
+            #print "nid = ",nid
+            #print "sd = ",sd
+            if nid==0 or sd>0.:
+                eid = self.eidOld
+                isNewElement = False
+            else:
+                eid = eidTemp
+                self.eidOld = eid
+                isNewElement = True
             eid2  = extract(eid,dt)
-            
-            dataIn = [eid2,cntlNode,freeConv,freeConvK]
-            print dataIn
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_CONV)
-        if self.makeOp2Debug:
-            print "done with OEF_CONV"
-        
-        #print self.thermalLoad_CHBDY
-    def createThermalTransientObject(self,resultName,objClass,isSort1):
-        #print resultName
-        if self.iSubcase in resultName:
-            self.obj = resultName[self.iSubcase]
-            print "returning iSubcase result=%s" %(self.iSubcase)
-        else:
-            self.obj = objClass(isSort1,self.nonlinearFactor)
-            resultName[self.iSubcase] = self.obj
-            print "creating iSubcase result=%s" %(self.iSubcase)
-        ###
-        #return self.obj
-    
-    def OEF_VU_Element(self): # 189-VUQUAD 190-VUTRIA,191-VUBEAM
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
-
-        if self.elementType in [189]:
-            nNodes = 4
-        elif self.elementType in [190]:
-            nNodes = 3
-        elif self.elementType in [191]:
-            nNodes = 2
-        else:
-            raise NotImplementedError(self.codeInformation())
-
-        if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiiccccii' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiiccccii' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-        ###
-        formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VU,Thermal_VU,isSort1)
-
-        n = 24+28*nNodes
-        while len(self.data)>=n:
-            eData     = self.data[0:24] # 6*4
-            self.data = self.data[24: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD,theta,null) = out
-            icord = icordA+icordB+icordC+icordD
-
-            eid2  = extract(eid,dt)
-            dataIn = [eid2,parent,coord,icord,theta]
-
-            gradFluxes = []
-            for i in range(nNodes):
-                eData     = self.data[0:28] # 7*4
-                self.data = self.data[28: ]
-                #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
-                gradFluxes.append(out)
-            dataIn.append(gradFluxes)
-            #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
             
-            #dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print dataIn
-            #eid = self.obj.addNewEid(out)            
-            self.obj.add(nNodes,dt,dataIn)
+            dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
+            #print dataIn
+            #eid = self.obj.addNewEid(out)
+            if isNewElement:
+                self.obj.addNewElement(dt,dataIn)
+                #print
+            elif sd>0.:
+                self.obj.add(dt,dataIn)
+                #print
+            #else: pass
+
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_1D)
-        if self.makeOp2Debug:
-            print "done with OEF_1D"
-        
-        print self.thermalLoad_VU
+        self.handleResultsBuffer(self.OEF_Beam)
+        #print self.beamForces
 
-    def OEF_VU_3D_Element(self): # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
+    def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
+        deviceCode = self.deviceCode
+        
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
-
-        if self.elementType in [147]:
-            nNodes = 4
-        elif self.elementType in [146]:
-            nNodes = 6
-        elif self.elementType in [145]:
-            nNodes = 8
-        else:
-            raise NotImplementedError(self.codeInformation())
-
         if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ii' # SORT1
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'if' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fi' # SORT2
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'ff' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
-        ###
-        formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VU_3D,Thermal_VU_3D,isSort1)
 
-        n = 8+28*nNodes
-        while len(self.data)>=n:
-            eData     = self.data[0:8] # 2*4
+        self.createThermalTransientObject(self.springForces,SPRING,isSort1)
+
+        while len(self.data)>=8: # 2*4
+            eData     = self.data[0:8]
             self.data = self.data[8: ]
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent) = out
-
+            (eid,force) = out
             eid2  = extract(eid,dt)
-            dataIn = [eid2,parent]
-
-            gradFluxes = []
-            for i in range(nNodes):
-                eData     = self.data[0:7*4]
-                self.data = self.data[7*4: ]
-                #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
-                gradFluxes.append(out)
-            dataIn.append(gradFluxes)
-            
-            print dataIn
-            self.obj.add(nNodes,dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_VU_3D_Element)
-        if self.makeOp2Debug:
-            print "done with OEF_VU_3D_Element"
-        
-        print self.thermalLoad_VU_3D
-
-    def OEF_1D(self): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
-        n = 36
-        if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iccccccccffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fccccccccffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-        ###
-        self.createThermalTransientObject(self.thermalLoad_1D,Thermal_1D,isSort1)
-
-        n = 36
-        while len(self.data)>=n: # 10*4
-            eData     = self.data[0:n]
-            self.data = self.data[n: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = out
-            eid2  = extract(eid,dt)
-            eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
             
-            dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print dataIn
-            #eid = self.obj.addNewEid(out)            
+            dataIn = [eid2,force]
+            #print dataIn
+            #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_1D)
-        if self.makeOp2Debug:
-            print "done with OEF_1D"
+        self.handleResultsBuffer(self.OEF_Spring)
+        #print self.springForces
         
-        print self.thermalLoad_1D
-
-    def OEF_2D_3D(self): # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
-        """numWide==10"""
+    def OEF_CBar(self): # 34-CBAR
+        deviceCode = self.deviceCode
+        
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
-        print "dt = ",dt
-        if self.elementType in [39,67,68]: # HEXA,PENTA
-            n = 40
-            if isSort1:
-                print "SORT1 - %s" %(self.ElementType(self.elementType))
-                format1 = 'iccccccccffffffi' # SORT1
-                extract = self.extractSort1
-                #dt = self.nonlinearFactor
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.barForces,CBAR,isSort1)
+
+        while len(self.data)>=36: # 9*4
+            eData     = self.data[0:36]
+            self.data = self.data[36: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq]
+            #print dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_CBar)
+        #print self.barForces
+        
+    def OEF_CBush(self): # 102-CBUSH
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.bushForces,CBUSH,isSort1)
+
+        while len(self.data)>=28: # 7*4
+            eData     = self.data[0:28]
+            self.data = self.data[28: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,fx,fy,fz,mx,my,mz) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,fx,fy,fz,mx,my,mz]
+            #print dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_CBush)
+        #print self.bushForces
+
+    def readOEF_Forces(self):
+        assert self.isReal()
+
+        if self.elementType in [1,3,10]: # CROD,CTUBE,CONROD
+            if self.isRealOrRandom():
+                self.OEF_Rod()
+            #elif self.isRealImaginaryOrMagnitudePhase():
+                #self.OEF_Rod_alt()
             else:
-                print "SORT2 - %s" %(self.ElementType(self.elementType))
-                format1 = 'fccccccccffffffi' # SORT2
-                extract = self.extractSort2
-                #eid = self.nonlinearFactor
-        elif self.elementType in [33,53,64,74,75]: # no zed on this element for some reason...
-            n = 36
-            if isSort1:
-                print "SORT1 - %s" %(self.ElementType(self.elementType))
-                format1 = 'iccccccccffffff' # SORT1
-                extract = self.extractSort1
-                #dt = self.nonlinearFactor
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [2]: # CBEAM
+            self.eidOld = None
+            if self.isRealOrRandom():
+                self.OEF_Beam()
+            #elif self.isRealImaginaryOrMagnitudePhase():
+                #self.OEF_Beam_alt()
             else:
-                print "SORT2 - %s" %(self.ElementType(self.elementType))
-                format1 = 'fccccccccffffff' # SORT2
-                extract = self.extractSort2
-                #eid = self.nonlinearFactor
+                raise NotImplementedError(self.codeInformation())
+            ###
+            del self.eidOld
+        elif self.elementType in [4]: # CSHEAR
+            if self.isRealOrRandom():
+                self.OEF_Shear()
+            elif self.isRealImaginaryOrMagnitudePhase():
+                self.OEF_Shear_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [11,12,13,14]: # CELAS1,CELAS2,CELAS3,CELAS4
+            if self.isRealOrRandom(): ## @todo is this correct or is DMAP wrong (CELAS1)???
+                self.OEF_Spring()
+            #elif self.isRealImaginaryOrMagnitudePhase():
+                #self.OEF_Spring_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [20,21,22,23]: # CDAMP1,CDAMP2,CDAMP3,CDAMP4
+            if self.isRealOrRandom():
+                self.OEF_Spring()
+            #elif self.isRealImaginaryOrMagnitudePhase():
+                #self.OEF_Spring_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+
+        elif self.elementType in [24]: # CVISC
+            if self.isRealOrRandom():
+                self.OEF_CVisc()
+            elif self.isRealImaginaryOrMagnitudePhase():
+                self.OEF_CVisc_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [33]: # CQUAD4
+            if self.isRealOrRandom():
+                self.OEF_CQuad()
+            elif self.isRealImaginaryOrMagnitudePhase():
+                self.OEF_CQuad_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [34]: # CBAR
+            if self.isRealOrRandom():
+                self.OEF_CBar()
+            #elif self.isRealImaginaryOrMagnitudePhase():
+                #self.OEF_CBar_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [38]: # CGAP
+            if self.isRealOrRandom():
+                self.OEF_CGap()
+            elif self.isRealImaginaryOrMagnitudePhase():
+                self.OEF_CGap_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
+            if self.isRealOrRandom():
+                self.OEF_CompositePlate()
+            elif self.isRealImaginaryOrMagnitudePhase():
+                self.OEF_CompositePlate_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [102]: # CBUSH
+            if self.isRealOrRandom():
+                self.OEF_CBush()
+            #elif self.isRealImaginaryOrMagnitudePhase():
+                #self.OEF_CBush_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
             ###
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-        self.createThermalTransientObject(self.thermalLoad_2D_3D,Thermal_2D_3D,isSort1)
 
-        #n = 36
-        while len(self.data)>=n: # 10*4
-            eData     = self.data[0:n]
-            self.data = self.data[n: ]
-
-            out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = out[0:15]
-            eid2  = extract(eid,dt)
-            eType = a+b+c+d+e+f+g+h
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print dataIn
-            #eid = self.obj.addNewEid(out)            
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_2D_3D)
-        if self.makeOp2Debug:
-            print "done with OEF_2D_3D"
-        
-        print self.thermalLoad_2D_3D
-
-    def readOEF_Thermal(self):
-        #print "self.elementType = ",self.elementType
-        if self.elementType in [107,108,109]: # CHBDYE, CHBDYG, CHBDYP
-            assert self.numWide==8,self.codeInformation()
-            self.OEF_CHBDYx()
-        elif self.elementType in [33,39,67,68]: # QUAD4,TETRA,HEXA,PENTA
-            assert self.numWide in [9,10],self.codeInformation()
-            self.OEF_2D_3D()
-        elif self.elementType in [53,64,74,75]: # TRIAX6,QUAD8,TRIA3,TRIA6
-            assert self.numWide==9,self.codeInformation()
-            self.OEF_2D_3D()
-        elif self.elementType in [1,2,3,10,34,69]: # ROD,BEAM,TUBE,CONROD,BAR,BEND
-            assert self.numWide==9,self.codeInformation()
-            self.OEF_1D()
-        elif self.elementType in [189,190,191]: # VUQUAD,VUTRIA,VUBEAM
-            #assert self.numWide==27,self.codeInformation()
-            self.OEF_VU_Element()
-        elif self.elementType in [145,146,147]: # VUHEXA,VUPENTA,VUTETRA
-            self.OEF_VU_3D_Element()
-        elif self.elementType in [110]:
-            self.OEF_CONV()
-        else:
-            print self.codeInformation()
-            raise NotImplementedError('stopping in bad OEF thermal element')
-        ###
 
     def readOEF1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
@@ -474,6 +433,8 @@ class OEF(object):
         
         if self.thermal==1:
             self.readOEF_Thermal()
+        elif self.thermal==0:
+            self.readOEF_Forces()
         else:
             #sys.exit('non-thermal results in OEF not supported')
             self.skipOES_Element() # skipping entire table
@@ -677,24 +638,7 @@ class OEF(object):
     def skipMe(self,data):
         pass
 
-    #def readOEF_2D_3D(self,data):
-        #print "read_2D_3D"
-        #gridDevice, = unpack('i',data[0:4])
-        #grid = (gridDevice-self.deviceCode)/10
-        #eType = ''.join(unpack('cccccccc',data[4:12]))
-        #(xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
-        #print "grid=%g dx=%i dy=%i dz=%i rx=%i ry=%i rz=%i" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
-        #return(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
-
-    #def readOEF_CHBDY(self,data):
-        #print "read_CHBDYx"
-        #gridDevice, = unpack('i',data[0:4])
-        #grid = (gridDevice-self.deviceCode)/10
-        #eType = ''.join(unpack('cccccccc',data[4:12]))
-        #(fApplied,freeConv,forceConv,fRad,fTotal) = unpack('fffff',data[12:32])
-        #return(grid,eType,fApplied,freeConv,forceConv,fRad,fTotal)
-
-    def readForces(self,scalarObject):
+    def readForces_old(self,scalarObject):
         #print "readForces..."
         #print type(scalarObject)
         data = self.data
@@ -729,13 +673,6 @@ class OEF(object):
 
     def passFunc(self,data):
         return
-
-    #def readOEF_2D_3D(self,data):
-    #    gridDevice, = unpack('i',data[0:4])
-    #    grid = (gridDevice-self.deviceCode)/10
-    #    eType = ''.join(unpack('cccccccc',data[4:12]))
-    #    (xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = unpack('ffffff',data[12:36])
-    #    return(grid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
 
     def getOEF_nWords(self):
         if self.thermal==0:
