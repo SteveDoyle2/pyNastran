@@ -182,7 +182,7 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
         array    = malloc(sizeof(double)*size*NPT);
         column   = malloc(sizeof(double)*nRow*NPT);
     } else {        /* sparse; must malloc all numeric data */
-        array    = malloc(sizeof(double)*size*NPT);
+        array    = malloc(sizeof(double)*n_Nnz*NPT);
         column   = malloc(sizeof(double)*n_Nnz*NPT);
         str_data = malloc(sizeof(str_t)*(nRow+1)/2);  /* max # strings in a row is nR/2 + 1*/
     }
