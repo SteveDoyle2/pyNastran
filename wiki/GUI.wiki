@@ -55,7 +55,7 @@ The solidBending.bdf and solidBending.op2 files have been included as examples t
  * CHEXA8 / CHEXA20
  * CPENTA6 / CPENTA15
  * CSHEAR
- * CBAR/CBEAM/CROD/CONROD/CELASx (displayed as lines)
+ * CBAR / CBEAM / CROD / CONROD / CELASx (displayed as lines)
  * CAERO1 (shown in yellow)
  * CONM2 (shown in yellow as points)
  
