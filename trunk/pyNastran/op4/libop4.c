@@ -225,13 +225,9 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                 }
              }
         } else {       /* dense  */
-            for (r = 0; r < nRow*NPT; r += NPT) {
+            for (r = 0; r < nRow*NPT; r++) {
                 if (DEBUG) { printf("   op4_load_D array[%d] = column[%d] = %e\n", c*nRow*NPT + r, r, column[r]); fflush(stdout); }
                 array[c*nRow*NPT + r] = column[r];
-                 if (NPT > 1) {
-                    if (DEBUG) { printf("   op4_load_D array[%d] = column[%d] = %e\n", c*nRow*NPT + r+1, r+1, column[r]); fflush(stdout); }
-                    array[c*nRow*NPT + r+1] = column[r+1];
-                 }
             }
         }
     }
