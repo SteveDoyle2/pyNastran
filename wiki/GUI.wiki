@@ -4,6 +4,8 @@
 = Setup Note =
 Make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGuide Installation Guide] and use *setup.py develop* and not *setup.py install*.  Otherwise, the GUI will not work in v0.3.
 
+If you're using Python 3.x, the GUI will *not* work because [http://wiki.wxpython.org/TentativeRoadmap wxPython] does not support Python 3.x.
+
 = Introduction =
 
 The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
