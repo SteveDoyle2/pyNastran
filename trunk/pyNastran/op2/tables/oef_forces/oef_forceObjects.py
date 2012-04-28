@@ -144,6 +144,131 @@ class RealCBEAMForce(object): # 2-CBEAM
     def __repr__(self):
         return str(self.axial)
 
+class RealCShearForce(object): # 4-CSHEAR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.force41 = {}
+        self.force14 = {}
+        self.force21 = {}
+        self.force12 = {}
+        self.force32 = {}
+        self.force23 = {}
+        self.force43 = {}
+        self.force34 = {}
+        self.kickForce1 = {}
+        self.kickForce2 = {}
+        self.kickForce3 = {}
+        self.kickForce4 = {}
+        self.shear12 = {}
+        self.shear23 = {}
+        self.shear34 = {}
+        self.shear41 = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.force41[dt] = {}
+        self.force14[dt] = {}
+        self.force21[dt] = {}
+        self.force12[dt] = {}
+        self.force32[dt] = {}
+        self.force23[dt] = {}
+        self.force43[dt] = {}
+        self.force34[dt] = {}
+        self.kickForce1[dt] = {}
+        self.kickForce2[dt] = {}
+        self.kickForce3[dt] = {}
+        self.kickForce4[dt] = {}
+        self.shear12[dt] = {}
+        self.shear23[dt] = {}
+        self.shear34[dt] = {}
+        self.shear41[dt] = {}
+
+    def add(self,dt,data):
+        [eid,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,
+                                             kf2,s23,
+                                             kf3,s34,
+                                             kf4,s41] = data
+        #self.eType[eid] = eType
+        self.force41[eid] = f41
+        self.force14[eid] = f14
+        self.force21[eid] = f21
+        self.force12[eid] = f12
+        self.force32[eid] = f32
+        self.force23[eid] = f23
+        self.force43[eid] = f43
+        self.force34[eid] = f34
+        self.kickForce1[eid] = kf1
+        self.kickForce2[eid] = kf2
+        self.kickForce3[eid] = kf3
+        self.kickForce4[eid] = kf4
+        self.shear12[eid] = s12
+        self.shear23[eid] = s23
+        self.shear34[eid] = s34
+        self.shear41[eid] = s41
+        
+    def addSort1(self,dt,data):
+        [eid,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,
+                                             kf2,s23,
+                                             kf3,s34,
+                                             kf4,s41] = data
+        if dt not in self.force41:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.force41[dt][eid] = f41
+        self.force14[dt][eid] = f14
+        self.force21[dt][eid] = f21
+        self.force12[dt][eid] = f12
+        self.force32[dt][eid] = f32
+        self.force23[dt][eid] = f23
+        self.force43[dt][eid] = f43
+        self.force34[dt][eid] = f34
+        self.kickForce1[dt][eid] = kf1
+        self.kickForce2[dt][eid] = kf2
+        self.kickForce3[dt][eid] = kf3
+        self.kickForce4[dt][eid] = kf4
+        self.shear12[dt][eid] = s12
+        self.shear23[dt][eid] = s23
+        self.shear34[dt][eid] = s34
+        self.shear41[dt][eid] = s41
+
+    def addSort2(self,eid,data):
+        [dt,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,
+                                            kf2,s23,
+                                            kf3,s34,
+                                            kf4,s41] = data
+        if dt not in self.force41:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.force41[dt][eid] = f41
+        self.force14[dt][eid] = f14
+        self.force21[dt][eid] = f21
+        self.force12[dt][eid] = f12
+        self.force32[dt][eid] = f32
+        self.force23[dt][eid] = f23
+        self.force43[dt][eid] = f43
+        self.force34[dt][eid] = f34
+        self.kickForce1[dt][eid] = kf1
+        self.kickForce2[dt][eid] = kf2
+        self.kickForce3[dt][eid] = kf3
+        self.kickForce4[dt][eid] = kf4
+        self.shear12[dt][eid] = s12
+        self.shear23[dt][eid] = s23
+        self.shear34[dt][eid] = s34
+        self.shear41[dt][eid] = s41
+
+    def __repr__(self):
+        return str(self.force41)
+
 class RealSpringForce(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self,isSort1,dt):
         #self.eType = {}
@@ -535,6 +660,49 @@ class RealCGAPForce(object): # 38-CGAP
 
     def __repr__(self):
         return str(self.fx)
+
+class RealBendForce(object): # 69-CBEND
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        raise NotImplementedError()
+        self.bendingMoment = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.force[dt] = {}
+
+    def add(self,dt,data):
+        [eid,force] = data
+
+        #self.eType[eid] = eType
+        self.force[eid] = force
+
+    def addSort1(self,dt,data):
+        [eid,force] = data
+        if dt not in self.force:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.force[dt][eid] = force
+
+    def addSort2(self,eid,data):
+        [dt,force] = data
+        if dt not in self.force:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.force[dt][eid] = force
+
+    def __repr__(self):
+        return str(self.force)
 
 class RealCBUSHForce(object): # 102-CBUSH
     def __init__(self,isSort1,dt):
