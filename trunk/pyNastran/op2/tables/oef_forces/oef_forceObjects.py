@@ -397,6 +397,68 @@ class RealPLATE2Force(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __repr__(self):
         return str(self.mx)
 
+class RealCBARForce(object): # 34-CBAR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.bendingMomentA = {}
+        self.bendingMomentB = {}
+        self.shear = {}
+        self.axial = {}
+        self.torque = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.bendingMomentA[dt] = {}
+        self.bendingMomentB[dt] = {}
+        self.shear[dt] = {}
+        self.axial[dt] = {}
+        self.torque[dt] = {}
+
+    def add(self,dt,data):
+        [eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
+
+        #self.eType[eid] = eType
+        self.bendingMomentA[eid] = [bm1a,bm2a]
+        self.bendingMomentB[eid] = [bm1b,bm2b]
+        self.shear[eid] = [ts1,ts2]
+        self.axial[eid] = af
+        self.torque[eid] = trq
+
+    def addSort1(self,dt,data):
+        [eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMomentA[dt][eid] = [bm1a,bm2a]
+        self.bendingMomentB[dt][eid] = [bm1b,bm2b]
+        self.shear[dt][eid] = [ts1,ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
+
+    def addSort2(self,eid,data):
+        [dt,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMomentA[dt][eid] = [bm1a,bm2a]
+        self.bendingMomentB[dt][eid] = [bm1b,bm2b]
+        self.shear[dt][eid] = [ts1,ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
+
+    def __repr__(self):
+        return str(self.axial)
+
 class RealCGAPForce(object): # 38-CGAP
     def __init__(self,isSort1,dt):
         #self.eType = {}
@@ -473,68 +535,6 @@ class RealCGAPForce(object): # 38-CGAP
 
     def __repr__(self):
         return str(self.fx)
-
-class RealCBARForce(object): # 34-CBAR
-    def __init__(self,isSort1,dt):
-        #self.eType = {}
-        self.bendingMomentA = {}
-        self.bendingMomentB = {}
-        self.shear = {}
-        self.axial = {}
-        self.torque = {}
-
-        if isSort1:
-            if dt is not None:
-                self.add = self.addSort1
-            ###
-        else:
-            assert dt is not None
-            self.add = self.addSort2
-        ###
-
-    def addNewTransient(self,dt):
-        self.bendingMomentA[dt] = {}
-        self.bendingMomentB[dt] = {}
-        self.shear[dt] = {}
-        self.axial[dt] = {}
-        self.torque[dt] = {}
-
-    def add(self,dt,data):
-        [eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
-
-        #self.eType[eid] = eType
-        self.bendingMomentA[eid] = [bm1a,bm2a]
-        self.bendingMomentB[eid] = [bm1b,bm2b]
-        self.shear[eid] = [ts1,ts2]
-        self.axial[eid] = af
-        self.torque[eid] = trq
-
-    def addSort1(self,dt,data):
-        [eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
-        if dt not in self.axial:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.bendingMomentA[dt][eid] = [bm1a,bm2a]
-        self.bendingMomentB[dt][eid] = [bm1b,bm2b]
-        self.shear[dt][eid] = [ts1,ts2]
-        self.axial[dt][eid] = af
-        self.torque[dt][eid] = trq
-
-    def addSort2(self,eid,data):
-        [dt,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
-        if dt not in self.axial:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.bendingMomentA[dt][eid] = [bm1a,bm2a]
-        self.bendingMomentB[dt][eid] = [bm1b,bm2b]
-        self.shear[dt][eid] = [ts1,ts2]
-        self.axial[dt][eid] = af
-        self.torque[dt][eid] = trq
-
-    def __repr__(self):
-        return str(self.axial)
 
 class RealCBUSHForce(object): # 102-CBUSH
     def __init__(self,isSort1,dt):

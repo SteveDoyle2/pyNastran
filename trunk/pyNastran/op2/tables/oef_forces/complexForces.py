@@ -6,6 +6,43 @@ from oef_complexForceObjects import *
 
 class ComplexForces(object):
 
+    def OEF_Rod_alt(self): # 1-CROD, 3-CTUBE, 10-CONROD
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.rodForces,ComplexRodForce,isSort1)
+
+        while len(self.data)>=20: # 5*4
+            eData     = self.data[0:20]
+            self.data = self.data[20: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,axialReal,torqueReal,axialImag,torqueImag) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,axialReal,torqueReal,axialImag,torqueImag]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Rod_alt)
+        #print self.rodForces
+        
     def OEF_Spring_alt(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         deviceCode = self.deviceCode
         
@@ -74,7 +111,7 @@ class ComplexForces(object):
             
             dataIn = [eid2,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
                            bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi]
-            #print dataIn
+            print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -118,6 +155,44 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Plate)
+        self.handleResultsBuffer(self.OEF_Plate_alt)
         #print self.plateForces
 
+    def OEF_CBush_alt(self): # 102-CBUSH
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffffffffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffffffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.bushForces,ComplexCBUSHForce,isSort1)
+
+        while len(self.data)>=52: # 13*4
+            eData     = self.data[0:52]
+            self.data = self.data[52: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,fxr,fyr,fzr,mxr,myr,mzr,
+                 fxi,fyi,fzi,mxi,myi,mzi) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,fxr,fyr,fzr,mxr,myr,mzr,
+                           fxi,fyi,fzi,mxi,myi,mzi]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_CBush_alt)
+        #print self.bushForces
