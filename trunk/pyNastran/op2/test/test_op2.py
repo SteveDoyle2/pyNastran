@@ -69,7 +69,9 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=Tr
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.readOP2()
     
-    sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed))
+    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
+    print msg
+    sys.exit(msg)
 
 def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,deleteF06=False,iSubcases=[],debug=False,stopOnFailure=True):
     assert '.op2' in op2FileName.lower(),'op2FileName=%s is not an OP2' %(op2FileName)

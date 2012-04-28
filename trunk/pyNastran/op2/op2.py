@@ -189,7 +189,16 @@ class OP2(BDF,  # BDF methods
 
         # OEF
         # rename to staticLoads/thermalLoads
-        #self.forces = {}
+        self.forces = {}
+
+        self.rodForces = {}
+        self.beamForces = {}
+        self.springForces = {}
+        self.barForces = {}
+        self.bushForces = {}
+        self.plateForces = {}
+        self.plateForces2 = {}
+        
         #self.fluxes = {}
         self.thermalLoad_CONV  = {}
         self.thermalLoad_CHBDY = {}

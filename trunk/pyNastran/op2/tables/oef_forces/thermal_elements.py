@@ -1,3 +1,5 @@
+from oef_thermalObjects import *
+
 class ThermalElements(object):
 
     def OEF_CHBDYx(self): # [107,108,109]  CHBDYE, CHBDYG, CHBDYP

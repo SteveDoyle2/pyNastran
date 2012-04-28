@@ -20,7 +20,7 @@ class ROD(object): # 1-ROD, 3-TUBE, 10-CONROD
     def add(self,dt,data):
         [eid,axialForce,torque] = data
 
-        #self.eType[eid] = eType        
+        #self.eType[eid] = eType
         self.axialForce[eid] = {}
         self.torque[eid] = {}
 
@@ -29,7 +29,7 @@ class ROD(object): # 1-ROD, 3-TUBE, 10-CONROD
         if dt not in self.axialForce:
             self.addNewTransient(dt)
 
-        #self.eType[eid] = eType        
+        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -38,7 +38,7 @@ class ROD(object): # 1-ROD, 3-TUBE, 10-CONROD
         if dt not in self.axialForce:
             self.addNewTransient(dt)
 
-        #self.eType[eid] = eType        
+        #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
@@ -172,7 +172,7 @@ class SPRING(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         if dt not in self.force:
             self.addNewTransient(dt)
 
-        #self.eType[eid] = eType        
+        #self.eType[eid] = eType
         self.force[dt][eid] = force
 
     def addSort2(self,eid,data):
@@ -185,6 +185,294 @@ class SPRING(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
     def __repr__(self):
         return str(self.force)
+
+class PLATE(object): # 33-CQUAD4, 74-CTRIA3
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.mx = {}
+        self.my = {}
+        self.mxy = {}
+        self.bmx = {}
+        self.bmy = {}
+        self.bmxy = {}
+        self.tx = {}
+        self.ty = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.mx[dt] = {}
+        self.my[dt] = {}
+        self.mxy[dt] = {}
+        self.bmx[dt] = {}
+        self.bmy[dt] = {}
+        self.bmxy[dt] = {}
+        self.tx[dt] = {}
+        self.ty[dt] = {}
+
+    def add(self,dt,data):
+        [eid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+
+        #self.eType[eid] = eType
+        self.mx[eid] = mx
+        self.my[eid] = my
+        self.mxy[eid] = mxy
+        self.bmx[eid] = bmx
+        self.bmy[eid] = bmy
+        self.bmxy[eid] = bmxy
+        self.tx[eid] = tx
+        self.ty[eid] = ty
+
+    def addSort1(self,dt,data):
+        [eid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+        if dt not in self.mx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.mx[dt][eid] = mx
+        self.my[dt][eid] = my
+        self.mxy[dt][eid] = mxy
+        self.bmx[dt][eid] = bmx
+        self.bmy[dt][eid] = bmy
+        self.bmxy[dt][eid] = bmxy
+        self.tx[dt][eid] = tx
+        self.ty[dt][eid] = ty
+
+    def addSort2(self,eid,data):
+        [dt,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+        if dt not in self.mx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.mx[dt][eid] = mx
+        self.my[dt][eid] = my
+        self.mxy[dt][eid] = mxy
+        self.bmx[dt][eid] = bmx
+        self.bmy[dt][eid] = bmy
+        self.bmxy[dt][eid] = bmxy
+        self.tx[dt][eid] = tx
+        self.ty[dt][eid] = ty
+
+    def __repr__(self):
+        return str(self.mx)
+
+class PLATE2(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.term = {}
+        self.ngrids = {}
+        self.mx = {}
+        self.my = {}
+        self.mxy = {}
+        self.bmx = {}
+        self.bmy = {}
+        self.bmxy = {}
+        self.tx = {}
+        self.ty = {}
+
+        if isSort1:
+            if dt is not None:
+                self.addNewElement = self.addNewElementSort1
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.addNewElement = self.addNewElementSort2
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.term[dt] = {}
+        self.ngrids[dt] = {}
+        self.mx[dt] = {}
+        self.my[dt] = {}
+        self.mxy[dt] = {}
+        self.bmx[dt] = {}
+        self.bmy[dt] = {}
+        self.bmxy[dt] = {}
+        self.tx[dt] = {}
+        self.ty[dt] = {}
+
+    def addNewElement(self,eid,dt,data):
+        #print "eid = ",eid
+        [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+
+        #self.eType[eid] = eType
+        self.term[eid] = term
+        self.ngrids[eid] = nid
+        self.mx[eid] = [mx]
+        self.my[eid] = [my]
+        self.mxy[eid] = [mxy]
+        self.bmx[eid] = [bmx]
+        self.bmy[eid] = [bmy]
+        self.bmxy[eid] = [bmxy]
+        self.tx[eid] = [tx]
+        self.ty[eid] = [ty]
+
+    def add(self,eid,dt,data):
+        [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+
+        #self.eType[eid] = eType
+        #print "mx = ",self.mx,mx
+        self.mx[eid].append(mx)
+        self.my[eid].append(my)
+        self.mxy[eid].append(mxy)
+        self.bmx[eid].append(bmx)
+        self.bmy[eid].append(bmy)
+        self.bmxy[eid].append(bmxy)
+        self.tx[eid].append(tx)
+        self.ty[eid].append(ty)
+
+    def addNewElementSort1(self,eid,dt,data):
+        [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+        if dt not in self.mx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.term[dt][eid] = term
+        self.ngrids[dt][eid] = nid
+        self.mx[dt][eid] = [mx]
+        self.my[dt][eid] = [my]
+        self.mxy[dt][eid] = [mxy]
+        self.bmx[dt][eid] = [bmx]
+        self.bmy[dt][eid] = [bmy]
+        self.bmxy[dt][eid] = [bmxy]
+        self.tx[dt][eid] = [tx]
+        self.ty[dt][eid] = [ty]
+
+    def addSort1(self,eid,dt,data):
+        [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+        if dt not in self.mx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.mx[dt][eid].append(mx)
+        self.my[dt][eid].append(my)
+        self.mxy[dt][eid].append(mxy)
+        self.bmx[dt][eid].append(bmx)
+        self.bmy[dt][eid].append(bmy)
+        self.bmxy[dt][eid].append(bmxy)
+        self.tx[dt][eid].append(tx)
+        self.ty[dt][eid].append(ty)
+
+    def addNewElementSort2(self,dt,eid,data):
+        [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+        if dt not in self.mx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.term[dt][eid] = term
+        self.ngrids[dt][eid] = nid
+        self.mx[dt][eid] = [mx]
+        self.my[dt][eid] = [my]
+        self.mxy[dt][eid] = [mxy]
+        self.bmx[dt][eid] = [bmx]
+        self.bmy[dt][eid] = [bmy]
+        self.bmxy[dt][eid] = [bmxy]
+        self.tx[dt][eid] = [tx]
+        self.ty[dt][eid] = [ty]
+
+    def addSort2(self,dt,eid,data):
+        [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
+        if dt not in self.mx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.mx[dt][eid].append(mx)
+        self.my[dt][eid].append(my)
+        self.mxy[dt][eid].append(mxy)
+        self.bmx[dt][eid].append(bmx)
+        self.bmy[dt][eid].append(bmy)
+        self.bmxy[dt][eid].append(bmxy)
+        self.tx[dt][eid].append(tx)
+        self.ty[dt][eid].append(ty)
+
+    def __repr__(self):
+        return str(self.mx)
+
+class CGAP(object): # 38-CGAP
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.fx = {}
+        self.sfy = {}
+        self.sfz = {}
+        self.u = {}
+        self.v = {}
+        self.w = {}
+        self.sv = {}
+        self.sw = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.fx[dt] = {}
+        self.sfy[dt] = {}
+        self.sfz[dt] = {}
+        self.u[dt] = {}
+        self.v[dt] = {}
+        self.w[dt] = {}
+        self.sv[dt] = {}
+        self.sw[dt] = {}
+
+    def add(self,dt,data):
+        [eid,fx,sfy,sfz,u,v,w,sv,sw] = data
+
+        #self.eType[eid] = eType
+        self.fx[eid] = fx
+        self.sfy[eid] = sfy
+        self.sfz[eid] = sfz
+        self.u[eid] = u
+        self.v[eid] = v
+        self.w[eid] = w
+        self.sv[eid] = sv
+        self.sw[eid] = sw
+
+    def addSort1(self,dt,data):
+        [eid,fx,sfy,sfz,u,v,w,sv,sw] = data
+        if dt not in self.fx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.fx[dt][eid] = fx
+        self.sfy[dt][eid] = sfy
+        self.sfz[dt][eid] = sfz
+        self.u[dt][eid] = u
+        self.v[dt][eid] = v
+        self.w[dt][eid] = w
+        self.sv[dt][eid] = sv
+        self.sw[dt][eid] = sw
+
+    def addSort2(self,eid,data):
+        [dt,fx,sfy,sfz,u,v,w,sv,sw] = data
+        if dt not in self.fx:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.fx[dt][eid] = fx
+        self.sfy[dt][eid] = sfy
+        self.sfz[dt][eid] = sfz
+        self.u[dt][eid] = u
+        self.v[dt][eid] = v
+        self.w[dt][eid] = w
+        self.sv[dt][eid] = sv
+        self.sw[dt][eid] = sw
+
+    def __repr__(self):
+        return str(self.fx)
 
 class CBAR(object): # 34-CBAR
     def __init__(self,isSort1,dt):
