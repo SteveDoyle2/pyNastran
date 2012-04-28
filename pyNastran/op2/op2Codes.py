@@ -239,7 +239,8 @@ class Op2Codes(object):
             232 : 'QUADRLC',
             233 : 'TRIARLC',
             234 : '???',
-            235 : '???',
+            235 : 'CQUADR',  # was blank in DMAP, found reference in OEF table
+            236 : 'CTRIAR',  # was blank in DMAP, found reference in OEF table
         }
         return elements[eCode] # +'_'+str(eCode)
 
@@ -363,7 +364,7 @@ class Op2Codes(object):
         else:                     sortWord2 = 'Real/Imaginary'
         if   self.sortBits[2]==0: sortWord3 = 'Sorted Responses'
         else:                     sortWord3 = 'Random Responses'
-
+    
         #if(  self.sortCode==0): sortWord = 'Real'
         #elif(self.sortCode==1): sortWord = 'Real/Imaginary'
         #elif(self.sortCode==2): sortWord = 'Random Responses'
@@ -469,6 +470,15 @@ class Op2Codes(object):
         #print msg
         return msg
 
+    #----
+    # formatCode 3
+    def isMagnitudePhase(self):
+        if self.formatCode==3:
+            return True
+        return False
+
+    #----
+    # sortCode 0
     def isSort1(self):
         if self.sortBits[0]==0:
             return True
@@ -476,3 +486,33 @@ class Op2Codes(object):
 
     def isSort2(self):
         return not(self.isSort1())
+
+    #----
+    # sortCode 1
+    def isReal(self): # formatCode=1, this one is tricky b/c you can overwrite the Real code
+        #if self.formatCode==1:
+        #    return True
+        if self.sortBits[1]==0:
+            return True
+        return False
+
+    def isRealImaginary(self): # formatCode=2...does that dominate?
+        return not(self.isReal())
+
+    #----
+    # sortCode 2
+    def isSortedResponse(self):
+        if self.sortBits[2]==0:
+            return True
+        return False
+
+    def isRandomResponse(self):
+        return not(self.isSortedResponse())
+
+    #----
+    # combos
+    def isRealOrRandom(self):
+        return self.isReal() or self.isRandom()
+
+    def isRealImaginaryOrMagnitudePhase(self):
+        return self.isRealImaginary or self.MagnitudePhase()

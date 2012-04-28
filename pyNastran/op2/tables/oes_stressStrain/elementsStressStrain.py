@@ -47,7 +47,7 @@ class ElementsStressStrain(object):
             print "done with OES_Thermal"
         ###
 
-    def basicElement(self):
+    def OES_basicElement(self):
         """
         genericStressReader - works on CROD_1, CELAS2_12
         stress & strain
@@ -68,9 +68,9 @@ class ElementsStressStrain(object):
             n+=nTotal
         ###
         self.data = self.data[n: ]
-        self.handleResultsBuffer(self.basicElement)
+        self.handleResultsBuffer(self.OES_basicElement)
 
-    def CBEAM_2(self): # not tested
+    def OES_CBEAM_2(self): # not tested
         if self.makeOp2Debug:
             self.op2Debug.write('---BEAM_2---\n')
         deviceCode = self.deviceCode
@@ -99,12 +99,12 @@ class ElementsStressStrain(object):
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.CBEAM_2)
+        self.handleResultsBuffer(self.OES_CBEAM_2)
         if self.makeOp2Debug:
             print "done with CBEAM-2"
         #raise Exception('add CBEAM-2...')
 
-    def CQUAD4_33(self): # works
+    def OES_CQUAD4_33(self): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -164,9 +164,9 @@ class ElementsStressStrain(object):
             #self.printSection(100)
             #self.dn += 348
         ###
-        self.handleResultsBuffer(self.CQUAD4_33)
+        self.handleResultsBuffer(self.OES_CQUAD4_33)
 
-    def CBAR_34(self): # ???
+    def OES_CBAR_34(self): # ???
         if self.makeOp2Debug:
             self.op2Debug.write('---CBAR_34---\n')
         deviceCode = self.deviceCode
@@ -188,11 +188,11 @@ class ElementsStressStrain(object):
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" %(s1b,s2b,s3b,s4b,smaxb,sminb)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.CBAR_34)
+        self.handleResultsBuffer(self.OES_CBAR_34)
         if self.makeOp2Debug:
             print "done with CBAR-34"
 
-    def CSOLID_67(self):  # works
+    def OES_CSOLID_67(self):  # works
         """
         stress is extracted at the centroid
         CTETRA_39
@@ -291,10 +291,10 @@ class ElementsStressStrain(object):
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
         ###
-        self.handleResultsBuffer(self.CSOLID_67)
+        self.handleResultsBuffer(self.OES_CSOLID_67)
         #print self.solidStress[self.iSubcase]
 
-    def CTRIA3_74(self): # works
+    def OES_CTRIA3_74(self): # works
         """
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
@@ -318,9 +318,9 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.CTRIA3_74)
+        self.handleResultsBuffer(self.OES_CTRIA3_74)
 
-    def CSOLID_85(self):  # works
+    def OES_CSOLID_85(self):  # works
         """
         stress is extracted at the centroid
         CTETRA_85
@@ -425,7 +425,7 @@ class ElementsStressStrain(object):
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
         ###
-        self.handleResultsBuffer(self.CSOLID_85)
+        self.handleResultsBuffer(self.OES_CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
     #def extractDt(self):
@@ -465,7 +465,7 @@ class ElementsStressStrain(object):
             raise NotImplementedError('invalid SORTx code')
         ###
 
-    def CTRIAX6_53(self):
+    def OES_CTRIAX6_53(self):
         (Format1,scaleValue) = self.OES_field1()
         Format = Format1+'ifffffff'
         while len(self.data)>=132: # (1+8*4) = 33*4 = 132
@@ -488,9 +488,9 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.CTRIAX6_53)
+        self.handleResultsBuffer(self.OES_CTRIAX6_53)
 
-    def RODNL_89_92(self):
+    def OES_RODNL_89_92(self):
         while len(self.data)>=28:
             eData     = self.data[0:4*7]
             self.data = self.data[4*7: ]
@@ -509,9 +509,9 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.RODNL_89_92)
+        self.handleResultsBuffer(self.OES_RODNL_89_92)
 
-    def CQUAD4NL_90(self):
+    def OES_CQUAD4NL_90(self):
         #print "self.numWide = ",self.numWide
         
         deviceCode = self.deviceCode
@@ -549,9 +549,9 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.CQUAD4NL_90)
+        self.handleResultsBuffer(self.OES_CQUAD4NL_90)
     
-    def CPENTANL_91(self):
+    def OES_CPENTANL_91(self):
         """
         The DMAP manual says fields 3-18 repeat 7 times. but they dont.
         They repeat 6 times.  Other DMAP cards are correct with
@@ -586,9 +586,9 @@ class ElementsStressStrain(object):
             #sys.exit('hexa...')
         #print "buffer time..."
         #self.firstPass = True
-        self.handleResultsBuffer(self.CHEXANL_93,debug=True)
+        self.handleResultsBuffer(self.OES_CHEXANL_93,debug=True)
 
-    def CHEXANL_93(self):
+    def OES_CHEXANL_93(self):
         """
         The DMAP manual says fields 3-18 repeat 9 times. but they dont.
         They repeat 8 times.  Other DMAP cards are correct with
@@ -623,9 +623,9 @@ class ElementsStressStrain(object):
             #sys.exit('hexa...')
         #print "buffer time..."
         #self.firstPass = True
-        self.handleResultsBuffer(self.CHEXANL_93,debug=True)
+        self.handleResultsBuffer(self.OES_CHEXANL_93,debug=True)
 
-    def CBEAM_94(self):
+    def OES_CBEAM_94(self):
         if self.makeOp2Debug:
             self.op2Debug.write('---BEAM_94---\n')
         deviceCode = self.deviceCode
@@ -659,12 +659,12 @@ class ElementsStressStrain(object):
             ###
             #sys.exit('stoping in CBEAM_94')
 
-        self.handleResultsBuffer(self.CBEAM_94)
+        self.handleResultsBuffer(self.OES_CBEAM_94)
         if self.makeOp2Debug:
             print "done with CBEAM-94"
         #raise Exception('add CBEAM-94...')
 
-    def CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho)
+    def OES_CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho)
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -701,9 +701,9 @@ class ElementsStressStrain(object):
         ###
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
         self.printSection(100)
-        self.handleResultsBuffer(self.CQUAD4_95)
+        self.handleResultsBuffer(self.OES_CQUAD4_95)
 
-    def QUAD4FD_139(self): # hyperelastic
+    def OES_QUAD4FD_139(self): # hyperelastic
         """
         Hyperelastic Quad
         36+4*7*4 = 148
@@ -735,9 +735,9 @@ class ElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
         #sys.exit('end of hyperQuad')
-        self.handleResultsBuffer(self.QUAD4FD_139)
+        self.handleResultsBuffer(self.OES_QUAD4FD_139)
     
-    def CQUADR_82(self): # not done...
+    def OES_CQUADR_82(self): # not done...
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -784,9 +784,9 @@ class ElementsStressStrain(object):
                 self.obj.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             ###
         ###
-        self.handleResultsBuffer(self.CQUAD4_82)
+        self.handleResultsBuffer(self.OES_CQUAD4_82)
 
-    def CQUAD4_144(self): # works
+    def OES_CQUAD4_144(self): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -914,5 +914,5 @@ class ElementsStressStrain(object):
        # ###
        # else:
        #     raise AddNewElementError('invalid numWide')
-        self.handleResultsBuffer(self.CQUAD4_144)
+        self.handleResultsBuffer(self.OES_CQUAD4_144)
 
