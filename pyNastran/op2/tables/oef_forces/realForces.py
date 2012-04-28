@@ -22,7 +22,7 @@ class RealForces(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.forces,RealRodForce,isSort1)
+        self.createThermalTransientObject(self.rodForces,RealRodForce,isSort1)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -35,13 +35,13 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,axial,torque]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_Rod)
-        #print self.forces
+        #print self.rodForces
         
     def OEF_Beam(self): # 2-CBEAM
         deviceCode = self.deviceCode
@@ -163,7 +163,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -336,7 +336,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,fx,fy,fz,mx,my,mz]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)

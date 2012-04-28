@@ -157,6 +157,11 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        70:  2+(11-2)*4, # CTRIAR
                        74:  9,    # CTRIA3
                        75:  2+(11-2)*4, # CTRIA6
+                       
+                      #76:  16,   # Acoustic Velocity/Pressure CHEXA ???
+                       77:  10,   # Acoustic Velocity/Pressure CPENTA
+                       78:  10,   # Acoustic Velocity/Pressure CTETRA
+                       
                        82:  2+(11-2)*5, # CQUADR
                        95:  9,    # composite CQUAD4 ???
                        96:  9,    # composite CQUAD8 ???
@@ -201,6 +206,11 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        70:  2+(19-2)*4, # CTRIAR
                        74:  17,   # CTRIA3
                        75:  2+(19-2)*4, # CTRIA6
+
+                      #76:  16,   # Acoustic Velocity/Pressure CHEXA ???
+                       77:  16,   # Acoustic Velocity/Pressure CPENTA
+                       78:  16,   # Acoustic Velocity/Pressure CTETRA
+
                        82:  2+(19-2)*5, # CQUADR
                        95:  9,    # composite CQUAD4 ???
                        96:  9,    # composite CQUAD8 ???
