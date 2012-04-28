@@ -97,6 +97,43 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_Beam)
         #print self.beamForces
 
+    def OEF_Shear(self): # 4-CSHEAR
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffffffffffffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffffffffffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.shearForces,RealCShearForce,isSort1)
+
+        while len(self.data)>=68: # 17*4
+            eData     = self.data[0:68]
+            self.data = self.data[68: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,kf2,s23,kf3,s34,kf4,s41) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,kf2,s23,kf3,s34,kf4,s41]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Shear)
+        #print self.rodForces
+        
     def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         deviceCode = self.deviceCode
         
@@ -307,6 +344,45 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_CGap)
         #print self.plateForces
 
+    def OEF_Bend(self): # 69-CBEND
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iifffffffffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fifffffffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.bendForces,RealBendForce,isSort1)
+
+        while len(self.data)>=60: # 15*4
+            eData     = self.data[0:60]
+            self.data = self.data[60: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,nidA,bm1A,bm2A,ts1A,ts2A,afA,trqA,
+                 nidB,bm1B,bm2B,ts1B,ts2B,afB,trqB) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,nidA,bm1A,bm2A,ts1A,ts2A,afA,trqA,
+                           nidB,bm1B,bm2B,ts1B,ts2B,afB,trqB]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Bend)
+        #print self.bendForces
+        
     def OEF_CBush(self): # 102-CBUSH
         deviceCode = self.deviceCode
         

@@ -327,6 +327,14 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
+        elif self.elementType in [69]: # CBEND
+            if self.numWide==numWideReal:
+                self.OEF_Bend()
+            elif self.numWide==numWideImag:
+                self.OEF_Bend_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
         elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
             if self.numWide==numWideReal:
                 self.OEF_CompositePlate()
