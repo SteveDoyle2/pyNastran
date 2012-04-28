@@ -1,3 +1,6 @@
+from __future__ import division
+import sys
+from struct import unpack
 from oef_thermalObjects import *
 
 class ThermalElements(object):

@@ -1,4 +1,4 @@
-class ROD(object): # 1-ROD, 3-TUBE, 10-CONROD
+class RealRodForce(object): # 1-ROD, 3-TUBE, 10-CONROD
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.axialForce = {}
@@ -21,8 +21,8 @@ class ROD(object): # 1-ROD, 3-TUBE, 10-CONROD
         [eid,axialForce,torque] = data
 
         #self.eType[eid] = eType
-        self.axialForce[eid] = {}
-        self.torque[eid] = {}
+        self.axialForce[eid] = axialForce
+        self.torque[eid] = torque
 
     def addSort1(self,dt,data):
         [eid,axialForce,torque] = data
@@ -45,7 +45,7 @@ class ROD(object): # 1-ROD, 3-TUBE, 10-CONROD
     def __repr__(self):
         return str(self.axialForce)
 
-class CBEAM(object): # 2-CBEAM
+class RealCBEAMForce(object): # 2-CBEAM
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.bendingMoment = {}
@@ -144,7 +144,7 @@ class CBEAM(object): # 2-CBEAM
     def __repr__(self):
         return str(self.axial)
 
-class SPRING(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
+class RealSpringForce(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.force = {}
@@ -165,7 +165,7 @@ class SPRING(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         [eid,force] = data
 
         #self.eType[eid] = eType
-        self.force[eid] = {}
+        self.force[eid] = force
 
     def addSort1(self,dt,data):
         [eid,force] = data
@@ -186,7 +186,7 @@ class SPRING(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __repr__(self):
         return str(self.force)
 
-class PLATE(object): # 33-CQUAD4, 74-CTRIA3
+class RealPlateForce(object): # 33-CQUAD4, 74-CTRIA3
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.mx = {}
@@ -263,7 +263,7 @@ class PLATE(object): # 33-CQUAD4, 74-CTRIA3
     def __repr__(self):
         return str(self.mx)
 
-class PLATE2(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+class RealPLATE2Force(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.term = {}
@@ -397,7 +397,7 @@ class PLATE2(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __repr__(self):
         return str(self.mx)
 
-class CGAP(object): # 38-CGAP
+class RealCGAPForce(object): # 38-CGAP
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.fx = {}
@@ -474,7 +474,7 @@ class CGAP(object): # 38-CGAP
     def __repr__(self):
         return str(self.fx)
 
-class CBAR(object): # 34-CBAR
+class RealCBARForce(object): # 34-CBAR
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.bendingMomentA = {}
@@ -536,7 +536,7 @@ class CBAR(object): # 34-CBAR
     def __repr__(self):
         return str(self.axial)
 
-class CBUSH(object): # 102-CBUSH
+class RealCBUSHForce(object): # 102-CBUSH
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.force = {}

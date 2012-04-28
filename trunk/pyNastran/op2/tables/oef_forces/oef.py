@@ -4,7 +4,7 @@ from struct import unpack
 from pyNastran.op2.op2Errors import *
 
 # pyNastran
-from pyNastran.op2.tables.oug.oug_displacements import displacementObject
+#from pyNastran.op2.tables.oug.oug_displacements import displacementObject
 #from pyNastran.op2.resultObjects.ougv1_Objects import (
 #    temperatureObject,displacementObject,
 #    nonlinearTemperatureObject,
@@ -14,11 +14,13 @@ from pyNastran.op2.tables.oug.oug_displacements import displacementObject
 #    displacementObject,temperatureObject)
 #from pyNastran.op2.tables.oug.oug_eigenvectors import (
 #    eigenVectorObject)
-from thermal_elements import ThermalElements
-from oef_Objects import (nonlinearFluxObject)
-from oef_forceObjects import *
+#from oef_Objects import (nonlinearFluxObject)
 
-class OEF(ThermalElements):
+from thermal_elements import ThermalElements
+from realForces    import RealForces
+from complexForces import ComplexForces
+
+class OEF(ThermalElements,RealForces,ComplexForces):
     """Table of element forces"""
     def readTable_OEF(self):
         table3     = self.readTable_OEF_3
@@ -123,451 +125,216 @@ class OEF(ThermalElements):
         #gridDevice, = unpack('i',data)
         return timeFreq
     
-    def OEF_Rod(self): # 1-CROD, 3-CTUBE, 10-CONROD
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
+    def OEF_ForceCode(self):
+        """
+        Gets the numwide codes for the element to determine if
+        the real or complex result should be found.
+        The format and sort codes do not always give the right answer...
+        """
+        realMapper = {
+                       1:   3,    # CROD
+                       2:   1+(10-1)*11, # CBEAM
+                       3:   3,    # CTUBE
+                       4:   17,   # CSHEAR
+                       10:  3,    # CONROD
+                       11:  2,    # CELAS1
+                       12:  2,    # CELAS2
+                       13:  2,    # CELAS3
+                       14:  2,    # CELAS4
+                       
+                       20:  2,    # CDAMP1
+                       21:  2,    # CDAMP2
+                       22:  2,    # CDAMP3
+                       23:  2,    # CDAMP4
+                       24:  3,    # CVISC
+                       33:  9,    # CQUAD4
+                       34:  9,    # CBAR
+                       35:  7,    # CCONEAX ???
+                       38:  9,    # CGAP
+                       40:  8,    # CBUSH1D ???
+                       64:  2+(11-2)*5, # CQUAD8
+                       69:  1+(8-1)*2,  # CBEND
+                       70:  2+(11-2)*4, # CTRIAR
+                       74:  9,    # CTRIA3
+                       75:  2+(11-2)*4, # CTRIA6
+                       82:  2+(11-2)*5, # CQUADR
+                       95:  9,    # composite CQUAD4 ???
+                       96:  9,    # composite CQUAD8 ???
+                       97:  9,    # composite CTRIA3 ???
+                       98:  9,    # composite CTRIA6 ???
+                       100: 8,    # BARS
+                       102: 7,    # CBUSH
+                       144: 2+(11-2)*5, # bilinear CQUAD4
+                       189: 6+(19-6)*4, # VUQUAD
+                       190: 6+(19-6)*3, # VUTRIA
+                       191: 4+(13-4)*2, # VUBEAM
+                       200: 9,    # CWELD
+                       232: 9,    # composite CQUADR ???
+                       233: 9,    # composite TRIAR ???
+                       235: 8,    # punch CQUADR
+                       236: 8,    # punch CTRIAR
+                     }
+        imagMapper = {
+                       1:   5,    # CROD
+                       2:   1+(17-1)*11, # CBEAM
+                       3:   5,    # CTUBE
+                       4:   33,   # CSHEAR
+                       10:  5,    # CONROD
 
-        self.createThermalTransientObject(self.forces,ROD,isSort1)
+                       11:  3,    # CELAS1
+                       12:  3,    # CELAS2
+                       13:  3,    # CELAS3
+                       14:  3,    # CELAS4
 
-        while len(self.data)>=12: # 3*4
-            eData     = self.data[0:12]
-            self.data = self.data[12: ]
-            #print "len(data) = ",len(eData)
+                       20:  3,    # CDAMP1
+                       21:  3,    # CDAMP2
+                       22:  3,    # CDAMP3
+                       23:  3,    # CDAMP4
+                       24:  5,    # CVISC
+                       33:  17,   # CQUAD4
+                       34:  17,   # CBAR
+                       35:  7,    # CCONEAX ???
+                       38:  9,    # CGAP
+                       40:  8,    # CBUSH1D ???
+                       64:  2+(19-2)*5, # CQUAD8
+                       69:  1+(14-1)*2, # CBEND
+                       70:  2+(19-2)*4, # CTRIAR
+                       74:  17,   # CTRIA3
+                       75:  2+(19-2)*4, # CTRIA6
+                       82:  2+(19-2)*5, # CQUADR
+                       95:  9,    # composite CQUAD4 ???
+                       96:  9,    # composite CQUAD8 ???
+                       97:  9,    # composite CTRIA3 ???
+                       98:  9,    # composite CTRIA6 ???
+                       100: 14,   # BARS
+                       102: 13,   # CBUSH
+                       144: 2+(19-2)*5, # bilinear CQUAD4
+                       189: 6+(31-6)*4, # VUQUAD
+                       190: 6+(31-6)*3, # VUTRIA
+                       191: 4+(18-4)*2, # VUBEAM
+                       200: 17,   # CWELD
+                       232: 9,    # composite CQUADR ???
+                       233: 9,    # composite TRIAR ???
+                       235: 16,   # punch CQUADR
+                       236: 16,   # punch CTRIAR
+                     }
 
-            out = unpack(format1, eData)
-            (eid,axial,torque) = out
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,axial,torque]
-            #print dataIn
-            #eid = self.obj.addNewEid(out)
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_Rod)
-        #print self.forces
-        
-    def OEF_Beam(self): # 2-CBEAM
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.beamForces,CBEAM,isSort1)
-
-        while len(self.data)>=40: # 10*4
-            eData     = self.data[0:40]
-            self.data = self.data[40: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eidTemp,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq) = out
-            #print "eidTemp = ",eidTemp
-            #print "nid = ",nid
-            #print "sd = ",sd
-            if nid==0 or sd>0.:
-                eid = self.eidOld
-                isNewElement = False
-            else:
-                eid = eidTemp
-                self.eidOld = eid
-                isNewElement = True
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
-            #print dataIn
-            #eid = self.obj.addNewEid(out)
-            if isNewElement:
-                self.obj.addNewElement(dt,dataIn)
-                #print
-            elif sd>0.:
-                self.obj.add(dt,dataIn)
-                #print
-            #else: pass
-
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_Beam)
-        #print self.beamForces
-
-    def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'if' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.springForces,SPRING,isSort1)
-
-        while len(self.data)>=8: # 2*4
-            eData     = self.data[0:8]
-            self.data = self.data[8: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,force) = out
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,force]
-            #print dataIn
-            #eid = self.obj.addNewEid(out)
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_Spring)
-        #print self.springForces
-        
-    def OEF_CBar(self): # 34-CBAR
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.barForces,CBAR,isSort1)
-
-        while len(self.data)>=36: # 9*4
-            eData     = self.data[0:36]
-            self.data = self.data[36: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq) = out
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq]
-            #print dataIn
-            #eid = self.obj.addNewEid(out)
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_CBar)
-        #print self.barForces
-        
-    def OEF_Plate(self): # 33-CQUAD4,74-CTRIA3
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.plateForces,PLATE,isSort1)
-
-        while len(self.data)>=36: # 9*4
-            eData     = self.data[0:36]
-            self.data = self.data[36: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_Plate)
-        #print self.plateForces
-
-    def OEF_Plate2(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        
-        if self.elementType in [70,75]: # CTRIAR,CTRIA6
-            nNodes = 4
-        elif self.elementType in [64,82,144]: # CQUAD8,CQUADR,CQUAD4-bilinear
-            nNodes = 5
-        else:
-            raise NotImplementedError(self.codeInformation())
-        ###
-            
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'icccc' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fcccc' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.plateForces2,PLATE2,isSort1)
-
-        allFormat = 'fffffffff'
-        nTotal = 44+nNodes*36
-        while len(self.data)>=nTotal:
-            eData     = self.data[0:44]
-            self.data = self.data[44: ]
-            #print self.printBlock(eData)
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1+allFormat, eData)
-            (eid,a,b,c,d,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
-            term = a+b+c+d # CEN\
-            #print "eType=%s" %(eType)
-
-            eid2  = extract(eid,dt)
-            
-            dataIn = [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
-            self.obj.addNewElement(eid2,dt,dataIn)
-
-            for i in range(nNodes-1):
-                eData     = self.data[0:36]
-                self.data = self.data[36: ]
-                dataIn = unpack(allFormat, eData)
-                #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
-                #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-                print "%s    " %(self.ElementType(self.elementType)),dataIn
-                
-                self.obj.add(eid2,dt,dataIn)
-                #print "len(data) = ",len(self.data)
-            ###
-        ###
-        #sys.exit('Plate2 stop...')
-        self.handleResultsBuffer(self.OEF_Plate2)
-        #print self.plateForces2
-
-    def OEF_CGap(self): # 38-CGAP
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.plateForces,CGAP,isSort1)
-
-        while len(self.data)>=36: # 9*4
-            eData     = self.data[0:36]
-            self.data = self.data[36: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,fx,sfy,sfz,u,v,w,sv,sw) = out
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,fx,sfy,sfz,u,v,w,sv,sw]
-            print "CGAP",dataIn
-            #eid = self.obj.addNewEid(out)
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_CGap)
-        #print self.plateForces
-
-    def OEF_CBush(self): # 102-CBUSH
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-
-        self.createThermalTransientObject(self.bushForces,CBUSH,isSort1)
-
-        while len(self.data)>=28: # 7*4
-            eData     = self.data[0:28]
-            self.data = self.data[28: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid,fx,fy,fz,mx,my,mz) = out
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,fx,fy,fz,mx,my,mz]
-            #print dataIn
-            #eid = self.obj.addNewEid(out)
-            self.obj.add(dt,dataIn)
-            #print "len(data) = ",len(self.data)
-        ###
-        self.handleResultsBuffer(self.OEF_CBush)
-        #print self.bushForces
+        Real = realMapper[self.elementType]
+        Imag = imagMapper[self.elementType]
+        return (Real,Imag)
 
     def readOEF_Forces(self):
-        assert self.isReal(),self.codeInformation()
+        #assert self.isReal(),self.codeInformation()
+        #print self.codeInformation()
+        try:
+            (numWideReal,numWideImag) = self.OEF_ForceCode()
+        except KeyError:
+            raise NotImplementedError(self.codeInformation())
 
         if self.elementType in [1,3,10]: # CROD,CTUBE,CONROD
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_Rod()
-            #elif self.isRealImaginaryOrMagnitudePhase():
-                #self.OEF_Rod_alt()
+            elif self.numWide==numWideImag:
+                self.OEF_Rod_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [2]: # CBEAM
             self.eidOld = None
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_Beam()
-            #elif self.isRealImaginaryOrMagnitudePhase():
-                #self.OEF_Beam_alt()
+            elif self.numWide==numWideImag:
+                self.OEF_Beam_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
             del self.eidOld
         elif self.elementType in [4]: # CSHEAR
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_Shear()
-            elif self.isRealImaginaryOrMagnitudePhase():
+            elif self.numWide==numWideImag:
                 self.OEF_Shear_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [11,12,13,14]: # CELAS1,CELAS2,CELAS3,CELAS4
-            if self.isRealOrRandom(): ## @todo is this correct or is DMAP wrong (CELAS1)???
+            if self.numWide==numWideReal: ## @todo is this correct or is DMAP wrong (CELAS1)???
                 self.OEF_Spring()
-            #elif self.isRealImaginaryOrMagnitudePhase():
-                #self.OEF_Spring_alt()
+            elif self.numWide==numWideImag:
+                self.OEF_Spring_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [20,21,22,23]: # CDAMP1,CDAMP2,CDAMP3,CDAMP4
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_Spring()
-            #elif self.isRealImaginaryOrMagnitudePhase():
-                #self.OEF_Spring_alt()
+            elif self.numWide==numWideImag:
+                self.OEF_Spring_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
 
         elif self.elementType in [24]: # CVISC
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_CVisc()
-            elif self.isRealImaginaryOrMagnitudePhase():
+            elif self.numWide==numWideImag:
                 self.OEF_CVisc_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [33,74]: # CQUAD4,CTRIA3
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 #print self.codeInformation()
                 self.OEF_Plate()
-            elif self.isRealImaginaryOrMagnitudePhase():
+            elif self.numWide==numWideImag:
                 self.OEF_Plate_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [64,70,75,82,144]: # CQUAD8,CTRIAR,CTRIA6,CQUADR,CQUAD4-bilinear
-            if self.isRealOrRandom():
-                print self.codeInformation()
+            if self.numWide==numWideReal:
+                #print self.codeInformation()
                 self.OEF_Plate2()
-            elif self.isRealImaginaryOrMagnitudePhase():
+            elif self.numWide==numWideImag:
                 self.OEF_Plate2_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
 
         elif self.elementType in [34]: # CBAR
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_CBar()
-            #elif self.isRealImaginaryOrMagnitudePhase():
-                #self.OEF_CBar_alt()
+            elif self.numWide==numWideImag:
+                self.OEF_CBar_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [38]: # CGAP
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_CGap()
-            elif self.isRealImaginaryOrMagnitudePhase():
+            elif self.numWide==numWideImag:
                 self.OEF_CGap_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_CompositePlate()
-            elif self.isRealImaginaryOrMagnitudePhase():
+            elif self.numWide==numWideImag:
                 self.OEF_CompositePlate_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [102]: # CBUSH
-            if self.isRealOrRandom():
+            if self.numWide==numWideReal:
                 self.OEF_CBush()
-            #elif self.isRealImaginaryOrMagnitudePhase():
-                #self.OEF_CBush_alt()
+            elif self.numWide==numWideImag:
+                self.OEF_CBush_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         else:
-            raise NotImplementedError(self.codeInformation())
+            raise NotImplementedError('New Element'+self.codeInformation())
         ###
 
 
