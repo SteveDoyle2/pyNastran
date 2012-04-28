@@ -158,7 +158,9 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        74:  9,    # CTRIA3
                        75:  2+(11-2)*4, # CTRIA6
                        
+
                       #76:  16,   # Acoustic Velocity/Pressure CHEXA ???
+                       76:  None, # dummy so it doesnt go into the real results
                        77:  10,   # Acoustic Velocity/Pressure CPENTA
                        78:  10,   # Acoustic Velocity/Pressure CTETRA
                        
@@ -207,9 +209,9 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        74:  17,   # CTRIA3
                        75:  2+(19-2)*4, # CTRIA6
 
-                      #76:  16,   # Acoustic Velocity/Pressure CHEXA ???
-                       77:  16,   # Acoustic Velocity/Pressure CPENTA
-                       78:  16,   # Acoustic Velocity/Pressure CTETRA
+                       76:  16,   # Acoustic Velocity/Pressure CHEXA_PR
+                       77:  16,   # Acoustic Velocity/Pressure CPENTA_PR
+                       78:  16,   # Acoustic Velocity/Pressure CTETRA_PR
 
                        82:  2+(19-2)*5, # CQUADR
                        95:  9,    # composite CQUAD4 ???
@@ -283,7 +285,6 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
-
         elif self.elementType in [24]: # CVISC
             if self.numWide==numWideReal:
                 self.OEF_CVisc()
@@ -306,6 +307,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 #print self.codeInformation()
                 self.OEF_Plate2()
             elif self.numWide==numWideImag:
+                print self.codeInformation()
                 self.OEF_Plate2_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
@@ -316,6 +318,14 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 self.OEF_CBar()
             elif self.numWide==numWideImag:
                 self.OEF_CBar_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [100]: # CBAR
+            if self.numWide==numWideReal:
+                self.OEF_CBar100()
+            elif self.numWide==numWideImag:
+                self.OEF_CBar100_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
@@ -332,6 +342,14 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 self.OEF_Bend()
             elif self.numWide==numWideImag:
                 self.OEF_Bend_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [76,77,78]: # CHEXA_PR,PENTA_PR,CTETRA_PR
+            if self.numWide==numWideReal:
+                self.OEF_PentaPressure()
+            elif self.numWide==numWideImag:
+                self.OEF_PentaPressure_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
