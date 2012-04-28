@@ -584,6 +584,63 @@ class RealCBARForce(object): # 34-CBAR
     def __repr__(self):
         return str(self.axial)
 
+class RealCBAR100Force(object): # 100-CBAR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.bendingMoment = {}
+        self.shear = {}
+        self.axial = {}
+        self.torque = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.bendingMoment[dt] = {}
+        self.shear[dt] = {}
+        self.axial[dt] = {}
+        self.torque[dt] = {}
+
+    def add(self,dt,data):
+        [eid,sd,bm1,bm2,ts1,ts2,af,trq] = data
+
+        #self.eType[eid] = eType
+        self.bendingMoment[eid] = [bm1,bm2]
+        self.shear[eid] = [ts1,ts2]
+        self.axial[eid] = af
+        self.torque[eid] = trq
+
+    def addSort1(self,dt,data):
+        [eid,sd,bm1,bm2,ts1,ts2,af,trq] = data
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMoment[dt][eid] = [bm1,bm2]
+        self.shear[dt][eid] = [ts1,ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
+
+    def addSort2(self,eid,data):
+        [dt,sd,bm1,bm2,ts1,ts2,af,trq] = data
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMoment[dt][eid] = [bm1,bm2]
+        self.shear[dt][eid] = [ts1,ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
+
+    def __repr__(self):
+        return str(self.axial)
+
 class RealCGAPForce(object): # 38-CGAP
     def __init__(self,isSort1,dt):
         #self.eType = {}
@@ -661,7 +718,7 @@ class RealCGAPForce(object): # 38-CGAP
     def __repr__(self):
         return str(self.fx)
 
-class RealBendForce(object): # 69-CBEND
+class RealBendForceOff(object): # 69-CBEND
     def __init__(self,isSort1,dt):
         #self.eType = {}
         raise NotImplementedError()
@@ -703,6 +760,58 @@ class RealBendForce(object): # 69-CBEND
 
     def __repr__(self):
         return str(self.force)
+
+class RealPentaPressureForce(object): # 77-PENTA_PR,78-TETRA_PR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.acceleration = {}
+        self.velocity = {}
+        self.pressure = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.acceleration[dt] = {}
+        self.velocity[dt] = {}
+        self.pressure[dt] = {}
+
+    def add(self,dt,data):
+        [eid,eName,ax,ay,az,vx,vy,vz,pressure] = data
+
+        #self.eType[eid] = eType
+        self.acceleration[eid] = [ax,ay,az]
+        self.velocity[eid] = [vx,vy,vz]
+        self.pressure[eid] = pressure
+
+    def addSort1(self,dt,data):
+        [eid,eName,ax,ay,az,vx,vy,vz,pressure] = data
+        if dt not in self.acceleration:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.acceleration[dt][eid] = [ax,ay,az]
+        self.velocity[dt][eid] = [vx,vy,vz]
+        self.pressure[dt][eid] = pressure
+
+    def addSort2(self,eid,data):
+        [dt,eName,ax,ay,az,vx,vy,vz,pressure] = data
+        if dt not in self.acceleration:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.acceleration[dt][eid] = [ax,ay,az]
+        self.velocity[dt][eid] = [vx,vy,vz]
+        self.pressure[dt][eid] = pressure
+
+    def __repr__(self):
+        return str(self.acceleration)
 
 class RealCBUSHForce(object): # 102-CBUSH
     def __init__(self,isSort1,dt):

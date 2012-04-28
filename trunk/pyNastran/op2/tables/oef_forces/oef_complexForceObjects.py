@@ -177,6 +177,223 @@ class ComplexPlateForce(object): # 33-CQUAD4, 74-CTRIA3
     def __repr__(self):
         return str(self.mx)
 
+class ComplexPLATE2Force(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.term = {}
+        self.ngrids = {}
+        self.mxReal = {}
+        self.myReal = {}
+        self.mxyReal = {}
+        self.bmxReal = {}
+        self.bmyReal = {}
+        self.bmxyReal = {}
+        self.txReal = {}
+        self.tyReal = {}
+
+        self.mxImag = {}
+        self.myImag = {}
+        self.mxyImag = {}
+        self.bmxImag = {}
+        self.bmyImag = {}
+        self.bmxyImag = {}
+        self.txImag = {}
+        self.tyImag = {}
+
+        if isSort1:
+            if dt is not None:
+                self.addNewElement = self.addNewElementSort1
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.addNewElement = self.addNewElementSort2
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.term[dt] = {}
+        self.ngrids[dt] = {}
+
+        self.mxReal[dt] = {}
+        self.myReal[dt] = {}
+        self.mxyReal[dt] = {}
+        self.bmxReal[dt] = {}
+        self.bmyReal[dt] = {}
+        self.bmxyReal[dt] = {}
+        self.txReal[dt] = {}
+        self.tyReal[dt] = {}
+
+        self.mxImag[dt] = {}
+        self.myImag[dt] = {}
+        self.mxyImag[dt] = {}
+        self.bmxImag[dt] = {}
+        self.bmyImag[dt] = {}
+        self.bmxyImag[dt] = {}
+        self.txImag[dt] = {}
+        self.tyImag[dt] = {}
+
+    def addNewElement(self,eid,dt,data):
+        #print "eid = ",eid
+        [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                  mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+
+        #self.eType[eid] = eType
+        self.term[eid] = term
+        self.ngrids[eid] = nid
+
+        self.mxReal[eid] = [mxr]
+        self.myReal[eid] = [myr]
+        self.mxyReal[eid] = [mxyr]
+        self.bmxReal[eid] = [bmxr]
+        self.bmyReal[eid] = [bmyr]
+        self.bmxyReal[eid] = [bmxyr]
+        self.txReal[eid] = [txr]
+        self.tyReal[eid] = [tyr]
+
+        self.mxImag[eid] = [mxi]
+        self.myImag[eid] = [myi]
+        self.mxyImag[eid] = [mxyi]
+        self.bmxImag[eid] = [bmxi]
+        self.bmyImag[eid] = [bmyi]
+        self.bmxyImag[eid] = [bmxyi]
+        self.txImag[eid] = [txi]
+        self.tyImag[eid] = [tyi]
+
+
+    def add(self,eid,dt,data):
+        [nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+
+        #self.eType[eid] = eType
+        #print "mx = ",self.mx,mx
+        self.mxReal[eid].append(mxr)
+        self.myReal[eid].append(myr)
+        self.mxyReal[eid].append(mxyr)
+        self.bmxReal[eid].append(bmxr)
+        self.bmyReal[eid].append(bmyr)
+        self.bmxyReal[eid].append(bmxyr)
+        self.txReal[eid].append(txr)
+        self.tyReal[eid].append(tyr)
+
+        self.mxImag[eid].append(mxi)
+        self.myImag[eid].append(myi)
+        self.mxyImag[eid].append(mxyi)
+        self.bmxImag[eid].append(bmxi)
+        self.bmyImag[eid].append(bmyi)
+        self.bmxyImag[eid].append(bmxyi)
+        self.txImag[eid].append(txi)
+        self.tyImag[eid].append(tyi)
+
+    def addNewElementSort1(self,eid,dt,data):
+        [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                  mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        if dt not in self.mxReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.term[dt][eid] = term
+        self.ngrids[dt][eid] = nid
+        self.mxReal[dt][eid] = [mxr]
+        self.myReal[dt][eid] = [myr]
+        self.mxyReal[dt][eid] = [mxyr]
+        self.bmxReal[dt][eid] = [bmxr]
+        self.bmyReal[dt][eid] = [bmyr]
+        self.bmxyReal[dt][eid] = [bmxyr]
+        self.txReal[dt][eid] = [txr]
+        self.tyReal[dt][eid] = [tyr]
+
+        self.mxImag[dt][eid] = [mxi]
+        self.myImag[dt][eid] = [myi]
+        self.mxyImag[dt][eid] = [mxyi]
+        self.bmxImag[dt][eid] = [bmxi]
+        self.bmyImag[dt][eid] = [bmyi]
+        self.bmxyImag[dt][eid] = [bmxyi]
+        self.txImag[dt][eid] = [txi]
+        self.tyImag[dt][eid] = [tyi]
+
+    def addSort1(self,eid,dt,data):
+        [nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        if dt not in self.mxReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.mxReal[dt][eid].append(mxr)
+        self.myReal[dt][eid].append(myr)
+        self.mxyReal[dt][eid].append(mxyr)
+        self.bmxReal[dt][eid].append(bmxr)
+        self.bmyReal[dt][eid].append(bmyr)
+        self.bmxyReal[dt][eid].append(bmxyr)
+        self.txReal[dt][eid].append(txr)
+        self.tyReal[dt][eid].append(tyr)
+
+        self.mxImag[dt][eid].append(mxi)
+        self.myImag[dt][eid].append(myi)
+        self.mxyImag[dt][eid].append(mxyi)
+        self.bmxImag[dt][eid].append(bmxi)
+        self.bmyImag[dt][eid].append(bmyi)
+        self.bmxyImag[dt][eid].append(bmxyi)
+        self.txImag[dt][eid].append(txi)
+        self.tyImag[dt][eid].append(tyi)
+
+    def addNewElementSort2(self,dt,eid,data):
+        [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                  mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        if dt not in self.mxReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.term[dt][eid] = term
+        self.ngrids[dt][eid] = nid
+
+        self.mxReal[dt][eid] = [mxr]
+        self.myReal[dt][eid] = [myr]
+        self.mxyReal[dt][eid] = [mxyr]
+        self.bmxReal[dt][eid] = [bmxr]
+        self.bmyReal[dt][eid] = [bmyr]
+        self.bmxyReal[dt][eid] = [bmxyr]
+        self.txReal[dt][eid] = [txr]
+        self.tyReal[dt][eid] = [tyr]
+
+        self.mxImag[dt][eid] = [mxi]
+        self.myImag[dt][eid] = [myi]
+        self.mxyImag[dt][eid] = [mxyi]
+        self.bmxImag[dt][eid] = [bmxi]
+        self.bmyImag[dt][eid] = [bmyi]
+        self.bmxyImag[dt][eid] = [bmxyi]
+        self.txImag[dt][eid] = [txi]
+        self.tyImag[dt][eid] = [tyi]
+
+    def addSort2(self,dt,eid,data):
+        [nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        if dt not in self.mxReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.mxReal[dt][eid].append(mxr)
+        self.myReal[dt][eid].append(myr)
+        self.mxyReal[dt][eid].append(mxyr)
+        self.bmxReal[dt][eid].append(bmxr)
+        self.bmyReal[dt][eid].append(bmyr)
+        self.bmxyReal[dt][eid].append(bmxyr)
+        self.txReal[dt][eid].append(txr)
+        self.tyReal[dt][eid].append(tyr)
+
+        self.mxImag[dt][eid].append(mxi)
+        self.myImag[dt][eid].append(myi)
+        self.mxyImag[dt][eid].append(mxyi)
+        self.bmxImag[dt][eid].append(bmxi)
+        self.bmyImag[dt][eid].append(bmyi)
+        self.bmxyImag[dt][eid].append(bmxyi)
+        self.txImag[dt][eid].append(txi)
+        self.tyImag[dt][eid].append(tyi)
+
+    def __repr__(self):
+        return str(self.mxReal)
+
+
 class ComplexCBARForce(object): # 34-CBAR
     def __init__(self,isSort1,dt):
         #self.eType = {}
@@ -272,6 +489,72 @@ class ComplexCBARForce(object): # 34-CBAR
 
     def __repr__(self):
         return str(self.axialReal)
+
+class ComplexPentaPressureForce(object): # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.accelerationReal = {}
+        self.accelerationImag = {}
+        self.velocityReal = {}
+        self.velocityImag = {}
+        self.pressure = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.accelerationReal[dt] = {}
+        self.accelerationImag[dt] = {}
+        self.velocityReal[dt] = {}
+        self.velocityImag[dt] = {}
+        self.pressure[dt] = {}
+
+    def add(self,dt,data):
+        [eid,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
+                   axi,ayi,azi,vxi,vyi,vzi] = data
+
+        #self.eType[eid] = eType
+        self.accelerationReal[eid] = [axr,ayr,azr]
+        self.accelerationImag[eid] = [axi,ayi,azi]
+        self.velocityReal[eid] = [vxr,vyr,vzr]
+        self.velocityImag[eid] = [vxi,vyi,vzi]
+        self.pressure[eid] = pressure
+
+    def addSort1(self,dt,data):
+        [eid,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
+                  axi,ayi,azi,vxi,vyi,vzi] = data
+        if dt not in self.accelerationReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.accelerationReal[dt][eid] = [axr,ayr,azr]
+        self.accelerationImag[dt][eid] = [axi,ayi,azi]
+        self.velocityReal[dt][eid] = [vxr,vyr,vzr]
+        self.velocityImag[dt][eid] = [vxi,vyi,vzi]
+        self.pressure[dt][eid] = pressure
+
+    def addSort2(self,eid,data):
+        [dt,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
+                  axi,ayi,azi,vxi,vyi,vzi] = data
+        if dt not in self.accelerationReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.accelerationReal[dt][eid] = [axr,ayr,azr]
+        self.accelerationImag[dt][eid] = [axi,ayi,azi]
+        self.velocityReal[dt][eid] = [vxr,vyr,vzr]
+        self.velocityImag[dt][eid] = [vxi,vyi,vzi]
+        self.pressure[dt][eid] = pressure
+
+
+    def __repr__(self):
+        return str(self.accelerationReal)
 
 class ComplexCBUSHForce(object): # 102-CBUSH
     def __init__(self,isSort1,dt):

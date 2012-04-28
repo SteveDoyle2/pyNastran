@@ -208,6 +208,43 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_CBar)
         #print self.barForces
         
+    def OEF_CBar100(self): # 100-CBAR
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'ifffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'ffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.bar100Forces,RealCBAR100Force,isSort1)
+
+        while len(self.data)>=36: # 9*4
+            eData     = self.data[0:32]
+            self.data = self.data[32: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,sd,bm1,bm2,ts1,ts2,af,trq) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,sd,bm1,bm2,ts1,ts2,af,trq]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_CBar)
+        #print self.bar100Forces
+        
     def OEF_Plate(self): # 33-CQUAD4,74-CTRIA3
         deviceCode = self.deviceCode
         
@@ -381,6 +418,44 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_Bend)
+        #print self.bendForces
+        
+    def OEF_PentaPressure(self): # 77-CPENTA_PR,78-CTETRA_PR
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iccccccccfffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fccccccccfffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.pentaPressureForces,RealPentaPressureForce,isSort1)
+
+        while len(self.data)>=40: # 10*4
+            eData     = self.data[0:40]
+            self.data = self.data[40: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,a,b,c,d,e,f,g,h,ax,ay,az,vx,vy,vz,pressure) = out
+            eName = a+b+c+d+e+f+g+h
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,eName,ax,ay,az,vx,vy,vz,pressure]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_PentaPressure)
         #print self.bendForces
         
     def OEF_CBush(self): # 102-CBUSH
