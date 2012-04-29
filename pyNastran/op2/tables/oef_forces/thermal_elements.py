@@ -5,6 +5,45 @@ from oef_thermalObjects import *
 
 class ThermalElements(object):
 
+    def readOEF_Thermal(self):
+        assert self.formatCode==1,self.codeInformation()
+        #print "self.elementType = ",self.elementType
+        if self.elementType in [107,108,109]: # CHBDYE, CHBDYG, CHBDYP
+            assert self.numWide==8,self.codeInformation()
+            self.OEF_CHBDYx()
+        elif self.elementType in [33,39,67,68]: # QUAD4,TETRA,HEXA,PENTA
+            assert self.numWide in [9,10],self.codeInformation()
+            self.OEF_2D_3D()
+        elif self.elementType in [53,64,74,75]: # TRIAX6,QUAD8,TRIA3,TRIA6
+            assert self.numWide==9,self.codeInformation()
+            self.OEF_2D_3D()
+        elif self.elementType in [1,2,3,10,34,69]: # ROD,BEAM,TUBE,CONROD,BAR,BEND
+            assert self.numWide==9,self.codeInformation()
+            self.OEF_1D()
+        elif self.elementType in [189,190,191]: # VUQUAD,VUTRIA,VUBEAM
+            #assert self.numWide==27,self.codeInformation()
+            self.OEF_VU_Element()
+        elif self.elementType in [145,146,147]: # VUHEXA,VUPENTA,VUTETRA
+            self.OEF_VU_3D_Element()
+        elif self.elementType in [110]:
+            self.OEF_CONV()
+        else:
+            #print self.codeInformation()
+            raise NotImplementedError(self.codeInformation())
+        ###
+
+    def createThermalTransientObject(self,resultName,objClass,isSort1):
+        #print resultName
+        if self.iSubcase in resultName:
+            self.obj = resultName[self.iSubcase]
+            print "returning iSubcase result=%s" %(self.iSubcase)
+        else:
+            self.obj = objClass(isSort1,self.nonlinearFactor)
+            resultName[self.iSubcase] = self.obj
+            print "creating iSubcase result=%s" %(self.iSubcase)
+        ###
+        #return self.obj
+
     def OEF_CHBDYx(self): # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
         if self.makeOp2Debug:
             self.op2Debug.write('---OEF_CHBDYx---\n')
@@ -23,7 +62,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.thermalLoad_CHBDY,CHBDYx,isSort1)
+        self.createThermalTransientObject(self.thermalLoad_CHBDY,HeatFlux_CHBDYx,isSort1)
 
         while len(self.data)>=32: # 8*4
             eData     = self.data[0:32]
@@ -37,7 +76,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,fApplied,freeConv,forceConv,fRad,fTotal]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -45,7 +84,6 @@ class ThermalElements(object):
         self.handleResultsBuffer(self.OEF_CHBDYx)
         if self.makeOp2Debug:
             print "done with OEF_CHBDYx"
-        
         #print self.thermalLoad_CHBDY
 
     def OEF_CONV(self): # [110]  CONV
@@ -66,7 +104,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.thermalLoad_CONV,tCONV,isSort1)
+        self.createThermalTransientObject(self.thermalLoad_CONV,HeatFlux_CONV,isSort1)
 
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
@@ -78,27 +116,15 @@ class ThermalElements(object):
             eid2  = extract(eid,dt)
             
             dataIn = [eid2,cntlNode,freeConv,freeConvK]
-            print dataIn
+            print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_CONV)
         if self.makeOp2Debug:
-            print "done with OEF_CONV"
-        
+            print "done with OEF_CONV"        
         #print self.thermalLoad_CHBDY
-    def createThermalTransientObject(self,resultName,objClass,isSort1):
-        #print resultName
-        if self.iSubcase in resultName:
-            self.obj = resultName[self.iSubcase]
-            print "returning iSubcase result=%s" %(self.iSubcase)
-        else:
-            self.obj = objClass(isSort1,self.nonlinearFactor)
-            resultName[self.iSubcase] = self.obj
-            print "creating iSubcase result=%s" %(self.iSubcase)
-        ###
-        #return self.obj
-    
+
     def OEF_VU_Element(self): # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
@@ -125,7 +151,7 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VU,Thermal_VU,isSort1)
+        self.createThermalTransientObject(self.thermalLoad_VU,HeatFlux_VU,isSort1)
 
         n = 24+28*nNodes
         while len(self.data)>=n:
@@ -152,15 +178,14 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_1D)
+        self.handleResultsBuffer(self.OEF_VU_Element)
         if self.makeOp2Debug:
             print "done with OEF_1D"
-        
         print self.thermalLoad_VU
 
     def OEF_VU_3D_Element(self): # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
@@ -189,7 +214,7 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VU_3D,Thermal_VU_3D,isSort1)
+        self.createThermalTransientObject(self.thermalLoad_VU_3D,HeatFlux_VU_3D,isSort1)
 
         n = 8+28*nNodes
         while len(self.data)>=n:
@@ -212,14 +237,13 @@ class ThermalElements(object):
                 gradFluxes.append(out)
             dataIn.append(gradFluxes)
             
-            print dataIn
+            print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_VU_3D_Element)
         if self.makeOp2Debug:
             print "done with OEF_VU_3D_Element"
-        
         print self.thermalLoad_VU_3D
 
     def OEF_1D(self): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
@@ -238,7 +262,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
-        self.createThermalTransientObject(self.thermalLoad_1D,Thermal_1D,isSort1)
+        self.createThermalTransientObject(self.thermalLoad_1D,HeatFlux_1D,isSort1)
 
         n = 36
         while len(self.data)>=n: # 10*4
@@ -253,7 +277,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print dataIn
+            print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -261,7 +285,6 @@ class ThermalElements(object):
         self.handleResultsBuffer(self.OEF_1D)
         if self.makeOp2Debug:
             print "done with OEF_1D"
-        
         print self.thermalLoad_1D
 
     def OEF_2D_3D(self): # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
@@ -298,7 +321,7 @@ class ThermalElements(object):
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-        self.createThermalTransientObject(self.thermalLoad_2D_3D,Thermal_2D_3D,isSort1)
+        self.createThermalTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D,isSort1)
 
         #n = 36
         while len(self.data)>=n: # 10*4
@@ -312,7 +335,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print dataIn
+            print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -322,31 +345,4 @@ class ThermalElements(object):
             print "done with OEF_2D_3D"
         
         print self.thermalLoad_2D_3D
-
-    def readOEF_Thermal(self):
-        assert self.formatCode==1,self.codeInformation()
-        #print "self.elementType = ",self.elementType
-        if self.elementType in [107,108,109]: # CHBDYE, CHBDYG, CHBDYP
-            assert self.numWide==8,self.codeInformation()
-            self.OEF_CHBDYx()
-        elif self.elementType in [33,39,67,68]: # QUAD4,TETRA,HEXA,PENTA
-            assert self.numWide in [9,10],self.codeInformation()
-            self.OEF_2D_3D()
-        elif self.elementType in [53,64,74,75]: # TRIAX6,QUAD8,TRIA3,TRIA6
-            assert self.numWide==9,self.codeInformation()
-            self.OEF_2D_3D()
-        elif self.elementType in [1,2,3,10,34,69]: # ROD,BEAM,TUBE,CONROD,BAR,BEND
-            assert self.numWide==9,self.codeInformation()
-            self.OEF_1D()
-        elif self.elementType in [189,190,191]: # VUQUAD,VUTRIA,VUBEAM
-            #assert self.numWide==27,self.codeInformation()
-            self.OEF_VU_Element()
-        elif self.elementType in [145,146,147]: # VUHEXA,VUPENTA,VUTETRA
-            self.OEF_VU_3D_Element()
-        elif self.elementType in [110]:
-            self.OEF_CONV()
-        else:
-            #print self.codeInformation()
-            raise NotImplementedError(self.codeInformation())
-        ###
 

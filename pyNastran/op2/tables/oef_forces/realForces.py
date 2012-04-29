@@ -82,7 +82,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             if isNewElement:
                 self.obj.addNewElement(dt,dataIn)
@@ -163,7 +163,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,force]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -334,7 +334,7 @@ class RealForces(object):
                 dataIn = unpack(allFormat, eData)
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-                print "%s    " %(self.ElementType(self.elementType)),dataIn
+                print "***%s    " %(self.ElementType(self.elementType)),dataIn
                 
                 self.obj.add(eid2,dt,dataIn)
                 #print "len(data) = ",len(self.data)
@@ -373,7 +373,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,fx,sfy,sfz,u,v,w,sv,sw]
-            print "CGAP",dataIn
+            print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -494,3 +494,127 @@ class RealForces(object):
         ###
         self.handleResultsBuffer(self.OEF_CBush)
         #print self.bushForces
+
+    def OEF_Force_VU(self): # 191-VUBEAM ### 189-VUQUAD,190-VUTRIA,
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        print "numWide = ",self.numWide
+
+        #if self.elementType in [189]:
+            #nNodes = 4
+        #elif self.elementType in [190]:
+            #nNodes = 3
+        if self.elementType in [191]:
+            nNodes = 2
+        else:
+            raise NotImplementedError(self.codeInformation())
+
+        if isSort1:
+            print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iiicccc' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fiicccc' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+        ###
+        formatAll = 'ifffffff'
+        self.createThermalTransientObject(self.force_VU,RealForce_VU,isSort1)
+
+        n = 16+32*nNodes
+        while len(self.data)>=n:
+            eData     = self.data[0:16] # 8*4
+            self.data = self.data[16: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,parent,coord,icordA,icordB,icordC,icordD) = out
+            icord = icordA+icordB+icordC+icordD
+
+            eid2  = extract(eid,dt)
+            dataIn = [eid2,parent,coord,icord]
+
+            forces = []
+            for i in range(nNodes):
+                eData     = self.data[0:32] # 8*4
+                self.data = self.data[32: ]
+                #print "i=%s len(data)=%s" %(i,len(eData))
+                out = unpack(formatAll, eData)
+                forces.append(out)
+            dataIn.append(forces)
+            #eType = a+b+c+d+e+f+g+h
+            #print "eType=%s" %(eType)
+            
+            #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)            
+            self.obj.add(nNodes,dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Force_VU)
+        if self.makeOp2Debug:
+            print "done with OEF_Force_VU"
+        print self.force_VU
+
+    def OEF_Force_VUTRIA(self): # 190-VUTRIA ### 189-VUQUAD,
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        print "numWide = ",self.numWide
+
+        #if self.elementType in [189]:
+            #nNodes = 4
+        if self.elementType in [190]:
+            nNodes = 3
+        else:
+            raise NotImplementedError(self.codeInformation())
+
+        if isSort1:
+            print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iiiccccii' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fiiccccii' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+        ###
+        formatAll = 'ifffiiifffffi'
+        self.createThermalTransientObject(self.force_VU_2D,RealForce_VU_2D,isSort1)
+
+        n = 24+52*nNodes
+        while len(self.data)>=n:
+            eData     = self.data[0:24] # 6*4
+            self.data = self.data[24: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,parent,coord,icordA,icordB,icordC,icordD,theta,_) = out
+            icord = icordA+icordB+icordC+icordD
+
+            eid2  = extract(eid,dt)
+            dataIn = [eid2,parent,coord,icord,theta]
+
+            forces = []
+            for i in range(nNodes):
+                eData     = self.data[0:52] # 13*4
+                self.data = self.data[52: ]
+                #print "i=%s len(data)=%s" %(i,len(eData))
+                out = unpack(formatAll, eData)
+                forces.append(out)
+            dataIn.append(forces)
+            #eType = a+b+c+d+e+f+g+h
+            #print "eType=%s" %(eType)
+            
+            #dataIn = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)            
+            self.obj.add(nNodes,dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Force_VU)
+        if self.makeOp2Debug:
+            print "done with OEF_Force_VU"
+        print self.force_VU

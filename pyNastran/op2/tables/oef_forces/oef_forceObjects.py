@@ -860,3 +860,234 @@ class RealCBUSHForce(object): # 102-CBUSH
     def __repr__(self):
         return str(self.force)
 
+class RealForce_VU(object): # 191-VUBEAM # 189-VUQUAD 
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.parent = {}
+        self.coord = {}
+        self.icord = {}
+        
+        self.forceX  = {}
+        self.shearY  = {}
+        self.shearZ  = {}
+        self.torsion  = {}
+        self.bendingY  = {}
+        self.bendingZ  = {}
+
+        ## @todo if dt=None, handle SORT1 case
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.forceX[dt]  = {}
+        self.shearY[dt]  = {}
+        self.shearZ[dt]  = {}
+        self.torsion[dt]  = {}
+        self.bendingY[dt]  = {}
+        self.bendingZ[dt]  = {}
+
+    def add(self,nNodes,dt,data):
+        [eid,parent,coord,icord,forces] = data
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+        
+        self.forceX[eid]  = {}
+        self.shearY[eid]  = {}
+        self.shearZ[eid]  = {}
+        self.torsion[eid]  = {}
+        self.bendingY[eid] = {}
+        self.bendingZ[eid] = {}
+
+        for force in forces:
+            [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
+            self.forceX[eid][nid]  = forceX
+            self.shearY[eid][nid]  = shearY
+            self.shearZ[eid][nid]  = shearZ
+            self.torsion[eid][nid]  = torsion
+            self.bendingY[eid][nid] = bendingY
+            self.bendingZ[eid][nid] = bendingZ
+
+    def addSort1(self,nNodes,dt,data):
+        [eid,parent,coord,icord,forces] = data
+        if dt not in self.forceX:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+        
+        self.forceX[dt][eid]  = {}
+        self.shearY[dt][eid]  = {}
+        self.shearZ[dt][eid]  = {}
+        self.torsion[dt][eid]  = {}
+        self.bendingY[dt][eid] = {}
+        self.bendingZ[dt][eid] = {}
+        for force in forces:
+            [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
+            self.forceX[dt][eid][nid]  = forceX
+            self.shearY[dt][eid][nid]  = shearY
+            self.shearZ[dt][eid][nid]  = shearZ
+            self.torsion[dt][eid][nid]  = torsion
+            self.bendingY[dt][eid][nid] = bendingY
+            self.bendingZ[dt][eid][nid] = bendingZ
+
+    def addSort2(self,nNodes,eid,data):
+        [dt,parent,coord,icord,forces] = data
+        if dt not in self.forceX:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+
+        self.forceX[dt][eid]  = {}
+        self.shearY[dt][eid]  = {}
+        self.shearZ[dt][eid]  = {}
+        self.torsion[dt][eid]  = {}
+        self.bendingY[dt][eid] = {}
+        self.bendingZ[dt][eid] = {}
+        for force in forces:
+            [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
+            self.forceX[dt][eid][nid]  = forceX
+            self.shearY[dt][eid][nid]  = shearY
+            self.shearZ[dt][eid][nid]  = shearZ
+            self.torsion[dt][eid][nid]  = torsion
+            self.bendingY[dt][eid][nid] = bendingY
+            self.bendingZ[dt][eid][nid] = bendingZ
+
+    def __repr__(self):
+        return str(self.forceX)
+
+class RealForce_VU_2D(object): # 190-VUTRIA # 189-VUQUAD
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.parent = {}
+        self.coord = {}
+        self.icord = {}
+        self.theta = {}
+        
+        self.membraneX  = {}
+        self.membraneY  = {}
+        self.membraneXY = {}
+        self.bendingX  = {}
+        self.bendingY  = {}
+        self.bendingXY = {}
+        self.shearYZ = {}
+        self.shearXZ = {}
+
+        ## @todo if dt=None, handle SORT1 case
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.membraneX[dt]  = {}
+        self.membraneY[dt]  = {}
+        self.membraneXY[dt] = {}
+        self.bendingX[dt]  = {}
+        self.bendingY[dt]  = {}
+        self.bendingXY[dt] = {}
+        self.shearYZ[dt] = {}
+        self.shearXZ[dt] = {}
+
+    def add(self,nNodes,dt,data):
+        [eid,parent,coord,icord,theta,forces] = data
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        self.theta[eid] = theta
+        #self.eType[eid]    = eType
+        
+        self.membraneX[eid]  = {}
+        self.membraneY[eid]  = {}
+        self.membraneXY[eid] = {}
+        self.bendingX[eid]  = {}
+        self.bendingY[eid]  = {}
+        self.bendingXY[eid] = {}
+        self.shearYZ[eid] = {}
+        self.shearXZ[eid] = {}
+
+        for force in forces:
+            [nid,membraneX,membraneY,membraneXY,_,_,_,bendingX,bendingY,bendingXY,shearYZ,shearXZ,_] = force
+            self.membraneX[eid][nid]  = membraneX
+            self.membraneY[eid][nid]  = membraneY
+            self.membraneXY[eid][nid] = membraneXY
+            self.bendingX[eid][nid]  = bendingX
+            self.bendingY[eid][nid]  = bendingY
+            self.bendingXY[eid][nid] = bendingXY
+            self.shearYZ[eid][nid]  = shearYZ
+            self.shearXZ[eid][nid]  = shearXZ
+
+    def addSort1(self,nNodes,dt,data):
+        [eid,parent,coord,icord,theta,forces] = data
+        if dt not in self.membraneX:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        self.theta[eid] = theta
+        #self.eType[eid]    = eType
+        
+        self.membraneX[dt][eid]  = {}
+        self.membraneY[dt][eid]  = {}
+        self.membraneXY[dt][eid] = {}
+        self.bendingX[dt][eid]  = {}
+        self.bendingY[dt][eid]  = {}
+        self.bendingXY[dt][eid] = {}
+        self.shearYZ[dt][eid] = {}
+        self.shearXZ[dt][eid] = {}
+        for force in forces:
+            [nid,membraneX,membraneY,membraneXY,_,_,_,bendingX,bendingY,bendingXY,shearYZ,shearXZ,_] = force
+            self.membraneX[dt][eid][nid]  = membraneX
+            self.membraneY[dt][eid][nid]  = membraneY
+            self.membraneXY[dt][eid][nid] = membraneXY
+            self.bendingX[dt][eid][nid]  = bendingX
+            self.bendingY[dt][eid][nid]  = bendingY
+            self.bendingXY[dt][eid][nid] = bendingXY
+            self.shearYZ[dt][eid][nid]  = shearYZ
+            self.shearXZ[dt][eid][nid]  = shearXZ
+
+    def addSort2(self,nNodes,eid,data):
+        [dt,parent,coord,icord,theta,forces] = data
+        if dt not in self.membraneX:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        self.theta[eid] = theta
+        #self.eType[eid]    = eType
+
+        self.membraneX[dt][eid]  = {}
+        self.membraneY[dt][eid]  = {}
+        self.membraneXY[dt][eid] = {}
+        self.bendingX[dt][eid]  = {}
+        self.bendingY[dt][eid]  = {}
+        self.bendingXY[dt][eid] = {}
+        self.shearYZ[dt][eid] = {}
+        self.shearXZ[dt][eid] = {}
+        for force in forces:
+            [nid,membraneX,membraneY,membraneXY,_,_,_,bendingX,bendingY,bendingXY,shearYZ,shearXZ,_] = force
+            self.membraneX[dt][eid][nid]  = membraneX
+            self.membraneY[dt][eid][nid]  = membraneY
+            self.membraneXY[dt][eid][nid] = membraneXY
+            self.bendingX[dt][eid][nid]  = bendingX
+            self.bendingY[dt][eid][nid]  = bendingY
+            self.bendingXY[dt][eid][nid] = bendingXY
+            self.shearYZ[dt][eid][nid]  = shearYZ
+            self.shearXZ[dt][eid][nid]  = shearXZ
+
+    def __repr__(self):
+        return str(self.membraneX)
