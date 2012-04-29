@@ -174,7 +174,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        144: 2+(11-2)*5, # bilinear CQUAD4
                        189: 6+(19-6)*4, # VUQUAD
                        190: 6+(19-6)*3, # VUTRIA
-                       191: 4+(13-4)*2, # VUBEAM
+                       191: 4+(12-4)*2, # VUBEAM
                        200: 9,    # CWELD
                        232: 9,    # composite CQUADR ???
                        233: 9,    # composite TRIAR ???
@@ -253,6 +253,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             ###
         elif self.elementType in [2]: # CBEAM
             self.eidOld = None
+            raise Exception('beam asdf')
             if self.numWide==numWideReal:
                 self.OEF_Beam()
             elif self.numWide==numWideImag:
@@ -369,10 +370,25 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
+        elif self.elementType in [190]: # VUTRIA
+            if self.numWide==numWideReal:
+                self.OEF_Force_VUTRIA()
+            elif self.numWide==numWideImag:
+                self.OEF_Force_VUTRIA_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [191]: # VUBEAM
+            #if self.numWide==numWideReal:
+                #self.OEF_Force_VU()
+            #elif self.numWide==numWideImag:
+                #self.OEF_Force_VU_alt()
+            #else:
+                raise NotImplementedError(self.codeInformation())
+            ###
         else:
             raise NotImplementedError('New Element'+self.codeInformation())
         ###
-
 
     def readOEF1_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]

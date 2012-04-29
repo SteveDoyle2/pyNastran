@@ -82,7 +82,7 @@ class ComplexForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
-            #print dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             if isNewElement:
                 self.obj.addNewElement(dt,dataIn)
@@ -267,7 +267,7 @@ class ComplexForces(object):
                 dataIn = unpack(allFormat, eData)
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-                print "%s    " %(self.ElementType(self.elementType)),dataIn
+                print "***%s    " %(self.ElementType(self.elementType)),dataIn
                 
                 self.obj.add(eid2,dt,dataIn)
                 #print "len(data) = ",len(self.data)
