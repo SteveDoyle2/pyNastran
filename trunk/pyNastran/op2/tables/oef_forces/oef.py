@@ -178,7 +178,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        200: 9,    # CWELD
                        232: 9,    # composite CQUADR ???
                        233: 9,    # composite TRIAR ???
-                       235: 8,    # punch CQUADR
+                       235: 9,    # punch CQUADR...numWide in DMAP is wrong...left out first entry...
                        236: 8,    # punch CTRIAR
                      }
         imagMapper = {
@@ -227,7 +227,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        200: 17,   # CWELD
                        232: 9,    # composite CQUADR ???
                        233: 9,    # composite TRIAR ???
-                       235: 16,   # punch CQUADR
+                       235: 17,   # punch CQUADR...numWide in DMAP is wrong...left out first entry...
                        236: 16,   # punch CTRIAR
                      }
 
@@ -252,7 +252,6 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [2]: # CBEAM
-
             if self.numWide==numWideReal:
                 self.OEF_Beam()
             elif self.numWide==numWideImag:
@@ -381,6 +380,14 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 self.OEF_Force_VU()
             elif self.numWide==numWideImag:
                 self.OEF_Force_VU_alt()
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [235]: # CQUADR
+            if self.numWide==numWideReal:
+                self.OEF_Plate()
+            elif self.numWide==numWideImag:
+                self.OEF_Plate_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
