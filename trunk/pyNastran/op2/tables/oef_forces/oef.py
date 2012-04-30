@@ -252,8 +252,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [2]: # CBEAM
-            self.eidOld = None
-            raise Exception('beam asdf')
+
             if self.numWide==numWideReal:
                 self.OEF_Beam()
             elif self.numWide==numWideImag:
@@ -261,7 +260,6 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
-            del self.eidOld
         elif self.elementType in [4]: # CSHEAR
             if self.numWide==numWideReal:
                 self.OEF_Shear()
@@ -370,7 +368,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
-        elif self.elementType in [190]: # VUTRIA
+        elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             if self.numWide==numWideReal:
                 self.OEF_Force_VUTRIA()
             elif self.numWide==numWideImag:
@@ -379,11 +377,11 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [191]: # VUBEAM
-            #if self.numWide==numWideReal:
-                #self.OEF_Force_VU()
-            #elif self.numWide==numWideImag:
-                #self.OEF_Force_VU_alt()
-            #else:
+            if self.numWide==numWideReal:
+                self.OEF_Force_VU()
+            elif self.numWide==numWideImag:
+                self.OEF_Force_VU_alt()
+            else:
                 raise NotImplementedError(self.codeInformation())
             ###
         else:

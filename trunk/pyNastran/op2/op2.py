@@ -193,11 +193,18 @@ class OP2(BDF,  # BDF methods
 
         self.rodForces = {}
         self.beamForces = {}
+        self.shearForces  = {}
         self.springForces = {}
         self.barForces = {}
+        self.bar100Forces = {}
+        self.bendForces = {}
         self.bushForces = {}
         self.plateForces = {}
         self.plateForces2 = {}
+        
+        self.pentaPressureForces = {}
+        self.force_VU = {}
+        self.force_VU_2D = {}
         
         #self.fluxes = {}
         self.thermalLoad_CONV  = {}
@@ -206,6 +213,7 @@ class OP2(BDF,  # BDF methods
         self.thermalLoad_2D_3D = {}
         self.thermalLoad_VU    = {}
         self.thermalLoad_VU_3D = {}
+        self.thermalLoad_VUBeam = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
         #self.modalForces = {}
@@ -574,8 +582,8 @@ class OP2(BDF,  # BDF methods
             #sys.stderr.write("  print and plot can cause bad results...if there's a crash, try plot only\n")
             self.deviceCode = 1
             
-            self.log.info('The op2 may be inconsistent...')
-            self.log.info("  print and plot can cause bad results...if there's a crash, try plot only")
+            #self.log.info('The op2 may be inconsistent...')
+            #self.log.info("  print and plot can cause bad results...if there's a crash, try plot only")
             #pass
 
         ## dataCode stores the active variables; these pass important

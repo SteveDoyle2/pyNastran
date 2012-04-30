@@ -45,52 +45,57 @@ class ComplexForces(object):
         
     def OEF_Beam_alt(self): # 2-CBEAM
         deviceCode = self.deviceCode
-        raise NotImplementedError()
+        
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiffffffff' # SORT1
+            format1 = 'i' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiffffffff' # SORT2
+            format1 = 'f' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
         self.createThermalTransientObject(self.beamForces,ComplexCBEAMForce,isSort1)
+        print self.codeInformation()
 
-        while len(self.data)>=68: # 10*4
-            eData     = self.data[0:68]
-            self.data = self.data[68: ]
-            #print "len(data) = ",len(eData)
+        formatAll = 'ifffffffffffffff'
+        nTotal = 16*11+1
+        while len(self.data)>=708: # (16*11+1)*4 = 177*4
+            eData     = self.data[0:4]
+            self.data = self.data[4: ]
+            eidTemp, = unpack(format1, eData)
+            eid2  = extract(eidTemp,dt)
 
-            out = unpack(format1, eData)
-            (eidTemp,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq) = out
-            #print "eidTemp = ",eidTemp
-            #print "nid = ",nid
-            #print "sd = ",sd
-            if nid==0 or sd>0.:
-                eid = self.eidOld
-                isNewElement = False
-            else:
-                eid = eidTemp
-                self.eidOld = eid
-                isNewElement = True
-            eid2  = extract(eid,dt)
-            #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
-            if isNewElement:
-                self.obj.addNewElement(dt,dataIn)
-                #print
-            elif sd>0.:
-                self.obj.add(dt,dataIn)
-                #print
-            #else: pass
+            for i in range(11):
+                eData     = self.data[0:64]
+                self.data = self.data[64: ]
+                #print "len(data) = ",len(eData)
+
+                out = unpack(formatAll, eData)
+                (nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                        bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi) = out
+                #print "eidTemp = ",eidTemp
+                #print "nid = ",nid
+                #print "sd = ",sd
+
+                #eid = self.obj.addNewEid(out)
+                if i==0: #isNewElement:
+                    dataIn = [eid2,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                                          bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi]
+                    print "%s cNew   " %(self.ElementType(self.elementType)),dataIn
+                    self.obj.addNewElement(dt,dataIn)
+                    #print
+                elif sd>0.:
+                    dataIn = [eid2,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                                          bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi]
+                    print "%s cOld   " %(self.ElementType(self.elementType)),dataIn
+                    self.obj.add(dt,dataIn)
+                    #print
+                #else: pass
 
             #print "len(data) = ",len(self.data)
         ###
@@ -355,3 +360,62 @@ class ComplexForces(object):
         ###
         self.handleResultsBuffer(self.OEF_CBush_alt)
         #print self.bushForces
+
+    def OEF_Force_VU_alt(self): # 191-VUBEAM
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        #print "numWide = ",self.numWide
+
+        if self.elementType in [191]:
+            nNodes = 2
+        else:
+            raise NotImplementedError(self.codeInformation())
+
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iiicccc' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fiicccc' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+        ###
+        formatAll = 'ifffffffffffff'
+        self.createThermalTransientObject(self.force_VU,ComplexForce_VU,isSort1)
+
+        n = 16+56*nNodes
+        while len(self.data)>=n:
+            eData     = self.data[0:16] # 8*4
+            self.data = self.data[16: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,parent,coord,icordA,icordB,icordC,icordD) = out
+            icord = icordA+icordB+icordC+icordD
+
+            eid2  = extract(eid,dt)
+            dataIn = [eid2,parent,coord,icord]
+
+            forces = []
+            for i in range(nNodes):
+                eData     = self.data[0:56] # 14*4
+                self.data = self.data[56: ]
+                #print "i=%s len(data)=%s" %(i,len(eData))
+                out = unpack(formatAll, eData)
+                forces.append(out)
+            dataIn.append(forces)
+            #eType = a+b+c+d+e+f+g+h
+            #print "eType=%s" %(eType)
+            
+            #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
+            print "force %s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(nNodes,dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Force_VU_alt)
+        if self.makeOp2Debug:
+            print "done with OEF_Force_VU"
+        print self.force_VU

@@ -144,6 +144,79 @@ class HeatFlux_VU(object): #  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
     def __repr__(self):
         return str(self.grad)
         
+class HeatFlux_VUBEAM(object): # 191-VUBEAM
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.parent = {}
+        self.coord = {}
+        self.icord = {}
+        
+        self.grad  = {}
+        self.flux  = {}
+
+        ## @todo if dt=None, handle SORT1 case
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.grad[dt] = {}
+        self.flux[dt] = {}
+
+    def add(self,nNodes,dt,data):
+        [eid,parent,coord,icord,gradFluxes] = data
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+        
+        self.grad[eid] = {}
+        self.flux[eid] = {}
+        for gradFlux in gradFluxes:
+            [nid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux] = gradFlux
+            self.grad[eid][nid] = [xGrad,yGrad,zGrad]
+            self.flux[eid][nid] = [xFlux,yFlux,zFlux]
+
+    def addSort1(self,nNodes,dt,data):
+        [eid,parent,coord,icord,gradFluxes] = data
+        if dt not in self.grad:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+        
+        self.grad[dt][eid] = {}
+        self.flux[dt][eid] = {}
+        for gradFlux in gradFluxes:
+            [nid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux] = gradFlux
+            self.grad[dt][eid][nid] = [xGrad,yGrad,zGrad]
+            self.flux[dt][eid][nid] = [xFlux,yFlux,zFlux]
+
+    def addSort2(self,nNodes,eid,data):
+        [dt,parent,coord,icord,gradFluxes] = data
+        if dt not in self.fApplied:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+
+        self.grad[dt][eid] = {}
+        self.flux[dt][eid] = {}
+        for gradFlux in gradFluxes:
+            [nid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux] = gradFlux
+            self.grad[dt][eid][nid] = [xGrad,yGrad,zGrad]
+            self.flux[dt][eid][nid] = [xFlux,yFlux,zFlux]
+
+    def __repr__(self):
+        return str(self.grad)
+
 class HeatFlux_1D(object): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
     def __init__(self,isSort1,dt):
         self.eType = {}

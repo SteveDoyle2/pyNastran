@@ -860,7 +860,7 @@ class RealCBUSHForce(object): # 102-CBUSH
     def __repr__(self):
         return str(self.force)
 
-class RealForce_VU(object): # 191-VUBEAM # 189-VUQUAD 
+class RealForce_VU(object): # 191-VUBEAM
     def __init__(self,isSort1,dt):
         #self.eType = {}
         self.parent = {}

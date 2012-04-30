@@ -55,6 +55,159 @@ class ComplexRodForce(object): # 1-ROD, 3-TUBE, 10-CONROD
     def __repr__(self):
         return str(self.axialForceReal)
 
+class ComplexCBEAMForce(object): # 2-CBEAM
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.bendingMomentReal = {}
+        self.shearReal = {}
+        self.axialReal = {}
+        self.totalTorqueReal = {}
+        self.warpingTorqueReal = {}
+
+        self.bendingMomentImag = {}
+        self.shearImag = {}
+        self.axialImag = {}
+        self.totalTorqueImag = {}
+        self.warpingTorqueImag = {}
+
+        if isSort1:
+            if dt is not None:
+                self.addNewElement = self.addNewElementSort1
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.addNewElement = self.addNewElementSort2
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.bendingMomentReal[dt] = {}
+        self.shearReal[dt] = {}
+        self.axialReal[dt] = {}
+        self.totalTorqueReal[dt] = {}
+        self.warpingTorqueReal[dt] = {}
+
+        self.bendingMomentImag[dt] = {}
+        self.shearImag[dt] = {}
+        self.axialImag[dt] = {}
+        self.totalTorqueImag[dt] = {}
+        self.warpingTorqueImag[dt] = {}
+
+    def addNewElement(self,dt,data):
+        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
+        print "CBEAM addnew",data
+        #self.eType[eid] = eType
+        self.bendingMomentReal[eid] = {nid:[bm1r,bm2r]}
+        self.shearReal[eid] = {nid:[ts1r,ts2r]}
+        self.axialReal[eid] = {nid:afr}
+        self.totalTorqueReal[eid] = {nid:ttrqr}
+        self.warpingTorqueReal[eid] = {nid:wtrqr}
+
+        self.bendingMomentImag[eid] = {nid:[bm1i,bm2i]}
+        self.shearImag[eid] = {nid:[ts1i,ts2i]}
+        self.axialImag[eid] = {nid:afi}
+        self.totalTorqueImag[eid] = {nid:ttrqi}
+        self.warpingTorqueImag[eid] = {nid:wtrqi}
+
+    def add(self,dt,data):
+        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
+        print "CBEAM add   ",data
+
+        #self.eType[eid] = eType
+        self.bendingMomentReal[eid][nid] = [bm1r,bm2r]
+        self.shearReal[eid][nid] = [ts1r,ts2r]
+        self.axialReal[eid][nid] = afr
+        self.totalTorqueReal[eid][nid] = ttrqr
+        self.warpingTorqueReal[eid][nid] = wtrqr
+
+        self.bendingMomentImag[eid][nid] = [bm1i,bm2i]
+        self.shearImag[eid][nid] = [ts1i,ts2i]
+        self.axialImag[eid][nid] = afi
+        self.totalTorqueImag[eid][nid] = ttrqi
+        self.warpingTorqueImag[eid][nid] = wtrqi
+
+    def addNewElementSort1(self,dt,data):
+        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
+        if dt not in self.axialReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMomentReal[dt][eid] = {nid:[bm1r,bm2r]}
+        self.shearReal[dt][eid] = {nid:[ts1r,ts2r]}
+        self.axialReal[dt][eid] = {nid:afr}
+        self.totalTorqueReal[dt][eid] = {nid:ttrqr}
+        self.warpingTorqueReal[dt][eid] = {nid:wtrqr}
+
+        self.bendingMomentImag[dt][eid] = {nid:[bm1i,bm2i]}
+        self.shearImag[dt][eid] = {nid:[ts1i,ts2i]}
+        self.axialImag[dt][eid] = {nid:afi}
+        self.totalTorqueImag[dt][eid] = {nid:ttrqi}
+        self.warpingTorqueImag[dt][eid] = {nid:wtrqi}
+
+    def addSort1(self,dt,data):
+        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
+        #if dt not in self.axialReal:
+            #self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMomentReal[dt][eid][nid] = [bm1r,bm2r]
+        self.shearReal[dt][eid][nid] = [ts1r,ts2r]
+        self.axialReal[dt][eid][nid] = afr
+        self.totalTorqueReal[dt][eid][nid] = ttrqr
+        self.warpingTorqueReal[dt][eid][nid] = wtrqr
+
+        self.bendingMomentImag[dt][eid][nid] = [bm1i,bm2i]
+        self.shearImag[dt][eid][nid] = [ts1i,ts2i]
+        self.axialImag[dt][eid][nid] = afi
+        self.totalTorqueImag[dt][eid][nid] = ttrqi
+        self.warpingTorqueImag[dt][eid][nid] = wtrqi
+
+    def addNewElementSort2(self,eid,data):
+        [dt,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        if dt not in self.axialReal:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMomentReal[dt][eid] = {nid:[bm1r,bm2r]}
+        self.shearReal[dt][eid] = {nid:[ts1r,ts2r]}
+        self.axialReal[dt][eid] = {nid:afr}
+        self.totalTorqueReal[dt][eid] = {nid:ttrqr}
+        self.warpingTorqueReal[dt][eid] = {nid:wtrqr}
+
+        self.bendingMomentImag[dt][eid] = {nid:[bm1i,bm2i]}
+        self.shearImag[dt][eid] = {nid:[ts1i,ts2i]}
+        self.axialImag[dt][eid] = {nid:afi}
+        self.totalTorqueImag[dt][eid] = {nid:ttrqi}
+        self.warpingTorqueImag[dt][eid] = {nid:wtrqi}
+
+
+    def addSort2(self,eid,data):
+        [dt,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
+                   bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
+        #if dt not in self.axialReal:
+            #self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.bendingMomentReal[dt][eid][nid] = [bm1r,bm2r]
+        self.shearReal[dt][eid][nid] = [ts1r,ts2r]
+        self.axialReal[dt][eid][nid] = afr
+        self.totalTorqueReal[dt][eid][nid] = ttrqr
+        self.warpingTorqueReal[dt][eid][nid] = wtrqr
+
+        self.bendingMomentImag[dt][eid][nid] = [bm1i,bm2i]
+        self.shearImag[dt][eid][nid] = [ts1i,ts2i]
+        self.axialImag[dt][eid][nid] = afi
+        self.totalTorqueImag[dt][eid][nid] = ttrqi
+        self.warpingTorqueImag[dt][eid][nid] = wtrqi
+
+    def __repr__(self):
+        return str(self.axialReal)
+
 class ComplexSpringForce(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self,isSort1,dt):
         #self.eType = {}
@@ -615,4 +768,169 @@ class ComplexCBUSHForce(object): # 102-CBUSH
 
     def __repr__(self):
         return str(self.forceReal)
+
+class ComplexForce_VU(object): # 191-VUBEAM
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.parent = {}
+        self.coord = {}
+        self.icord = {}
+        
+        self.forceXReal = {}
+        self.shearYReal = {}
+        self.shearZReal = {}
+        self.torsionReal  = {}
+        self.bendingYReal = {}
+        self.bendingZReal = {}
+
+        self.forceXImag  = {}
+        self.shearYImag  = {}
+        self.shearZImag  = {}
+        self.torsionImag  = {}
+        self.bendingYImag = {}
+        self.bendingZImag = {}
+
+        ## @todo if dt=None, handle SORT1 case
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.forceXReal[dt] = {}
+        self.shearYReal[dt] = {}
+        self.shearZReal[dt] = {}
+        self.torsionReal[dt]  = {}
+        self.bendingYReal[dt] = {}
+        self.bendingZReal[dt] = {}
+
+        self.forceXImag[dt]  = {}
+        self.shearYImag[dt]  = {}
+        self.shearZImag[dt]  = {}
+        self.torsionImag[dt]  = {}
+        self.bendingYImag[dt] = {}
+        self.bendingZImag[dt] = {}
+
+    def add(self,nNodes,dt,data):
+        [eid,parent,coord,icord,forces] = data
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+        
+        self.forceXReal[eid]  = {}
+        self.shearYReal[eid]  = {}
+        self.shearZReal[eid]  = {}
+        self.torsionReal[eid]  = {}
+        self.bendingYReal[eid] = {}
+        self.bendingZReal[eid] = {}
+
+        self.forceXImag[eid]  = {}
+        self.shearYImag[eid]  = {}
+        self.shearZImag[eid]  = {}
+        self.torsionImag[eid]  = {}
+        self.bendingYImag[eid] = {}
+        self.bendingZImag[eid] = {}
+
+        for force in forces:
+            [nid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
+                       forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = force
+            self.forceXReal[eid][nid]  = forceXr
+            self.shearYReal[eid][nid]  = shearYr
+            self.shearZReal[eid][nid]  = shearZr
+            self.torsionReal[eid][nid]  = torsionr
+            self.bendingYReal[eid][nid] = bendingYr
+            self.bendingZReal[eid][nid] = bendingZr
+
+            self.forceXImag[eid][nid]  = forceXi
+            self.shearYImag[eid][nid]  = shearYi
+            self.shearZImag[eid][nid]  = shearZi
+            self.torsionImag[eid][nid]  = torsioni
+            self.bendingYImag[eid][nid] = bendingYi
+            self.bendingZImag[eid][nid] = bendingZi
+
+    def addSort1(self,nNodes,dt,data):
+        [eid,parent,coord,icord,forces] = data
+        if dt not in self.forceXReal:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+        
+        self.forceXReal[dt][eid]  = {}
+        self.shearYReal[dt][eid]  = {}
+        self.shearZReal[dt][eid]  = {}
+        self.torsionReal[dt][eid]  = {}
+        self.bendingYReal[dt][eid] = {}
+        self.bendingZReal[dt][eid] = {}
+
+        self.forceXImag[dt][eid]  = {}
+        self.shearYImag[dt][eid]  = {}
+        self.shearZImag[dt][eid]  = {}
+        self.torsionImag[dt][eid]  = {}
+        self.bendingYImag[dt][eid] = {}
+        self.bendingZImag[dt][eid] = {}
+        for force in forces:
+            [nid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
+                       forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = force
+            self.forceXReal[dt][eid][nid]  = forceXr
+            self.shearYReal[dt][eid][nid]  = shearYr
+            self.shearZReal[dt][eid][nid]  = shearZr
+            self.torsionReal[dt][eid][nid]  = torsionr
+            self.bendingYReal[dt][eid][nid] = bendingYr
+            self.bendingZReal[dt][eid][nid] = bendingZr
+
+            self.forceXImag[dt][eid][nid]  = forceXi
+            self.shearYImag[dt][eid][nid]  = shearYi
+            self.shearZImag[dt][eid][nid]  = shearZi
+            self.torsionImag[dt][eid][nid]  = torsioni
+            self.bendingYImag[dt][eid][nid] = bendingYi
+            self.bendingZImag[dt][eid][nid] = bendingZi
+
+    def addSort2(self,nNodes,eid,data):
+        [dt,parent,coord,icord,forces] = data
+        if dt not in self.forceXReal:
+            self.addNewTransient(dt)
+        self.parent[eid] = parent
+        self.coord[eid] = coord
+        self.icord[eid] = icord
+        #self.eType[eid]    = eType
+
+        self.forceXReal[dt][eid]  = {}
+        self.shearYReal[dt][eid]  = {}
+        self.shearZReal[dt][eid]  = {}
+        self.torsionReal[dt][eid]  = {}
+        self.bendingYReal[dt][eid] = {}
+        self.bendingZReal[dt][eid] = {}
+
+        self.forceXImag[dt][eid]  = {}
+        self.shearYImag[dt][eid]  = {}
+        self.shearZImag[dt][eid]  = {}
+        self.torsionImag[dt][eid]  = {}
+        self.bendingYImag[dt][eid] = {}
+        self.bendingZImag[dt][eid] = {}
+        for force in forces:
+            [nid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
+                       forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = force
+            self.forceXReal[dt][eid][nid]  = forceXr
+            self.shearYReal[dt][eid][nid]  = shearYr
+            self.shearZReal[dt][eid][nid]  = shearZr
+            self.torsionReal[dt][eid][nid]  = torsionr
+            self.bendingYReal[dt][eid][nid] = bendingYr
+            self.bendingZReal[dt][eid][nid] = bendingZr
+
+            self.forceXImag[dt][eid][nid]  = forceXi
+            self.shearYImag[dt][eid][nid]  = shearYi
+            self.shearZImag[dt][eid][nid]  = shearZi
+            self.torsionImag[dt][eid][nid]  = torsioni
+            self.bendingYImag[dt][eid][nid] = bendingYi
+            self.bendingZImag[dt][eid][nid] = bendingZi
+
+    def __repr__(self):
+        return str(self.forceXReal)
 
