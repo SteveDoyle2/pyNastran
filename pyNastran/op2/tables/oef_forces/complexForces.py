@@ -35,7 +35,7 @@ class ComplexForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,axialReal,torqueReal,axialImag,torqueImag]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -60,10 +60,10 @@ class ComplexForces(object):
             #eid = self.nonlinearFactor
 
         self.createThermalTransientObject(self.beamForces,ComplexCBEAMForce,isSort1)
-        print self.codeInformation()
+        #print self.codeInformation()
 
+        #nTotal = 16*11+1
         formatAll = 'ifffffffffffffff'
-        nTotal = 16*11+1
         while len(self.data)>=708: # (16*11+1)*4 = 177*4
             eData     = self.data[0:4]
             self.data = self.data[4: ]
@@ -102,6 +102,45 @@ class ComplexForces(object):
         self.handleResultsBuffer(self.OEF_Beam_alt)
         #print self.beamForces
 
+    def OEF_Shear_alt(self): # 4-CSHEAR
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffffffffffffffffffffffffffffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffffffffffffffffffffffffffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.shearForces,ComplexCShearForce,isSort1)
+
+        while len(self.data)>=132: # 33*4
+            eData     = self.data[0:132]
+            self.data = self.data[132: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
+                 f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
+                           f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Shear_alt)
+        #print self.shearForces
+        
     def OEF_Spring_alt(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         deviceCode = self.deviceCode
         
@@ -131,13 +170,50 @@ class ComplexForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,forceReal,forceImag]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_Spring_alt)
         #print self.springForces
+        
+    def OEF_CVisc_alt(self): # 24-CVISC
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.viscForces,ComplexViscForce,isSort1)
+
+        while len(self.data)>=20: # 5*4
+            eData     = self.data[0:20]
+            self.data = self.data[20: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,axialReal,torqueReal,axialImag,torqueImag) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,axialReal,torqueReal,axialImag,torqueImag]
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_CVisc_alt)
+        #print self.viscForces
         
     def OEF_CBar_alt(self): # 34-CBAR
         deviceCode = self.deviceCode
@@ -246,7 +322,6 @@ class ComplexForces(object):
 
         allFormat = 'fffffffffffffffff'
         nTotal = 8+nNodes*68
-        print "nTotal",nTotal,nTotal/4.
         while len(self.data)>=nTotal:
             eData     = self.data[0:76]
             self.data = self.data[76: ]
@@ -282,6 +357,49 @@ class ComplexForces(object):
         self.handleResultsBuffer(self.OEF_Plate2_alt)
         #print self.plateForces2
 
+    def OEF_Bend_alt(self): # 69-CBEND
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iifffffffffffffffffffffffff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fifffffffffffffffffffffffff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.bendForces,ComplexBendForce,isSort1)
+
+        while len(self.data)>=108: # 27*4
+            eData     = self.data[0:108]
+            self.data = self.data[108: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,nidA,bm1Ar,bm2Ar,ts1Ar,ts2Ar,afAr,trqAr,
+                      bm1Ai,bm2Ai,ts1Ai,ts2Ai,afAi,trqAi,
+                 nidB,bm1Br,bm2Br,ts1Br,ts2Br,afBr,trqBr,
+                      bm1Bi,bm2Bi,ts1Bi,ts2Bi,afBi,trqBi) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,nidA,bm1Ar,bm2Ar,ts1Ar,ts2Ar,afAr,trqAr,
+                                bm1Ai,bm2Ai,ts1Ai,ts2Ai,afAi,trqAi,
+                           nidB,bm1Br,bm2Br,ts1Br,ts2Br,afBr,trqBr,
+                                bm1Bi,bm2Bi,ts1Bi,ts2Bi,afBi,trqBi]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Bend_alt)
+        #print self.bendForces
+        
     def OEF_PentaPressure_alt(self): # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR
         deviceCode = self.deviceCode
         
@@ -419,3 +537,65 @@ class ComplexForces(object):
         if self.makeOp2Debug:
             print "done with OEF_Force_VU"
         print self.force_VU
+
+    def OEF_Force_VUTRIA_alt(self): # 189-VUQUAD,190-VUTRIA
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        #print "numWide = ",self.numWide
+
+        if self.elementType in [189]: # VUQUAD
+            nNodes = 4
+        elif self.elementType in [190]: # VUTRIA
+            nNodes = 3
+        else:
+            raise NotImplementedError(self.codeInformation())
+
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iiiccccii' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fiiccccii' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+        ###
+        formatAll = 'ifffiiifffffifffiiifffffi'
+        self.createThermalTransientObject(self.force_VU_2D,ComplexForce_VU_2D,isSort1)
+
+        n = 24+100*nNodes
+        while len(self.data)>=n:
+            eData     = self.data[0:24] # 6*4
+            self.data = self.data[24: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,parent,coord,icordA,icordB,icordC,icordD,theta,_) = out
+            icord = icordA+icordB+icordC+icordD
+
+            eid2  = extract(eid,dt)
+            dataIn = [eid2,parent,coord,icord,theta]
+
+            forces = []
+            for i in range(nNodes):
+                eData     = self.data[0:100] # 13*4
+                self.data = self.data[100: ]
+                #print "i=%s len(data)=%s" %(i,len(eData))
+                out = unpack(formatAll, eData)
+                forces.append(out)
+            dataIn.append(forces)
+            #eType = a+b+c+d+e+f+g+h
+            #print "eType=%s" %(eType)
+            
+            #dataIn = [vugrid,mfxr,mfyr,mfxyr,a,b,c,bmxr,bmyr,bmxyr,syzr,szxr,d,
+                             #mfxi,mfyi,mfxyi,a,b,c,bmxi,bmyi,bmxyi,syzi,szxi,d]
+            print "force %s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(nNodes,dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_Force_VUTRIA_alt)
+        if self.makeOp2Debug:
+            print "done with OEF_Force_VUTRIA"
+        print self.force_VU_2D

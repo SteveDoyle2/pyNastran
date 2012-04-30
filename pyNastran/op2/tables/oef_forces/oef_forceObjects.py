@@ -74,72 +74,59 @@ class RealCBEAMForce(object): # 2-CBEAM
 
     def addNewElement(self,dt,data):
         [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
-        print "CBEAM addnew",data
+        #print "CBEAM addnew",data
         #self.eType[eid] = eType
-        self.bendingMoment[eid] = {nid:[bm1,bm2]}
-        self.shear[eid] = {nid:[ts1,ts2]}
-        self.axial[eid] = {nid:af}
-        self.totalTorque[eid] = {nid:ttrq}
-        self.warpingTorque[eid] = {nid:wtrq}
+        self.bendingMoment[eid] = {sd:[bm1,bm2]}
+        self.shear[eid] = {sd:[ts1,ts2]}
+        self.axial[eid] = {sd:af}
+        self.totalTorque[eid] = {sd:ttrq}
+        self.warpingTorque[eid] = {sd:wtrq}
 
     def add(self,dt,data):
         [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
-        print "CBEAM add   ",data
-
+        #print "CBEAM add   ",data
         #self.eType[eid] = eType
-        self.bendingMoment[eid][nid] = [bm1,bm2]
-        self.shear[eid][nid] = [ts1,ts2]
-        self.axial[eid][nid] = af
-        self.totalTorque[eid][nid] = ttrq
-        self.warpingTorque[eid][nid] = wtrq
+        self.bendingMoment[eid][sd] = [bm1,bm2]
+        self.shear[eid][sd] = [ts1,ts2]
+        self.axial[eid][sd] = af
+        self.totalTorque[eid][sd] = ttrq
+        self.warpingTorque[eid][sd] = wtrq
 
     def addNewElementSort1(self,dt,data):
         [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
-        if dt not in self.axial:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.bendingMoment[dt][eid] = {nid:[bm1,bm2]}
-        self.shear[dt][eid] = {nid:[ts1,ts2]}
-        self.axial[dt][eid] = {nid:af}
-        self.totalTorque[dt][eid] = {nid:ttrq}
-        self.warpingTorque[dt][eid] = {nid:wtrq}
+        self._fillObjectNew(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
 
     def addSort1(self,dt,data):
         [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
-        #if dt not in self.axial:
-            #self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.bendingMoment[dt][eid][nid] = [bm1,bm2]
-        self.shear[dt][eid][nid] = [ts1,ts2]
-        self.axial[dt][eid][nid] = af
-        self.totalTorque[dt][eid][nid] = ttrq
-        self.warpingTorque[dt][eid][nid] = wtrq
+        self._fillObject(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
 
     def addNewElementSort2(self,eid,data):
         [dt,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
-        if dt not in self.axial:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.bendingMoment[dt][eid] = {nid:[bm1,bm2]}
-        self.shear[dt][eid] = {nid:[ts1,ts2]}
-        self.axial[dt][eid] = {nid:af}
-        self.totalTorque[dt][eid] = {nid:ttrq}
-        self.warpingTorque[dt][eid] = {nid:wtrq}
-
+        self._fillObjectNew(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
+        
     def addSort2(self,eid,data):
         [dt,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        self._fillObject(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
+
+    def _fillObject(self,dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq):
         #if dt not in self.axial:
             #self.addNewTransient(dt)
-
         #self.eType[eid] = eType
-        self.bendingMoment[dt][eid][nid] = [bm1,bm2]
-        self.shear[dt][eid][nid] = [ts1,ts2]
-        self.axial[dt][eid][nid] = af
-        self.totalTorque[dt][eid][nid] = ttrq
-        self.warpingTorque[dt][eid][nid] = wtrq
+        self.bendingMoment[dt][eid][sd] = [bm1,bm2]
+        self.shear[dt][eid][sd] = [ts1,ts2]
+        self.axial[dt][eid][sd] = af
+        self.totalTorque[dt][eid][sd] = ttrq
+        self.warpingTorque[dt][eid][sd] = wtrq
+
+    def _fillObjectNew(self,dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq):
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+        #self.eType[eid] = eType
+        self.bendingMoment[dt][eid] = {sd:[bm1,bm2]}
+        self.shear[dt][eid] = {sd:[ts1,ts2]}
+        self.axial[dt][eid] = {sd:af}
+        self.totalTorque[dt][eid] = {sd:ttrq}
+        self.warpingTorque[dt][eid] = {sd:wtrq}
 
     def __repr__(self):
         return str(self.axial)
@@ -192,10 +179,8 @@ class RealCShearForce(object): # 4-CSHEAR
         self.shear41[dt] = {}
 
     def add(self,dt,data):
-        [eid,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,
-                                             kf2,s23,
-                                             kf3,s34,
-                                             kf4,s41] = data
+        [eid,f41,f21,f12,f32,f23,f43,f34,f14,
+             kf1,s12,kf2,s23,kf3,s34,kf4,s41] = data
         #self.eType[eid] = eType
         self.force41[eid] = f41
         self.force14[eid] = f14
@@ -215,39 +200,22 @@ class RealCShearForce(object): # 4-CSHEAR
         self.shear41[eid] = s41
         
     def addSort1(self,dt,data):
-        [eid,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,
-                                             kf2,s23,
-                                             kf3,s34,
-                                             kf4,s41] = data
-        if dt not in self.force41:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.force41[dt][eid] = f41
-        self.force14[dt][eid] = f14
-        self.force21[dt][eid] = f21
-        self.force12[dt][eid] = f12
-        self.force32[dt][eid] = f32
-        self.force23[dt][eid] = f23
-        self.force43[dt][eid] = f43
-        self.force34[dt][eid] = f34
-        self.kickForce1[dt][eid] = kf1
-        self.kickForce2[dt][eid] = kf2
-        self.kickForce3[dt][eid] = kf3
-        self.kickForce4[dt][eid] = kf4
-        self.shear12[dt][eid] = s12
-        self.shear23[dt][eid] = s23
-        self.shear34[dt][eid] = s34
-        self.shear41[dt][eid] = s41
+        [eid,f41,f21,f12,f32,f23,f43,f34,f14,
+             kf1,s12,kf2,s23,kf3,s34,kf4,s41] = data
+        self._fillObject(dt,eid,f41,f21,f12,f32,f23,f43,f34,f14,
+                                kf1,s12,kf2,s23,kf3,s34,kf4,s41)
 
     def addSort2(self,eid,data):
-        [dt,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,
-                                            kf2,s23,
-                                            kf3,s34,
-                                            kf4,s41] = data
+        [dt,f41,f21,f12,f32,f23,f43,f34,f14,
+            kf1,s12,kf2,s23,kf3,s34,kf4,s41] = data
+
+        self._fillObject(dt,eid,f41,f21,f12,f32,f23,f43,f34,f14,
+                                kf1,s12,kf2,s23,kf3,s34,kf4,s41)
+
+    def _fillObject(self,dt,eid,f41,f21,f12,f32,f23,f43,f34,f14,
+                                kf1,s12,kf2,s23,kf3,s34,kf4,s41):
         if dt not in self.force41:
             self.addNewTransient(dt)
-
         #self.eType[eid] = eType
         self.force41[dt][eid] = f41
         self.force14[dt][eid] = f14
@@ -310,6 +278,53 @@ class RealSpringForce(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
 
     def __repr__(self):
         return str(self.force)
+
+class RealViscForce(object): # 24-CVISC
+    def __init__(self,isSort1,dt):
+        #self.eType = {}
+        self.axialForce = {}
+        self.torque = {}
+
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.axialForce[dt] = {}
+        self.torque[dt] = {}
+
+    def add(self,dt,data):
+        [eid,axialForce,torque] = data
+
+        #self.eType[eid] = eType
+        self.axialForce[eid] = axialForce
+        self.torque[eid] = torque
+
+    def addSort1(self,dt,data):
+        [eid,axialForce,torque] = data
+        if dt not in self.axialForce:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid] = torque
+
+    def addSort2(self,eid,data):
+        [dt,axialForce,torque] = data
+        if dt not in self.axialForce:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid] = torque
+
+    def __repr__(self):
+        return str(self.axialForce)
 
 class RealPlateForce(object): # 33-CQUAD4, 74-CTRIA3
     def __init__(self,isSort1,dt):
@@ -718,12 +733,17 @@ class RealCGAPForce(object): # 38-CGAP
     def __repr__(self):
         return str(self.fx)
 
-class RealBendForceOff(object): # 69-CBEND
+class RealBendForce(object): # 69-CBEND
     def __init__(self,isSort1,dt):
         #self.eType = {}
-        raise NotImplementedError()
-        self.bendingMoment = {}
-
+        self.nodeIDs = {}
+        self.bendingMoment1 = {}
+        self.bendingMoment2 = {}
+        self.shearPlane1 = {}
+        self.shearPlane2 = {}
+        self.axial  = {}
+        self.torque = {}
+        
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -734,32 +754,54 @@ class RealBendForceOff(object): # 69-CBEND
         ###
 
     def addNewTransient(self,dt):
-        self.force[dt] = {}
+        self.bendingMoment1[dt] = {}
+        self.bendingMoment2[dt] = {}
+        self.shearPlane1[dt] = {}
+        self.shearPlane2[dt] = {}
+        self.axial[dt]  = {}
+        self.torque[dt] = {}
 
     def add(self,dt,data):
-        [eid,force] = data
+        [eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+             nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB] = data
 
         #self.eType[eid] = eType
-        self.force[eid] = force
+        self.nodeIDs[eid] = [nidA,nidB]
+        self.bendingMoment1[eid] = [bm1A,bm1B]
+        self.bendingMoment2[eid] = [bm2A,bm2B]
+        self.shearPlane1[eid] = [sp1A,sp1B]
+        self.shearPlane2[eid] = [sp2A,sp2B]
+        self.axial[eid]  = [axialA,axialB]
+        self.torque[eid] = [torqueA,torqueB]
 
     def addSort1(self,dt,data):
-        [eid,force] = data
-        if dt not in self.force:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.force[dt][eid] = force
+        [eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+             nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB] = data
+        self._fillObject(dt,eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+                                nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB)
 
     def addSort2(self,eid,data):
-        [dt,force] = data
-        if dt not in self.force:
+        [dt,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+            nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB] = data
+        self._fillObject(dt,eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+                                nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB)
+
+    def _fillObject(self,dt,eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+                                nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB):
+        if dt not in self.axial:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.force[dt][eid] = force
+        self.nodeIDs[eid] = [nidA,nidB]
+        self.bendingMoment1[dt][eid] = [bm1A,bm1B]
+        self.bendingMoment2[dt][eid] = [bm2A,bm2B]
+        self.shearPlane1[dt][eid] = [sp1A,sp1B]
+        self.shearPlane2[dt][eid] = [sp2A,sp2B]
+        self.axial[dt][eid]  = [axialA,axialB]
+        self.torque[dt][eid] = [torqueA,torqueB]
 
     def __repr__(self):
-        return str(self.force)
+        return str(self.axial)
 
 class RealPentaPressureForce(object): # 77-PENTA_PR,78-TETRA_PR
     def __init__(self,isSort1,dt):

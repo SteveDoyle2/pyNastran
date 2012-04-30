@@ -192,6 +192,7 @@ class OP2(BDF,  # BDF methods
         self.forces = {}
 
         self.rodForces = {}
+        self.viscForces = {}
         self.beamForces = {}
         self.shearForces  = {}
         self.springForces = {}

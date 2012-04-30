@@ -43,6 +43,43 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_Rod)
         #print self.rodForces
         
+    def OEF_CVisc(self): # 24-CVISC
+        deviceCode = self.deviceCode
+        
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iff' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fff' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+
+        self.createThermalTransientObject(self.viscForces,RealViscForce,isSort1)
+
+        while len(self.data)>=12: # 3*4
+            eData     = self.data[0:12]
+            self.data = self.data[12: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,axial,torque) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,axial,torque]
+            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_CVisc)
+        #print self.viscForces
+        
     def OEF_Beam(self): # 2-CBEAM
         deviceCode = self.deviceCode
         
@@ -60,8 +97,8 @@ class RealForces(object):
             #eid = self.nonlinearFactor
 
         self.createThermalTransientObject(self.beamForces,RealCBEAMForce,isSort1)
+        #print self.codeInformation()
         formatAll = 'iffffffff'
-        print self.codeInformation()
         while len(self.data)>=400: # 1+(10-1)*11=100 ->100*4 = 400
             #print "eType=%s" %(eType)
 
@@ -69,6 +106,7 @@ class RealForces(object):
             self.data = self.data[4: ]
             eid, = unpack(format1, eData)
             eid2 = extract(eid,dt)
+
             for i in range(11):
                 eData     = self.data[0:36]
                 self.data = self.data[36: ]
@@ -131,7 +169,7 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_Shear)
-        #print self.rodForces
+        #print self.shearForces
         
     def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         deviceCode = self.deviceCode
@@ -613,3 +651,4 @@ class RealForces(object):
         if self.makeOp2Debug:
             print "done with OEF_Force_VUTRIA"
         print self.force_VU_2D
+
