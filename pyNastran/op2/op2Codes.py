@@ -407,18 +407,26 @@ class Op2Codes(object):
         elif(self.deviceCode==6):  device = "Plot and Punch"
         elif(self.deviceCode==7):  device = "Print, Plot, and Punch"
 
+        if thermal == 0:   ForceFlux = 'Force'
+        elif thermal==1:   ForceFlux = 'Flux'
+        else:              ForceFlux = 'Force (or Flux)'
+        
+        if thermal == 0:   DispTemp = 'Displacement'
+        elif thermal==1:   DispTemp = 'Temperature'
+        else:              DispTemp = 'Displacement/Temperature'
+        
         table = '???'
-        if(  self.tableCode== 1):  table = "OUG - Displacement vector/scalar"
+        if(  self.tableCode== 1):  table = "OUG - %s vector/scalar" %(DispTemp)
         elif(self.tableCode== 2):  table = "OPG - Load vector"
         elif(self.tableCode== 3):  table = "OQG - SPC Force vector"
-        elif(self.tableCode== 4):  table = "OEF - Element Force (or Flux)"
+        elif(self.tableCode== 4):  table = "OEF - Element %s" %(ForceFlux)
         elif(self.tableCode== 5):  table = "OES - Element Stress/Strain"
         elif(self.tableCode== 6):  table = "LAMA - Eigenvalue summary"
         elif(self.tableCode== 7):  table = "OUG - Eigenvector"
         elif(self.tableCode== 8):  table = "none - Grid point singularity table (obsolete)"
         elif(self.tableCode== 9):  table = "OEIGS - Eigenvalue analysis summary"
         elif(self.tableCode==10):  table = "OUG - Velocity vector"
-        elif(self.tableCode==11):  table = "OUG -Acceleration vector"
+        elif(self.tableCode==11):  table = "OUG - Acceleration vector"
         elif(self.tableCode==12):  table = "OPG - Nonlinear force vector"
         elif(self.tableCode==13):  table = "OGPWG - Grid point weight generator"
         elif(self.tableCode==14):  table = "OUG - Eigenvector (solution set)"

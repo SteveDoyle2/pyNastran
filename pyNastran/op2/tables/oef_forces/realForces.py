@@ -50,45 +50,44 @@ class RealForces(object):
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiffffffff' # SORT1
+            format1 = 'i' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiffffffff' # SORT2
+            format1 = 'f' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
         self.createThermalTransientObject(self.beamForces,RealCBEAMForce,isSort1)
-
-        while len(self.data)>=40: # 10*4
-            eData     = self.data[0:40]
-            self.data = self.data[40: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eidTemp,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq) = out
-            #print "eidTemp = ",eidTemp
-            #print "nid = ",nid
-            #print "sd = ",sd
-            if nid==0 or sd>0.:
-                eid = self.eidOld
-                isNewElement = False
-            else:
-                eid = eidTemp
-                self.eidOld = eid
-                isNewElement = True
-            eid2  = extract(eid,dt)
+        formatAll = 'iffffffff'
+        print self.codeInformation()
+        while len(self.data)>=400: # 1+(10-1)*11=100 ->100*4 = 400
             #print "eType=%s" %(eType)
-            
-            dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)
-            if isNewElement:
-                self.obj.addNewElement(dt,dataIn)
-                #print
-            elif sd>0.:
-                self.obj.add(dt,dataIn)
+
+            eData     = self.data[0:4]
+            self.data = self.data[4: ]
+            eid, = unpack(format1, eData)
+            eid2 = extract(eid,dt)
+            for i in range(11):
+                eData     = self.data[0:36]
+                self.data = self.data[36: ]
+                #print "len(data) = ",len(eData)
+
+                out = unpack(formatAll, eData)
+                (nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq) = out
+                #print "eidTemp = ",eidTemp
+                #print "nid = ",nid
+                #print "sd = ",sd
+
+                dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
+                print "%s        " %(self.ElementType(self.elementType)),dataIn
+                #eid = self.obj.addNewEid(out)
+                if i==0: #isNewElement:
+                    self.obj.addNewElement(dt,dataIn)
+                    #print
+                elif sd>0.:
+                    self.obj.add(dt,dataIn)
                 #print
             #else: pass
 
@@ -495,27 +494,23 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_CBush)
         #print self.bushForces
 
-    def OEF_Force_VU(self): # 191-VUBEAM ### 189-VUQUAD,190-VUTRIA,
+    def OEF_Force_VU(self): # 191-VUBEAM
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
+        #print "numWide = ",self.numWide
 
-        #if self.elementType in [189]:
-            #nNodes = 4
-        #elif self.elementType in [190]:
-            #nNodes = 3
         if self.elementType in [191]:
             nNodes = 2
         else:
             raise NotImplementedError(self.codeInformation())
 
         if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
             format1 = 'iiicccc' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
             format1 = 'fiicccc' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
@@ -548,7 +543,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            print "force %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -558,14 +553,14 @@ class RealForces(object):
             print "done with OEF_Force_VU"
         print self.force_VU
 
-    def OEF_Force_VUTRIA(self): # 190-VUTRIA ### 189-VUQUAD,
+    def OEF_Force_VUTRIA(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
+        #print "numWide = ",self.numWide
 
-        #if self.elementType in [189]:
-            #nNodes = 4
-        if self.elementType in [190]:
+        if self.elementType in [189]: # VUQUAD
+            nNodes = 4
+        elif self.elementType in [190]: # VUTRIA
             nNodes = 3
         else:
             raise NotImplementedError(self.codeInformation())
@@ -609,12 +604,12 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            print "force %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Force_VU)
+        self.handleResultsBuffer(self.OEF_Force_VUTRIA)
         if self.makeOp2Debug:
-            print "done with OEF_Force_VU"
-        print self.force_VU
+            print "done with OEF_Force_VUTRIA"
+        print self.force_VU_2D

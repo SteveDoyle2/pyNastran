@@ -50,9 +50,9 @@ class FortranFile(object):
         elif len(ints)==0:
             return None
         
-        assert ints[0]==ints[2]==4, "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
-        #if not(ints[0]==ints[2]==4):
-        #    raise InvalidMarkerError("header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected))
+        #assert ints[0]==ints[2]==4, "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
+        if not(ints[0]==ints[2]==4):
+            raise InvalidMarkerError("header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected))
         if debug and self.makeOp2Debug:
             self.op2Debug.write('[4,%s,4]\n' %(ints[1]))
         return ints[1]

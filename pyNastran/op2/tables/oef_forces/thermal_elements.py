@@ -20,9 +20,12 @@ class ThermalElements(object):
         elif self.elementType in [1,2,3,10,34,69]: # ROD,BEAM,TUBE,CONROD,BAR,BEND
             assert self.numWide==9,self.codeInformation()
             self.OEF_1D()
-        elif self.elementType in [189,190,191]: # VUQUAD,VUTRIA,VUBEAM
+        elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             #assert self.numWide==27,self.codeInformation()
             self.OEF_VU_Element()
+        elif self.elementType in [191]: # VUBEAM
+            #assert self.numWide==27,self.codeInformation()
+            self.OEF_VUBeam_Element()
         elif self.elementType in [145,146,147]: # VUHEXA,VUPENTA,VUTETRA
             self.OEF_VU_3D_Element()
         elif self.elementType in [110]:
@@ -76,7 +79,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,fApplied,freeConv,forceConv,fRad,fTotal]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -116,7 +119,7 @@ class ThermalElements(object):
             eid2  = extract(eid,dt)
             
             dataIn = [eid2,cntlNode,freeConv,freeConvK]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
@@ -128,7 +131,7 @@ class ThermalElements(object):
     def OEF_VU_Element(self): # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
+        #print "numWide = ",self.numWide
 
         if self.elementType in [189]:
             nNodes = 4
@@ -140,12 +143,12 @@ class ThermalElements(object):
             raise NotImplementedError(self.codeInformation())
 
         if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
             format1 = 'iiiccccii' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
             format1 = 'fiiccccii' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
@@ -178,7 +181,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -186,12 +189,73 @@ class ThermalElements(object):
         self.handleResultsBuffer(self.OEF_VU_Element)
         if self.makeOp2Debug:
             print "done with OEF_1D"
+        #sys.exit('thermalLoad_VU')
         print self.thermalLoad_VU
+
+    def OEF_VUBeam_Element(self): # 191-VUBEAM
+        dt = self.nonlinearFactor
+        isSort1 = self.isSort1()
+        #print "numWide = ",self.numWide
+
+        if self.elementType in [191]:
+            nNodes = 2
+        else:
+            raise NotImplementedError(self.codeInformation())
+
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'iiicccc' # SORT1
+            extract = self.extractSort1
+            #dt = self.nonlinearFactor
+        else:
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            format1 = 'fiicccc' # SORT2
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+        ###
+        formatAll = 'iffffff'
+        self.createThermalTransientObject(self.thermalLoad_VUBeam,HeatFlux_VUBEAM,isSort1)
+
+        n = 16+28*nNodes
+        while len(self.data)>=n:
+            eData     = self.data[0:16] # 4*4
+            self.data = self.data[16: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,parent,coord,icordA,icordB,icordC,icordD) = out
+            icord = icordA+icordB+icordC+icordD
+
+            eid2  = extract(eid,dt)
+            dataIn = [eid2,parent,coord,icord]
+
+            gradFluxes = []
+            for i in range(nNodes):
+                eData     = self.data[0:28] # 7*4
+                self.data = self.data[28: ]
+                #print "i=%s len(data)=%s" %(i,len(eData))
+                out = unpack(formatAll, eData)
+                gradFluxes.append(out)
+            dataIn.append(gradFluxes)
+            #eType = a+b+c+d+e+f+g+h
+            #print "eType=%s" %(eType)
+            
+            #dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
+            print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)            
+            self.obj.add(nNodes,dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_VUBeam_Element)
+        if self.makeOp2Debug:
+            print "done with OEF_1D"
+        #sys.exit('thermalLoad_VUBeam')
+        print self.thermalLoad_VUBeam
 
     def OEF_VU_3D_Element(self): # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
-        print "numWide = ",self.numWide
+        #print "numWide = ",self.numWide
 
         if self.elementType in [147]:
             nNodes = 4
@@ -203,12 +267,12 @@ class ThermalElements(object):
             raise NotImplementedError(self.codeInformation())
 
         if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
             format1 = 'ii' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
             format1 = 'fi' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
@@ -237,14 +301,14 @@ class ThermalElements(object):
                 gradFluxes.append(out)
             dataIn.append(gradFluxes)
             
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_VU_3D_Element)
         if self.makeOp2Debug:
             print "done with OEF_VU_3D_Element"
-        print self.thermalLoad_VU_3D
+        #print self.thermalLoad_VU_3D
 
     def OEF_1D(self): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
         dt = self.nonlinearFactor
@@ -277,7 +341,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -285,7 +349,7 @@ class ThermalElements(object):
         self.handleResultsBuffer(self.OEF_1D)
         if self.makeOp2Debug:
             print "done with OEF_1D"
-        print self.thermalLoad_1D
+        #print self.thermalLoad_1D
 
     def OEF_2D_3D(self): # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
         """numWide==10"""
@@ -308,12 +372,12 @@ class ThermalElements(object):
         elif self.elementType in [33,53,64,74,75]: # no zed on this element for some reason...
             n = 36
             if isSort1:
-                print "SORT1 - %s" %(self.ElementType(self.elementType))
+                #print "SORT1 - %s" %(self.ElementType(self.elementType))
                 format1 = 'iccccccccffffff' # SORT1
                 extract = self.extractSort1
                 #dt = self.nonlinearFactor
             else:
-                print "SORT2 - %s" %(self.ElementType(self.elementType))
+                #print "SORT2 - %s" %(self.ElementType(self.elementType))
                 format1 = 'fccccccccffffff' # SORT2
                 extract = self.extractSort2
                 #eid = self.nonlinearFactor
@@ -335,7 +399,7 @@ class ThermalElements(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -344,5 +408,5 @@ class ThermalElements(object):
         if self.makeOp2Debug:
             print "done with OEF_2D_3D"
         
-        print self.thermalLoad_2D_3D
+        #print self.thermalLoad_2D_3D
 
