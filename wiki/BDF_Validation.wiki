@@ -102,7 +102,7 @@ The list of duplicate defined cards include (not a full list):
  * PELAS
  * PDAMP
  * PMASS
- * SPOINT (doesn't write in long form)
+ * SPOINT (writes in short form)
 
 == Modified Cards ==
 Sometimes this will happen
