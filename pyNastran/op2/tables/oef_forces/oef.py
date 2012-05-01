@@ -246,6 +246,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         if self.elementType in [1,3,10]: # CROD,CTUBE,CONROD
             if self.numWide==numWideReal:
                 self.OEF_Rod()
+                asdf
             elif self.numWide==numWideImag:
                 self.OEF_Rod_alt()
             else:
@@ -262,6 +263,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [4]: # CSHEAR
             if self.numWide==numWideReal:
                 self.OEF_Shear()
+                asf
             elif self.numWide==numWideImag:
                 self.OEF_Shear_alt()
             else:
@@ -286,6 +288,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [24]: # CVISC
             if self.numWide==numWideReal:
                 self.OEF_CVisc()
+                asdf
             elif self.numWide==numWideImag:
                 self.OEF_CVisc_alt()
             else:
@@ -295,6 +298,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             if self.numWide==numWideReal:
                 #print self.codeInformation()
                 self.OEF_Plate()
+                sdaf
             elif self.numWide==numWideImag:
                 self.OEF_Plate_alt()
             else:
@@ -304,13 +308,13 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             if self.numWide==numWideReal:
                 #print self.codeInformation()
                 self.OEF_Plate2()
+                asdf
             elif self.numWide==numWideImag:
                 print self.codeInformation()
                 self.OEF_Plate2_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
-
         elif self.elementType in [34]: # CBAR
             if self.numWide==numWideReal:
                 self.OEF_CBar()
@@ -322,6 +326,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [100]: # CBAR
             if self.numWide==numWideReal:
                 self.OEF_CBar100()
+                asf
             elif self.numWide==numWideImag:
                 self.OEF_CBar100_alt()
             else:
@@ -330,6 +335,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [38]: # CGAP
             if self.numWide==numWideReal:
                 self.OEF_CGap()
+                asdf
             elif self.numWide==numWideImag:
                 self.OEF_CGap_alt()
             else:
@@ -338,6 +344,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [69]: # CBEND
             if self.numWide==numWideReal:
                 self.OEF_Bend()
+                asdf
             elif self.numWide==numWideImag:
                 self.OEF_Bend_alt()
             else:
@@ -354,6 +361,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
             if self.numWide==numWideReal:
                 self.OEF_CompositePlate()
+                asf
             elif self.numWide==numWideImag:
                 self.OEF_CompositePlate_alt()
             else:
@@ -362,6 +370,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [102]: # CBUSH
             if self.numWide==numWideReal:
                 self.OEF_CBush()
+                asf
             elif self.numWide==numWideImag:
                 self.OEF_CBush_alt()
             else:

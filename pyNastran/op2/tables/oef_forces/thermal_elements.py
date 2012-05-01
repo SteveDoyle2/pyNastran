@@ -41,7 +41,7 @@ class ThermalElements(object):
             self.obj = resultName[self.iSubcase]
             print "returning iSubcase result=%s" %(self.iSubcase)
         else:
-            self.obj = objClass(isSort1,self.nonlinearFactor)
+            self.obj = objClass(self.dataCode,isSort1,self.iSubcase,self.nonlinearFactor)
             resultName[self.iSubcase] = self.obj
             print "creating iSubcase result=%s" %(self.iSubcase)
         ###
