@@ -49,7 +49,8 @@ class mpcForcesObject(TableObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __reprTransient__(self):
         msg = '---MPC FORCES---\n'
@@ -121,13 +122,21 @@ class complexMpcForcesObject(complexTableObject):
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        raise RuntimeError('is this valid...')
         for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
             (dx,dy,dz) = translation
+            #dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+            #dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
             (rx,ry,rz) = rotation
-            vals = [dx,dy,dz,rx,ry,rz]
+            #rxr=rx.real; ryr=ry.real; rzr=rz.real
+            #rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+
+            #vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
+            vals = list(translation)+list(rotation)
             (vals2,isAllZeros) = self.writeF06Floats13E(vals)
             if not isAllZeros:
                 [dx,dy,dz,rx,ry,rz] = vals2
@@ -149,17 +158,24 @@ class complexMpcForcesObject(complexTableObject):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
-                #(dx,dy,dz) = translation
-                #(rx,ry,rz) = rotation
-                vals = translation+rotation #[dx,dy,dz,rx,ry,rz]
+                (dx,dy,dz) = translation
+                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
+                (rx,ry,rz) = rotation
+                rxr=rx.real; ryr=ry.real; rzr=rz.real
+                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+
+                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 if not isAllZeros:
-                    [v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i] = vals2
+                    [v1r,v2r,v3r,v4r,v5r,v6r,  v1i,v2i,v3i,v4i,v5i,v6i] = vals2
                     msg.append('0%13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r.rstrip()))
                     msg.append(' %13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1i,v2i,v3i,v4i,v5i,v6i.rstrip()))
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         return (''.join(msg),pageNum-1)
 
     def __reprTransient__(self):
@@ -167,6 +183,7 @@ class complexMpcForcesObject(complexTableObject):
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
+        raise RuntimeError('is this valid...')
         headers = ['T1','T2','T3','R1','R2','R3']
         msg += '%-8s ' %('GRID')
         for header in headers:
@@ -197,6 +214,7 @@ class complexMpcForcesObject(complexTableObject):
         if self.dt is not None:
             msg += 'dt = %g\n' %(self.dt)
 
+        raise RuntimeError('is this valid...')
         headers = ['T1','T2','T3','R1','R2','R3']
         msg += '%-8s ' %('GRID')
         for header in headers:

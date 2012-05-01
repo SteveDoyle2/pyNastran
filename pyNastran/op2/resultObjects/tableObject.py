@@ -262,8 +262,8 @@ class complexTableObject(scalarObject):
             for line in data:
                 (nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r, v1i,v2i,v3i,v4i,v5i,v6i) = line
                 self.gridTypes[nodeID]    = gridType
-                self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
-                self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
+                self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+                self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
                 #self.translations[nodeID] = array([t1,t2,t3])
                 #self.rotations[nodeID]    = array([r1,r2,r3])
             ###
@@ -277,8 +277,8 @@ class complexTableObject(scalarObject):
         for line in data:
             (nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r, v1i,v2i,v3i,v4i,v5i,v6i) = line
             self.gridTypes[nodeID]    = gridType
-            self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
-            self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
+            self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+            self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
             #self.translations[dt][nodeID] = array([t1,t2,t3])
             #self.rotations[dt][nodeID]    = array([r1,r2,r3])
         ###
@@ -358,6 +358,6 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[self.dt][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
-        self.rotations[self.dt][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
+        self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+        self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
     ###
