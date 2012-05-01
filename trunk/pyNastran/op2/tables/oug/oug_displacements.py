@@ -116,8 +116,14 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
 
-                (dxr,dxi,dyr,dyi,dzr,dzi) = translation
-                (rxr,rxi,ryr,ryi,rzr,rzi) = rotation
+                (dx,dy,dz) = translation
+                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
+                (rx,ry,rz) = rotation
+                rxr=rx.real; ryr=ry.real; rzr=rz.real
+                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+                
                 vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
