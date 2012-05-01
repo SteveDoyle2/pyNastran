@@ -1,5 +1,8 @@
-class ComplexRodForce(object): # 1-ROD, 3-TUBE, 10-CONROD
-    def __init__(self,isSort1,dt):
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+
+class ComplexRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.axialForce = {}
         self.torque = {}
@@ -45,8 +48,9 @@ class ComplexRodForce(object): # 1-ROD, 3-TUBE, 10-CONROD
     def __repr__(self):
         return str(self.axialForce)
 
-class ComplexCBEAMForce(object): # 2-CBEAM
-    def __init__(self,isSort1,dt):
+class ComplexCBEAMForce(scalarObject): # 2-CBEAM
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.bendingMoment = {}
         self.shear = {}
@@ -147,8 +151,9 @@ class ComplexCBEAMForce(object): # 2-CBEAM
     def __repr__(self):
         return str(self.axial)
 
-class ComplexCShearForce(object): # 4-CSHEAR
-    def __init__(self,isSort1,dt):
+class ComplexCShearForce(scalarObject): # 4-CSHEAR
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.force41 = {}
         self.force14 = {}
@@ -267,8 +272,9 @@ class ComplexCShearForce(object): # 4-CSHEAR
     def __repr__(self):
         return str(self.force41)
 
-class ComplexSpringForce(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
-    def __init__(self,isSort1,dt):
+class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.force = {}
 
@@ -308,8 +314,9 @@ class ComplexSpringForce(object): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __repr__(self):
         return str(self.force)
 
-class ComplexViscForce(object): # 24-CVISC
-    def __init__(self,isSort1,dt):
+class ComplexViscForce(scalarObject): # 24-CVISC
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.axialForce = {}
         self.torque = {}
@@ -355,8 +362,9 @@ class ComplexViscForce(object): # 24-CVISC
     def __repr__(self):
         return str(self.axialForce)
 
-class ComplexPlateForce(object): # 33-CQUAD4, 74-CTRIA3
-    def __init__(self,isSort1,dt):
+class ComplexPlateForce(scalarObject): # 33-CQUAD4, 74-CTRIA3
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.mx = {}
         self.my = {}
@@ -435,8 +443,9 @@ class ComplexPlateForce(object): # 33-CQUAD4, 74-CTRIA3
     def __repr__(self):
         return str(self.mx)
 
-class ComplexPLATE2Force(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
-    def __init__(self,isSort1,dt):
+class ComplexPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.term = {}
         self.ngrids = {}
@@ -579,8 +588,9 @@ class ComplexPLATE2Force(object): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         return str(self.mx)
 
 
-class ComplexCBARForce(object): # 34-CBAR
-    def __init__(self,isSort1,dt):
+class ComplexCBARForce(scalarObject): # 34-CBAR
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.bendingMomentA = {}
         self.bendingMomentB = {}
@@ -644,8 +654,9 @@ class ComplexCBARForce(object): # 34-CBAR
     def __repr__(self):
         return str(self.axial)
 
-class ComplexBendForce(object): # 69-CBEND
-    def __init__(self,isSort1,dt):
+class ComplexBendForce(scalarObject): # 69-CBEND
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.nodeIDs = {}
         self.bendingMoment1 = {}
@@ -681,7 +692,7 @@ class ComplexBendForce(object): # 69-CBEND
         #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA,nidB]
         self.bendingMoment1[eid] = [complex(bm1Ar,bm1Ai),complex(bm1Br,bm1Bi)]
-        self.bendingMoment2[eid] = [complex(bm2Ar,b12Ai),complex(bm2Br,bm2Bi)]
+        self.bendingMoment2[eid] = [complex(bm2Ar,bm2Ai),complex(bm2Br,bm2Bi)]
         self.shearPlane1[eid] = [complex(sp1Ar,sp1Ai),complex(sp1Br,sp1Bi)]
         self.shearPlane2[eid] = [complex(sp2Ar,sp2Ai),complex(sp2Br,sp2Bi)]
         self.axial[eid]  = [complex(axialAr,axialAi),complex(axialBr,axialBi)]
@@ -717,7 +728,7 @@ class ComplexBendForce(object): # 69-CBEND
         #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA,nidB]
         self.bendingMoment1[dt][eid] = [complex(bm1Ar,bm1Ai),complex(bm1Br,bm1Bi)]
-        self.bendingMoment2[dt][eid] = [complex(bm2Ar,b12Ai),complex(bm2Br,bm2Bi)]
+        self.bendingMoment2[dt][eid] = [complex(bm2Ar,bm2Ai),complex(bm2Br,bm2Bi)]
         self.shearPlane1[dt][eid] = [complex(sp1Ar,sp1Ai),complex(sp1Br,sp1Bi)]
         self.shearPlane2[dt][eid] = [complex(sp2Ar,sp2Ai),complex(sp2Br,sp2Bi)]
         self.axial[dt][eid]  = [complex(axialAr,axialAi),complex(axialBr,axialBi)]
@@ -726,8 +737,9 @@ class ComplexBendForce(object): # 69-CBEND
     def __repr__(self):
         return str(self.axial)
 
-class ComplexPentaPressureForce(object): # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
-    def __init__(self,isSort1,dt):
+class ComplexPentaPressureForce(scalarObject): # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.acceleration = {}
         self.velocity = {}
@@ -782,8 +794,9 @@ class ComplexPentaPressureForce(object): # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
     def __repr__(self):
         return str(self.acceleration)
 
-class ComplexCBUSHForce(object): # 102-CBUSH
-    def __init__(self,isSort1,dt):
+class ComplexCBUSHForce(scalarObject): # 102-CBUSH
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.force = {}
         self.moment = {}
@@ -832,8 +845,9 @@ class ComplexCBUSHForce(object): # 102-CBUSH
     def __repr__(self):
         return str(self.force)
 
-class ComplexForce_VU(object): # 191-VUBEAM
-    def __init__(self,isSort1,dt):
+class ComplexForce_VU(scalarObject): # 191-VUBEAM
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -942,8 +956,9 @@ class ComplexForce_VU(object): # 191-VUBEAM
     def __repr__(self):
         return str(self.forceX)
 
-class ComplexForce_VU_2D(object): # 189-VUQUAD,190-VUTRIA
-    def __init__(self,isSort1,dt):
+class ComplexForce_VU_2D(scalarObject): # 189-VUQUAD,190-VUTRIA
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}

@@ -1,6 +1,8 @@
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
-class HeatFlux_VU_3D(object): # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
-    def __init__(self,isSort1,dt):
+class HeatFlux_VU_3D(scalarObject): # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.parent = {}
 
@@ -67,8 +69,9 @@ class HeatFlux_VU_3D(object): # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def __repr__(self):
         return str(self.grad)
 
-class HeatFlux_VU(object): #  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
-    def __init__(self,isSort1,dt):
+class HeatFlux_VU(scalarObject): #  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -144,8 +147,9 @@ class HeatFlux_VU(object): #  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
     def __repr__(self):
         return str(self.grad)
         
-class HeatFlux_VUBEAM(object): # 191-VUBEAM
-    def __init__(self,isSort1,dt):
+class HeatFlux_VUBEAM(scalarObject): # 191-VUBEAM
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -217,8 +221,9 @@ class HeatFlux_VUBEAM(object): # 191-VUBEAM
     def __repr__(self):
         return str(self.grad)
 
-class HeatFlux_1D(object): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
-    def __init__(self,isSort1,dt):
+class HeatFlux_1D(scalarObject): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
         self.grad  = {}
         self.flux  = {}
@@ -262,8 +267,9 @@ class HeatFlux_1D(object): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
     def __repr__(self):
         return str(self.grad)
         
-class HeatFlux_2D_3D(object):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
-    def __init__(self,isSort1,dt):
+class HeatFlux_2D_3D(scalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
         self.grad  = {}
         self.flux  = {}
@@ -298,8 +304,9 @@ class HeatFlux_2D_3D(object):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA
     def __repr__(self):
         return str(self.grad)
         
-class HeatFlux_CONV(object): # 110-CONV
-    def __init__(self,isSort1,dt):
+class HeatFlux_CONV(scalarObject): # 110-CONV
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.cntlNode  = {}
         self.freeConv  = {}
         self.freeConvK = {}
@@ -349,8 +356,9 @@ class HeatFlux_CONV(object): # 110-CONV
     def __repr__(self):
         return str(self.fApplied)
 
-class HeatFlux_CHBDYx(object): # 107-CHBDYE 108-CHBDYG 109-CHBDYP
-    def __init__(self,isSort1,dt):
+class HeatFlux_CHBDYx(scalarObject): # 107-CHBDYE 108-CHBDYG 109-CHBDYP
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
         self.eType     = {}
         self.fApplied  = {}
         self.freeConv  = {}
