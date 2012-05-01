@@ -90,7 +90,7 @@ Sometimes this will happen
 diffKeys1=[] diffKeys2=[]
   *key=CROD    value1=2   value2=4
 }}}
-If you look at the definition of the card, you'll see you can define 2 instances of them on a single Nastran card.  pyNastran rewrites them in long form.
+If you look at the definition of the card, you'll see you can define 2 instances of them on a single Nastran card.  pyNastran rewrites them in long form (unless specified).
 
 The list of duplicate defined cards include (not a full list):
  * CORD1R
