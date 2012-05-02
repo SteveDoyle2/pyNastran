@@ -56,7 +56,14 @@ cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
 
+# Import the Python-level symbols of numpy
+import numpy as np
+
+# Import the C-level symbols of numpy
+cimport numpy as np
+
 cdef extern from "libop4.c":
+    ctypedef np.int_t      itype_t
     ctypedef struct str_t:
         int     len         #/* Number of terms in the string (a complex       */
                             #/* number counts as a single term).               */
@@ -134,19 +141,12 @@ from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
 import os
 
-# Import the Python-level symbols of numpy
-import numpy as np
-
-# Import the C-level symbols of numpy
-cimport numpy as np
-
 # Numpy must be initialized. When using numpy from C or Cython you must
 # _always_ do that, or you will have segfaults
 np.import_array()
 
 # We need to build an array-wrapper class to deallocate our array when
 # the Python object is deleted.
-
 # types at http://cython.org/release/Cython-0.13/Cython/Includes/numpy.pxd
 cdef class ArrayWrapper_RS:                                # {{{1
     cdef void* data_ptr
@@ -396,6 +396,8 @@ class OP4:                                                # {{{1
         cdef char    line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
         cdef int     size
         cdef int     filetype
+#       cdef np.ndarray[np.int_t, ndim=1, mode="c"] I_coo
+#       cdef np.ndarray[np.int_t, ndim=1, mode="c"] J_coo
         cdef int    *unused
         cdef int     n_str
         cdef str_t  *unused_s
@@ -443,109 +445,125 @@ class OP4:                                                # {{{1
             complx = False
             if self.type[i] > 2: complx = True
             # print('%s complx=%d' % (self.name[i], complx))
-            if self.storage[i]:
-                print('%s is sparse, skipping for now' % (self.name[i]))
-            else:
-                # now read the file contents
-                fseek(fp, self.offset[i], SEEK_SET)
-                if filetype == 1: # text
-                    fgets(line, OP4_TXT_LINE_SIZE, fp)   # skip the header line
-                    # create the scanf format string
-                    col_width = self.digits[i] + 7
-                    fmt_one   = '%%%dle' % col_width
-                    nNum_cols = 80 // col_width
-                    fmt_str   = fmt_one*nNum_cols
-                    # print('fmt_str=[%s]' % (fmt_str))
-                else: # binary
-                    col_width = 0
-                    fmt_str   = ''
 
-                if self.storage[i]:          # sparse
-                    print("matrix %d is sparse, skipping" % i)
-                    pass
-                else:                        # dense
-                    size = self.nrow[i] * self.ncol[i]
-                    if   self.type[i] == 1:  # real single precision
-                        array_RS = op4_load_S(fp        ,
-                                              filetype  , # 1 = text
-                                              self.nrow[i], 
-                                              self.ncol[i], 
-                                              fmt_str   , 
-                                              col_width ,
-                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                              complx    , # in  0=real   1=complex     
-                                              self.nnz[i],# in number of nonzero terms
-                                              unused    , # out sparse row ind
-                                              unused    ) # out sparse col ind
+            # now read the file contents
+            fseek(fp, self.offset[i], SEEK_SET)
+            if filetype == 1: # text
+                fgets(line, OP4_TXT_LINE_SIZE, fp)   # skip the header line
+                # create the scanf format string
+                col_width = self.digits[i] + 7
+                fmt_one   = '%%%dle' % col_width
+                nNum_cols = 80 // col_width
+                fmt_str   = fmt_one*nNum_cols
+                # print('fmt_str=[%s]' % (fmt_str))
+            else: # binary
+                col_width = 0
+                fmt_str   = ''
 
-                        array_wrapper_RS = ArrayWrapper_RS()
-                        array_wrapper_RS.set_data(size, <void*> array_RS) 
-                        ndarray = np.array(array_wrapper_RS, copy=False)
-                        ndarray.base = <PyObject*> array_wrapper_RS
-                        Py_INCREF(array_wrapper_RS)
+            if self.storage[i]:          # sparse
+                print("matrix %d is sparse, skipping" % i)
+#               if   self.type[i] == 1:  # real single precision
+#                   I_coo = np.zeros((self.nnz[i],), dtype=np.int)
+#                   J_coo = np.zeros((self.nnz[i],), dtype=np.int)
+#                   array_RS = op4_load_S(fp        ,
+#                                         filetype  , # 1 = text
+#                                         self.nrow[i], 
+#                                         self.ncol[i], 
+#                                         fmt_str   , 
+#                                         col_width ,
+#                                         self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+#                                         complx    , # in  0=real   1=complex     
+#                                         self.nnz[i],# in number of nonzero terms
+#                                        <int*>I_coo.data, # out sparse row ind
+#                                        <int*>J_coo.data) # out sparse col ind
+#                   print("I=",I_coo)
+#                   print("J=",J_coo)
+#               else:
+#                   print("matrix %d is sparse and not single prec, skipping" % i)
 
-                    elif self.type[i] == 2:   # real double precision
-                        array_RD = op4_load_D(fp        ,
-                                              filetype  , # 1 = text
-                                              self.nrow[i], 
-                                              self.ncol[i], 
-                                              fmt_str   ,
-                                              col_width ,
-                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                              complx    , # in  0=real   1=complex     
-                                              self.nnz[i],# in number of nonzero terms
-                                              unused    , # out sparse row ind
-                                              unused    ) # out sparse col ind
-                        array_wrapper_RD = ArrayWrapper_RD()
-                        array_wrapper_RD.set_data(size, <void*> array_RD) 
-                        ndarray = np.array(array_wrapper_RD, copy=False)
-                        ndarray.base = <PyObject*> array_wrapper_RD
-                        Py_INCREF(array_wrapper_RD)
+            else:                        # dense
+                size = self.nrow[i] * self.ncol[i]
+                if   self.type[i] == 1:  # real single precision
+                    array_RS = op4_load_S(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   , 
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                          unused    , # out sparse row ind
+                                          unused    ) # out sparse col ind
 
-                    elif self.type[i] == 3:   # complex single precision
-                        array_CS = op4_load_S(fp        ,
-                                              filetype  , # 1 = text
-                                              self.nrow[i], 
-                                              self.ncol[i], 
-                                              fmt_str   ,
-                                              col_width ,
-                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                              complx    , # in  0=real   1=complex     
-                                              self.nnz[i],# in number of nonzero terms
-                                              unused    , # out sparse row ind
-                                              unused    ) # out sparse col ind
-                        array_wrapper_CS = ArrayWrapper_CS()
-                        array_wrapper_CS.set_data(size, <void*> array_CS) 
-                        ndarray = np.array(array_wrapper_CS, copy=False)
-                        ndarray.base = <PyObject*> array_wrapper_CS
-                        Py_INCREF(array_wrapper_CS)
+                    array_wrapper_RS = ArrayWrapper_RS()
+                    array_wrapper_RS.set_data(size, <void*> array_RS) 
+                    ndarray = np.array(array_wrapper_RS, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_RS
+                    Py_INCREF(array_wrapper_RS)
 
-                    elif self.type[i] == 4:   # complex double precision
-                        array_CD = op4_load_D(fp        ,
-                                              filetype  , # 1 = text
-                                              self.nrow[i], 
-                                              self.ncol[i], 
-                                              fmt_str   ,
-                                              col_width ,
-                                              self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
-                                              complx    , # in  0=real   1=complex     
-                                              self.nnz[i],# in number of nonzero terms
-                                              unused    , # out sparse row ind
-                                              unused    ) # out sparse col ind
-                        array_wrapper_CD = ArrayWrapper_CD()
-                        array_wrapper_CD.set_data(size, <void*> array_CD) 
-                        ndarray = np.array(array_wrapper_CD, copy=False)
-                        ndarray.base = <PyObject*> array_wrapper_CD
-                        Py_INCREF(array_wrapper_CD)
+                elif self.type[i] == 2:   # real double precision
+                    array_RD = op4_load_D(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   ,
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                          unused    , # out sparse row ind
+                                          unused    ) # out sparse col ind
+                    array_wrapper_RD = ArrayWrapper_RD()
+                    array_wrapper_RD.set_data(size, <void*> array_RD) 
+                    ndarray = np.array(array_wrapper_RD, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_RD
+                    Py_INCREF(array_wrapper_RD)
 
-                    else:
-                        print('op4.Load type failure  %s: %d' % (
-                            self.name[i], self.type[i]))
-                        raise IOError
+                elif self.type[i] == 3:   # complex single precision
+                    array_CS = op4_load_S(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   ,
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                          unused    , # out sparse row ind
+                                          unused    ) # out sparse col ind
+                    array_wrapper_CS = ArrayWrapper_CS()
+                    array_wrapper_CS.set_data(size, <void*> array_CS) 
+                    ndarray = np.array(array_wrapper_CS, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_CS
+                    Py_INCREF(array_wrapper_CS)
 
-                    ndarray = np.reshape(ndarray, (self.ncol[i], self.nrow[i])).T
+                elif self.type[i] == 4:   # complex double precision
+                    array_CD = op4_load_D(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   ,
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                          unused    , # out sparse row ind
+                                          unused    ) # out sparse col ind
+                    array_wrapper_CD = ArrayWrapper_CD()
+                    array_wrapper_CD.set_data(size, <void*> array_CD) 
+                    ndarray = np.array(array_wrapper_CD, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_CD
+                    Py_INCREF(array_wrapper_CD)
 
-                    All_Matrices.append(ndarray)
+                else:
+                    print('op4.Load type failure  %s: %d' % (
+                        self.name[i], self.type[i]))
+                    raise IOError
+
+                ndarray = np.reshape(ndarray, (self.ncol[i], self.nrow[i])).T
+
+                All_Matrices.append(ndarray)
 
         if len(All_Matrices) == 1:
             return All_Matrices[0]
