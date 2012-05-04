@@ -4,6 +4,19 @@ from struct import unpack
 
 from oef_complexForceObjects import *
 
+def polarToRealImag(mag,phase):
+    """
+    Converts magnitude-phase to real-imaginary
+    so all complex results are consistent
+    @param mag magnitude c^2
+    @param phase phase angle phi (degrees; theta)
+    @retval realValue the real component a of a+bi
+    @retval imagValue the imaginary component b of a+bi
+    """
+    realValue = mag*cos(radians(phase))
+    imagValue = mag*cos(radians(phase))
+    return (realValue,imagValue)
+
 class ComplexForces(object):
 
     def OEF_Rod_alt(self): # 1-CROD, 3-CTUBE, 10-CONROD
@@ -23,6 +36,7 @@ class ComplexForces(object):
             #eid = self.nonlinearFactor
 
         self.createThermalTransientObject(self.rodForces,ComplexRodForce,isSort1)
+        isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=20: # 5*4
             eData     = self.data[0:20]
@@ -31,6 +45,10 @@ class ComplexForces(object):
 
             out = unpack(format1, eData)
             (eid,axialReal,torqueReal,axialImag,torqueImag) = out
+
+            if isMagnitudePhase:
+                (axialReal,axialImag)   = polarToRealImag(axialReal,axialImag)
+                (torqueReal,torqueImag) = polarToRealImag(torqueReal,torqueImag)
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
@@ -62,6 +80,7 @@ class ComplexForces(object):
         self.createThermalTransientObject(self.beamForces,ComplexCBEAMForce,isSort1)
         #print self.codeInformation()
 
+        isMagnitudePhase = self.isMagnitudePhase()
         #nTotal = 16*11+1
         formatAll = 'ifffffffffffffff'
         while len(self.data)>=708: # (16*11+1)*4 = 177*4
@@ -78,6 +97,14 @@ class ComplexForces(object):
                 out = unpack(formatAll, eData)
                 (nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
                         bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi) = out
+
+                if isMagnitudePhase:
+                    (bm1r,bm1i) = polarToRealImag(bm1r,bm1i)
+                    (bm2r,bm2i) = polarToRealImag(bm2r,bm2i)
+                    (ts1r,ts1i) = polarToRealImag(ts1r,ts1i)
+                    (afr,afi)   = polarToRealImag(afr,afi)
+                    (ttrqr,ttrqi) = polarToRealImag(ttrqr,ttrqi)
+                    (wtrqr,wtrqi) = polarToRealImag(wtrqr,wtrqi)
                 #print "eidTemp = ",eidTemp
                 #print "nid = ",nid
                 #print "sd = ",sd
@@ -120,6 +147,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.shearForces,ComplexCShearForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=132: # 33*4
             eData     = self.data[0:132]
             self.data = self.data[132: ]
@@ -128,6 +156,16 @@ class ComplexForces(object):
             out = unpack(format1, eData)
             (eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
                  f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i) = out
+            if isMagnitudePhase:
+                (f41r,f41i) = polarToRealImag(f41r,f41i); (kf1r,kf1i) = polarToRealImag(kf1r,kf1i)
+                (f21r,f21i) = polarToRealImag(f21r,f21i); (kf2r,kf2i) = polarToRealImag(kf2r,kf2i)
+                (f12r,f12i) = polarToRealImag(f12r,f12i); (kf3r,kf3i) = polarToRealImag(kf3r,kf3i)
+                (f23r,f23i) = polarToRealImag(f23r,f23i); (kf4r,kf4i) = polarToRealImag(kf4r,kf4i)
+                (f32r,f32i) = polarToRealImag(f32r,f32i); (s12r,s12i) = polarToRealImag(s12r,s12i)
+                (f43r,f43i) = polarToRealImag(f43r,f43i); (s23r,s23i) = polarToRealImag(s23r,s23i)
+                (f34r,f34i) = polarToRealImag(f34r,f34i); (s34r,s34i) = polarToRealImag(s34r,s34i)
+                (f14r,f14i) = polarToRealImag(f14r,f14i); (s41r,s41i) = polarToRealImag(s41r,s41i)
+                
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
@@ -159,6 +197,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.springForces,ComplexSpringForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
             self.data = self.data[12: ]
@@ -169,6 +208,9 @@ class ComplexForces(object):
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
+            if isMagnitudePhase:
+                (forceReal,forceImag) = polarToRealImag(forceReal,forceImag)
+
             dataIn = [eid2,forceReal,forceImag]
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
@@ -196,6 +238,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.viscForces,ComplexViscForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=20: # 5*4
             eData     = self.data[0:20]
             self.data = self.data[20: ]
@@ -205,6 +248,10 @@ class ComplexForces(object):
             (eid,axialReal,torqueReal,axialImag,torqueImag) = out
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
+
+            if isMagnitudePhase:
+                (axialReal,axialImag)   = polarToRealImag(axialReal,axialImag)
+                (torqueReal,torqueImag) = polarToRealImag(torqueReal,torqueImag)
             
             dataIn = [eid2,axialReal,torqueReal,axialImag,torqueImag]
             #print "%s" %(self.ElementType(self.elementType)),dataIn
@@ -233,6 +280,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.barForces,ComplexCBARForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=68: # 17*4
             eData     = self.data[0:68]
             self.data = self.data[68: ]
@@ -244,6 +292,16 @@ class ComplexForces(object):
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
+            if isMagnitudePhase:
+                (bm1ar,bm1ai) = polarToRealImag(bm1ar,bm1ai)
+                (bm2ar,bm2ai) = polarToRealImag(bm2ar,bm2ai)
+                (bm1br,bm1bi) = polarToRealImag(bm1br,bm1bi)
+                (bm2br,bm2bi) = polarToRealImag(bm2br,bm2bi)
+                (ts1r,ts1i)   = polarToRealImag(ts1r,ts1i)
+                (ts2r,ts2i)   = polarToRealImag(ts2r,ts2i)
+                (afr,afi)     = polarToRealImag(afr,afi)
+                (trqr,trqi)   = polarToRealImag(trqr,trqi)
+
             dataIn = [eid2,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
                            bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi]
             print "%s" %(self.ElementType(self.elementType)),dataIn
@@ -272,6 +330,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.plateForces,ComplexPlateForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=68: # 17*4
             eData     = self.data[0:68]
             self.data = self.data[68: ]
@@ -283,6 +342,15 @@ class ComplexForces(object):
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
+            if isMagnitudePhase:
+                (mxr,mxi)     = polarToRealImag(mxr,mxi)
+                (myr,myi)     = polarToRealImag(myr,myi)
+                (bmxr,bmxi)   = polarToRealImag(bmxr,bmxi)
+                (bmyr,bmyi)   = polarToRealImag(bmyr,bmyi)
+                (bmxyr,bmxyi) = polarToRealImag(bmxyr,bmxyi)
+                (txr,txi)     = polarToRealImag(txr,txi)
+                (tyr,tyi)     = polarToRealImag(tyr,tyi)
+
             dataIn = [eid2,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
                            mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi]
             print "%s" %(self.ElementType(self.elementType)),dataIn
@@ -320,6 +388,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.plateForces2,ComplexPLATE2Force,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         allFormat = 'fffffffffffffffff'
         nTotal = 8+nNodes*68
         while len(self.data)>=nTotal:
@@ -329,15 +398,25 @@ class ComplexForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1+allFormat, eData)
-            (eid,a,b,c,d,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,tx,tyr,
-                             mxi,myi,mxyi,bmxi,bmyi,bmxyi,tx,tyi) = out
+            (eid,a,b,c,d,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi) = out
             term = a+b+c+d # CEN\
             #print "eType=%s" %(eType)
 
             eid2  = extract(eid,dt)
             
-            dataIn = [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,tx,tyr,
-                               mxi,myi,mxyi,bmxi,bmyi,bmxyi,tx,tyi]
+            if isMagnitudePhase:
+                (mxr,mxi)     = polarToRealImag(mxr,mxi)
+                (myr,myi)     = polarToRealImag(myr,myi)
+                (mxyr,mxyi)   = polarToRealImag(mxyr,mxyi)
+                (bmxr,bmxi)   = polarToRealImag(bmxr,bmxi)
+                (bmyr,bmyi)   = polarToRealImag(bmyr,bmyi)
+                (bmxyr,bmxyi) = polarToRealImag(bmxyr,bmxyi)
+                (txr,txi)     = polarToRealImag(txr,txi)
+                (tyr,tyi)     = polarToRealImag(tyr,tyi)
+
+            dataIn = [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                               mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi]
             print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
@@ -375,6 +454,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.bendForces,ComplexBendForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=108: # 27*4
             eData     = self.data[0:108]
             self.data = self.data[108: ]
@@ -388,6 +468,13 @@ class ComplexForces(object):
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
+            if isMagnitudePhase:
+                (bm1Ar,bm1Ai) = polarToRealImag(bm1Ar,bm1Ai); (bm1Br,bm1Bi) = polarToRealImag(bm1Br,bm1Bi)
+                (bm2Ar,bm2Ai) = polarToRealImag(bm2Ar,bm2Ai); (bm2Br,bm2Bi) = polarToRealImag(bm2Br,bm2Bi)
+                (ts1Ar,ts1Ai) = polarToRealImag(ts1Ar,ts1Ai); (ts1Br,ts1Bi) = polarToRealImag(ts1Br,ts1Bi)
+                (afAr, afAi)  = polarToRealImag(afAr, afAi);  (afBr, afBi)  = polarToRealImag(afBr, afBi)
+                (trqAr,trqAi) = polarToRealImag(trqAr,trqAi); (trqBr,trqBi) = polarToRealImag(trqBr,trqBi)
+
             dataIn = [eid2,nidA,bm1Ar,bm2Ar,ts1Ar,ts2Ar,afAr,trqAr,
                                 bm1Ai,bm2Ai,ts1Ai,ts2Ai,afAi,trqAi,
                            nidB,bm1Br,bm2Br,ts1Br,ts2Br,afBr,trqBr,
@@ -418,6 +505,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.pentaPressureForces,ComplexPentaPressureForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=64: # 16*4
             eData     = self.data[0:64]
             self.data = self.data[64: ]
@@ -430,6 +518,11 @@ class ComplexForces(object):
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
+            if isMagnitudePhase:
+                (axr,axi) = polarToRealImag(axr,axi); (vxr,vxi) = polarToRealImag(vxr,vxi)
+                (ayr,ayi) = polarToRealImag(ayr,ayi); (vyr,vyi) = polarToRealImag(vyr,vyi)
+                (azr,azi) = polarToRealImag(azr,azi); (vzr,vzi) = polarToRealImag(vzr,vzi)
+
             dataIn = [eid2,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
                                  axi,ayi,azi,vxi,vyi,vzi]
             print "%s" %(self.ElementType(self.elementType)),dataIn
@@ -458,6 +551,7 @@ class ComplexForces(object):
 
         self.createThermalTransientObject(self.bushForces,ComplexCBUSHForce,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=52: # 13*4
             eData     = self.data[0:52]
             self.data = self.data[52: ]
@@ -469,6 +563,11 @@ class ComplexForces(object):
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
+            if isMagnitudePhase:
+                (fxr,fxi) = polarToRealImag(fxr,fxi); (mxr,mxi) = polarToRealImag(mxr,mxi)
+                (fyr,fyi) = polarToRealImag(fyr,fyi); (myr,myi) = polarToRealImag(myr,myi)
+                (fzr,fzi) = polarToRealImag(fzr,fzi); (mzr,mzi) = polarToRealImag(mzr,mzi)
+
             dataIn = [eid2,fxr,fyr,fzr,mxr,myr,mzr,
                            fxi,fyi,fzi,mxi,myi,mzi]
             print "%s" %(self.ElementType(self.elementType)),dataIn
@@ -503,6 +602,7 @@ class ComplexForces(object):
         formatAll = 'ifffffffffffff'
         self.createThermalTransientObject(self.force_VU,ComplexForce_VU,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         n = 16+56*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:16] # 8*4
@@ -522,6 +622,19 @@ class ComplexForces(object):
                 self.data = self.data[56: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = unpack(formatAll, eData)
+                [vugrid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
+                              forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = out
+
+                if isMagnitudePhase:
+                    (forceXr,forceXi)     = polarToRealImag(forceXr,forceXi)
+                    (shearYr,shearYi)     = polarToRealImag(shearYr,shearYi)
+                    (shearZr,shearZi)     = polarToRealImag(shearZr,shearZi)
+                    (torsionr,torsioni)   = polarToRealImag(torsionr,torsioni)
+                    (bendingYr,bendingYi) = polarToRealImag(bendingYr,bendingYi)
+                    (bendingZr,bendingZi) = polarToRealImag(bendingZr,bendingZi)
+
+                out2 = [vugrid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
+                                     forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi]
                 forces.append(out)
             dataIn.append(forces)
             #eType = a+b+c+d+e+f+g+h
@@ -564,6 +677,7 @@ class ComplexForces(object):
         formatAll = 'ifffiiifffffifffiiifffffi'
         self.createThermalTransientObject(self.force_VU_2D,ComplexForce_VU_2D,isSort1)
 
+        isMagnitudePhase = self.isMagnitudePhase()
         n = 24+100*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:24] # 6*4
@@ -583,7 +697,24 @@ class ComplexForces(object):
                 self.data = self.data[100: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = unpack(formatAll, eData)
-                forces.append(out)
+                [vugrid,mfxr,mfyr,mfxyr,a,b,c,bmxr,bmyr,bmxyr,syzr,szxr,d,
+                        mfxi,mfyi,mfxyi,a,b,c,bmxi,bmyi,bmxyi,syzi,szxi,d] = out
+
+                if isMagnitudePhase:
+                    (mfxr,mfxi)   = polarToRealImag(mfxr,mfxi)
+                    (mfyr,mfyi)   = polarToRealImag(mfyr,mfyi)
+                    (mfxyr,mfxyi) = polarToRealImag(mfxyr,mfxyi)
+                    (bmxr,bmxi)   = polarToRealImag(bmxr,bmxi)
+                    (bmyr,bmyi)   = polarToRealImag(bmyr,bmyi)
+                    (bmxyr,bmxyi) = polarToRealImag(bmxyr,bmxyi)
+                    (syzr,syzi)   = polarToRealImag(syzr,syzi)
+                    (szxr,szxi)   = polarToRealImag(szxr,szxi)
+
+                out2 = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
+                               mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
+                #if isMagnitudePhase:
+                    #(axr,axi) = polarToRealImag(axr,axi)
+                forces.append(out2)
             dataIn.append(forces)
             #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
