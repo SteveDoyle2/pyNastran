@@ -6,22 +6,30 @@ from oef_forceObjects import *
 
 class RealForces(object):
 
-    def OEF_Rod(self): # 1-CROD, 3-CTUBE, 10-CONROD
-        deviceCode = self.deviceCode
-        
-        dt = self.nonlinearFactor
+    def getOEF_FormatStart(self):
+        """
+        Returns an i or an f depending on if it's SORT2 or not.
+        Also returns an extraction function that is called on the first argument
+        """
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iff' # SORT1
+            format1 = 'i' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fff' # SORT2
+            format1 = 'f' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
+        return (format1,extract)
 
+    def OEF_Rod(self): # 1-CROD, 3-CTUBE, 10-CONROD
+        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ff'
         self.createThermalTransientObject(self.rodForces,RealRodForce,isSort1)
 
         while len(self.data)>=12: # 3*4
@@ -45,20 +53,10 @@ class RealForces(object):
         
     def OEF_CVisc(self): # 24-CVISC
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ff'
         self.createThermalTransientObject(self.viscForces,RealViscForce,isSort1)
 
         while len(self.data)>=12: # 3*4
@@ -82,20 +80,9 @@ class RealForces(object):
         
     def OEF_Beam(self): # 2-CBEAM
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'i' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'f' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
         self.createThermalTransientObject(self.beamForces,RealCBEAMForce,isSort1)
         #print self.codeInformation()
         formatAll = 'iffffffff'
@@ -136,20 +123,10 @@ class RealForces(object):
 
     def OEF_Shear(self): # 4-CSHEAR
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffffffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffffffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ffffffffffffffff'
         self.createThermalTransientObject(self.shearForces,RealCShearForce,isSort1)
 
         while len(self.data)>=68: # 17*4
@@ -173,20 +150,10 @@ class RealForces(object):
         
     def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'if' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'f'
         self.createThermalTransientObject(self.springForces,RealSpringForce,isSort1)
 
         while len(self.data)>=8: # 2*4
@@ -210,20 +177,10 @@ class RealForces(object):
         
     def OEF_CBar(self): # 34-CBAR
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ffffffff'
         self.createThermalTransientObject(self.barForces,RealCBARForce,isSort1)
 
         while len(self.data)>=36: # 9*4
@@ -247,20 +204,10 @@ class RealForces(object):
         
     def OEF_CBar100(self): # 100-CBAR
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ifffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'ffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'fffffff'
         self.createThermalTransientObject(self.bar100Forces,RealCBAR100Force,isSort1)
 
         while len(self.data)>=36: # 9*4
@@ -284,20 +231,10 @@ class RealForces(object):
         
     def OEF_Plate(self): # 33-CQUAD4,74-CTRIA3
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ffffffff'
         self.createThermalTransientObject(self.plateForces,RealPlateForce,isSort1)
 
         while len(self.data)>=36: # 9*4
@@ -321,7 +258,6 @@ class RealForces(object):
 
     def OEF_Plate2(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
         
         if self.elementType in [70,75]: # CTRIAR,CTRIA6
@@ -331,19 +267,9 @@ class RealForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-            
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'icccc' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fcccc' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'cccc'
         self.createThermalTransientObject(self.plateForces2,RealPLATE2Force,isSort1)
 
         allFormat = 'fffffffff'
@@ -383,20 +309,10 @@ class RealForces(object):
 
     def OEF_CGap(self): # 38-CGAP
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ffffffff'
         self.createThermalTransientObject(self.plateForces,RealCGAPForce,isSort1)
 
         while len(self.data)>=36: # 9*4
@@ -420,20 +336,10 @@ class RealForces(object):
 
     def OEF_Bend(self): # 69-CBEND
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iifffffffffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fifffffffffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ifffffffffffff'
         self.createThermalTransientObject(self.bendForces,RealBendForce,isSort1)
 
         while len(self.data)>=60: # 15*4
@@ -459,20 +365,10 @@ class RealForces(object):
         
     def OEF_PentaPressure(self): # 77-CPENTA_PR,78-CTETRA_PR
         deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iccccccccfffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fccccccccfffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ccccccccfffffff'
         self.createThermalTransientObject(self.pentaPressureForces,RealPentaPressureForce,isSort1)
 
         while len(self.data)>=40: # 10*4
@@ -493,24 +389,15 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OEF_PentaPressure)
-        #print self.bendForces
+        #print self.pentaPressureForces
         
     def OEF_CBush(self): # 102-CBUSH
         deviceCode = self.deviceCode
         
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iffffff' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fffffff' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
 
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ffffff'
         self.createThermalTransientObject(self.bushForces,RealCBUSHForce,isSort1)
 
         while len(self.data)>=28: # 7*4
@@ -534,7 +421,6 @@ class RealForces(object):
 
     def OEF_Force_VU(self): # 191-VUBEAM
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
         #print "numWide = ",self.numWide
 
         if self.elementType in [191]:
@@ -542,17 +428,8 @@ class RealForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
 
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiicccc' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiicccc' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-        ###
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'iicccc'
         formatAll = 'ifffffff'
         self.createThermalTransientObject(self.force_VU,RealForce_VU,isSort1)
 
@@ -593,7 +470,6 @@ class RealForces(object):
 
     def OEF_Force_VUTRIA(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
-        isSort1 = self.isSort1()
         #print "numWide = ",self.numWide
 
         if self.elementType in [189]: # VUQUAD
@@ -603,17 +479,8 @@ class RealForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
 
-        if isSort1:
-            print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiiccccii' # SORT1
-            extract = self.extractSort1
-            #dt = self.nonlinearFactor
-        else:
-            print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiiccccii' # SORT2
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-        ###
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'iiccccii'
         formatAll = 'ifffiiifffffi'
         self.createThermalTransientObject(self.force_VU_2D,RealForce_VU_2D,isSort1)
 
