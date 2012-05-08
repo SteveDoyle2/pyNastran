@@ -60,8 +60,8 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                    int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
                    int     complx     ,  /* in  0=real   1=complex         */
                    int     n_Nnz      ,  /* in  number of nonzero terms    */
-                   int    *I_coo      ,  /* out: sparse row ind            */
-                   int    *J_coo      )  /* out: sparse col ind            */
+                   double *I_coo      ,  /* out: sparse row ind            */
+                   double *J_coo      )  /* out: sparse col ind            */
 {
     int     DEBUG = 0;
     float  *array;
@@ -163,8 +163,8 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                    int     storage    ,  /* in  0=dense  1,2=sparse  3=ccr */
                    int     complx     ,  /* in  0=real   1=complex         */
                    int     n_Nnz      ,  /* in  number of nonzero terms    */
-                   int    *I_coo      ,  /* out: sparse row ind            */
-                   int    *J_coo      )  /* out: sparse col ind            */
+                   double *I_coo      ,  /* out: sparse row ind            */
+                   double *J_coo      )  /* out: sparse col ind            */
 {
     int     DEBUG = 0;
     double *array, *column;

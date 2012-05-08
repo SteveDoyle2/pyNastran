@@ -63,13 +63,14 @@ import numpy as np
 cimport numpy as np
 
 cdef extern from "libop4.c":
-    ctypedef np.int_t      itype_t
+    ctypedef np.int_t      itype_t   # can't get this to do anything useful
     ctypedef struct str_t:
         int     len         #/* Number of terms in the string (a complex       */
                             #/* number counts as a single term).               */
         int     start_row   #/* Zero based, so first row has start_row = 0.    */
         int     N_idx       #/* Index into N[] to first numeric term for this  */
                             #/* string.                                        */
+    ctypedef np.float64_t  dtype_t
     float  *op4_load_S(FILE   *fp         ,
                        int     filetype   ,  #/* in  1=text, other is binary    */
                        int     nRow       ,  #/* in  # rows    in matrix        */
@@ -79,8 +80,8 @@ cdef extern from "libop4.c":
                        int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
                        int     complx     ,  #/* in  0=real   1=complex         */
                        int     n_Nnz      ,  #/* in  number of nonzero terms    */
-                       int    *I_coo      ,  #/* out sparse row ind             */
-                       int    *J_coo      ,  #/* out sparse col ind             */
+                       double *I_coo      ,  #/* out sparse row ind             */
+                       double *J_coo      ,  #/* out sparse col ind             */
                        )
     double *op4_load_D(FILE   *fp         ,
                        int     filetype   ,  #/* in  1=text, other is binary    */
@@ -91,8 +92,8 @@ cdef extern from "libop4.c":
                        int     storage    ,  #/* in  0=dense  1,2=sparse  3=ccr */
                        int     complx     ,  #/* in  0=real   1=complex         */
                        int     n_Nnz      ,  #/* in  number of nonzero terms    */
-                       int    *I_coo      ,  #/* out sparse row ind             */
-                       int    *J_coo      ,  #/* out sparse col ind             */
+                       double *I_coo      ,  #/* out sparse row ind             */
+                       double *J_coo      ,  #/* out sparse col ind             */
                        )
     int    op4_scan(char *filename  , #/* in                          */
                     int  *nmat     , #/* out number of matrices      */
@@ -136,6 +137,8 @@ cdef extern from "libop4.c":
                        )
 
 cdef int OP4_TXT_LINE_SIZE = 82
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
 
 from libc.stdlib cimport free
 from cpython cimport PyObject, Py_INCREF
@@ -398,7 +401,7 @@ class OP4:                                                # {{{1
         cdef int     filetype
 #       cdef np.ndarray[np.int_t, ndim=1, mode="c"] I_coo
 #       cdef np.ndarray[np.int_t, ndim=1, mode="c"] J_coo
-        cdef int    *unused
+        cdef double *unused
         cdef int     n_str
         cdef str_t  *unused_s
         cdef str_t  *str_data
@@ -407,6 +410,10 @@ class OP4:                                                # {{{1
         cdef float  *array_CS
         cdef double *array_RD
         cdef double *array_CD
+#       cdef np.ndarray I_coo = np.zeros((self.nnz[i],), dtype=DTYPE)
+#       cdef np.ndarray J_coo = np.zeros((self.nnz[i],), dtype=DTYPE)
+        cdef np.ndarray I_coo = np.zeros((1000,), dtype=DTYPE)
+        cdef np.ndarray J_coo = np.zeros((1000,), dtype=DTYPE)
         cdef np.ndarray ndarray
         All_Matrices = []
 
@@ -461,29 +468,27 @@ class OP4:                                                # {{{1
                 fmt_str   = ''
 
             if self.storage[i]:          # sparse
-                print("matrix %d is sparse, skipping" % i)
-#               if   self.type[i] == 1:  # real single precision
-#                   I_coo = np.zeros((self.nnz[i],), dtype=np.int)
-#                   J_coo = np.zeros((self.nnz[i],), dtype=np.int)
-#                   array_RS = op4_load_S(fp        ,
-#                                         filetype  , # 1 = text
-#                                         self.nrow[i], 
-#                                         self.ncol[i], 
-#                                         fmt_str   , 
-#                                         col_width ,
-#                                         self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
-#                                         complx    , # in  0=real   1=complex     
-#                                         self.nnz[i],# in number of nonzero terms
-#                                        <int*>I_coo.data, # out sparse row ind
-#                                        <int*>J_coo.data) # out sparse col ind
-#                   print("I=",I_coo)
-#                   print("J=",J_coo)
-#               else:
-#                   print("matrix %d is sparse and not single prec, skipping" % i)
+#               print("matrix %d is sparse, skipping" % i)
+                if   self.type[i] == 1:  # real single precision
+                    array_RS = op4_load_S(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   , 
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                         <DTYPE_t*>I_coo.data, # out sparse row ind
+                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+                    print("I=",I_coo)
+                    print("J=",J_coo)
+                else:
+                    print("matrix %d is sparse and not single prec, skipping" % i)
 
             else:                        # dense
                 size = self.nrow[i] * self.ncol[i]
-                if   self.type[i] == 1:  # real single precision
+                if   self.type[i] == 1:  # dense real single precision
                     array_RS = op4_load_S(fp        ,
                                           filetype  , # 1 = text
                                           self.nrow[i], 
@@ -502,7 +507,7 @@ class OP4:                                                # {{{1
                     ndarray.base = <PyObject*> array_wrapper_RS
                     Py_INCREF(array_wrapper_RS)
 
-                elif self.type[i] == 2:   # real double precision
+                elif self.type[i] == 2:   # dense real double precision
                     array_RD = op4_load_D(fp        ,
                                           filetype  , # 1 = text
                                           self.nrow[i], 
@@ -520,7 +525,7 @@ class OP4:                                                # {{{1
                     ndarray.base = <PyObject*> array_wrapper_RD
                     Py_INCREF(array_wrapper_RD)
 
-                elif self.type[i] == 3:   # complex single precision
+                elif self.type[i] == 3:   # dense complex single precision
                     array_CS = op4_load_S(fp        ,
                                           filetype  , # 1 = text
                                           self.nrow[i], 
@@ -538,7 +543,7 @@ class OP4:                                                # {{{1
                     ndarray.base = <PyObject*> array_wrapper_CS
                     Py_INCREF(array_wrapper_CS)
 
-                elif self.type[i] == 4:   # complex double precision
+                elif self.type[i] == 4:   # dense complex double precision
                     array_CD = op4_load_D(fp        ,
                                           filetype  , # 1 = text
                                           self.nrow[i], 
