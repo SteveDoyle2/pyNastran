@@ -479,6 +479,14 @@ class Op2Codes(object):
         return msg
 
     #----
+    def isThermal(self):
+        if self.thermal==0:
+            return False
+        elif self.thermal==1:
+            return True
+        return '???'
+
+    #----
     # formatCode 3
     def isMagnitudePhase(self):
         if self.formatCode==3:

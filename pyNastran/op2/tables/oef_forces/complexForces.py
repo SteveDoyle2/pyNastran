@@ -13,7 +13,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffff'
-        self.createThermalTransientObject(self.rodForces,ComplexRodForce,isSort1)
+        self.createTransientObject(self.rodForces,ComplexRodForce)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=20: # 5*4
@@ -44,7 +44,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOEF_FormatStart()
-        self.createThermalTransientObject(self.beamForces,ComplexCBEAMForce,isSort1)
+        self.createTransientObject(self.beamForces,ComplexCBEAMForce)
         #print self.codeInformation()
 
         isMagnitudePhase = self.isMagnitudePhase()
@@ -102,7 +102,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffffffffffffffffffff'
-        self.createThermalTransientObject(self.shearForces,ComplexCShearForce,isSort1)
+        self.createTransientObject(self.shearForces,ComplexCShearForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=132: # 33*4
@@ -142,7 +142,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        self.createThermalTransientObject(self.springForces,ComplexSpringForce,isSort1)
+        self.createTransientObject(self.springForces,ComplexSpringForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=12: # 3*4
@@ -173,7 +173,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffff'
-        self.createThermalTransientObject(self.viscForces,ComplexViscForce,isSort1)
+        self.createTransientObject(self.viscForces,ComplexViscForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=20: # 5*4
@@ -205,7 +205,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
-        self.createThermalTransientObject(self.barForces,ComplexCBARForce,isSort1)
+        self.createTransientObject(self.barForces,ComplexCBARForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=68: # 17*4
@@ -245,7 +245,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
-        self.createThermalTransientObject(self.plateForces,ComplexPlateForce,isSort1)
+        self.createTransientObject(self.plateForces,ComplexPlateForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=68: # 17*4
@@ -292,7 +292,7 @@ class ComplexForces(object):
             
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'cccc'
-        self.createThermalTransientObject(self.plateForces2,ComplexPLATE2Force,isSort1)
+        self.createTransientObject(self.plateForces2,ComplexPLATE2Force)
 
         isMagnitudePhase = self.isMagnitudePhase()
         allFormat = 'fffffffffffffffff'
@@ -348,7 +348,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ifffffffffffffffffffffffff'
-        self.createThermalTransientObject(self.bendForces,ComplexBendForce,isSort1)
+        self.createTransientObject(self.bendForces,ComplexBendForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=108: # 27*4
@@ -389,7 +389,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ccccccccfffffffffffff'
-        self.createThermalTransientObject(self.pentaPressureForces,ComplexPentaPressureForce,isSort1)
+        self.createTransientObject(self.pentaPressureForces,ComplexPentaPressureForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=64: # 16*4
@@ -425,7 +425,7 @@ class ComplexForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffff'
-        self.createThermalTransientObject(self.bushForces,ComplexCBUSHForce,isSort1)
+        self.createTransientObject(self.bushForces,ComplexCBUSHForce)
 
         isMagnitudePhase = self.isMagnitudePhase()
         while len(self.data)>=52: # 13*4
@@ -466,7 +466,7 @@ class ComplexForces(object):
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'iicccc'
         formatAll = 'ifffffffffffff'
-        self.createThermalTransientObject(self.force_VU,ComplexForce_VU,isSort1)
+        self.createTransientObject(self.force_VU,ComplexForce_VU)
 
         isMagnitudePhase = self.isMagnitudePhase()
         n = 16+56*nNodes
@@ -531,7 +531,7 @@ class ComplexForces(object):
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'iiccccii'
         formatAll = 'ifffiiifffffifffiiifffffi'
-        self.createThermalTransientObject(self.force_VU_2D,ComplexForce_VU_2D,isSort1)
+        self.createTransientObject(self.force_VU_2D,ComplexForce_VU_2D)
 
         isMagnitudePhase = self.isMagnitudePhase()
         n = 24+100*nNodes

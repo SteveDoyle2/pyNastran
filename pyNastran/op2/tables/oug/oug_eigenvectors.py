@@ -12,8 +12,8 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
         2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
-    def __init__(self,dataCode,isSort1,iSubcase,mode):
-        TableObject.__init__(self,dataCode,isSort1,iSubcase,mode)
+    def __init__(self,dataCode,isSort1,iSubcase,iMode):
+        TableObject.__init__(self,dataCode,isSort1,iSubcase,iMode)
         #self.caseVal = mode
         self.updateDt = self.updateMode
         #print "mode = %s" %(mode)
@@ -22,8 +22,8 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         
         #assert mode>=0.
         self.gridTypes = {}
-        #self.translations = {self.caseVal: {}}
-        #self.rotations    = {self.caseVal: {}}
+        #self.translations = {iMode: {}}
+        #self.rotations    = {iMode: {}}
     
     def readF06Data(self,dataCode,data):
         iMode = dataCode['mode']
@@ -37,7 +37,7 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
             self.rotations[iMode][nid]    = array([r1,r2,r3])
         ###
 
-    def updateMode(self,dataCode,mode):
+    def updateMode(self,dataCode,iMode):
         """
         this method is called if the object
         already exits and a new time step is found
@@ -45,11 +45,14 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         #assert mode>=0.
         self.dataCode = dataCode
         self.applyDataCode()
-        self.caseVal = mode
+        #self.caseVal = iMode
         #print "mode = %s" %(str(mode))
-        self.translations[self.caseVal] = {}
-        self.rotations[self.caseVal] = {}
+        self.addNewMode()
         self.setDataMembers()
+
+    def addNewMode(self,iMode):
+        self.translations[iMode] = {}
+        self.rotations[iMode] = {}
 
     #def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
         #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
@@ -155,17 +158,21 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
              1      G      0.0            0.0            0.0            0.0            1.260264E-01   0.0
              7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
-    def __init__(self,dataCode,iSubcase,mode):
+    def __init__(self,dataCode,iSubcase,iMode):
         scalarObject.__init__(self,dataCode,iSubcase)
         #self.caseVal = mode
-        #print "mode = %s" %(mode)
+        #print "mode = %s" %(iMode)
         self.caseVal = self.getUnsteadyValue()
         self.setDataMembers()
         
         #assert mode>=0.
         self.gridTypes = {}
-        self.translations = {self.caseVal: {}}
-        self.rotations    = {self.caseVal: {}}
+        self.translations = {iMode: {}}
+        self.rotations    = {iMode: {}}
+
+    def addNewMode(self,iMode):
+        self.translations[iMode] = {}
+        self.rotations[iMode] = {}
 
     def updateDt(self,dataCode,dt):
         #print " self.dataCode = ",self.dataCode
@@ -288,9 +295,9 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         return msg
 
 class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0, thermal=0
-    def __init__(self,dataCode,isSort1,iSubcase,mode):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,mode)
-        self.caseVal = mode
+    def __init__(self,dataCode,isSort1,iSubcase,iMode):
+        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,iMode)
+        self.caseVal = iMode
         self.updateDt = self.updateMode
         self.setDataMembers()
         
@@ -298,22 +305,25 @@ class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0
         
         #assert mode>=0.
         #self.gridTypes = {}
-        #self.translations = {self.caseVal: {}}
-        #self.rotations    = {self.caseVal: {}}
+        #self.translations = {iMode: {}}
+        #self.rotations    = {iMode: {}}
 
-    def updateMode(self,dataCode,mode):
+    def updateMode(self,dataCode,iMode):
         """
         this method is called if the object
         already exits and a new time step is found
         """
         #assert mode>=0.
-        self.caseVal = mode
+        self.caseVal = iMode
         self.dataCode = dataCode
         self.applyDataCode()
         self.setDataMembers()
         #print "mode = %s" %(str(mode))
-        self.translations[self.caseVal] = {}
-        self.rotations[self.caseVal] = {}
+        self.addNewMode(iMode)
+
+    def addNewMode(self,iMode):
+        self.translations[iMode] = {}
+        self.rotations[iMode] = {}
 
     #def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
         #msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)

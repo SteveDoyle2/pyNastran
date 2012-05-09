@@ -79,7 +79,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        self.createThermalTransientObject(self.rodForces,RealRodForce,isSort1)
+        self.createTransientObject(self.rodForces,RealRodForce)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -106,7 +106,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        self.createThermalTransientObject(self.viscForces,RealViscForce,isSort1)
+        self.createTransientObject(self.viscForces,RealViscForce)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -132,7 +132,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOEF_FormatStart()
-        self.createThermalTransientObject(self.beamForces,RealCBEAMForce,isSort1)
+        self.createTransientObject(self.beamForces,RealCBEAMForce)
         #print self.codeInformation()
         formatAll = 'iffffffff'
         while len(self.data)>=400: # 1+(10-1)*11=100 ->100*4 = 400
@@ -176,7 +176,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
-        self.createThermalTransientObject(self.shearForces,RealCShearForce,isSort1)
+        self.createTransientObject(self.shearForces,RealCShearForce)
 
         while len(self.data)>=68: # 17*4
             eData     = self.data[0:68]
@@ -203,7 +203,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'f'
-        self.createThermalTransientObject(self.springForces,RealSpringForce,isSort1)
+        self.createTransientObject(self.springForces,RealSpringForce)
 
         while len(self.data)>=8: # 2*4
             eData     = self.data[0:8]
@@ -230,7 +230,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        self.createThermalTransientObject(self.barForces,RealCBARForce,isSort1)
+        self.createTransientObject(self.barForces,RealCBARForce)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -257,7 +257,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'fffffff'
-        self.createThermalTransientObject(self.bar100Forces,RealCBAR100Force,isSort1)
+        self.createTransientObject(self.bar100Forces,RealCBAR100Force)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:32]
@@ -284,7 +284,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        self.createThermalTransientObject(self.plateForces,RealPlateForce,isSort1)
+        self.createTransientObject(self.plateForces,RealPlateForce)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -319,7 +319,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'cccc'
-        self.createThermalTransientObject(self.plateForces2,RealPLATE2Force,isSort1)
+        self.createTransientObject(self.plateForces2,RealPLATE2Force)
 
         allFormat = 'fffffffff'
         nTotal = 44+nNodes*36
@@ -362,7 +362,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        self.createThermalTransientObject(self.plateForces,RealCGAPForce,isSort1)
+        self.createTransientObject(self.plateForces,RealCGAPForce)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -389,7 +389,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ifffffffffffff'
-        self.createThermalTransientObject(self.bendForces,RealBendForce,isSort1)
+        self.createTransientObject(self.bendForces,RealBendForce)
 
         while len(self.data)>=60: # 15*4
             eData     = self.data[0:60]
@@ -418,7 +418,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ccccccccfffffff'
-        self.createThermalTransientObject(self.pentaPressureForces,RealPentaPressureForce,isSort1)
+        self.createTransientObject(self.pentaPressureForces,RealPentaPressureForce)
 
         while len(self.data)>=40: # 10*4
             eData     = self.data[0:40]
@@ -447,7 +447,7 @@ class RealForces(object):
 
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffff'
-        self.createThermalTransientObject(self.bushForces,RealCBUSHForce,isSort1)
+        self.createTransientObject(self.bushForces,RealCBUSHForce)
 
         while len(self.data)>=28: # 7*4
             eData     = self.data[0:28]
@@ -480,7 +480,7 @@ class RealForces(object):
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'iicccc'
         formatAll = 'ifffffff'
-        self.createThermalTransientObject(self.force_VU,RealForce_VU,isSort1)
+        self.createTransientObject(self.force_VU,RealForce_VU)
 
         n = 16+32*nNodes
         while len(self.data)>=n:
@@ -531,7 +531,7 @@ class RealForces(object):
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'iiccccii'
         formatAll = 'ifffiiifffffi'
-        self.createThermalTransientObject(self.force_VU_2D,RealForce_VU_2D,isSort1)
+        self.createTransientObject(self.force_VU_2D,RealForce_VU_2D)
 
         n = 24+52*nNodes
         while len(self.data)>=n:
