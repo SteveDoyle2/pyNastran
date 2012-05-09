@@ -67,7 +67,8 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             #print self.obj.writeF06(['',''],'PAGE ',1)[0]
             
             try:
-                self.obj.updateDt(self.dataCode,self.nonlinearFactor)
+                self.obj.updateDataCode(self.dataCode)
+                #self.obj.updateDt(self.dataCode,self.nonlinearFactor)
             except:
                 #try:
                     #print "objName = ",self.obj.name()
@@ -76,10 +77,22 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
                 raise
             ###
         else:
-            self.obj = classObj(self.dataCode,self.iSubcase,self.nonlinearFactor)
+            self.obj = classObj(self.dataCode,self.isSort1(),self.iSubcase,self.nonlinearFactor)
             #print "obj2 = ",self.obj.__class__.__name__
         storageObj[self.iSubcase] = self.obj
         ###
+
+    def createThermalTransientObject(self,resultName,objClass,isSort1):
+        #print resultName
+        if self.iSubcase in resultName:
+            self.obj = resultName[self.iSubcase]
+            #print "returning iSubcase result=%s" %(self.iSubcase)
+        else:
+            self.obj = objClass(self.dataCode,isSort1,self.iSubcase,self.nonlinearFactor)
+            resultName[self.iSubcase] = self.obj
+            #print "creating iSubcase result=%s" %(self.iSubcase)
+        ###
+        #return self.obj
 
     def readResultsTable(self,table3,table4Data,flag=0):
         self.dtMap = {}

@@ -111,12 +111,18 @@ class scalarObject(baseScalarObject):
                 assert len(listA)==n+1
             ###
         ###
+
     def setDataMembers(self):
         for name in self.dataCode['dataNames']:
             #print "name = ",name
             self.appendDataMember(name+'s',name)
         ###
 
+    def updateDataCode(self,dataCode):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        self.setDataMembers()
+        
     def printDataMembers(self):
         """
         Prints out the "unique" vals of the case.

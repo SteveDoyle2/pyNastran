@@ -4,7 +4,7 @@ from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class nonlinearQuadObject(stressObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         #self.eType = 'QUAD4FD' # or CTRIA3
         
@@ -161,7 +161,7 @@ class nonlinearQuadObject(stressObject):
 
                 
 class hyperelasticQuadObject(stressObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'QUAD4FD'
         

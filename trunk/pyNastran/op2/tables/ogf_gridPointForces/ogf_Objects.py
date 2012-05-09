@@ -3,7 +3,7 @@ from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class gridPointForcesObject(scalarObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.forces = {}
         self.moments = {}
@@ -136,10 +136,11 @@ class gridPointForcesObject(scalarObject):
         #return '---gridPointForceObject---'
 
 class complexGridPointForcesObject(scalarObject):
-    def __init__(self,dataCode,iSubcase,freq=None):
+    def __init__(self,dataCode,isSort1,iSubcase,freq=None):
         scalarObject.__init__(self,dataCode,iSubcase)
-class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
-    def __init__(self,dataCode,iSubcase,freq=None):
+
+class off_complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, thermal=0
+    def __init__(self,dataCode,isSort1,iSubcase,freq=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.freq = freq
         #print "complexDisplacementObject - self.freq=|%s|" %(self.freq)
@@ -217,8 +218,8 @@ class complexDisplacementObject(scalarObject): # approachCode=1, sortCode=0, the
 #---------------------------------------------------------------------------------
 #class staticFluxObj(scalarObject): # approachCode=1, tableCode=3 - whatever the static version of this is...
 
-class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
-    def __init__(self,dataCode,iSubcase,dt=None):
+class off_fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
 
         self.dt = dt

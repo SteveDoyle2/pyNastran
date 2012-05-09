@@ -11,7 +11,7 @@ class ctriaxStressObject(stressObject):
        5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                 4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CTRIAX6'
         
@@ -215,7 +215,7 @@ class ctriaxStrainObject(strainObject):
        5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                 4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CTRIAX6'
         #raise NotImplementedError('CTRIAX6 strain...')

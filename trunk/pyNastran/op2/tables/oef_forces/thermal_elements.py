@@ -35,18 +35,6 @@ class ThermalElements(object):
             raise NotImplementedError(self.codeInformation())
         ###
 
-    def createThermalTransientObject(self,resultName,objClass,isSort1):
-        #print resultName
-        if self.iSubcase in resultName:
-            self.obj = resultName[self.iSubcase]
-            #print "returning iSubcase result=%s" %(self.iSubcase)
-        else:
-            self.obj = objClass(self.dataCode,isSort1,self.iSubcase,self.nonlinearFactor)
-            resultName[self.iSubcase] = self.obj
-            #print "creating iSubcase result=%s" %(self.iSubcase)
-        ###
-        #return self.obj
-
     def OEF_CHBDYx(self): # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
         if self.makeOp2Debug:
             self.op2Debug.write('---OEF_CHBDYx---\n')
@@ -65,7 +53,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.thermalLoad_CHBDY,HeatFlux_CHBDYx,isSort1)
+        self.createTransientObject(self.thermalLoad_CHBDY,HeatFlux_CHBDYx)
 
         while len(self.data)>=32: # 8*4
             eData     = self.data[0:32]
@@ -107,7 +95,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
 
-        self.createThermalTransientObject(self.thermalLoad_CONV,HeatFlux_CONV,isSort1)
+        self.createTransientObject(self.thermalLoad_CONV,HeatFlux_CONV)
 
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
@@ -154,7 +142,7 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VU,HeatFlux_VU,isSort1)
+        self.createTransientObject(self.thermalLoad_VU,HeatFlux_VU)
 
         n = 24+28*nNodes
         while len(self.data)>=n:
@@ -214,7 +202,7 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VUBeam,HeatFlux_VUBEAM,isSort1)
+        self.createTransientObject(self.thermalLoad_VUBeam,HeatFlux_VUBEAM)
 
         n = 16+28*nNodes
         while len(self.data)>=n:
@@ -278,7 +266,7 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createThermalTransientObject(self.thermalLoad_VU_3D,HeatFlux_VU_3D,isSort1)
+        self.createTransientObject(self.thermalLoad_VU_3D,HeatFlux_VU_3D)
 
         n = 8+28*nNodes
         while len(self.data)>=n:
@@ -326,7 +314,7 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
-        self.createThermalTransientObject(self.thermalLoad_1D,HeatFlux_1D,isSort1)
+        self.createTransientObject(self.thermalLoad_1D,HeatFlux_1D)
 
         n = 36
         while len(self.data)>=n: # 10*4
@@ -385,7 +373,7 @@ class ThermalElements(object):
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-        self.createThermalTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D,isSort1)
+        self.createTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D)
 
         #n = 36
         while len(self.data)>=n: # 10*4

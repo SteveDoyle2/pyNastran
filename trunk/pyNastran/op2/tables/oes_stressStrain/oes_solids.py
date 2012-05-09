@@ -22,7 +22,7 @@ class solidStressObject(stressObject):
                            Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                            Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
     """
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
 
         self.eType = {}
@@ -612,7 +612,7 @@ class solidStrainObject(strainObject):
                            Y  -2.289814E-04  YZ  -2.369997E-04   B  -2.909276E-04  LY-0.10 0.71-0.70
                            Z   9.383460E-04  ZX  -2.369997E-04   C  -1.917288E-04  LZ 0.99 0.00-0.15
     """
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 

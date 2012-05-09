@@ -56,28 +56,38 @@ class OGF(object):
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # real eigenvalues
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
         elif self.analysisCode==3: # differential stiffness
+            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
             self.extractDt = self.extractInt
         elif self.analysisCode==4: # differential stiffness
             self.extractDt = self.extractInt
         elif self.analysisCode==5:   # frequency
             self.extractDt = self.extractFloat
+            self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.extractDt = self.extractFloat
         elif self.analysisCode==7: # pre-buckling
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
         elif self.analysisCode==9: # complex eigenvalues
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
             self.extractDt = self.extractFloat
+            self.applyDataCodeValue('dataNames',['lftsfq'])
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.extractDt = self.extractInt
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
 
@@ -107,6 +117,8 @@ class OGF(object):
         #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         # displacement
+        #if self.tableCode==19:
+            #self.readOGF_Data_table19()
         if   tfsCode==[19,1,0]:
             self.readOGF_Data_table19_format1_sort0()
         elif tfsCode==[19,1,1]:

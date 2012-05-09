@@ -48,49 +48,52 @@ class OEE(object):
         self.addDataParameter(data,'etotpos',   'f',18)        ## Total positive energy
         self.addDataParameter(data,'etotneg',   'f',19,False)  ## Total negative energy
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
 
         #self.printBlock(data) # on
         if self.analysisCode==1:   # statics / displacement / heat flux
             #del self.dataCode['nonlinearFactor']
             self.nonlinearFactor = None
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            #print "mode(5)=%s" %(self.mode)
-        elif self.analysisCode==3: # differential stiffness
-            pass
-        elif self.analysisCode==4: # differential stiffness
-            pass
+            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
+            #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
+        #elif self.analysisCode==3: # differential stiffness
+            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.dataCode['lsdvmn'] = self.lsdvmn
+        #elif self.analysisCode==4: # differential stiffness
+            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq2','f',5)   ## frequency
-
+            self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'time','f',5)   ## time step
-            #print "time(5)=%s" %(self.time)
         elif self.analysisCode==7: # pre-buckling
-            pass
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            #print "mode(5)=%s" %(self.mode)
+            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            #print "mode(5)=%s" %(self.mode)
+            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'loadFactor','f',5)   ## load factor
-            #print "loadFactor(5) = %s" %(self.loadFactor)
+            self.applyDataCodeValue('dataNames',['lftsfq'])
         elif self.analysisCode==11: # old geometric nonlinear statics
-            pass
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'time','f',5)   ## time step
-            #print "time(5)=%s" %(self.time)
+            self.applyDataCodeValue('dataNames',['time'])
         else:
-            raise InvalidATFSCodeError('invalid analysis code...analysisCode=%s' %(self.analysisCode))
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         ###
         
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
         #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
-        #if self.numWide==5:
-            #print self.codeInformation()
         #print self.codeInformation()
+
         #self.printBlock(data)
         self.readTitle()
 
@@ -98,8 +101,10 @@ class OEE(object):
         #print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         
-        if tfsCode==[18,1,0]:
-            self.readStrainEnergy_table18_format1_sort0()
+        if self.tableCode==18:
+            self.readStrainEnergy_table18()
+        #if tfsCode==[18,1,0]:
+            #self.readStrainEnergy_table18_format1_sort0()
         #elif fsCode==[18,1,1]:
         #    self.readOEE_Data_format1_sort1()
         #elif fsCode==[18,2,1]:
@@ -109,6 +114,10 @@ class OEE(object):
             #raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
         ###
         #print str(self.obj)
+
+    
+    def readStrainEnergy_table18(self):
+        self.createTransientObject(self.strainEnergy,StrainEnergyObject)
 
     def readStrainEnergy_table18_format1_sort0(self):
         """

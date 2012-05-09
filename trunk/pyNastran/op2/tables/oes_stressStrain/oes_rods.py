@@ -3,7 +3,7 @@ from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class rodDamperObject(stressObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CBUSH'
         
@@ -32,7 +32,7 @@ class rodStressObject(stressObject):
                  ELEMENT                             AXIAL                                         TORQUE
                    ID.                               FORCE
     """
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CROD'
         
@@ -331,7 +331,7 @@ class rodStrainObject(strainObject):
       ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
        1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CROD' #{} # 'CROD/CONROD/CTUBE'
 

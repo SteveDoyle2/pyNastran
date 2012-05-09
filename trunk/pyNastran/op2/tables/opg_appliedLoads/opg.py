@@ -45,6 +45,9 @@ class OPG(object):
         self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
 
         #print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+        assert self.isThermal()==False,self.isThermal
         
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
@@ -236,10 +239,10 @@ class OPG(object):
     def readOPG_Data_table2(self): # Load Vector
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
-            self.createThermalTransientObject(self.loadVectors,loadVectorObject,isSort1) # real
+            self.createTransientObject(self.loadVectors,loadVectorObject) # real
             self.OUG_RealTable()
         elif self.numWide==14:  # real/imaginary or mag/phase
-            self.createThermalTransientObject(self.loadVectors,complexLoadVectorObject,isSort1) # complex
+            self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
             self.OUG_ComplexTable()
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))

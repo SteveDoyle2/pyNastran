@@ -31,8 +31,6 @@ class OQG(object):
         #print self.obj
         params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag','thermal']
         self.deleteAttributes(params)
-        #sys.exit('stopping in oqg1.py')
-        
     
     def readTable_OQG_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
@@ -53,14 +51,20 @@ class OQG(object):
         self.addDataParameter(data,'acousticFlag','f',13,False)  ## acoustic pressure flag
         self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
         
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+        assert self.isThermal()==False,self.isThermal
+
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode',     'i',5)         ## mode number
             self.addDataParameter(data,'eigr',     'f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
+            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
             #self.lsdvmn = self.getValues(data,'i',5) ## load set number
             #self.dataCode['lsdvmn'] = self.lsdvmn
@@ -73,6 +77,7 @@ class OQG(object):
             self.addDataParameter(data,'dt','f',5)   ## time step
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)         ## load set number
             self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
@@ -81,12 +86,16 @@ class OQG(object):
             self.addDataParameter(data,'mode','i',5)         ## mode number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
+            self.applyDataCodeValue('dataNames',['lftsfq'])
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         # tCode=2
@@ -99,6 +108,7 @@ class OQG(object):
 
         #self.printBlock(data)
         self.readTitle()
+
 
     def readOQG_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
@@ -143,10 +153,10 @@ class OQG(object):
     def readOQG_Data_table3(self): # SPC Forces
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
-            self.createThermalTransientObject(self.spcForces,spcForcesObject,isSort1) # real
+            self.createTransientObject(self.spcForces,spcForcesObject) # real
             self.OUG_RealTable()
         elif self.numWide==14:  # real/imaginary or mag/phase
-            self.createThermalTransientObject(self.spcForces,complexSpcForcesObject,isSort1) # complex
+            self.createTransientObject(self.spcForces,complexSpcForcesObject) # complex
             self.OUG_ComplexTable()
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
@@ -155,10 +165,10 @@ class OQG(object):
     def readOQG_Data_table39(self): # MPC Forces
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
-            self.createThermalTransientObject(self.mpcForces,mpcForcesObject,isSort1) # real
+            self.createTransientObject(self.mpcForces,mpcForcesObject) # real
             self.OUG_RealTable()
         elif self.numWide==14:  # real/imaginary or mag/phase
-            self.createThermalTransientObject(self.mpcForces,complexMpcForcesObject,isSort1) # complex
+            self.createTransientObject(self.mpcForces,complexMpcForcesObject) # complex
             self.OUG_ComplexTable()
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))

@@ -69,13 +69,15 @@ class OES(ElementsStressStrain):
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.addDataParameter(data,'lsdvmn','i',5,False)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode',     'i',5)         ## mode number
             self.addDataParameter(data,'eign',     'f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
             self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
-        #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            #self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
 
@@ -107,7 +109,6 @@ class OES(ElementsStressStrain):
             self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
-        ###
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
