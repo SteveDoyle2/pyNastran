@@ -110,14 +110,75 @@ class OEE(object):
         #elif fsCode==[18,2,1]:
         #    self.readOEE_Data_format2_sort1()
         else:
-            self.skipOES_Element()
-            #raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
+            #self.skipOES_Element()
+            raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
         ###
         #print str(self.obj)
 
     
     def readStrainEnergy_table18(self):
         self.createTransientObject(self.strainEnergy,StrainEnergyObject)
+        if self.numWide==4:
+            self.OEE_Strain4()
+        elif self.numWide==5:
+            self.OEE_Strain5()
+        else:   
+            raise NotImplementedError()
+        #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
+
+    def OEE_Strain4(self):
+        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+
+        (format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
+        format1 += 'fff'
+
+        while len(self.data)>=16: # 4*4
+            eData     = self.data[0:16]
+            self.data = self.data[16: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,energy,percent,density) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,energy,percent,density]
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEE_Strain4)
+        #print self.strainEnergy
+
+    def OEE_Strain5(self):
+        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+
+        #(format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
+        format1 = 'ccccccccfff'
+
+        while len(self.data)>=16: # 5*4
+            eData     = self.data[0:20]
+            self.data = self.data[20: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (a,b,c,d,e,f,g,h,energy,percent,density) = out
+            #print "out = ",out
+            word = a+b+c+d+e+f+g+h
+            word = word.strip()
+            #print "eType=%s" %(eType)
+            
+            dataIn = [word,energy,percent,density]
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEE_Strain5)
+        #print self.strainEnergy
 
     def readStrainEnergy_table18_format1_sort0(self):
         """

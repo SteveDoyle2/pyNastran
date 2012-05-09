@@ -32,11 +32,15 @@ class barStressObject(stressObject):
             raise InvalidCodeError('barStress - get the format/sort/stressCode=%s' %(self.code))
         ###
         
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.addNewEid = self.addNewEidTransient
+        if isSort1:
+            if dt is not None:
+                #self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            #self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def addF06Data(self,data,transient):
@@ -171,8 +175,8 @@ class barStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                                          s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
+    def addNewEidSort1(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                                      s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
         #print "Bar Stress add..."
         dt = self.dt
         self.eType[eid] = eType
@@ -399,11 +403,15 @@ class barStrainObject(strainObject):
         else:
             raise InvalidCodeError('barStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.addNewEid = self.addNewEidTransient
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.NewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.NewEidSort2
         ###
 
     def addF06Data(self,data,transient):
@@ -495,7 +503,7 @@ class barStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
+    def addNewEidSort1(self,eType,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
                                       e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
         dt = self.dt
