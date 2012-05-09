@@ -160,10 +160,15 @@ class F06Writer(object):
                   '\n',' \n']
 
         resTypes = [
-                    self.displacements,self.temperatures,
-                    self.loadVectors,
+                    self.displacements,self.velocities,self.accelerations,
+                    self.eigenvectors,
+                    self.temperatures,self.loadVectors,
 
                     self.spcForces,self.mpcForces,
+                    
+                    self.barForces,self.beamForces,self.springForces,
+                    self.pentaPressureForces,
+                    
                     self.rodStrain,self.nonlinearRodStress,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
                     self.beamStrain,self.ctriaxStrain,self.hyperelasticPlateStress,
 
