@@ -33,6 +33,7 @@ class barStressObject(stressObject):
         ###
         
         if isSort1:
+            self.dt = dt
             if dt is not None:
                 #self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
@@ -86,11 +87,8 @@ class barStressObject(stressObject):
             #self.MS_compression[dt][eid] = MSc
         ###
 
-    def getLength34_format1_sort0(self):
+    def getLength(self):
         return (68,'iffffffffffffffff')
-
-    def getLength100_format1_sort0(self):
-        return (40,'ifffffffff')
 
     def deleteTransient(self,dt):
         del self.s1[dt]
@@ -106,28 +104,26 @@ class barStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         """
-        #print self.s1
-        #print self.dt
-        if self.dt not in self.s1:
-            self.s1[self.dt]    = {}
-            self.s2[self.dt]    = {}
-            self.s3[self.dt]    = {}
-            self.s4[self.dt]    = {}
-            self.axial[self.dt] = {}
-            self.smax[self.dt]  = {}
-            self.smin[self.dt]  = {}
-            #self.MS_tension[self.dt]     = {}
-            #self.MS_compression[self.dt] = {}
+        #print "****add new transient****"
+        self.dt = dt
+        self.s1[dt]    = {}
+        self.s2[dt]    = {}
+        self.s3[dt]    = {}
+        self.s4[dt]    = {}
+        self.axial[dt] = {}
+        self.smax[dt]  = {}
+        self.smin[dt]  = {}
+        #self.MS_tension[self.dt]     = {}
+        #self.MS_compression[self.dt] = {}
 
-    def addNewEid100(self,out):
+    def addNewEid100(self,dt,out):
         #print "out = ",out
         #return
         (eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc) = out
-        (eid-self.deviceCode) // 10
         #print "Bar Stress add..."
         self.eType[eid] = 'CBAR' #eType
         #if self.dt not in self.s1:
@@ -156,30 +152,33 @@ class barStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEid(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                                 s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
+    def addNewEid(self,eType,dt,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                                    s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
-        if self.dt not in self.s1:
-            self.s1[eid]    = [s1a,s1b]
-            self.s2[eid]    = [s2a,s2b]
-            self.s3[eid]    = [s3a,s3b]
-            self.s4[eid]    = [s4a,s4b]
-            self.axial[eid] = axial
-            self.smax[eid]  = [smaxa,smaxb]
-            self.smin[eid]  = [smina,sminb]
-            #self.MS_tension[eid]     = MSt
-            #self.MS_compression[eid] = MSc
+
+        self.s1[eid]    = [s1a,s1b]
+        self.s2[eid]    = [s2a,s2b]
+        self.s3[eid]    = [s3a,s3b]
+        self.s4[eid]    = [s4a,s4b]
+        self.axial[eid] = axial
+        self.smax[eid]  = [smaxa,smaxb]
+        self.smin[eid]  = [smina,sminb]
+        #self.MS_tension[eid]     = MSt
+        #self.MS_compression[eid] = MSc
 
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(self,eType,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                                      s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
-        #print "Bar Stress add..."
-        dt = self.dt
+    def addNewEidSort1(self,eType,dt,eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                                         s1b,s2b,s3b,s4b,      smaxb,sminb,MSc):
+        msg = "dt=%s eid=%s s1a=%s" %(dt,eid,s1a)
+        #print msg
+        if dt not in self.s1:
+            self.addNewTransient(dt)
         self.eType[eid] = eType
+        #print self.s1
         self.s1[dt][eid]    = [s1a,s1b]
         self.s2[dt][eid]    = [s2a,s2b]
         self.s3[dt][eid]    = [s3a,s3b]
@@ -190,8 +189,6 @@ class barStressObject(stressObject):
         #self.MS_tension[dt][eid]     = MSt
         #self.MS_compression[dt][eid] = MSc
 
-        #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        #print msg
         #if nodeID==0: raise Exception(msg)
 
     def writeF06(self,header,pageStamp,pageNum=1):

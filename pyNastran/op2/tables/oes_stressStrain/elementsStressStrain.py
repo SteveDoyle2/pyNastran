@@ -76,14 +76,14 @@ class ElementsStressStrain(object):
         self.handleResultsBuffer(self.OES_basicElement)
 
     def OES_CBEAM_2(self): # not tested
-        if self.makeOp2Debug:
-            self.op2Debug.write('---BEAM_2---\n')
-        deviceCode = self.deviceCode
-        nNodes = 10 # 11-1
+        dt = self.nonlinearFactor
+        (formatStart,extract) = self.getOUG_FormatStart()
 
+        nNodes = 10 # 11-1
         nTotal       = self.obj.getLengthTotal()
         (n1,format1) = self.obj.getLength1()
         (n2,format2) = self.obj.getLength2()
+        format1 = formatStart+format1
 
         while len(self.data)>=nTotal:
             eData     = self.data[0:n1]
@@ -92,22 +92,20 @@ class ElementsStressStrain(object):
 
             out = unpack(format1, eData)
             #print "outA = ",out
-            eid = self.obj.addNewEid(out)
+            eid2 = extract(out[0],'???')
+            self.obj.addNewEid(dt,eid2,out[1:])
             
             for iNode in range(nNodes):
                 eData     = self.data[0:n2]
                 self.data = self.data[n2: ]
                 out = unpack(format2, eData)
                 #print "outB = ",out
-                self.obj.add(eid,out)
+                self.obj.add(dt,eid2,out)
 
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.OES_CBEAM_2)
-        if self.makeOp2Debug:
-            print "done with CBEAM-2"
-        #raise Exception('add CBEAM-2...')
 
     def OES_CQUAD4_33(self): # works
         """
@@ -174,9 +172,13 @@ class ElementsStressStrain(object):
     def OES_CBAR_34(self): # ???
         if self.makeOp2Debug:
             self.op2Debug.write('---CBAR_34---\n')
-        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
         #print "len(data) = ",len(self.data)
         assert self.numWide==16,'invalid numWide...numWide=%s' %(self.numWide)
+
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'fffffffffffffff'
+
         while len(self.data)>=64:
             #self.printBlock(self.data)
             eData     = self.data[0:4*16]
@@ -184,10 +186,10 @@ class ElementsStressStrain(object):
             #print "len(data) = ",len(eData)
 
             (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                 s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)= unpack('ifffffffffffffff',eData)
-            eid = (eid - deviceCode) // 10
-            self.obj.addNewEid('CBAR',eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                                          s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)
+                 s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)= unpack(format1,eData)
+            eid2 = extract(eid,'???')
+            self.obj.addNewEid('CBAR',dt,eid2,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
+                                              s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)
 
             #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i smax=%i smin=%i MSt=%i MSc=%i" %(eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,MSc)
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" %(s1b,s2b,s3b,s4b,smaxb,sminb)
