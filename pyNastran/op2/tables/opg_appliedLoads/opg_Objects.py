@@ -2,7 +2,7 @@ from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class appliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         

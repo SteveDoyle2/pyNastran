@@ -600,7 +600,7 @@ class OP2(BDF,  # BDF methods
         self.parseSortCode()
 
         #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase)
-        self.log.debug(self.printTableCode(self.tableCode))
+        #self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
     def getValues(self,data,sFormat,iWordStart,iWordStop=None):

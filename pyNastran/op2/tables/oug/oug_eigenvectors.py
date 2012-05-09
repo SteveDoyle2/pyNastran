@@ -1,7 +1,8 @@
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
+from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
-class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
+class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
     """
     EIGENVALUE =  6.158494E+07
         CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
@@ -11,9 +12,9 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
         2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
-    def __init__(self,dataCode,iSubcase,mode):
-        scalarObject.__init__(self,dataCode,iSubcase)
-        self.caseVal = mode
+    def __init__(self,dataCode,isSort1,iSubcase,mode):
+        TableObject.__init__(self,dataCode,isSort1,iSubcase,mode)
+        #self.caseVal = mode
         self.updateDt = self.updateMode
         #print "mode = %s" %(mode)
         #print "dataCode = ",self.dataCode
@@ -21,8 +22,8 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         
         #assert mode>=0.
         self.gridTypes = {}
-        self.translations = {self.caseVal: {}}
-        self.rotations    = {self.caseVal: {}}
+        #self.translations = {self.caseVal: {}}
+        #self.rotations    = {self.caseVal: {}}
     
     def readF06Data(self,dataCode,data):
         iMode = dataCode['mode']
@@ -50,27 +51,27 @@ class eigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
         self.rotations[self.caseVal] = {}
         self.setDataMembers()
 
-    def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        assert 0<nodeID<1000000000, msg
+    #def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
+        #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        #assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations
 
         #if gridType==0:
         #    Type = 'S'
-        if gridType==1:
-            Type = 'G'
-        elif gridType==2:
-            Type = 'S'
-        elif gridType==7:
-            Type = 'L'
-        else:
-            raise Exception('invalid grid type...gridType=%s' %(gridType))
+        #if gridType==1:
+        #    Type = 'G'
+        #elif gridType==2:
+        #    Type = 'S'
+        #elif gridType==7:
+        #    Type = 'L'
+        #else:
+        #    raise Exception('invalid grid type...gridType=%s' %(gridType))
 
-        self.gridTypes[nodeID] = Type
+        #self.gridTypes[nodeID] = Type
         #print 'self.caseVall = %s' %(self.caseVal),type(self.caseVal)
         #print "d = ",self.translations
-        self.translations[self.caseVal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[self.caseVal][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
+        #self.translations[self.caseVal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        #self.rotations[self.caseVal][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
     def eigenvalues(self):
@@ -286,9 +287,9 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             msg += '\n'
         return msg
 
-class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal=0
-    def __init__(self,dataCode,iSubcase,mode):
-        scalarObject.__init__(self,dataCode,iSubcase)
+class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0, thermal=0
+    def __init__(self,dataCode,isSort1,iSubcase,mode):
+        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,mode)
         self.caseVal = mode
         self.updateDt = self.updateMode
         self.setDataMembers()
@@ -296,9 +297,9 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
         #print "mode = %s" %(mode)
         
         #assert mode>=0.
-        self.gridTypes = {}
-        self.translations = {self.caseVal: {}}
-        self.rotations    = {self.caseVal: {}}
+        #self.gridTypes = {}
+        #self.translations = {self.caseVal: {}}
+        #self.rotations    = {self.caseVal: {}}
 
     def updateMode(self,dataCode,mode):
         """
@@ -314,25 +315,25 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
         self.translations[self.caseVal] = {}
         self.rotations[self.caseVal] = {}
 
-    def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
+    #def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
         #msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
         #assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations
 
         #if gridType==0:
         #    Type = 'S??'
-        if gridType==1:
-            Type = 'G'
-        elif gridType==2:
-            Type = 'S'
-        else:
-            raise Exception('invalid grid type...gridType=%s' %(gridType))
+        #if gridType==1:
+        #    Type = 'G'
+        #elif gridType==2:
+        #    Type = 'S'
+        #else:
+        #    raise Exception('invalid grid type...gridType=%s' %(gridType))
 
-        self.gridTypes[nodeID] = Type
+        #self.gridTypes[nodeID] = Type
         #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
         #print "d = ",self.translations
-        self.translations[self.caseVal][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
-        self.rotations[self.caseVal][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
+        #self.translations[self.caseVal][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
+        #self.rotations[self.caseVal][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
     ###
 
     def eigenvalues(self):
@@ -391,7 +392,8 @@ class complexEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, ther
                     if abs(val)<1e-6:
                         msg += '%10s ' %(0)
                     else:
-                        msg += '%10.3g ' %(val)
+                        msg += '%10s ' %(str(val))
+                        #msg += '%10.3g ' %(val)
                     ###
                 msg += '\n'
             ###

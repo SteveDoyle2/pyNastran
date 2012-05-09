@@ -8,13 +8,13 @@ from struct import unpack
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
 from opg_Objects import appliedLoadsObject
-from opg_loadVector import loadVectorObject
+from opg_loadVector import loadVectorObject,complexLoadVectorObject
 
 class OPG(object):
     """Table of element forces"""
     def readTable_OPG(self):
         table3     = self.readTable_OPG_3
-        table4Data = self.readOPG1_Data
+        table4Data = self.readOPG_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OPG()
 
@@ -98,74 +98,76 @@ class OPG(object):
         #self.printBlock(data)
         self.readTitle()
 
-    def readOPG1_Data(self):
+    def readOPG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
 
         # grid point force balance
         if   tfsCode==[19,1,0]:
-            self.readOPG1_Data_table19_format1_sort0()
+            self.readOPG_Data_table19_format1_sort0()
         #elif tfsCode==[19,1,1]:
-        #    self.readOPG1_Data_format1_sort1()
+        #    self.readOPG_Data_format1_sort1()
         #elif tfsCode==[19,2,1]:
-        #    self.readOPG1_Data_format2_sort1()
+        #    self.readOPG_Data_format2_sort1()
         #elif tfsCode==[19,3,0]:
-        #    self.readOPG1_Data_format3_sort0()
+        #    self.readOPG_Data_format3_sort0()
         #elif tfsCode==[19,3,1]:
-        #    self.readOPG1_Data_format3_sort1()
+        #    self.readOPG_Data_format3_sort1()
         
         # load vector
-        elif tfsCode==[2,1,0]:
-            self.readOPG1_Data_table2_format1_sort0()
+        elif self.tableCode==2:
+            self.readOPG_Data_table2() ### was on
+        #elif tfsCode==[2,1,0]:
+            #self.readOPG_Data_table2_format1_sort0() ### was on
         #elif tfsCode==[2,1,1]:
-        #    self.readOPG1_Data_format1_sort1()
+        #    self.readOPG_Data_format1_sort1()
         #elif tfsCode==[2,2,1]:
-        #    self.readOPG1_Data_format2_sort1()
+        #    self.readOPG_Data_format2_sort1()
         #elif tfsCode==[2,3,0]:
-        #    self.readOPG1_Data_format3_sort0()
+        #    self.readOPG_Data_format3_sort0()
         #elif tfsCode==[2,3,1]:
-        #    self.readOPG1_Data_format3_sort1()
+        #    self.readOPG_Data_format3_sort1()
 
         # Nonlinear force vector
         #elif tfsCode==[12,1,0]:
-        #    self.readOPG1_Data_format1_sort0()
+        #    self.readOPG_Data_format1_sort0()
 
         # OGS1- grid point stresses - surface
         #elif tfsCode==[26,1,0]:
-        #    self.readOPG1_Data_format1_sort0()
+        #    self.readOPG_Data_format1_sort0()
 
         # OGS1- grid point stresses - volume direct
         #elif tfsCode==[27,1,0]:
-        #    self.readOPG1_Data_format1_sort0()
+        #    self.readOPG_Data_format1_sort0()
 
         # OGS1- grid point stresses - principal
         #elif tfsCode==[28,1,0]:
-        #    self.readOPG1_Data_format1_sort0()
+        #    self.readOPG_Data_format1_sort0()
 
         # OGS - Grid point stress discontinuities (plane strain)
         #elif tfsCode==[35,1,0]:
-        #    self.readOPG1_Data_format1_sort0()
+        #    self.readOPG_Data_format1_sort0()
 
         # OFMPF2M - does this belong here?
         #elif tfsCode==[51,3,3]:
-        #    self.readOPG1_Data_format3_sort3()
+        #    self.readOPG_Data_format3_sort3()
         
         # OSMPF2M - does this belong here?
         #elif tfsCode==[52,3,3]:
-        #    self.readOPG1_Data_format3_sort3()
+        #    self.readOPG_Data_format3_sort3()
         
         # OPMPF2M - does this belong here?
         #elif tfsCode==[53,3,3]:
-        #    self.readOPG1_Data_format3_sort3()
+        #    self.readOPG_Data_format3_sort3()
         
         # OLMPF2M - does this belong here?
         #elif tfsCode==[54,3,3]:
-        #    self.readOPG1_Data_format3_sort3()
+        #    self.readOPG_Data_format3_sort3()
 
         # OGMPF2M - does this belong here?
         #elif tfsCode==[55,3,3]:
-        #    self.readOPG1_Data_format3_sort3()
+        #    self.readOPG_Data_format3_sort3()
         else:
             #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
             #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
@@ -173,27 +175,27 @@ class OPG(object):
         ###
         #print self.obj
 
-    #def readOPG1_Data_format1_sort1(self):
+    #def readOPG_Data_format1_sort1(self):
         #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
         #self.skipOES_Element()
 
-    #def readOPG1_Data_format2_sort1(self):
+    #def readOPG_Data_format2_sort1(self):
         #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
         #self.skipOES_Element()
 
-    #def readOPG1_Data_format3_sort0(self):
+    #def readOPG_Data_format3_sort0(self):
         #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         #self.skipOES_Element()
 
-    #def readOPG1_Data_format3_sort1(self):
+    #def readOPG_Data_format3_sort1(self):
         #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         #self.skipOES_Element()
 
-    #def readOPG1_Data_format3_sort3(self):
+    #def readOPG_Data_format3_sort3(self):
         #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
         #self.skipOES_Element()
 
-    def readOPG1_Data_table19_format1_sort0(self):
+    def readOPG_Data_table19_format1_sort0(self):
         if self.thermal==0:
             if self.analysisCode==1: # static
                 #print "isAppliedLoads"
@@ -231,7 +233,19 @@ class OPG(object):
         ###
         
 
-    def readOPG1_Data_table2_format1_sort0(self):
+    def readOPG_Data_table2(self): # Load Vector
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.loadVectors,loadVectorObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.loadVectors,complexLoadVectorObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOPG_Data_table2_format1_sort0(self):
         if self.thermal==0:
             if self.analysisCode==1: # load vector
                 self.createTransientObject(self.loadVectors,loadVectorObject)

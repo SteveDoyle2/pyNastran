@@ -28,7 +28,6 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEF()
         
-
     def deleteAttributes_OEF(self):
         params = ['elementType','dLoadID','loadID','obj','markerStart','oCode',
                   'eigr','eigi','eign','mode','freq','time','thermal',]
@@ -57,6 +56,8 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         #print "dLoadID(8)=%s formatCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         #print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
 
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
@@ -235,10 +236,11 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         Imag = imagMapper[self.elementType]
         return (Real,Imag)
 
-    def readOEF_Forces(self):
-        #self.skipOES_Element() # skipping entire table
-        #return
+    def readOEF1_Data(self,*args):
+        self.skipOES_Element() # skipping entire table
+        return
         
+    def readOEF_Forces(self):
         #print self.codeInformation()
         try:
             (numWideReal,numWideImag) = self.OEF_ForceCode()

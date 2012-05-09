@@ -2,8 +2,8 @@ from numpy import array
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
 class mpcForcesObject(TableObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase,dt)
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+        TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
@@ -113,8 +113,8 @@ class mpcForcesObject(TableObject):
         return msg
 
 class complexMpcForcesObject(complexTableObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
-        complexTableObject.__init__(self,dataCode,iSubcase,dt)
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:

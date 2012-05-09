@@ -108,12 +108,14 @@ class OQG(object):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1]
 
-        if tfsCode==[3,1,0]:  # SPC Force vector
-            self.readOQG_Data_table3_format1_sort0()
-        elif tfsCode==[3,1,1]:
-            self.readOQG_Data_table3_format1_sort1()
-        elif tfsCode==[3,2,0]:
-            self.readOQG_Data_table3_format2_sort0()
+        if self.tableCode==3:  # SPC Force vector
+            self.readOQG_Data_table3()
+        ##if tfsCode==[3,1,0]:  # SPC Force vector
+            #self.readOQG_Data_table3_format1_sort0()  ### was on
+        #elif tfsCode==[3,1,1]:
+            #self.readOQG_Data_table3_format1_sort1()  ### was on
+        #elif tfsCode==[3,2,0]:
+            #self.readOQG_Data_table3_format2_sort0()  ### was on
         #elif tfsCode==[3,2,1]:
             #self.skipOES_Element()
             #self.readOQG_Data_table3_format2_sort1()
@@ -124,8 +126,10 @@ class OQG(object):
             #self.skipOES_Element()
             #self.readOQG_Data_table3_format3_sort1()
         
-        elif tfsCode==[39,1,0]: # MPC Forces
-            self.readOQG_Data_table39_format1_sort0()
+        if self.tableCode==39:  # MPC Force vector
+            self.readOQG_Data_table3()
+        #elif tfsCode==[39,1,0]: # MPC Forces
+            #self.readOQG_Data_table39_format1_sort0()  ### was on
         #elif tfsCode==[39,1,1]:
             #self.skipOES_Element()
             #self.readOQG_Data_table39_format1_sort1()
@@ -135,6 +139,30 @@ class OQG(object):
             #raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
+
+    def readOQG_Data_table3(self): # SPC Forces
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.spcForces,spcForcesObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.spcForces,complexSpcForcesObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOQG_Data_table39(self): # MPC Forces
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.mpcForces,mpcForcesObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.mpcForces,complexMpcForcesObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
 
     def readOQG_Data_table39_format1_sort0(self):
         if self.thermal==0:
