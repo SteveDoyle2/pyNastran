@@ -23,39 +23,15 @@ class StrainEnergyObject(scalarObject):
         self.density = {}
         #print self.dataCode
         #print "numWide = %s %s"  %(self.dataCode['numWide'],type(self.dataCode['numWide']))
-        self.updateNumWide()
 
-        if dt is not None:
-            self.dt = dt
-            #print "*****dt = ",self.dt
-            self.addNewTransient()
-            self.isTransient = True
-            self.add = self.addTransient
-            #asdf
-        ###
-
-    def updateNumWide(self):
-        #print "***dataCode = ",self.dataCode
-        if self.dataCode['numWide']==4:
-            self.getLength    = self.getLength4
-            self.add          = self.add4
-            self.addTransient = self.addTransient4
-        elif self.dataCode['numWide']==5:
-            self.getLength    = self.getLength5
-            self.add          = self.add5
-            self.addTransient = self.addTransient5
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
         else:
-            raise RuntimeError('invalid numWide=%s' %(self.numWide))
+            assert dt is not None
+            self.add = self.addSort2
         ###
-        #print "self.dt = ",self.dt
-        if self.dt is not None:
-            self.add = self.addTransient
-
-    def getLength4(self):
-        return(16,'ifff')
-
-    def getLength5(self):
-        return(20,'ssssssssfff')
 
     def updateDt(self,dataCode,dt):
         """
@@ -83,19 +59,17 @@ class StrainEnergyObject(scalarObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         """
-        if self.dt not in self.energy:
-            self.energy[self.dt]  = {}
-            self.percent[self.dt] = {}
-            self.density[self.dt] = {}
+        self.energy[dt]  = {}
+        self.percent[dt] = {}
+        self.density[dt] = {}
         
-    def add4(self,out):
+    def add(self,dt,out):
         #print "add4"
         (eid,energy,percent,density) = out
-        eid = (eid-self.deviceCode)//10
         #print "energyGridIDs = %s" %(self.energy.keys())
         #assert grid not in self.energy,'grid=%s out=%s' %(grid,out)
         if eid<=0:
@@ -104,24 +78,12 @@ class StrainEnergyObject(scalarObject):
         self.percent[eid] = percent
         self.density[eid] = density
 
-    def add5(self,out):
-        #print "add5"
-        (a,b,c,d,e,f,g,h,energy,percent,density) = out
-        #print "out = ",out
-        word = a+b+c+d+e+f+g+h
-        word = word.strip()
-        #assert word not in self.energy,'%s in energy...' %(word)
-        #if grid<=0:
-        #    raise InvalidGridID_Error('grid=%s' %(grid))
-        self.energy[word]  = energy
-        self.percent[word] = percent
-        self.density[word] = density
-
-    def addTransient4(self,out):
-        #print "addTransient4"
+    def addSort1(self,dt,out):
         dt = self.dt
+        if dt not in self.energy:
+            self.addNewTransient(dt)
+
         (eid,energy,percent,density) = out
-        eid = (eid-self.deviceCode)//10
         #print str(self)
         #assert grid not in self.energy[dt],'grid=%s dt=%s energy=%s percent=%s density=%s' %(grid,dt,energy,percent,density)
         if eid<=0:
@@ -132,18 +94,6 @@ class StrainEnergyObject(scalarObject):
         self.percent[dt][eid] = percent
         self.density[dt][eid] = density
     
-    def addTransient5(self,out):
-        #print "addTransient5"
-        dt = self.dt
-        (a,b,c,d,energy,percent,density) = out
-        word = a+b+c+d
-        assert word not in self.energy[dt]
-        #if grid<=0:
-        #    raise InvalidGridID_Error('grid=%s' %(grid))
-        self.energy[dt][word]  = energy
-        self.percent[dt][word] = percent
-        self.density[dt][word] = density
-
     def __reprTransient__(self):
         msg  = '---Transient Strain Energy Object---\n'
         for dt,Energy in sorted(self.energy.iteritems()):

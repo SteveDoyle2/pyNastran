@@ -55,7 +55,11 @@ class ElementsStressStrain(object):
         formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
         """
         deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+        
+        (format1,extract) = self.getOUG_FormatStart()
         (nTotal,dataFormat) = self.obj.getLength()
+        dataFormat = format1+dataFormat
         #print "nTotal=%s dataFormat=%s len(data)=%s" %(nTotal,dataFormat,len(self.data))
         
         n = 0
@@ -64,7 +68,8 @@ class ElementsStressStrain(object):
             eData = self.data[n:n+nTotal]
             out = unpack(dataFormat,eData)
             #print "out = ",out
-            self.obj.addNewEid(out)
+            eid = extract(out[0],'???')
+            self.obj.addNewEid(dt,eid,out[1:])
             n+=nTotal
         ###
         self.data = self.data[n: ]
