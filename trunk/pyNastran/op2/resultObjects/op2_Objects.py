@@ -113,6 +113,8 @@ class scalarObject(baseScalarObject):
         ###
 
     def setDataMembers(self):
+        if 'dataNames' not in self.dataCode:
+            raise RuntimeError(self.codeInformation())
         for name in self.dataCode['dataNames']:
             #print "name = ",name
             self.appendDataMember(name+'s',name)

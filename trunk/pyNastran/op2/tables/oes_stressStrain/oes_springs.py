@@ -16,32 +16,21 @@ class celasStressObject(stressObject):
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.stress = {}
-        if self.code in [[1,0,0]]:
-            self.getLength = self.getLength_format1_sort0
-            #self.isImaginary = False
+
+        self.dt = dt
+        if isSort1:
             if dt is not None:
-                self.addNewTransient = self.addNewTransient_format1_sort0
-                self.addNewEid       = self.addNewEidTransient_format1_sort0
-                self.isTransient = True
-            else:
-                self.addNewEid = self.addNewEid_format1_sort0
+                #self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
             ###
-        elif 0: #self.code==[2,1,0]:
-            self.getLength       = self.getLength_format1_sort0
-            self.addNewTransient = self.addNewTransient_format2_sort1
-            self.addNewEid       = self.addNewEidTransient_format2_sort1
-            self.isImaginary = True
         else:
-            raise InvalidCodeError('rodStress - get the format/sort/stressCode=%s' %(self.code))
-        ###
-        if dt is not None:
-            #self.isTransient = True
-            self.dt = self.nonlinearFactor
-            self.addNewTransient()
+            assert dt is not None
+            #self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
-    def getLength_format1_sort0(self):
-        return (8,'if')
+    def getLength(self):
+        return (8,'f')
 
     def deleteTransient(self,dt):
         del self.stress[dt]
@@ -51,59 +40,25 @@ class celasStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient_format1_sort0(self):
+    def addNewTransient(self,dt):
         """initializes the transient variables"""
         self.elementName = self.dataCode['elementName']
-        if self.dt not in self.stress:
-            self.stress[self.dt] = {}
+        self.dt = dt
+        self.stress[dt] = {}
 
-    def addNewTransient_format2_sort1(self):
-        """initializes the transient variables"""
-        raise Exception('not implemented')
-        #print self.dataCode
-        self.elementName = self.dataCode['elementName']
-        if self.dt not in self.stress:
-            self.axial[self.dt]     = {}
-            self.torsion[self.dt]   = {}
-
-    def addNewEid_format1_sort0(self,out):
-        #print "Rod Stress add..."
-        (eid,stress) = out
-        eid = (eid-self.deviceCode) // 10
-        #assert isinstance(eid,int)
+    def addNewEid(self,dt,eid,out):
+        (stress) = out
         self.eType[eid]  = self.elementName
         self.stress[eid] = stress
 
-    def addNewEid_format2_sort1(self,out):
-        raise Exception('not implemented')
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        assert eid >= 0
+    def addNewEidSort1(self,dt,eid,out):
+        if dt not in self.stress:
+            self.addNewTransient(dt)
+        (stress) = out
         self.eType[eid]      = self.elementName
-        self.axial[eid]      = [axialReal,axialImag]
-        self.torsion[eid]    = [torsionReal,torsionImag]
+        self.stress[dt][eid] = stress
 
-    def addNewEidTransient_format1_sort0(self,out):
-        (eid,stress) = out
-        eid = (eid-self.deviceCode) // 10
-        self.eType[eid] = self.elementName
-        dt = self.dt
-        #assert isinstance(eid,int)
-        #assert eid >= 0
-        self.eType[eid]           = self.elementName
-        self.stress[dt][eid]      = stress
-
-    def addNewEidTransient_format2_sort1(self,out):
-        raise Exception('not implemented')
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        dt = self.dt
-        assert eid >= 0
-        self.eType[eid]          = self.elementName
-        self.axial[dt][eid]      = [axialReal,axialImag]
-        self.torsion[dt][eid]    = [torsionReal,torsionImag]
-
-    def __reprTransient_format1_sort0__(self):
+    def __reprTransient__(self):
         msg = '---CELASx STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['stress']
@@ -124,38 +79,9 @@ class celasStressObject(stressObject):
             ###
         return msg
 
-    def __reprTransient_format2_sort1__(self):
-        raise Exception('not implemented')
-        msg = '---COMPLEX CELASx STRESSES---\n'
-        msg += '%-10s %10s ' %('EID','eType')
-        headers = ['axialReal','axialImag','torsionReal','torsionImag']
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid in sorted(axial):
-                axial   = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                msg += '%-6g %6s ' %(eid,self.eType)
-                vals = axial + torsion # concatination
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%10s ' %('0')
-                    else:
-                        msg += '%10i ' %(val)
-                    ###
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-            ###
-        return msg
-
     def __repr__(self):
         if   self.isTransient and self.code==[1,0,0]:
-            return self.__reprTransient_format1_sort0__()
-        elif self.code==[2,1,0]:
-            return self.__reprTransient_format2_sort1__()
+            return self.__reprTransient__()
 
         msg = '---CELASx STRESSES---\n'
         msg += '%-8s %6s ' %('EID','eType')

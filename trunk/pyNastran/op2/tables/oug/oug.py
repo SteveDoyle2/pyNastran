@@ -105,6 +105,7 @@ class OUG(object):
             self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
+            self.applyDataCodeValue('dataNames',['dt'])
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
