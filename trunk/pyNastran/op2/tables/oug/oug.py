@@ -16,10 +16,12 @@ from oug_displacements import (
 
 from oug_velocities import (                # tableCode=10,formatCode=1 sortCode=0
      velocityObject,
+     complexVelocityObject
      )
 
 from oug_accelerations import (             # tableCode=11,formatCode=1 sortCode=0
      accelerationObject,
+     complexAccelerationObject
      )
 
 from oug_temperatures import (              # tableCode=1, formatCode=1 sortCode=0
@@ -31,6 +33,7 @@ from oug_eigenvectors import (
      complexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
      realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
      )
+from pyNastran.op2.op2_helper import polarToRealImag
 
 class OUG(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
@@ -79,6 +82,9 @@ class OUG(object):
         self.addDataParameter(data,'acousticFlag','f',13,False)  ## acoustic pressure flag
         self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat transfer, 0 otherwise
         
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
@@ -143,12 +149,14 @@ class OUG(object):
         #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         # displacement
-        if   tfsCode==[1,1,0]:
-            self.readOUG_Data_table1_format1_sort0()
-        elif tfsCode==[1,1,1]:
-            self.readOUG_Data_table1_format1_sort1()
-        elif tfsCode==[1,2,0]:
-            self.readOUG_Data_table1_format2_sort0()
+        if self.tableCode==1:
+            self.readOUG_Data_table1()
+        #if   tfsCode==[1,1,0]:  ### was on
+            #self.readOUG_Data_table1_format1_sort0()
+        #elif tfsCode==[1,1,1]:  ### was on
+            #self.readOUG_Data_table1_format1_sort1()
+        #elif tfsCode==[1,2,0]:  ### was on
+            #self.readOUG_Data_table1_format2_sort0()
         #elif tfsCode==[1,2,1]:
         #    self.readOUG_Data_table1_format2_sort1()
         #elif tfsCode==[1,2,2]:
@@ -161,12 +169,14 @@ class OUG(object):
         #    self.readOUG_Data_table1_format3_sort2()
 
         # modes
-        elif tfsCode==[7,1,0]:
-            self.readOUG_Data_table7_format1_sort0()
+        elif self.tableCode==7:
+            self.readOUG_Data_table7()
+        #elif tfsCode==[7,1,0]: ### was on
+            #self.readOUG_Data_table7_format1_sort0()
         #elif tfsCode==[7,1,1]:
         #    self.readOUG_Data_table7_format1_sort1()
-        elif tfsCode==[7,2,0]:
-            self.readOUG_Data_table7_format2_sort0()
+        #elif tfsCode==[7,2,0]: ### was on
+            #self.readOUG_Data_table7_format2_sort0()
         #elif tfsCode==[7,2,1]:
         #    self.readOUG_Data_table7_format2_sort1()
         #elif tfsCode==[7,2,2]:
@@ -179,12 +189,14 @@ class OUG(object):
         #    self.readOUG_Data_table7_format3_sort2()
 
         # velocity
-        elif tfsCode==[10,1,0]:
-            self.readOUG_Data_table10_format1_sort0()
+        elif self.tableCode==10:
+            self.readOUG_Data_table10()
+        #elif tfsCode==[10,1,0]:  ### was on
+            #self.readOUG_Data_table10_format1_sort0()
         #elif tfsCode==[10,1,1]:
         #    self.readOUG_Data_table10_format1_sort1()
-        elif tfsCode==[10,2,0]:
-            self.readOUG_Data_table10_format2_sort0()
+        #elif tfsCode==[10,2,0]:  ### was on
+            #self.readOUG_Data_table10_format2_sort0()
         #elif tfsCode==[10,2,1]:
         #    self.readOUG_Data_table10_format2_sort1()
         #elif tfsCode==[10,2,2]:
@@ -197,12 +209,15 @@ class OUG(object):
         #    self.readOUG_Data_table10_format3_sort2()
 
         # Acceleration vector
-        elif tfsCode==[11,1,0]:
-            self.readOUG_Data_table11_format1_sort0()
+        elif self.tableCode==11:
+            self.readOUG_Data_table11()
+        #elif tfsCode==[11,1,0]:  ### was on
+            #self.readOUG_Data_table11_format1_sort0()
         #elif tfsCode==[11,1,1]:
-        #    self.readOUG_Data_table11_format1_sort1()
-        elif tfsCode==[11,2,0]:
-            self.readOUG_Data_table11_format2_sort0()
+            #self.readOUG_Data_table11_format1_sort1()
+        #elif tfsCode==[11,2,0]:  ### was on
+            #self.readOUG_Data_table11_format2_sort0()
+
         #elif tfsCode==[11,2,1]:
         #    self.readOUG_Data_table11_format2_sort1()
         #elif tfsCode==[11,2,2]:
@@ -418,7 +433,144 @@ class OUG(object):
         #else:
         #    self.skipOES_Element()
         ###
+    
+    def readOUG_Data_table1(self): # new displacement
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.displacements,displacementObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.displacements,complexDisplacementObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
 
+    def readOUG_Data_table7(self): # new eigenvector
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.eigenvectors,eigenVectorObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.eigenvectors,complexEigenVectorObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOUG_Data_table10(self): # new velocity
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.velocities,velocityObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.velocities,complexVelocityObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOUG_Data_table11(self): # new acceleration
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            self.createThermalTransientObject(self.accelerations,accelerationObject,isSort1) # real
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            self.createThermalTransientObject(self.accelerations,complexAccelerationObject,isSort1) # complex
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def getOUG_FormatStart(self):
+        """
+        Returns an i or an f depending on if it's SORT2 or not.
+        Also returns an extraction function that is called on the first argument
+        """
+        isSort1 = self.isSort1()
+        if isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            format1 = 'i' # SORT1
+            extract = self.extractSort1
+        else: # values from IDENT   #@todo test this...
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            if self.analysisCode in [1,2,3,4,7,8,11]:
+                format1 = 'i' # SORT1
+            elif self.analysisCode in [5,6,9,10,12]:
+                format1 = 'f' # SORT1
+            else:
+                raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            ###
+
+            extract = self.extractSort2
+            #eid = self.nonlinearFactor
+        return (format1,extract)
+
+    def OUG_RealTable(self):
+        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'iffffff'
+
+        while len(self.data)>=32: # 8*4
+            eData     = self.data[0:32]
+            self.data = self.data[32: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,gridType,tx,ty,tz,rx,ry,rz) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,gridType,tx,ty,tz,rx,ry,rz]
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OUG_RealTable)
+
+    def OUG_ComplexTable(self):
+        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'iffffffffffff'
+        #print "format1 = ",format1
+        isMagnitudePhase = self.isMagnitudePhase()
+
+        while len(self.data)>=56: # 14*4
+            eData     = self.data[0:56]
+            self.data = self.data[56: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,gridType,txr,tyr,tzr,rxr,ryr,rzr,
+                          txi,tyi,tzi,rxi,ryi,rzi) = out
+
+            if isMagnitudePhase:
+                (txr,txi) = polarToRealImag(txr,txi)
+                (tyr,tyi) = polarToRealImag(tyr,tyi)
+                (tzr,tzi) = polarToRealImag(tzr,tzi)
+
+                (rxr,rxi) = polarToRealImag(rxr,rxi)
+                (ryr,ryi) = polarToRealImag(ryr,ryi)
+                (rzr,rzi) = polarToRealImag(rzr,rzi)
+
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,gridType,txr,tyr,tzr,rxr,ryr,rzr,
+                                    txi,tyi,tzi,rxi,ryi,rzi]
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OUG_ComplexTable)
+        
+    
     def readOUG_Data_table11_format1_sort0(self): # acceleration
         #assert self.formatCode==1 # Real
         #assert self.sortCode==0   # Real
@@ -444,6 +596,32 @@ class OUG(object):
             pass
         ###
         self.readMappedScalarsOut(debug=False) # handles dtMap
+
+    def readOUG_Data_table11_format1_sort1(self): # acceleration
+        print self.codeInformation()
+        #assert self.formatCode==1 # Real
+        #assert self.sortCode==0   # Real
+        if self.thermal==0 or self.thermal>1:  ## @warning dont leave the thermal>0!!!!
+            if self.analysisCode==1: # acceleration
+                #print "isAcceleration"
+                self.createTransientObject(self.accelerations,accelerationObject)
+            elif self.analysisCode==6: # transient acceleration
+                #print "isTransientAcceleration"
+                self.createTransientObject(self.accelerations,accelerationObject)
+            else:
+                raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+                pass
+            ###
+        elif self.thermal==1:
+            #print self.codeInformation()
+            raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
+            pass
+        else:
+            #print self.codeInformation()
+            raise NotImplementedError('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
+            pass
+        ###
+        self.readMappedScalarsOut2(debug=False) # handles dtMap
 
     def readOUG_Data_table11_format2_sort0(self): # acceleration
         #assert self.formatCode==1 # Real

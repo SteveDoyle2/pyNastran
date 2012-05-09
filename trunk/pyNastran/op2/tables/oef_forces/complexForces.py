@@ -3,19 +3,7 @@ import sys
 from struct import unpack
 
 from oef_complexForceObjects import *
-
-def polarToRealImag(mag,phase):
-    """
-    Converts magnitude-phase to real-imaginary
-    so all complex results are consistent
-    @param mag magnitude c^2
-    @param phase phase angle phi (degrees; theta)
-    @retval realValue the real component a of a+bi
-    @retval imagValue the imaginary component b of a+bi
-    """
-    realValue = mag*cos(radians(phase))
-    imagValue = mag*cos(radians(phase))
-    return (realValue,imagValue)
+from pyNastran.op2.op2_helper import polarToRealImag
 
 class ComplexForces(object):
 

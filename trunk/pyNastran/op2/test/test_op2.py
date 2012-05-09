@@ -112,13 +112,13 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,deleteF06=Fal
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    #except TapeCodeError: # the op2 is bad, not my fault
-    #    isPassed = True
-    #    if stopOnFailure:
-    #        raise
-    #    else:
-    #        isPassed = True
-    #    ###
+    except TapeCodeError: # the op2 is bad, not my fault
+        isPassed = True
+        if stopOnFailure:
+            raise
+        else:
+            isPassed = True
+        ###
     except IOError: # missing file
         pass
     #except AssertionError:
@@ -128,8 +128,8 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,deleteF06=Fal
     #    isPassed = True
     #except InvalidAnalysisCodeError:
     #    isPassed = True
-    #except InvalidMarkersError:
-    #    isPassed = True
+    except InvalidMarkerError:
+        isPassed = True
 
     #except TabCharacterError:
     #    isPassed = True

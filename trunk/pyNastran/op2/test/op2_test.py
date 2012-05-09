@@ -59,7 +59,7 @@ if __name__=='__main__':
     writeBDF  = False
     writeF06  = False
     deleteF06 = True
-    saveCases = False
+    saveCases = True
     regenerate = False
     stopOnFailure = False
     getSkipCards = False
@@ -81,7 +81,7 @@ if __name__=='__main__':
     
     #            HIS, R1B        EQEXIN
     #skipFiles = ['accopt3.op2','acms111m.op2','adjoint.op2','aerobeam.op2',] # tpl
-    skipFiles = ['nltrot99.op2','rot12901.op2'] # giant
+    skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
     #print files
 
     nStart = 0

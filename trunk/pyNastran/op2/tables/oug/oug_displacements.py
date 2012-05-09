@@ -5,8 +5,8 @@ import copy
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
 class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
-    def __init__(self,dataCode,iSubcase,dt=None):
-        TableObject.__init__(self,dataCode,iSubcase,dt)
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+        TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         if self.dt is not None:
@@ -101,8 +101,8 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         return msg
 
 class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
-    def __init__(self,dataCode,iSubcase,dt=None):
-        complexTableObject.__init__(self,dataCode,iSubcase,dt)
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',

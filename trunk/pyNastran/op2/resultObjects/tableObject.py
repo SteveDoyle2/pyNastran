@@ -4,22 +4,31 @@ from numpy import array
 from op2_Objects import scalarObject
 
 class TableObject(scalarObject):  # displacement style table
-    def __init__(self,dataCode,iSubcase,dt):
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         self.gridTypes    = {}
         self.translations = {}
         self.rotations    = {}
 
-        if dt is not None:
-            self.addNewTransient()
-            self.add  = self.addTransient
-            self.addF = self.addTransientF
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+        #if dt is not None:
+            #self.addNewTransient()
+            #self.add  = self.addTransient
+            #self.addF = self.addTransientF
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
             #self.writeOp2 = self.writeOp2Transient
         ###
-        self.parseLength()
+        #self.parseLength()
 
     def addF06Data(self,data,transient):
         if transient is None:
@@ -43,37 +52,6 @@ class TableObject(scalarObject):  # displacement style table
             self.rotations[dt][nodeID]    = array([r1,r2,r3])
         ###
 
-    def parseLength(self):
-        self.mainHeaders = []
-        self.strFormat = ''
-        #print self.dataCode
-        if self.analysisCode==5:
-            self.mainHeaders.append('Freq')
-            self.strFormat += 'fi'
-            self.add = self.addF
-            #raise Exception('???A')
-        #elif self.analysisCode in[6]: # 10
-            #self.mainHeaders.append('Time')
-            #self.strFormat += 'fi'
-            #self.add = self.addF
-            #print self.dataCode
-            #raise Exception('???B')
-        elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
-            self.mainHeaders.append('NodeID')
-            self.strFormat += 'ii'
-        else:
-            raise Exception('invalid analysisCode=%s' %(self.analysisCode))
-        self.mainHeaders.append('GridType')
-
-        # real
-        self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]:
-        self.headers = ['T1','T2','T3','R1','R2','R3']
-        
-        self.mainHeaders = tuple(self.mainHeaders)
-
-    def getLength(self):
-        return (4*len(self.strFormat),self.strFormat)
-
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
@@ -92,27 +70,25 @@ class TableObject(scalarObject):  # displacement style table
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """initializes the transient variables"""
-        if self.dt not in self.translations:
-            self.translations[self.dt] = {}
-            self.rotations[self.dt]    = {}
+        self.translations[dt] = {}
+        self.rotations[dt]    = {}
 
-    def addBinary(self,deviceCode,data):
-        (nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
-        msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        assert 0<nodeID<1000000000, msg
-        assert nodeID not in self.translations
+    #def addBinary(self,deviceCode,data):
+        #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
+        #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
+        #assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations
 
-        self.translations[nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
+        #self.translations[nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        #self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def add(self,out):
+    def add(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
         #print msg
-        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements,'displacementObject - static failure'
         
@@ -122,58 +98,52 @@ class TableObject(scalarObject):  # displacement style table
         self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def addF(self,out):
-        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
-        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],time,gridType,v1,v2,v3)
-        #print msg
-        #assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.translations,'displacementObject - static failure'
-        
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[freq]    = gridType
-        self.translations[freq] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[freq]    = array([v4,v5,v6]) # rx,ry,rz
-    ###
-
-    def addTransient(self,out):
+    def addSort1(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
-        nodeID = (nodeID-self.deviceCode) // 10
+        if dt not in self.translations:
+            self.addNewTransient(dt)
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         #print msg
-        assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements[self.dt],'displacementObject - transient failure'
+        #assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 
         gridType = self.recastGridType(gridType)
         self.gridTypes[nodeID]             = gridType
-        self.translations[self.dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[self.dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
+        self.translations[dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def addTransientF(self,out):
-        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
-        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],freq,gridType,v1,v2,v3)
+    def addSort2(self,nodeID,out):
+        (dt,gridType,v1,v2,v3,v4,v5,v6) = out
+        if dt not in self.translations:
+            self.addNewTransient(dt)
+        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
+        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         #print msg
+        #assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
+
         gridType = self.recastGridType(gridType)
-        self.gridTypes[freq]             = gridType
-        self.translations[self.dt][freq] = array([v1,v2,v3]) # dx,dy,dz
-        self.rotations[self.dt][freq]    = array([v4,v5,v6]) # rx,ry,rz
+        self.gridTypes[nodeID]             = gridType
+        self.translations[dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
+        self.rotations[dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def writeOp2(self,block3,deviceCode=1):
-        """
-        creates the binary data for writing the table
-        @warning hasnt been tested...
-        """
-        msg = block3
-        for nodeID,translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            (dx,dy,dz) = translation
-            (rx,ry,rz) = rotation
-            grid = nodeID*10+deviceCode
-            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
+    #def writeOp2(self,block3,deviceCode=1):
+        #"""
+        #creates the binary data for writing the table
+        #@warning hasnt been tested...
+        #"""
+        #msg = block3
+        #for nodeID,translation in sorted(self.translations.iteritems()):
+            #rotation = self.rotations[nodeID]
+            #(dx,dy,dz) = translation
+            #(rx,ry,rz) = rotation
+            #grid = nodeID*10+deviceCode
+            #msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
         ###
-        return msg
+        #return msg
 
     #def writeOp2Transient(self,block3,deviceCode=1):
     #    """
@@ -199,7 +169,9 @@ class TableObject(scalarObject):  # displacement style table
     #    return msg
 
     def writeHeader(self):
-        (mainHeaders,headers) = self.getHeaders()
+        #(mainHeaders,headers) = self.getHeaders()
+        mainHeaders = ('nodeID','gridType')
+        headers = ('T1','T2','T3','R1','R2','R3')
         msg = '%-10s %8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
@@ -240,22 +212,30 @@ class TableObject(scalarObject):  # displacement style table
         return (self.mainHeaders,self.headers)
 
 class complexTableObject(scalarObject):
-    def __init__(self,dataCode,iSubcase,dt):
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         self.gridTypes    = {}
         self.translations = {}
         self.rotations    = {}
 
-        if dt is not None:
-            self.addNewTransient()
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+        #if dt is not None:
+            #self.addNewTransient()
             #self.add  = self.addTransient
             #self.addF = self.addTransientF
             #self.addBinary = self.addBinaryTransient
             #self.__repr__ = self.__reprTransient__  # why cant i do this...
             #self.writeOp2 = self.writeOp2Transient
         ###
-        self.parseLength()
         
     def addF06Data(self,data,transient):
         if transient is None:
@@ -264,8 +244,6 @@ class complexTableObject(scalarObject):
                 self.gridTypes[nodeID]    = gridType
                 self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
                 self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
-                #self.translations[nodeID] = array([t1,t2,t3])
-                #self.rotations[nodeID]    = array([r1,r2,r3])
             ###
             return
 
@@ -279,8 +257,6 @@ class complexTableObject(scalarObject):
             self.gridTypes[nodeID]    = gridType
             self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
             self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
-            #self.translations[dt][nodeID] = array([t1,t2,t3])
-            #self.rotations[dt][nodeID]    = array([r1,r2,r3])
         ###
 
     def updateDt(self,dataCode,dt):
@@ -288,7 +264,6 @@ class complexTableObject(scalarObject):
         self.applyDataCode()
         if dt is not None:
             self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
-            self.dt = dt
             self.addNewTransient()
         ###
 
@@ -301,48 +276,41 @@ class complexTableObject(scalarObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """initializes the transient variables"""
-        if self.dt not in self.translations:
-            self.translations[self.dt] = {}
-            self.rotations[self.dt]    = {}
+        self.translations[dt] = {}
+        self.rotations[dt]    = {}
 
-    def parseLength(self):
-        self.mainHeaders = []
-        self.strFormat = ''
-        #print self.dataCode
-        if self.analysisCode==5:
-            self.mainHeaders.append('Freq')
-            self.strFormat += 'fi'
-            #raise Exception('???A')
-        #elif self.analysisCode in[6]: # 10
-            #self.mainHeaders.append('Time')
-            #self.strFormat += 'fi'
-            #self.add = self.addF
-            #print self.dataCode
-            #raise Exception('???B')
-        elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
-            self.mainHeaders.append('NodeID')
-            self.strFormat += 'ii'
+    def addSort2(self,eid,data):
+        [dt,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i] = data
+
+        if dt not in self.translations:
+            self.addNewTransient(dt)
+
+        assert isinstance(eid,int),eid
+        assert 0<nodeID<1000000000, msg
+        if gridType==1:
+            Type = 'G'
+        elif gridType==2:
+            Type = 'S'
+        elif gridType==7:
+            Type = 'L'
         else:
-            raise Exception('invalid analysisCode=%s' %(self.analysisCode))
-        self.mainHeaders.append('GridType')
+            raise Exception('invalid grid type...gridType=%s' %(gridType))
 
-        # imaginary
-        self.strFormat += 'ffffffffffff'
-        self.headers = ['T1','T2','T3','R1','R2','R3']
-
+        self.gridTypes[nodeID] = Type
+        self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+        self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
         
-        self.mainHeaders = tuple(self.mainHeaders)
-
-    def getLength(self):
-        return (4*len(self.strFormat),self.strFormat)
-
-    def add(self,out):
+    def addSort1(self,dt,out):
         (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
-        msg = "nodeID=%s v1r=%s v2r=%s v3r=%s" %(nodeID,v1r,v2r,v3r)
+        msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
+        #print msg
+        if dt not in self.translations:
+            self.addNewTransient(dt)
         #print msg
         #msg = ''
+        #assert isinstance(nodeID,int),nodeID
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
@@ -358,6 +326,26 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-        self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+        self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+        self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+
+    def add(self,dt,out):
+        (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
+        msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
+        #assert isinstance(nodeID,int),nodeID
+        assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+
+        if gridType==1:
+            Type = 'G'
+        elif gridType==2:
+            Type = 'S'
+        elif gridType==7:
+            Type = 'L'
+        else:
+            raise Exception('invalid grid type...gridType=%s' %(gridType))
+
+        self.gridTypes[nodeID] = Type
+        self.translations[nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+        self.rotations[nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
     ###

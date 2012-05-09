@@ -6,6 +6,55 @@ from oef_forceObjects import *
 
 class RealForces(object):
 
+    def OEF_aCode(self):
+        if self.analysisCode==1:   # statics
+            format1 = 'i' # loadID
+            #self.addDataParameter(data,'loadID','i',5,False)   ## load set ID number
+        elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
+            format1 = 'i' # mode
+            #self.addDataParameter(data,'mode','i',5)   ## mode number
+            #self.addDataParameter(data,'eign','f',6,False)   ## eigenvalue
+        elif self.analysisCode==3: # differential stiffness 0
+            format1 = 'i' #loadID
+            #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+        elif self.analysisCode==4: # differential stiffness 1
+            format1 = 'i' #loadID
+            self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+        elif self.analysisCode==5:   # frequency
+            format1 = 'f' # freq
+            #self.addDataParameter(data,'freq','f',5)   ## frequency
+
+        elif self.analysisCode==6: # transient
+            format1 = 'f' # time
+            #self.addDataParameter(data,'time','f',5)   ## time step
+            #print "time(5)=%s" %(self.time)
+        elif self.analysisCode==7: # pre-buckling
+            format1 = 'i' # loadID
+            #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+            #print "loadID(5)=%s" %(self.loadID)
+        elif self.analysisCode==8: # post-buckling
+            format1 = 'i' # loadID
+            #self.addDataParameter(data,'loadID','i',5)       ## load set ID number
+            #self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+            #print "loadID(5)=%s  eigr(6)=%s" %(self.loadID,self.eigr)
+        elif self.analysisCode==9: # complex eigenvalues
+            format1 = 'i' # mode
+            #self.addDataParameter(data,'mode','i',5)         ## mode number
+            #self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+            #self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+        elif self.analysisCode==10: # nonlinear statics
+            format1 = 'f' # loadStep
+            self.addDataParameter(data,'loadStep','f',5)   ## load step
+            #print "loadStep(5) = %s" %(self.loadStep)
+        elif self.analysisCode==11: # geometric nonlinear statics
+            format1 = 'i' # loadID
+            #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+            #print "loadID(5)=%s" %(self.loadID)
+        else:
+            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
+        return format1
+
     def getOEF_FormatStart(self):
         """
         Returns an i or an f depending on if it's SORT2 or not.
