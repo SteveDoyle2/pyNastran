@@ -808,7 +808,10 @@ class CQUADR(QuadShell):
         return fields
 
     def reprFields(self):
-        return self.rawFields()
+        (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults()
+        fields = ['CQUADR',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
+                  None,TFlag,T1,T2,T3,T4]
+        return fields
 
 class CQUAD(QuadShell):
     type = 'CQUAD'
