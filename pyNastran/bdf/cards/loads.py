@@ -87,7 +87,7 @@ class GRAV(BaseCard):
         return p
 
     def rawFields(self):
-        fields = ['GRAV',self.sid,self.Cid(),self.a]+self.N+[self.mb]
+        fields = ['GRAV',self.sid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
         return fields
 
     def reprFields(self):
