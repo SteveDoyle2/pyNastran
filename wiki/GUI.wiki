@@ -28,7 +28,7 @@ Tests to see if an OP2 will work with pyNastran.
 optional arguments:
   -h, --help     show this help message and exit
   -q, --quiet    Prints debug messages (default=True)
-  -g, --edges    Reads the OP2 for geometry, which can be written out
+  -g, --edges    Shows element edges as black lines
   -v, --version  show program's version number and exit
 }}}
 
