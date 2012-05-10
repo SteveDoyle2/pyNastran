@@ -104,7 +104,7 @@ class plateStressObject(stressObject):
                         self.ovmShear[eid][nid] = [ovm1,ovm2]
                     else:
                         assert len(line)==19,'len(line)=%s' %(len(line))
-                        #raise NotImplementedError()
+                        raise NotImplementedError()
                     ###
                 else:
                     raise NotImplementedError('line=%s not supported...' %(line))
@@ -369,8 +369,8 @@ class plateStressObject(stressObject):
             elif eType in 'CTRIA3':
                 out = self.writeF06_Tri3(eid,oxxNodes)
                 triMsg.append(out)
-            #else:
-            #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+            else:
+                raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
             ###
         ###
         if isQuad:
@@ -447,8 +447,8 @@ class plateStressObject(stressObject):
                 elif eType in 'CTRIA3':
                     out = self.writeF06_Tri3Transient(dt,eid,oxxNodes)
                     triMsg.append(out)
-                #else:
-                #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
                 ###
             ###
             if isQuad:
@@ -722,7 +722,7 @@ class plateStrainObject(strainObject):
                         self.evmShear[eid][nid] = [evm1,evm2]
                     else:
                         assert len(line)==19,'len(line)=%s' %(len(line))
-                        #raise NotImplementedError()
+                        raise NotImplementedError()
                     ###
                 else:
                     raise NotImplementedError('line=%s not supported...' %(line))
@@ -928,8 +928,8 @@ class plateStrainObject(strainObject):
             elif eType in 'CTRIA3':
                 out = self.writeF06_Tri3(eid,exxNodes)
                 triMsg.append(out)
-            #else:
-            #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+            else:
+                raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
             ###
         ###
         if isQuad:
@@ -1008,8 +1008,8 @@ class plateStrainObject(strainObject):
                 elif eType in 'CTRIA3':
                     out = self.writeF06_Tri3Transient(dt,eid,exxNodes)
                     triMsg.append(out)
-                #else:
-                #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
                 ###
             ###
             if isQuad:

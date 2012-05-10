@@ -80,13 +80,13 @@ class ComplexForces(object):
                 if i==0: #isNewElement:
                     dataIn = [eid2,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
                                           bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi]
-                    print "%s cNew   " %(self.ElementType(self.elementType)),dataIn
+                    #print "%s cNew   " %(self.ElementType(self.elementType)),dataIn
                     self.obj.addNewElement(dt,dataIn)
                     #print
                 elif sd>0.:
                     dataIn = [eid2,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
                                           bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi]
-                    print "%s cOld   " %(self.ElementType(self.elementType)),dataIn
+                    #print "%s cOld   " %(self.ElementType(self.elementType)),dataIn
                     self.obj.add(dt,dataIn)
                     #print
                 #else: pass
@@ -128,7 +128,7 @@ class ComplexForces(object):
             
             dataIn = [eid2,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
                            f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -231,7 +231,7 @@ class ComplexForces(object):
 
             dataIn = [eid2,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
                            bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -270,7 +270,7 @@ class ComplexForces(object):
 
             dataIn = [eid2,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
                            mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -323,7 +323,7 @@ class ComplexForces(object):
 
             dataIn = [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
                                mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
             for i in range(nNodes-1):
@@ -332,7 +332,7 @@ class ComplexForces(object):
                 dataIn = unpack(allFormat, eData)
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-                print "***%s    " %(self.ElementType(self.elementType)),dataIn
+                #print "***%s    " %(self.ElementType(self.elementType)),dataIn
                 
                 self.obj.add(eid2,dt,dataIn)
                 #print "len(data) = ",len(self.data)
@@ -375,7 +375,7 @@ class ComplexForces(object):
                                 bm1Ai,bm2Ai,ts1Ai,ts2Ai,afAi,trqAi,
                            nidB,bm1Br,bm2Br,ts1Br,ts2Br,afBr,trqBr,
                                 bm1Bi,bm2Bi,ts1Bi,ts2Bi,afBi,trqBi]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -411,7 +411,7 @@ class ComplexForces(object):
 
             dataIn = [eid2,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
                                  axi,ayi,azi,vxi,vyi,vzi]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -446,7 +446,7 @@ class ComplexForces(object):
 
             dataIn = [eid2,fxr,fyr,fzr,mxr,myr,mzr,
                            fxi,fyi,fzi,mxi,myi,mzi]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -507,7 +507,7 @@ class ComplexForces(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
-            print "force %s" %(self.ElementType(self.elementType)),dataIn
+            #print "force %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -515,7 +515,7 @@ class ComplexForces(object):
         self.handleResultsBuffer(self.OEF_Force_VU_alt)
         if self.makeOp2Debug:
             print "done with OEF_Force_VU"
-        print self.force_VU
+        #print self.force_VU
 
     def OEF_Force_VUTRIA_alt(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
@@ -577,7 +577,7 @@ class ComplexForces(object):
             
             #dataIn = [vugrid,mfxr,mfyr,mfxyr,a,b,c,bmxr,bmyr,bmxyr,syzr,szxr,d,
                              #mfxi,mfyi,mfxyi,a,b,c,bmxi,bmyi,bmxyi,syzi,szxi,d]
-            print "force %s" %(self.ElementType(self.elementType)),dataIn
+            #print "force %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -585,4 +585,4 @@ class ComplexForces(object):
         self.handleResultsBuffer(self.OEF_Force_VUTRIA_alt)
         if self.makeOp2Debug:
             print "done with OEF_Force_VUTRIA"
-        print self.force_VU_2D
+        #print self.force_VU_2D

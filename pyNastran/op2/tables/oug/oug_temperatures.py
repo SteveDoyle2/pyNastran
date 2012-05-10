@@ -3,23 +3,21 @@ from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.dt = dt
         self.gridTypes    = {}
         self.temperatures = {}
         
-        if dt is not None:
-            #raise Exception('potential test of temperature bug...')
-            self.addNewTransient()
-            #assert dt>=0.
-            self.isTransient = True
-            self.add = self.addTransient
-            self.addF = self.addTransientF
-            #self.addBinary = self.addBinaryTransient
-            #self.__repr__ = self.__reprTransient__  # why cant i do this...
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
         ###
-        self.parseLength()
 
     def addF06Data(self,data,transient):
         if transient is None:
@@ -50,37 +48,37 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             ###
         ###
 
-    def parseLength(self):
-        self.mainHeaders = []
-        self.strFormat = ''
-        print "analysisCode = %s" %(self.analysisCode)
-        if 0: #self.analysisCode==6:  # disabled
-            self.mainHeaders.append('Freq')
-            self.strFormat += 'fi'
-            self.add = self.addF
-        elif self.analysisCode in[5]:
-            self.mainHeaders.append('Time')
-            self.strFormat += 'fi'
-            self.add = self.addF
-        elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
-            self.mainHeaders.append('NodeID')
-            self.strFormat += 'ii'
-        else:
-            raise NotImplementedError('invalid analysisCode=%s' %(self.analysisCode))
-        self.mainHeaders.append('GridType')
-
-        if self.isImaginary():  # elif self.dataFormat==1:
-            self.strFormat += 'ffffffffffff'
-            self.headers = ['Temperature']
-            raise NotImplementedError('verify...add imaginary...')
-        else:
-            self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]
-            self.headers = ['Temperature']
-        
-        self.mainHeaders = tuple(self.mainHeaders)
-
-    def getLength(self):
-        return (4*len(self.strFormat),self.strFormat)
+   # def parseLength(self):
+   #     self.mainHeaders = []
+   #     self.strFormat = ''
+   #     print "analysisCode = %s" %(self.analysisCode)
+   #     if 0: #self.analysisCode==6:  # disabled
+   #         self.mainHeaders.append('Freq')
+   #         self.strFormat += 'fi'
+   #         self.add = self.addF
+   #     elif self.analysisCode in[5]:
+   #         self.mainHeaders.append('Time')
+   #         self.strFormat += 'fi'
+   #         self.add = self.addF
+   #     elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
+   #         self.mainHeaders.append('NodeID')
+   #         self.strFormat += 'ii'
+   #     else:
+   #         raise NotImplementedError('invalid analysisCode=%s' %(self.analysisCode))
+   #     self.mainHeaders.append('GridType')
+   #
+   #     if self.isImaginary():  # elif self.dataFormat==1:
+   #         self.strFormat += 'ffffffffffff'
+   #         self.headers = ['Temperature']
+   #         raise NotImplementedError('verify...add imaginary...')
+   #     else:
+   #         self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]
+   #         self.headers = ['Temperature']
+   #     
+   #     self.mainHeaders = tuple(self.mainHeaders)
+   #
+   # def getLength(self):
+   #     return (4*len(self.strFormat),self.strFormat)
 
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
@@ -98,14 +96,13 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         k = self.temperatures.keys()
         k.sort()
         return k
-    def addNewTransient(self):
-        """initializes the transient variables"""
-        if self.dt not in self.temperatures:
-            self.temperatures[self.dt] = {}
 
-    def add(self,out):
+    def addNewTransient(self,dt):
+        """initializes the transient variables"""
+        self.temperatures[dt] = {}
+
+    def add(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
-        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures
 
@@ -114,78 +111,58 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         self.temperatures[nodeID] = v1
     ###
 
-    def addF(self,out):
-        (freq,gridType,v1,v2,v3,v4,v5,v6) = out
-        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],time,gridType,v1,v2,v3)
-        #print msg
-        #assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.translations,'temperatrueObject - static failure'
-        
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[freq]    = gridType
-        self.temperatures[nodeID] = v1
-    ###
+    def addSort1(self,dt,out):
+        if dt not in self.temperatures:
+            self.addNewTransient(dt)
 
-    def addTransient(self,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
-        nodeID = (nodeID-self.deviceCode) // 10
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures[self.dt]
 
         gridType = self.recastGridType(gridType)
         self.gridTypes[nodeID] = gridType
-        self.temperatures[self.dt][nodeID] = v1
+        self.temperatures[dt][nodeID] = v1
 
-    def addTransientF(self,out):
-        (freq,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
-        msg = "dt=%g %s=%s gridType=%s v1=%s v2=%s v3=%s" %(self.dt,self.mainHeaders[0],freq,gridType,v1,v2,v3)
-        #print msg
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[freq]             = gridType
-        self.temperatures[self.dt][freq] = v1
-    ###
-
-    def writeOp2(self,block3,deviceCode=1):
-        """
-        creates the binary data for writing the table
-        @warning hasnt been tested...
-        """
-        msg = block3
-        for nodeID,T in sorted(self.temperatures.iteritems()):
-            grid = nodeID*10+deviceCode
-            msg += pack('iffffff',grid,T,0,0,0,0,0)
-        ###
-        return msg
-
-    def writeOp2Transient(self,block3,deviceCode=1):
-        """
-        creates the binary data for writing the table
-        @warning hasnt been tested...
-        @warning dt slot needs to be fixed...
-        """
-        msg = ''
-        for dt,temperatures in sorted(self.temperatures.iteritems()):
-            XXX = 50 ## this isnt correct... @todo update dt
-            msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
-            #msg += '%s = %g\n' %(self.dataCode['name'],dt)
-    
-            for nodeID,T in sorted(temperatures.iteritems()):
-                grid = nodeID*10+deviceCode
-                msg += pack('iffffff',grid,T,0,0,0,0,0)
-            ###
-        ###
-        return msg
+   # def writeOp2(self,block3,deviceCode=1):
+   #     """
+   #     creates the binary data for writing the table
+   #     @warning hasnt been tested...
+   #     """
+   #     msg = block3
+   #     for nodeID,T in sorted(self.temperatures.iteritems()):
+   #         grid = nodeID*10+deviceCode
+   #         msg += pack('iffffff',grid,T,0,0,0,0,0)
+   #     ###
+   #     return msg
+   #
+   # def writeOp2Transient(self,block3,deviceCode=1):
+   #     """
+   #     creates the binary data for writing the table
+   #     @warning hasnt been tested...
+   #     @warning dt slot needs to be fixed...
+   #     """
+   #     msg = ''
+   #     for dt,temperatures in sorted(self.temperatures.iteritems()):
+   #         XXX = 50 ## this isnt correct... @todo update dt
+   #         msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
+   #         #msg += '%s = %g\n' %(self.dataCode['name'],dt)
+   # 
+   #         for nodeID,T in sorted(temperatures.iteritems()):
+   #             grid = nodeID*10+deviceCode
+   #             msg += pack('iffffff',grid,T,0,0,0,0,0)
+   #         ###
+   #     ###
+   #     return msg
 
     def writeHeader(self):
-        (mainHeaders,headers) = self.getHeaders()
+        mainHeaders = ('nodeID','GridType')
+        headers = ['T1','T2','T3','T4','T5','T6']
+
         msg = '%-10s %-8s ' %(mainHeaders)
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
         return msg
-
-    def getHeaders(self):
-        return (self.mainHeaders,self.headers)
 
     def __reprTransient__(self):
         msg = '---TRANSIENT TEMPERATURE---\n'
@@ -206,11 +183,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        #header = ['     DEFAULT                                                                                                                        ',
-        #           '0                                                                                                            SUBCASE 1              ',
-        #           '     LOAD STEP =  1.00000E+00']
-
-        msgOrig = ['                                              T E M P E R A T U R E   V E C T O R\n',
+        words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
@@ -218,7 +191,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             for dt,temperatures in sorted(self.temperatures.iteritems()):
                 dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
                 header[2] = dtLine
-                msg += header+msgOrig
+                msg += header+words
                 msg += self.printTempLines(temperatures)
                 msg.append(pageStamp+str(pageNum)+'\n')
                 pageNum += 1
@@ -271,7 +244,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         return msg
 
     def __repr__(self):
-        if self.isTransient:
+        if self.dt is not None:
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'

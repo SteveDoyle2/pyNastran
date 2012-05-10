@@ -39,28 +39,17 @@ class solidStressObject(stressObject):
         self.o2 = {}
         self.o3 = {}
         self.ovmShear = {}
-        if self.code == [1,0,0]:  # not done...
-            pass
-            #EQUIVALENT EFF. STRAIN  EFF. CREEP
-            #  STRESS   PLAS/NLELAS   STRAIN
-            #self.eqStress       = {}
-            #self.effStrain      = {}
-            #self.effCreepStrain = {}
-        elif self.code == [1,0,1]:
-            pass
-            #self.aCos = {}
-            #self.bCos = {}
-            #self.cCos = {}
-            #self.pressure = {}
-        else:
-            raise InvalidCodeError('solidStress - get the format/sort/stressCode=%s' %(self.code))
 
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.add       = self.addTransient
-            self.addNewEid = self.addNewEidTransient
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def addF06Data(self,data,transient):
@@ -167,30 +156,27 @@ class solidStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        if self.dt not in self.oxx:
-            self.oxx[self.dt] = {}
-            self.oyy[self.dt] = {}
-            self.ozz[self.dt] = {}
-            self.txy[self.dt] = {}
-            self.tyz[self.dt] = {}
-            self.txz[self.dt] = {}
-            self.o1[self.dt] = {}
-            self.o2[self.dt] = {}
-            self.o3[self.dt] = {}
-        
-            #self.aCos[self.dt] = {}
-            #self.bCos[self.dt] = {}
-            #self.cCos[self.dt] = {}
-            #self.pressure[self.dt] = {}
-            self.ovmShear[self.dt]  = {}
-        ###
+        self.oxx[self.dt] = {}
+        self.oyy[self.dt] = {}
+        self.ozz[self.dt] = {}
+        self.txy[self.dt] = {}
+        self.tyz[self.dt] = {}
+        self.txz[self.dt] = {}
+        self.o1[self.dt] = {}
+        self.o2[self.dt] = {}
+        self.o3[self.dt] = {}
 
-    def addNewEid(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
+        #self.aCos[self.dt] = {}
+        #self.bCos[self.dt] = {}
+        #self.cCos[self.dt] = {}
+        #self.pressure[self.dt] = {}
+        self.ovmShear[self.dt]  = {}
+
+    def addNewEid(self,eType,cid,dt,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
         #assert eid not in self.oxx
         assert cid >= 0
@@ -215,11 +201,13 @@ class solidStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,cid,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
+    def addNewEidSort1(self,eType,cid,dt,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add transient..."
         assert cid >= 0
         assert eid >= 0
-        dt = self.dt
+
+        if dt not in self.oxx:
+            self.addNewTransient(dt)
         assert eid not in self.oxx[dt]
         self.eType[eid] = eType
         #print "eid=%s eType=%s" %(eid,eType)
@@ -244,7 +232,7 @@ class solidStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
+    def add(self,dt,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
@@ -269,13 +257,13 @@ class solidStressObject(stressObject):
         self.ovmShear[eid][nodeID] = ovm
         if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
+    def addSort1(self,dt,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,ovm)
         #print msg
         #print self.oxx
         #print self.fiberDistance
-        dt = self.dt
+
         #self.eType[eid] = eType
         #print "eid=%s nid=%s oxx=%s" %(eid,nodeID,oxx)
         self.oxx[dt][eid][nodeID] = oxx
@@ -321,7 +309,7 @@ class solidStressObject(stressObject):
         return v
     
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = []
 
@@ -515,7 +503,7 @@ class solidStressObject(stressObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.isTransient:
+        if self.dt is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
@@ -634,20 +622,17 @@ class solidStrainObject(strainObject):
         #self.pressure = {}
         self.evmShear = {}
         
-        #if self.isVonMises():
-        #if   self.code == [1,0,10]:
-        #    self.isVonMises = False
-        #elif self.code == [1,0,11]:
-        #    self.isVonMises = True
-        #else:
-        #    raise InvalidCodeError('solidStrain - get the format/sort/stressCode=%s' %(self.code))
-        ###
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.add       = self.addTransient
-            self.addNewEid = self.addNewEidTransient
+
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def addF06Data(self,data,transient):
@@ -752,30 +737,28 @@ class solidStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        if self.dt not in self.exx:
-            self.exx[self.dt] = {}
-            self.eyy[self.dt] = {}
-            self.ezz[self.dt] = {}
-            self.exy[self.dt] = {}
-            self.eyz[self.dt] = {}
-            self.exz[self.dt] = {}
-            self.e1[self.dt] = {}
-            self.e2[self.dt] = {}
-            self.e3[self.dt] = {}
+        self.exx[dt] = {}
+        self.eyy[dt] = {}
+        self.ezz[dt] = {}
+        self.exy[dt] = {}
+        self.eyz[dt] = {}
+        self.exz[dt] = {}
+        self.e1[dt] = {}
+        self.e2[dt] = {}
+        self.e3[dt] = {}
 
-            #self.aCos[self.dt] = {}
-            #self.bCos[self.dt] = {}
-            #self.cCos[self.dt] = {}
-            #self.pressure[self.dt] = {}
-            self.evmShear[self.dt]      = {}
+        #self.aCos[dt] = {}
+        #self.bCos[dt] = {}
+        #self.cCos[dt] = {}
+        #self.pressure[dt] = {}
+        self.evmShear[dt]      = {}
         ###
 
-    def addNewEid(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
+    def addNewEid(self,eType,cid,dt,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
         assert eid not in self.exx
         assert cid >= 0
@@ -800,11 +783,13 @@ class solidStrainObject(strainObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,cid,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
+    def addNewEidSort1(self,eType,cid,dt,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "Solid Strain add..."
         assert cid >= 0
         assert eid >= 0
-        dt = self.dt
+        
+        if dt not in self.exx:
+            self.addNewTransient(dt)
         assert eid not in self.exx[dt]
         self.eType[eid] = eType
         self.cid[eid]  = cid
@@ -826,7 +811,7 @@ class solidStrainObject(strainObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
+    def add(self,dt,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
         #print msg
@@ -851,13 +836,13 @@ class solidStrainObject(strainObject):
 
         if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
+    def addSort1(self,dt,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" %(eid,nodeID,evm)
         #print msg
         #print self.exx
         #print self.fiberDistance
-        dt = self.dt
+        
         self.exx[dt][eid][nodeID] = exx
         self.eyy[dt][eid][nodeID] = eyy
         self.ezz[dt][eid][nodeID] = ezz
@@ -917,7 +902,7 @@ class solidStrainObject(strainObject):
         return v
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = []
 
@@ -1105,7 +1090,7 @@ class solidStrainObject(strainObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.isTransient:
+        if self.dt is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
@@ -1143,7 +1128,7 @@ class solidStrainObject(strainObject):
         return msg
 
     def __repr__(self):
-        if self.isTransient:
+        if self.dt is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRAIN---\n'

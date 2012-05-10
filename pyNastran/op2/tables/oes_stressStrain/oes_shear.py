@@ -19,31 +19,29 @@ class shearStressObject(stressObject):
         self.avgShear = {}
         self.margin   = {}
         
-        if self.code in [[1,0,0],]:
-            self.getLength = self.getLength_format1_sort0
-            self.isImaginary = False
-            if dt is not None:
-                self.addNewTransient = self.addNewTransient_format1_sort0
-                self.addNewEid       = self.addNewEidTransient_format1_sort0
-            else:
-                self.addNewEid = self.addNewEid_format1_sort0
-            ###
-        #elif self.code==[2,1,0]:
-        #    self.getLength       = self.getLength_format1_sort0
-        #    self.addNewTransient = self.addNewTransient_format2_sort1
-        #    self.addNewEid       = self.addNewEidTransient_format2_sort1
-        #    self.isImaginary = True
-        else:
-            raise InvalidCodeError('rodStress - get the format/sort/stressCode=%s' %(self.code))
-        ###
-        if dt is not None:
-            self.isTransient = True
-            self.dt = self.nonlinearFactor
-            self.addNewTransient()
+        self.getLength = self.getLength
+        self.isImaginary = False
+        #if dt is not None:
+        #    self.addNewTransient = self.addNewTransient
+        #    self.addNewEid       = self.addNewEidTransient
+        #else:
+        #    self.addNewEid = self.addNewEid
         ###
 
-    def getLength_format1_sort0(self):
-        return (16,'ifff')
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
+        ###
+
+    def getLength(self):
+        return (16,'fff')
 
     def deleteTransient(self,dt):
         del self.maxShear[dt]
@@ -55,31 +53,18 @@ class shearStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient_format1_sort0(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        if self.dt not in self.maxShear:
-            self.maxShear[self.dt] = {}
-            self.avgShear[self.dt] = {}
-            self.margin[self.dt]   = {}
+        self.dt = dt
+        self.maxShear[dt] = {}
+        self.avgShear[dt] = {}
+        self.margin[dt]   = {}
 
-    def addNewTransient_format2_sort1(self):
-        """
-        initializes the transient variables
-        @note make sure you set self.dt first
-        """
-        #print self.dataCode
-        raise Exeption('not supported')
-        if self.dt not in self.axial:
-            self.axial[self.dt]     = {}
-            self.torsion[self.dt]   = {}
-
-    def addNewEid_format1_sort0(self,out):
+    def addNewEid(self,dt,out):
         #print "Rod Stress add..."
         (eid,maxShear,avgShear,margin) = out
-        eid = (eid-self.deviceCode) // 10
         assert isinstance(eid,int)
         self.maxShear = {}
         self.avgShear = {}
@@ -88,34 +73,15 @@ class shearStressObject(stressObject):
         self.avgShear[eid] = avgShear
         self.margin[eid]   = margin
 
-    def addNewEid_format2_sort1(self,out):
-        raise Exception('not supported')
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        assert eid >= 0
-        self.axial[eid]      = [axialReal,axialImag]
-        self.torsion[eid]    = [torsionReal,torsionImag]
-
-    def addNewEidTransient_format1_sort0(self,out):
+    def addNewEidSort1(self,dt,out):
         (eid,maxShear,avgShear,margin) = out
-        eid = (eid-self.deviceCode) // 10
-        dt = self.dt
         assert isinstance(eid,int)
         assert eid >= 0
         self.maxShear[dt][eid] = maxShear
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid]   = margin
 
-    def addNewEidTransient_format2_sort1(self,out):
-        raise Exception('not supported')
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        dt = self.dt
-        assert eid >= 0
-        self.axial[dt][eid]      = [axialReal,axialImag]
-        self.torsion[dt][eid]    = [torsionReal,torsionImag]
-
-    def __reprTransient_format1_sort0__(self):
+    def __reprTransient__(self):
         msg = '---TRANSIENT CSHEAR STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['maxShear','avgShear','Margin']
@@ -142,40 +108,10 @@ class shearStressObject(stressObject):
             ###
         return msg
 
-    def __reprTransient_format2_sort1__(self):
-        raise Exeption('not supported')
-        msg = '---COMPLEX ROD STRESSES---\n'
-        msg += '%-10s %10s ' %('EID','eType')
-        headers = ['axialReal','axialImag','torsionReal','torsionImag']
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid in sorted(axial):
-                axial   = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                msg += '%-6i %6s ' %(eid,self.eType)
-                vals = axial + torsion # concatination
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%10s ' %('0')
-                    else:
-                        msg += '%10i ' %(val)
-                    ###
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-            ###
-        return msg
-
     def __repr__(self):
-        if   self.isTransient and self.code in [[1,0,0],[1,0,1]]:
-            return self.__reprTransient_format1_sort0__()
-        elif self.code==[2,1,0]:
-            return self.__reprTransient_format2_sort1__()
-        #else:
-        #    raise Exception('code=%s' %(self.code))
+        if self.dt is not None:
+            return self.__reprTransient__()
+
         msg = '---CSHEAR STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['maxShear','avgShear','margin']
@@ -212,33 +148,20 @@ class shearStrainObject(strainObject):
         self.avgShear = {}
         self.margin   = {}
 
-        self.isTransient = False
-        if self.code == [1,0,10]:
-            self.getLength = self.getLength_format1_sort0
-            self.isImaginary = False
+        self.dt = dt
+        if isSort1:
             if dt is not None:
-                self.addNewTransient = self.addNewTransient_format1_sort0
-                self.addNewEid       = self.addNewEidTransient_format1_sort0
-            else:
-                self.addNewEid = self.addNewEid_format1_sort0
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
             ###
-
-        #elif self.code==[2,1,10]:
-        #    self.getLength = self.getLength_format1_sort0
-        #    self.addNewTransient = self.addNewTransient_format2_sort1
-        #    self.addNewEid       = self.addNewEidTransient_format2_sort1
-        #    self.isImaginary = True
         else:
-            raise InvalidCodeError('rodStrain - get the format/sort/stressCode=%s' %(self.code))
-        ###
-        if dt is not None:
-            self.dt = self.nonlinearFactor
-            self.isTransient = True
-            self.addNewTransient()
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
-    def getLength_format1_sort0(self):
-        return (16,'ifff')
+    def getLength(self):
+        return (16,'fff')
 
     def deleteTransient(self,dt):
         del self.maxShear[dt]
@@ -250,31 +173,18 @@ class shearStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient_format1_sort0(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         @note make sure you set self.dt first
         """
-        if self.dt not in self.maxShear:
-            self.maxShear[self.dt] = {}
-            self.avgShear[self.dt] = {}
-            self.margin[self.dt]   = {}
+        self.dt = dt
+        self.maxShear[dt] = {}
+        self.avgShear[dt] = {}
+        self.margin[dt]   = {}
 
-    def addNewTransient_format2_sort1(self):
-        """
-        initializes the transient variables
-        @note make sure you set self.dt first
-        """
-        raise Exeption('not supported')
-        #print self.dataCode
-        if self.dt not in self.axial:
-            self.axial[self.dt]     = {}
-            self.torsion[self.dt]   = {}
-
-    def addNewEid_format1_sort0(self,out):
-        raise Exception('not supported')
+    def addNewEid(self,dt,out):
         (eid,axial,SMa,torsion,SMt) = out
-        eid = (eid-self.deviceCode) // 10
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
@@ -282,37 +192,18 @@ class shearStrainObject(strainObject):
         self.avgShear[eid]  = SMa
         self.margin[eid]    = torsion
 
-    def addNewEid_format2_sort1(self,out):
-        raise Exeption('not supported')
-        assert eid >= 0
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        self.axial[eid]      = [axialReal,axialImag]
-        self.torsion[eid]    = [torsionReal,torsionImag]
-
-    def addNewEidTransient_format1_sort0(self,out):
+    def addNewEidSort1(self,dt,out):
         #print "Rod Strain add..."
         #print out
         (eid,maxShear,avgShear,margin) = out
-        eid = (eid-self.deviceCode) // 10
         assert eid >= 0
-        dt = self.dt
 
         #self.eType[eid] = self.elementType
         self.maxShear[dt][eid] = maxShear
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid]   = margin
 
-    def addNewEidTransient_format2_sort1(self,out):
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        assert eid >= 0
-        dt = self.dt
-        self.axial[dt][eid]      = [axialReal,axialImag]
-        self.torsion[dt][eid]    = [torsionReal,torsionImag]
-
-    def __reprTransient_format1_sort0__(self):
-        raise Exception('not supported')
+    def __reprTransient__(self):
         msg = '---TRANSIENT CSHEAR STRAINS---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['maxShear','avgShear','Margin']
@@ -339,38 +230,9 @@ class shearStrainObject(strainObject):
             ###
         return msg
 
-    def __reprTransient_format2_sort1__(self):
-        raise Exeption('not supported')
-        msg = '---COMPLEX ROD STRAINS---\n'
-        msg += '%-10s %10s ' %('EID','eType')
-        headers = ['axialReal','axialImag','torsionReal','torsionImag']
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid in sorted(axial):
-                axial   = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                msg += '%-6i %6s ' %(eid,self.eType)
-                vals = axial + torsion # concatination
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%10s ' %('0')
-                    else:
-                        msg += '%10g ' %(val)
-                    ###
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-            ###
-        return msg
-
     def __repr__(self):
-        if   self.isTransient and self.code==[1,0,10]:
-            return self.__reprTransient_format1_sort0__()
-        elif self.code==[2,1,10]:
-            return self.__reprTransient_format2_sort1__()
+        if self.dt is not None:
+            return self.__reprTransient__()
 
         msg = '---CSHEAR STRAINS---\n'
         msg += '%-6s %6s ' %('EID','eType')

@@ -58,7 +58,7 @@ class OEE(object):
             self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
+            self.applyDataCodeValue('dataNames',['mode'])
             #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         #elif self.analysisCode==3: # differential stiffness
             #self.lsdvmn = self.getValues(data,'i',5) ## load set number
@@ -67,22 +67,23 @@ class OEE(object):
             #self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq2','f',5)   ## frequency
-            self.applyDataCodeValue('dataNames',['freq'])
+            self.applyDataCodeValue('dataNames',['freq2'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'time','f',5)   ## time step
-        elif self.analysisCode==7: # pre-buckling
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.applyDataCodeValue('dataNames',['time'])
+        #elif self.analysisCode==7: # pre-buckling
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
+            self.applyDataCodeValue('dataNames',['mode'])
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
+            self.applyDataCodeValue('dataNames',['mode'])
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'loadFactor','f',5)   ## load factor
-            self.applyDataCodeValue('dataNames',['lftsfq'])
-        elif self.analysisCode==11: # old geometric nonlinear statics
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.applyDataCodeValue('dataNames',['loadFactor'])
+        #elif self.analysisCode==11: # old geometric nonlinear statics
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'time','f',5)   ## time step
             self.applyDataCodeValue('dataNames',['time'])
@@ -179,33 +180,3 @@ class OEE(object):
         ###
         self.handleResultsBuffer(self.OEE_Strain5)
         #print self.strainEnergy
-
-    def readStrainEnergy_table18_format1_sort0(self):
-        """
-        assert self.tableCode==18 # Strain Energy
-        assert self.formatCode==1 # Real
-        assert self.sortCode==0   # Real
-        """
-        if self.analysisCode==1: # displacement
-            #print "isStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.analysisCode==2: # buckling modes
-            #print "isBucklingStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        #elif self.analysisCode==5: # freq
-            #print "isFreqStrainEnergy"
-            #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.analysisCode==6: # transient
-            #print "isTransientStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject,debug=False)
-        #elif self.analysisCode==9: # nonlinear static eigenvector
-            #print "isComplexStrainEnergy"
-            #self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        elif self.analysisCode==10: # nonlinear statics
-            #print "isNonlinearStrainEnergy"
-            self.createTransientObject(self.strainEnergy,StrainEnergyObject)
-        else:
-            #raise NotImplementedError('bad analysis/table/format/sortCode=%s on OEE table' %(self.atfsCode))
-            pass
-        ###
-        self.readMappedScalarsOut(debug=False) # handles dtMap

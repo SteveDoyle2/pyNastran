@@ -82,6 +82,8 @@ class spcForcesObject(TableObject):
         return msg
 
     def __repr__(self):
+        return self.writeF06(['',''],'PAGE ',1)[0]
+
         if self.dt is not None:
             return self.__reprTransient__()
 
@@ -206,6 +208,7 @@ class complexSpcForcesObject(complexTableObject):
         return msg
 
     def __repr__(self):
+        return self.writeF06(['',''],'PAGE ',1)[0]
         if self.dt is not None:
             return self.__reprTransient__()
 

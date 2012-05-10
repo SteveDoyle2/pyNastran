@@ -13,7 +13,7 @@ class ElementsStressStrain(object):
     def skipOES_Element(self):
         self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
         print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
-        print self.codeInformation()
+        #print self.codeInformation()
         self.skipOES_Element2()
 
     def skipOES_Element2(self): # works???
@@ -70,14 +70,14 @@ class ElementsStressStrain(object):
             eData = self.data[n:n+nTotal]
             out = unpack(dataFormat,eData)
             #print "out = ",out
-            eid = extract(out[0],'???')
+            eid = extract(out[0],dt)
             self.obj.addNewEid(dt,eid,out[1:])
             n+=nTotal
         ###
         self.data = self.data[n: ]
         self.handleResultsBuffer(self.OES_basicElement)
 
-    def OES_CBEAM_2(self): # not tested
+    def OES_CBEAM_2(self):
         dt = self.nonlinearFactor
         (formatStart,extract) = self.getOUG_FormatStart()
 
@@ -94,7 +94,7 @@ class ElementsStressStrain(object):
 
             out = unpack(format1, eData)
             #print "outA = ",out
-            eid2 = extract(out[0],'???')
+            eid2 = extract(out[0],dt)
             self.obj.addNewEid(dt,eid2,out[1:])
             
             for iNode in range(nNodes):
@@ -189,7 +189,7 @@ class ElementsStressStrain(object):
 
             (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
                  s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)= unpack(format1,eData)
-            eid2 = extract(eid,'???')
+            eid2 = extract(eid,dt)
             self.obj.addNewEid('CBAR',dt,eid2,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
                                               s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)
 
@@ -210,8 +210,10 @@ class ElementsStressStrain(object):
         """
         if self.makeOp2Debug:
             self.op2Debug.write('---CSOLID_67---\n')
-        #print "starting solid element..."
-        deviceCode = self.deviceCode
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += "issssi"
+
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
         #term      = self.data[0:4] CEN/
@@ -226,15 +228,16 @@ class ElementsStressStrain(object):
             self.data = self.data[16:]
             #self.printBlock(eData)
 
-            out = unpack("iissssi",eData)
+            out = unpack(format1,eData)
             (eid,cid,a,b,c,d,nNodes) = out
+            eid2 = extract(eid,dt)
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             #print "abcd = |%s|" %(a+b+c+d)
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
             assert nNodes < 21,self.printBlock(eData)
-            eid = (eid - deviceCode) // 10
+            #eid = (eid - deviceCode) // 10
 
             if   ElementType=='TETRA':   nNodesExpected = 5
             elif ElementType=='PENTA':   nNodesExpected = 7
@@ -282,9 +285,9 @@ class ElementsStressStrain(object):
                 cCos = []
                 if nodeID==0:
                     #print "adding new eid"
-                    self.obj.addNewEid(ElementType,cid,eid,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
+                    self.obj.addNewEid(ElementType,cid,dt,eid2,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
                 else:
-                    self.obj.add(                      eid,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
+                    self.obj.add(                      dt,eid2,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 #self.printBlock(data)

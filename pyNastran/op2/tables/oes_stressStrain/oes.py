@@ -80,12 +80,12 @@ class OES(ElementsStressStrain):
             #self.dataCode['lsdvmn'] = self.lsdvmn
         #elif self.analysisCode==4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
             self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
+            self.applyDataCodeValue('dataNames',['dt'])
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn','i',5)   ## load set
             self.applyDataCodeValue('dataNames',['lsdvmn'])
@@ -106,7 +106,7 @@ class OES(ElementsStressStrain):
             self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'dt','f',5)   ## Time step ??? --> straight from DMAP
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.applyDataCodeValue('dataNames',['dt'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         # tCode=2
