@@ -58,6 +58,7 @@ cdef extern from "stdlib.h":
 
 # Import the Python-level symbols of numpy
 import numpy as np
+from   scipy import sparse
 
 # Import the C-level symbols of numpy
 cimport numpy as np
@@ -468,8 +469,8 @@ class OP4:                                                # {{{1
                 fmt_str   = ''
 
             if self.storage[i]:          # sparse
-#               print("matrix %d is sparse, skipping" % i)
-                if   self.type[i] == 1:  # real single precision
+
+                if   self.type[i] == 1:  # sparse real single precision
                     array_RS = op4_load_S(fp        ,
                                           filetype  , # 1 = text
                                           self.nrow[i], 
@@ -481,10 +482,81 @@ class OP4:                                                # {{{1
                                           self.nnz[i],# in number of nonzero terms
                                          <DTYPE_t*>I_coo.data, # out sparse row ind
                                          <DTYPE_t*>J_coo.data) # out sparse col ind
-                    print("I=",I_coo)
-                    print("J=",J_coo)
+                    # print('nnz=%d' % (self.nnz[i]))
+                    # print("I=",I_coo[:self.nnz[i]])
+                    # print("J=",J_coo[:self.nnz[i]])
+
+                    array_wrapper_RS = ArrayWrapper_RS()
+                    array_wrapper_RS.set_data(self.nnz[i], <void*> array_RS) 
+                    ndarray = np.array(array_wrapper_RS, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_RS
+                    Py_INCREF(array_wrapper_RS)
+
+                elif self.type[i] == 2:   # sparse real double precision
+                    array_RD = op4_load_D(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   , 
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                         <DTYPE_t*>I_coo.data, # out sparse row ind
+                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+
+                    array_wrapper_RD = ArrayWrapper_RD()
+                    array_wrapper_RD.set_data(self.nnz[i], <void*> array_RD) 
+                    ndarray = np.array(array_wrapper_RD, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_RD
+                    Py_INCREF(array_wrapper_RD)
+
+                elif self.type[i] == 3:   # dense complex single precision
+                    array_CS = op4_load_S(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   , 
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                         <DTYPE_t*>I_coo.data, # out sparse row ind
+                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+
+                    array_wrapper_CS = ArrayWrapper_CS()
+                    array_wrapper_CS.set_data(self.nnz[i], <void*> array_CS) 
+                    ndarray = np.array(array_wrapper_CS, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_CS
+                    Py_INCREF(array_wrapper_CS)
+
+                elif self.type[i] == 4:   # dense complex double precision
+                    array_CD = op4_load_D(fp        ,
+                                          filetype  , # 1 = text
+                                          self.nrow[i], 
+                                          self.ncol[i], 
+                                          fmt_str   , 
+                                          col_width ,
+                                          self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
+                                          complx    , # in  0=real   1=complex     
+                                          self.nnz[i],# in number of nonzero terms
+                                         <DTYPE_t*>I_coo.data, # out sparse row ind
+                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+
+                    array_wrapper_CD = ArrayWrapper_CD()
+                    array_wrapper_CD.set_data(self.nnz[i], <void*> array_CD) 
+                    ndarray = np.array(array_wrapper_CD, copy=False)
+                    ndarray.base = <PyObject*> array_wrapper_CD
+                    Py_INCREF(array_wrapper_CD)
                 else:
-                    print("matrix %d is sparse and not single prec, skipping" % i)
+                    print('op4.Load sparse type failure  %s: %d' % (
+                        self.name[i], self.type[i]))
+                    raise IOError
+###############     print("matrix %d is sparse and not single prec, skipping" % i)
+
+                All_Matrices.append( sparse.coo_matrix(
+                    (ndarray, (I_coo[:self.nnz[i]] ,J_coo[:self.nnz[i]])), 
+                     shape=(self.nrow[i], self.ncol[i])) )
 
             else:                        # dense
                 size = self.nrow[i] * self.ncol[i]
@@ -562,7 +634,7 @@ class OP4:                                                # {{{1
                     Py_INCREF(array_wrapper_CD)
 
                 else:
-                    print('op4.Load type failure  %s: %d' % (
+                    print('op4.Load dense type failure  %s: %d' % (
                         self.name[i], self.type[i]))
                     raise IOError
 
