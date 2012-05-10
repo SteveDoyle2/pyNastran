@@ -116,68 +116,38 @@ class OGF(object):
         #if self.thermal==2:
         #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
-        # displacement
-        #if self.tableCode==19:
-            #self.readOGF_Data_table19()
-        if   tfsCode==[19,1,0]:
-            self.readOGF_Data_table19_format1_sort0()
-        elif tfsCode==[19,1,1]:
-            self.readOGF_Data_table19_format1_sort1()
-        elif tfsCode==[19,2,0]:
-            self.readOGF_Data_table19_format2_sort0()
-        #elif tfsCode==[19,2,1]:
-        #    self.readOGF_Data_table19_format2_sort1()
-        #elif tfsCode==[19,2,2]:
-        #    self.readOGF_Data_table19_format2_sort2()
-        #elif tfsCode==[19,3,0]:
-        #    self.readOGF_Data_table19_format3_sort0()
-        #elif tfsCode==[19,3,1]:
-        #    self.readOGF_Data_table19_format3_sort1()
-        #elif tfsCode==[19,3,2]:
-        #    self.readOGF_Data_table19_format3_sort2()
-
-        else:
-            #print "***start skipping***"
-            self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
-            #print self.codeInformation()
-            self.skipOES_Element()
-            #print "***end skipping***"
-            #raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName,))
-        ###
-        #print self.obj
-
-    def readOGF_Data_table19_format1_sort0(self): # grid point forces
-        #print self.codeInformation()
-        if self.numWide==10:
-            self.createTransientObject(self.gridPointForces,gridPointForcesObject)
-            self.readOGF_numWide10()
-        elif self.numWide==16:
-            self.createTransientObject(self.gridPointForces,complexGridPointForcesObject)
-            self.readOGF_numWide16()
+        
+        if self.tableCode==19: # grid point forces
+            self.readOGF_Data_table19()
         else:
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
-            self.skipOES_Element()
-            #raise NotImplementedError('%s-OGF only supports numWide=10,16' %(self.tableName))
-
-        #sys.exit('stopping in OGF')        
-        
-        #readCase = True
-        #if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
-        #    readCase = self.updateDtMap()
-        
-        #if self.obj and readCase:
-        #    self.readScalarsOut(debug=False)
-        #else:
-        #    self.skipOES_Element()
-        ###
-        #if self.obj:
-        #    self.readScalars8(debug=False)
-        #else:
-        #    self.skipOES_Element()
+            print self.codeInformation()
+            #self.skipOES_Element()
+            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName))
         ###
         #print self.obj
-        #return
-    
+
+
+    def readOGF_Data_table19(self): # grid point forces
+        isSort1 = self.isSort1()
+        if self.numWide==10:  # real/random
+            #if self.thermal==0:
+            self.createTransientObject(self.gridPointForces,gridPointForcesObject) # real
+            #else:
+                #raise NotImplementedError(self.codeInformation())
+            #self.OUG_RealTable()
+            self.readOGF_numWide10()
+        elif self.numWide==16:  # real/imaginary or mag/phase
+            #if self.thermal==0:
+            self.createTransientObject(self.gridPointForces,complexGridPointForcesObject) # complex
+            #else:
+                #raise NotImplementedError(self.codeInformation())
+            self.readOGF_numWide16()
+            #self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
+        ###
+
     def readOGF_numWide10(self):
         (eKey,scaleValue) = self.extractDt()
         Format = eKey+'issssssssffffff'
@@ -231,226 +201,3 @@ class OGF(object):
             n+=32
             #print "nid = ",nid
         #sys.exit('thermal4...')
-
-    def readOGF_Data_table7_format1_sort0(self):  # modes
-        #assert self.formatCode==1 # Real
-        #assert self.sortCode==0   # Real
-        
-        if self.thermal==0:
-            #print self.codeInformation()
-            if self.analysisCode==2: # nonlinear static eigenvector
-                #print "isEigenvector2"
-                self.createTransientObject(self.eigenvectors,eigenVectorObject)
-            elif self.analysisCode==8: # post-buckling eigenvector
-                #print "isPostBucklingEigenvector8"
-                self.createTransientObject(self.eigenvectors,realEigenVectorObject)
-            else:
-                #raise Exception('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        elif self.thermal==1:
-            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-            pass
-        else:
-            #raise NotImplementedError('invalid %s-OGF thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
-            pass
-        ###
-        if self.obj:
-            self.readScalars8(debug=False)
-        else:
-            self.skipOES_Element()
-        #if self.analysisCode not in [2,8]:
-        #    raise Exception('check_format1...')
-        ###
-
-    def readOGF_Data_table1_format1_sort1(self): # displacement
-        #assert self.formatCode==1 # Real
-        #assert self.sortCode==1   # Real/Imaginary
-        if self.thermal==0:
-            if self.analysisCode==5: # complex displacements (real/imaginary)
-                #print "isComplexDisplacement"
-                self.createTransientObject(self.displacements,complexDisplacementObject)
-            #elif self.analysisCode==7: # pre-buckling displacement
-                #print "isPreBucklingDisplacement"
-                #self.createTransientObject(self.displacements,displacementObject)
-            #elif self.analysisCode==9: # nonlinear static eigenvector
-                #print "isComplexEigenvalues"
-                #self.createTransientObject(self.displacements,eigenVectorObject)
-            #elif self.analysisCode==11: # Geometric nonlinear statics
-                #print "isNonlinearStaticDisplacement"
-                #self.createTransientObject(self.displacements,displacementObject)
-            else:
-                #raise NotImplementedError('unsupported %s-OGF static table1_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        else:
-            #raise Exception('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-            pass
-        ###
-        #print "objName = ",self.obj.name()
-        if self.obj:
-            self.readScalars14(debug=False)
-        else:
-            self.skipOES_Element()
-        #print "---OBJ---"
-        #print self.obj
-        #raise Exception('format1_sort1')
-        #return
-
-    def readOGF_Data_table7_format1_sort1(self): # modes
-        #assert self.formatCode==1 # Real
-        #assert self.sortCode==1   # Real/Imaginary
-        #print self.codeInformation()
-        if self.thermal==0:
-            #if self.analysisCode==5: # frequency displacement
-                #print "isFrequencyDisplacement"
-                #self.createTransientObject(self.freqDisplacements,eigenVectorObject)
-            #elif self.analysisCode==7: # pre-buckling displacement
-                #print "isPreBucklingDisplacement"
-                #self.createTransientObject(self.displacements,displacementObject)
-            if self.analysisCode==9: # nonlinear static eigenvector
-                #print "isComplexEigenvalues"
-                self.createTransientObject(self.eigenvectors,complexEigenVectorObject)
-            #elif self.analysisCode==11: # Geometric nonlinear statics
-                #print "isNonlinearStaticDisplacement"
-                #self.createTransientObject(self.displacements,displacementObject)
-            else:
-                #raise NotImplementedError('unsupported %s-OGF static table7_format1_sort1 solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        else:
-            #raise Not ImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-            pass
-        ###
-        #print "objName = ",self.obj.name()
-        if self.obj:
-            self.readScalars14()
-        else:
-            self.skipOES_Element()
-        #print self.obj
-        #return
-
-    def readOGF_Data_table1_format2_sort0(self): # displacement
-        if self.thermal==0:
-            if self.analysisCode==6: # transient displacement
-                #print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-            else:
-                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        elif self.thermal==1:
-            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-            pass
-        else:
-            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-            pass
-        ###
-        if self.obj:
-            #self.readScalars8()
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
-
-    def readOGF_Data_table1_format2_sort1(self): # displacement
-        #assert self.formatCode==2 # Real/Imaginary
-        #assert self.sortCode==1   # Real/Imaginary
-        #print self.codeInformation()
-        if self.thermal==0:
-            if self.analysisCode==5: # frequency displacement
-                #print "isFrequencyDisplacement"
-                self.createTransientObject(self.displacements,complexDisplacementObject)
-            elif self.analysisCode==7: # pre-buckling displacement
-                #print "isPreBucklingDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-            #elif self.analysisCode==9 and self.sortCode==1: # nonlinear static eigenvector
-                #print "isComplexEigenvalues"
-                #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
-                #self.readScalars8()
-            else:
-                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        elif self.thermal==1:
-            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-            pass
-        else:
-            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-            pass
-        ###
-        if self.obj:
-            self.readScalarsF14()
-        else:
-            self.skipOES_Element()
-        #print self.obj
-        #return
-
-    def readOGF_Data_table1_format3_sort0(self): # displacement
-        #assert self.formatCode==3 # Magnitude/Phase
-        #assert self.sortCode==0   # Real
-        #print self.codeInformation()
-        if self.thermal==0:
-            raise Exception('unsupported OGF static solution...atfsCode=%s' %(self.atfsCode))
-            if self.analysisCode==1: # displacement
-                #print "isDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-            elif self.analysisCode==2: # nonlinear static eigenvector
-                #print "isEigenvector_3_0"
-                self.createTransientObject(self.eigenvectors,eigenVectorObject)
-            elif self.analysisCode==5: # frequency displacement
-                #print "isFreqDisplacement"
-                self.createTransientObject(self.freqDisplacements,displacementObject)
-            elif self.analysisCode==6: # transient displacement
-                #print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-            elif self.analysisCode==7: # pre-buckling displacement
-                #print "isPreBucklingDisplacement"
-                self.createTransientObject(self.preBucklingDisplacements,displacementObject)
-            elif self.analysisCode==10: # transient velocity
-                #print "isTransientVelocity"
-                self.createTransientObject(self.velocities,displacementObject,self.dt)
-            else:
-                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        elif self.thermal==1:
-            raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-            pass
-        else:
-            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-            pass
-        ###
-        if self.obj:
-            #self.readScalars8()
-            self.readScalarsOut(debug=False)
-        else:
-            self.skipOES_Element()
-
-    def readOGF_Data_table1_format3_sort1(self): # displacemnt
-        #assert self.formatCode==3 # Magnitude/Phase
-        #assert self.sortCode==1   # Imaginary
-        if self.thermal==0:
-            if self.analysisCode==5: # complex frequency displacement
-                #print "isComplexFreqDisplacement"
-                self.createTransientObject(self.displacements,complexDisplacementObject)
-            #elif self.analysisCode==7: # pre-buckling displacement
-                #print "isComlexPreBucklingDisplacement"
-                #self.createTransientObject(self.complexDisplacements,displacementObject)
-            #elif self.analysisCode==9: # nonlinear static eigenvector
-                #print "isComplexEigenvalues"
-                #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
-            else:
-                #raise NotImplementedError('unsupported %s-OGF static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        elif self.thermal==1:
-            #raise NotImplementedError('unsupported %s-OGF thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-            pass
-        else:
-            #raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-            pass
-        ###
-        if self.obj:
-            self.readScalars14()
-        else:
-            self.skipOES_Element()

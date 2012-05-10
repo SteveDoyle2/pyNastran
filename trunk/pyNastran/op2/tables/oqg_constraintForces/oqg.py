@@ -53,7 +53,7 @@ class OQG(object):
         
         if not self.isSort1():
             raise NotImplementedError('sort2...')
-        assert self.isThermal()==False,self.isThermal
+        #assert self.isThermal()==False,self.thermal
 
         #self.printBlock(data) # on
         ## assuming tCode=1
@@ -75,6 +75,7 @@ class OQG(object):
             self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'dt','f',5)   ## time step
+            self.applyDataCodeValue('dataNames',['dt'])
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
@@ -131,21 +132,26 @@ class OQG(object):
 
     def readOQG_Data_table3(self): # SPC Forces
         isSort1 = self.isSort1()
-        if self.numWide==8:  # real/random
-            if self.thermal==0:
-                self.createTransientObject(self.spcForces,spcForcesObject) # real
-            else:
-                raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
-        elif self.numWide==14:  # real/imaginary or mag/phase
+        #print self.codeInformation()
+        magPhase = self.isMagnitudePhase()
+        if magPhase or self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.spcForces,complexSpcForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.OUG_ComplexTable()
+        elif self.numWide==8:  # real/random
+            #if self.thermal==0:
+            self.createTransientObject(self.spcForces,spcForcesObject) # real
+            #else:
+            #    raise NotImplementedError(self.codeInformation())
+            self.OUG_RealTable()
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
+        if self.thermal!=0:
+            print self.obj
+            raise RuntimeError('check the printout for thermal...')
 
     def readOQG_Data_table39(self): # MPC Forces
         isSort1 = self.isSort1()

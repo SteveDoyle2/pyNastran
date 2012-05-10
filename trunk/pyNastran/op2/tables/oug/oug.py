@@ -84,7 +84,6 @@ class OUG(object):
         
         if not self.isSort1():
             raise NotImplementedError('sort2...')
-        assert self.isThermal()==False,self.isThermal
 
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
@@ -166,83 +165,8 @@ class OUG(object):
         ###
         #print self.obj
 
-    def readOUG_Data_table1_format1_sort0(self): # displacement
 
-        if self.thermal==0:
-            #print self.codeInformation()
-            if self.analysisCode==1: # displacement
-                #print "isDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-
-            #elif self.analysisCode==5: # frequency displacement
-                #print "isFrequencyDisplacement"
-                #self.createTransientObject(self.displacements,eigenVectorObject)
-                #raise Exception('verify...displacement5 format1')
-
-            elif self.analysisCode==6: # transient displacement
-                #print "isTransientDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-
-            elif self.analysisCode==7: # pre-buckling displacement
-                #print "isPreBucklingDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-
-            elif self.analysisCode==8: # post-buckling eigenvector
-                #print "isPostBucklingEigenvector8_1_0"
-                self.createTransientObject(self.displacements,eigenVectorObject)
-
-            #elif self.analysisCode==9: # nonlinear static eigenvector
-                #print "isComplexEigenvalues"
-                #self.createTransientObject(self.complexEigenvalues,eigenVectorObject)
-                #raise Exception('verify...displacement9 format1')
-
-            elif self.analysisCode==10: # nonlinear static displacement
-                #print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-            elif self.analysisCode==11: # nonlinear geometric static displacement
-                #print "isNonlinearStaticDisplacement"
-                self.createTransientObject(self.displacements,displacementObject)
-            else:
-                #print self.codeInformation()
-                #raise NotImplementedError('unsupported %s-OUG static solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-
-        elif self.thermal==1:
-            if self.analysisCode==1: # temperature
-                #print "isTemperature"
-                self.createTransientObject(self.temperatures,temperatureObject)
-            elif self.analysisCode==6: # transient temperature
-                #print "isTransientTemperature"
-                self.createTransientObject(self.temperatures,temperatureObject)
-            elif self.analysisCode==10: # nonlinear static displacement
-                #print "isNonlinearStaticTemperatures"
-                self.createTransientObject(self.temperatures,temperatureObject)
-                #self.createTransientObject(self.temperatures,nonlinearTemperatureObject)
-            else:
-                #print self.codeInformation()
-                #raise NotImplementedError('unsupported %s-OUG thermal solution...atfsCode=%s' %(self.tableName,self.atfsCode))
-                pass
-            ###
-        elif self.thermal in [2,4,8]:
-            self.readThermal4()
-        else:   # self.thermal>1:  ## @warning thermal>0!!!!
-            #print self.codeInformation()
-            #raise NotImplementedError('invalid %s-OUG thermal flag...not 0 or 1...flag=%s' %(self.tableName,self.thermal))
-            pass
-        ###
-        
-        self.readMappedScalarsOut(debug=False) # handles dtMap
-
-        #if self.obj:
-        #    self.readScalars8(debug=False)
-        #else:
-        #    self.skipOES_Element()
-        ###
-        #print self.obj
-        #return
-
-    def readThermal4(self):
+    def readThermal4(self): # used on self.thermal in [2,4,8]:
         #print self.codeInformation()
         #print self.printBlock(self.data)
         n=0

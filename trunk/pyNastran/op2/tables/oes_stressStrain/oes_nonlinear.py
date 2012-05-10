@@ -256,7 +256,7 @@ class hyperelasticQuadObject(stressObject):
         return self.writeF06([],'PAGE ',1)[0]
 
 class nonlinearRodObject(stressObject):
-    def __init__(self,dataCode,iSubcase,dt=None):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         #self.eType = 'CROD'
         self.eTypeMap = {89:'CRODNL',92:'CONRODNL'}

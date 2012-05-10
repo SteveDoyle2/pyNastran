@@ -119,7 +119,7 @@ class complexLoadVectorObject(complexTableObject): # tableCode=11, approachCode=
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID,translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[dt][nodeID]
+            rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
 
             (dx,dy,dz) = translation

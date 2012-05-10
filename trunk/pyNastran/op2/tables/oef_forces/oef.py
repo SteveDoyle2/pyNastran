@@ -62,7 +62,8 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
             self.addDataParameter(data,'loadID','i',5,False)   ## load set ID number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.applyDataCodeValue('dataNames',['loadID'])
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eign','f',6,False)   ## eigenvalue
@@ -70,17 +71,20 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             #print "mode(5)=%s eigr(6)=%s modeCycle(7)=%s" %(self.mode,self.eigr,self.modeCycle)
         elif self.analysisCode==3: # differential stiffness 0
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            #self.dataCode['lsdvmn'] = self.lsdvmn
+            self.applyDataCodeValue('dataNames',['loadID'])
         elif self.analysisCode==4: # differential stiffness 1
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
+            self.applyDataCodeValue('dataNames',['loadID'])
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
             self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'time','f',5)   ## time step
+            self.applyDataCodeValue('dataNames',['time'])
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.applyDataCodeValue('dataNames',['loadID'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'loadID','i',5)       ## load set ID number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
@@ -279,7 +283,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [4]: # CSHEAR
             if self.numWide==numWideReal:
                 self.OEF_Shear()
-                asf
+                #asf
             elif self.numWide==numWideImag:
                 self.OEF_Shear_alt()
             else:

@@ -58,6 +58,13 @@ class celasStressObject(stressObject):
         self.eType[eid]      = self.elementName
         self.stress[dt][eid] = stress
 
+    def addNewEidSort2(self,eid,dt,out):
+        if dt not in self.stress:
+            self.addNewTransient(dt)
+        (stress) = out
+        self.eType[eid]      = self.elementName
+        self.stress[dt][eid] = stress
+
     def __reprTransient__(self):
         msg = '---CELASx STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
@@ -80,7 +87,7 @@ class celasStressObject(stressObject):
         return msg
 
     def __repr__(self):
-        if   self.isTransient and self.code==[1,0,0]:
+        if self.dt is not None:
             return self.__reprTransient__()
 
         msg = '---CELASx STRESSES---\n'
@@ -114,36 +121,22 @@ class celasStrainObject(strainObject):
         self.code = [self.formatCode,self.sortCode,self.sCode]
         
         self.isTransient = False
-        if self.code == [1,0,10]:
-            self.getLength = self.getLength_format1_sort0
-            self.strain = {}
-            #self.isImaginary = False
+        self.strain = {}
+
+        self.dt = dt
+        if isSort1:
             if dt is not None:
-                self.addNewTransient = self.addNewTransient_format1_sort0
-                self.addNewEid       = self.addNewEidTransient_format1_sort0
+                #self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
             ###
-            else:
-                self.addNewEid = self.addNewEid_format1_sort0
-            ###
-
-        #elif self.code in [[2,1,10]]:
-        #    self.getLength = self.getLength_format1_sort0
-        #    self.axial      = {}
-        #    self.torsion    = {}
-        #    self.addNewTransient = self.addNewTransient_format2_sort1
-        #    self.addNewEid       = self.addNewEidTransient_format2_sort1
-        #    #self.isImaginary = True
         else:
-            raise InvalidCodeError('celasStrain - get the format/sort/stressCode=%s' %(self.code))
-        ###
-        if dt is not None:
-            self.dt = self.nonlinearFactor
-            self.isTransient = True
-            self.addNewTransient()
+            assert dt is not None
+            #self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
-    def getLength_format1_sort0(self):
-        return (8,'if')
+    def getLength(self):
+        return (8,'f')
 
     def deleteTransient(self,dt):
         del self.strain[dt]
@@ -153,94 +146,30 @@ class celasStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient_format1_sort0(self):
-        """
-        initializes the transient variables
-        @note make sure you set self.dt first
-        """
-        if self.dt not in self.strain:
-            self.strain[self.dt] = {}
-
-    def addNewTransient_format2_sort1(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         """
-        raise Exception('not implemented')
-        #print self.dataCode
-        if self.dt not in self.strain:
-            self.axial[self.dt]     = {}
-            self.torsion[self.dt]   = {}
+        self.strain[dt] = {}
 
-    def addNewEid_format1_sort0(self,out):
-        (eid,strain) = out
-        eid = (eid-self.deviceCode) // 10
-        #print "Rod Strain add..."
+    def addNewEid(self,dt,eid,out):
+        (strain) = out
         assert eid >= 0
         #self.eType = self.eType
         self.eType[eid]  = self.elementName
         self.strain[eid] = strain
 
-    def addNewEid_format2_sort1(self,out):
-        raise Exception('not implemented')
-        assert eid >= 0
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        self.eType[eid] = self.elementType
-        self.axial[eid]      = [axialReal,axialImag]
-        self.torsion[eid]    = [torsionReal,torsionImag]
-
-    def addNewEidTransient_format1_sort0(self,out):
-        #print "Rod Strain add..."
+    def addNewEidSort1(self,dt,eid,out):
         #print out
-        (eid,strain) = out
-        eid = (eid-self.deviceCode) // 10
+        (strain) = out
         assert eid >= 0
-        dt = self.dt
 
         self.eType[eid] = self.elementType
         self.strain[dt][eid] = strain
 
-    def addNewEidTransient_format2_sort1(self,out):
-        raise Exception('not implemented')
-        (eid,axialReal,axialImag,torsionReal,torsionImag) = out
-        eid = (eid-self.deviceCode) // 10
-        assert eid >= 0
-        dt = self.dt
-        self.axial[dt][eid]      = [axialReal,axialImag]
-        self.torsion[dt][eid]    = [torsionReal,torsionImag]
-
-    def __reprTransient_format2_sort1__(self):
-        raise Exception('not implemented')
-        msg = '---COMPLEX CELASx STRAINS---\n'
-        msg += '%-8s %10s ' %('EID','eType')
-        headers = ['axialReal','axialImag','torsionReal','torsionImag']
-        for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
-
-        for dt,axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for eid in sorted(axial):
-                axial   = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                msg += '%-8i %6s ' %(eid,self.eType[eid])
-                vals = axial + torsion # concatination
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%10s ' %('0')
-                    else:
-                        msg += '%10g ' %(val)
-                    ###
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-            ###
-        return msg
-
     def __repr__(self):
-        if   self.isTransient and self.code==[1,0,10]:
-            return self.__reprTransient_format1_sort0__()
-        elif self.code==[2,1,10]:
-            return self.__reprTransient_format2_sort1__()
+        if self.dt is not None:
+            return self.__reprTransient__()
 
         msg = '---CELASx STRAINS---\n'
         msg += '%-8s %6s ' %('EID','eType')

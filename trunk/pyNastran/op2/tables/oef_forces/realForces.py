@@ -119,7 +119,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,axial,torque]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -155,7 +155,7 @@ class RealForces(object):
                 #print "sd = ",sd
 
                 dataIn = [eid2,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq]
-                print "%s        " %(self.ElementType(self.elementType)),dataIn
+                #print "%s        " %(self.ElementType(self.elementType)),dataIn
                 #eid = self.obj.addNewEid(out)
                 if i==0: #isNewElement:
                     self.obj.addNewElement(dt,dataIn)
@@ -189,7 +189,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,kf2,s23,kf3,s34,kf4,s41]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -270,7 +270,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,sd,bm1,bm2,ts1,ts2,af,trq]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -297,7 +297,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -337,7 +337,7 @@ class RealForces(object):
             eid2  = extract(eid,dt)
             
             dataIn = [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
             for i in range(nNodes-1):
@@ -346,7 +346,7 @@ class RealForces(object):
                 dataIn = unpack(allFormat, eData)
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
-                print "***%s    " %(self.ElementType(self.elementType)),dataIn
+                #print "***%s    " %(self.ElementType(self.elementType)),dataIn
                 
                 self.obj.add(eid2,dt,dataIn)
                 #print "len(data) = ",len(self.data)
@@ -375,7 +375,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,fx,sfy,sfz,u,v,w,sv,sw]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -404,7 +404,7 @@ class RealForces(object):
             
             dataIn = [eid2,nidA,bm1A,bm2A,ts1A,ts2A,afA,trqA,
                            nidB,bm1B,bm2B,ts1B,ts2B,afB,trqB]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -432,7 +432,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eName,ax,ay,az,vx,vy,vz,pressure]
-            print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -507,7 +507,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
-            print "force %s" %(self.ElementType(self.elementType)),dataIn
+            #print "force %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -515,7 +515,7 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_Force_VU)
         if self.makeOp2Debug:
             print "done with OEF_Force_VU"
-        print self.force_VU
+        #print self.force_VU
 
     def OEF_Force_VUTRIA(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
@@ -558,7 +558,7 @@ class RealForces(object):
             #print "eType=%s" %(eType)
             
             #dataIn = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
-            print "force %s" %(self.ElementType(self.elementType)),dataIn
+            #print "force %s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)            
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
@@ -566,5 +566,5 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_Force_VUTRIA)
         if self.makeOp2Debug:
             print "done with OEF_Force_VUTRIA"
-        print self.force_VU_2D
+        #print self.force_VU_2D
 

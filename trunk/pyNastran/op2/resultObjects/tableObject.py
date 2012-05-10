@@ -6,11 +6,11 @@ from op2_Objects import scalarObject
 class TableObject(scalarObject):  # displacement style table
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
-        self.dt = dt
         self.gridTypes    = {}
         self.translations = {}
         self.rotations    = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -20,15 +20,8 @@ class TableObject(scalarObject):  # displacement style table
             self.add = self.addSort2
         ###
 
-        #if dt is not None:
-            #self.addNewTransient()
-            #self.add  = self.addTransient
-            #self.addF = self.addTransientF
-            #self.addBinary = self.addBinaryTransient
-            #self.__repr__ = self.__reprTransient__  # why cant i do this...
-            #self.writeOp2 = self.writeOp2Transient
-        ###
-        #self.parseLength()
+    def isImaginary(self):
+        return False
 
     def addF06Data(self,data,transient):
         if transient is None:
@@ -99,6 +92,7 @@ class TableObject(scalarObject):  # displacement style table
     ###
 
     def addSort1(self,dt,out):
+        #print "dt=%s out=%s" %(dt,out)
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         if dt not in self.translations:
             self.addNewTransient(dt)
@@ -208,17 +202,14 @@ class TableObject(scalarObject):  # displacement style table
         ###
         return translations2,rotations2
         
-    def getHeaders(self):
-        return (self.mainHeaders,self.headers)
-
 class complexTableObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
-        self.dt = dt
         self.gridTypes    = {}
         self.translations = {}
         self.rotations    = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -227,16 +218,10 @@ class complexTableObject(scalarObject):
             assert dt is not None
             self.add = self.addSort2
         ###
-
-        #if dt is not None:
-            #self.addNewTransient()
-            #self.add  = self.addTransient
-            #self.addF = self.addTransientF
-            #self.addBinary = self.addBinaryTransient
-            #self.__repr__ = self.__reprTransient__  # why cant i do this...
-            #self.writeOp2 = self.writeOp2Transient
-        ###
         
+    def isImaginary(self):
+        return True
+
     def addF06Data(self,data,transient):
         if transient is None:
             for line in data:
@@ -281,14 +266,13 @@ class complexTableObject(scalarObject):
         self.translations[dt] = {}
         self.rotations[dt]    = {}
 
-    def addSort2(self,eid,data):
-        [dt,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i] = data
-
-        if dt not in self.translations:
-            self.addNewTransient(dt)
-
-        assert isinstance(eid,int),eid
+    def add(self,dt,out):
+        (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
+        msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
+        #assert isinstance(nodeID,int),nodeID
         assert 0<nodeID<1000000000, msg
+        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+
         if gridType==1:
             Type = 'G'
         elif gridType==2:
@@ -299,9 +283,10 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-        self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
-        
+        self.translations[nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+        self.rotations[nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+    ###
+
     def addSort1(self,dt,out):
         (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
         msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
@@ -329,13 +314,14 @@ class complexTableObject(scalarObject):
         self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
         self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
 
-    def add(self,dt,out):
-        (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
-        msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
-        #assert isinstance(nodeID,int),nodeID
-        assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
+    def addSort2(self,eid,data):
+        [dt,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i] = data
 
+        if dt not in self.translations:
+            self.addNewTransient(dt)
+
+        assert isinstance(eid,int),eid
+        assert 0<nodeID<1000000000, msg
         if gridType==1:
             Type = 'G'
         elif gridType==2:
@@ -346,6 +332,6 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-        self.rotations[nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
-    ###
+        self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
+        self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+        

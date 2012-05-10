@@ -47,46 +47,48 @@ class OPG(object):
         #print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         if not self.isSort1():
             raise NotImplementedError('sort2...')
-        assert self.isThermal()==False,self.isThermal
+        assert self.isThermal()==False,self.thermal
         
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
             self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.addDataParameter(data,'mode',     'i',5)   ## mode number
             self.addDataParameter(data,'eign',     'f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
+            self.applyDataCodeValue('dataNames',['mode','eign','modeCycle'])
         #elif self.analysisCode==3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         #elif self.analysisCode==4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
         elif self.analysisCode==5:   # frequency
             self.addDataParameter(data,'freq','f',5)   ## frequency
-
+            self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
             self.addDataParameter(data,'time','f',5)   ## time step
-            #print "TIME(5)=%s" %(self.time)
+            self.applyDataCodeValue('dataNames',['time'])
         elif self.analysisCode==7: # pre-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==8: # post-buckling
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
-            #print "LSDVMN(5)=%s  EIGR(6)=%s" %(self.lsdvmn,self.eigr)
+            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
         elif self.analysisCode==9: # complex eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
-            #print "mode(5)=%s  eigr(6)=%s  eigi(7)=%s" %(self.mode,self.eigr,self.eigi)
+            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
-            #print "LFTSFQ(5) = %s" %(self.lftsfq)
+            self.applyDataCodeValue('dataNames',['lftsfq'])
         elif self.analysisCode==11: # old geometric nonlinear statics
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            #print "LSDVMN(5)=%s" %(self.lsdvmn)
+            self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         ###
@@ -106,31 +108,12 @@ class OPG(object):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
 
-        # grid point force balance
-        if   tfsCode==[19,1,0]:
-            self.readOPG_Data_table19_format1_sort0()
-        #elif tfsCode==[19,1,1]:
-        #    self.readOPG_Data_format1_sort1()
-        #elif tfsCode==[19,2,1]:
-        #    self.readOPG_Data_format2_sort1()
-        #elif tfsCode==[19,3,0]:
-        #    self.readOPG_Data_format3_sort0()
-        #elif tfsCode==[19,3,1]:
-        #    self.readOPG_Data_format3_sort1()
         
-        # load vector
-        elif self.tableCode==2:
-            self.readOPG_Data_table2() ### was on
-        #elif tfsCode==[2,1,0]:
-            #self.readOPG_Data_table2_format1_sort0() ### was on
-        #elif tfsCode==[2,1,1]:
-        #    self.readOPG_Data_format1_sort1()
-        #elif tfsCode==[2,2,1]:
-        #    self.readOPG_Data_format2_sort1()
-        #elif tfsCode==[2,3,0]:
-        #    self.readOPG_Data_format3_sort0()
-        #elif tfsCode==[2,3,1]:
-        #    self.readOPG_Data_format3_sort1()
+        if   self.tableCode==19:
+            self.readOPG_Data_table19() # grid point force balance
+        
+        elif self.tableCode==2:  # load vector
+            self.readOPG_Data_table2()
 
         # Nonlinear force vector
         #elif tfsCode==[12,1,0]:
@@ -172,31 +155,32 @@ class OPG(object):
         #elif tfsCode==[55,3,3]:
         #    self.readOPG_Data_format3_sort3()
         else:
-            #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
+            print self.codeInformation()
+            raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
             #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
-            self.skipOES_Element()
+            #self.skipOES_Element()
         ###
         #print self.obj
 
-    #def readOPG_Data_format1_sort1(self):
-        #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
-        #self.skipOES_Element()
-
-    #def readOPG_Data_format2_sort1(self):
-        #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
-        #self.skipOES_Element()
-
-    #def readOPG_Data_format3_sort0(self):
-        #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
-        #self.skipOES_Element()
-
-    #def readOPG_Data_format3_sort1(self):
-        #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
-        #self.skipOES_Element()
-
-    #def readOPG_Data_format3_sort3(self):
-        #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableCode,self.atfsCode)
-        #self.skipOES_Element()
+    def readOPG_Data_table19(self): # Grid Point Force Balance
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            if self.thermal==0:
+                self.createTransientObject(self.appliedLoads,appliedLoadsObject) # real
+            else:
+                raise NotImplementedError(self.codeInformation())
+            #self.OUG_RealTable()
+            self.readOPGForces()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            if self.thermal==0:
+                self.createTransientObject(self.appliedLoads,complexAppliedLoadsObject) # complex
+            else:
+                raise NotImplementedError(self.codeInformation())
+            #self.OUG_ComplexTable()
+            raise NotImplementedError(self.codeInformation())
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
 
     def readOPG_Data_table19_format1_sort0(self):
         if self.thermal==0:
@@ -239,40 +223,20 @@ class OPG(object):
     def readOPG_Data_table2(self): # Load Vector
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
-            self.createTransientObject(self.loadVectors,loadVectorObject) # real
+            if self.thermal==0:
+                self.createTransientObject(self.loadVectors,loadVectorObject) # real
+            else:
+                raise NotImplementedError(self.codeInformation())
             self.OUG_RealTable()
         elif self.numWide==14:  # real/imaginary or mag/phase
-            self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
+            if self.thermal==0:
+                self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
+            else:
+                raise NotImplementedError(self.codeInformation())
             self.OUG_ComplexTable()
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
-
-    def readOPG_Data_table2_format1_sort0(self):
-        if self.thermal==0:
-            if self.analysisCode==1: # load vector
-                self.createTransientObject(self.loadVectors,loadVectorObject)
-            elif self.analysisCode==6: # transient
-                self.createTransientObject(self.loadVectors,loadVectorObject)
-            elif self.analysisCode==7: # pre-buckling
-                self.createTransientObject(self.loadVectors,loadVectorObject)
-            elif self.analysisCode==10: # nonlinear static
-                self.createTransientObject(self.loadVectors,loadVectorObject)
-            elif self.analysisCode==11: # old nonlinear static
-                self.createTransientObject(self.loadVectors,loadVectorObject)
-            else:
-                #self.skipOES_Element()
-                pass
-                #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
-                #print self.codeInformation()
-                #raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
-            ###
-        elif self.thermal==1:
-            self.skipOES_Element()
-        else:
-            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-        ###
-        self.readMappedScalarsOut(debug=False) # handles dtMap
 
     def readOPGForces(self,data,scalarObject):
         deviceCode = self.deviceCode
@@ -300,11 +264,8 @@ class OPG(object):
             #print "deviceCode = ",deviceCode
             grid = (gridDevice-self.deviceCode) // 10
             #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
-            #print type(scalarObject)
             data = data[dn:]
-            #sys.exit('asd')
         ###
         #print "***********"
         #print self.obj
-        #sys.exit('check...')
 
