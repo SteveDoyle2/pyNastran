@@ -12,6 +12,8 @@ class ElementsStressStrain(object):
 
     def skipOES_Element(self):
         self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
+        print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
+        print self.codeInformation()
         self.skipOES_Element2()
 
     def skipOES_Element2(self): # works???
@@ -817,6 +819,11 @@ class ElementsStressStrain(object):
             nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
             nNodes = 4    # centroid + 4 corner points
             eType  = 'CQUAD8'
+        elif self.elementType==82: # CQUADR
+            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            nNodes = 4    # centroid + 4 corner points
+            eType  = 'CQUADR'
+
         elif self.elementType==75: # CTRIA6
             nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
             nNodes = 3    # centroid + 3 corner points
