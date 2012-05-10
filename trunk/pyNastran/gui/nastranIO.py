@@ -143,7 +143,7 @@ class NastranIO(object):
         for eid,element in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
             #print element.type
-            if isinstance(element,CTRIA3):
+            if isinstance(element,CTRIA3) or isinstance(element,CTRIAR):
                 #print "ctria3"
                 elem = vtkTriangle()
                 nodeIDs = element.nodeIDs()
@@ -186,7 +186,7 @@ class NastranIO(object):
                 #elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element,CQUAD4) or isinstance(element,CSHEAR):
+            elif isinstance(element,CQUAD4) or isinstance(element,CSHEAR) or isinstance(element,CQUADR):
                 nodeIDs = element.nodeIDs()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
