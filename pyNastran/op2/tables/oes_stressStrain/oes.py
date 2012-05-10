@@ -399,12 +399,13 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.OES_CTRIA3_74()
-        elif self.elementType in [64,144,70,75]: # cquad8/cquad4/ctriar/ctria6
+        elif self.elementType in [64,144,70,75,82]: # cquad8/cquad4/ctriar/ctria6/cquadr
             #print "    found cquad_144"
             if     self.elementType==64:  self.dataCode['elementName'] = 'CQUAD8'
             elif   self.elementType==144: self.dataCode['elementName'] = 'CQUAD4'
             elif   self.elementType==70:  self.dataCode['elementName'] = 'CTRIAR'
             elif   self.elementType==75:  self.dataCode['elementName'] = 'CTRIA6'
+            elif   self.elementType==82:  self.dataCode['elementName'] = 'CQUADR'
             else:  raise NotImplementedError('card not implemented elementType=%s' %(self.elementType))
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
@@ -523,7 +524,7 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 70:   # ctriar
         #elif self.elementType == 74:   # ctria3  (done)
         #elif self.elementType == 75:   # ctria6  (done)
-        #elif self.elementType == 82:   # cquadr
+        #elif self.elementType == 82:   # cquadr  (done)
         #elif self.elementType == 95:   # composite CQUAD4    (done)
         #elif self.elementType == 96:   # composite CQUAD8    (done)
         #elif self.elementType == 97:   # composite CTRIA3    (done)
