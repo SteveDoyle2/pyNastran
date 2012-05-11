@@ -47,21 +47,21 @@ class celasStressObject(stressObject):
         self.stress[dt] = {}
 
     def addNewEid(self,dt,eid,out):
-        (stress) = out
+        (stress,) = out
         self.eType[eid]  = self.elementName
         self.stress[eid] = stress
 
     def addNewEidSort1(self,dt,eid,out):
         if dt not in self.stress:
             self.addNewTransient(dt)
-        (stress) = out
+        (stress,) = out
         self.eType[eid]      = self.elementName
         self.stress[dt][eid] = stress
 
     def addNewEidSort2(self,eid,dt,out):
         if dt not in self.stress:
             self.addNewTransient(dt)
-        (stress) = out
+        (stress,) = out
         self.eType[eid]      = self.elementName
         self.stress[dt][eid] = stress
 
@@ -87,6 +87,7 @@ class celasStressObject(stressObject):
         return msg
 
     def __repr__(self):
+        #print "spring dt=%s" %(self.dt)
         if self.dt is not None:
             return self.__reprTransient__()
 
@@ -153,7 +154,7 @@ class celasStrainObject(strainObject):
         self.strain[dt] = {}
 
     def addNewEid(self,dt,eid,out):
-        (strain) = out
+        (strain,) = out
         assert eid >= 0
         #self.eType = self.eType
         self.eType[eid]  = self.elementName
@@ -161,7 +162,7 @@ class celasStrainObject(strainObject):
 
     def addNewEidSort1(self,dt,eid,out):
         #print out
-        (strain) = out
+        (strain,) = out
         assert eid >= 0
 
         self.eType[eid] = self.elementType

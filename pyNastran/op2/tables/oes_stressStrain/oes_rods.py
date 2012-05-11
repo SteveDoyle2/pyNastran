@@ -77,10 +77,10 @@ class rodStressObject(stressObject):
             return
 
         (dtName,dt) = transient
+        self.dt = dt
         self.dataCode['name'] = dtName
         if dt not in self.s1:
             self.updateDt(self.dataCode,dt)
-            self.isTransient = True
 
         for line in data:
             (eid,axial,MSa,torsion,MSt) = line
@@ -92,8 +92,8 @@ class rodStressObject(stressObject):
             self.MS_torsion[dt][eid] = MSt
         ###
 
-    #def getLength_format1_sort0(self):
-        #return (20,'iffff')
+    def getLength(self):
+        return (20,'ffff')
 
     def deleteTransient(self,dt):
         del self.axial[dt]
@@ -244,7 +244,7 @@ class rodStressObject(stressObject):
         if self.dt is not None:
             return self.__reprTransient__()
         
-        print 'axial = ',self.axial
+        #print 'axial = ',self.axial
         msg = '---ROD STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
         headers = ['axial','torsion','MS_axial','MS_torsion']
@@ -291,15 +291,11 @@ class rodStrainObject(strainObject):
         
         self.axial      = {}
         self.torsion    = {}
-        self.isTransient = False
-        if self.code == [1,0,10]:
-            self.getLength = self.getLength_format1_sort0
-            self.MS_axial   = {}
-            self.MS_torsion = {}
-            self.isImaginary = False
-        else:
-            raise InvalidCodeError('rodStrain - get the format/sort/stressCode=%s' %(self.code))
-        ###
+
+        self.MS_axial   = {}
+        self.MS_torsion = {}
+        self.isImaginary = False
+
         self.dt = dt
         if isSort1:
             if dt is not None:
@@ -326,10 +322,10 @@ class rodStrainObject(strainObject):
             return
 
         (dtName,dt) = transient
+        self.dt = dt
         self.dataCode['name'] = dtName
         if dt not in self.s1:
             self.updateDt(self.dataCode,dt)
-            self.isTransient = True
 
         for line in data:
             (eid,axial,MSa,torsion,MSt) = line
@@ -377,8 +373,20 @@ class rodStrainObject(strainObject):
     def addNewEidSort1(self,dt,eid,out):
         (axial,SMa,torsion,SMt) = out
         assert eid >= 0
-
         #self.eType[eid] = self.elementType
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+        self.axial[dt][eid]      = axial
+        self.MS_axial[dt][eid]   = SMa
+        self.torsion[dt][eid]    = torsion
+        self.MS_torsion[dt][eid] = SMt
+
+    def addNewEidSort2(self,eid,dt,out):
+        (axial,SMa,torsion,SMt) = out
+        assert eid >= 0
+        #self.eType[eid] = self.elementType
+        if dt not in self.axial:
+            self.addNewTransient(dt)
         self.axial[dt][eid]      = axial
         self.MS_axial[dt][eid]   = SMa
         self.torsion[dt][eid]    = torsion
@@ -477,7 +485,8 @@ class rodStrainObject(strainObject):
         return(''.join(msg),pageNum-1)
 
     def __repr__(self):
-        return self.__reprTransient__()
+        if self.dt is not None:
+            return self.__reprTransient__()
 
         msg = '---ROD STRAINS---\n'
         msg += '%-6s %6s ' %('EID','eType')

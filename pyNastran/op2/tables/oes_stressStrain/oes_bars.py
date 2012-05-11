@@ -14,24 +14,23 @@ class barStressObject(stressObject):
         self.eType = {}
 
         self.code = [self.formatCode,self.sortCode,self.sCode]
-        if self.code==[1,0,0]:
-            self.s1    = {}
-            self.s2    = {}
-            self.s3    = {}
-            self.s4    = {}
-            self.axial = {}
-            self.smax  = {}
-            self.smin  = {}
-            self.MS_tension = {}
-            self.MS_compression = {}
 
-            if self.elementType==100:
-                self.getLength = self.getLength100_format1_sort0
-                self.addNewEid = self.addNewEid100
-        else:
-            raise InvalidCodeError('barStress - get the format/sort/stressCode=%s' %(self.code))
-        ###
-        
+        self.s1    = {}
+        self.s2    = {}
+        self.s3    = {}
+        self.s4    = {}
+        self.axial = {}
+        self.smax  = {}
+        self.smin  = {}
+        self.MS_tension = {}
+        self.MS_compression = {}
+
+        #if self.elementType==100:
+            #self.getLength = self.getLength100_format1_sort0
+            #self.addNewEid = self.addNewEid100
+
+        self.dt = dt
+        #print "BAR dt=%s" %(dt)
         if isSort1:
             self.dt = dt
             if dt is not None:
@@ -481,8 +480,8 @@ class barStrainObject(strainObject):
             #self.MS_tension[self.dt]     = {}
             #self.MS_compression[self.dt] = {}
 
-    def addNewEid(self,eType,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
-                                 e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
+    def addNewEid(self,eType,dt,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
+                                    e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
         if self.dt not in self.e1:
@@ -500,8 +499,8 @@ class barStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(self,eType,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
-                                      e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
+    def addNewEidSort1(self,eType,dt,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
+                                         e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
         dt = self.dt
         self.eType[eid] = eType

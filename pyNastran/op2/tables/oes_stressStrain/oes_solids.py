@@ -78,7 +78,7 @@ class solidStressObject(stressObject):
                                Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
         eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
-        if self.dt is None:
+        if self.nonlinearFactor is None:
             pack = []
             i=0
             n=0
@@ -160,21 +160,21 @@ class solidStressObject(stressObject):
         """
         initializes the transient variables
         """
-        self.oxx[self.dt] = {}
-        self.oyy[self.dt] = {}
-        self.ozz[self.dt] = {}
-        self.txy[self.dt] = {}
-        self.tyz[self.dt] = {}
-        self.txz[self.dt] = {}
-        self.o1[self.dt] = {}
-        self.o2[self.dt] = {}
-        self.o3[self.dt] = {}
+        self.oxx[dt] = {}
+        self.oyy[dt] = {}
+        self.ozz[dt] = {}
+        self.txy[dt] = {}
+        self.tyz[dt] = {}
+        self.txz[dt] = {}
+        self.o1[dt] = {}
+        self.o2[dt] = {}
+        self.o3[dt] = {}
 
-        #self.aCos[self.dt] = {}
-        #self.bCos[self.dt] = {}
-        #self.cCos[self.dt] = {}
-        #self.pressure[self.dt] = {}
-        self.ovmShear[self.dt]  = {}
+        #self.aCos[dt] = {}
+        #self.bCos[dt] = {}
+        #self.cCos[dt] = {}
+        #self.pressure[dt] = {}
+        self.ovmShear[dt]  = {}
 
     def addNewEid(self,eType,cid,dt,eid,nodeID,oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,aCos,bCos,cCos,pressure,ovm):
         #print "Solid Stress add..."
@@ -206,11 +206,12 @@ class solidStressObject(stressObject):
         assert cid >= 0
         assert eid >= 0
 
+        #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
         if dt not in self.oxx:
             self.addNewTransient(dt)
-        assert eid not in self.oxx[dt]
+        assert eid not in self.oxx[dt],self.oxx[dt]
+
         self.eType[eid] = eType
-        #print "eid=%s eType=%s" %(eid,eType)
         self.cid[eid]   = cid
         self.oxx[dt][eid] = {nodeID: oxx}
         self.oyy[dt][eid] = {nodeID: oyy}
@@ -309,7 +310,7 @@ class solidStressObject(stressObject):
         return v
     
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = []
 
@@ -503,7 +504,9 @@ class solidStressObject(stressObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.dt is not None:
+        #print "self.dt = ",self.dt
+        #print "self.nf = ",self.nonlinearFactor
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
@@ -623,7 +626,7 @@ class solidStrainObject(strainObject):
         self.evmShear = {}
         
 
-        self.dt = dt
+        self.nonlinearFactor = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -661,7 +664,7 @@ class solidStrainObject(strainObject):
                                Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
         eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
-        if self.dt is None:
+        if self.nonlinearFactor is None:
             pack = []
             i=0
             n=0
@@ -741,6 +744,7 @@ class solidStrainObject(strainObject):
         """
         initializes the transient variables
         """
+        self.nonlinearFactor = dt
         self.exx[dt] = {}
         self.eyy[dt] = {}
         self.ezz[dt] = {}
@@ -755,7 +759,7 @@ class solidStrainObject(strainObject):
         #self.bCos[dt] = {}
         #self.cCos[dt] = {}
         #self.pressure[dt] = {}
-        self.evmShear[dt]      = {}
+        self.evmShear[dt]  = {}
         ###
 
     def addNewEid(self,eType,cid,dt,eid,nodeID,exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,aCos,bCos,cCos,pressure,evm):
@@ -790,7 +794,8 @@ class solidStrainObject(strainObject):
         
         if dt not in self.exx:
             self.addNewTransient(dt)
-        assert eid not in self.exx[dt]
+        
+        assert eid not in self.exx[dt],self.exx[dt]
         self.eType[eid] = eType
         self.cid[eid]  = cid
         self.exx[dt][eid]  = {nodeID: exx}
@@ -902,7 +907,7 @@ class solidStrainObject(strainObject):
         return v
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = []
 
@@ -1090,7 +1095,7 @@ class solidStrainObject(strainObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRESS---\n'
@@ -1128,7 +1133,7 @@ class solidStrainObject(strainObject):
         return msg
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---SOLID STRAIN---\n'
@@ -1169,7 +1174,7 @@ class solidStrainObject(strainObject):
             msg += '%10s ' %(header)
         msg += '\n'
         for dt,exxs in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,exxNodes in sorted(exxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
