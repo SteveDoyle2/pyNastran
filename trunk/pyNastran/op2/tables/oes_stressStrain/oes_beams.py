@@ -49,7 +49,7 @@ class beamStressObject(stressObject):
         return 444  # 44+10*40   (11 nodes)
 
     def getLength1(self):
-        return (44,'iifffffffff')
+        return (44,'ifffffffff')
 
     def getLength2(self):
         return (40,'ifffffffff')
@@ -72,9 +72,9 @@ class beamStressObject(stressObject):
     def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
         #print "addNewTransient_beam+1+0"
+        self.dt = dt
         self.sxc[dt] = {}
         self.sxd[dt] = {}
         self.sxe[dt] = {}
@@ -108,6 +108,8 @@ class beamStressObject(stressObject):
         (grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
 
         assert eid  >= 0
+        if dt not in self.sxc:
+            self.addNewTransient(dt)
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
         self.sxc[dt][eid] = [sxc]
@@ -154,7 +156,7 @@ class beamStressObject(stressObject):
         ###
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header + ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -245,7 +247,7 @@ class beamStressObject(stressObject):
         return msg
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---BEAM STRESSES---\n'
@@ -280,8 +282,6 @@ class beamStressObject(stressObject):
         return msg
 
 class beamStrainObject(strainObject):
-    """
-    """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CBEAM' #{} # 'CBEAM/CONBEAM'
@@ -322,7 +322,7 @@ class beamStrainObject(strainObject):
         return 444  # 44+10*40   (11 nodes)
 
     def getLength1(self):
-        return (44,'iifffffffff')
+        return (44,'ifffffffff')
 
     def getLength2(self):
         return (40,'ifffffffff')
@@ -342,26 +342,25 @@ class beamStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         @note make sure you set self.dt first
         """
         #print "addNewTransient_beam+1+0"
-        if self.dt not in self.smax:
-            self.sxc[self.dt] = {}
-            self.sxd[self.dt] = {}
-            self.sxe[self.dt] = {}
-            self.sxf[self.dt] = {}
-            self.smax[self.dt] = {}
-            self.smin[self.dt] = {}
-            self.MS_tension[self.dt]     = {}
-            self.MS_compression[self.dt] = {}
+        self.dt = dt
+        self.sxc[dt] = {}
+        self.sxd[dt] = {}
+        self.sxe[dt] = {}
+        self.sxf[dt] = {}
+        self.smax[dt] = {}
+        self.smin[dt] = {}
+        self.MS_tension[dt]     = {}
+        self.MS_compression[dt] = {}
 
-    def addNewEid(self,out):
+    def addNewEid(self,dt,out):
         #print "Beam Stress addNewEid..."
         (eid,grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
-        eid = (eid-self.deviceCode)/10
         #print "eid=%s grid=%s" %(eid,grid)
         assert eid >= 0
         #assert isinstance(eid,int)
@@ -378,13 +377,13 @@ class beamStrainObject(strainObject):
         self.MS_compression[eid] = [msc]
         return eid
 
-    def addNewEidTransient(self,out):
+    def addNewEidSort1(self,dt,out):
         #print "Beam Transient Stress addNewEid..."
         (eid,grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
 
-        eid = (eid-self.deviceCode)/10
-        dt = self.dt
         assert eid  >= 0
+        if dt not in self.sxc:
+            self.addNewTransient(dt)
         self.grids[eid] = [grid]
         self.xxb[eid] = [sd]
         self.sxc[dt][eid] = [sxc]
@@ -397,7 +396,7 @@ class beamStrainObject(strainObject):
         self.MS_compression[dt][eid] = [msc]
         return eid
 
-    def add(self,eid,out):
+    def add(self,dt,eid,out):
         #print "Beam Stress add..."
         (grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
         if grid:
@@ -413,10 +412,9 @@ class beamStrainObject(strainObject):
             self.MS_compression[eid].append(msc)
         ###
 
-    def addTransient(self,eid,out):
+    def addSort1(self,dt,eid,out):
         #print "Beam Transient Stress add..."
         (grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
-        dt = self.dt
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
@@ -427,7 +425,7 @@ class beamStrainObject(strainObject):
         ###
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header + ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -484,7 +482,7 @@ class beamStrainObject(strainObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if   self.isTransient and self.code==[1,0,10]:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---BEAM STRAINS---\n'

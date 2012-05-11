@@ -62,9 +62,9 @@ class shearStressObject(stressObject):
         self.avgShear[dt] = {}
         self.margin[dt]   = {}
 
-    def addNewEid(self,dt,out):
+    def addNewEid(self,dt,eid,out):
         #print "Rod Stress add..."
-        (eid,maxShear,avgShear,margin) = out
+        (maxShear,avgShear,margin) = out
         assert isinstance(eid,int)
         self.maxShear = {}
         self.avgShear = {}
@@ -73,8 +73,20 @@ class shearStressObject(stressObject):
         self.avgShear[eid] = avgShear
         self.margin[eid]   = margin
 
-    def addNewEidSort1(self,dt,out):
-        (eid,maxShear,avgShear,margin) = out
+    def addNewEidSort1(self,dt,eid,out):
+        (maxShear,avgShear,margin) = out
+        if dt not in self.maxShear:
+            self.addNewTransient(dt)
+        assert isinstance(eid,int)
+        assert eid >= 0
+        self.maxShear[dt][eid] = maxShear
+        self.avgShear[dt][eid] = avgShear
+        self.margin[dt][eid]   = margin
+
+    def addNewEidSort1(self,eid,dt,out):
+        (maxShear,avgShear,margin) = out
+        if dt not in self.maxShear:
+            self.addNewTransient(dt)
         assert isinstance(eid,int)
         assert eid >= 0
         self.maxShear[dt][eid] = maxShear
@@ -183,8 +195,8 @@ class shearStrainObject(strainObject):
         self.avgShear[dt] = {}
         self.margin[dt]   = {}
 
-    def addNewEid(self,dt,out):
-        (eid,axial,SMa,torsion,SMt) = out
+    def addNewEid(self,dt,eid,out):
+        (axial,SMa,torsion,SMt) = out
         #print "Rod Strain add..."
         assert eid >= 0
         #self.eType = self.eType
@@ -192,10 +204,21 @@ class shearStrainObject(strainObject):
         self.avgShear[eid]  = SMa
         self.margin[eid]    = torsion
 
-    def addNewEidSort1(self,dt,out):
-        #print "Rod Strain add..."
-        #print out
-        (eid,maxShear,avgShear,margin) = out
+    def addNewEidSort1(self,dt,eid,out):
+        (maxShear,avgShear,margin) = out
+        if dt not in self.maxShear:
+            self.addNewTransient(dt)
+        assert eid >= 0
+
+        #self.eType[eid] = self.elementType
+        self.maxShear[dt][eid] = maxShear
+        self.avgShear[dt][eid] = avgShear
+        self.margin[dt][eid]   = margin
+
+    def addNewEidSort2(self,eid,dt,out):
+        (maxShear,avgShear,margin) = out
+        if dt not in self.maxShear:
+            self.addNewTransient(dt)
         assert eid >= 0
 
         #self.eType[eid] = self.elementType

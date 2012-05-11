@@ -6,7 +6,7 @@ class mpcForcesObject(TableObject):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                ' \n',
@@ -54,7 +54,7 @@ class mpcForcesObject(TableObject):
 
     def __reprTransient__(self):
         msg = '---MPC FORCES---\n'
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             msg += 'dt = %g\n' %(self.dt)
 
         headers = ['T1','T2','T3','R1','R2','R3']
@@ -83,7 +83,7 @@ class mpcForcesObject(TableObject):
         return msg
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---MPC FORCES---\n'
@@ -117,7 +117,7 @@ class complexMpcForcesObject(complexTableObject):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                ' \n',
@@ -180,7 +180,7 @@ class complexMpcForcesObject(complexTableObject):
 
     def __reprTransient__(self):
         msg = '---COMPLEX MPC FORCES---\n'
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             msg += 'dt = %g\n' %(self.dt)
 
         raise RuntimeError('is this valid...')
@@ -207,7 +207,7 @@ class complexMpcForcesObject(complexTableObject):
         return msg
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPLEX MPC FORCES---\n'

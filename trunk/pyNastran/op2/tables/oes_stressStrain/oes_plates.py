@@ -34,17 +34,20 @@ class plateStressObject(stressObject):
         self.minorP = {}
         self.ovmShear = {}
 
-        #print "%%%%%dt = ",dt
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.add        = self.addTransient
-            self.addNewEid  = self.addNewEidTransient
-            self.addNewNode = self.addNewNodeTransient
-        #else:
-        #    self.dt = None
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+                self.addNewNode = self.addNewNodeSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
+            self.addNewNode = self.addNewNodeSort2
         ###
+
 
     def addF06Data(self,data,transient):
         if transient is None:
@@ -128,26 +131,26 @@ class plateStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         """
-        if self.dt not in self.oxx:
-            self.fiberCurvature[self.dt] = {}
-            self.oxx[self.dt]      = {}
-            self.oyy[self.dt]      = {}
-            self.txy[self.dt]      = {}
-            self.angle[self.dt]    = {}
-            self.majorP[self.dt]   = {}
-            self.minorP[self.dt]   = {}
-            self.ovmShear[self.dt] = {}
+        self.dt = dt
+        self.fiberCurvature[dt] = {}
+        self.oxx[dt]      = {}
+        self.oyy[dt]      = {}
+        self.txy[dt]      = {}
+        self.angle[dt]    = {}
+        self.majorP[dt]   = {}
+        self.minorP[dt]   = {}
+        self.ovmShear[dt] = {}
 
-    def addNewEid(self,eType,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewEid(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addNewEid..."
-        if eid in self.oxx:
-            return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        #if eid in self.oxx:
+            #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
-        assert eid not in self.oxx
+        #assert eid not in self.oxx
         #print self.oxx
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [fd]}
@@ -163,23 +166,24 @@ class plateStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewEidSort1(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addNewEidTransient..."
-        dt = self.dt
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" %(dt,eid,nodeID,fd,oxx,majorP,ovm)
         #print msg
         #if eid in self.ovmShear[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
-        if eid in self.ovmShear[dt]:  # SOL200, erase the old result
-            nid = nodeID
-            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            self.deleteTransient(dt)
-            self.addNewTransient()
+        if dt in self.ovmShear and eid in self.ovmShear[dt]:  # SOL200, erase the old result
+           nid = nodeID
+           #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+           self.deleteTransient(dt)
+           self.addNewTransient(dt)
         
         assert isinstance(eid,int)
         self.eType[eid] = eType
+        if dt not in self.oxx:
+            self.addNewTransient(dt)
         self.fiberCurvature[dt][eid] = {nodeID: [fd]}
         self.oxx[dt][eid]      = {nodeID: [oxx]}
         self.oyy[dt][eid]      = {nodeID: [oyy]}
@@ -191,7 +195,7 @@ class plateStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def add(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***add"
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
@@ -208,9 +212,8 @@ class plateStressObject(stressObject):
         self.ovmShear[eid][nodeID].append(ovm)
         if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addTransient"
-        dt = self.dt
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #print self.oxx
@@ -226,7 +229,7 @@ class plateStressObject(stressObject):
         self.ovmShear[dt][eid][nodeID].append(ovm)
         if nodeID==0: raise Exception(msg)
 
-    def addNewNode(self,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewNode(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addNewNode"
         #print self.oxx
         assert eid is not None
@@ -243,11 +246,10 @@ class plateStressObject(stressObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewNodeTransient(self,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewNodeSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addNewNodeTransient"
         #print self.oxx
         assert eid is not None
-        dt = self.dt
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
         #assert nodeID not in self.oxx[dt][eid]
@@ -317,7 +319,7 @@ class plateStressObject(stressObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
@@ -576,7 +578,7 @@ class plateStressObject(stressObject):
 
     def __repr__(self):
         #print "sCodes = ",self.sCodes
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---ISOTROPIC PLATE STRESS---\n'
@@ -655,12 +657,16 @@ class plateStrainObject(strainObject):
         self.minorP = {}
         self.evmShear = {}
 
-        if dt is not None:
-            self.dt = dt
-            self.addNewTransient()
-            self.add       = self.addTransient
-            self.addNewEid = self.addNewEidTransient
-            self.isTransient = True
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def addF06Data(self,data,transient):
@@ -744,31 +750,29 @@ class plateStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        if self.dt not in self.exx:
-            self.fiberCurvature[self.dt] = {}
-            self.exx[self.dt]   = {}
-            self.eyy[self.dt]   = {}
-            self.exy[self.dt]   = {}
-            self.angle[self.dt] = {}
-            self.majorP[self.dt] = {}
-            self.minorP[self.dt] = {}
-            self.evmShear[self.dt]   = {}
+        self.fiberCurvature[dt] = {}
+        self.exx[dt]    = {}
+        self.eyy[dt]    = {}
+        self.exy[dt]    = {}
+        self.angle[dt]  = {}
+        self.majorP[dt] = {}
+        self.minorP[dt] = {}
+        self.evmShear[dt] = {}
 
-    def addNewEid(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addNewEid(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
-        if eid in self.exx:
-            return self.add(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
-        assert eid not in self.exx
+        #if eid in self.exx:
+            #return self.add(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        #assert eid not in self.exx
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [curvature]}
         self.exx[eid]    = {nodeID: [exx]}
@@ -781,19 +785,21 @@ class plateStrainObject(strainObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addNewEidSort1(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
-        dt = self.dt
+
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
-        if eid in self.evmShear[dt]:  # SOL200, erase the old result
-            nid = nodeID
+        if dt not in self.exx:
+            self.addNewTransient(dt)
+        #if eid in self.evmShear[dt]:  # SOL200, erase the old result
+            #nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            self.deleteTransient(dt)
-            self.addNewTransient()
+            #self.deleteTransient(dt)
+            #self.addNewTransient()
         
         self.eType[eid] = eType
         self.fiberCurvature[dt][eid] = {nodeID: [curvature]}
@@ -807,7 +813,7 @@ class plateStrainObject(strainObject):
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def add(self,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
@@ -825,7 +831,7 @@ class plateStrainObject(strainObject):
         self.evmShear[eid][nodeID].append(evm)
         if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addSort1(self,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
@@ -833,7 +839,7 @@ class plateStrainObject(strainObject):
         #print self.fiberCurvature
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
-        dt = self.dt
+
         self.fiberCurvature[dt][eid][nodeID].append(curvature)
         self.exx[dt][eid][nodeID].append(exx)
         self.eyy[dt][eid][nodeID].append(eyy)
@@ -844,7 +850,7 @@ class plateStrainObject(strainObject):
         self.evmShear[dt][eid][nodeID].append(evm)
         if nodeID==0: raise Exception(msg)
 
-    def addNewNode(self,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addNewNode(self,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
         #print "***addNewNode"
         #print self.oxx
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
@@ -874,7 +880,7 @@ class plateStrainObject(strainObject):
         return headers
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
@@ -1136,7 +1142,9 @@ class plateStrainObject(strainObject):
         return msg
 
     def __repr__(self):
-        if self.isTransient:
+        #print "dt = ",self.dt
+        #print "nf = ",self.nonlinearFactor
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---ISOTROPIC PLATE STRAIN---\n'

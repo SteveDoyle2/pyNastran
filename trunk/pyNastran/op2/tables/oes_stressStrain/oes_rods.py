@@ -40,13 +40,9 @@ class rodStressObject(stressObject):
         self.axial      = {}
         self.torsion    = {}
         
-        if self.code in [[1,0,0],[1,0,1]]:
-            self.MS_axial   = {}
-            self.MS_torsion = {}
-            self.isImaginary = False
-        else:
-            raise InvalidCodeError('rodStress - get the format/sort/stressCode=%s' %(self.code))
-        ###
+        self.MS_axial   = {}
+        self.MS_torsion = {}
+        self.isImaginary = False
 
         self.dt = dt
         if isSort1:
@@ -174,7 +170,7 @@ class rodStressObject(stressObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
@@ -241,7 +237,7 @@ class rodStressObject(stressObject):
         return(''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
         
         #print 'axial = ',self.axial

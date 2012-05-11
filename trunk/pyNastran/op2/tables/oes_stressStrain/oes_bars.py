@@ -262,7 +262,7 @@ class barStressObject(stressObject):
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---BAR STRESS---\n'

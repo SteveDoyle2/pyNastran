@@ -9,7 +9,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                                             D I S P L A C E M E N T   V E C T O R\n',
                ' \n',
@@ -52,7 +52,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---DISPLACEMENTS---\n'
