@@ -57,6 +57,7 @@ class OGF(object):
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.extractDt = self.extractInt
             self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.setNullNonlinearFactor()
         elif self.analysisCode==2: # real eigenvalues
             self.extractDt = self.extractInt
             self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])

@@ -64,6 +64,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             self.addDataParameter(data,'loadID','i',5,False)   ## load set ID number
             #self.applyDataCodeValue('dataNames',['lsdvmn'])
             self.applyDataCodeValue('dataNames',['loadID'])
+            self.setNullNonlinearFactor()
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.addDataParameter(data,'eign','f',6,False)   ## eigenvalue

@@ -48,6 +48,24 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         self.obj = None
         self.readOES_Element()
 
+    def addDataParameter(self,data,Name,Type,FieldNum,applyNonlinearFactor=True):
+        #self.mode      = self.getValues(data,'i',5) ## mode number
+        value = self.getValues(data,Type,FieldNum)
+        setattr(self,Name,value)
+        self.dataCode[Name] = value
+        
+        if applyNonlinearFactor:
+            self.nonlinearFactor = value
+            self.dataCode['nonlinearFactor'] = value
+            self.dataCode['name'] = Name
+    
+    def setNullNonlinearFactor(self):
+        self.nonlinearFactor = None
+        self.dataCode['nonlinearFactor'] = None
+
+    def applyDataCodeValue(self,Name,value):
+        self.dataCode[Name] = value
+        
     def createTransientObject(self,storageObj,classObj,debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
