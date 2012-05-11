@@ -104,8 +104,11 @@ class OP2(BDF,  # BDF methods
         self.skippedCardsFile = open('skippedCards.out','a')
 
         ## the list of supported tables (dont edit this)
-        self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
-                             'EPT','MPT','MPTS', # properties/materials
+        self.tablesToRead = ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',  # nodes/geometry/loads/BCs
+                             'GEOM1S','GEOM2S','GEOM3S','GEOM4S', # nodes/geometry/loads/BCs - superelements
+                             'GEOM1N', #???
+                             'EPT', 'MPT',  # properties/materials
+                             'EPTS','MPTS', # properties/materials - superelements
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # tables
                              'LAMA',
@@ -156,8 +159,7 @@ class OP2(BDF,  # BDF methods
                              # new
                              'AFRF',             'AGRF',
                              'PMRF','PERF','PFRF',
-                             'FOL','GEOM1N',
-                             
+                             'FOL',
                              ]
         
         ## a dictionary that maps an integer of the subcaseName to the subcaseID
@@ -408,6 +410,15 @@ class OP2(BDF,  # BDF methods
                     #print "startTell = ",self.op2.tell()
                     if tableName=='GEOM1': # nodes,coords,etc.
                         self.readTable_Geom1()
+                    elif tableName=='GEOM1S': # superelements - nodes,coords,etc.
+                        self.readTable_Geom1S()
+                    elif tableName=='GEOM2S': # superelements - elements
+                        self.readTable_Geom2S()
+                    elif tableName=='GEOM3S': # superelements - static/thermal loads
+                        self.readTable_Geom3S()
+                    elif tableName=='GEOM4S': # superelements - constraints
+                        self.readTable_Geom4S()
+
                     #elif tableName=='GEOM1N':
                     #    self.readTable_Geom1N()
                     elif tableName=='GEOM2': # elements
