@@ -126,7 +126,7 @@ class compositePlateStressObject(stressObject):
         #print "Composite Plate Strain add..."
         msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,eType,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
         if eid in self.o11:
-            return self.add(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+            return self.add(dt,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
         assert eid not in self.o11,msg+'\n  o11=%s eType=%s code=%s' %(self.o11[eid],self.eType[eid],self.dataCode)
 
         self.eType[eid]  = eType
@@ -146,11 +146,11 @@ class compositePlateStressObject(stressObject):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
 
-        #if eid in self.o11[dt]:
-            #return self.add(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
-
         if dt not in self.o11:
             self.addNewTransient(dt)
+        if eid in self.o11[dt]:
+            return self.add(dt,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+
         assert eid not in self.o11[dt]
         self.eType[eid]  = eType
         self.o11[dt][eid]    = [o11]
@@ -496,7 +496,7 @@ class compositePlateStrainObject(strainObject):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         if eid in self.e11:
-            return self.add(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
+            return self.add(dt,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
         assert eid not in self.e11
         assert isinstance(eid,int)
         self.eType[eid]  = eType

@@ -161,7 +161,7 @@ class OUG(object):
         for i in range(nEntries):
             eData = self.data[n:n+32]
             out = unpack('iiffffff',eData)
-            nid = (out[0]-self.deviceCode)//10
+            #nid = (out[0]-self.deviceCode)//10    ## @todo fix the deviceCode
 
             #print out
             n+=32
@@ -250,9 +250,13 @@ class OUG(object):
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            #print "SORT1"
             format1 = 'i' # SORT1
             extract = self.extractSort1
+            #if self.analysisCode in [5]:
+                #extract==self.extractSort2
         else: # values from IDENT   #@todo test this...
+            #print "SORT2"
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
             if self.analysisCode in [1,2,3,4,7,8,11]:
                 format1 = 'i' # SORT1
@@ -267,7 +271,6 @@ class OUG(object):
         return (format1,extract)
 
     def OUG_RealTable(self):
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOUG_FormatStart()
@@ -292,7 +295,6 @@ class OUG(object):
         self.handleResultsBuffer(self.OUG_RealTable)
 
     def OUG_ComplexTable(self):
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOUG_FormatStart()

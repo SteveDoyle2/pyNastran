@@ -220,7 +220,7 @@ class hyperelasticQuadObject(stressObject):
 
     def addNewEidSort1(self,dt,data):
         if dt not in self.oxx:
-            self.addNewTransient()
+            self.addNewTransient(dt)
         (eid,Type,oxx,oyy,txy,angle,majorP,minorP) = data
         self.Type[eid] = Type
         self.oxx[dt] = {eid:[oxx]}

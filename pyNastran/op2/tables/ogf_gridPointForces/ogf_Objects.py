@@ -242,17 +242,16 @@ class off_fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
         assert nodeID not in self.fluxes
         self.fluxes[nodeID] = array([v1,v2,v3])
 
-    def writeOp2(self,block3,deviceCode=1):
+    #def writeOp2(self,block3,deviceCode=1):
         """
         creates the binary data for writing the table
-        @warning hasnt been tested...
         """
-        msg = block3
-        for nodeID,flux in sorted(self.fluxes.iteritems()):
-            grid = nodeID*10+deviceCode
-            msg += pack('iffffff',grid,flux[0],flux[1],flux[2],0,0,0)
+        #msg = block3
+        #for nodeID,flux in sorted(self.fluxes.iteritems()):
+            #grid = nodeID*10+deviceCode
+            #msg += pack('iffffff',grid,flux[0],flux[1],flux[2],0,0,0)
         ###
-        return msg
+        #return msg
 
     def __repr__(self):
         if self.isTransient:

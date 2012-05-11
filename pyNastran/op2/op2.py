@@ -287,6 +287,7 @@ class OP2(BDF,  # BDF methods
         ## OPG - summation of loads for each element
         self.appliedLoads = {}
         self.loadVectors  = {}
+        self.forceVectors = {}
         
         ## OEE - strain energy density
         self.strainEnergy = {}
@@ -723,6 +724,7 @@ class OP2(BDF,  # BDF methods
                    # OPG - Applied Force/Moment
                    self.appliedLoads,
                    self.loadVectors,
+                   self.forceVectors,
 
                    # OES - Stress/Strain
                    self.celasStress,self.celasStrain,
