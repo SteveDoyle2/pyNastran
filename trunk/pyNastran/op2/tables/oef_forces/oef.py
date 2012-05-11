@@ -118,24 +118,6 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         #print '-'*80
         self.readTitle()
 
-    def updateSort1(self):
-        extract = self.extractSort1
-        return 'i',extract
-
-    def updateSort2(self):
-        extract = self.extractSort2
-        return 'f'
-
-    def extractSort1(self,eidDevice,dt):
-        #eidDevice, = unpack('i',data)
-        #print "eidDevice=%s dt=%s" %(eidDevice,dt)
-        return (eidDevice-self.deviceCode)//10
-
-    def extractSort2(self,timeFreq,eid):
-        #print "timeFreq=%s eid=%s" %(timeFreq,eid)
-        #gridDevice, = unpack('i',data)
-        return timeFreq
-    
     def OEF_ForceCode(self):
         """
         Gets the numwide codes for the element to determine if
@@ -331,7 +313,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 self.OEF_Plate2()
                 #asdf
             elif self.numWide==numWideImag:
-                print self.codeInformation()
+                #print self.codeInformation()
                 self.OEF_Plate2_alt()
             else:
                 raise NotImplementedError(self.codeInformation())

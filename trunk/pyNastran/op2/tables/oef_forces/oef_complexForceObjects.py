@@ -1012,8 +1012,8 @@ class ComplexForce_VU_2D(scalarObject): # 189-VUQUAD,190-VUTRIA
         self.shearXZ[eid] = {}
 
         for force in forces:
-            [nid,membraneXr,membraneYr,membraneXYr,_,_,_,bendingXr,bendingYr,bendingXYr,shearYZr,shearXZr,_,
-                 membraneXi,membraneYi,membraneXYi,_,_,_,bendingXi,bendingYi,bendingXYi,shearYZi,shearXZi,_] = force
+            [nid,membraneXr,membraneYr,membraneXYr,bendingXr,bendingYr,bendingXYr,shearYZr,shearXZr,
+                 membraneXi,membraneYi,membraneXYi,bendingXi,bendingYi,bendingXYi,shearYZi,shearXZi] = force
             self.membraneX[eid][nid]  = complex(membraneXr, membraneXi)
             self.membraneY[eid][nid]  = complex(membraneYr, membraneYi)
             self.membraneXY[eid][nid] = complex(membraneXYr,membraneXYi)
@@ -1050,8 +1050,8 @@ class ComplexForce_VU_2D(scalarObject): # 189-VUQUAD,190-VUTRIA
         self.shearXZ[dt][eid] = {}
 
         for force in forces:
-            [nid,membraneXr,membraneYr,membraneXYr,_,_,_,bendingXr,bendingYr,bendingXYr,shearYZr,shearXZr,_,
-                 membraneXi,membraneYi,membraneXYi,_,_,_,bendingXi,bendingYi,bendingXYi,shearYZi,shearXZi,_] = force
+            [nid,membraneXr,membraneYr,membraneXYr,bendingXr,bendingYr,bendingXYr,shearYZr,shearXZr,
+                 membraneXi,membraneYi,membraneXYi,bendingXi,bendingYi,bendingXYi,shearYZi,shearXZi] = force
             self.membraneX[dt][eid][nid]  = complex(membraneXr, membraneXi)
             self.membraneY[dt][eid][nid]  = complex(membraneYr, membraneYi)
             self.membraneXY[dt][eid][nid] = complex(membraneXYr,membraneXYi)

@@ -24,13 +24,18 @@ class ctriaxStressObject(stressObject):
         self.oms = {}
         self.ovm = {}
 
-        if dt is not None:
-            self.isTransient = True
-            self.dt = self.nonlinearFactor
-            self.addNewTransient()
-            self.add = self.addTransient
-            self.addNewEid = self.addNewEidTransient
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
+
 
     def addF06Data(self,data,transient):
         raise Exception('Not Implemented')
@@ -79,19 +84,17 @@ class ctriaxStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        if self.dt not in self.axial:
-            self.radial[self.dt]  = {}
-            self.azimuthal[self.dt] = {}
-            self.axial[self.dt] = {}
-            self.shear[self.dt] = {}
-            self.omax[self.dt] = {}
-            self.oms[self.dt] = {}
-            self.ovm[self.dt] = {}
+        self.radial[dt]  = {}
+        self.azimuthal[dt] = {}
+        self.axial[dt] = {}
+        self.shear[dt] = {}
+        self.omax[dt] = {}
+        self.oms[dt] = {}
+        self.ovm[dt] = {}
 
     def addNewEid(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
@@ -113,11 +116,12 @@ class ctriaxStressObject(stressObject):
         self.oms[eid][nid]       = tmax
         self.ovm[eid][nid]       = octs
 
-    def addNewEidTransient(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
-        dt = self.dt
+    def addNewEidSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #assert isinstance(eid,int)
         #assert eid >= 0
         #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
+        if dt not in self.radial:
+            self.addNewTransient(dt)
         self.radial[dt][eid]    = {nid: rs}
         self.azimuthal[dt][eid] = {nid: azs}
         self.axial[dt][eid]     = {nid: As}
@@ -126,9 +130,8 @@ class ctriaxStressObject(stressObject):
         self.oms[dt][eid]       = {nid: tmax}
         self.ovm[dt][eid]       = {nid: octs}
 
-    def addTransient(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        dt = self.dt
         self.radial[dt][eid][nid]    = rs
         self.azimuthal[dt][eid][nid] = azs
         self.axial[dt][eid][nid]     = As
@@ -218,7 +221,7 @@ class ctriaxStrainObject(strainObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CTRIAX6'
-        #raise NotImplementedError('CTRIAX6 strain...')
+
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.radial  = {}
         self.azimuthal = {}
@@ -228,13 +231,18 @@ class ctriaxStrainObject(strainObject):
         self.ems = {}
         self.evm = {}
 
-        if dt is not None:
-            self.isTransient = True
-            self.dt = self.nonlinearFactor
-            self.addNewTransient()
-            self.add = self.addTransient
-            self.addNewEid = self.addNewEidTransient
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
+
 
     def addF06Data(self,data,transient):
         raise Exception('Not Implemented')
@@ -256,21 +264,19 @@ class ctriaxStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        if self.dt not in self.axial:
-            self.radial[self.dt]  = {}
-            self.azimuthal[self.dt] = {}
-            self.axial[self.dt] = {}
-            self.shear[self.dt] = {}
-            self.emax[self.dt] = {}
-            self.ems[self.dt] = {}
-            self.evm[self.dt] = {}
+        self.radial[dt]  = {}
+        self.azimuthal[dt] = {}
+        self.axial[dt] = {}
+        self.shear[dt] = {}
+        self.emax[dt] = {}
+        self.ems[dt] = {}
+        self.evm[dt] = {}
 
-    def addNewEid(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addNewEid(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid]    = {nid: rs}
         self.azimuthal[eid] = {nid: azs}
@@ -280,7 +286,7 @@ class ctriaxStrainObject(strainObject):
         self.ems[eid]       = {nid: emax}
         self.evm[eid]       = {nid: ects}
 
-    def add(self,eid,nid,rs,azs,As,ss,maxp,emax,ects):
+    def add(self,dt,eid,nid,rs,azs,As,ss,maxp,emax,ects):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid][nid]    = rs
         self.azimuthal[eid][nid] = azs
@@ -290,8 +296,7 @@ class ctriaxStrainObject(strainObject):
         self.ems[eid][nid]       = emax
         self.evm[eid][nid]       = ects
 
-    def addNewEidTransient(self,eid,nid,rs,azs,As,ss,maxp,emax,ects):
-        dt = self.dt
+    def addNewEidSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,emax,ects):
         #assert isinstance(eid,int)
         #assert eid >= 0
         #print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
@@ -303,9 +308,8 @@ class ctriaxStrainObject(strainObject):
         self.ems[dt][eid]       = {nid: emax}
         self.evm[dt][eid]       = {nid: ects}
 
-    def addTransient(self,eid,nid,rs,azs,As,ss,maxp,emax,ects):
+    def addSort1(self,dt,eid,nid,rs,azs,As,ss,maxp,emax,ects):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        dt = self.dt
         self.radial[dt][eid][nid]    = rs
         self.azimuthal[dt][eid][nid] = azs
         self.axial[dt][eid][nid]     = As

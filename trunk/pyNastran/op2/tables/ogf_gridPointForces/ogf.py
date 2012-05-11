@@ -99,16 +99,17 @@ class OGF(object):
         #self.printBlock(data)
         self.readTitle()
 
-    def extractDt(self):
-        pass
-    def extractInt(self):
-        return 'i',self.scaleEid
-    def extractFloat(self):
-        return 'f',self.scaleDt
-    def scaleEid(self,eid):
-        return (eid-self.deviceCode)//10
-    def scaleDt(self,dt):
-        return dt
+        # this may be a really good idea...
+    #def extractDt(self):
+        #pass
+    #def extractInt(self):
+        #return 'i',self.scaleEid
+    #def extractFloat(self):
+        #return 'f',self.scaleDt
+    #def scaleEid(self,eid):
+        #return (eid-self.deviceCode)//10
+    #def scaleDt(self,dt):
+        #return dt
 
     def readOGF_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
@@ -196,7 +197,7 @@ class OGF(object):
         for i in range(nEntries):
             eData = self.data[n:n+32]
             out = unpack('iiffffff',eData)
-            nid = (out[0]-self.deviceCode)//10
+            #nid = (out[0]-self.deviceCode)//10  ## @todo update...
 
             #print out
             n+=32

@@ -477,16 +477,19 @@ class ElementsStressStrain(object):
         ###
 
     def OES_CTRIAX6_53(self):
-        (Format1,scaleValue) = self.OES_field1()
-        Format = Format1+'ifffffff'
+        #(Format1,scaleValue) = self.OES_field1()
+        #Format = Format1+'ifffffff'
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'ifffffff'
         while len(self.data)>=132: # (1+8*4) = 33*4 = 132
             eData     = self.data[0:4*9]
             self.data = self.data[4*9: ]
-            out = unpack(Format,eData)
+            out = unpack(format1,eData)
             (eid,loc,rs,azs,As,ss,maxp,tmax,octs) = out
-            eid = scaleValue(eid)
+            eid = extract(eid,dt)
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-            self.obj.addNewEid(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+            self.obj.addNewEid(dt,eid,loc,rs,azs,As,ss,maxp,tmax,octs)
 
             for i in range(3):
                 eData     = self.data[0:4*8]
@@ -494,7 +497,7 @@ class ElementsStressStrain(object):
                 out = unpack('ifffffff',eData)
                 (loc,rs,azs,As,ss,maxp,tmax,octs) = out
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-                self.obj.add(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                self.obj.add(dt,eid,loc,rs,azs,As,ss,maxp,tmax,octs)
 
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
@@ -746,14 +749,14 @@ class ElementsStressStrain(object):
             (eid,t1,t2,t3,t4,ID,sx,sy,sxy,angle,smj,smi) = out
             eid = extract(eid,dt)
             Type = t1+t2+t3+t4
-            self.obj.addNewEid([eid,Type,sx,sy,sxy,angle,smj,smi])
+            self.obj.addNewEid(dt,[eid,Type,sx,sy,sxy,angle,smj,smi])
             #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(eid,Type,ID,sx,sy,sxy,angle,smj,smi)
             for i in range(3):
                 eData     = self.data[0:4*7]
                 self.data = self.data[4*7: ]
                 out = unpack('iffffff',eData)
                 #(ID,sx,sy,sxy,angle,smj,smi) = out
-                self.obj.add(eid,out)
+                self.obj.add(dt,eid,out)
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(ID,sx,sy,sxy,angle,smj,smi)
             ###
             #self.obj.add(data)

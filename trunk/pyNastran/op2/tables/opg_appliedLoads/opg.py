@@ -7,8 +7,9 @@ from struct import unpack
 #    temperatureObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
-from opg_Objects import appliedLoadsObject
-from opg_loadVector import loadVectorObject,complexLoadVectorObject
+from opg_Objects      import appliedLoadsObject
+from opg_loadVector   import loadVectorObject,complexLoadVectorObject
+from opnl_forceVector import forceVectorObject,complexForceVectorObject
 
 class OPG(object):
     """Table of element forces"""
@@ -112,9 +113,10 @@ class OPG(object):
         
         if   self.tableCode==19:
             self.readOPG_Data_table19() # grid point force balance
-        
         elif self.tableCode==2:  # load vector
             self.readOPG_Data_table2()
+        elif self.tableCode==12:  # nonlinear force vector
+            self.readOPG_Data_table12()
 
         # Nonlinear force vector
         #elif tfsCode==[12,1,0]:
@@ -232,6 +234,24 @@ class OPG(object):
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
+            else:
+                raise NotImplementedError(self.codeInformation())
+            self.OUG_ComplexTable()
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOPG_Data_table12(self): # Nonlinear Force Vector (in progress)
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            if self.thermal==0:
+                self.createTransientObject(self.forceVectors,forceVectorObject) # real
+            else:
+                raise NotImplementedError(self.codeInformation())
+            self.OUG_RealTable()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            if self.thermal==0:
+                self.createTransientObject(self.forceVectors,complexForceVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.OUG_ComplexTable()

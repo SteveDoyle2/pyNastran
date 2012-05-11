@@ -48,6 +48,24 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         self.obj = None
         self.readOES_Element()
 
+    def updateSort1(self):
+        extract = self.extractSort1
+        return 'i',extract
+
+    def updateSort2(self):
+        extract = self.extractSort2
+        return 'f'
+
+    def extractSort1(self,eidDevice,dt):
+        #eidDevice, = unpack('i',data)
+        #print "eidDevice=%s dt=%s eid-dev=%s out=%s" %(eidDevice,dt,eidDevice-self.deviceCode,(eidDevice-self.deviceCode)/10.)
+        return (eidDevice-self.deviceCode)//10
+
+    def extractSort2(self,timeFreq,eid):
+        #print "timeFreq=%s eid=%s" %(timeFreq,eid)
+        #gridDevice, = unpack('i',data)
+        return timeFreq
+    
     def addDataParameter(self,data,Name,Type,FieldNum,applyNonlinearFactor=True):
         #self.mode      = self.getValues(data,'i',5) ## mode number
         value = self.getValues(data,Type,FieldNum)
