@@ -34,12 +34,16 @@ class compositePlateStressObject(stressObject):
             raise InvalidCodeError('compositePlateStress - get the format/sort/stressCode=%s' %(self.code))
         ###
 
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.add       = self.addTransient
-            self.addNewEid = self.addNewEidTransient
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def addF06Data(self,data,transient,eType):
@@ -102,24 +106,22 @@ class compositePlateStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        #self.fiberDistance[self.dt] = {}
-        if self.dt not in self.o11:
-            self.o11[self.dt]    = {}
-            self.o22[self.dt]    = {}
-            self.t12[self.dt]    = {}
-            self.t1z[self.dt]    = {}
-            self.t2z[self.dt]    = {}
-            self.angle[self.dt]  = {}
-            self.majorP[self.dt] = {}
-            self.minorP[self.dt] = {}
-            self.ovmShear[self.dt]    = {}
+        #self.fiberDistance[dt] = {}
+        self.o11[dt]    = {}
+        self.o22[dt]    = {}
+        self.t12[dt]    = {}
+        self.t1z[dt]    = {}
+        self.t2z[dt]    = {}
+        self.angle[dt]  = {}
+        self.majorP[dt] = {}
+        self.minorP[dt] = {}
+        self.ovmShear[dt] = {}
 
-    def addNewEid(self,eType,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
+    def addNewEid(self,eType,dt,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,eType,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
@@ -140,12 +142,15 @@ class compositePlateStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
+    def addNewEidSort1(self,eType,dt,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
-        dt = self.dt
-        if eid in self.o11[dt]:
-            return self.add(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+
+        #if eid in self.o11[dt]:
+            #return self.add(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
+
+        if dt not in self.o11:
+            self.addNewTransient(dt)
         assert eid not in self.o11[dt]
         self.eType[eid]  = eType
         self.o11[dt][eid]    = [o11]
@@ -161,7 +166,7 @@ class compositePlateStressObject(stressObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
+    def add(self,dt,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
         #print "***add"
         msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
         #print msg
@@ -177,12 +182,12 @@ class compositePlateStressObject(stressObject):
         self.ovmShear[eid].append(ovm)
         #if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
+    def addSort1(self,dt,eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm):
         #print "***add"
         msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,o11,o22,t12,t1z,t2z,angle,majorP,minorP,ovm)
         #print msg
         #print self.o11
-        dt = self.dt
+
         self.o11[dt][eid].append(o11)
         self.o22[dt][eid].append(o22)
         self.t12[dt][eid].append(t12)
@@ -203,7 +208,7 @@ class compositePlateStressObject(stressObject):
         return headers
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
@@ -343,7 +348,7 @@ class compositePlateStressObject(stressObject):
 
     def __repr__(self):
         return self.writeF06(['','',''],'PAGE ',1)[0]
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPOSITE PLATE STRESS---\n'
@@ -444,12 +449,16 @@ class compositePlateStrainObject(strainObject):
             raise InvalidCodeError('compositePlateStrain - get the format/sort/stressCode=%s' %(self.code))
         ###
 
-        if dt is not None:
-            self.dt = dt
-            self.isTransient = True
-            self.addNewTransient()
-            self.add       = self.addTransient
-            self.addNewEid = self.addNewEidTransient
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def deleteTransient(self,dt):
@@ -468,24 +477,22 @@ class compositePlateStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
-        @note make sure you set self.dt first
         """
-        #self.fiberDistance[self.dt] = {}
-        if self.dt not in self.e11:
-            self.e11[self.dt]    = {}
-            self.e22[self.dt]    = {}
-            self.e12[self.dt]    = {}
-            self.e1z[self.dt]    = {}
-            self.e2z[self.dt]    = {}
-            self.angle[self.dt]  = {}
-            self.majorP[self.dt] = {}
-            self.minorP[self.dt] = {}
-            self.evmShear[self.dt]    = {}
+        #self.fiberDistance[dt] = {}
+        self.e11[dt]    = {}
+        self.e22[dt]    = {}
+        self.e12[dt]    = {}
+        self.e1z[dt]    = {}
+        self.e2z[dt]    = {}
+        self.angle[dt]  = {}
+        self.majorP[dt] = {}
+        self.minorP[dt] = {}
+        self.evmShear[dt] = {}
 
-    def addNewEid(self,eType,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
+    def addNewEid(self,eType,dt,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         if eid in self.e11:
@@ -506,12 +513,15 @@ class compositePlateStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def addNewEidTransient(self,eType,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
+    def addNewEidSort1(self,eType,dt,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
-        dt = self.dt
+        
+        if dt not in self.e11:
+            self.addNewTransient(dt)
         assert eid not in self.e11[dt]
         assert isinstance(eid,int)
+
         self.eType[eid]  = eType
         self.e11[dt][eid]    = [e11]
         self.e22[dt][eid]    = [e22]
@@ -526,7 +536,7 @@ class compositePlateStrainObject(strainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def add(self,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
+    def add(self,dt,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
         #print "***add"
         msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
         #print msg
@@ -542,12 +552,11 @@ class compositePlateStrainObject(strainObject):
         self.evmShear[eid].append(evm)
         #if nodeID==0: raise Exception(msg)
 
-    def addTransient(self,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
+    def addSort1(self,dt,eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm):
         #print "***add"
         msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" %(eid,e11,e22,e12,e1z,e2z,angle,majorP,minorP,evm)
         #print msg
         #print self.o11
-        dt = self.dt
         self.e11[dt][eid].append(e11)
         self.e22[dt][eid].append(e22)
         self.e12[dt][eid].append(e12)
@@ -568,7 +577,7 @@ class compositePlateStrainObject(strainObject):
         return headers
 
     def writeF06(self,header,pageStamp,pageNum=1):  # @todo no transient
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         if self.isVonMises():
@@ -709,7 +718,7 @@ class compositePlateStrainObject(strainObject):
 
     def __repr__(self):
         return self.writeF06(['','',''],'PAGE ',1)[0]
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPOSITE PLATE STAIN---\n'

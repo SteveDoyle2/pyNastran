@@ -112,8 +112,6 @@ class celasStressObject(stressObject):
         return msg
 
 class celasStrainObject(strainObject):
-    """
-    """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = {}

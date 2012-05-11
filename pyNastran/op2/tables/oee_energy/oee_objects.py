@@ -24,6 +24,7 @@ class StrainEnergyObject(scalarObject):
         #print self.dataCode
         #print "numWide = %s %s"  %(self.dataCode['numWide'],type(self.dataCode['numWide']))
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -45,7 +46,7 @@ class StrainEnergyObject(scalarObject):
         #print "dataCode = ",self.dataCode
         if dt is not None:
             self.dt = dt
-            self.addNewTransient()
+            self.addNewTransient(dt)
         ###
         self.updateNumWide()
 
@@ -79,7 +80,6 @@ class StrainEnergyObject(scalarObject):
         self.density[eid] = density
 
     def addSort1(self,dt,out):
-        dt = self.dt
         if dt not in self.energy:
             self.addNewTransient(dt)
 
@@ -120,7 +120,7 @@ class StrainEnergyObject(scalarObject):
         return msg
 
     def __repr__(self):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg  = '---Strain Energy Object---\n'

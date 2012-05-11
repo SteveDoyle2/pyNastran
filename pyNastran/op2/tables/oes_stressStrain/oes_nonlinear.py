@@ -24,7 +24,18 @@ class nonlinearQuadObject(stressObject):
         self.es  = {}
         self.eps = {}
         self.ecs = {}
+
         self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
+        ###
 
     def deleteTransient(self,dt):
         del self.fiberDistance[dt]
@@ -47,8 +58,7 @@ class nonlinearQuadObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
-        dt = self.dt
+    def addNewTransient(self,dt):
         self.fiberDistance[dt] = {}
         self.oxx[dt] = {}
         self.oyy[dt] = {}
@@ -64,10 +74,9 @@ class nonlinearQuadObject(stressObject):
         self.eps[dt] = {}
         self.ecs[dt] = {}
 
-    def addNewEid(self,eType,data):
-        dt = self.dt
+    def addNewEidSort1(self,eType,dt,data):
         if dt not in self.oxx:
-            self.addNewTransient()
+            self.addNewTransient(dt)
         (eid,fd,sx,sy,sz,txy,es,eps,ecs,ex,ey,ez,exy) = data
         self.fiberDistance[dt][eid] = [fd]
         if isnan(sz): sz = 0.
@@ -87,8 +96,7 @@ class nonlinearQuadObject(stressObject):
         self.eps[dt][eid] = [eps]
         self.ecs[dt][eid] = [ecs]
 
-    def add(self,data):
-        dt = self.dt
+    def addSort1(self,dt,data):
         (eid,fd,sx,sy,sz,txy,es,eps,ecs,ex,ey,ez,exy) = data
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz): sz = 0.
@@ -175,6 +183,18 @@ class hyperelasticQuadObject(stressObject):
         self.majorP = {}
         self.minorP = {}
 
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
+        ###
+
     def deleteTransient(self,dt):
         del self.fiberDistance[dt]
         del self.oxx[dt]
@@ -190,8 +210,7 @@ class hyperelasticQuadObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
-        dt = self.dt
+    def addNewTransient(self,dt):
         self.oxx[dt] = {}
         self.oyy[dt] = {}
         self.txy[dt] = {}
@@ -199,8 +218,7 @@ class hyperelasticQuadObject(stressObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
 
-    def addNewEid(self,data):
-        dt = self.dt
+    def addNewEidSort1(self,dt,data):
         if dt not in self.oxx:
             self.addNewTransient()
         (eid,Type,oxx,oyy,txy,angle,majorP,minorP) = data
@@ -212,8 +230,7 @@ class hyperelasticQuadObject(stressObject):
         self.majorP[dt] = {eid:[majorP]}
         self.minorP[dt] = {eid:[minorP]}
 
-    def add(self,eid,data):
-        dt = self.dt
+    def addSort1(self,dt,eid,data):
         (ID,oxx,oyy,txy,angle,majorP,minorP) = data
         self.oxx[dt][eid].append(oxx)
         self.oyy[dt][eid].append(oyy)
@@ -269,7 +286,18 @@ class nonlinearRodObject(stressObject):
         self.effectivePlasticCreepStrain = {}
         self.effectiveCreepStrain  = {}
         self.linearTorsionalStress = {}
+
         self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+                #self.addNewEid = self.addNewEidSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            #self.addNewEid = self.addNewEidSort2
+        ###
     
     def deleteTransient(self,dt):
         del self.axialStress[dt]
@@ -285,8 +313,7 @@ class nonlinearRodObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
-        dt = self.dt
+    def addNewTransient(self,dt):
         self.axialStress[dt] = {}
         self.equivStress[dt] = {}
         self.totalStrain[dt] = {}
@@ -294,10 +321,9 @@ class nonlinearRodObject(stressObject):
         self.effectiveCreepStrain[dt]  = {}
         self.linearTorsionalStress[dt] = {}
 
-    def add(self,eType,data):
-        dt = self.dt
+    def addSort1(self,eType,dt,data):
         if dt not in self.axialStress:
-            self.addNewTransient()
+            self.addNewTransient(dt)
         eid = data[0]
         self.eType[eid] = eType
         self.axialStress[dt][eid] = data[1]

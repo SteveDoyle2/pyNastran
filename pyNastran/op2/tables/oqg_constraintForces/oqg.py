@@ -149,9 +149,9 @@ class OQG(object):
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
-        if self.thermal!=0:
-            print self.obj
-            raise RuntimeError('check the printout for thermal...')
+        #if self.thermal!=0:
+            #print self.obj
+            #raise RuntimeError('check the printout for thermal...')
 
     def readOQG_Data_table39(self): # MPC Forces
         isSort1 = self.isSort1()

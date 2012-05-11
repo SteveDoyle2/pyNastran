@@ -6,7 +6,7 @@ class spcForcesObject(TableObject):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                ' \n',
@@ -53,7 +53,7 @@ class spcForcesObject(TableObject):
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             msg += 'dt = %g\n' %(self.dt)
 
         headers = ['T1','T2','T3','R1','R2','R3']
@@ -84,7 +84,7 @@ class spcForcesObject(TableObject):
     def __repr__(self):
         return self.writeF06(['',''],'PAGE ',1)[0]
 
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---SPC FORCES---\n'
@@ -118,7 +118,7 @@ class complexSpcForcesObject(complexTableObject):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                ' \n',
@@ -181,7 +181,7 @@ class complexSpcForcesObject(complexTableObject):
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             msg += 'dt = %g\n' %(self.dt)
 
         raise RuntimeError('is this valid...')
@@ -209,11 +209,11 @@ class complexSpcForcesObject(complexTableObject):
 
     def __repr__(self):
         return self.writeF06(['',''],'PAGE ',1)[0]
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---COMPLEX SPC FORCES---\n'
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             msg += 'dt = %g\n' %(self.dt)
 
         raise RuntimeError('is this valid...')

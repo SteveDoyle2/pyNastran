@@ -9,7 +9,7 @@ class accelerationObject(TableObject): # approachCode=11, sortCode=0, thermal=0
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                                             A C C E L E R A T I O N   V E C T O R\n',
                ' \n',
@@ -51,7 +51,7 @@ class accelerationObject(TableObject): # approachCode=11, sortCode=0, thermal=0
         return (''.join(msg),pageNum)
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---ACCELERATIONS---\n'
@@ -104,7 +104,7 @@ class complexAccelerationObject(complexTableObject): # tableCode=11, approachCod
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
@@ -165,9 +165,11 @@ class complexAccelerationObject(complexTableObject): # tableCode=11, approachCod
 
     def __repr__(self):
         return self.writeF06(['','',''],'PAGE ',1)[0]
+        #if self.nonlinearFactor is not None:
+            #return self.__reprTransient__()
 
         msg = '---COMPLEX ACCELERATIONS---\n'
-        #if self.dt is not None:
+        #if self.nonlinearFactor is not None:
         #    msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
         headers = ['DxReal','DxImag','DyReal','DyImag','DzReal','DyImag','RxReal','RxImag','RyReal','RyImag','RzReal','RzImag']
         msg += '%-10s ' %('nodeID')

@@ -9,7 +9,7 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                                                   V E L O C I T Y   V E C T O R\n',
                ' \n',
@@ -51,7 +51,7 @@ class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
         return (''.join(msg),pageNum)
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---VELOCITIES---\n'
@@ -104,7 +104,7 @@ class complexVelocityObject(complexTableObject): # tableCode=10, approachCode=??
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n',

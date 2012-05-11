@@ -5,7 +5,6 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
-        self.dt = dt
         self.gridTypes    = {}
         self.temperatures = {}
         
@@ -86,7 +85,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         if dt is not None:
             self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
             self.dt = dt
-            self.addNewTransient()
+            self.addNewTransient(dt)
         ###
 
     def deleteTransient(self,dt):
@@ -187,7 +186,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                ' \n',
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             for dt,temperatures in sorted(self.temperatures.iteritems()):
                 dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
                 header[2] = dtLine
@@ -196,7 +195,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                 msg.append(pageStamp+str(pageNum)+'\n')
                 pageNum += 1
             ###
-            return(''.join(msg),pageNum) # transient
+            return(''.join(msg),pageNum-1) # transient
 
         msg += self.printTempLines(self.temperatures)
         msg.append(pageStamp+str(pageNum)+'\n')
@@ -244,7 +243,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         return msg
 
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---TEMPERATURE---\n'

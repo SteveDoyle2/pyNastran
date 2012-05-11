@@ -5,33 +5,8 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT LOAD VECTOR---\n'
-        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
-        msg += self.writeHeader()
-        
-        for dt,translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-                (dx,dy,dz) = translation
-                (rx,ry,rz) = rotation
-
-                msg += '%-10i %8s ' %(nodeID,gridType)
-                vals = [dx,dy,dz,rx,ry,rz]
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%10s ' %(0)
-                    else:
-                        msg += '%10.3e ' %(val)
-                    ###
-                msg += '\n'
-            ###
-        return msg
-
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                                     L O A D   V E C T O R\n',
@@ -79,8 +54,33 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
             msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum-1)
 
+    def __reprTransient__(self):
+        msg = '---TRANSIENT LOAD VECTOR---\n'
+        #msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+        msg += self.writeHeader()
+        
+        for dt,translations in sorted(self.translations.iteritems()):
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            for nodeID,translation in sorted(translations.iteritems()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+
+                msg += '%-10i %8s ' %(nodeID,gridType)
+                vals = [dx,dy,dz,rx,ry,rz]
+                for val in vals:
+                    if abs(val)<1e-6:
+                        msg += '%10s ' %(0)
+                    else:
+                        msg += '%10.3e ' %(val)
+                    ###
+                msg += '\n'
+            ###
+        return msg
+
     def __repr__(self):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
         msg = '---LOAD VECTOR---\n'
@@ -112,7 +112,7 @@ class complexLoadVectorObject(complexTableObject): # tableCode=11, approachCode=
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                                       C O M P L E X   L O A D   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',

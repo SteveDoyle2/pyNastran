@@ -156,9 +156,9 @@ class OPG(object):
         #    self.readOPG_Data_format3_sort3()
         else:
             print self.codeInformation()
-            raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
+            #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
             #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
-            #self.skipOES_Element()
+            self.skipOES_Element()
         ###
         #print self.obj
 
