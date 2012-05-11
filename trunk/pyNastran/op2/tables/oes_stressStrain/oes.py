@@ -583,11 +583,6 @@ class OES(ElementsStressStrain):
         #elif self.elementType == 78:   # ctetra (acoustic)
         #elif self.elementType == 101:  # caabsf (acoustic)
 
-    def isStress(self):
-        if self.stressBits[1]==0:
-            return True
-        return False
-
     def makeOES_Object(self,stress,stressObject,strain,strainObject):
         """
         Creates a stress/strain object if necessary

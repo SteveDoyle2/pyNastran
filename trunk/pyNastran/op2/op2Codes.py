@@ -323,6 +323,15 @@ class Op2Codes(object):
         if hasattr(self, 'thermal'):
             thermal = self.thermal 
 
+        stressWord = ''
+        if hasattr(self, 'stressBits'):
+            if self.isStress():#
+                stressWord = 'Stress'
+            else:
+                stressWord = 'Strain'
+            ###
+        ###
+
         elementType = None
         if hasattr(self, 'elementType'):
             elementType = self.elementType
@@ -420,7 +429,7 @@ class Op2Codes(object):
         elif(self.tableCode== 2):  table = "OPG - Load vector"
         elif(self.tableCode== 3):  table = "OQG - SPC Force vector"
         elif(self.tableCode== 4):  table = "OEF - Element %s" %(ForceFlux)
-        elif(self.tableCode== 5):  table = "OES - Element Stress/Strain"
+        elif(self.tableCode== 5):  table = "OES - Element %s" %(stressWord)
         elif(self.tableCode== 6):  table = "LAMA - Eigenvalue summary"
         elif(self.tableCode== 7):  table = "OUG - Eigenvector"
         elif(self.tableCode== 8):  table = "none - Grid point singularity table (obsolete)"
@@ -532,3 +541,10 @@ class Op2Codes(object):
 
     def isRealImaginaryOrMagnitudePhase(self):
         return self.isRealImaginary or self.MagnitudePhase()
+
+    #----
+    def isStress(self):
+        if self.stressBits[1]==0:
+            return True
+        return False
+
