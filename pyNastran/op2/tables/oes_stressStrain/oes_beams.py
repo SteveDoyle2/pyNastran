@@ -358,9 +358,9 @@ class beamStrainObject(strainObject):
         self.MS_tension[dt]     = {}
         self.MS_compression[dt] = {}
 
-    def addNewEid(self,dt,out):
+    def addNewEid(self,dt,eid,out):
         #print "Beam Stress addNewEid..."
-        (eid,grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
+        (grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
         #print "eid=%s grid=%s" %(eid,grid)
         assert eid >= 0
         #assert isinstance(eid,int)
@@ -377,9 +377,9 @@ class beamStrainObject(strainObject):
         self.MS_compression[eid] = [msc]
         return eid
 
-    def addNewEidSort1(self,dt,out):
+    def addNewEidSort1(self,dt,eid,out):
         #print "Beam Transient Stress addNewEid..."
-        (eid,grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
+        (grid,sd,sxc,sxd,sxe,sxf,smax,smin,mst,msc) = out
 
         assert eid  >= 0
         if dt not in self.sxc:

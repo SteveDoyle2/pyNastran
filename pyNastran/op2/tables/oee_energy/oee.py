@@ -54,8 +54,8 @@ class OEE(object):
         #self.printBlock(data) # on
         if self.analysisCode==1:   # statics / displacement / heat flux
             #del self.dataCode['nonlinearFactor']
-            self.nonlinearFactor = None
             self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.setNullNonlinearFactor()
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode','i',5)   ## mode number
             self.applyDataCodeValue('dataNames',['mode'])

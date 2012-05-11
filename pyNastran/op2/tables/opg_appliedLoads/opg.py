@@ -53,6 +53,7 @@ class OPG(object):
         if self.analysisCode==1:   # statics
             self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.setNullNonlinearFactor()
         elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
             self.addDataParameter(data,'mode',     'i',5)   ## mode number
             self.addDataParameter(data,'eign',     'f',6,False)   ## real eigenvalue

@@ -32,7 +32,6 @@ class barStressObject(stressObject):
         self.dt = dt
         #print "BAR dt=%s" %(dt)
         if isSort1:
-            self.dt = dt
             if dt is not None:
                 #self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
@@ -116,8 +115,8 @@ class barStressObject(stressObject):
         self.axial[dt] = {}
         self.smax[dt]  = {}
         self.smin[dt]  = {}
-        #self.MS_tension[self.dt]     = {}
-        #self.MS_compression[self.dt] = {}
+        #self.MS_tension[dt]     = {}
+        #self.MS_compression[dt] = {}
 
     def addNewEid100(self,dt,out):
         #print "out = ",out
@@ -125,7 +124,7 @@ class barStressObject(stressObject):
         (eid,s1,s2,s3,s4,axial,smax,smin,MSt,MSc) = out
         #print "Bar Stress add..."
         self.eType[eid] = 'CBAR' #eType
-        #if self.dt not in self.s1:
+
         if self.eid in self.s1:
             self.s1[eid].append(s1)
             self.s2[eid].append(s2)
@@ -321,7 +320,7 @@ class barStressObject(stressObject):
         msg += '\n'
 
         for dt,S1ss in sorted(self.s1.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,S1s in sorted(S1ss.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -465,35 +464,33 @@ class barStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self):
+    def addNewTransient(self,dt):
         """
         initializes the transient variables
         """
-        if self.dt not in self.e1:
-            self.e1[self.dt]    = {}
-            self.e2[self.dt]    = {}
-            self.e3[self.dt]    = {}
-            self.e4[self.dt]    = {}
-            self.axial[self.dt] = {}
-            self.emax[self.dt]  = {}
-            self.emin[self.dt]  = {}
-            #self.MS_tension[self.dt]     = {}
-            #self.MS_compression[self.dt] = {}
+        self.e1[dt]    = {}
+        self.e2[dt]    = {}
+        self.e3[dt]    = {}
+        self.e4[dt]    = {}
+        self.axial[dt] = {}
+        self.emax[dt]  = {}
+        self.emin[dt]  = {}
+        #self.MS_tension[dt]     = {}
+        #self.MS_compression[dt] = {}
 
     def addNewEid(self,eType,dt,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
                                     e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
-        if self.dt not in self.e1:
-            self.e1[eid]    = [e1a,e1b]
-            self.e2[eid]    = [e2a,e2b]
-            self.e3[eid]    = [e3a,e3b]
-            self.e4[eid]    = [e4a,e4b]
-            self.axial[eid] = axial
-            self.emax[eid]  = [emaxa,emaxb]
-            self.emin[eid]  = [emina,eminb]
-            #self.MS_tension[eid]     = MSt
-            #self.MS_compression[eid] = MSc
+        self.e1[eid]    = [e1a,e1b]
+        self.e2[eid]    = [e2a,e2b]
+        self.e3[eid]    = [e3a,e3b]
+        self.e4[eid]    = [e4a,e4b]
+        self.axial[eid] = axial
+        self.emax[eid]  = [emaxa,emaxb]
+        self.emin[eid]  = [emina,eminb]
+        #self.MS_tension[eid]     = MSt
+        #self.MS_compression[eid] = MSc
 
         #msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         #print msg
@@ -502,8 +499,11 @@ class barStrainObject(strainObject):
     def addNewEidSort1(self,eType,dt,eid,e1a,e2a,e3a,e4a,axial,emaxa,emina,MSt,
                                          e1b,e2b,e3b,e4b,      emaxb,eminb,MSc):
         #print "Bar Stress add..."
-        dt = self.dt
+
         self.eType[eid] = eType
+        if dt not in self.e1:
+            self.addNewTransient(dt)
+
         self.e1[dt][eid]    = [e1a,e1b]
         self.e2[dt][eid]    = [e2a,e2b]
         self.e3[dt][eid]    = [e3a,e3b]
@@ -649,7 +649,7 @@ class barStrainObject(strainObject):
         msg += '\n'
 
         for dt,E1s in sorted(self.e1.iteritems()):
-            msg += "%s = %g\n" %(self.dataCode['name'],self.dt)
+            msg += "%s = %g\n" %(self.dataCode['name'],dt)
             for eid,e1s in sorted(Els.iteritems()):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]

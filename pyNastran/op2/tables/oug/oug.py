@@ -49,20 +49,6 @@ class OUG(object):
         params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','randomCode','fCode','numWide','acousticFlag']
         self.deleteAttributes(params)
     
-    def addDataParameter(self,data,Name,Type,FieldNum,applyNonlinearFactor=True):
-        #self.mode      = self.getValues(data,'i',5) ## mode number
-        value = self.getValues(data,Type,FieldNum)
-        setattr(self,Name,value)
-        self.dataCode[Name] = value
-        
-        if applyNonlinearFactor:
-            self.nonlinearFactor = value
-            self.dataCode['nonlinearFactor'] = value
-            self.dataCode['name'] = Name
-    
-    def applyDataCodeValue(self,Name,value):
-        self.dataCode[Name] = value
-        
     def readTable_OUG_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()
         if self.makeOp2Debug:
@@ -89,6 +75,7 @@ class OUG(object):
         if self.analysisCode==1:   # statics / displacement / heat flux
             self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.setNullNonlinearFactor()
         elif self.analysisCode==2: # real eigenvalues
             self.addDataParameter(data,'mode',     'i',5)         ## mode number
             self.addDataParameter(data,'eigr',     'f',6,False)   ## real eigenvalue
