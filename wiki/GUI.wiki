@@ -32,7 +32,7 @@ optional arguments:
   -v, --version  show program's version number and exit
 }}}
 
-The solidBending.bdf and solidBending.op2 files have been included as examples that work in the GUI.  They are inside the "models" folder (at the same level as setup.py).
+The *solidBending.bdf* and *solidBending.op2* files have been included as examples that work in the GUI.  They are inside the "models" folder (at the same level as setup.py).
 
 = Features =
  * Load BDF file window (menu/button)
