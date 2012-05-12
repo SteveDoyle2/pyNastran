@@ -645,7 +645,7 @@ class OP2(BDF,  # BDF methods
         messing up data
         """
         params += ['dataCode','deviceCode','analysisCode','tableCode','sortCode','iSubcase',
-                   'data','numWide','nonlinearFactor','obj']
+                   'data','numWide','nonlinearFactor','obj','subtitle','label']
         for param in params:
             if hasattr(self,param):
                 #print '%s = %s' %(param,getattr(self,param))
@@ -663,28 +663,26 @@ class OP2(BDF,  # BDF methods
         assert bufferWords>0,self.printSection(220)
 
     def readTitle(self):
-        """reads the Title, Subtitle, and Label.
-        Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]"""
+        """
+        reads the Title, Subtitle, and Label.
+        Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]
+        """
+
+        ## the title of the analysis
         word = self.readString(384) # titleSubtitleLabel
-        Title    = word[0:128].strip()
-        Subtitle = word[128:256].strip()
-        Label    = word[256:].strip()
-        #print "Title    %s |%s|" %(len(Title   ),Title)
-        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle)
-        #print "Label    %s |%s|" %(len(Label   ),Label)
-        #print "Title    %s |%s|" %(len(Title   ),Title.strip())
-        #print "Subtitle %s |%s|" %(len(Subtitle),Subtitle.strip())
-        #print "Label    %s |%s|" %(len(Label   ),Label.strip())
-        #print "Title    |%s|" %(Title)
-        #print "Subtitle |%s|" %(Subtitle)
-        #print "Label    |%s|" %(Label)
+        self.Title    = word[0:128].strip()
+        ## the subtitle of the subcase
+        self.subtitle = word[128:256].strip()
+        ## the label of the subcase
+        self.label    = word[256:].strip()
 
         self.readHollerith() # not really a hollerith, just the end of the block (so bufferWords*4)
 
-        ## the title of the analysis
-        self.Title = Title.strip()
+        self.dataCode['subtitle'] = self.subtitle
+        self.dataCode['label']    = self.label
+
         if self.iSubcase not in self.iSubcaseNameMap:
-            self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
+            self.iSubcaseNameMap[self.iSubcase] = [self.subtitle,self.label]
 
     def tableInit(self,word):
         """
@@ -692,6 +690,7 @@ class OP2(BDF,  # BDF methods
         """
         ## the local table name
         self.tableName = word.strip()
+        ## the names of all the tables
         self.tableNames.append(word)
         msg = '*'*20+word+'*'*20+'\n'
         if self.makeOp2Debug:
