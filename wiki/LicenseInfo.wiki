@@ -3,7 +3,7 @@
 
 = Licensing =
 
-[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=XH9CY9GDKWSFU&lc=US&item_name=pyNastran&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png]
+[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=XH9CY9GDKWSFU&lc=US&item_name=pyNastran&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif]
 
 
 
