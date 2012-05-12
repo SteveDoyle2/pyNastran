@@ -22,10 +22,37 @@ BDF API Changes
 Added BDF
    - *** TIC
 
-OP2 API Changes
-OP2 Bug Fixes
 Overall OP2
+   - test_op2 now crashes if there isn't a .op2 in the filename
+   - major changes to reader to support non-standard solutions
+     reader should be much better at getting correct values
+   - added support for SORT2
+   - added majority of element forces
+   - added majority of element heat fluxes
+   - significantly more support for complex results
+   - ***adding plotting support
+OP2 API Changes
+   - complex tables now have same format as the real tables
+     all results are stored in real/imaginary format and not
+     magnitude/phase, regardless of what was defined in the OP2
+
 Added OP2
+ - OEF
+   - Loads
+   - Thermal (***static,transient)
+     - 2D/3D
+       - CQUAD4 (33)
+       - CHEXA  (87)
+       - ***CTRIA3 (74)
+       - ***CTETRA ()
+       - ***CPENTA ()
+
+     - CHBDYx
+       - CHBDYE (107)
+       - CHBDYG (108)
+       - CHBDYP (109)
+   
+OP2 Bug Fixes
 
 Overall F06 Reader/Writer
 Added F06 Reader
@@ -33,6 +60,7 @@ Added F06 Writer
 
 Overall GUI
 Added GUI
+   - CQUADR, CTRIAR
 GUI Bug Fixes
 
 Solver

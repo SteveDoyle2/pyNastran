@@ -26,7 +26,69 @@ GEOM1 table and is identified as #1.  It's that simple.  So if you
 see a gap in the numbers, that means there are missing cards.
 For convenience, the last card is listed as well.
 
-OP2 Reader
+
+Added OP2
+   - LAMA (requires an ESE = ALL to create table)
+     - eigenvalues (real***complex)
+
+   - OUG (DISPLACMENTS=ALL)
+     - displacement  (real/complex)
+     - eigenvectors  (real/complex)
+     - temperature   (real/***complex)
+     - velocity      (real/complex)
+     - acceleration  (real/complex)
+
+   - OQG (SPCFORCES=ALL, MPCFORCES=ALL)
+     - SPC Forces (static/transient; real/complex)
+     - MPC Forces (static/transient; real/complex)
+   
+      - heat flux (approachCode=1, sortCode=1)
+   - OEF Loads (ELFORCE=ALL)
+     - Loads
+
+   - OEF Thermal (ELFORCE=ALL)
+     - Thermal Gradients/Heat Flux (***static,transient; FLUX=ALL)
+       - 2D/3D
+         - CQUAD4 (33)
+         - CHEXA  (87)
+         - ***CTRIA3 (74)
+         - ***CTETRA ()
+         - ***CPENTA ()
+
+       - CHBDYx
+         - CHBDYE (107)
+         - CHBDYG (108)
+         - CHBDYP (109)
+
+   - OES (STRESS=ALL, STRAIN=ALL)
+     - isotropic stress/strain (static/transient)
+       - CROD, CONROD, CTUBE
+       - CBAR
+       - CSHEAR
+       - CBEAM
+       - CTETRA, CPENTA, CHEXA
+       - CTRIA3  
+       - CQUAD8/CQUAD4/CTRIAR/CTRIA6 (bilinear)
+       - CQUAD4 (center)
+       - CTRIAX6
+     - composite stress/strain (static/transient)
+       - CTRIA3, CTRIA6
+       - CQUAD4, CQUAD8 (center)
+     - hyperelastic stress/strain (transient)
+       - CQUAD4
+     - nonlinear strain (transient)
+       - CROD, CONROD, CTUBE
+       - CTRIA3, CQUAD4
+       - ***CBAR
+       - ***CSHEAR
+       - ***CBEAM
+
+   - OGF (GPFORCES=ALL)
+     - grid point forces (static/transient)
+     - load vector (static/transient)
+
+----------------------------------------------------------------------
+OP2 Reader (Long Version)
 
 ***Results***
    - OES
@@ -83,29 +145,104 @@ OP2 Reader
          - ???
 
    - OUGV1 Table (displacement/velocity/acceleration)
-      - displacement / temperature (approachCode=1/6/10, sortCode=0, done)
-      - eigenvectors /             (approachCode=2,      sortCode=0, done)
-      - velocity     (done)
-      - acceleration (done)
+      - real/complex
+         - displacement / temperature (tableCode=1)
+         - eigenvectors (tableCode= 7)
+         - velocity     (tableCode=10)
+         - acceleration (tableCode=11)
+
+   - OEF (element forces/heat flux)
+      - real/complex
+         - forces (tableCode=4)
+            - barForces
+               - CBAR   (34)
+               - CBAR   (100)
+            - beamForces
+               - CBEAM  (2)
+            - bendForces
+               - CBEND  (69)
+            - bushForces
+               - CBUSH  (102)
+            - compositePlateForces
+               - CQUADR (82) ???
+               - CQUAD4 (95)
+               - CQUAD8 (96)
+               - CTRIA3 (97)
+               - CTRIA6 (98)
+               - CQUADR (232)
+               - CTRIAR (233)
+            - dampForces
+               - CDAMP1 (20)
+               - CDAMP2 (21)
+               - CDAMP3 (22)
+               - CDAMP4 (23)
+            - gapForces
+               - CGAP   (38,***complex)
+            - plateForces
+               - CTRIA3 (74)
+               - CQUAD4-center   (33)
+               - CQUAD4-bilinear (144)
+               - CQUAD8 (64)
+               - CTRIA6 (75)
+               - CQUADR (***)
+               - CTRIAR (70)
+            - rodForces
+               - CROD   (1)
+               - CTUBE  (3)
+               - CONROD (10)
+            - shearForces
+               - CSHEAR (4)
+            - solidForces (***)
+               - CTETRA
+               - CPENTA
+               - CHEXA
+            - springFroces
+               - CELAS1 (11)
+               - CELAS2 (12)
+               - CELAS3 (13)
+               - CELAS4 (14)
+            - viscForces
+               - CVISC (24)
+            - VU_Beam (name***)
+               - CBEAM (191)
+            - VU_Shell (name***)
+               - CQUAD4 (189) ***
+               - CTRIA3 (190) ***
+            - solidPressureForces
+               - CHEXA  (76)
+               - CPENTA (77)
+               - CTETRA (78)
+            - ***NOT IMPLEMENTED***
+               - 
+        
 
    - OGF (grid point force balance)
-      - grid point forces (static/***transient)
-      - load vector (static/transient)
+      - real/complex
+         - gridPointForces (tableCode=19)
 
-   - OGP1 Table (grid point forces)
-      - static structural forces applied at the nodes (applied/element/spc/total forces & moments - AppliedLoads)  (approachCode=1,sortCode=0,done)
+   - OPG (grid point forces)
+      - real/complex
+         - loadVector      (tableCode= 2)
+         - forceVector     (tableCode=12)
+         - appliedLoads    (tableCode=19)
+
+   - OGP (???)
+      - real/complex
+         - appliedLoads (tableCode=; static structural forces applied at the nodes; applied/element/spc/total forces & moments)
       
    - OEE Table (element energy strain/kinetic/loss)
-      - strain energy (static/transient)
+      - real
+         - strainEnergy  (tableCode=18)
    
    - OQG Table (spc/mpc forces)
-      - spc forces (done)
-      - mpc forces (done)
+      - real/complex
+         - spcForces (tableCode=3)
+         - mpcForces (tableCode=39)
 
 
 
 ***BDF Tables***
-   - GEOM1 (nodes/coordinate systems; 7/34)
+   - GEOM1 / GEOM1S (nodes/coordinate systems; 7/34)
      - CORD1C  (1, done)
      - CORD1R  (2, done)
      - CORD1S  (3, done)
@@ -119,7 +256,7 @@ OP2 Reader
    - GEOM1N
      - ???
 
-   - GEOM2 (elements; 31/125)
+   - GEOM2 / GEOM2S (elements; 31/125)
      - AEROQ4  (1)
      - CBAR    (8,  done)
      - CBARAO  (9)
@@ -170,7 +307,7 @@ OP2 Reader
      - SPOINT  (118,done)
      - WELDP   (125)
 
-   - GEOM3 (loads; 13/42)
+   - GEOM3 / GEOM3S (loads; 13/42)
      - FORCE   (3,done)
      - FORCE1  (4,done)
      - FORCE2  (5,done)
@@ -187,7 +324,7 @@ OP2 Reader
      - TEMPD   (33,done)
      - PEDGE   (42)
    
-   - GEOM4   (constraints; 3/63)
+   - GEOM4 / GEOM4S   (constraints; 3/63)
      - RBAR    (22)
      - RBE1    (23)
      - RBE2    (24)
@@ -200,9 +337,9 @@ OP2 Reader
      - SUPORT1 (60)
      - USET1   (63)
    
-   - EPT (element properties table; 11/63)
-   	 (properties may be created that are too large >100000000.  this is how
-          properties created by the solution are identified)
+   - EPT / EPTS (element properties table; 11/63)
+   	        (properties may be created that are too large >100000000.  this is how
+                 properties created by the solution are identified)
      - NSM     (2, done)
      - PBAR    (11,buggy)
      - PBARL   (12,done)
@@ -448,7 +585,7 @@ CQUAD4_144 (2/6 done; 4/6 not integrated)
 -------------------------------------------
 These fields were removed b/c they crowd the tables
 
-GEOM2
+GEOM2 / GEOM2S
      - AEROT3  (2)
      - BEAMAERO(3)
      - CAABSF  (4)

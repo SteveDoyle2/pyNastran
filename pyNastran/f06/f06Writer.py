@@ -162,7 +162,7 @@ class F06Writer(object):
         resTypes = [
                     self.displacements,self.velocities,self.accelerations,
                     self.eigenvectors,
-                    self.temperatures,self.loadVectors,
+                    self.temperatures,self.loadVectors,self.forceVectors,
 
                     self.spcForces,self.mpcForces,
                     

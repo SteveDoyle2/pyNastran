@@ -31,7 +31,7 @@ from oug_temperatures import (              # tableCode=1, formatCode=1 sortCode
 from oug_eigenvectors import (
      eigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
      complexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
-     realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
+    #realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
      )
 from pyNastran.op2.op2_helper import polarToRealImag
 
@@ -168,7 +168,7 @@ class OUG(object):
             #print "nid = ",nid
         #sys.exit('thermal4...')
     
-    def readOUG_Data_table1(self): # new displacement
+    def readOUG_Data_table1(self): # displacement / temperature
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
@@ -188,7 +188,7 @@ class OUG(object):
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 
-    def readOUG_Data_table7(self): # new eigenvector
+    def readOUG_Data_table7(self): # eigenvector
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
@@ -206,7 +206,7 @@ class OUG(object):
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 
-    def readOUG_Data_table10(self): # new velocity
+    def readOUG_Data_table10(self): # velocity
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
@@ -224,7 +224,7 @@ class OUG(object):
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 
-    def readOUG_Data_table11(self): # new acceleration
+    def readOUG_Data_table11(self): # acceleration
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
@@ -272,7 +272,6 @@ class OUG(object):
 
     def OUG_RealTable(self):
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'iffffff'
 
@@ -312,19 +311,18 @@ class OUG(object):
                           txi,tyi,tzi,rxi,ryi,rzi) = out
 
             if isMagnitudePhase:
-                (txr,txi) = polarToRealImag(txr,txi)
-                (tyr,tyi) = polarToRealImag(tyr,tyi)
-                (tzr,tzi) = polarToRealImag(tzr,tzi)
-
-                (rxr,rxi) = polarToRealImag(rxr,rxi)
-                (ryr,ryi) = polarToRealImag(ryr,ryi)
-                (rzr,rzi) = polarToRealImag(rzr,rzi)
-
+                tx = polarToRealImag(txr,txi); rx = polarToRealImag(rxr,rxi)
+                ty = polarToRealImag(tyr,tyi); ry = polarToRealImag(ryr,ryi)
+                tz = polarToRealImag(tzr,tzi); rz = polarToRealImag(rzr,rzi)
+            else:
+                tx = complex(txr,txi); rx = complex(rxr,rxi)
+                ty = complex(tyr,tyi); ry = complex(ryr,ryi)
+                tz = complex(tzr,tzi); rz = complex(rzr,rzi)
+                
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
-            dataIn = [eid2,gridType,txr,tyr,tzr,rxr,ryr,rzr,
-                                    txi,tyi,tzi,rxi,ryi,rzi]
+            dataIn = [eid2,gridType,tx,ty,tz,rx,ry,rz]
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)

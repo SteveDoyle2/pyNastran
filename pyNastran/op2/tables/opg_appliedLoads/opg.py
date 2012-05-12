@@ -165,7 +165,7 @@ class OPG(object):
         ###
         #print self.obj
 
-    def readOPG_Data_table19(self): # Grid Point Force Balance
+    def readOPG_Data_table19(self): # Applied Loads
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
@@ -184,44 +184,6 @@ class OPG(object):
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
-
-    def readOPG_Data_table19_format1_sort0(self):
-        if self.thermal==0:
-            if self.analysisCode==1: # static
-                #print "isAppliedLoads"
-                self.createTransientObject(self.appliedLoads,appliedLoadsObject)
-                self.readOPGForces(self.data,self.obj)
-            elif self.analysisCode==6: # transient
-                #print "isAppliedLoads"
-                self.createTransientObject(self.appliedLoads,appliedLoadsObject)
-                self.readOPGForces(self.data,self.obj)
-            elif self.analysisCode==10: # nonlinear static
-                #print "isAppliedLoads"
-                self.createTransientObject(self.appliedLoads,appliedLoadsObject)
-                self.readOPGForces(self.data,self.obj)
-            #elif self.analysisCode==11: # old nonlinear static
-                #self.createTransientObject(self.appliedLoads,appliedLoadsObject)
-            else:
-                self.skipOES_Element()
-                #print 'not supported %s-OPG solution...atfsCode=%s' %(self.tableName,self.atfsCode)
-                #raise Exception('not supported OPG solution...')
-            ###
-        elif self.thermal==1:
-            self.skipOES_Element()
-        else:
-            raise NotImplementedError('invalid thermal flag...not 0 or 1...flag=%s' %(self.thermal))
-        ###
-        
-        #readCase = True
-        #if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
-        #    readCase = self.updateDtMap()
-        
-        #if self.obj and readCase:
-        #    self.readScalarsOut(debug=False)
-        #else:
-        #    self.skipOES_Element()
-        ###
-        
 
     def readOPG_Data_table2(self): # Load Vector
         isSort1 = self.isSort1()
@@ -259,33 +221,33 @@ class OPG(object):
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 
-    def readOPGForces(self,data,scalarObject):
-        deviceCode = self.deviceCode
-        #self.printBlock(data[0:self.numWide*4])
-        dn = self.numWide*4
+    def readOPGForces(self): ## @todo needs some work...
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'i'
+
+        #nTotal = self.numWide*4
+        nTotal = 40 # same as dn
         while len(data)>dn:
             #print "len(data) = ",len(data)
-            eData = data[0:dn]
+            eData = self.data[0:dn]
             #self.printBlock(data[:dn])
-            gridDevice,eid = unpack('ii',data[0:8])
-            nodeID = (gridDevice-deviceCode) // 10
+            (gridDevice,eid) = unpack(format1,data[0:8])
+            nodeID = extract(gridDevice,dt)
             
             source = ''.join(unpack('cccccccc',data[8:16]))
-            #self.printBlock(data[16:dn])
             (dx,dy,dz,rx,ry,rz) = unpack('ffffff',data[16:40])
             #print "source = |%s|" %(source)
-            #print "len(data[8:40]"
             
             #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             source2 = source.replace('*','').replace('-','').strip()
             assert source2.isalnum(),'source=|%s| contains invalid characters...' %(source)
             
-            scalarObject.add(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
+            self.obj.add(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             #print "gridDevice = ",gridDevice
             #print "deviceCode = ",deviceCode
-            grid = (gridDevice-self.deviceCode) // 10
-            #print "grid=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
-            data = data[dn:]
+            #print "nodeID=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(nodeID,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
+            self.data = self.data[dn:]
         ###
         #print "***********"
         #print self.obj

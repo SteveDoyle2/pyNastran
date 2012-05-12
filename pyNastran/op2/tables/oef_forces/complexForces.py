@@ -348,7 +348,7 @@ class ComplexForces(object):
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
-            for i in range(nNodes-1):
+            for i in range(nNodes-1):  ## @todo fix crash...
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
                 dataIn = unpack(allFormat, eData)
