@@ -30,7 +30,13 @@ Overall OP2
    - added majority of element forces
    - added majority of element heat fluxes
    - significantly more support for complex results
-   - ***adding plotting support
+   - added plotting support for "standard" results (real/***complex)
+      - displacement, velocity, acceleration,
+        eigenvectors, spcForces, mpcForces,
+        gridPointForces, appliedLoads, loadVectors, forceVectors
+      - ***complex results may plot in real/imag or mag/phase or PSD (power spectral density)
+      - ***no temperature, stress, element forces, energy
+
 OP2 API Changes
    - complex tables now have same format as the real tables
      all results are stored in real/imaginary format and not
@@ -39,7 +45,7 @@ OP2 API Changes
 Added OP2
  - OEF
    - Loads
-   - Thermal (***static,transient)
+   - Thermal (static,transient)
      - 2D/3D
        - CQUAD4 (33)
        - CHEXA  (87)

@@ -1,7 +1,14 @@
 import sys
 from struct import pack
-from numpy import array
+from numpy import array,sqrt,dot,abs,degrees
+
 from op2_Objects import scalarObject
+
+try:
+    from pylab import xlabel,ylabel,show,grid,legend,plot,title
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 class TableObject(scalarObject):  # displacement style table
     def __init__(self,dataCode,isSort1,iSubcase,dt):
@@ -172,10 +179,10 @@ class TableObject(scalarObject):  # displacement style table
         msg += '\n'
         return msg
 
-    def GetAsSort1(self):
+    def getAsSort1(self):
         return (self.translations,self.rotations)
 
-    def GetAsSort2(self):
+    def getAsSort2(self):
         """returns translations and rotations in sort2 format"""
         translations2 = {}
         rotations2 = {}
@@ -201,6 +208,72 @@ class TableObject(scalarObject):  # displacement style table
             ###
         ###
         return translations2,rotations2
+        
+    def plot(self,nodeList=None,resultType='Translation',coord=3,markers=None,
+                  Title=None,hasLegend=True,Legend=None,xLabel=None,yLabel=None,alphaLegend=0.5):
+        """
+        @param nodeList a list of the node IDs to plot vs the
+               independent variable (default=None; all nodes)
+        @param resultType the variable to plot ('Translation','Rotation')
+        @param coord the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
+               default=Magnitude
+        @param markers  a list of colors/marker shapes for each line
+        @param Title title of the plot (default=the object name)
+        @param hasLegend should a legend be shown (default=False)
+        @param Legend the list of the legend titles (default=No Legend)
+        @param xLabel the name of the xAxis (default=the name of
+               the independent variable; string)
+        @param yLabel the name of the xAxis (default=the name of
+               the dependent variable; string)
+        @param alphaLegend the transparency of the legend;
+               (0.0=solid; 1.0=transparent; default=0.5)
+        
+        @todo fix alphaLegend; test options more...
+        """
+        (results,nodeList,markers,Title,xLabel,yLabel) = getPlotData(
+                 self,nodeList,resultType,coord,markers,Title,hasLegend,Legend,xLabel,yLabel)
+
+        i = 0
+        Labels = []
+        #print "nodeList = ",nodeList
+        node0 = nodeList[0]
+        Xs = results[node0].keys()
+
+        (fig,ax) = plt.subplots(1)
+        #leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
+        for nodeID in nodeList: # translation/rotation
+            result = results[nodeID]
+            Ys = []
+            for dt,res in sorted(result.iteritems()):
+                if coord==3:
+                    val = sqrt(res.dot(res))
+                else:
+                    val = res[coord]
+                ###
+                Ys.append(val)
+            Label = 'Node %s' %(nodeID)
+            Labels.append(Label)
+            #ax.plot(Xs,Ys,markers[i],label=Label)
+            #plot(Xs,Ys,Label)
+            plot(Xs,Ys)
+            i+=1
+        plt.legend(Labels,loc='best',fancybox=True)
+        #print dir(leg)
+        #leg.get_frame().set_alpha(0.5)
+        ax.set_title(Title)
+        #ax.set_legend(Labels)
+        #if hasLegend and Legend is None:        
+        #    plt.legend(Labels)
+        #elif hasLegend:
+        #    plt.legend(Legend)
+        #plt.axes
+        #print dir(plt)
+        ax.grid(True)
+        ax.set_ylabel(yLabel)
+        ax.set_xlabel(xLabel)
+        #alpha(alphaLegend)
+        show()
+        
         
 class complexTableObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt):
@@ -335,3 +408,109 @@ class complexTableObject(scalarObject):
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
+    def plot(self,nodeList=None,resultType='Translation',displayType='Real Imag',coord=3,markers=None,
+                  Title=None,hasLegend=True,Legend=None,xLabel=None,yLabel=None,alphaLegend=0.5):
+        """
+        @param nodeList a list of the node IDs to plot vs the
+               independent variable (default=None; all nodes)
+        @param resultType the variable to plot ('Translation','Rotation')
+        @param displayType 'Real Imag' or 'Mag Phase'
+        @param coord the coordinate to plot (for <x,y,z>, x=0,y=1,z=2,Mag=3);
+               default=Magnitude
+        @param markers  a list of colors/marker shapes for each line
+        @param Title title of the plot (default=the object name)
+        @param hasLegend should a legend be shown (default=False)
+        @param Legend the list of the legend titles (default=No Legend)
+        @param xLabel the name of the xAxis (default=the name of
+               the independent variable; string)
+        @param yLabel the name of the xAxis (default=the name of
+               the dependent variable; string)
+        @param alphaLegend the transparency of the legend;
+               (0.0=solid; 1.0=transparent; default=0.5)
+        
+        @todo fix alphaLegend; test options more...
+        """
+        displayType = displayType.title()
+        (results,nodeList,markers,Title,xLabel,yLabel) = getPlotData(
+                 self,nodeList,resultType,coord,markers,Title,hasLegend,Legend,xLabel,yLabel)
+
+        i = 0
+        Labels = []
+        node0 = nodeList[0]
+        Xs = results[node0].keys()
+
+        (fig,ax) = plt.subplots(1)
+        leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
+        for nodeID in nodeList: # translation/rotation
+            result = results[nodeID]
+            Ys = []
+            for dt,res in sorted(result.iteritems()):
+                if coord==3:
+                    val = sqrt(res.dot(res))
+                else:
+                    val = res[coord]
+                ###
+                mag   = abs(val)
+                phase = degrees(val)
+                Ys.append(val)
+            Label = 'Node %s' %(nodeID)
+            Labels.append(Label)
+            ax.plot(Xs,Ys,markers[i])
+            #plot(Xs,Ys,Label)
+            i+=1
+        #print dir(leg)
+        #leg.get_frame().set_alpha(0.5)
+        ax.set_title(Title)
+        #ax.set_legend(Labels)
+        if hasLegend and Legend is None:        
+            plt.legend(Labels)
+        elif hasLegend:
+            plt.legend(Legend)
+        #plt.axes
+        #print dir(plt)
+        ax.grid(True)
+        ax.set_ylabel(yLabel)
+        ax.set_xlabel(xLabel)
+        #alpha(alphaLegend)
+        show()
+
+def getPlotData(obj,nodeList,resultType,coord,markers,Title,hasLegend,Legend,xLabel,yLabel):
+    if Title is None:
+        label = ''
+        subtitle = ''
+        if obj.label:
+            label = ' - %s' %(obj.label)
+        if obj.subtitle:
+            subtitle = ' - %s' %(obj.subtitle)
+        Title = '%s%s%s - Subcase %s' %(obj.__class__.__name__,label,subtitle,obj.iSubcase)
+
+    resultType  = resultType.title()
+    assert coord in [0,1,2,3],'invalid coord...options=[0,1,2,3].  coord=%s' %(coord)
+    assert resultType in ['Translation','Rotation'],"invalid resultType...options=['Translation','Rotation']."
+
+    if xLabel is None:
+        xLabel = obj.dataCode['name'].title()
+    if yLabel is None:
+        if   coord==0:  yLabel='X %s' %(resultType)
+        elif coord==1:  yLabel='Y %s' %(resultType)
+        elif coord==2:  yLabel='Z %s' %(resultType)
+        elif coord==3:  yLabel='%s (Magnitude)' %(resultType)
+        else: raise RuntimeError('invalid coord...options=[0,1,2,3].  choice=%s' %(coord))
+
+    (translations,rotations) = obj.getAsSort2()
+
+    if resultType=='Translation':
+        results = translations
+    else:
+        results = rotations
+
+    nodeListAll = results.keys()
+    if nodeList is None:
+        nodeList = nodeListAll
+
+    if hasLegend and Legend is not None:
+        assert len(nodeList)==len(Legend),'len(nodeList)=%s len(legend)=%s' %(len(nodeList),len(legend))
+    if markers==None:
+        markers = ['-']*len(nodeList)
+    #print "subcase = ",obj.iSubcase
+    return (results,nodeList,markers,Title,xLabel,yLabel)
