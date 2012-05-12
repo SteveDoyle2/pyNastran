@@ -225,10 +225,10 @@ class complexTableObject(scalarObject):
     def addF06Data(self,data,transient):
         if transient is None:
             for line in data:
-                (nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r, v1i,v2i,v3i,v4i,v5i,v6i) = line
+                (nodeID,gridType,v1,v2,v3,v4,v5,v6) = line
                 self.gridTypes[nodeID]    = gridType
-                self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-                self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+                self.translations[self.dt][nodeID] = [v1,v2,v3] # dx,dy,dz
+                self.rotations[self.dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
             ###
             return
 
@@ -238,10 +238,10 @@ class complexTableObject(scalarObject):
             self.updateDt(self.dataCode,dt)
 
         for line in data:
-            (nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r, v1i,v2i,v3i,v4i,v5i,v6i) = line
+            (nodeID,gridType,v1,v2,v3,v4,v5,v6) = line
             self.gridTypes[nodeID]    = gridType
-            self.translations[self.dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-            self.rotations[self.dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+            self.translations[self.dt][nodeID] = [v1,v2,v3] # dx,dy,dz
+            self.rotations[self.dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         ###
 
     def updateDt(self,dataCode,dt):
@@ -267,8 +267,8 @@ class complexTableObject(scalarObject):
         self.rotations[dt]    = {}
 
     def add(self,dt,out):
-        (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
-        msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
+        #msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1,v2,v3r)
         #assert isinstance(nodeID,int),nodeID
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
@@ -283,13 +283,13 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-        self.rotations[nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+        self.translations[nodeID] = [v1,v2,v3] # dx,dy,dz
+        self.rotations[nodeID]    = [v4,v5,v6] # rx,ry,rz
     ###
 
     def addSort1(self,dt,out):
-        (nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i) = out
-        msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1r,v2r,v3r)
+        (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
+        #msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1,v2,v3)
         #print msg
         if dt not in self.translations:
             self.addNewTransient(dt)
@@ -311,11 +311,11 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-        self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+        self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
+        self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
 
     def addSort2(self,eid,data):
-        [dt,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i] = data
+        [dt,gridType,v1,v2,v3,v4,v5,v6] = data
 
         if dt not in self.translations:
             self.addNewTransient(dt)
@@ -332,6 +332,6 @@ class complexTableObject(scalarObject):
             raise Exception('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
-        self.translations[dt][nodeID] = [complex(v1r,v1i),complex(v2r,v2i),complex(v3r,v3i)] # dx,dy,dz
-        self.rotations[dt][nodeID]    = [complex(v4r,v4i),complex(v5r,v5i),complex(v6r,v6i)] # rx,ry,rz
+        self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
+        self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
