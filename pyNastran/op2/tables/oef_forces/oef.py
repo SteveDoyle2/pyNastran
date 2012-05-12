@@ -20,11 +20,14 @@ from thermal_elements import ThermalElements
 from realForces    import RealForces
 from complexForces import ComplexForces
 
+from oef_forceObjects import *
+from oef_complexForceObjects import *
+
 class OEF(ThermalElements,RealForces,ComplexForces):
     """Table of element forces"""
     def readTable_OEF(self):
         table3     = self.readTable_OEF_3
-        table4Data = self.readOEF1_Data
+        table4Data = self.readOEF_Data
         self.readResultsTable(table3,table4Data)
         self.deleteAttributes_OEF()
         
@@ -228,9 +231,16 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         Imag = imagMapper[self.elementType]
         return (Real,Imag)
 
-    def readOEF1_Data(self,*args):
+    def readOEF_Data(self):
         #self.skipOES_Element() # skipping entire table
         #return
+        if self.tableCode==4: # Forces/Heat Flux
+            self.readOEF_Data_table4()
+        else:
+            raise NotImplementedError(self.codeInformation())
+        ###
+
+    def readOEF_Data_table4(self): # Forces/Heat Flux
         if self.thermal==0:
             self.readOEF_Forces()
         elif self.thermal==1:
@@ -248,41 +258,49 @@ class OEF(ThermalElements,RealForces,ComplexForces):
 
         if self.elementType in [1,3,10]: # CROD,CTUBE,CONROD
             if self.numWide==numWideReal:
+                self.createTransientObject(self.rodForces,RealRodForce)
                 self.OEF_Rod()
                 #asdf
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.rodForces,ComplexRodForce)
                 self.OEF_Rod_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [2]: # CBEAM
             if self.numWide==numWideReal:
+                self.createTransientObject(self.beamForces,RealCBEAMForce)
                 self.OEF_Beam()
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.beamForces,ComplexCBEAMForce)
                 self.OEF_Beam_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [4]: # CSHEAR
             if self.numWide==numWideReal:
+                self.createTransientObject(self.shearForces,RealCShearForce)
                 self.OEF_Shear()
                 #asf
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.shearForces,ComplexCShearForce)
                 self.OEF_Shear_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [11,12,13,14]: # CELAS1,CELAS2,CELAS3,CELAS4
             if self.numWide==numWideReal: ## @todo is this correct or is DMAP wrong (CELAS1)???
+                self.createTransientObject(self.springForces,RealSpringForce)
                 self.OEF_Spring()
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.springForces,ComplexSpringForce)
                 self.OEF_Spring_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [20,21,22,23]: # CDAMP1,CDAMP2,CDAMP3,CDAMP4
             if self.numWide==numWideReal:
-                self.OEF_Spring()
+                self.OEF_Spring() ## @todo update the object
             elif self.numWide==numWideImag:
                 self.OEF_Spring_alt()
             else:
@@ -290,44 +308,61 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             ###
         elif self.elementType in [24]: # CVISC
             if self.numWide==numWideReal:
+                self.createTransientObject(self.viscForces,RealViscForce)
                 self.OEF_CVisc()
                 #asdf
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.viscForces,ComplexViscForce)
                 self.OEF_CVisc_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
-        elif self.elementType in [33,74]: # CQUAD4,CTRIA3
+        elif self.elementType in [33,74,235]: # CQUAD4,CTRIA3,CQUADR
             if self.numWide==numWideReal:
                 #print self.codeInformation()
+                self.createTransientObject(self.plateForces,RealPlateForce)
                 self.OEF_Plate()
                 #sdaf
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.plateForces,ComplexPlateForce)
                 self.OEF_Plate_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
+        #elif self.elementType in [235]: # CQUADR
+            #if self.numWide==numWideReal:
+                #self.OEF_Plate()
+            #elif self.numWide==numWideImag:
+                #self.OEF_Plate_alt()
+            #else:
+                #raise NotImplementedError(self.codeInformation())
+            ###
         elif self.elementType in [64,70,75,82,144]: # CQUAD8,CTRIAR,CTRIA6,CQUADR,CQUAD4-bilinear
             if self.numWide==numWideReal:
                 #print self.codeInformation()
+                self.createTransientObject(self.plateForces2,RealPLATE2Force)
                 self.OEF_Plate2()
                 #asdf
             elif self.numWide==numWideImag:
                 #print self.codeInformation()
+                self.createTransientObject(self.plateForces2,ComplexPLATE2Force)
                 self.OEF_Plate2_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [34]: # CBAR
             if self.numWide==numWideReal:
+                self.createTransientObject(self.barForces,RealCBARForce)
                 self.OEF_CBar()
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.barForces,ComplexCBARForce)
                 self.OEF_CBar_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [100]: # CBAR
             if self.numWide==numWideReal:
+                self.createTransientObject(self.bar100Forces,RealCBAR100Force)
                 self.OEF_CBar100()
                 #asf
             elif self.numWide==numWideImag:
@@ -337,6 +372,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             ###
         elif self.elementType in [38]: # CGAP
             if self.numWide==numWideReal:
+                self.createTransientObject(self.gapForces,RealCGAPForce)
                 self.OEF_CGap()
                 #asdf
             elif self.numWide==numWideImag:
@@ -346,17 +382,21 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             ###
         elif self.elementType in [69]: # CBEND
             if self.numWide==numWideReal:
+                self.createTransientObject(self.bendForces,RealBendForce)
                 self.OEF_Bend()
                 #asdf
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.bendForces,ComplexBendForce)
                 self.OEF_Bend_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [76,77,78]: # CHEXA_PR,PENTA_PR,CTETRA_PR
             if self.numWide==numWideReal:
+                self.createTransientObject(self.solidPressureForces,RealPentaPressureForce)
                 self.OEF_PentaPressure()
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.solidPressureForces,ComplexPentaPressureForce)
                 self.OEF_PentaPressure_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
@@ -372,34 +412,32 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             ###
         elif self.elementType in [102]: # CBUSH
             if self.numWide==numWideReal:
+                self.createTransientObject(self.bushForces,RealCBUSHForce)
                 self.OEF_CBush()
                 #asf
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.bushForces,ComplexCBUSHForce)
                 self.OEF_CBush_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             if self.numWide==numWideReal:
+                self.createTransientObject(self.force_VU_2D,RealForce_VU_2D)
                 self.OEF_Force_VUTRIA()
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.force_VU_2D,ComplexForce_VU_2D)
                 self.OEF_Force_VUTRIA_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [191]: # VUBEAM
             if self.numWide==numWideReal:
+                self.createTransientObject(self.force_VU,RealForce_VU)
                 self.OEF_Force_VU()
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.force_VU,ComplexForce_VU)
                 self.OEF_Force_VU_alt()
-            else:
-                raise NotImplementedError(self.codeInformation())
-            ###
-        elif self.elementType in [235]: # CQUADR
-            if self.numWide==numWideReal:
-                self.OEF_Plate()
-            elif self.numWide==numWideImag:
-                self.OEF_Plate_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
             ###

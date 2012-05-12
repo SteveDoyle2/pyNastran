@@ -2,8 +2,6 @@ from __future__ import division
 import sys
 from struct import unpack
 
-from oef_forceObjects import *
-
 class RealForces(object):
 
     def OEF_aCode(self):
@@ -74,12 +72,9 @@ class RealForces(object):
         return (format1,extract)
 
     def OEF_Rod(self): # 1-CROD, 3-CTUBE, 10-CONROD
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        self.createTransientObject(self.rodForces,RealRodForce)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -101,12 +96,9 @@ class RealForces(object):
         #print self.rodForces
         
     def OEF_CVisc(self): # 24-CVISC
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
-        self.createTransientObject(self.viscForces,RealViscForce)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -127,14 +119,12 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_CVisc)
         #print self.viscForces
         
-    def OEF_Beam(self): # 2-CBEAM
-        deviceCode = self.deviceCode
+    def OEF_Beam(self): # 2-CBEAM   ## @todo is this correct???
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
-        self.createTransientObject(self.beamForces,RealCBEAMForce)
         #print self.codeInformation()
         formatAll = 'iffffffff'
+
         while len(self.data)>=400: # 1+(10-1)*11=100 ->100*4 = 400
             #print "eType=%s" %(eType)
 
@@ -171,12 +161,9 @@ class RealForces(object):
         #print self.beamForces
 
     def OEF_Shear(self): # 4-CSHEAR
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
-        self.createTransientObject(self.shearForces,RealCShearForce)
 
         while len(self.data)>=68: # 17*4
             eData     = self.data[0:68]
@@ -198,12 +185,9 @@ class RealForces(object):
         #print self.shearForces
         
     def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'f'
-        self.createTransientObject(self.springForces,RealSpringForce)
 
         while len(self.data)>=8: # 2*4
             eData     = self.data[0:8]
@@ -225,12 +209,9 @@ class RealForces(object):
         #print self.springForces
         
     def OEF_CBar(self): # 34-CBAR
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        self.createTransientObject(self.barForces,RealCBARForce)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -252,12 +233,9 @@ class RealForces(object):
         #print self.barForces
         
     def OEF_CBar100(self): # 100-CBAR
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'fffffff'
-        self.createTransientObject(self.bar100Forces,RealCBAR100Force)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:32]
@@ -279,12 +257,9 @@ class RealForces(object):
         #print self.bar100Forces
         
     def OEF_Plate(self): # 33-CQUAD4,74-CTRIA3
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        self.createTransientObject(self.plateForces,RealPlateForce)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -306,9 +281,10 @@ class RealForces(object):
         #print self.plateForces
 
     def OEF_Plate2(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-        
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'cccc'
+
         if self.elementType in [70,75]: # CTRIAR,CTRIA6
             nNodes = 4
         elif self.elementType in [64,82,144]: # CQUAD8,CQUADR,CQUAD4-bilinear
@@ -316,10 +292,6 @@ class RealForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-
-        (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'cccc'
-        self.createTransientObject(self.plateForces2,RealPLATE2Force)
 
         allFormat = 'fffffffff'
         nTotal = 44+nNodes*36
@@ -357,12 +329,9 @@ class RealForces(object):
         #print self.plateForces2
 
     def OEF_CGap(self): # 38-CGAP
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
-        self.createTransientObject(self.plateForces,RealCGAPForce)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -384,12 +353,9 @@ class RealForces(object):
         #print self.plateForces
 
     def OEF_Bend(self): # 69-CBEND
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ifffffffffffff'
-        self.createTransientObject(self.bendForces,RealBendForce)
 
         while len(self.data)>=60: # 15*4
             eData     = self.data[0:60]
@@ -413,12 +379,9 @@ class RealForces(object):
         #print self.bendForces
         
     def OEF_PentaPressure(self): # 77-CPENTA_PR,78-CTETRA_PR
-        deviceCode = self.deviceCode
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ccccccccfffffff'
-        self.createTransientObject(self.pentaPressureForces,RealPentaPressureForce)
 
         while len(self.data)>=40: # 10*4
             eData     = self.data[0:40]
@@ -441,13 +404,9 @@ class RealForces(object):
         #print self.pentaPressureForces
         
     def OEF_CBush(self): # 102-CBUSH
-        deviceCode = self.deviceCode
-        
         dt = self.nonlinearFactor
-
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffff'
-        self.createTransientObject(self.bushForces,RealCBUSHForce)
 
         while len(self.data)>=28: # 7*4
             eData     = self.data[0:28]
@@ -470,18 +429,16 @@ class RealForces(object):
 
     def OEF_Force_VU(self): # 191-VUBEAM
         dt = self.nonlinearFactor
-        #print "numWide = ",self.numWide
+
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'iicccc'
 
         if self.elementType in [191]:
             nNodes = 2
         else:
             raise NotImplementedError(self.codeInformation())
 
-        (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iicccc'
         formatAll = 'ifffffff'
-        self.createTransientObject(self.force_VU,RealForce_VU)
-
         n = 16+32*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:16] # 8*4
@@ -519,7 +476,8 @@ class RealForces(object):
 
     def OEF_Force_VUTRIA(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
-        #print "numWide = ",self.numWide
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'iiccccii'
 
         if self.elementType in [189]: # VUQUAD
             nNodes = 4
@@ -528,11 +486,7 @@ class RealForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
 
-        (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iiccccii'
         formatAll = 'ifffiiifffffi'
-        self.createTransientObject(self.force_VU_2D,RealForce_VU_2D)
-
         n = 24+52*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:24] # 6*4

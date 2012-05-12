@@ -7,6 +7,7 @@ class ComplexRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
         self.axialForce = {}
         self.torque = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -17,33 +18,34 @@ class ComplexRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.axialForce[dt] = {}
         self.torque[dt] = {}
 
     def add(self,dt,data):
-        [eid,axialForceReal,torqueReal,axialForceImag,torqueImag] = data
+        [eid,axialForce,torque] = data
 
         #self.eType[eid] = eType
-        self.axialForce[eid] = complex(axialForceReal,axialForceImag)
-        self.torque[eid]     = complex(torqueReal,torqueImag)
+        self.axialForce[eid] = axialForce
+        self.torque[eid]     = torque
 
     def addSort1(self,dt,data):
-        [eid,axialForceReal,torqueReal,axialForceImag,torqueImag] = data
+        [eid,axialForce,torque] = data
         if dt not in self.axialForce:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.axialForce[dt][eid] = complex(axialForceReal,axialForceImag)
-        self.torque[dt][eid]     = complex(torqueReal,torqueImag)
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid]     = torque
 
     def addSort2(self,eid,data):
-        [dt,axialForceReal,torqueReal,axialForceImag,torqueImag] = data
+        [dt,axialForce,torque] = data
         if dt not in self.axialForce:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.axialForce[dt][eid] = complex(axialForceReal,axialForceImag)
-        self.torque[dt][eid]     = complex(torqueReal,torqueImag)
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid]     = torque
 
     def __repr__(self):
         return str(self.axialForce)
@@ -58,6 +60,7 @@ class ComplexCBEAMForce(scalarObject): # 2-CBEAM
         self.totalTorque = {}
         self.warpingTorque = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.addNewElement = self.addNewElementSort1
@@ -70,6 +73,7 @@ class ComplexCBEAMForce(scalarObject): # 2-CBEAM
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.bendingMoment[dt] = {}
         self.shear[dt] = {}
         self.axial[dt] = {}
@@ -77,76 +81,64 @@ class ComplexCBEAMForce(scalarObject): # 2-CBEAM
         self.warpingTorque[dt] = {}
 
     def addNewElement(self,dt,data):
-        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
-        print "CBEAM addnew",data
+        [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        #print "CBEAM addnew",data
         #self.eType[eid] = eType
-        self.bendingMoment[eid] = {sd:[complex(bm1r,bm1i),complex(bm2r,bm2i)]}
-        self.shear[eid] = {sd:[complex(ts1r,ts1i),complex(ts2r,ts2i)]}
-        self.axial[eid] = {sd:complex(afr,afi)}
-        self.totalTorque[eid] = {sd:complex(ttrqr,ttrqi)}
-        self.warpingTorque[eid] = {sd:complex(wtrqr,wtrqi)}
+        self.bendingMoment[eid] = {sd:[bm1,bm2]}
+        self.shear[eid] = {sd:[ts1,ts2]}
+        self.axial[eid] = {sd:af}
+        self.totalTorque[eid] = {sd:ttrq}
+        self.warpingTorque[eid] = {sd:wtrq}
 
     def add(self,dt,data):
-        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
-        print "CBEAM add   ",data
+        [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        #print "CBEAM add   ",data
 
         #self.eType[eid] = eType
-        self.bendingMoment[eid][sd] = [complex(bm1r,bm1i),complex(bm2r,bm2i)]
-        self.shear[eid][sd] = [complex(ts1r,ts1i),complex(ts2r,ts2i)]
-        self.axial[eid][sd] = complex(afr,afi)
-        self.totalTorque[eid][sd]   = complex(ttrqr,ttrqi)
-        self.warpingTorque[eid][sd] = complex(wtrqr,wtrqi)
+        self.bendingMoment[eid][sd] = [bm1,bm2]
+        self.shear[eid][sd] = [ts1,ts2]
+        self.axial[eid][sd] = af
+        self.totalTorque[eid][sd]   = ttrq
+        self.warpingTorque[eid][sd] = wtrq
 
     def addNewElementSort1(self,dt,data):
-        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
+        [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
 
-        self._fillNewObject(dt,eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                                          bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi)
+        self._fillNewObject(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
 
     def addSort1(self,dt,data):
-        [eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                    bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
-        self._fillObject(dt,eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                                       bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi)
+        [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        self._fillObject(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
 
     def addNewElementSort2(self,eid,data):
-        [dt,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                   bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
-        self._fillNewObject(dt,eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                                          bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi)
+        [dt,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        self._fillNewObject(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
 
     def addSort2(self,eid,data):
-        [dt,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                   bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi] = data
-        self._fillObject(dt,eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                                       bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi)
+        [dt,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
+        self._fillObject(dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq)
 
-    def _fillNewObject(self,dt,eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                                          bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi):
-        if dt not in self.axial:
-            self.addNewTransient(dt)
-
-        #self.eType[eid] = eType
-        self.bendingMoment[dt][eid] = {sd:[complex(bm1r,bm1i),complex(bm2r,bm2i)]}
-        self.shear[dt][eid] = {sd:[complex(ts1r,ts1i),complex(ts2r,ts2i)]}
-        self.axial[dt][eid] = {sd:complex(afr,afi)}
-        self.totalTorque[dt][eid] = {sd:complex(ttrqr,ttrqi)}
-        self.warpingTorque[dt][eid] = {sd:complex(wtrqr,wtrqi)}
-
-    def _fillObject(self,dt,eid,nid,sd,bm1r,bm2r,ts1r,ts2r,afr,ttrqr,wtrqr,
-                                       bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi):
+    def _fillObject(self,dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq):
         #if dt not in self.axial:
             #self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.bendingMoment[dt][eid][sd] = [complex(bm1r,bm1i),complex(bm2r,bm2i)]
-        self.shear[dt][eid][sd] = [complex(ts1r,ts1i),complex(ts2r,ts2i)]
-        self.axial[dt][eid][sd] = complex(afr,afi)
-        self.totalTorque[dt][eid][sd]   = complex(ttrqr,ttrqi)
-        self.warpingTorque[dt][eid][sd] = complex(wtrqr,wtrqi)
+        self.bendingMoment[dt][eid][sd] = [bm1,bm2]
+        self.shear[dt][eid][sd] = [ts1,ts2]
+        self.axial[dt][eid][sd] = af
+        self.totalTorque[dt][eid][sd]   = ttrq
+        self.warpingTorque[dt][eid][sd] = wtrq
+
+    def _fillNewObject(self,dt,eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq):
+        if dt not in self.axial:
+            self.addNewTransient(dt)
+        #self.eType[eid] = eType
+        self.bendingMoment[dt][eid] = {sd:[bm1,bm2]}
+        self.shear[dt][eid] = {sd:[ts1,ts2]}
+        self.axial[dt][eid] = {sd:af}
+        self.totalTorque[dt][eid] = {sd:ttrq}
+        self.warpingTorque[dt][eid] = {sd:wtrq}
+
 
     def __repr__(self):
         return str(self.axial)
@@ -172,6 +164,7 @@ class ComplexCShearForce(scalarObject): # 4-CSHEAR
         self.shear34 = {}
         self.shear41 = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -199,75 +192,61 @@ class ComplexCShearForce(scalarObject): # 4-CSHEAR
         self.shear34[dt] = {}
         self.shear41[dt] = {}
 
-
     def add(self,dt,data):
-        [eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,
-             f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,
-             kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
-             kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i] = data
+        [eid,f41,f21,f12,f32,f23,f43,f34,f14,
+             kf1,s12,kf2,s23,kf3,s34,kf4,s41] = data
         #self.eType[eid] = eType
-        self.force41[eid] = complex(f41r,f41i)
-        self.force14[eid] = complex(f14r,f14i)
-        self.force21[eid] = complex(f21r,f21i)
-        self.force12[eid] = complex(f12r,f12i)
-        self.force32[eid] = complex(f32r,f32i)
-        self.force23[eid] = complex(f23r,f23i)
-        self.force43[eid] = complex(f43r,f43i)
-        self.force34[eid] = complex(f34r,f34i)
-        self.kickForce1[eid] = complex(kf1r,kf1i)
-        self.kickForce2[eid] = complex(kf2r,kf2i)
-        self.kickForce3[eid] = complex(kf3r,kf3i)
-        self.kickForce4[eid] = complex(kf4r,kf4i)
-        self.shear12[eid] = complex(s12r,s12i)
-        self.shear23[eid] = complex(s23r,s23i)
-        self.shear34[eid] = complex(s34r,s34i)
-        self.shear41[eid] = complex(s41r,s41i)
+        self.force41[eid] = f41
+        self.force14[eid] = f14
+        self.force21[eid] = f21
+        self.force12[eid] = f12
+        self.force32[eid] = f32
+        self.force23[eid] = f23
+        self.force43[eid] = f43
+        self.force34[eid] = f34
+        self.kickForce1[eid] = kf1
+        self.kickForce2[eid] = kf2
+        self.kickForce3[eid] = kf3
+        self.kickForce4[eid] = kf4
+        self.shear12[eid] = s12
+        self.shear23[eid] = s23
+        self.shear34[eid] = s34
+        self.shear41[eid] = s41
         
     def addSort1(self,dt,data):
-        [eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,
-             f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,
-             kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
-             kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i] = data
-        self._fillObject(dt,eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,
-                                f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,
-                                kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
-                                kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i)
+        [eid,f41,f21,f12,f32,f23,f43,f34,f14,
+             kf1,s12,kf2,s23,kf3,s34,kf4,s41] = data
+        self._fillObject(dt,eid,f41,f21,f12,f32,f23,f43,f34,f14,
+                                kf1,s12,kf2,s23,kf3,s34,kf4,s41)
 
     def addSort2(self,eid,data):
-        [dt,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,
-            f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,
-            kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
-            kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i] = data
+        [dt,f41,f21,f12,f32,f23,f43,f34,f14,
+            kf1,s12,kf2,s23,kf3,s34,kf4,s41] = data
 
-        self._fillObject(dt,eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,
-                                f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,
-                                kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
-                                kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i)
+        self._fillObject(dt,eid,f41,f21,f12,f32,f23,f43,f34,f14,
+                                kf1,s12,kf2,s23,kf3,s34,kf4,s41)
 
-    def _fillObject(self,dt,eid,f41r,f21r,f12r,f32r,f23r,f43r,f34r,f14r,
-                                f41i,f21i,f12i,f32i,f23i,f43i,f34i,f14i,
-                                kf1r,s12r,kf2r,s23r,kf3r,s34r,kf4r,s41r,
-                                kf1i,s12i,kf2i,s23i,kf3i,s34i,kf4i,s41i):
-
+    def _fillObject(self,dt,eid,f41,f21,f12,f32,f23,f43,f34,f14,
+                                kf1,s12,kf2,s23,kf3,s34,kf4,s41):
         if dt not in self.force41:
             self.addNewTransient(dt)
         #self.eType[eid] = eType
-        self.force41[dt][eid] = complex(f41r,f41i)
-        self.force14[dt][eid] = complex(f14r,f14i)
-        self.force21[dt][eid] = complex(f21r,f21i)
-        self.force12[dt][eid] = complex(f12r,f12i)
-        self.force32[dt][eid] = complex(f32r,f32i)
-        self.force23[dt][eid] = complex(f23r,f23i)
-        self.force43[dt][eid] = complex(f43r,f43i)
-        self.force34[dt][eid] = complex(f34r,f34i)
-        self.kickForce1[dt][eid] = complex(kf1r,kf1i)
-        self.kickForce2[dt][eid] = complex(kf2r,kf2i)
-        self.kickForce3[dt][eid] = complex(kf3r,kf3i)
-        self.kickForce4[dt][eid] = complex(kf4r,kf4i)
-        self.shear12[dt][eid] = complex(s12r,s12i)
-        self.shear23[dt][eid] = complex(s23r,s23i)
-        self.shear34[dt][eid] = complex(s34r,s34i)
-        self.shear41[dt][eid] = complex(s41r,s41i)
+        self.force41[dt][eid] = f41
+        self.force14[dt][eid] = f14
+        self.force21[dt][eid] = f21
+        self.force12[dt][eid] = f12
+        self.force32[dt][eid] = f32
+        self.force23[dt][eid] = f23
+        self.force43[dt][eid] = f43
+        self.force34[dt][eid] = f34
+        self.kickForce1[dt][eid] = kf1
+        self.kickForce2[dt][eid] = kf2
+        self.kickForce3[dt][eid] = kf3
+        self.kickForce4[dt][eid] = kf4
+        self.shear12[dt][eid] = s12
+        self.shear23[dt][eid] = s23
+        self.shear34[dt][eid] = s34
+        self.shear41[dt][eid] = s41
 
     def __repr__(self):
         return str(self.force41)
@@ -278,6 +257,7 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         #self.eType = {}
         self.force = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -288,28 +268,30 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.force[dt] = {}
 
     def add(self,dt,data):
-        [eid,forceReal,forceImag] = data
+        [eid,force] = data
 
         #self.eType[eid] = eType
-        self.force[eid] = complex(forceReal,forceImag)
+        self.force[eid] = force
 
     def addSort1(self,dt,data):
-        [eid,forceReal,forceImag] = data
+        [eid,force] = data
         if dt not in self.force:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.force[dt][eid] = complex(forceReal,forceImag)
+        self.force[dt][eid] = force
+
     def addSort2(self,eid,data):
-        [dt,forceReal,forceImag] = data
+        [dt,force] = data
         if dt not in self.force:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.force[dt][eid] = complex(forceReal,forceImag)
+        self.force[dt][eid] = force
 
     def __repr__(self):
         return str(self.force)
@@ -321,6 +303,7 @@ class ComplexViscForce(scalarObject): # 24-CVISC
         self.axialForce = {}
         self.torque = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -331,33 +314,34 @@ class ComplexViscForce(scalarObject): # 24-CVISC
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.axialForce[dt] = {}
         self.torque[dt] = {}
 
     def add(self,dt,data):
-        [eid,axialForceReal,torqueReal,axialForceImag,torqueImag] = data
+        [eid,axialForce,torque] = data
 
         #self.eType[eid] = eType
-        self.axialForce[eid] = complex(axialForceReal,axialForceImag)
-        self.torque[eid]     = complex(torqueReal,torqueImag)
+        self.axialForce[eid] = axialForce
+        self.torque[eid] = torque
 
     def addSort1(self,dt,data):
-        [eid,axialForceReal,torqueReal,axialForceImag,torqueImag] = data
+        [eid,axialForce,torque] = data
         if dt not in self.axialForce:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.axialForce[dt][eid] = complex(axialForceReal,axialForceImag)
-        self.torque[dt][eid]     = complex(torqueReal,torqueImag)
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid] = torque
 
     def addSort2(self,eid,data):
-        [dt,axialForceReal,torqueReal,axialForceImag,torqueImag] = data
+        [dt,axialForce,torque] = data
         if dt not in self.axialForce:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.axialForce[dt][eid] = complex(axialForceReal,axialForceImag)
-        self.torque[dt][eid]     = complex(torqueReal,torqueImag)
+        self.axialForce[dt][eid] = axialForce
+        self.torque[dt][eid] = torque
 
     def __repr__(self):
         return str(self.axialForce)
@@ -375,6 +359,7 @@ class ComplexPlateForce(scalarObject): # 33-CQUAD4, 74-CTRIA3
         self.tx = {}
         self.ty = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -385,6 +370,7 @@ class ComplexPlateForce(scalarObject): # 33-CQUAD4, 74-CTRIA3
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.mx[dt] = {}
         self.my[dt] = {}
         self.mxy[dt] = {}
@@ -395,50 +381,47 @@ class ComplexPlateForce(scalarObject): # 33-CQUAD4, 74-CTRIA3
         self.ty[dt] = {}
 
     def add(self,dt,data):
-        [eid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [eid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
 
         #self.eType[eid] = eType
-        self.mx[eid] = complex(mxr,mxi)
-        self.my[eid] = complex(myr,myi)
-        self.mxy[eid] = complex(mxyr,mxyi)
-        self.bmx[eid] = complex(bmxr,bmxi)
-        self.bmy[eid] = complex(bmyr,bmyi)
-        self.bmxy[eid] = complex(bmxyr,bmxyi)
-        self.tx[eid] = complex(txr,txi)
-        self.ty[eid] = complex(tyr,tyi)
+        self.mx[eid] = mx
+        self.my[eid] = my
+        self.mxy[eid] = mxy
+        self.bmx[eid] = bmx
+        self.bmy[eid] = bmy
+        self.bmxy[eid] = bmxy
+        self.tx[eid] = tx
+        self.ty[eid] = ty
 
     def addSort1(self,dt,data):
-        [eid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [eid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
         if dt not in self.mx:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.mx[dt][eid] = complex(mxr,mxi)
-        self.my[dt][eid] = complex(myr,myi)
-        self.mxy[dt][eid] = complex(mxyr,mxyi)
-        self.bmx[dt][eid] = complex(bmxr,bmxi)
-        self.bmy[dt][eid] = complex(bmyr,bmyi)
-        self.bmxy[dt][eid] = complex(bmxyr,bmxyi)
-        self.tx[dt][eid] = complex(txr,txi)
-        self.ty[dt][eid] = complex(tyr,tyi)
+        self.mx[dt][eid] = mx
+        self.my[dt][eid] = my
+        self.mxy[dt][eid] = mxy
+        self.bmx[dt][eid] = bmx
+        self.bmy[dt][eid] = bmy
+        self.bmxy[dt][eid] = bmxy
+        self.tx[dt][eid] = tx
+        self.ty[dt][eid] = ty
 
     def addSort2(self,eid,data):
-        [dt,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-            mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [dt,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
         if dt not in self.mx:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.mx[dt][eid] = complex(mxr,mxi)
-        self.my[dt][eid] = complex(myr,myi)
-        self.mxy[dt][eid] = complex(mxyr,mxyi)
-        self.bmx[dt][eid] = complex(bmxr,bmxi)
-        self.bmy[dt][eid] = complex(bmyr,bmyi)
-        self.bmxy[dt][eid] = complex(bmxyr,bmxyi)
-        self.tx[dt][eid] = complex(txr,txi)
-        self.ty[dt][eid] = complex(tyr,tyi)
+        self.mx[dt][eid] = mx
+        self.my[dt][eid] = my
+        self.mxy[dt][eid] = mxy
+        self.bmx[dt][eid] = bmx
+        self.bmy[dt][eid] = bmy
+        self.bmxy[dt][eid] = bmxy
+        self.tx[dt][eid] = tx
+        self.ty[dt][eid] = ty
 
     def __repr__(self):
         return str(self.mx)
@@ -458,6 +441,7 @@ class ComplexPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx = {}
         self.ty = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.addNewElement = self.addNewElementSort1
@@ -470,9 +454,7 @@ class ComplexPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         ###
 
     def addNewTransient(self,dt):
-        self.term[dt] = {}
-        self.ngrids[dt] = {}
-
+        self.dt = dt
         self.mx[dt] = {}
         self.my[dt] = {}
         self.mxy[dt] = {}
@@ -484,109 +466,102 @@ class ComplexPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
     def addNewElement(self,eid,dt,data):
         #print "eid = ",eid
-        [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-                  mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
 
         #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
 
-        self.mx[eid] = [complex(mxr,mxi)]
-        self.my[eid] = [complex(myr,myi)]
-        self.mxy[eid] = [complex(mxyr,mxyi)]
-        self.bmx[eid] = [complex(bmxr,bmxi)]
-        self.bmy[eid] = [complex(bmyr,bmyi)]
-        self.bmxy[eid] = [complex(bmxyr,bmxyi)]
-        self.tx[eid] = [complex(txr,txi)]
-        self.ty[eid] = [complex(tyr,tyi)]
+        self.mx[eid] = [mx]
+        self.my[eid] = [my]
+        self.mxy[eid] = [mxy]
+        self.bmx[eid] = [bmx]
+        self.bmy[eid] = [bmy]
+        self.bmxy[eid] = [bmxy]
+        self.tx[eid] = [tx]
+        self.ty[eid] = [ty]
 
     def add(self,eid,dt,data):
-        [nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
 
         #self.eType[eid] = eType
         #print "mx = ",self.mx,mx
-        self.mx[eid].append(complex(mxr,mxi))
-        self.my[eid].append(complex(myr,myi))
-        self.mxy[eid].append(complex(mxyr,mxyi))
-        self.bmx[eid].append(complex(bmxr,bmxi))
-        self.bmy[eid].append(complex(bmyr,bmyi))
-        self.bmxy[eid].append(complex(bmxyr,bmxyi))
-        self.tx[eid].append(complex(txr,txi))
-        self.ty[eid].append(complex(tyr,tyi))
+        self.mx[eid].append(mx)
+        self.my[eid].append(my)
+        self.mxy[eid].append(mxy)
+        self.bmx[eid].append(bmx)
+        self.bmy[eid].append(bmy)
+        self.bmxy[eid].append(bmxy)
+        self.tx[eid].append(tx)
+        self.ty[eid].append(ty)
 
     def addNewElementSort1(self,eid,dt,data):
-        [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-                  mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
         if dt not in self.mx:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.term[dt][eid] = term
-        self.ngrids[dt][eid] = nid
-        self.mx[dt][eid] = [complex(mxr,mxi)]
-        self.my[dt][eid] = [complex(myr,myi)]
-        self.mxy[dt][eid] = [complex(mxyr,mxyi)]
-        self.bmx[dt][eid] = [complex(bmxr,bmxi)]
-        self.bmy[dt][eid] = [complex(bmyr,bmyi)]
-        self.bmxy[dt][eid] = [complex(bmxyr,bmxyi)]
-        self.tx[dt][eid] = [complex(txr,txi)]
-        self.ty[dt][eid] = [complex(tyr,tyi)]
+        self.term[eid] = term
+        self.ngrids[eid] = nid
+        self.mx[dt][eid] = [mx]
+        self.my[dt][eid] = [my]
+        self.mxy[dt][eid] = [mxy]
+        self.bmx[dt][eid] = [bmx]
+        self.bmy[dt][eid] = [bmy]
+        self.bmxy[dt][eid] = [bmxy]
+        self.tx[dt][eid] = [tx]
+        self.ty[dt][eid] = [ty]
 
     def addSort1(self,eid,dt,data):
-        [nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
         if dt not in self.mx:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.mx[dt][eid].append(complex(mxr,mxi))
-        self.my[dt][eid].append(complex(myr,myi))
-        self.mxy[dt][eid].append(complex(mxyr,mxyi))
-        self.bmx[dt][eid].append(complex(bmxr,bmxi))
-        self.bmy[dt][eid].append(complex(bmyr,bmyi))
-        self.bmxy[dt][eid].append(complex(bmxyr,bmxyi))
-        self.tx[dt][eid].append(complex(txr,txi))
-        self.ty[dt][eid].append(complex(tyr,tyi))
+        self.mx[dt][eid].append(mx)
+        self.my[dt][eid].append(my)
+        self.mxy[dt][eid].append(mxy)
+        self.bmx[dt][eid].append(bmx)
+        self.bmy[dt][eid].append(bmy)
+        self.bmxy[dt][eid].append(bmxy)
+        self.tx[dt][eid].append(tx)
+        self.ty[dt][eid].append(ty)
 
     def addNewElementSort2(self,dt,eid,data):
-        [term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-                  mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
         if dt not in self.mx:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.term[dt][eid] = term
-        self.ngrids[dt][eid] = nid
+        self.term[eid] = term
+        self.ngrids[eid] = nid
 
-        self.mx[dt][eid] = [complex(mxr,mxi)]
-        self.my[dt][eid] = [complex(myr,myi)]
-        self.mxy[dt][eid] = [complex(mxyr,mxyi)]
-        self.bmx[dt][eid] = [complex(bmxr,bmxi)]
-        self.bmy[dt][eid] = [complex(bmyr,bmyi)]
-        self.bmxy[dt][eid] = [complex(bmxyr,bmxyi)]
-        self.tx[dt][eid] = [complex(txr,txi)]
-        self.ty[dt][eid] = [complex(tyr,tyi)]
+        self.mx[dt][eid] = [mx]
+        self.my[dt][eid] = [my]
+        self.mxy[dt][eid] = [mxy]
+        self.bmx[dt][eid] = [bmx]
+        self.bmy[dt][eid] = [bmy]
+        self.bmxy[dt][eid] = [bmxy]
+        self.tx[dt][eid] = [tx]
+        self.ty[dt][eid] = [ty]
 
     def addSort2(self,dt,eid,data):
-        [nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi] = data
+        [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty] = data
         if dt not in self.mx:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.mx[dt][eid].append(complex(mxr,mxi))
-        self.my[dt][eid].append(complex(myr,myi))
-        self.mxy[dt][eid].append(complex(mxyr,mxyi))
-        self.bmx[dt][eid].append(complex(bmxr,bmxi))
-        self.bmy[dt][eid].append(complex(bmyr,bmyi))
-        self.bmxy[dt][eid].append(complex(bmxyr,bmxyi))
-        self.tx[dt][eid].append(complex(txr,txi))
-        self.ty[dt][eid].append(complex(tyr,tyi))
+        self.mx[dt][eid].append(mx)
+        self.my[dt][eid].append(my)
+        self.mxy[dt][eid].append(mxy)
+        self.bmx[dt][eid].append(bmx)
+        self.bmy[dt][eid].append(bmy)
+        self.bmxy[dt][eid].append(bmxy)
+        self.tx[dt][eid].append(tx)
+        self.ty[dt][eid].append(ty)
 
     def __repr__(self):
         return str(self.mx)
-
 
 class ComplexCBARForce(scalarObject): # 34-CBAR
     def __init__(self,dataCode,isSort1,iSubcase,dt):
@@ -598,6 +573,7 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         self.axial = {}
         self.torque = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -608,6 +584,7 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.bendingMomentA[dt] = {}
         self.bendingMomentB[dt] = {}
         self.shear[dt] = {}
@@ -615,41 +592,38 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         self.torque[dt] = {}
 
     def add(self,dt,data):
-        [eid,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
-             bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi] = data
+        [eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
 
         #self.eType[eid] = eType
-        self.bendingMomentA[eid] = [complex(bm1ar,bm1ai),complex(bm2ar,bm2ai)]
-        self.bendingMomentB[eid] = [complex(bm1br,bm1bi),complex(bm2br,bm2bi)]
-        self.shear[eid] = [complex(ts1r,ts1i),complex(ts2r,ts2i)]
-        self.axial[eid] = complex(afr,afi)
-        self.torque[eid] = complex(trqr,trqi)
+        self.bendingMomentA[eid] = [bm1a,bm2a]
+        self.bendingMomentB[eid] = [bm1b,bm2b]
+        self.shear[eid] = [ts1,ts2]
+        self.axial[eid] = af
+        self.torque[eid] = trq
 
     def addSort1(self,dt,data):
-        [eid,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
-             bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi] = data
+        [eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
         if dt not in self.axial:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.bendingMomentA[dt][eid] = [complex(bm1ar,bm1ai),complex(bm2ar,bm2ai)]
-        self.bendingMomentB[dt][eid] = [complex(bm1br,bm1bi),complex(bm2br,bm2bi)]
-        self.shear[dt][eid] = [complex(ts1r,ts1i),complex(ts2r,ts2i)]
-        self.axial[dt][eid] = complex(afr,afi)
-        self.torque[dt][eid] = complex(trqr,trqi)
+        self.bendingMomentA[dt][eid] = [bm1a,bm2a]
+        self.bendingMomentB[dt][eid] = [bm1b,bm2b]
+        self.shear[dt][eid] = [ts1,ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
 
     def addSort2(self,eid,data):
-        [dt,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
-            bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi] = data
+        [dt,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = data
         if dt not in self.axial:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.bendingMomentA[dt][eid] = [complex(bm1ar,bm1ai),complex(bm2ar,bm2ai)]
-        self.bendingMomentB[dt][eid] = [complex(bm1br,bm1bi),complex(bm2br,bm2bi)]
-        self.shear[dt][eid] = [complex(ts1r,ts1i),complex(ts2r,ts2i)]
-        self.axial[dt][eid] = complex(afr,afi)
-        self.torque[dt][eid] = complex(trqr,trqi)
+        self.bendingMomentA[dt][eid] = [bm1a,bm2a]
+        self.bendingMomentB[dt][eid] = [bm1b,bm2b]
+        self.shear[dt][eid] = [ts1,ts2]
+        self.axial[dt][eid] = af
+        self.torque[dt][eid] = trq
 
     def __repr__(self):
         return str(self.axial)
@@ -666,6 +640,7 @@ class ComplexBendForce(scalarObject): # 69-CBEND
         self.axial  = {}
         self.torque = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -676,6 +651,7 @@ class ComplexBendForce(scalarObject): # 69-CBEND
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.bendingMoment1[dt] = {}
         self.bendingMoment2[dt] = {}
         self.shearPlane1[dt] = {}
@@ -684,55 +660,43 @@ class ComplexBendForce(scalarObject): # 69-CBEND
         self.torque[dt] = {}
 
     def add(self,dt,data):
-        [eid,nidA,bm1Ar,bm2Ar,sp1Ar,sp2Ar,axialAr,torqueAr,
-                  bm1Ai,bm2Ai,sp1Ai,sp2Ai,axialAi,torqueAi,
-             nidB,bm1Br,bm2Br,sp1Br,sp2Br,axialBr,torqueBr,
-                  bm1Bi,bm2Bi,sp1Bi,sp2Bi,axialBi,torqueBi] = data
+        [eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+             nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB] = data
 
         #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA,nidB]
-        self.bendingMoment1[eid] = [complex(bm1Ar,bm1Ai),complex(bm1Br,bm1Bi)]
-        self.bendingMoment2[eid] = [complex(bm2Ar,bm2Ai),complex(bm2Br,bm2Bi)]
-        self.shearPlane1[eid] = [complex(sp1Ar,sp1Ai),complex(sp1Br,sp1Bi)]
-        self.shearPlane2[eid] = [complex(sp2Ar,sp2Ai),complex(sp2Br,sp2Bi)]
-        self.axial[eid]  = [complex(axialAr,axialAi),complex(axialBr,axialBi)]
-        self.torque[eid] = [complex(torqueAr,torqueAi),complex(torqueBr,torqueBi)]
+        self.bendingMoment1[eid] = [bm1A,bm1B]
+        self.bendingMoment2[eid] = [bm2A,bm2B]
+        self.shearPlane1[eid] = [sp1A,sp1B]
+        self.shearPlane2[eid] = [sp2A,sp2B]
+        self.axial[eid]  = [axialA,axialB]
+        self.torque[eid] = [torqueA,torqueB]
 
     def addSort1(self,dt,data):
-        [eid,nidA,bm1Ar,bm2Ar,sp1Ar,sp2Ar,axialAr,torqueAr,
-                  bm1Ai,bm2Ai,sp1Ai,sp2Ai,axialAi,torqueAi,
-             nidB,bm1Br,bm2Br,sp1Br,sp2Br,axialBr,torqueBr,
-                  bm1Bi,bm2Bi,sp1Bi,sp2Bi,axialBi,torqueBi] = data
-        self._fillObject(dt,eid,nidA,bm1Ar,bm2Ar,sp1Ar,sp2Ar,axialAr,torqueAr,
-                                     bm1Ai,bm2Ai,sp1Ai,sp2Ai,axialAi,torqueAi,
-                                nidB,bm1Br,bm2Br,sp1Br,sp2Br,axialBr,torqueBr,
-                                     bm1Bi,bm2Bi,sp1Bi,sp2Bi,axialBi,torqueBi)
+        [eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+             nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB] = data
+        self._fillObject(dt,eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+                                nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB)
 
     def addSort2(self,eid,data):
-        [dt,nidA,bm1Ar,bm2Ar,sp1Ar,sp2Ar,axialAr,torqueAr,
-                 bm1Ai,bm2Ai,sp1Ai,sp2Ai,axialAi,torqueAi,
-            nidB,bm1Br,bm2Br,sp1Br,sp2Br,axialBr,torqueBr,
-                 bm1Bi,bm2Bi,sp1Bi,sp2Bi,axialBi,torqueBi] = data
-        self._fillObject(dt,eid,nidA,bm1Ar,bm2Ar,sp1Ar,sp2Ar,axialAr,torqueAr,
-                                     bm1Ai,bm2Ai,sp1Ai,sp2Ai,axialAi,torqueAi,
-                                nidB,bm1Br,bm2Br,sp1Br,sp2Br,axialBr,torqueBr,
-                                     bm1Bi,bm2Bi,sp1Bi,sp2Bi,axialBi,torqueBi)
+        [dt,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+            nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB] = data
+        self._fillObject(dt,eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+                                nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB)
 
-    def _fillObject(self,dt,eid,nidA,bm1Ar,bm2Ar,sp1Ar,sp2Ar,axialAr,torqueAr,
-                                     bm1Ai,bm2Ai,sp1Ai,sp2Ai,axialAi,torqueAi,
-                                nidB,bm1Br,bm2Br,sp1Br,sp2Br,axialBr,torqueBr,
-                                     bm1Bi,bm2Bi,sp1Bi,sp2Bi,axialBi,torqueBi):
+    def _fillObject(self,dt,eid,nidA,bm1A,bm2A,sp1A,sp2A,axialA,torqueA,
+                                nidB,bm1B,bm2B,sp1B,sp2B,axialB,torqueB):
         if dt not in self.axial:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
         self.nodeIDs[eid] = [nidA,nidB]
-        self.bendingMoment1[dt][eid] = [complex(bm1Ar,bm1Ai),complex(bm1Br,bm1Bi)]
-        self.bendingMoment2[dt][eid] = [complex(bm2Ar,bm2Ai),complex(bm2Br,bm2Bi)]
-        self.shearPlane1[dt][eid] = [complex(sp1Ar,sp1Ai),complex(sp1Br,sp1Bi)]
-        self.shearPlane2[dt][eid] = [complex(sp2Ar,sp2Ai),complex(sp2Br,sp2Bi)]
-        self.axial[dt][eid]  = [complex(axialAr,axialAi),complex(axialBr,axialBi)]
-        self.torque[dt][eid] = [complex(torqueAr,torqueAi),complex(torqueBr,torqueBi)]
+        self.bendingMoment1[dt][eid] = [bm1A,bm1B]
+        self.bendingMoment2[dt][eid] = [bm2A,bm2B]
+        self.shearPlane1[dt][eid] = [sp1A,sp1B]
+        self.shearPlane2[dt][eid] = [sp2A,sp2B]
+        self.axial[dt][eid]  = [axialA,axialB]
+        self.torque[dt][eid] = [torqueA,torqueB]
 
     def __repr__(self):
         return str(self.axial)
@@ -745,6 +709,7 @@ class ComplexPentaPressureForce(scalarObject): # 76-CHEXA_PR,77-PENTA_PR,78-TETR
         self.velocity = {}
         self.pressure = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -755,39 +720,37 @@ class ComplexPentaPressureForce(scalarObject): # 76-CHEXA_PR,77-PENTA_PR,78-TETR
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.acceleration[dt] = {}
         self.velocity[dt] = {}
         self.pressure[dt] = {}
 
     def add(self,dt,data):
-        [eid,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
-                   axi,ayi,azi,vxi,vyi,vzi] = data
+        [eid,eName,ax,ay,az,vx,vy,vz,pressure] = data
 
         #self.eType[eid] = eType
-        self.acceleration[eid] = [complex(axr,axi),complex(ayr,ayi),complex(azr,azi)]
-        self.velocity[eid]     = [complex(vxr,vxi),complex(vyr,vyi),complex(vzr,vzi)]
+        self.acceleration[eid] = [ax,ay,az]
+        self.velocity[eid] = [vx,vy,vz]
         self.pressure[eid] = pressure
 
     def addSort1(self,dt,data):
-        [eid,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
-                  axi,ayi,azi,vxi,vyi,vzi] = data
+        [eid,eName,ax,ay,az,vx,vy,vz,pressure] = data
         if dt not in self.acceleration:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.acceleration[dt][eid] = [complex(axr,axi),complex(ayr,ayi),complex(azr,azi)]
-        self.velocity[dt][eid]     = [complex(vxr,vxi),complex(vyr,vyi),complex(vzr,vzi)]
+        self.acceleration[dt][eid] = [ax,ay,az]
+        self.velocity[dt][eid] = [vx,vy,vz]
         self.pressure[dt][eid] = pressure
 
     def addSort2(self,eid,data):
-        [dt,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
-                  axi,ayi,azi,vxi,vyi,vzi] = data
+        [dt,eName,ax,ay,az,vx,vy,vz,pressure] = data
         if dt not in self.acceleration:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.acceleration[dt][eid] = [complex(axr,axi),complex(ayr,ayi),complex(azr,azi)]
-        self.velocity[dt][eid]     = [complex(vxr,vxi),complex(vyr,vyi),complex(vzr,vzi)]
+        self.acceleration[dt][eid] = [ax,ay,az]
+        self.velocity[dt][eid] = [vx,vy,vz]
         self.pressure[dt][eid] = pressure
 
 
@@ -801,6 +764,7 @@ class ComplexCBUSHForce(scalarObject): # 102-CBUSH
         self.force = {}
         self.moment = {}
 
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -811,36 +775,34 @@ class ComplexCBUSHForce(scalarObject): # 102-CBUSH
         ###
 
     def addNewTransient(self,dt):
+        self.dt = dt
         self.force[dt] = {}
         self.moment[dt] = {}
 
     def add(self,dt,data):
-        [eid,fxr,fyr,fzr,mxr,myr,mzr,
-             fxi,fyi,fzi,mxi,myi,mzi] = data
+        [eid,fx,fy,fz,mx,my,mz] = data
 
         #self.eType[eid] = eType
-        self.force[eid]  = [complex(fxr,fxi),complex(fyr,fyi),complex(fzr,fzi)]
-        self.moment[eid] = [complex(mxr,mxi),complex(myr,myi),complex(mzr,mzi)]
+        self.force[eid] = [fx,fy,fz]
+        self.moment[eid] = [mx,my,mz]
 
     def addSort1(self,dt,data):
-        [eid,fxr,fyr,fzr,mxr,myr,mzr,
-             fxi,fyi,fzi,mxi,myi,mzi] = data
+        [eid,fx,fy,fz,mx,my,mz] = data
         if dt not in self.force:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.force[dt][eid]  = [complex(fxr,fxi),complex(fyr,fyi),complex(fzr,fzi)]
-        self.moment[dt][eid] = [complex(mxr,mxi),complex(myr,myi),complex(mzr,mzi)]
+        self.force[dt][eid] = [fx,fy,fz]
+        self.moment[dt][eid] = [mx,my,mz]
 
     def addSort2(self,eid,data):
-        [dt,fxr,fyr,fzr,mxr,myr,mzr,
-            fxi,fyi,fzi,mxi,myi,mzi] = data
+        [dt,fx,fy,fz,mx,my,mz] = data
         if dt not in self.force:
             self.addNewTransient(dt)
 
         #self.eType[eid] = eType
-        self.force[dt][eid]  = [complex(fxr,fxi),complex(fyr,fyi),complex(fzr,fzi)]
-        self.moment[dt][eid] = [complex(mxr,mxi),complex(myr,myi),complex(mzr,mzi)]
+        self.force[dt][eid] = [fx,fy,fz]
+        self.moment[dt][eid] = [mx,my,mz]
 
     def __repr__(self):
         return str(self.force)
@@ -861,6 +823,7 @@ class ComplexForce_VU(scalarObject): # 191-VUBEAM
         self.bendingZ = {}
 
         ## @todo if dt=None, handle SORT1 case
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -871,12 +834,13 @@ class ComplexForce_VU(scalarObject): # 191-VUBEAM
         ###
 
     def addNewTransient(self,dt):
-        self.forceX[dt] = {}
-        self.shearY[dt] = {}
-        self.shearZ[dt] = {}
+        self.dt = dt
+        self.forceX[dt]  = {}
+        self.shearY[dt]  = {}
+        self.shearZ[dt]  = {}
         self.torsion[dt]  = {}
-        self.bendingY[dt] = {}
-        self.bendingZ[dt] = {}
+        self.bendingY[dt]  = {}
+        self.bendingZ[dt]  = {}
 
     def add(self,nNodes,dt,data):
         [eid,parent,coord,icord,forces] = data
@@ -893,14 +857,13 @@ class ComplexForce_VU(scalarObject): # 191-VUBEAM
         self.bendingZ[eid] = {}
 
         for force in forces:
-            [nid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
-                       forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = force
-            self.forceX[eid][nid]   = complex(forceXr,forceXi)
-            self.shearY[eid][nid]   = complex(shearYr,shearYi)
-            self.shearZ[eid][nid]   = complex(shearZr,shearZi)
-            self.torsion[eid][nid]  = complex(torsionr, torsioni)
-            self.bendingY[eid][nid] = complex(bendingYr,bendingYi)
-            self.bendingZ[eid][nid] = complex(bendingZr,bendingZi)
+            [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
+            self.forceX[eid][nid]  = forceX
+            self.shearY[eid][nid]  = shearY
+            self.shearZ[eid][nid]  = shearZ
+            self.torsion[eid][nid]  = torsion
+            self.bendingY[eid][nid] = bendingY
+            self.bendingZ[eid][nid] = bendingZ
 
     def addSort1(self,nNodes,dt,data):
         [eid,parent,coord,icord,forces] = data
@@ -919,14 +882,13 @@ class ComplexForce_VU(scalarObject): # 191-VUBEAM
         self.bendingZ[dt][eid] = {}
 
         for force in forces:
-            [nid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
-                       forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = force
-            self.forceX[dt][eid][nid]   = complex(forceXr,forceXi)
-            self.shearY[dt][eid][nid]   = complex(shearYr,shearYi)
-            self.shearZ[dt][eid][nid]   = complex(shearZr,shearZi)
-            self.torsion[dt][eid][nid]  = complex(torsionr, torsioni)
-            self.bendingY[dt][eid][nid] = complex(bendingYr,bendingYi)
-            self.bendingZ[dt][eid][nid] = complex(bendingZr,bendingZi)
+            [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
+            self.forceX[dt][eid][nid]   = forceX
+            self.shearY[dt][eid][nid]   = shearY
+            self.shearZ[dt][eid][nid]   = shearZ
+            self.torsion[dt][eid][nid]  = torsion
+            self.bendingY[dt][eid][nid] = bendingY
+            self.bendingZ[dt][eid][nid] = bendingZ
 
     def addSort2(self,nNodes,eid,data):
         [dt,parent,coord,icord,forces] = data
@@ -944,14 +906,13 @@ class ComplexForce_VU(scalarObject): # 191-VUBEAM
         self.bendingY[dt][eid] = {}
         self.bendingZ[dt][eid] = {}
         for force in forces:
-            [nid,posit,forceXr,shearYr,shearZr,torsionr,bendingYr,bendingZr,
-                       forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = force
-            self.forceX[dt][eid][nid]   = complex(forceXr,forceXi)
-            self.shearY[dt][eid][nid]   = complex(shearYr,shearYi)
-            self.shearZ[dt][eid][nid]   = complex(shearZr,shearZi)
-            self.torsion[dt][eid][nid]  = complex(torsionr, torsioni)
-            self.bendingY[dt][eid][nid] = complex(bendingYr,bendingYi)
-            self.bendingZ[dt][eid][nid] = complex(bendingZr,bendingZi)
+            [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
+            self.forceX[dt][eid][nid]   = forceX
+            self.shearY[dt][eid][nid]   = shearY
+            self.shearZ[dt][eid][nid]   = shearZ
+            self.torsion[dt][eid][nid]  = torsion
+            self.bendingY[dt][eid][nid] = bendingY
+            self.bendingZ[dt][eid][nid] = bendingZ
 
     def __repr__(self):
         return str(self.forceX)
@@ -975,6 +936,7 @@ class ComplexForce_VU_2D(scalarObject): # 189-VUQUAD,190-VUTRIA
         self.shearXZ = {}
 
         ## @todo if dt=None, handle SORT1 case
+        self.dt = dt
         if isSort1:
             if dt is not None:
                 self.add = self.addSort1
@@ -1012,16 +974,15 @@ class ComplexForce_VU_2D(scalarObject): # 189-VUQUAD,190-VUTRIA
         self.shearXZ[eid] = {}
 
         for force in forces:
-            [nid,membraneXr,membraneYr,membraneXYr,bendingXr,bendingYr,bendingXYr,shearYZr,shearXZr,
-                 membraneXi,membraneYi,membraneXYi,bendingXi,bendingYi,bendingXYi,shearYZi,shearXZi] = force
-            self.membraneX[eid][nid]  = complex(membraneXr, membraneXi)
-            self.membraneY[eid][nid]  = complex(membraneYr, membraneYi)
-            self.membraneXY[eid][nid] = complex(membraneXYr,membraneXYi)
-            self.bendingX[eid][nid]   = complex(bendingXr,  bendingXi)
-            self.bendingY[eid][nid]   = complex(bendingYr,  bendingYi)
-            self.bendingXY[eid][nid]  = complex(bendingXYr, bendingXYi)
-            self.shearYZ[eid][nid]  = complex(shearYZr,shearYZi)
-            self.shearXZ[eid][nid]  = complex(shearXZr,shearXZi)
+            [nid,membraneX,membraneY,membraneXY,bendingX,bendingY,bendingXY,shearYZ,shearXZ] = force
+            self.membraneX[eid][nid]  = membraneX
+            self.membraneY[eid][nid]  = membraneY
+            self.membraneXY[eid][nid] = membraneXY
+            self.bendingX[eid][nid]   = bendingX
+            self.bendingY[eid][nid]   = bendingY
+            self.bendingXY[eid][nid]  = bendingXY
+            self.shearYZ[eid][nid]  = shearYZ
+            self.shearXZ[eid][nid]  = shearXZ
 
     def addSort1(self,nNodes,dt,data):
         [eid,parent,coord,icord,theta,forces] = data
@@ -1050,16 +1011,15 @@ class ComplexForce_VU_2D(scalarObject): # 189-VUQUAD,190-VUTRIA
         self.shearXZ[dt][eid] = {}
 
         for force in forces:
-            [nid,membraneXr,membraneYr,membraneXYr,bendingXr,bendingYr,bendingXYr,shearYZr,shearXZr,
-                 membraneXi,membraneYi,membraneXYi,bendingXi,bendingYi,bendingXYi,shearYZi,shearXZi] = force
-            self.membraneX[dt][eid][nid]  = complex(membraneXr, membraneXi)
-            self.membraneY[dt][eid][nid]  = complex(membraneYr, membraneYi)
-            self.membraneXY[dt][eid][nid] = complex(membraneXYr,membraneXYi)
-            self.bendingX[dt][eid][nid]   = complex(bendingXr,  bendingXi)
-            self.bendingY[dt][eid][nid]   = complex(bendingYr,  bendingYi)
-            self.bendingXY[dt][eid][nid]  = complex(bendingXYr, bendingXYi)
-            self.shearYZ[dt][eid][nid]  = complex(shearYZr,shearYZi)
-            self.shearXZ[dt][eid][nid]  = complex(shearXZr,shearXZi)
+            [nid,membraneX,membraneY,membraneXY,bendingX,bendingY,bendingXY,shearYZ,shearXZ] = force
+            self.membraneX[dt][eid][nid]  = membraneX
+            self.membraneY[dt][eid][nid]  = membraneY
+            self.membraneXY[dt][eid][nid] = membraneXY
+            self.bendingX[dt][eid][nid]   = bendingX
+            self.bendingY[dt][eid][nid]   = bendingY
+            self.bendingXY[dt][eid][nid]  = bendingXY
+            self.shearYZ[dt][eid][nid]  = shearYZ
+            self.shearXZ[dt][eid][nid]  = shearXZ
 
     def __repr__(self):
         return str(self.membraneX)
