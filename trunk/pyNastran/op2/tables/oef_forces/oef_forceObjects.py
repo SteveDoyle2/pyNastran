@@ -95,6 +95,7 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
     def add(self,dt,data):
         [eid,nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq] = data
         #print "CBEAM add   ",data
+
         #self.eType[eid] = eType
         self.nodes[eid][sd] = nid
         self.bendingMoment[eid][sd] = [bm1,bm2]
@@ -565,6 +566,7 @@ class RealPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
+
         self.mx[eid] = [mx]
         self.my[eid] = [my]
         self.mxy[eid] = [mxy]
@@ -628,6 +630,7 @@ class RealPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #self.eType[eid] = eType
         self.term[eid] = term
         self.ngrids[eid] = nid
+
         self.mx[dt][eid] = [mx]
         self.my[dt][eid] = [my]
         self.mxy[dt][eid] = [mxy]
@@ -1186,6 +1189,7 @@ class RealForce_VU(scalarObject): # 191-VUBEAM
         self.torsion[dt][eid]  = {}
         self.bendingY[dt][eid] = {}
         self.bendingZ[dt][eid] = {}
+
         for force in forces:
             [nid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ] = force
             self.forceX[dt][eid][nid]  = forceX
@@ -1279,7 +1283,7 @@ class RealForce_VU_2D(scalarObject): # 190-VUTRIA # 189-VUQUAD
         self.shearXZ[eid] = {}
 
         for force in forces:
-            [nid,membraneX,membraneY,membraneXY,_,_,_,bendingX,bendingY,bendingXY,shearYZ,shearXZ,_] = force
+            [nid,membraneX,membraneY,membraneXY,bendingX,bendingY,bendingXY,shearYZ,shearXZ] = force
             self.membraneX[eid][nid]  = membraneX
             self.membraneY[eid][nid]  = membraneY
             self.membraneXY[eid][nid] = membraneXY
@@ -1291,35 +1295,12 @@ class RealForce_VU_2D(scalarObject): # 190-VUTRIA # 189-VUQUAD
 
     def addSort1(self,nNodes,dt,data):
         [eid,parent,coord,icord,theta,forces] = data
-        if dt not in self.membraneX:
-            self.addNewTransient(dt)
-        self.parent[eid] = parent
-        self.coord[eid] = coord
-        self.icord[eid] = icord
-        self.theta[eid] = theta
-        #self.eType[eid]    = eType
-        
-        self.membraneX[dt][eid]  = {}
-        self.membraneY[dt][eid]  = {}
-        self.membraneXY[dt][eid] = {}
-        self.bendingX[dt][eid]  = {}
-        self.bendingY[dt][eid]  = {}
-        self.bendingXY[dt][eid] = {}
-        self.shearYZ[dt][eid] = {}
-        self.shearXZ[dt][eid] = {}
-        for force in forces:
-            [nid,membraneX,membraneY,membraneXY,_,_,_,bendingX,bendingY,bendingXY,shearYZ,shearXZ,_] = force
-            self.membraneX[dt][eid][nid]  = membraneX
-            self.membraneY[dt][eid][nid]  = membraneY
-            self.membraneXY[dt][eid][nid] = membraneXY
-            self.bendingX[dt][eid][nid]  = bendingX
-            self.bendingY[dt][eid][nid]  = bendingY
-            self.bendingXY[dt][eid][nid] = bendingXY
-            self.shearYZ[dt][eid][nid]  = shearYZ
-            self.shearXZ[dt][eid][nid]  = shearXZ
+        self._fillObject(dt,eid,parent,coord,icord,theta,forces)
 
     def addSort2(self,nNodes,eid,data):
         [dt,parent,coord,icord,theta,forces] = data
+        self._fillObject(dt,eid,parent,coord,icord,theta,forces)
+    def _fillObject(self,dt,eid,parent,coord,icord,theta,forces):
         if dt not in self.membraneX:
             self.addNewTransient(dt)
         self.parent[eid] = parent
@@ -1336,8 +1317,9 @@ class RealForce_VU_2D(scalarObject): # 190-VUTRIA # 189-VUQUAD
         self.bendingXY[dt][eid] = {}
         self.shearYZ[dt][eid] = {}
         self.shearXZ[dt][eid] = {}
+
         for force in forces:
-            [nid,membraneX,membraneY,membraneXY,_,_,_,bendingX,bendingY,bendingXY,shearYZ,shearXZ,_] = force
+            [nid,membraneX,membraneY,membraneXY,bendingX,bendingY,bendingXY,shearYZ,shearXZ] = force
             self.membraneX[dt][eid][nid]  = membraneX
             self.membraneY[dt][eid][nid]  = membraneY
             self.membraneXY[dt][eid][nid] = membraneXY
