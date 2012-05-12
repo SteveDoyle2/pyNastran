@@ -104,12 +104,6 @@ class OEE(object):
         
         if self.tableCode==18:
             self.readStrainEnergy_table18()
-        #if tfsCode==[18,1,0]:
-            #self.readStrainEnergy_table18_format1_sort0()
-        #elif fsCode==[18,1,1]:
-        #    self.readOEE_Data_format1_sort1()
-        #elif fsCode==[18,2,1]:
-        #    self.readOEE_Data_format2_sort1()
         else:
             #self.skipOES_Element()
             raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))

@@ -191,21 +191,22 @@ class OP2(BDF,  # BDF methods
 
         # OEF
         # rename to staticLoads/thermalLoads
-        self.forces = {}
+        #self.forces = {}
 
         self.rodForces = {}
-        self.viscForces = {}
-        self.beamForces = {}
-        self.shearForces  = {}
-        self.springForces = {}
         self.barForces = {}
         self.bar100Forces = {}
+        self.beamForces = {}
         self.bendForces = {}
         self.bushForces = {}
+        self.gapForces = {}
         self.plateForces = {}
         self.plateForces2 = {}
+        self.shearForces  = {}
+        self.solidPressureForces = {}
+        self.springForces = {}
+        self.viscForces = {}
         
-        self.pentaPressureForces = {}
         self.force_VU = {}
         self.force_VU_2D = {}
         
@@ -239,7 +240,9 @@ class OP2(BDF,  # BDF methods
         self.rodStress  = {}
         ## OES - isotropic CROD/CONROD/CTUBE
         self.rodStrain  = {}
+        ## OES - nonlinear CROD/CONROD/CTUBE
         self.nonlinearRodStress = {}
+        ## OES - nonlinear CROD/CONROD/CTUBE
         self.nonlinearRodStrain = {}
         ## OES - isotropic CBAR
         self.barStress  = {}
@@ -256,6 +259,7 @@ class OP2(BDF,  # BDF methods
         self.plateStrain = {}
         ## OESNLXR - CTRIA3/CQUAD4
         self.nonlinearPlateStress = {}
+        ## OESNLXR - CTRIA3/CQUAD4
         self.nonlinearPlateStrain = {}
         self.hyperelasticPlateStress = {}
         self.hyperelasticPlateStrain = {}
