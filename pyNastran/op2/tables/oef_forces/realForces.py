@@ -506,7 +506,9 @@ class RealForces(object):
                 self.data = self.data[52: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = unpack(formatAll, eData)
-                forces.append(out)
+                (vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d) = out
+                out2 = (vugrid,mfx,mfy,mfxy,bmx,bmy,bmxy,syz,szx)
+                forces.append(out2)
             dataIn.append(forces)
             #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)

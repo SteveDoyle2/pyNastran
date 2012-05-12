@@ -63,13 +63,13 @@ class ComplexForces(object):
                         bm1i,bm2i,ts1i,ts2i,afi,ttrqi,wtrqi) = out
 
                 if isMagnitudePhase:
-                    bm1   = polarToRealImag(bm1r,bm1i)
-                    bm2   = polarToRealImag(bm2r,bm2i)
-                    ts1   = polarToRealImag(ts1r,ts1i)
-                    ts2   = polarToRealImag(ts2r,ts2i)
-                    af    = polarToRealImag(afr,afi)
-                    ttrqr = polarToRealImag(ttrqr,ttrqi)
-                    wtrq  = polarToRealImag(wtrqr,wtrqi)
+                    bm1  = polarToRealImag(bm1r,bm1i)
+                    bm2  = polarToRealImag(bm2r,bm2i)
+                    ts1  = polarToRealImag(ts1r,ts1i)
+                    ts2  = polarToRealImag(ts2r,ts2i)
+                    af   = polarToRealImag(afr,afi)
+                    ttrq = polarToRealImag(ttrqr,ttrqi)
+                    wtrq = polarToRealImag(wtrqr,wtrqi)
                 else:
                     bm1  = complex(bm1r,bm1i)
                     bm2  = complex(bm2r,bm2i)
@@ -272,6 +272,7 @@ class ComplexForces(object):
             if isMagnitudePhase:
                 mx   = polarToRealImag(mxr,mxi)
                 my   = polarToRealImag(myr,myi)
+                mxy  = polarToRealImag(mxyr,mxyi)
                 bmx  = polarToRealImag(bmxr,bmxi)
                 bmy  = polarToRealImag(bmyr,bmyi)
                 bmxy = polarToRealImag(bmxyr,bmxyi)
@@ -280,6 +281,7 @@ class ComplexForces(object):
             else:
                 mx   = complex(mxr,mxi)
                 my   = complex(myr,myi)
+                mxy  = complex(mxyr,mxyi)
                 bmx  = complex(bmxr,bmxi)
                 bmy  = complex(bmyr,bmyi)
                 bmxy = complex(bmxyr,bmxyi)
@@ -351,9 +353,29 @@ class ComplexForces(object):
             for i in range(nNodes-1):  ## @todo fix crash...
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
-                dataIn = unpack(allFormat, eData)
-                #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
-                #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
+                out = unpack(allFormat, eData)
+
+                (nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                     mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi) = out
+                if isMagnitudePhase:
+                    mx   = polarToRealImag(mxr,mxi)
+                    my   = polarToRealImag(myr,myi)
+                    mxy  = polarToRealImag(mxyr,mxyi)
+                    bmx  = polarToRealImag(bmxr,bmxi)
+                    bmy  = polarToRealImag(bmyr,bmyi)
+                    bmxy = polarToRealImag(bmxyr,bmxyi)
+                    tx   = polarToRealImag(txr,txi)
+                    ty   = polarToRealImag(tyr,tyi)
+                else:
+                    mx   = complex(mxr,mxi)
+                    my   = complex(myr,myi)
+                    mxy  = complex(mxyr,mxyi)
+                    bmx  = complex(bmxr,bmxi)
+                    bmy  = complex(bmyr,bmyi)
+                    bmxy = complex(bmxyr,bmxyi)
+                    tx   = complex(txr,txi)
+                    ty   = complex(tyr,tyi)
+                dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
                 #print "***%s    " %(self.ElementType(self.elementType)),dataIn
                 
                 self.obj.add(eid2,dt,dataIn)
@@ -387,12 +409,14 @@ class ComplexForces(object):
                 bm1A = polarToRealImag(bm1Ar,bm1Ai); bm1B = polarToRealImag(bm1Br,bm1Bi)
                 bm2A = polarToRealImag(bm2Ar,bm2Ai); bm2B = polarToRealImag(bm2Br,bm2Bi)
                 ts1A = polarToRealImag(ts1Ar,ts1Ai); ts1B = polarToRealImag(ts1Br,ts1Bi)
+                ts2A = polarToRealImag(ts2Ar,ts2Ai); ts2B = polarToRealImag(ts2Br,ts2Bi)
                 afA  = polarToRealImag(afAr, afAi);  afB  = polarToRealImag(afBr, afBi)
                 trqA = polarToRealImag(trqAr,trqAi); trqB = polarToRealImag(trqBr,trqBi)
             else:
                 bm1A = complex(bm1Ar,bm1Ai); bm1B = complex(bm1Br,bm1Bi)
                 bm2A = complex(bm2Ar,bm2Ai); bm2B = complex(bm2Br,bm2Bi)
                 ts1A = complex(ts1Ar,ts1Ai); ts1B = complex(ts1Br,ts1Bi)
+                ts2A = complex(ts2Ar,ts2Ai); ts2B = complex(ts2Br,ts2Bi)
                 afA  = complex(afAr, afAi);  afB  = complex(afBr, afBi)
                 trqA = complex(trqAr,trqAi); trqB = complex(trqBr,trqBi)
 
@@ -515,22 +539,22 @@ class ComplexForces(object):
                               forceXi,shearYi,shearZi,torsioni,bendingYi,bendingZi] = out
 
                 if isMagnitudePhase:
-                    forceX     = polarToRealImag(forceXr,forceXi)
-                    shearY     = polarToRealImag(shearYr,shearYi)
-                    shearZ     = polarToRealImag(shearZr,shearZi)
-                    torsionr   = polarToRealImag(torsionr,torsioni)
-                    bendingYr  = polarToRealImag(bendingYr,bendingYi)
-                    bendingZr  = polarToRealImag(bendingZr,bendingZi)
+                    forceX    = polarToRealImag(forceXr,forceXi)
+                    shearY    = polarToRealImag(shearYr,shearYi)
+                    shearZ    = polarToRealImag(shearZr,shearZi)
+                    torsionr  = polarToRealImag(torsionr,torsioni)
+                    bendingYr = polarToRealImag(bendingYr,bendingYi)
+                    bendingZr = polarToRealImag(bendingZr,bendingZi)
                 else:
-                    forceX     = complex(forceXr,forceXi)
-                    shearY     = complex(shearYr,shearYi)
-                    shearZ     = complex(shearZr,shearZi)
-                    torsionr   = complex(torsionr,torsioni)
-                    bendingYr  = complex(bendingYr,bendingYi)
-                    bendingZr  = complex(bendingZr,bendingZi)
+                    forceX    = complex(forceXr,forceXi)
+                    shearY    = complex(shearYr,shearYi)
+                    shearZ    = complex(shearZr,shearZi)
+                    torsion   = complex(torsionr,torsioni)
+                    bendingY  = complex(bendingYr,bendingYi)
+                    bendingZ  = complex(bendingZr,bendingZi)
 
                 out2 = [vugrid,posit,forceX,shearY,shearZ,torsion,bendingY,bendingZ]
-                forces.append(out)
+                forces.append(out2)
             dataIn.append(forces)
             #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)

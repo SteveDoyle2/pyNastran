@@ -341,7 +341,7 @@ class complexTableObject(scalarObject):
 
     def add(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
-        #msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1,v2,v3r)
+        #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
         #assert isinstance(nodeID,int),nodeID
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
@@ -362,7 +362,7 @@ class complexTableObject(scalarObject):
 
     def addSort1(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
-        #msg = "dt=%s nodeID=%s v1r=%s v2r=%s v3r=%s" %(dt,nodeID,v1,v2,v3)
+        msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
         #print msg
         if dt not in self.translations:
             self.addNewTransient(dt)

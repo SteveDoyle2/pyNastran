@@ -96,7 +96,7 @@ class ctriaxStressObject(stressObject):
         self.oms[dt] = {}
         self.ovm[dt] = {}
 
-    def addNewEid(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def addNewEid(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid]    = {nid: rs}
         self.azimuthal[eid] = {nid: azs}
@@ -106,7 +106,7 @@ class ctriaxStressObject(stressObject):
         self.oms[eid]       = {nid: tmax}
         self.ovm[eid]       = {nid: octs}
 
-    def add(self,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
+    def add(self,dt,eid,nid,rs,azs,As,ss,maxp,tmax,octs):
         #print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
         self.radial[eid][nid]    = rs
         self.azimuthal[eid][nid] = azs

@@ -300,8 +300,10 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             ###
         elif self.elementType in [20,21,22,23]: # CDAMP1,CDAMP2,CDAMP3,CDAMP4
             if self.numWide==numWideReal:
-                self.OEF_Spring() ## @todo update the object
+                self.createTransientObject(self.damperForces,RealDamperForce)
+                self.OEF_Spring() # same reader as for springs
             elif self.numWide==numWideImag:
+                self.createTransientObject(self.damperForces,ComplexDamperForce)
                 self.OEF_Spring_alt()
             else:
                 raise NotImplementedError(self.codeInformation())
