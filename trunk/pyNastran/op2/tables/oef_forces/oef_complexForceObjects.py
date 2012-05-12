@@ -296,6 +296,51 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
     def __repr__(self):
         return str(self.force)
 
+class ComplexDamperForce(scalarObject): # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
+        #self.eType = {}
+        self.force = {}
+
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.dt = dt
+        self.force[dt] = {}
+
+    def add(self,dt,data):
+        [eid,force] = data
+
+        #self.eType[eid] = eType
+        self.force[eid] = force
+
+    def addSort1(self,dt,data):
+        [eid,force] = data
+        if dt not in self.force:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.force[dt][eid] = force
+
+    def addSort2(self,eid,data):
+        [dt,force] = data
+        if dt not in self.force:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.force[dt][eid] = force
+
+    def __repr__(self):
+        return str(self.force)
+
 class ComplexViscForce(scalarObject): # 24-CVISC
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
