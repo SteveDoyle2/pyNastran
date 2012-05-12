@@ -1,11 +1,12 @@
 #summary your rights to using the software
 #labels Featured
 
-= Licensing =
+= Donation =
+pyNastran is free, but any donation to support it's development would be much appreciated.
 
 [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=XH9CY9GDKWSFU&lc=US&item_name=pyNastran&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif]
 
-
+= Licensing =
 
 pyNastran is “free software”; this means that everyone is free to use it and to redistribute it on a free basis. pyNastran is not in the public domain; it is copyrighted and there are restrictions on its distribution, but these restrictions are designed to permit everything that a good cooperating citizen would want to do. What is not allowed is to try to prevent others from further sharing any version of pyNastran that they might get from you.
 
