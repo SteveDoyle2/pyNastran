@@ -6,8 +6,9 @@
  * The OP4 reader is a bit harder to get working, but is an optional package that requires building of C code in addition to requiring Cython.  Assuming you can build a sample Cython project, it'll work.
 
 = User Overview = 
- * Install Python
- * Install numpy, scipy, vtk, & wxPython
+ * Install Python 2.6 or 2.7
+ * Install numpy, scipy, vtk, & wxPython (Python 2.x)
+ * Install numpy, scipy (Python 3.1+)
  * Install Cython for OP4 support
  * Download the latest pyNastran release
  * Extract the zip file
@@ -30,6 +31,7 @@ Python 3.x *should* work, but hasn't really been tested.
  * [http://numpy.org/ numpy 1.6.1  ]
  * vtk 5.8.0
  * wxPython 2.8.12.0
+ * [http://matplotlib.sourceforge.net/ matplotlib 1.1.0] (version 0.5+)
  * Cython 0.15.1
 
 == Install Python C compiler & Cython==
@@ -51,13 +53,13 @@ Python 3.x *should* work, but hasn't really been tested.
 
 ===Windows===
  * run *make* to install the OP4 code
- * if that doesnt work, try *python setup.py build_ext --inplace*
+ * if that doesn't work, try *python setup.py build_ext --inplace*
 
 Enjoy!
 
 = Developer Overview = 
  * Install Python
- * Install numpy, scipy, vtk, & wxPython
+ * Install numpy, scipy, matplotlib, vtk, & wxPython
  * install Doxygen
  * Install Cython (if you want OP4 support)
  * Use subversion to checkout pyNastran
@@ -83,5 +85,3 @@ Enjoy!
 
 === Linux/Mac Step ===
  * open Doxyfile in a text editor and change the python path from    *C:\Python27\python.exe* to your executable location (likely */usr/bin/python* or some variation on that)
-
-Glad to have you aboard!
