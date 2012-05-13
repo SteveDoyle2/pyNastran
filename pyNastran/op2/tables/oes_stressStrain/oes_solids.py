@@ -309,11 +309,7 @@ class solidStressObject(stressObject):
         (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
         return v
     
-    def writeF06(self,header,pageStamp,pageNum=1):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
-        msg = []
-
+    def getF06_Header(self):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -331,20 +327,65 @@ class solidStressObject(stressObject):
                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
-        eTypes = self.eType.values()
-        isTetra=False; isPenta=False; isHexa=False
-        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
-            isTetra = True
-        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
-            isPenta = True
-        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
-            isHexa = True
+        #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        tetraEids = []
+        hexaEids  = []
+        pentaEids = []
+        for eid,eType in sorted(self.eType.iteritems()):
+            if eType=='CTETRA' or eType=='TETRA':
+                tetraEids.append(eid)
+            elif eType=='CPENTA' or eType=='PENTA':
+                pentaEids.append(eid)
+            elif eType=='CHEXA' or eType=='HEXA':
+                hexaEids.append(eid)
+            else:
+                raise NotImplementedError('eType=|%r|' %(eType))
+            ###
+        ###
+        return (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids)
         
-        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        for eid,oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
+        msg = []
 
-            k = oxxNodes.keys()
+        (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
+        #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        if tetraEids:
+            msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
+            pageStamp+=1
+        if hexaEids:
+            msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
+            pageStamp+=1
+        if pentaEids:
+            msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
+            pageStamp+=1
+        ###
+        return (''.join(msg),pageNum-1)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+        msg = []
+        (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
+        for dt in dts:
+            if tetraEids:
+                msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
+                pageStamp+=1
+            if hexaEids:
+                msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
+                pageStamp+=1
+            if pentaEids:
+                msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
+                pageStamp+=1
+            ###
+        return (''.join(msg),pageStamp-1)
+
+    def writeElement(self,eType,nNodes,eids,dt,header,tetraMsg,pageStamp=1,f=None):
+        dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
+        header[1] = dtLine
+        for eid in eids:
+            #eType = self.eType[eid]
+
+            k = self.oxxs[dt][eid].keys()
             #kc = k.index('C')
             #k.pop(kc)
             k.sort()
@@ -352,156 +393,39 @@ class solidStressObject(stressObject):
             #print k
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
             for nid in ['C']+k:
-                oxx = self.oxx[eid][nid]
-                oyy = self.oyy[eid][nid]
-                ozz = self.ozz[eid][nid]
-                txy = self.txy[eid][nid]
-                tyz = self.tyz[eid][nid]
-                txz = self.txz[eid][nid]
+                oxx = self.oxx[dt][eid][nid]
+                oyy = self.oyy[dt][eid][nid]
+                ozz = self.ozz[dt][eid][nid]
+                txy = self.txy[dt][eid][nid]
+                tyz = self.tyz[dt][eid][nid]
+                txz = self.txz[dt][eid][nid]
 
-                o1 = self.o1[eid][nid]
-                o2 = self.o2[eid][nid]
-                o3 = self.o3[eid][nid]
-                ovm = self.ovmShear[eid][nid]
+                o1 = self.o1[dt][eid][nid]
+                o2 = self.o2[dt][eid][nid]
+                o3 = self.o3[dt][eid][nid]
+                ovm = self.ovmShear[dt][eid][nid]
                 p = (o1+o2+o3)/-3.
 
                 if nid=='C': nid='CENTER'
                 #print "nid = |%r|" %(nid)
                 A = [[oxx,txy,txz],
                      [txy,oyy,tyz],
-                     [txz,tyz,ozz]]
+                     [txz,oyz,ozz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
-                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,2],v[0,0],v[0,1],p,ovm)
-                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,2],v[1,0],v[1,1])
-                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,2],v[2,0],v[2,1])
-            ###
-            if eType=='CTETRA' or eType=='TETRA':
-                tetraMsg.append(msgA)
-            elif eType=='CPENTA' or eType=='PENTA':
-                pentaMsg.append(msgA)
-            elif eType=='CHEXA' or eType=='HEXA':
-                hexaMsg.append(msgA)
-            else:
-                raise NotImplementedError('eType=|%r|' %(eType))
-            ###                
-        ###
-        if isTetra:
-            msg += header+tetraMsg
-            msg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        if isPenta:
-            msg += header+pentaMsg
-            msg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        if isHexa:
-            msg += header+hexaMsg
-            msg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
-
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
-        msg = []
-
-        if self.isVonMises():
-            vonMises = 'VON MISES'
-        else:
-            vonMises = 'MAX SHEAR'
-
-        tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
-
-        pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
-
-        hexaMsg  = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
-
-        eTypes = self.eType.values()
-        isTetra=False; isPenta=False; isHexa=False
-        #print eTypes
-        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
-            isTetra = True
-        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
-            isPenta = True
-        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
-            isHexa = True
-        
-        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        
-        for dt,oxxs in sorted(self.oxx.iteritems()):
-            dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
-            header[1] = dtLine
-            #print oxxs
-            for eid,oxxNodes in sorted(oxxs.iteritems()):
-                eType = self.eType[eid]
-                #self.eType[eid] = eType
-                #print "eid=%s eType=%s" %(eid,eType)
-
-                k = oxxNodes.keys()
-                #kc = k.index('C')
-                #k.pop(kc)
-                k.sort()
-                k.pop(-1)
-                #print k
-                msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
-                for nid in ['C']+k:
-                    oxx = self.oxx[dt][eid][nid]
-                    oyy = self.oyy[dt][eid][nid]
-                    ozz = self.ozz[dt][eid][nid]
-                    txy = self.txy[dt][eid][nid]
-                    tyz = self.tyz[dt][eid][nid]
-                    txz = self.txz[dt][eid][nid]
-
-                    o1 = self.o1[dt][eid][nid]
-                    o2 = self.o2[dt][eid][nid]
-                    o3 = self.o3[dt][eid][nid]
-                    #print self.ovmShear
-                    ovm = self.ovmShear[dt][eid][nid]
-                    p = (o1+o2+o3)/-3.
-
-                    if nid=='C': nid='CENTER'
-                    #print "nid = |%r|" %(nid)
-                    A = [[oxx,txy,txz],
-                         [txy,oyy,tyz],
-                         [txz,tyz,ozz]]
-                    (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
-
-                    ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
-                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,2],v[0,0],v[0,1],p,ovm)
-                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,2],v[1,0],v[1,1])
-                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,2],v[2,0],v[2,1])
-                ###
-                #print eType
-                if eType=='CTETRA' or eType=='TETRA':
-                    tetraMsg.append(msgA)
-                elif eType=='CPENTA' or eType=='PENTA':
-                    pentaMsg.append(msgA)
-                elif eType=='CHEXA' or eType=='HEXA':
-                    hexaMsg.append(msgA)
-                else:
-                    raise NotImplementedError('eType=|%r|' %(eType))
-                ###                
-            ###
-            if isTetra:
-                msg += header+tetraMsg
-                msg.append(pageStamp+str(pageNum)+'\n')
-                pageNum+=1
-            if isPenta:
-                msg += header+pentaMsg
-                msg.append(pageStamp+str(pageNum)+'\n')
-                pageNum+=1
-            if isHexa:
-                msg += header+hexaMsg
-                msg.append(pageStamp+str(pageNum)+'\n')
-                pageNum+=1
+                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([exx,oyy,ozz,oxy,oyz,oxz,o1,o2,o3,p,ovm])
+                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,1],v[0,2],v[0,0],p,ovm.strip())
+                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,1],v[1,2],v[1,0])
+                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,1],v[2,2],v[2,0])
             ###
         ###
-        return (''.join(msg),pageNum-1)
+        msg += header+tetraMsg
+        msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        ###
+        return ''.join(msg)
 
     def __repr__(self):
         #print "self.dt = ",self.dt
@@ -906,11 +830,7 @@ class solidStrainObject(strainObject):
         (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def writeF06(self,header,pageStamp,pageNum=1):
-        if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
-        msg = []
-
+    def getF06_Header(self):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -928,20 +848,66 @@ class solidStrainObject(strainObject):
                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
 
-        eTypes = self.eType.values()
-        isTetra=False; isPenta=False; isHexa=False
-        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
-            isTetra = True
-        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
-            isPenta = True
-        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
-            isHexa = True
-        
-        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        for eid,exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
 
-            k = exxNodes.keys()
+        #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        tetraEids = []
+        hexaEids  = []
+        pentaEids = []
+        for eid,eType in sorted(self.eType.iteritems()):
+            if eType=='CTETRA' or eType=='TETRA':
+                tetraEids.append(eid)
+            elif eType=='CPENTA' or eType=='PENTA':
+                pentaEids.append(eid)
+            elif eType=='CHEXA' or eType=='HEXA':
+                hexaEids.append(eid)
+            else:
+                raise NotImplementedError('eType=|%r|' %(eType))
+            ###
+        ###
+        return (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids)
+
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
+        msg = []
+
+        (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
+        #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        if tetraEids:
+            msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
+            pageStamp+=1
+        if hexaEids:
+            msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
+            pageStamp+=1
+        if pentaEids:
+            msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
+            pageStamp+=1
+        ###
+        return (''.join(msg),pageNum-1)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+        msg = []
+        (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
+        for dt in dts:
+            if tetraEids:
+                msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
+                pageStamp+=1
+            if hexaEids:
+                msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
+                pageStamp+=1
+            if pentaEids:
+                msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
+                pageStamp+=1
+            ###
+        return (''.join(msg),pageStamp-1)
+
+    def writeElement(self,eType,nNodes,eids,dt,header,tetraMsg,pageStamp=1,f=None):
+        dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
+        header[1] = dtLine
+        for eid in eids:
+            #eType = self.eType[eid]
+
+            k = self.exxs[dt][eid].keys()
             #kc = k.index('C')
             #k.pop(kc)
             k.sort()
@@ -949,150 +915,39 @@ class solidStrainObject(strainObject):
             #print k
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
             for nid in ['C']+k:
-                exx = self.exx[eid][nid]
-                eyy = self.eyy[eid][nid]
-                ezz = self.ezz[eid][nid]
-                exy = self.exy[eid][nid]
-                eyz = self.eyz[eid][nid]
-                exz = self.exz[eid][nid]
+                exx = self.exx[dt][eid][nid]
+                eyy = self.eyy[dt][eid][nid]
+                ezz = self.ezz[dt][eid][nid]
+                exy = self.exy[dt][eid][nid]
+                eyz = self.eyz[dt][eid][nid]
+                exz = self.exz[dt][eid][nid]
 
-                e1 = self.e1[eid][nid]
-                e2 = self.e2[eid][nid]
-                e3 = self.e3[eid][nid]
-                evm = self.evmShear[eid][nid]
+                e1 = self.e1[dt][eid][nid]
+                e2 = self.e2[dt][eid][nid]
+                e3 = self.e3[dt][eid][nid]
+                evm = self.evmShear[dt][eid][nid]
                 p = (e1+e2+e3)/-3.
 
-                if nid=='C': nodeID='CENTER'
+                if nid=='C': nid='CENTER'
+                #print "nid = |%r|" %(nid)
                 A = [[exx,exy,exz],
                      [exy,eyy,eyz],
                      [exz,eyz,ezz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
                 ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
-                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,2],v[0,0],v[0,1],p,evm.strip())
-                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,2],v[1,0],v[1,1])
-                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,2],v[2,0],v[2,1])
-            ###
-            if eType=='CTETRA' or eType=='TETRA':
-                tetraMsg.append(msgA)
-            elif eType=='CPENTA' or eType=='PENTA':
-                pentaMsg.append(msgA)
-            elif eType=='CHEXA' or eType=='HEXA':
-                hexaMsg.append(msgA)
-            else:
-                raise NotImplementedError('eType=|%r|' %(eType))
+                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,1],v[0,2],v[0,0],p,evm.strip())
+                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,1],v[1,2],v[1,0])
+                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0])
             ###
         ###
-        msg = []
-        if isTetra:
-            msg += header+tetraMsg
-            msg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        if isPenta:
-            msg += header+pentaMsg
-            msg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        if isHexa:
-            msg += header+hexaMsg
-            msg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
-
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
-        msg = []
-
-        if self.isVonMises():
-            vonMises = 'VON MISES'
-        else:
-            vonMises = 'MAX SHEAR'
-
-        tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
-
-        pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
-
-        hexaMsg  = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' %(vonMises)]
-
-        eTypes = self.eType.values()
-        isTetra=False; isPenta=False; isHexa=False
-        if 'CTETRA' in eTypes or 'TETRA' in eTypes:
-            isTetra = True
-        if 'CPENTA' in eTypes or 'PENTA' in eTypes:
-            isPenta = True
-        if 'CHEXA' in eTypes or 'HEXA' in eTypes:
-            isHexa = True
-        
-        nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        
-        for dt,exxs in sorted(self.exx.iteritems()):            
-            dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
-            header[1] = dtLine
-            for eid,exxNodes in sorted(exxs.iteritems()):
-                eType = self.eType[eid]
-
-                k = exxNodes.keys()
-                #kc = k.index('C')
-                #k.pop(kc)
-                k.sort()
-                k.pop(-1)
-                #print k
-                msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
-                for nid in ['C']+k:
-                    exx = self.exx[dt][eid][nid]
-                    eyy = self.eyy[dt][eid][nid]
-                    ezz = self.ezz[dt][eid][nid]
-                    exy = self.exy[dt][eid][nid]
-                    eyz = self.eyz[dt][eid][nid]
-                    exz = self.exz[dt][eid][nid]
-
-                    e1 = self.e1[dt][eid][nid]
-                    e2 = self.e2[dt][eid][nid]
-                    e3 = self.e3[dt][eid][nid]
-                    evm = self.evmShear[dt][eid][nid]
-                    p = (e1+e2+e3)/-3.
-
-                    if nid=='C': nid='CENTER'
-                    #print "nid = |%r|" %(nid)
-                    A = [[exx,exy,exz],
-                         [exy,eyy,eyz],
-                         [exz,eyz,ezz]]
-                    (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
-
-                    ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
-                    msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,1],v[0,2],v[0,0],p,evm.strip())
-                    msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,1],v[1,2],v[1,0])
-                    msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0])
-                ###
-                if eType=='CTETRA' or eType=='TETRA':
-                    tetraMsg.append(msgA)
-                elif eType=='CPENTA' or eType=='PENTA':
-                    pentaMsg.append(msgA)
-                elif eType=='CHEXA' or eType=='HEXA':
-                    hexaMsg.append(msgA)
-                else:
-                    raise NotImplementedError('eType=|%r|' %(eType))
-                ###                
-            ###
-            if isTetra:
-                msg += header+tetraMsg
-                msg.append(pageStamp+str(pageNum)+'\n')
-                pageNum+=1
-            if isPenta:
-                msg += header+pentaMsg
-                msg.append(pageStamp+str(pageNum)+'\n')
-                pageNum+=1
-            if isHexa:
-                msg += header+hexaMsg
-                msg.append(pageStamp+str(pageNum)+'\n')
-                pageNum+=1
-            ###
+        msg += header+tetraMsg
+        msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         ###
-        return (''.join(msg),pageNum-1)
+        return ''.join(msg)
 
     def __repr__(self):
         if self.nonlinearFactor is not None:
@@ -1167,16 +1022,19 @@ class solidStrainObject(strainObject):
         return msg
 
     def __reprTransient__(self):
-        msg = '---SOLID STRAIN---\n'
+        #return ''
+        msg = ['---SOLID STRAIN---\n']
         headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
+        msg2 = '%-6s %6s %8s ' %('EID','eType','nodeID')
         for header in headers:
-            msg += '%10s ' %(header)
-        msg += '\n'
+            msg2 += '%10s ' %(header)
+        msg2 += '\n'
+        msg.append(msg2)
         for dt,exxs in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            msg.append('%s = %g\n' %(self.dataCode['name'],dt))
             for eid,exxNodes in sorted(exxs.iteritems()):
                 eType = self.eType[eid]
+                msg2 = ''
                 for nid in sorted(exxNodes):
                     exx = self.exx[dt][eid][nid]
                     eyy = self.eyy[dt][eid][nid]
@@ -1185,17 +1043,18 @@ class solidStrainObject(strainObject):
                     eyz = self.eyz[dt][eid][nid]
                     exz = self.exz[dt][eid][nid]
                     evm = self.evmShear[dt][eid][nid]
-                    msg += '%-6i %6s %8s ' %(eid,eType,nid)
+                    msg2 += '%-6i %6s %8s ' %(eid,eType,nid)
                     vals = [exx,eyy,ezz,exy,eyz,exz,evm]
                     for val in vals:
                         if abs(val)<1e-6:
-                            msg += '%10s ' %('0')
+                            msg2 += '%10s ' %('0')
                         else:
-                            msg += '%10.3e ' %(val)
+                            msg2 += '%10.3e ' %(val)
                         ###
-                    msg += '\n'
+                    msg2 += '\n'
+                    msg.append(msg2)
                     #msg += "eid=%-4s eType=%-6s nid=%-2i exx=%-5i eyy=%-5i ezz=%-5i exy=%-5i eyz=%-5i exz=%-5i evm=%-5i\n" %(eid,eType,nid,exx,eyy,ezz,exy,eyz,exz,evm)
                 ###
             ###
         ###
-        return msg
+        return ''.join(msg)

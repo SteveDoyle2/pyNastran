@@ -142,7 +142,7 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
         self.totalTorque[dt][eid] = {sd:ttrq}
         self.warpingTorque[dt][eid] = {sd:wtrq}
 
-    def writeF06Transient(self,header,pageStamp,pageNum):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                  '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
@@ -169,12 +169,15 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
                     msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' %(nid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq))
                 ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.dt is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                       '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                       '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
@@ -191,6 +194,9 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
                 msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' %(eid,bm1,bm2,ts1,ts2,af,ttrq,wtrq))
             ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
     def __repr__(self):
@@ -348,12 +354,12 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def writeF06Transient(self,header,pageStamp,pageNum):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
         msg = []
-        for dt,force in sorted(self.force.items()):
+        for dt,Force in sorted(self.force.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
 
@@ -361,31 +367,56 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             forces = []
             elements = []
             line = '   '
-            for eid,f in sorted(force.items()):
+            for eid,force in sorted(Force.items()):
                 elements.append(eid)
-                forces.append(f)
+                forces.append(force)
                 #pack.append(eid)
                 #pack.append(f)
                 line += '%13s  %13s     ' %(eid,f)
                 if len(forces)==3:
                     msg.append(line.rstrip()+'\n')
-                ###                
+                ###
             ###
             if forces:
                 msg.append(line.rstrip()+'\n')
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         ###
         return (''.join(msg),pageNum-1)
         
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.dt is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                       ' \n',
                       '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
+        packs = []
+        forces = []
+        elements = []
+        line = '   '
+        for eid,f in sorted(force.items()):
+            elements.append(eid)
+            forces.append(f)
+            #pack.append(eid)
+            #pack.append(f)
+            line += '%13s  %13s     ' %(eid,f)
+            if len(forces)==3:
+                msg.append(line.rstrip()+'\n')
+            ###
+        ###
+        if forces:
+            msg.append(line.rstrip()+'\n')
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
     def __repr__(self):
@@ -433,7 +464,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def writeF06Transient(self,header,pageStamp,pageNum):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
@@ -460,18 +491,42 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
                 msg.append(line.rstrip()+'\n')
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         ###
         return (''.join(msg),pageNum-1)
         
 
-    def writeF06(self,header,pageStamp,pageNum=1):
-        raise NotImplementedError()
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.dt is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                       ' \n',
                       '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
+        packs = []
+        forces = []
+        elements = []
+        line = '   '
+        for eid,f in sorted(force.items()):
+            elements.append(eid)
+            forces.append(f)
+            #pack.append(eid)
+            #pack.append(f)
+            line += '%13s  %13s     ' %(eid,f)
+            if len(forces)==3:
+                msg.append(line.rstrip()+'\n')
+            ###                
+        ###
+        if forces:
+            msg.append(line.rstrip()+'\n')
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
     def __repr__(self):
@@ -806,7 +861,7 @@ class RealCBARForce(scalarObject): # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
@@ -826,13 +881,16 @@ class RealCBARForce(scalarObject): # 34-CBAR
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.dt is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
@@ -848,6 +906,9 @@ class RealCBARForce(scalarObject): # 34-CBAR
             msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %(eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
     def __repr__(self):
@@ -1118,7 +1179,7 @@ class RealPentaPressureForce(scalarObject): # 77-PENTA_PR,78-TETRA_PR
         self.velocity[dt][eid] = [vx,vy,vz]
         self.pressure[dt][eid] = pressure
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
@@ -1126,7 +1187,7 @@ class RealPentaPressureForce(scalarObject): # 77-PENTA_PR,78-TETRA_PR
             return self.writeF06Transient(header,pageStamp,pageNum)
         raise NotImplementedError()
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
@@ -1144,9 +1205,11 @@ class RealPentaPressureForce(scalarObject): # 77-PENTA_PR,78-TETRA_PR
                 eType = 'PENPR'
                 msg.append('0%13s    %5s               %13s             %13s             %13s             %-s\n' %(eid,eType,ax,ay,az,pressure))
             ###
-            pageNum+=1
-#'0 5.000000E-02    PENPR                7.617838E+01             -9.394992E+01              2.069810E+02              4.495885E+00'
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
@@ -1386,6 +1449,7 @@ class RealForce_VU_2D(scalarObject): # 190-VUTRIA # 189-VUQUAD
     def addSort2(self,nNodes,eid,data):
         [dt,parent,coord,icord,theta,forces] = data
         self._fillObject(dt,eid,parent,coord,icord,theta,forces)
+
     def _fillObject(self,dt,eid,parent,coord,icord,theta,forces):
         if dt not in self.membraneX:
             self.addNewTransient(dt)
