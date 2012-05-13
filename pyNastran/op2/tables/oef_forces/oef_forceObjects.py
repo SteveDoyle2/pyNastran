@@ -845,7 +845,7 @@ class RealCBARForce(scalarObject): # 34-CBAR
             trq = self.torque[eid]
             (vals2,isAllZeros) = self.writeF06Floats13E([bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq])
             [bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = vals2
-            msg.append('      %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %(eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq))
+            msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %(eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)

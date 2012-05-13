@@ -169,7 +169,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             marker = self.getMarker()
             self.goto(n)
             if marker!=146:
-                print "marker = ",marker
+                self.log.debug("marker = %s" %(marker))
                 exitFast = True
                 break
 

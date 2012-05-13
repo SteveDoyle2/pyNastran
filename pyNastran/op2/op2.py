@@ -109,11 +109,13 @@ class OP2(BDF,  # BDF methods
                              'GEOM1N', #???
                              'EPT', 'MPT',  # properties/materials
                              'EPTS','MPTS', # properties/materials - superelements
+                             'EDTS',         # ???
                              'DYNAMIC','DYNAMICS',
                              'DIT',                           # tables (e.g. TABLED1)
                              'LAMA','BLAMA',                  # eigenvalues
 
-                             'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
+                             'BGPDT','BGPDTS',                # boundary grids???
+                             'EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
                              'DESTAB',                        # design variables
                              'OQG1','OQGV1','OQMG1',          # spc/mpc forces
                              
@@ -303,7 +305,7 @@ class OP2(BDF,  # BDF methods
         if 0:
             marker = 0
             #print self.printSection(200)
-            sys.exit()
+            sys.exit('stopping in readTapeCode in op2.py')
             while marker != -1:
                 ints = self.readIntBlock()
                 marker = ints[0]
@@ -518,7 +520,9 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DUMMY_GEOM(tableName)
                     elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
                         self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
+                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','EDOM',]:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['BGPDT','BGPDTS','EDTS',]:
                         self.readTable_DUMMY_GEOM(tableName)
                     else:
                         raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))

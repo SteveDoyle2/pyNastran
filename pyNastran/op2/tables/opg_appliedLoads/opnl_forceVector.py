@@ -6,9 +6,9 @@ class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
 
         msg = header+['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                ' \n',
@@ -27,9 +27,12 @@ class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
             ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         msg = []
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                ' \n',
@@ -53,6 +56,10 @@ class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
         return (''.join(msg),pageNum-1)
 
     def __reprTransient__(self):
@@ -112,9 +119,9 @@ class complexForceVectorObject(complexTableObject): # tableCode=12, approachCode
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                       C O M P L E X   FORCE   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -138,9 +145,12 @@ class complexForceVectorObject(complexTableObject): # tableCode=12, approachCode
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -168,6 +178,9 @@ class complexForceVectorObject(complexTableObject): # tableCode=12, approachCode
                 msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
 

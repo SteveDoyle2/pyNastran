@@ -181,7 +181,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             ###
         return msg
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
@@ -193,12 +193,18 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                 msg += header+words
                 msg += self.printTempLines(temperatures)
                 msg.append(pageStamp+str(pageNum)+'\n')
+                if f is not None:
+                    f.write(''.join(msg))
+                    msg = ['']
                 pageNum += 1
             ###
             return(''.join(msg),pageNum-1) # transient
 
         msg += self.printTempLines(self.temperatures)
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return(''.join(msg),pageNum)  # static
     
     def printTempLines(self,temperatures):

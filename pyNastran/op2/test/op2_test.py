@@ -44,12 +44,32 @@ def parseSkippedCards(fname):
     f.close()
     return filesToAnalyze
 
+def getAllFiles(foldersFile,fileType):
+    f = open(foldersFile,'r')
+    lines = f.readlines()
+    files2 = []
+    for line in lines:
+        moveDir = os.path.join('r"'+line.strip()+'"')
+        moveDir = line.strip()
+        if moveDir:
+            print "moveDir = ",moveDir
+            assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
+            #print getFilesOfType(moveDir,fileType)
+            files2 += getFilesOfType(moveDir,fileType)
+        ###
+    ###
+    #print files2
+    #print "len(files2) = ",len(files2)
+    #asdf
+    return files2
+
 if __name__=='__main__':
     # works
     files = getFilesOfType('tests','.op2')
     
     #moveDir = r'D:\work\move\hard_demo'
-    moveDir = r'D:\work\move\move_tpl'
+    #moveDir = r'D:\work\move\move_tpl'
+    foldersFile = 'tests/foldersRead.txt'
     #moveDir = r'D:\work\move\solid_shell_bar'
     #files2 = ['ann6611.op2']
 
@@ -67,7 +87,7 @@ if __name__=='__main__':
     if getSkipCards:
         files2 = parseSkippedCards('skippedCards.out')
     elif regenerate:
-        files2 = getFilesOfType(moveDir,'.op2')
+        files2 = getAllFiles(foldersFile,'.op2')
         files2 += files
     else:
         files2 = getFailedFiles('failedCases.in')
@@ -82,6 +102,7 @@ if __name__=='__main__':
     #            HIS, R1B        EQEXIN
     #skipFiles = ['accopt3.op2','acms111m.op2','adjoint.op2','aerobeam.op2',] # tpl
     skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
+    #skipFiles = []
     #print files
 
     nStart = 0

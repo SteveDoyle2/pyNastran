@@ -33,6 +33,7 @@ from oug_eigenvectors import (
      complexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
     #realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
      )
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import thermalVelocityVectorObject
 from pyNastran.op2.op2_helper import polarToRealImag
 
 class OUG(object):
@@ -183,7 +184,7 @@ class OUG(object):
             elif self.thermal==8:
                 self.createTransientObject(self.scaledDisplacements,displacementObject)
             else:
-                raise NotImplementedError(self.codeInformation())
+                raise NotImplementedError('***thermal=%s***\n%s' %(self.thermal,self.codeInformation()))
             self.OUG_RealTable()
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
@@ -218,6 +219,8 @@ class OUG(object):
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 self.createTransientObject(self.velocities,velocityObject) # real
+            elif self.thermal==1:
+                self.createTransientObject(self.velocities,thermalVelocityVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.OUG_RealTable()

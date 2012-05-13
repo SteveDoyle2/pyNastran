@@ -82,9 +82,9 @@ class gridPointForcesObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
 
         msg = header+['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                ' \n',
@@ -110,9 +110,12 @@ class gridPointForcesObject(scalarObject):
             ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
     
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         msg = header+['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
                ' \n',
                '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n',]
@@ -140,6 +143,9 @@ class gridPointForcesObject(scalarObject):
                 zero = '0'
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
     
