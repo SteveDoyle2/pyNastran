@@ -400,7 +400,7 @@ class OES(ElementsStressStrain):
             self.makeOES_Object(self.plateStress,plateStressObject,
                                 self.plateStrain,plateStrainObject)
             self.OES_CTRIA3_74()
-        elif self.elementType in [64,144,70,75,82]: # cquad8/cquad4/ctriar/ctria6/cquadr
+        elif self.elementType in [144,75,82]: # 64-cquad8/cquad4/70-ctriar/ctria6/cquadr
             #print "    found cquad_144"
             if     self.elementType==64:  self.dataCode['elementName'] = 'CQUAD8'
             elif   self.elementType==144: self.dataCode['elementName'] = 'CQUAD4'

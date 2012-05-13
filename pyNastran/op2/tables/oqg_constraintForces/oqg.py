@@ -118,16 +118,18 @@ class OQG(object):
         #return
 
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        assert self.thermal in [0,1]
+        assert self.thermal in [0,1,8],self.codeInformation()
 
-        if self.tableCode==3:  # SPC Force vector
+        if   self.tableCode==3:   # SPC Forces
+            assert self.tableName in ['OQG1','OQGV1','OQP1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOQG_Data_table3()
-        elif self.tableCode==39:  # MPC Force vector
+        elif self.tableCode==39:  # MPC Forces
+            assert self.tableName in ['OQMG1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOQG_Data_table3()
         else:
-            self.skipOES_Element()
-            #print self.codeInformation()
-            #raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
+            #self.skipOES_Element()
+            print self.codeInformation()
+            raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -150,7 +152,8 @@ class OQG(object):
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
-        #if self.thermal!=0:
+        if self.thermal not in [0,1]:
+            raise NotImplementedError(self.obj)
             #print self.obj
             #raise RuntimeError('check the printout for thermal...')
 

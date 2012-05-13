@@ -55,40 +55,44 @@ class OGF(object):
         #self.printBlock(data) # on
         ## assuming tCode=1
         if self.analysisCode==1:   # statics / displacement / heat flux
-            self.extractDt = self.extractInt
+            #self.extractDt = self.extractInt
             self.applyDataCodeValue('dataNames',['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysisCode==2: # real eigenvalues
-            self.extractDt = self.extractInt
-            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
-        elif self.analysisCode==3: # differential stiffness
+            self.addDataParameter(data,'mode','i',5)   ## mode number
+            self.applyDataCodeValue('dataNames',['mode'])
+        #elif self.analysisCode==3: # differential stiffness
             #self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            self.extractDt = self.extractInt
-        elif self.analysisCode==4: # differential stiffness
-            self.extractDt = self.extractInt
+            #self.extractDt = self.extractInt
+        #elif self.analysisCode==4: # differential stiffness
+            #self.extractDt = self.extractInt
         elif self.analysisCode==5:   # frequency
-            self.extractDt = self.extractFloat
+            self.addDataParameter(data,'freq','f',5)   ## frequency
             self.applyDataCodeValue('dataNames',['freq'])
         elif self.analysisCode==6: # transient
-            self.extractDt = self.extractFloat
-        elif self.analysisCode==7: # pre-buckling
-            self.extractDt = self.extractInt
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode==8: # post-buckling
-            self.extractDt = self.extractInt
-            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
+            self.addDataParameter(data,'time','f',5)   ## time step
+            self.applyDataCodeValue('dataNames',['time'])
+        #elif self.analysisCode==7: # pre-buckling
+            #self.extractDt = self.extractInt
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
+        #elif self.analysisCode==8: # post-buckling
+            #self.extractDt = self.extractInt
+            #self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
         elif self.analysisCode==9: # complex eigenvalues
-            self.extractDt = self.extractInt
+            self.addDataParameter(data,'mode','i',5)         ## mode number
+            #self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
             self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
-            self.extractDt = self.extractFloat
-            self.applyDataCodeValue('dataNames',['lftsfq'])
-        elif self.analysisCode==11: # old geometric nonlinear statics
-            self.extractDt = self.extractInt
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.addDataParameter(data,'loadFactor','f',5)   ## load factor
+            self.applyDataCodeValue('dataNames',['loadFactor'])
+        #elif self.analysisCode==11: # old geometric nonlinear statics
+            #self.extractDt = self.extractInt
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
         elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.extractDt = self.extractInt
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.addDataParameter(data,'time','f',5)   ## time step
+            self.applyDataCodeValue('dataNames',['time'])
+            #self.extractDt = self.extractInt
+            #self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
 
@@ -120,6 +124,7 @@ class OGF(object):
         #print "tfsCode=%s" %(tfsCode)
         
         if self.tableCode==19: # grid point forces
+            assert self.tableName in ['OGPFB1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOGF_Data_table19()
         else:
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
@@ -151,42 +156,51 @@ class OGF(object):
         ###
 
     def readOGF_numWide10(self):
-        (eKey,scaleValue) = self.extractDt()
-        Format = eKey+'issssssssffffff'
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'issssssssffffff'
+
         while len(self.data)>=40:
             eData     = self.data[0:4*10]
             self.data = self.data[4*10: ]
-            out = unpack(Format,eData)
+            out = unpack(format1,eData)
             (eKey,eid,a,b,c,d,e,f,g,h,f1,f2,f3,m1,m2,m3) = out
-            eKey = scaleValue(eKey)
+            eKey = extract(eKey,dt)
             elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
             #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
-            self.obj.add(eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
+            self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #sys.exit('asfd')
         #print len(self.data)
         self.handleResultsBuffer(self.readOGF_numWide10)
 
     def readOGF_numWide16(self):
-        (eKey,scaleValue) = self.extractDt()
-        Format = eKey+'issssssssffffffffffff'
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'issssssssffffffffffff'
+        isMagnitudePhase = self.isMagnitudePhase()
+
         while len(self.data)>=64:
             eData     = self.data[0:4*16]
             self.data = self.data[4*16: ]
-            out = unpack(Format,eData)
+            out = unpack(format1,eData)
             (eKey,eid,a,b,c,d,e,f,g,h,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i) = out
-            eKey = scaleValue(eKey)
-            f1i = f1i*1j
-            f1i = f2i*1j
-            f1i = f3i*1j
-            m1i = m1i*1j
-            m2i = m2i*1j
-            m3i = m3i*1j
+            eKey = extract(eKey,dt)
+
+            if isMagnitudePhase:
+                f1 = polarToRealImag(f1r,f1i); m1 = polarToRealImag(m1r,m1i)
+                f2 = polarToRealImag(f2r,f2i); m2 = polarToRealImag(m2r,m2i)
+                f3 = polarToRealImag(f3r,f3i); m3 = polarToRealImag(m3r,m3i)
+            else:
+                f1 = complex(f1r,f1i); m1 = complex(m1r,m1i)
+                f2 = complex(f2r,f2i); m2 = complex(m2r,m2i)
+                f3 = complex(f3r,f3i); m3 = complex(m3r,m3i)
+
             elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%s f2=%s f3=%s m1=%s m2=%s m3=%s" %(ekey,eid,elemName,f1r+f1i,f2r+f2i,f3r+f3i,m1r+m1i,m2r+m2i,m3r+m3i)
-            self.obj.add(eKey,eid,elemName,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i)
+            self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
         self.handleResultsBuffer(self.readOGF_numWide16)
 
     def readThermal4(self):

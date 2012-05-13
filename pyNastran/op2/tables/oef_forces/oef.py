@@ -101,10 +101,10 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
         elif self.analysisCode==10: # nonlinear statics
             self.addDataParameter(data,'loadStep','f',5)   ## load step
-            self.applyDataCodeValue('dataNames',['lftsfq'])
+            self.applyDataCodeValue('dataNames',['loadStep'])
         elif self.analysisCode==11: # geometric nonlinear statics
             self.addDataParameter(data,'loadID','i',5)   ## load set ID number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+            self.applyDataCodeValue('dataNames',['loadID'])
             #print "loadID(5)=%s" %(self.loadID)
         else:
             raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
@@ -235,19 +235,22 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         #self.skipOES_Element() # skipping entire table
         #return
         if self.tableCode==4: # Forces/Heat Flux
+            assert self.tableName in ['OEF1X','DOEF1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOEF_Data_table4()
         else:
             raise NotImplementedError(self.codeInformation())
         ###
 
     def readOEF_Data_table4(self): # Forces/Heat Flux
-        if self.thermal==0:
+        if self.thermal in [0,8]:
             self.readOEF_Forces()
         elif self.thermal==1:
             self.readOEF_Thermal()
         else:
             raise NotImplementedError('thermal=%s' %(self.thermal))
         ###
+        if self.thermal==8:
+            raise NotImplementedError(self.obj)
 
     def readOEF_Forces(self):
         #print self.codeInformation()

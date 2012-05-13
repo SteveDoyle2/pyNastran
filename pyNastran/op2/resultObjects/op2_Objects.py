@@ -17,6 +17,18 @@ class baseScalarObject(Op2Codes):
         msg = 'writeF06Transient is not implemented in %s' %(self.__class__.__name__)
         raise NotImplementedError(msg)
 
+    def writeF06Floats10E(self,vals):
+        vals2 = []
+        isAllZeros = True
+        for v in vals:
+            v2 = '%10.3E' %(v)
+            if v2==' 0.000E+00' or v2=='-0.000E+00':
+                v2 = ' 0.0      '
+            else:
+                isAllZeros = False
+            vals2.append(v2)
+        return (vals2,isAllZeros)
+
     def writeF06Floats12E(self,vals):
         vals2 = []
         isAllZeros = True
@@ -115,7 +127,9 @@ class scalarObject(baseScalarObject):
 
     def setDataMembers(self):
         if 'dataNames' not in self.dataCode:
-            raise RuntimeError(self.codeInformation())
+            msg = 'No "transient" variable was set for %s\n' %(self.tableName)
+            raise NotImplementedError(msg+self.codeInformation())
+
         for name in self.dataCode['dataNames']:
             #print "name = ",name
             self.appendDataMember(name+'s',name)

@@ -103,21 +103,24 @@ class OEE(object):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         
         if self.tableCode==18:
+            assert self.tableName in ['ONRGY1','ONRGY2'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readStrainEnergy_table18()
         else:
             #self.skipOES_Element()
-            raise NotImplementedError('unsupported OEE static solution...aftsCode=%s' %(self.atfsCode))
+            print self.codeInformation()
+            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OEE table' %(self.atfsCode,self.tableName))
         ###
         #print str(self.obj)
 
     
-    def readStrainEnergy_table18(self):
+    def readStrainEnergy_table18(self): # real ???
         self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         if self.numWide==4:
             self.OEE_Strain4()
         elif self.numWide==5:
             self.OEE_Strain5()
         else:   
+            print self.codeInformation()
             raise NotImplementedError()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 
