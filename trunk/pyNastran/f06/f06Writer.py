@@ -142,7 +142,7 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
             f.write(msg)
             pageNum +=1
         
@@ -151,7 +151,7 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
             f.write(msg)
             pageNum +=1
 
@@ -199,7 +199,7 @@ class F06Writer(object):
                         result = resType[iSubcase]
                         try:
                             print result.__class__.__name__
-                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
@@ -211,7 +211,7 @@ class F06Writer(object):
         if 0:
             for res in resTypes:
                 for iSubcase,result in sorted(res.iteritems()):
-                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
+                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
                     f.write(msg)
                     pageNum +=1
                 ###

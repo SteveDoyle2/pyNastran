@@ -5,7 +5,7 @@ class mpcForcesObject(TableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
@@ -25,9 +25,12 @@ class mpcForcesObject(TableObject):
             ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -49,6 +52,9 @@ class mpcForcesObject(TableObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
 
@@ -116,7 +122,7 @@ class complexMpcForcesObject(complexTableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
@@ -143,9 +149,12 @@ class complexMpcForcesObject(complexTableObject):
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                         C O M P L E X   F O R C E S   O F   M U L T I   P O I N T   C O N S T R A I N T\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -175,6 +184,9 @@ class complexMpcForcesObject(complexTableObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
 

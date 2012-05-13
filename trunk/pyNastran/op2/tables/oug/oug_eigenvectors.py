@@ -80,7 +80,7 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         """
         EIGENVALUE =  6.158494E+07
             CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
@@ -109,6 +109,9 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum += 1
         ###
         return (''.join(msg),pageNum-1)
@@ -349,7 +352,7 @@ class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         msg = []
         #print self.dataCode
         for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
@@ -372,6 +375,9 @@ class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          v1i,v2i,v3i,v4i,v5i,v6i.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum += 1
         ###
         return (''.join(msg),pageNum-1)

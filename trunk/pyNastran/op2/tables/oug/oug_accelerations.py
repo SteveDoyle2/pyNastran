@@ -8,9 +8,9 @@ class accelerationObject(TableObject): # approachCode=11, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                             A C C E L E R A T I O N   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -26,9 +26,12 @@ class accelerationObject(TableObject): # approachCode=11, sortCode=0, thermal=0
             msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -48,7 +51,11 @@ class accelerationObject(TableObject): # approachCode=11, sortCode=0, thermal=0
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
-        return (''.join(msg),pageNum)
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pagNum+=1
+        return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         if self.nonlinearFactor is not None:
@@ -103,9 +110,9 @@ class complexAccelerationObject(complexTableObject): # tableCode=11, approachCod
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -130,9 +137,12 @@ class complexAccelerationObject(complexTableObject): # tableCode=11, approachCod
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -160,6 +170,9 @@ class complexAccelerationObject(complexTableObject): # tableCode=11, approachCod
                 msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
 

@@ -204,7 +204,6 @@ class OES(ElementsStressStrain):
 
         #msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-
         self.parseStressCode()
 
         if not self.isValidSubcase():# lets the user skip a certain subcase

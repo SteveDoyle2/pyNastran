@@ -8,9 +8,9 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                             D I S P L A C E M E N T   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -26,9 +26,12 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
             msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -49,14 +52,17 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
                 pageNum+=1
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
         if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
-        msg = '---DISPLACEMENTS---\n'
-        msg += self.writeHeader()
+        msg = ['---DISPLACEMENTS---\n']
+        msg.append(self.writeHeader())
 
         for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
@@ -65,46 +71,48 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
 
-            msg += '%-10i %-8s ' %(nodeID,gridType)
+            msg2 = '%-10i %-8s ' %(nodeID,gridType)
             vals = [dx,dy,dz,rx,ry,rz]
             for val in vals:
                 if abs(val)<1e-6:
-                    msg += '%10s ' %(0)
+                    msg2 += '%10s ' %(0)
                 else:
-                    msg += '%10.3e ' %(val)
+                    msg2 += '%10.3e ' %(val)
                 ###
-            msg += '\n'
-        return msg
+            msg2 = '\n'
+            msg.append(msg2)
+        return ''.join(msg)
 
     def __reprTransient__(self):
-        msg = '---TRANSIENT DISPLACEMENTS---\n'
-        msg += self.writeHeader()
+        msg = ['---TRANSIENT DISPLACEMENTS---\n']
+        msg.append(self.writeHeader())
         
         for dt,translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            msg2 = '%s = %g\n' %(self.dataCode['name'],dt)
             for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
                 gridType = self.gridTypes[nodeID]
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
 
-                msg += '%-10i %8s ' %(nodeID,gridType)
+                msg2 += '%-10i %8s ' %(nodeID,gridType)
                 vals = [dx,dy,dz,rx,ry,rz]
                 for val in vals:
                     if abs(val)<1e-6:
-                        msg += '%10s ' %(0)
+                        msg2 += '%10s ' %(0)
                     else:
-                        msg += '%10.3e ' %(val)
+                        msg2 += '%10.3e ' %(val)
                     ###
-                msg += '\n'
+                msg2 += '\n'
+                msg.append(msg2)
             ###
-        return msg
+        return ''.join(msg)
 
 class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -132,6 +140,9 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                 msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
 

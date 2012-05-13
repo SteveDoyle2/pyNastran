@@ -111,9 +111,9 @@ class gridPointStressesObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
 
         msg = header+['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -147,9 +147,12 @@ class gridPointStressesObject(scalarObject):
             ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
     
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         raise NotImplementedError()
         msg = header+['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -178,6 +181,9 @@ class gridPointStressesObject(scalarObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
     
@@ -296,10 +302,10 @@ class gridPointStressesVolumeObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         raise NotImplementedError()
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
 
         msg = header+['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -331,9 +337,12 @@ class gridPointStressesVolumeObject(scalarObject):
             ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return (''.join(msg),pageNum)
     
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         raise NotImplementedError()
         msg = header+['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -362,6 +371,9 @@ class gridPointStressesVolumeObject(scalarObject):
                 ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
             pageNum+=1
         return (''.join(msg),pageNum-1)
     
