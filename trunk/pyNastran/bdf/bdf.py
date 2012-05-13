@@ -456,6 +456,35 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         isDone = self.foundEndData
         return ('BulkDataDeck',isDone)
 
+    def readBDF_Punch(self,infilename,includeDir=None,xref=True):
+        """
+        BDF punch file reader
+        @param infilename the input bdf
+        @param includeDir the relative path to any include files (default=None if no include files)
+        @param xref should the bdf be cross referenced (default=True)
+        """
+        self._setInfile(infilename,includeDir)
+
+        fname = self.printFileName(self.bdfFileName)
+        self.log.debug('---starting BDF.readBDF_Punch of %s---' %(fname))
+        #self.log.info('xref=%s' %(xref))
+        sys.stdout.flush()
+
+        #self.debug = True
+        if self.debug:
+            self.log.debug("*BDF.readBDF_Punch")
+        self.readBulkDataDeck()
+        #self.closeFile()
+        self.crossReference(xref=xref)
+        if self.debug:
+            self.log.debug("***BDF.readBDF_Punch")
+
+        self.log.debug('---finished BDF.readBDF_Punch of %s---' %(fname))
+        sys.stdout.flush()
+
+        isDone = self.foundEndData
+        return ('BulkDataDeck',isDone)
+
     def isExecutiveControlDeck(self,line):
         """@todo code this..."""
         return True

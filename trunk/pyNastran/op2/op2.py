@@ -110,19 +110,21 @@ class OP2(BDF,  # BDF methods
                              'EPT', 'MPT',  # properties/materials
                              'EPTS','MPTS', # properties/materials - superelements
                              'DYNAMIC','DYNAMICS',
-                             'DIT',  # tables
-                             'LAMA',
+                             'DIT',                           # tables (e.g. TABLED1)
+                             'LAMA','BLAMA',                  # eigenvalues
 
-                            'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
-                             'DESTAB',                      # design variables
-                             'OQG1','OQGV1','OQMG1',        # spc/mpc forces
+                             'BGPDT','EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
+                             'DESTAB',                        # design variables
+                             'OQG1','OQGV1','OQMG1',          # spc/mpc forces
                              
-                             'OUGV1',                       # displacements                             
-                             'OGPFB1','OGS1',               # grid point forces/stresses
+                             'OUGV1',                         # displacements                             
+                             'OGPFB1',                        # grid point forces
+                             'OGS1',                          # grid poitn stresses
                              
-                             'OEF1X', 'DOEF1','OEFIT',      # applied forces
-                             'OES1X','OES1X1','OES1C',      # stress
-                             'OSTR1C','OSTR1X',             # strains
+                             'OEF1X', 'DOEF1','OEFIT',        # element forces
+                             'OPG1','OPGV1','OPNL1',          # applied forces
+                             'OES1','OES1X','OES1X1','OES1C', # stress
+                             'OSTR1C','OSTR1X',               # strains
                              'OESNLXR','OESNLXD','OESNL1X','OESNLBR', # nonlinear stress
 
                              'OESCP',                       # cylinder stress???
@@ -145,8 +147,6 @@ class OP2(BDF,  # BDF methods
                               'OVGPSD2', 'OVGATO2', 'OVGRMS2', 'OVGNO2', 'OVGCRM2',
                              
                              ## @todo what do these do???
-                             'OPG1','OPGV1',
-                             'OPNL1',
                              'OUPV1',
                              'VIEWTB','ERRORN',
                              'OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M',
@@ -155,6 +155,8 @@ class OP2(BDF,  # BDF methods
                              'EDOM',
                              'STDISP','SDF','MONITOR','AEMONPT',
                              'OGPWG', # grid point weight
+                             'OQP1',
+                             'OCRUG','OCRPG',
 
                              # new
                              'AFRF',             'AGRF',
@@ -173,26 +175,22 @@ class OP2(BDF,  # BDF methods
         self.eigenvalues = {}
 
         ## OUG - displacement
-        self.displacements = {}           # aCode=1 tCode=1 fCode=1 sortCode=0 thermal=0
+        self.displacements = {}           # tCode=1 thermal=0
+        self.scaledDisplacements = {}     # tCode=1 thermal=8
 
         ## OUG - temperatures
-        self.temperatures  = {}            # aCode=1 ------- ------- sortCode=0 thermal=1
-        #self.nonlinearDisplacements  = {} # aCode=6 ------- fCode=1 sortCode=0 thermal=0
-        #self.nonlinearTemperatures   = {} # ------- ------- ------- ---------- thermal=1
+        self.temperatures  = {}           # tCode=1 thermal=1
 
         ## OUG - eigenvectors
-        self.eigenvectors = {}            # aCode=2 tCode=7 ------- sortCode=1 thermal=0
+        self.eigenvectors = {}            # tCode=7 thermal=0
 
-        ## OUG - velocity (not done)
-        self.velocities = {}              # aCode=6 tCode=10 fCode=3 sortCode=0 thermal=0
+        ## OUG - velocity
+        self.velocities = {}              # tCode=10 thermal=0
 
-        ## OUG - acceleration (not done)
-        self.accelerations = {}           # aCode=6 tCode=11 fCode=3 sortCode=0 thermal=0
+        ## OUG - acceleration
+        self.accelerations = {}           # tCode=11 thermal=0
 
-        # OEF
-        # rename to staticLoads/thermalLoads
-        #self.forces = {}
-
+        # OEF - Forces - tCode=4 thermal=0
         self.rodForces = {}
         self.barForces = {}
         self.bar100Forces = {}
@@ -211,7 +209,7 @@ class OP2(BDF,  # BDF methods
         self.force_VU = {}
         self.force_VU_2D = {}
         
-        #self.fluxes = {}
+        #OEF - Fluxes - tCode=4 thermal=1
         self.thermalLoad_CONV  = {}
         self.thermalLoad_CHBDY = {}
         self.thermalLoad_1D    = {}
@@ -221,81 +219,78 @@ class OP2(BDF,  # BDF methods
         self.thermalLoad_VUBeam = {}
         #self.temperatureForces = {}       # aCode=1  tCode=4 fCode=1 sortCode=0 thermal=1
 
-        #self.modalForces = {}
-        
-        # rename to nonlinearStaticLoads/nonlinearThermalLoads ???
-        #self.nonlinearForces = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=0
-        #self.nonlinearFluxes = {}         # aCode=10 tCode=4 fCode=1 sortCode=0 thermal=1
-
-        # OES
-        ## OES - CELAS1/CELAS2/CELAS3/CELAS4
+        # OES - tCode=5 thermal=0 sCode=0,1 (stress/strain)
+        ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
         self.celasStress   = {}
-        ## OES - CELAS1/CELAS2/CELAS3/CELAS4
+        ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
         self.celasStrain   = {}
         
         ## OES - CTRIAX6
         self.ctriaxStress = {}
         self.ctriaxStrain = {}
 
-        ## OES - isotropic CROD/CONROD/CTUBE
+        ## OES - isotropic CROD/CONROD/CTUBE stress
         self.rodStress  = {}
-        ## OES - isotropic CROD/CONROD/CTUBE
+        ## OES - isotropic CROD/CONROD/CTUBE strain
         self.rodStrain  = {}
-        ## OES - nonlinear CROD/CONROD/CTUBE
+        ## OES - nonlinear CROD/CONROD/CTUBE stress
         self.nonlinearRodStress = {}
-        ## OES - nonlinear CROD/CONROD/CTUBE
+        ## OES - nonlinear CROD/CONROD/CTUBE strain
         self.nonlinearRodStrain = {}
-        ## OES - isotropic CBAR
+        ## OES - isotropic CBAR stress
         self.barStress  = {}
-        ## OES - isotropic CBAR
+        ## OES - isotropic CBAR strain
         self.barStrain  = {}
-        ## OES - isotropic CBEAM
+        ## OES - isotropic CBEAM stress
         self.beamStress = {}
-        ## OES - isotropic CBEAM
+        ## OES - isotropic CBEAM strain
         self.beamStrain = {}
 
-        ## OES - isotropic CTRIA3/CQUAD4
+        ## OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
-        ## OES - isotropic CTRIA3/CQUAD4
+        ## OES - isotropic CTRIA3/CQUAD4 strain
         self.plateStrain = {}
-        ## OESNLXR - CTRIA3/CQUAD4
+        ## OESNLXR - CTRIA3/CQUAD4 stress
         self.nonlinearPlateStress = {}
-        ## OESNLXR - CTRIA3/CQUAD4
+        ## OESNLXR - CTRIA3/CQUAD4 strain
         self.nonlinearPlateStrain = {}
         self.hyperelasticPlateStress = {}
         self.hyperelasticPlateStrain = {}
 
-        ## OES - isotropic CTETRA/CHEXA/CPENTA
+        ## OES - isotropic CTETRA/CHEXA/CPENTA stress
         self.solidStress = {}
-        ## OES - isotropic CTETRA/CHEXA/CPENTA
+        ## OES - isotropic CTETRA/CHEXA/CPENTA strain
         self.solidStrain = {}
-        ## OES - composite CTRIA3/CQUAD4
+        ## OES - composite CTRIA3/CQUAD4 stress
         self.compositePlateStress = {}
-        ## OES - composite CTRIA3/CQUAD4
+        ## OES - composite CTRIA3/CQUAD4 strain
         self.compositePlateStrain = {}
         
-        ## OES - CSHEAR
+        ## OES - CSHEAR stress
         self.shearStress = {}
-        ## OES - CSHEAR
+        ## OES - CSHEAR strain
         self.shearStrain = {}
         
 
         # OQG - spc/mpc forces
-        self.spcForces      = {}
-        #self.modalSPCForces = {}
-        self.mpcForces      = {}
-        #self.modalMPCForces = {}
+        self.spcForces      = {}  # tCode=3?
+        self.mpcForces      = {}  # tCode=39
         
         ## OGF - grid point forces
-        self.gridPointForces = {}
+        self.gridPointForces = {} # tCode=19
+
+        ## OGS1 - grid point stresses
+        self.gridPointStresses = {}       # tCode=26
+        self.gridPointVolumeStresses = {} # tCode=27
 
         ## OPG - summation of loads for each element
-        self.appliedLoads = {}
-        self.loadVectors  = {}
-        self.forceVectors = {}
+        self.loadVectors  = {}       # tCode=2  thermal=0
+        self.thermalLoadVectors = {} # tCode=2  thermal=1
+        self.appliedLoads = {}       # tCode=19 thermal=0
+        self.forceVectors = {}       # tCode=12 thermal=0
         
         ## OEE - strain energy density
-        self.strainEnergy = {}
+        self.strainEnergy = {} # tCode=18
 
     def readTapeCode(self):
         """
@@ -442,7 +437,7 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DYNAMICS()
                     elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
                         self.readTable_DIT()
-                    elif tableName in ['LAMA']: # eigenvalue
+                    elif tableName in ['LAMA','BLAMA']: # eigenvalue
                         self.readTable_LAMA()
 
                     elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OGPWG',]:
@@ -464,11 +459,13 @@ class OP2(BDF,  # BDF methods
                         self.readTable_OPG()
                     elif tableName in ['OGPFB1',]:
                         self.readTable_OGF()
+                    elif tableName in ['OCRUG','OCRPG']:  # totally guessing...
+                        self.readTable_OUG()
 
 
                     elif tableName in ['OEF1X','DOEF1',  'OEFPSD2','OEFATO2','OEFRMS2','OEFNO2','OEFCRM2',]:  # applied loads
                         self.readTable_OEF()
-                    elif tableName in ['OQG1','OQMG1','OQGV1']:  # spc/mpc forces
+                    elif tableName in ['OQG1','OQMG1','OQGV1','OQP1',]:  # spc/mpc forces
                         self.readTable_OQG()
 
                     elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
@@ -476,7 +473,7 @@ class OP2(BDF,  # BDF methods
                     elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
                         self.readTable_OUG()
 
-                    elif tableName in ['OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
+                    elif tableName in ['OES1','OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
                         self.readTable_OES()  # 
                     elif tableName in ['OSTR1X','OSTR1C',]: # strain
                         self.readTable_OES()
@@ -533,6 +530,8 @@ class OP2(BDF,  # BDF methods
                     isAnotherTable = False
                 ###
             else:
+                if tableName not in [None]:
+                    assert 1==0,'%s is not supported' %(tableName)
                 (isAnotherTable) = self.skipNextTable()
                 continue
             #print self.printSection(140)
@@ -675,7 +674,7 @@ class OP2(BDF,  # BDF methods
         ## the subtitle of the subcase
         self.subtitle = word[128:256].strip()
         ## the label of the subcase
-        self.label    = word[256:].strip()
+        self.label    = word[256:328].strip()
 
         self.readHollerith() # not really a hollerith, just the end of the block (so bufferWords*4)
 
@@ -712,22 +711,18 @@ class OP2(BDF,  # BDF methods
                    self.eigenvectors,
                    self.velocities,
                    self.accelerations,
-                   #self.nonlinearTemperatures,self.nonlinearDisplacements,
-                   #self.forces,self.fluxes,
                    
                    # OEF - Applied Forces/Temperatures - ???
-                   #self.nonlinearForces,self.nonlinearFluxes,
-                   #self.temperatureForces,
                    
                    # OQG1 - Forces
-                   #self.spcForces,self.mpcForces,
+                   self.spcForces,self.mpcForces,
                    
                    # OGF - Grid Point Forces
                    self.gridPointForces,
 
                    # OPG - Applied Force/Moment
                    self.appliedLoads,
-                   self.loadVectors,
+                   self.loadVectors,self.thermalLoadVectors,
                    self.forceVectors,
 
                    # OES - Stress/Strain
@@ -740,7 +735,7 @@ class OP2(BDF,  # BDF methods
                    self.plateStress,self.plateStrain,
                    self.solidStress,self.solidStrain,
                    self.compositePlateStress,self.compositePlateStrain,
-                   self.ctriaxStress,self.ctriaxStrain, # strain not coded???
+                   self.ctriaxStress,self.ctriaxStrain,
                    
                    # OEE - Strain Energy
                    self.strainEnergy,

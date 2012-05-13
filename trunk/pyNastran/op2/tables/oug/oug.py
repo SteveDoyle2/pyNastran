@@ -134,21 +134,26 @@ class OUG(object):
         #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         
-        if self.tableCode==1: # displacement
+        if self.tableCode==1:    # displacement
+            assert self.tableName in ['OUGV1','OUPV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table1()
-        elif self.tableCode==7: # modes
+        elif self.tableCode==7:  # modes
+            assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table7()
         elif self.tableCode==10: # velocity
+            assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table10()
         elif self.tableCode==11: # Acceleration vector
+            assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table11()
         else:
             #print "***start skipping***"
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
-            self.skipOES_Element()
+            #self.skipOES_Element()
             #print "***end skipping***"
-            #print self.codeInformation()
-            #raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
+            print self.codeInformation()
+            #raise NotImplementedError(self.codeInformation())
+            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         ###
         #print self.obj
 
@@ -175,6 +180,8 @@ class OUG(object):
                 self.createTransientObject(self.displacements,displacementObject) # real
             elif self.thermal==1:
                 self.createTransientObject(self.temperatures,temperatureObject)
+            elif self.thermal==8:
+                self.createTransientObject(self.scaledDisplacements,displacementObject)
             else:
                 raise NotImplementedError(self.codeInformation())
             self.OUG_RealTable()
@@ -275,6 +282,7 @@ class OUG(object):
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'iffffff'
 
+        #print "len(data) = ",len(self.data)
         while len(self.data)>=32: # 8*4
             eData     = self.data[0:32]
             self.data = self.data[32: ]
@@ -287,6 +295,7 @@ class OUG(object):
             
             dataIn = [eid2,gridType,tx,ty,tz,rx,ry,rz]
             #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #print "%s" %(self.tableName),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)

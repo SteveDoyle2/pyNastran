@@ -160,14 +160,16 @@ class F06Writer(object):
                   '\n',' \n']
 
         resTypes = [
-                    self.displacements,self.velocities,self.accelerations,
-                    self.eigenvectors,
-                    self.temperatures,self.loadVectors,self.forceVectors,
+                    self.displacements,self.scaledDisplacements,
+                    self.velocities,self.accelerations,self.eigenvectors,
+                    self.temperatures,
+                    self.loadVectors,self.thermalLoadVectors,
+                    self.forceVectors,
 
                     self.spcForces,self.mpcForces,
                     
-                    self.barForces,self.beamForces,self.springForces,
-                    self.pentaPressureForces,
+                    self.barForces,self.beamForces,self.springForces,self.damperForces,
+                    self.solidPressureForces,
                     
                     self.rodStrain,self.nonlinearRodStress,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
                     self.beamStrain,self.ctriaxStrain,self.hyperelasticPlateStress,
@@ -180,7 +182,7 @@ class F06Writer(object):
                     #self.shearStrain,self.shearStress,
                     
                     
-                    self.gridPointForces,
+                    self.gridPointStresses,self.gridPointVolumeStresses,self.gridPointForces,
                     ]
 
         if 1:
@@ -189,8 +191,9 @@ class F06Writer(object):
                 (subtitle,label) = self.iSubcaseNameMap[iSubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
-                header[0] = '     %s\n' %(subtitle)
-                header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
+                #print "label = ",label
+                header[0] = '     %-127s\n' %(subtitle)
+                header[1] = '0    %-72s                                SUBCASE %-15i\n' %(label,iSubcase)
                 for resType in resTypes:
                     if resType.has_key(iSubcase):
                         result = resType[iSubcase]

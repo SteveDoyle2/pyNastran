@@ -141,7 +141,7 @@ class ctriaxStressObject(stressObject):
         self.ovm[dt][eid][nid]       = octs
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
@@ -208,6 +208,8 @@ class ctriaxStressObject(stressObject):
 
     def __repr__(self):
         return self.writeF06(['',''],'PAGE ',1)[0]
+        if self.nonlinearFactor is not None:
+            pass
 
 class ctriaxStrainObject(strainObject):
     """
@@ -319,7 +321,7 @@ class ctriaxStrainObject(strainObject):
         self.evm[dt][eid][nid]       = ects
 
     def writeF06(self,header,pageStamp,pageNum=1):
-        if self.isTransient:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
@@ -386,3 +388,5 @@ class ctriaxStrainObject(strainObject):
 
     def __repr__(self):
         return self.writeF06(['',''],'PAGE ',1)[0]
+        if self.nonlinearFactor is not None:
+            pass

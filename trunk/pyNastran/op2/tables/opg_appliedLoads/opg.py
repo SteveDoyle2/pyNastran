@@ -8,8 +8,11 @@ from struct import unpack
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
 from opg_Objects      import appliedLoadsObject
-from opg_loadVector   import loadVectorObject,complexLoadVectorObject
+from opg_loadVector   import loadVectorObject,complexLoadVectorObject,thermalLoadVectorObject
 from opnl_forceVector import forceVectorObject,complexForceVectorObject
+
+# OGS table ## @todo move this...
+from pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses import gridPointStressesObject,gridPointStressesVolumeObject
 
 class OPG(object):
     """Table of element forces"""
@@ -48,7 +51,7 @@ class OPG(object):
         #print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         if not self.isSort1():
             raise NotImplementedError('sort2...')
-        assert self.isThermal()==False,self.thermal
+        #assert self.isThermal()==False,self.thermal
         
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
@@ -112,25 +115,27 @@ class OPG(object):
 
         
         if   self.tableCode==19:
+            assert self.tableName in [None],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOPG_Data_table19() # grid point force balance
         elif self.tableCode==2:  # load vector
+            assert self.tableName in ['OPG1','OPGV1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOPG_Data_table2()
         elif self.tableCode==12:  # nonlinear force vector
+            assert self.tableName in ['OPNL1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOPG_Data_table12()
+        elif self.tableCode==26:  # OGS1 - grid point stresses - surface
+            assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
+            self.readOGS1_Data_table26()
+        elif self.tableCode==27:  # OGS1 - grid point stresses - volume direct
+            assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
+            self.readOGS1_Data_table27()
 
-        # Nonlinear force vector
-        #elif tfsCode==[12,1,0]:
-        #    self.readOPG_Data_format1_sort0()
+        elif self.tableCode==28:  # OGS1- grid point stresses - principal
+            assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
+            #self.readOGS1_Data_table28()
+            self.skipOES_Element() # skipping entire table
 
-        # OGS1- grid point stresses - surface
-        #elif tfsCode==[26,1,0]:
-        #    self.readOPG_Data_format1_sort0()
-
-        # OGS1- grid point stresses - volume direct
-        #elif tfsCode==[27,1,0]:
-        #    self.readOPG_Data_format1_sort0()
-
-        # OGS1- grid point stresses - principal
+        
         #elif tfsCode==[28,1,0]:
         #    self.readOPG_Data_format1_sort0()
 
@@ -159,37 +164,20 @@ class OPG(object):
         #    self.readOPG_Data_format3_sort3()
         else:
             print self.codeInformation()
-            #raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName,))
+            raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName))
             #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
-            self.skipOES_Element()
+            #self.skipOES_Element()
         ###
         #print self.obj
 
-    def readOPG_Data_table19(self): # Applied Loads
-        isSort1 = self.isSort1()
-        if self.numWide==8:  # real/random
-            if self.thermal==0:
-                self.createTransientObject(self.appliedLoads,appliedLoadsObject) # real
-            else:
-                raise NotImplementedError(self.codeInformation())
-            #self.OUG_RealTable()
-            self.readOPGForces()
-        elif self.numWide==14:  # real/imaginary or mag/phase
-            if self.thermal==0:
-                self.createTransientObject(self.appliedLoads,complexAppliedLoadsObject) # complex
-            else:
-                raise NotImplementedError(self.codeInformation())
-            #self.OUG_ComplexTable()
-            raise NotImplementedError(self.codeInformation())
-        else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
-        ###
-
     def readOPG_Data_table2(self): # Load Vector
         isSort1 = self.isSort1()
+        #print "********\n",self.codeInformation()
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 self.createTransientObject(self.loadVectors,loadVectorObject) # real
+            elif self.thermal==1:
+                self.createTransientObject(self.thermalLoadVectors,thermalLoadVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.OUG_RealTable()
@@ -220,6 +208,80 @@ class OPG(object):
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
+
+    def readOPG_Data_table19(self): # Applied Loads
+        isSort1 = self.isSort1()
+        if self.numWide==8:  # real/random
+            if self.thermal==0:
+                self.createTransientObject(self.appliedLoads,appliedLoadsObject) # real
+            else:
+                raise NotImplementedError(self.codeInformation())
+            #self.OUG_RealTable()
+            self.readOPGForces()
+        elif self.numWide==14:  # real/imaginary or mag/phase
+            if self.thermal==0:
+                self.createTransientObject(self.appliedLoads,complexAppliedLoadsObject) # complex
+            else:
+                raise NotImplementedError(self.codeInformation())
+            #self.OUG_ComplexTable()
+            raise NotImplementedError(self.codeInformation())
+        else:
+            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOGS1_Data_table26(self): # OGS1 - grid point stresses - surface
+        isSort1 = self.isSort1()
+        if self.numWide==11:  # real/random
+            self.createTransientObject(self.gridPointStresses,gridPointStressesObject) # real
+            self.readOGS1_table26_numWide11()
+        else:
+            raise NotImplementedError('only numWide=11 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOGS1_table26_numWide11(self): # surface stresses
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'iccccffffffff'
+
+        while len(self.data)>=44:
+            eData     = self.data[0:44]
+            self.data = self.data[44: ] # 11*4
+            out = unpack(format1,eData)
+            (eKey,eid,a,b,c,d,nx,ny,txy,angle,major,minor,tmax,ovm) = out
+            eKey = extract(eKey,dt)
+            fiber = a+b+c+d
+            fiber = fiber.strip()
+
+            self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
+        #print len(self.data)
+        self.handleResultsBuffer(self.readOGS1_table26_numWide11)
+
+    def readOGS1_Data_table27(self): # OGS1 - grid point stresses - volume direct
+        isSort1 = self.isSort1()
+        #print self.codeInformation()
+        if self.numWide==9:  # real/random
+            self.createTransientObject(self.gridPointVolumeStresses,gridPointStressesVolumeObject) # real
+            self.readOGS1_table27_numWide9()
+        else:
+            raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
+        ###
+
+    def readOGS1_table27_numWide9(self): # surface stresses
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ifffffff'
+
+        while len(self.data)>=36:
+            eData     = self.data[0:36]
+            self.data = self.data[36: ] # 9*4
+            out = unpack(format1,eData)
+            (eKey,nx,ny,nz,txy,tyz,txz,pressure,ovm) = out
+            eKey = extract(eKey,dt)
+
+            self.obj.add(dt,eKey,nx,ny,nz,txy,tyz,txz,pressure,ovm)
+        #print len(self.data)
+        self.handleResultsBuffer(self.readOGS1_table27_numWide9)
+
 
     def readOPGForces(self): ## @todo needs some work...
         dt = self.nonlinearFactor

@@ -21,7 +21,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
     filenames2 = []
     diffCards = []
     for filename in filenames:
-        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas'):
+        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas') or filename.endswith('.nas'):
             filenames2.append(filename)
         ###
     ###
@@ -76,7 +76,10 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
     try:
         #print "xref = ",xref
         try:
-            fem1.readBDF(bdfModel,xref=xref)
+            if '.pch' in bdfModel:
+                fem1.readBDF_Punch(bdfModel,xref=False)
+            else:
+                fem1.readBDF(bdfModel,xref=xref)
         except:
             print "failed reading |%s|" %(bdfModel)
             raise
