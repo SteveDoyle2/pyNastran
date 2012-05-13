@@ -58,6 +58,7 @@ class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
         return (''.join(msg),pageNum-1)
 
     def __repr__(self):
+        #return ''
         if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 

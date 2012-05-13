@@ -140,9 +140,9 @@ class ctriaxStressObject(stressObject):
         self.oms[dt][eid][nid]       = tmax
         self.ovm[dt][eid][nid]       = octs
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
 
         msg = header+['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -171,9 +171,12 @@ class ctriaxStressObject(stressObject):
         ###
 
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return(''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
@@ -204,6 +207,10 @@ class ctriaxStressObject(stressObject):
             ###
 
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
         return(''.join(msg),pageNum-1)
 
     def __repr__(self):
@@ -320,9 +327,9 @@ class ctriaxStrainObject(strainObject):
         self.ems[dt][eid][nid]       = emax
         self.evm[dt][eid][nid]       = ects
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
 
         msg = header+['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -351,9 +358,12 @@ class ctriaxStrainObject(strainObject):
         ###
 
         msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
         return(''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
@@ -384,6 +394,10 @@ class ctriaxStrainObject(strainObject):
             ###
 
             msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
         return(''.join(msg),pageNum-1)
 
     def __repr__(self):

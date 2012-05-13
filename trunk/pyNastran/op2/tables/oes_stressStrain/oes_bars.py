@@ -523,7 +523,7 @@ class barStrainObject(strainObject):
             return self.writeF06Transient(header,pageStamp,pageNum)
 
         msg = header+[
-                '                                   S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )\n',
+                '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
@@ -555,7 +555,7 @@ class barStrainObject(strainObject):
 
     def writeF06Transient(self,header,pageStamp,pageNum=1):
         words = [
-                '                                   S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )\n',
+                '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
