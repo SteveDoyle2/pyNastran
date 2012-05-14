@@ -2,7 +2,13 @@ import os
 from numpy import matrix
 from types import NoneType
 
-def getFilesOfType(dirname,extension='.txt'):
+def getFilesOfType(dirname,extension='.txt',maxSize=100.):
+    """
+    gets all the files in the specified directory with a given extension
+    @param dirname the directory name
+    @param extension list of filetypes to get (default='.txt')
+    @param maxSize size in MB for max file size
+    """
     files = os.listdir(dirname)
     files2 = []
     for fname in files:
@@ -10,7 +16,10 @@ def getFilesOfType(dirname,extension='.txt'):
         #print f
         #print ext
         if extension in ext:
-            files2.append(os.path.join(dirname,fname))
+            f = os.path.join(dirname,fname)
+            if os.path.getsize(f)/(1024.*1024.) <= maxSize: # convert to MB
+                files2.append(f)
+            ###
         ###
     ###
     return files2

@@ -145,7 +145,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        24:  3,    # CVISC
                        33:  9,    # CQUAD4
                        34:  9,    # CBAR
-                       35:  7,    # CCONEAX ???
+                       35:  7,    # CCONEAX
                        38:  9,    # CGAP
                        40:  8,    # CBUSH1D ???
                        64:  2+(11-2)*5, # CQUAD8
@@ -196,7 +196,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                        24:  5,    # CVISC
                        33:  17,   # CQUAD4
                        34:  17,   # CBAR
-                       35:  7,    # CCONEAX ???
+                       35:  7,    # CCONEAX # needed to not crash the code...
                        38:  9,    # CGAP
                        40:  8,    # CBUSH1D ???
                        64:  2+(19-2)*5, # CQUAD8
@@ -341,6 +341,13 @@ class OEF(ThermalElements,RealForces,ComplexForces):
                 #self.OEF_Plate_alt()
             #else:
                 #raise NotImplementedError(self.codeInformation())
+            ###
+        elif self.elementType in [35]: # CCONEAX
+            if self.numWide==numWideReal:
+                self.createTransientObject(self.coneAxForces,RealConeAxForce)
+                self.OEF_ConeAx()
+            else:
+                raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [64,70,75,82,144]: # CQUAD8,CTRIAR,CTRIA6,CQUADR,CQUAD4-bilinear
             if self.numWide==numWideReal:

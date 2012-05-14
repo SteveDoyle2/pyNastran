@@ -293,6 +293,69 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
+        msg = header+['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
+                      ' \n',
+                      '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
+        packs = []
+        forces = []
+        elements = []
+        line = '   '
+        for eid,force in sorted(self.force.items()):
+            elements.append(eid)
+            forces.append(force)
+            #pack.append(eid)
+            #pack.append(f)
+            line += '%13s  %13s / %13s     ' %(eid,force.real,force.imag)
+            if len(forces)==3:
+                msg.append(line.rstrip()+'\n')
+            ###
+        ###
+        if forces:
+            msg.append(line.rstrip()+'\n')
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return (''.join(msg),pageNum)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+        words=['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
+               ' \n',
+               '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
+        msg = []
+        for dt,Force in sorted(self.force.items()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            packs = []
+            forces = []
+            elements = []
+            line = '   '
+            for eid,force in sorted(Force.items()):
+                elements.append(eid)
+                forces.append(force)
+                #pack.append(eid)
+                #pack.append(f)
+                line += '%13s  %13s / %13s     ' %(eid,force.real,force.imag)
+                if len(forces)==3:
+                    msg.append(line.rstrip()+'\n')
+                ###
+            ###
+            if forces:
+                msg.append(line.rstrip()+'\n')
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
+
     def __repr__(self):
         return str(self.force)
 
@@ -669,6 +732,61 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         self.shear[dt][eid] = [ts1,ts2]
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+
+        words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+
+        msg = []
+        for dt,bendA in sorted(self.bendingMomentA.iteritems()):
+            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += words
+            for eid in sorted(bendA):
+                bm1a,bm2a = self.bendingMomentA[dt][eid]
+                bm1b,bm2b = self.bendingMomentB[dt][eid]
+                ts1,ts2 = self.shear[dt][eid]
+                af = self.axial[dt][eid]
+                trq = self.torque[dt][eid]
+                (vals2,isAllZeros) = self.writeF06ImagFloats13E([bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq])
+                [bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
+                 bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi] = vals2
+                msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %(eid,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr))
+                msg.append('     %8s    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %('', bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum += 1
+        ###
+        return (''.join(msg),pageNum-1)
+
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
+        msg = header+['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+               '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+               '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+
+        for eid in sorted(self.bendingMomentA):
+            bm1a,bm2a = self.bendingMomentA[eid]
+            bm1b,bm2b = self.bendingMomentB[eid]
+            ts1,ts2 = self.shear[eid]
+            af = self.axial[eid]
+            trq = self.torque[eid]
+            (vals2,isAllZeros) = self.writeF06ImagFloats13E([bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq])
+            [bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr,
+             bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi] = vals2
+            msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %(eid,bm1ar,bm2ar,bm1br,bm2br,ts1r,ts2r,afr,trqr))
+            msg.append('     %8s    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %('', bm1ai,bm2ai,bm1bi,bm2bi,ts1i,ts2i,afi,trqi))
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return (''.join(msg),pageNum)
 
     def __repr__(self):
         return str(self.axial)
