@@ -199,6 +199,7 @@ class OP2(BDF,  # BDF methods
         self.beamForces = {}
         self.bendForces = {}
         self.bushForces = {}
+        self.coneAxForces = {}
         self.damperForces = {}
         self.gapForces = {}
         self.plateForces = {}

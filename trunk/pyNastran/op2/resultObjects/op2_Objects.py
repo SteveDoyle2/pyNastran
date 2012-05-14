@@ -53,6 +53,26 @@ class baseScalarObject(Op2Codes):
             vals2.append(v2)
         return (vals2,isAllZeros)
 
+    def writeF06ImagFloats13E(self,vals):
+        vals2 = []
+        isAllZeros = True
+        for v in vals:
+            v2 = '%13.6E' %(v.real)
+            if v2==' 0.000000E+00' or v2=='-0.000000E+00':
+                v2 = ' 0.0         '
+            else:
+                isAllZeros = False
+            vals2.append(v2)
+
+        for v in vals:
+            v3 = '%13.6E' %(v.imag)
+            if v3==' 0.000000E+00' or v3=='-0.000000E+00':
+                v3 = ' 0.0         '
+            else:
+                isAllZeros = False
+            vals2.append(v3)
+        return (vals2,isAllZeros)
+
     def writeF06Floats8p4F(self,vals):
         vals2 = []
         isAllZeros = True
@@ -181,15 +201,17 @@ class scalarObject(baseScalarObject):
     def recastGridType(self,gridType):
         """converts a gridType integer to a string"""
         if gridType==1:
-            gridType = 'G'  # GRID
+            Type = 'G'  # GRID
         elif gridType==2:
-            gridType = 'S'  # SPOINT
+            Type = 'S'  # SPOINT
         elif gridType==7:
-            gridType = 'L'  # RIGID POINT ???
+            Type = 'L'  # RIGID POINT (e.g. RBE3)
+        elif gridType==0:
+            Type = 'H'      # SECTOR/HARMONIC/RING POINT
         else:
             raise Exception('gridType=%s' %(gridType))
         ###
-        return gridType
+        return Type
         
     def updateDt(self,dataCode,dt):
         """

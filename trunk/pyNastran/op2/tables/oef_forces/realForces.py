@@ -328,6 +328,30 @@ class RealForces(object):
         self.handleResultsBuffer(self.OEF_Plate2)
         #print self.plateForces2
 
+    def OEF_ConeAx(self): # 35-CCONEAX
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOEF_FormatStart()
+        format1 += 'ffffff'
+
+        while len(self.data)>=28: # 7*4
+            eData     = self.data[0:28]
+            self.data = self.data[28: ]
+            #print "len(data) = ",len(eData)
+
+            out = unpack(format1, eData)
+            (eid,hopa,bmu,bmv,tm,su,sv) = out
+            eid2  = extract(eid,dt)
+            #print "eType=%s" %(eType)
+            
+            dataIn = [eid2,hopa,bmu,bmv,tm,su,sv]
+            #print "%s" %(self.ElementType(self.elementType)),dataIn
+            #eid = self.obj.addNewEid(out)
+            self.obj.add(dt,dataIn)
+            #print "len(data) = ",len(self.data)
+        ###
+        self.handleResultsBuffer(self.OEF_ConeAx)
+        #print self.shearForces
+        
     def OEF_CGap(self): # 38-CGAP
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()

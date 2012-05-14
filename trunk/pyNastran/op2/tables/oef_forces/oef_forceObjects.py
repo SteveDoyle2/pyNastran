@@ -399,12 +399,12 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         forces = []
         elements = []
         line = '   '
-        for eid,f in sorted(force.items()):
+        for eid,force in sorted(self.force.items()):
             elements.append(eid)
-            forces.append(f)
+            forces.append(force)
             #pack.append(eid)
             #pack.append(f)
-            line += '%13s  %13s     ' %(eid,f)
+            line += '%13s  %13s     ' %(eid,force)
             if len(forces)==3:
                 msg.append(line.rstrip()+'\n')
             ###
@@ -888,29 +888,6 @@ class RealCBARForce(scalarObject): # 34-CBAR
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
-        if self.dt is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
-        msg = header+['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-               '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-               '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
-
-        for eid in sorted(self.bendingMomentA):
-            bm1a,bm2a = self.bendingMomentA[eid]
-            bm1b,bm2b = self.bendingMomentB[eid]
-            ts1,ts2 = self.shear[eid]
-            af = self.axial[eid]
-            trq = self.torque[eid]
-            (vals2,isAllZeros) = self.writeF06Floats13E([bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq])
-            [bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq] = vals2
-            msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' %(eid,bm1a,bm2a,bm1b,bm2b,ts1,ts2,af,trq))
-        ###
-        msg.append(pageStamp+str(pageNum)+'\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg),pageNum)
-
     def __repr__(self):
         return str(self.axial)
 
@@ -973,6 +950,76 @@ class RealCBAR100Force(scalarObject): # 100-CBAR
 
     def __repr__(self):
         return str(self.axial)
+
+class RealConeAxForce(scalarObject): # 35-CCONEAX
+    def __init__(self,dataCode,isSort1,iSubcase,dt):
+        scalarObject.__init__(self,dataCode,iSubcase)
+        #self.eType = {}
+        self.hopa = {}
+        self.bmu = {}
+        self.bmv = {}
+        self.tm = {}
+        self.su = {}
+        self.sv = {}
+
+        self.dt = dt
+        if isSort1:
+            if dt is not None:
+                self.add = self.addSort1
+            ###
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+        ###
+
+    def addNewTransient(self,dt):
+        self.dt = dt
+        self.hopa[dt] = {}
+        self.bmu[dt] = {}
+        self.bmv[dt] = {}
+        self.tm[dt] = {}
+        self.su[dt] = {}
+        self.sv[dt] = {}
+
+    def add(self,dt,data):
+        [eid,hopa,bmu,bmv,tm,su,sv] = data
+
+        #self.eType[eid] = eType
+        self.hopa[eid] = hopa
+        self.bmu[eid] = bmu
+        self.bmv[eid] = bmv
+        self.tm[eid] = tm
+        self.su[eid] = su
+        self.sv[eid] = sv
+
+    def addSort1(self,dt,data):
+        [eid,hopa,bmu,bmv,tm,su,sv] = data
+        if dt not in self.hopa:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.hopa[dt][eid] = hopa
+        self.bmu[dt][eid] = bmu
+        self.bmv[dt][eid] = bmv
+        self.tm[dt][eid] = tm
+        self.su[dt][eid] = su
+        self.sv[dt][eid] = sv
+
+    def addSort2(self,eid,data):
+        [dt,hopa,bmu,bmv,tm,su,sv] = data
+        if dt not in self.hopa:
+            self.addNewTransient(dt)
+
+        #self.eType[eid] = eType
+        self.hopa[dt][eid] = hopa
+        self.bmu[dt][eid] = bmu
+        self.bmv[dt][eid] = bmv
+        self.tm[dt][eid] = tm
+        self.su[dt][eid] = su
+        self.sv[dt][eid] = sv
+
+    def __repr__(self):
+        return str(self.hopa)
 
 class RealCGAPForce(scalarObject): # 38-CGAP
     def __init__(self,dataCode,isSort1,iSubcase,dt):

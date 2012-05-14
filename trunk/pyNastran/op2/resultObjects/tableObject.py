@@ -72,6 +72,7 @@ class TableObject(scalarObject):  # displacement style table
 
     def addNewTransient(self,dt):
         """initializes the transient variables"""
+        self.dt = dt
         self.translations[dt] = {}
         self.rotations[dt]    = {}
 
@@ -92,8 +93,7 @@ class TableObject(scalarObject):  # displacement style table
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.displacements,'displacementObject - static failure'
         
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID] = gridType
+        self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
@@ -109,8 +109,7 @@ class TableObject(scalarObject):  # displacement style table
         #assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID]             = gridType
+        self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
@@ -125,8 +124,7 @@ class TableObject(scalarObject):  # displacement style table
         #assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID]             = gridType
+        self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = array([v1,v2,v3]) # dx,dy,dz
         self.rotations[dt][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
@@ -299,7 +297,7 @@ class complexTableObject(scalarObject):
         if transient is None:
             for line in data:
                 (nodeID,gridType,v1,v2,v3,v4,v5,v6) = line
-                self.gridTypes[nodeID]    = gridType
+                self.gridTypes[nodeID] = gridType
                 self.translations[self.dt][nodeID] = [v1,v2,v3] # dx,dy,dz
                 self.rotations[self.dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
             ###
@@ -346,16 +344,7 @@ class complexTableObject(scalarObject):
         assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
-        if gridType==1:
-            Type = 'G'
-        elif gridType==2:
-            Type = 'S'
-        elif gridType==7:
-            Type = 'L'
-        else:
-            raise Exception('invalid grid type...gridType=%s' %(gridType))
-
-        self.gridTypes[nodeID] = Type
+        self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[nodeID]    = [v4,v5,v6] # rx,ry,rz
     ###
@@ -363,27 +352,16 @@ class complexTableObject(scalarObject):
     def addSort1(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
-        #print msg
+        print msg
         if dt not in self.translations:
             self.addNewTransient(dt)
         #print msg
         #msg = ''
         #assert isinstance(nodeID,int),nodeID
-        assert 0<nodeID<1000000000, msg
+        #assert 0<nodeID<1000000000, msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
-        #if gridType==0:
-        #    Type = 'S'
-        if gridType==1:
-            Type = 'G'
-        elif gridType==2:
-            Type = 'S'
-        elif gridType==7:
-            Type = 'L'
-        else:
-            raise Exception('invalid grid type...gridType=%s' %(gridType))
-
-        self.gridTypes[nodeID] = Type
+        self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
 
@@ -395,16 +373,8 @@ class complexTableObject(scalarObject):
 
         assert isinstance(eid,int),eid
         assert 0<nodeID<1000000000, msg
-        if gridType==1:
-            Type = 'G'
-        elif gridType==2:
-            Type = 'S'
-        elif gridType==7:
-            Type = 'L'
-        else:
-            raise Exception('invalid grid type...gridType=%s' %(gridType))
 
-        self.gridTypes[nodeID] = Type
+        self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         

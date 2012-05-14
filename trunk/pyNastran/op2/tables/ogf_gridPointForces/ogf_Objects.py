@@ -124,9 +124,9 @@ class gridPointForcesObject(scalarObject):
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         for dt,Forces in sorted(self.forces.iteritems()):
             zero = ' '
-            for eKey,force in sorted(Forces.iteritems()):
-                for iLoad,f in enumerate(force):
-                    (f1,f2,f3) = f
+            for eKey,Force in sorted(Forces.iteritems()):
+                for iLoad,force in enumerate(Force):
+                    (f1,f2,f3) = force
                     (m1,m2,m3) = self.moments[dt][eKey][iLoad]
                     (elemName) = self.elemName[eKey][iLoad]
                     eid = self.eids[eKey][iLoad]

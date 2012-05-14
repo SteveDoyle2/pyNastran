@@ -54,13 +54,9 @@ def getAllFiles(foldersFile,fileType):
         if moveDir:
             print "moveDir = ",moveDir
             assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
-            #print getFilesOfType(moveDir,fileType)
-            files2 += getFilesOfType(moveDir,fileType)
+            files2 += getFilesOfType(moveDir,fileType,maxSize=100.)
         ###
     ###
-    #print files2
-    #print "len(files2) = ",len(files2)
-    #asdf
     return files2
 
 if __name__=='__main__':

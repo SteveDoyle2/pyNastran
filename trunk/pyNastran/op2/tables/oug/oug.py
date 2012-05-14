@@ -181,8 +181,8 @@ class OUG(object):
                 self.createTransientObject(self.displacements,displacementObject) # real
             elif self.thermal==1:
                 self.createTransientObject(self.temperatures,temperatureObject)
-            elif self.thermal==8:
-                self.createTransientObject(self.scaledDisplacements,displacementObject)
+            #elif self.thermal==8:
+                #self.createTransientObject(self.scaledDisplacements,displacementObject)
             else:
                 raise NotImplementedError('***thermal=%s***\n%s' %(self.thermal,self.codeInformation()))
             self.OUG_RealTable()
