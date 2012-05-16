@@ -328,7 +328,7 @@ class OP4:                                                # {{{1
         # Scan the file for number of matrices and headers for each matrix.
         try:
             rv = op4_scan(filename , # in                            
-                     &nmat_in_file, # out number of matrices        
+                     &nmat_in_file , # out number of matrices        
                       name         , # out matrix names              
                       storage      , # out 0=dn; 1=sp1; 2=sp2        
                       nRow         , # out number of rows            
@@ -341,7 +341,8 @@ class OP4:                                                # {{{1
                       offset)        # out byte offset to matrix     
 
             if nmat_in_file > Max_Matrices_Per_OP4:
-                print('op4.File: too many matrices in %s' % (filename))
+                print('op4.File: too many matrices in %s; max allowed is %d' % (
+                    filename, Max_Matrices_Per_OP4))
                 raise IOError
 
             self.nmat      = nmat_in_file
@@ -411,10 +412,10 @@ class OP4:                                                # {{{1
         cdef float  *array_CS
         cdef double *array_RD
         cdef double *array_CD
-#       cdef np.ndarray I_coo = np.zeros((self.nnz[i],), dtype=DTYPE)
-#       cdef np.ndarray J_coo = np.zeros((self.nnz[i],), dtype=DTYPE)
-        cdef np.ndarray I_coo = np.zeros((1000,), dtype=DTYPE)
-        cdef np.ndarray J_coo = np.zeros((1000,), dtype=DTYPE)
+#       cdef np.ndarray I_coo = np.zeros((self.nnz[i],), dtype=DTYPE)  # syntax error
+#       cdef np.ndarray J_coo = np.zeros((self.nnz[i],), dtype=DTYPE)  # syntax error
+        cdef np.ndarray I_coo = np.zeros((100000,), dtype=DTYPE)  # KLUDGE!! must be dynamic size!
+        cdef np.ndarray J_coo = np.zeros((100000,), dtype=DTYPE)  # KLUDGE!! must be dynamic size!
         cdef np.ndarray ndarray
         All_Matrices = []
 
