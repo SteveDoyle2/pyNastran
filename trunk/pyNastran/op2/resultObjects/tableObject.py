@@ -79,7 +79,7 @@ class TableObject(scalarObject):  # displacement style table
     #def addBinary(self,deviceCode,data):
         #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
         #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        #assert 0<nodeID<1000000000, msg
+        #assert -1<nodeID<1000000000,msg
         #assert nodeID not in self.translations
 
         #self.translations[nodeID] = array([v1,v2,v3]) # dx,dy,dz
@@ -90,8 +90,9 @@ class TableObject(scalarObject):  # displacement style table
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
         #print msg
-        assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.displacements,'displacementObject - static failure'
+        assert -1<nodeID<1000000000,msg
+        assert isinstance(nodeID,int),msg
+        #assert nodeID not in self.translations,'displacementObject - static failure'
         
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[nodeID] = array([v1,v2,v3]) # dx,dy,dz
@@ -106,7 +107,8 @@ class TableObject(scalarObject):  # displacement style table
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         #print msg
-        #assert 0<nodeID<1000000000, msg
+        assert -1<nodeID<1000000000,msg
+        #assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
@@ -120,8 +122,10 @@ class TableObject(scalarObject):  # displacement style table
             self.addNewTransient(dt)
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
+        msg = 'dt=%s nodeID=%s' %(dt,nodeID)
         #print msg
-        #assert 0<nodeID<1000000000, msg
+        #assert 0<nodeID<1000000000,msg
+        #assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
@@ -207,6 +211,51 @@ class TableObject(scalarObject):  # displacement style table
         ###
         return translations2,rotations2
         
+    def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None):
+        msg = words
+        for nodeID,translation in sorted(self.translations.iteritems()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+            vals = [dx,dy,dz,rx,ry,rz]
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            [dx,dy,dz,rx,ry,rz] = vals2
+            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return (''.join(msg),pageNum)
+
+    def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None):
+        msg = []
+        for dt,translations in sorted(self.translations.iteritems()):
+            if isinstance(dt,float):
+                header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            else:
+                header[1] = ' %s = %10i\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            for nodeID,translation in sorted(translations.iteritems()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
+
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                pageNum+=1
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+        return (''.join(msg),pageNum-1)
+
     def plot(self,nodeList=None,resultType='Translation',coord=3,markers=None,
                   Title=None,hasLegend=True,Legend=None,xLabel=None,yLabel=None,alphaLegend=0.5):
         """
@@ -341,7 +390,11 @@ class complexTableObject(scalarObject):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
         #assert isinstance(nodeID,int),nodeID
-        assert 0<nodeID<1000000000, msg
+        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
+        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
+        #print msg
+        assert -1<nodeID<1000000000,msg
+        assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
@@ -351,33 +404,68 @@ class complexTableObject(scalarObject):
 
     def addSort1(self,dt,out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
-        msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
-        print msg
+        #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
+        #print msg
         if dt not in self.translations:
             self.addNewTransient(dt)
-        #print msg
-        #msg = ''
         #assert isinstance(nodeID,int),nodeID
-        #assert 0<nodeID<1000000000, msg
+        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
+        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
+        #print msg
+        assert -1<nodeID<1000000000,msg
+        assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
 
-    def addSort2(self,eid,data):
+    def addSort2(self,nodeID,data):
         [dt,gridType,v1,v2,v3,v4,v5,v6] = data
 
         if dt not in self.translations:
             self.addNewTransient(dt)
 
-        assert isinstance(eid,int),eid
-        assert 0<nodeID<1000000000, msg
+        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
+        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
+        #print msg
+        assert -1<nodeID<1000000000,msg
+        assert isinstance(nodeID,int),msg
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
+    def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None):
+        msg = []
+        for dt,translations in sorted(self.translations.iteritems()):
+            header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            msg += header+words
+            for nodeID,translation in sorted(translations.iteritems()):
+                rotation = self.rotations[dt][nodeID]
+                gridType = self.gridTypes[nodeID]
+
+                (dx,dy,dz) = translation
+                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
+                (rx,ry,rz) = rotation
+                rxr=rx.real; ryr=ry.real; rzr=rz.real
+                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+                
+                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
+                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
+                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
+                msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
+
     def plot(self,nodeList=None,resultType='Translation',displayType='Real Imag',coord=3,markers=None,
                   Title=None,hasLegend=True,Legend=None,xLabel=None,yLabel=None,alphaLegend=0.5):
         """

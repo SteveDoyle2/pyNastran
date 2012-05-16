@@ -4,58 +4,23 @@ import copy
 # pyNastran
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
-class velocityObject(TableObject): # approachCode=10, sortCode=0, thermal=0
+class velocityObject(TableObject): # approachCode=10, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
-        msg = header+['                                                   V E L O C I T Y   V E C T O R\n',
-               ' \n',
-               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-
-            (dx,dy,dz) = translation
-            (rx,ry,rz) = rotation
-            vals = [dx,dy,dz,rx,ry,rz]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-            [dx,dy,dz,rx,ry,rz] = vals2
-            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
-        ###
-        msg.append(pageStamp+str(pageNum)+'\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg),pageNum)
+        words = ['                                                   V E L O C I T Y   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                                   V E L O C I T Y   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-
-                (dx,dy,dz) = translation
-                (rx,ry,rz) = rotation
-                vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dx,dy,dz,rx,ry,rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
-            ###
-            msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
 
     def __repr__(self):
         if self.nonlinearFactor is not None:

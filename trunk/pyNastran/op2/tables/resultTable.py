@@ -66,9 +66,14 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         #gridDevice, = unpack('i',data)
         return timeFreq
     
-    def addDataParameter(self,data,Name,Type,FieldNum,applyNonlinearFactor=True):
-        #self.mode      = self.getValues(data,'i',5) ## mode number
-        value = self.getValues(data,Type,FieldNum)
+    def addDataParameter(self,data,Name,Type,fieldNum,applyNonlinearFactor=True,fixDeviceCode=False):
+        """
+        self.mode = self.getValues(data,'i',5) ## mode number
+        """
+        value = self.getValues(data,Type,fieldNum)
+        if fixDeviceCode:
+            value = (value-self.deviceCode)//10
+        print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysisCode,value)
         setattr(self,Name,value)
         self.dataCode[Name] = value
         
@@ -113,6 +118,9 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
                 raise
             ###
         else:
+            #if self.isRegular:
+                #self.obj = classObj(self.dataCode,not(self.isRegular),self.iSubcase,self.nonlinearFactor)
+            #else:
             self.obj = classObj(self.dataCode,self.isSort1(),self.iSubcase,self.nonlinearFactor)
             #print "obj2 = ",self.obj.__class__.__name__
         storageObj[self.iSubcase] = self.obj

@@ -122,7 +122,8 @@ class NastranIO(object):
         points2 = vtk.vtkPoints()
         points2.SetNumberOfPoints(nCAeros*4+nCONM2)
         for eid,element in sorted(model.caeros.iteritems()):
-            if isinstance(element,CAERO1):
+            if (isinstance(element,CAERO1) or isinstance(element,CAERO3) or
+                isinstance(element,CAERO4)  or isinstance(element,CAERO5)):
                 cpoints = element.Points()
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
@@ -135,6 +136,11 @@ class NastranIO(object):
                 points2.InsertPoint(j+3, *cpoints[3])
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j+=4
+            #elif isinstance(element,CAERO2): # cylinder
+                #pass
+            else:
+                print "skipping %s" %(element.type)
+                
         self.mapElements(points,points2,self.nidMap,model,j)
 
     def mapElements(self,points,points2,nidMap,model,j):
@@ -324,7 +330,7 @@ class NastranIO(object):
                 #elem.SetRadius(1.0)
                 #print str(element)
 
-                points2.InsertPoint(j,     *c)
+                points2.InsertPoint(j,*c)
                 elem.GetPointIds().SetId(0, j)
                 #elem.SetCenter(points.GetPoint(nidMap[nid]))
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())

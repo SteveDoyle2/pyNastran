@@ -353,14 +353,30 @@ class CONM2(PointElement): ## @todo not done
         ###
 
     def Mass(self):
-        if self.cid==0:
-            raise NotImplementedError('cid=0 is not supported for CONM2...')
         return self.mass
 
+    def Inertia(self):
+        """
+        Returns the 3x3 inertia matrix
+        @warning doesnt handle offsets or coordinate systems
+        """
+        I = self.I
+        A = [ [ I[0],I[1],I[3] ],
+              [ I[1],I[2],I[4] ],
+              [ I[3],I[4],I[5] ]]
+        if self.Cid()==-1:
+            return A
+        else:
+            # transform to global
+            dx,matrix = self.cid.transformToGlobal(self.X)
+            raise NotImplementedError()
+            A2 = A*matrix
+            return A2 # correct for offset using dx???
+
     def Centroid(self):
-        if self.cid==0:
-            raise NotImplementedError('cid=0 is not supported for CONM2...')
-        if self.cid==-1:
+        if self.Cid()==0:
+            X2  = self.nid.Position()+self.X
+        elif self.Cid()==-1:
             return self.X
         else:
             dx,matrix = self.cid.transformToGlobal(self.X)
@@ -370,10 +386,7 @@ class CONM2(PointElement): ## @todo not done
         return X2
 
     def crossReference(self,model):
-        """
-        @warning only supports cid=0
-        """
-        if self.cid!=-1:
+        if self.Cid()!=-1:
             self.cid = model.Coord(self.cid)
         self.nid = model.Node(self.nid)
 

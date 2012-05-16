@@ -9,9 +9,9 @@ class baseScalarObject(Op2Codes):
     def name(self):
         return self.__class__.__name__
 
-    def writeF06(self,header,pageStamp,pageNum):
-        msg = 'writeF06 is not implemented in %s' %(self.__class__.__name__)
-        raise NotImplementedError(msg)
+    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+        msg = ['writeF06 is not implemented in %s' %(self.__class__.__name__)]
+        return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum):
         msg = 'writeF06Transient is not implemented in %s' %(self.__class__.__name__)
