@@ -1,3 +1,4 @@
+# http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
 import sys
 import copy
 from numpy import array
@@ -68,61 +69,86 @@ class OUG(object):
         self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
         self.addDataParameter(data,'acousticFlag','f',13,False)  ## acoustic pressure flag
         self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat transfer, 0 otherwise
-        
-        if not self.isSort1():
-            raise NotImplementedError('sort2...')
+        self.isFlipped = False
+        if self.isSort1():
+            ## assuming tCode=1
+            if self.analysisCode==1:   # statics / displacement / heat flux
+                self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
+                self.applyDataCodeValue('dataNames',['lsdvmn'])
+                self.setNullNonlinearFactor()
+            elif self.analysisCode==2: # real eigenvalues
+                self.addDataParameter(data,'mode',     'i',5)         ## mode number
+                self.addDataParameter(data,'eigr',     'f',6,False)   ## real eigenvalue
+                self.addDataParameter(data,'modeCycle','i',7,False)   ## mode or cycle @todo confused on the type - F1???
+                self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
+            #elif self.analysisCode==3: # differential stiffness
+                #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+                #self.dataCode['lsdvmn'] = self.lsdvmn
+            #elif self.analysisCode==4: # differential stiffness
+                #self.lsdvmn = self.getValues(data,'i',5) ## load set number
+            elif self.analysisCode==5:   # frequency
+                self.addDataParameter(data,'freq','f',5)   ## frequency
+                self.applyDataCodeValue('dataNames',['freq'])
+            elif self.analysisCode==6: # transient
+                self.addDataParameter(data,'dt','f',5)   ## time step
+                self.applyDataCodeValue('dataNames',['dt'])
+            elif self.analysisCode==7: # pre-buckling
+                self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+                self.applyDataCodeValue('dataNames',['lsdvmn'])
+            elif self.analysisCode==8: # post-buckling
+                self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+                self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
+                self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
+            elif self.analysisCode==9: # complex eigenvalues
+                self.addDataParameter(data,'mode','i',5)   ## mode number
+                self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
+                self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+                self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
+            elif self.analysisCode==10: # nonlinear statics
+                self.addDataParameter(data,'lftsfq','f',5)   ## load step
+                self.applyDataCodeValue('dataNames',['lftsfq'])
+            elif self.analysisCode==11: # old geometric nonlinear statics
+                self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+                self.applyDataCodeValue('dataNames',['lsdvmn'])
+            elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+                self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
+                self.applyDataCodeValue('dataNames',['lsdvmn'])
+            else:
+                raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+        else: # sort2
+            
+            eidDevice = self.getValues(data,'i',5)
+            floatVal  = self.getValues(data,'f',5)
+            #eid = (eidDevice-self.deviceCode)//10
+            print "EID = %s" %(eidDevice)
+            print "floatVal = %s" %(floatVal)
 
-        ## assuming tCode=1
-        if self.analysisCode==1:   # statics / displacement / heat flux
-            self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-            self.setNullNonlinearFactor()
-        elif self.analysisCode==2: # real eigenvalues
-            self.addDataParameter(data,'mode',     'i',5)         ## mode number
-            self.addDataParameter(data,'eigr',     'f',6,False)   ## real eigenvalue
-            self.addDataParameter(data,'modeCycle','i',7,False)   ## mode or cycle @todo confused on the type - F1???
-            self.applyDataCodeValue('dataNames',['mode','eigr','modeCycle'])
-        #elif self.analysisCode==3: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
-            #self.dataCode['lsdvmn'] = self.lsdvmn
-        #elif self.analysisCode==4: # differential stiffness
-            #self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        elif self.analysisCode==5:   # frequency
-            self.addDataParameter(data,'freq','f',5)   ## frequency
-            self.applyDataCodeValue('dataNames',['freq'])
-        elif self.analysisCode==6: # transient
-            self.addDataParameter(data,'dt','f',5)   ## time step
-            self.applyDataCodeValue('dataNames',['dt'])
-        elif self.analysisCode==7: # pre-buckling
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode==8: # post-buckling
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
-            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
-        elif self.analysisCode==9: # complex eigenvalues
-            self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
-            self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
-            self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
-        elif self.analysisCode==10: # nonlinear statics
-            self.addDataParameter(data,'lftsfq','f',5)   ## load step
-            self.applyDataCodeValue('dataNames',['lftsfq'])
-        elif self.analysisCode==11: # old geometric nonlinear statics
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-        else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            self.isRegular = False
+            if self.analysisCode in [1]: # 5
+                self.addDataParameter(data,'freq','f',5)   ## frequency
+                self.applyDataCodeValue('dataNames',['freq'])
+            elif self.analysisCode==6: # transient
+                self.addDataParameter(data,'dt','f',5)   ## time step
+                self.applyDataCodeValue('dataNames',['dt'])
+            elif self.analysisCode==10: # freq/time step
+                self.addDataParameter(data,'fqts','f',5)   ## frequency / time step
+                self.applyDataCodeValue('dataNames',['fqts'])
+            else:
+                self.isRegular = True
+                self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## node ID
+                self.applyDataCodeValue('dataNames',['nodeID'])
+        ###
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
         
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        #print self.codeInformation()
+        print self.codeInformation()
+
+        #if not self.isSort1():
+            #raise NotImplementedError('sort2...')
+
 
         #self.printBlock(data)
         self.readTitle()
@@ -135,8 +161,11 @@ class OUG(object):
         #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         
-        if self.tableCode==1:    # displacement
+        if self.tableCode==1 and self.tableName in ['OUGV1','OUPV1']:    # displacement
             assert self.tableName in ['OUGV1','OUPV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+            self.readOUG_Data_table1()
+        elif self.tableCode==1 and self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',]:    # displacement
+            #assert self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table1()
         elif self.tableCode==7:  # modes
             assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
@@ -174,11 +203,32 @@ class OUG(object):
             #print "nid = ",nid
         #sys.exit('thermal4...')
     
-    def readOUG_Data_table1(self): # displacement / temperature
+    def readOUG_Data_table1(self): # displacement / temperature OUGV1, OUPV1
+        """
+        OUGV1   - global coordinate system in sort 1
+        OUPV1   - scaled response spectra in sort 1
+        OUGPSD2 - PSD in sort 2
+        OUGATO2 - auto-correlated in sort 2
+        """
         isSort1 = self.isSort1()
+        print "isSort2 = ",not(isSort1)
         if self.numWide==8:  # real/random
             if self.thermal==0:
-                self.createTransientObject(self.displacements,displacementObject) # real
+                print self.dataCode
+                if self.tableName in ['OUGV1']:
+                    self.createTransientObject(self.displacements,displacementObject) # real
+                elif self.tableName in ['OUGATO2']:
+                    self.createTransientObject(self.displacementsATO,displacementObject) # random
+                elif self.tableName in ['OUGCRM2']:
+                    self.createTransientObject(self.displacementsCRM,displacementObject) # random
+                elif self.tableName in ['OUGPSD2']:
+                    self.createTransientObject(self.displacementsPSD,displacementObject) # random
+                elif self.tableName in ['OUGRMS2']:
+                    self.createTransientObject(self.displacementsRMS,displacementObject) # random
+                elif self.tableName in ['OUGNO2']:
+                    self.createTransientObject(self.displacementsNO,displacementObject) # random
+                else:
+                    raise NotImplementedError('***table=%s***\n%s' %(self.tableName,self.codeInformation()))
             elif self.thermal==1:
                 self.createTransientObject(self.temperatures,temperatureObject)
             #elif self.thermal==8:

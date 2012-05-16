@@ -4,58 +4,91 @@ import copy
 # pyNastran
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
-class displacementObject(TableObject): # approachCode=1, sortCode=0, thermal=0
+class displacementObject(TableObject): # approachCode=1, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
-        msg = header+['                                             D I S P L A C E M E N T   V E C T O R\n',
-               ' \n',
-               '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID,translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-
-            (dx,dy,dz) = translation
-            (rx,ry,rz) = rotation
-            vals = [dx,dy,dz,rx,ry,rz]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-            [dx,dy,dz,rx,ry,rz] = vals2
-            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
-        ###
-        msg.append(pageStamp+str(pageNum)+'\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg),pageNum)
+        words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        words += self.getTableMarker()
+        return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+        words += self.getTableMarker()
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
 
-                (dx,dy,dz) = translation
-                (rx,ry,rz) = rotation
-                vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dx,dy,dz,rx,ry,rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
-                pageNum+=1
-            ###
-            msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-        return (''.join(msg),pageNum-1)
+    def getTableMarker(self):
+        if self.isATO():
+            words = self.ATO_words()
+        elif self.isCRM():
+            words = self.CRM_words()
+        elif self.isPSD():
+            words = self.PSD_words()
+        elif self.isRMS():
+            words = self.RMS_words()
+        elif self.isZERO():
+            return self.ZERO_words()
+        else:
+            words = ['']
+        return words
+
+    def isATO(self):
+        """Auto-Correlation Function"""
+        if 'ATO' in self.tableName:
+            return True
+        return False
+
+    def isCRM(self):
+        """Correlated Root-Mean Square"""
+        if 'CRM' in self.tableName:
+            return True
+        return False
+
+    def isPSD(self):
+        """Power Spectral Density"""
+        if 'PSD' in self.tableName:
+            return True
+        return False
+
+    def isRMS(self):
+        """Root-Mean Square"""
+        if 'RMS' in self.tableName:
+            return True
+        return False
+
+    def isZERO(self):
+        """Zero Crossings"""
+        if 'NO' in self.tableName:
+            return True
+        return False
+
+
+    def ATO_words(self):
+        words = ['                                                 ( AUTO-CORRELATION FUNCTION )\n',' \n']
+        return words
+
+    def CRM_words(self):
+        words = ['                                               ( CUMULATIVE ROOT MEAN SQUARE )\n',' \n']
+        return words
+
+    def PSD_words(self):
+        words = ['                                             ( POWER SPECTRAL DENSITY FUNCTION )\n',' \n']
+        return words
+
+    def RMS_words(self):
+        words = ['                                                     ( ROOT MEAN SQUARE )\n',' \n']
+        return words
+        
+    def ZERO_words(self):
+        words = ['                                                 ( NUMBER OF ZERO CROSSINGS )\n',' \n']
+        return words
 
     def __repr__(self):
         #return ''
@@ -118,34 +151,7 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
-            header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-
-                (dx,dy,dz) = translation
-                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-                (rx,ry,rz) = rotation
-                rxr=rx.real; ryr=ry.real; rzr=rz.real
-                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-                
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
-                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
-                msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
-            ###
-            msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
 
     def __repr__(self):
         return self.writeF06(['','',''],'PAGE ',1)[0]

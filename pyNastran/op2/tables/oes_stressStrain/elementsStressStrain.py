@@ -11,7 +11,7 @@ from pyNastran.op2.op2Errors import *
 class ElementsStressStrain(object):
 
     def skipOES_Element(self):
-        self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
+        #self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
         #print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
         #print self.codeInformation()
         self.skipOES_Element2()

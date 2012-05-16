@@ -117,7 +117,8 @@ class OP2(BDF,  # BDF methods
                              'BGPDT','BGPDTS',                # boundary grids???
                              'EQEXIN','EQEXINS','PVT0','CASECC','EDOM',
                              'DESTAB',                        # design variables
-                             'OQG1','OQGV1','OQMG1',          # spc/mpc forces
+                             'OQG1','OQGV1',                  # spc forces
+                             'OQMG1',                         # mpc forces
                              
                              'OUGV1',                         # displacements                             
                              'OGPFB1',                        # grid point forces
@@ -144,8 +145,10 @@ class OP2(BDF,  # BDF methods
                               'OESPSD2', 'OESATO2', 'OESRMS2', 'OESNO2', 'OESCRM2',
                               'OPGPSD2', 'OPGATO2', 'OPGRMS2', 'OPGNO2', 'OPGCRM2',
                               'OQGPSD2', 'OQGATO2', 'OQGRMS2', 'OQGNO2', 'OQGCRM2',
+                              
+                              'OQMPSD2', 'OQMATO2', 'OQMRMS2', 'OQMNO2', 'OQMCRM2',
                              'OSTRPSD2','OSTRATO2','OSTRRMS2','OSTRNO2','OSTRCRM2',
-                              'OUGPSD2', 'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGRMS2',
+                              'OUGPSD2', 'OUGATO2', 'OUGCRM2', 'OUGNO2', 'OUGRMS2', # supported-ish
                               'OVGPSD2', 'OVGATO2', 'OVGRMS2', 'OVGNO2', 'OVGCRM2',
                              
                              ## @todo what do these do???
@@ -178,6 +181,11 @@ class OP2(BDF,  # BDF methods
 
         ## OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
+        self.displacementsPSD = {}        # random
+        self.displacementsATO = {}        # random
+        self.displacementsRMS = {}        # random
+        self.displacementsCRM = {}        # random
+        self.displacementsNO  = {}        # random
         self.scaledDisplacements = {}     # tCode=1 thermal=8
 
         ## OUG - temperatures
@@ -410,6 +418,7 @@ class OP2(BDF,  # BDF methods
                 break
             elif tableName in self.tablesToRead:
                 self.tableName = tableName
+                self.isRegular = True
                 try:
                     #print "startTell = ",self.op2.tell()
                     if tableName=='GEOM1': # nodes,coords,etc.
@@ -468,9 +477,12 @@ class OP2(BDF,  # BDF methods
 
                     elif tableName in ['OEF1X','DOEF1',  'OEFPSD2','OEFATO2','OEFRMS2','OEFNO2','OEFCRM2',]:  # applied loads
                         self.readTable_OEF()
-                    elif tableName in ['OQG1','OQMG1','OQGV1','OQP1',]:  # spc/mpc forces
+                    elif tableName in ['OQG1','OQGV1','OQP1',]:  # spc forces
                         self.readTable_OQG()
-
+                    elif tableName in ['OQMG1','OQMPSD2','OQMATO2','OQMRMS2','OQMNO2','OQMCRM2',]: # mpc forces
+                        #self.readTable_OQG()
+                        self.readTable_DUMMY_GEOM(tableName)
+ 
                     elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
                         self.readTable_OUG()
                     elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
@@ -711,7 +723,8 @@ class OP2(BDF,  # BDF methods
         results = [
                    # OUG - Displacements/Velocity/Acceleration/Temperature/Heat Flux/
                    #       SPC Forces
-                   self.displacements,self.temperatures,
+                   self.displacements,self.displacementsPSD,self.displacementsATO,
+                   self.temperatures,
                    self.eigenvalues,
                    self.eigenvectors,
                    self.velocities,

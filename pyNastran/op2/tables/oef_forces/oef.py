@@ -59,8 +59,8 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         #print "dLoadID(8)=%s formatCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         #print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
 
-        if not self.isSort1():
-            raise NotImplementedError('sort2...')
+        #if not self.isSort1():
+            #raise NotImplementedError('sort2...')
 
         ## assuming tCode=1
         if self.analysisCode==1:   # statics
@@ -232,11 +232,17 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         return (Real,Imag)
 
     def readOEF_Data(self):
+        """
+        OEF1X - 
+        DOEF1 - 
+        """
         #self.skipOES_Element() # skipping entire table
         #return
-        if self.tableCode==4: # Forces/Heat Flux
+        if self.tableCode==4 and self.tableName in ['OEF1X','DOEF1']: # Forces/Heat Flux
             assert self.tableName in ['OEF1X','DOEF1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOEF_Data_table4()
+        elif self.tableName in ['OEFATO2','OEFCRM2','OEFPSD2','OEFRMS2','OEFNO2',]:
+            self.skipOES_Element() # skipping entire table
         else:
             raise NotImplementedError(self.codeInformation())
         ###

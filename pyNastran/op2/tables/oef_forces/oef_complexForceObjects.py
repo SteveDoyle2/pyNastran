@@ -139,7 +139,6 @@ class ComplexCBEAMForce(scalarObject): # 2-CBEAM
         self.totalTorque[dt][eid] = {sd:ttrq}
         self.warpingTorque[dt][eid] = {sd:wtrq}
 
-
     def __repr__(self):
         return str(self.axial)
 
@@ -297,6 +296,7 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
+                      '                                                          (REAL/IMAGINARY)\n',
                       ' \n',
                       '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
         packs = []
@@ -325,6 +325,7 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words=['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
+               '                                                          (REAL/IMAGINARY)\n',
                ' \n',
                '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
         msg = []
@@ -736,13 +737,14 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
 
         words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+                 '                                                          (REAL/IMAGINARY)\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
 
         msg = []
         for dt,bendA in sorted(self.bendingMomentA.iteritems()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg += words
+            msg += header+words
             for eid in sorted(bendA):
                 bm1a,bm2a = self.bendingMomentA[dt][eid]
                 bm1b,bm2b = self.bendingMomentB[dt][eid]
@@ -767,6 +769,7 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
+               '                                                          (REAL/IMAGINARY)\n',
                '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
 

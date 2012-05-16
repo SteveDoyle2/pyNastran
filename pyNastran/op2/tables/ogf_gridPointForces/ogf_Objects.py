@@ -150,6 +150,7 @@ class gridPointForcesObject(scalarObject):
         return (''.join(msg),pageNum-1)
     
     def __repr__(self):
+        return ''
         return self.writeF06([],'PAGE ',1)[0]
         #return '---gridPointForceObject---'
 
