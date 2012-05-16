@@ -125,13 +125,16 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                                   &n_ptr     ,  /* in/out idx N[]    (s_o)=1,2    */
                                    column    ); /* out numeric data               */
         }
+        if (DEBUG) { printf("op4_load_S column %d populating array\n", c); fflush(stdout); }
         if (storage) { /* sparse */
              for (s = 0; s < s_ptr; s++) {
-                if (DEBUG) { printf("op4_load_S    s=%d\n", s); fflush(stdout); }
+                if (DEBUG) { printf("op4_load_S    str_data[%d].len=%d  .start_row=%d  .N_idx=%d\n", 
+                        s, str_data[s].len, str_data[s].start_row, str_data[s].N_idx); fflush(stdout); }
                 for (j = 0; j < str_data[s].len; j++) {
                      I_coo[i] = str_data[s].start_row + j;
                      J_coo[i] = c;
-                     if (DEBUG) { printf("op4_load_S    I,J[%d]=%d,%d\n", i, I_coo[i], J_coo[i]); fflush(stdout); }
+                     if (DEBUG) { printf("op4_load_S    I,J[%d]=%d,%d\n", 
+                            i, (int) I_coo[i], (int) J_coo[i]); fflush(stdout); }
                      array[i*NPT] = column[str_data[s].N_idx + j*NPT];
                      if (NPT > 1) {
                         array[i*NPT + 1] = column[str_data[s].N_idx + j*NPT + 1];
@@ -174,6 +177,8 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
     int     endian = 0;      /* FIX THIS */
 
     if (DEBUG) { printf("-> op4_load_D:  %d x %d\n", nRow, nCol); fflush(stdout); }
+    i     = 0;
+    nnz   = 0;
     size  = nRow*nCol;  /* only used for dense */
     NPT   = 1;
     nType = 2;
@@ -188,9 +193,17 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
         array    = malloc(sizeof(double)*n_Nnz*NPT);
         column   = malloc(sizeof(double)*n_Nnz*NPT);
         str_data = malloc(sizeof(str_t)*(nRow+1)/2);  /* max # strings in a row is nR/2 + 1*/
+        if (DEBUG) { printf("op4_load_D malloc'ed array, column, str_data\n"); fflush(stdout); }
     }
     for (c = 0; c < nCol; c++) {
-        if (DEBUG) printf("op4_load_D column %d\n", c);
+        if (DEBUG) { printf("op4_load_D column %d\n", c); fflush(stdout); }
+        if (storage) { /* sparse */
+            s_ptr                 = 0;
+            n_ptr                 = 0;
+            str_data[0].start_row = 0;
+            str_data[0].len       = 0;
+            str_data[0].N_idx     = 0;
+        }
         if (filetype == 1) {
             nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
                                    storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
@@ -216,15 +229,21 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                                    column     
                                   );
         }
+        if (DEBUG) { printf("op4_load_D column %d populating array\n", c); fflush(stdout); }
         if (storage) { /* sparse */
              for (s = 0; s < s_ptr; s++) {
+                if (DEBUG) { printf("op4_load_D    str_data[%d].len=%d  .start_row=%d  .N_idx=%d\n", 
+                        s, str_data[s].len, str_data[s].start_row, str_data[s].N_idx); fflush(stdout); }
                 for (j = 0; j < str_data[s].len; j++) {
                      I_coo[i] = str_data[s].start_row + j;
                      J_coo[i] = c;
+                     if (DEBUG) { printf("op4_load_D    I,J[%d]=%d,%d\n", 
+                            i, (int) I_coo[i], (int) J_coo[i]); fflush(stdout); }
                      array[i*NPT] = column[str_data[s].N_idx + j*NPT];
                      if (NPT > 1) {
                         array[i*NPT + 1] = column[str_data[s].N_idx + j*NPT + 1];
                      }
+                     i++;
                 }
              }
         } else {       /* dense  */
@@ -899,8 +918,8 @@ int DEBUG = 0;
         location = ftell(fp);
         fgets(line, OP4_TXT_LINE_SIZE, fp);
         line_type = op4_line_type(line);
-if (DEBUG) 
-printf("op4_read_col_t line_type=%d\n", line_type);
+if (DEBUG) {
+printf("op4_read_col_t line_type=%d\n", line_type); fflush(stdout); }
         if (strlen(line) >= 8) {
             switch (line_type) {
                 case OP4_TEXT_NUMERIC   : /* {{{2 */
@@ -909,25 +928,25 @@ printf("op4_read_col_t line_type=%d\n", line_type);
                                                   &x[3], &x[4], &x[5],
                                                   &x[6], &x[7], &x[8]);
                     if (storage) { /* sparse  */
-if (DEBUG) 
+if (DEBUG) {
 printf("op4_read_col_t inserting %d terms at row=%d\n", 
-nRead, S[*n_str-1].start_row);
+nRead, S[*n_str-1].start_row); fflush(stdout); }
                         n_read_this_str += nRead;
                         S[*n_str-1].len = n_read_this_str/NPT;
-                        for (j = 0; j < nRead; j++)
-                            N[(*N_index)++] = x[j];
-                    } else {       /* dense  */
-if (DEBUG) printf("op4_read_col_t inserting %d terms at row=%d\n", nRead, row);
                         for (j = 0; j < nRead; j++) {
-if (DEBUG) 
-printf(" N[row=%d + *N_index=%d]=%e\n", row, (*N_index), x[j]);
+                            N[(*N_index)++] = x[j]; }
+                    } else {       /* dense  */
+if (DEBUG) { printf("op4_read_col_t inserting %d terms at row=%d\n", nRead, row); fflush(stdout); }
+                        for (j = 0; j < nRead; j++) {
+if (DEBUG) {
+printf(" N[row=%d + *N_index=%d]=%e\n", row, (*N_index), x[j]); fflush(stdout); }
                             N[row + j] = x[j];
                         }
                         row += nRead;
                     }
                     n_nnz += nRead;
-if (DEBUG) 
-printf("op4_read_col_t nR=%d n_nnz now=%d\n", nRead, n_nnz);
+if (DEBUG) {
+printf("op4_read_col_t nR=%d n_nnz now=%d\n", nRead, n_nnz); fflush(stdout); }
                     break; /* 2}}} */
                 case OP4_TEXT_HEADER    : /* {{{2 */
 
