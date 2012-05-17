@@ -1,4 +1,4 @@
-from math import radians,sin,cos,atan2,degrees
+from numpy import sin,cos,radians,abs,angle
 
 def polarToRealImag(mag,phase):
     """
@@ -15,8 +15,4 @@ def polarToRealImag(mag,phase):
 
 def realImagToMagPhase(realImag):
     """returns the magnitude and phase (degrees) of a complex number"""
-    return abs(realImag),angle(realImag)
-
-def angle(realImag):
-    """returns the phase angle in degrees"""
-    return degrees(atan2(realImag.imag,realImag.real))
+    return abs(realImag),angle(realImag,deg=True)

@@ -75,7 +75,7 @@ if __name__=='__main__':
     writeBDF  = False
     writeF06  = False
     deleteF06 = True
-    saveCases = True
+    saveCases = False
     regenerate = False
     stopOnFailure = False
     getSkipCards = False

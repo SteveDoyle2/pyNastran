@@ -8,18 +8,20 @@ class velocityObject(TableObject): # approachCode=10, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         words = ['                                                   V E L O C I T Y   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        words += self.getTableMarker()
         return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                                   V E L O C I T Y   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        words += self.getTableMarker()
         return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
 
     def __repr__(self):
@@ -72,75 +74,27 @@ class velocityObject(TableObject): # approachCode=10, thermal=0
         return msg
 
 class complexVelocityObject(complexTableObject): # tableCode=10, approachCode=???
-    def __init__(self,dataCode,isSort1,iSubcase,dt):
+    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 
-        msg = header+['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for nodeID,translation in sorted(self.translations.iteritems()):
-            rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
-
-            (dx,dy,dz) = translation
-            dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-            dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-            (rx,ry,rz) = rotation
-            rxr=rx.real; ryr=ry.real; rzr=rz.real
-            rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-
-            vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-            [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
-            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
-            msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
-        ###
-        msg.append(pageStamp+str(pageNum)+'\n')
-        if f is not None:
-            f.write(''.join(msg))
-            msg = ['']
-        return (''.join(msg),pageNum)
-
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
         words = ['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
-            header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg += header+words
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+        #words += self.getTableMarker()
+        return self._writeF06Block(words,header,pageStamp,pageNum,f,isMagPhase)
 
-                (dx,dy,dz) = translation
-                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-                (rx,ry,rz) = rotation
-                rxr=rx.real; ryr=ry.real; rzr=rz.real
-                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-                
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
-                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
-                msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
-            ###
-            msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        words = ['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n',
+                 '                                                          (REAL/IMAGINARY)\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #words += self.getTableMarker()
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def __repr__(self):
         return self.writeF06(['','',''],'PAGE ',1)[0]

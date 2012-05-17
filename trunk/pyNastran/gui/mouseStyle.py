@@ -81,12 +81,37 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
             self.pipeline.edgeMapper.Update()
             self.pipeline.edgeActor.Modified()
 
+        # Roll
         elif key=='o': # counter-clockwise
             camera.Roll(5.)
             self.Update()
         elif key=='O': # clockwise
             camera.Roll(-5.)
             self.Update()
+
+        # Yaw
+        #elif key=='a': # counter-clockwise
+            #camera.Yaw(5.)
+            #self.Update()
+        #elif key=='A': # clockwise
+            #camera.Yaw(-5.)
+            #self.Update()
+
+        # Elevation
+        #elif key=='v': # counter-clockwise
+            #camera.Elevation(5.)
+            #self.Update()
+        #elif key=='V': # clockwise
+            #camera.Elevation(-5.)
+            #self.Update()
+
+        # Pitch
+        #elif key=='c': # counter-clockwise
+            #camera.Pitch(5.)
+            #self.Update()
+        #elif key=='C': # clockwise
+            #camera.Pitch(-5.)
+            #self.Update()
 
         elif key=='x': # set x-axis
             camera.SetFocalPoint(0.,0.,0.)

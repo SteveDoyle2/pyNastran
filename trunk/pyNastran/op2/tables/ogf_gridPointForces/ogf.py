@@ -142,7 +142,7 @@ class OGF(object):
             self.createTransientObject(self.gridPointForces,gridPointForcesObject) # real
             #else:
                 #raise NotImplementedError(self.codeInformation())
-            #self.OUG_RealTable()
+            #self.handleResultsBuffer3(self.OUG_RealTable)
             self.readOGF_numWide10()
         elif self.numWide==16:  # real/imaginary or mag/phase
             #if self.thermal==0:
@@ -150,7 +150,7 @@ class OGF(object):
             #else:
                 #raise NotImplementedError(self.codeInformation())
             self.readOGF_numWide16()
-            #self.OUG_ComplexTable()
+            #self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
         ###

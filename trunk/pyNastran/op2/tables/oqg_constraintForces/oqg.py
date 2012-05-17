@@ -142,13 +142,13 @@ class OQG(object):
                 self.createTransientObject(self.spcForces,complexSpcForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         elif self.numWide==8:  # real/random
             #if self.thermal==0:
             self.createTransientObject(self.spcForces,spcForcesObject) # real
             #else:
             #    raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -164,13 +164,13 @@ class OQG(object):
                 self.createTransientObject(self.mpcForces,mpcForcesObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.mpcForces,complexMpcForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
