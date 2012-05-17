@@ -1,6 +1,6 @@
 import sys
 from struct import pack
-from numpy import array,sqrt,dot,abs,degrees
+from numpy import array,sqrt,dot,abs,angle
 
 from op2_Objects import scalarObject
 
@@ -124,8 +124,9 @@ class TableObject(scalarObject):  # displacement style table
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         msg = 'dt=%s nodeID=%s' %(dt,nodeID)
         #print msg
-        #assert 0<nodeID<1000000000,msg
-        #assert isinstance(nodeID,int),msg
+        assert 0<nodeID<1000000000,msg    # remove
+        assert isinstance(nodeID,int),msg # remove
+        assert -0.5<dt,msg # remove
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
@@ -213,6 +214,7 @@ class TableObject(scalarObject):  # displacement style table
         
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None):
         msg = words
+        assert f is not None # remove
         for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
@@ -232,11 +234,12 @@ class TableObject(scalarObject):  # displacement style table
 
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None):
         msg = []
+        assert f is not None # remove
         for dt,translations in sorted(self.translations.iteritems()):
-            if isinstance(dt,float):
-                header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+            if isinstance(dt,float): # fix
+                header[1] = ' %s = %10.4E float %s\n' %(self.dataCode['name'],dt,self.analysisCode)
             else:
-                header[1] = ' %s = %10i\n' %(self.dataCode['name'],dt)
+                header[1] = ' %s = %10i integer %s\n' %(self.dataCode['name'],dt,self.analysisCode)
             msg += header+words
             for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
@@ -255,6 +258,72 @@ class TableObject(scalarObject):  # displacement style table
                 f.write(''.join(msg))
                 msg = ['']
         return (''.join(msg),pageNum-1)
+
+    def getTableMarker(self):
+        if self.isATO():
+            words = self.ATO_words()
+        elif self.isCRM():
+            words = self.CRM_words()
+        elif self.isPSD():
+            words = self.PSD_words()
+        elif self.isRMS():
+            words = self.RMS_words()
+        elif self.isZERO():
+            return self.ZERO_words()
+        else:
+            words = ['']
+        return words
+
+    def isATO(self):
+        """Auto-Correlation Function"""
+        if 'ATO' in self.tableName:
+            return True
+        return False
+
+    def isCRM(self):
+        """Correlated Root-Mean Square"""
+        if 'CRM' in self.tableName:
+            return True
+        return False
+
+    def isPSD(self):
+        """Power Spectral Density"""
+        if 'PSD' in self.tableName:
+            return True
+        return False
+
+    def isRMS(self):
+        """Root-Mean Square"""
+        if 'RMS' in self.tableName:
+            return True
+        return False
+
+    def isZERO(self):
+        """Zero Crossings"""
+        if 'NO' in self.tableName:
+            return True
+        return False
+
+
+    def ATO_words(self):
+        words = ['                                                 ( AUTO-CORRELATION FUNCTION )\n',' \n']
+        return words
+
+    def CRM_words(self):
+        words = ['                                               ( CUMULATIVE ROOT MEAN SQUARE )\n',' \n']
+        return words
+
+    def PSD_words(self):
+        words = ['                                             ( POWER SPECTRAL DENSITY FUNCTION )\n',' \n']
+        return words
+
+    def RMS_words(self):
+        words = ['                                                     ( ROOT MEAN SQUARE )\n',' \n']
+        return words
+        
+    def ZERO_words(self):
+        words = ['                                                 ( NUMBER OF ZERO CROSSINGS )\n',' \n']
+        return words
 
     def plot(self,nodeList=None,resultType='Translation',coord=3,markers=None,
                   Title=None,hasLegend=True,Legend=None,xLabel=None,yLabel=None,alphaLegend=0.5):
@@ -309,7 +378,7 @@ class TableObject(scalarObject):  # displacement style table
         #leg.get_frame().set_alpha(0.5)
         ax.set_title(Title)
         #ax.set_legend(Labels)
-        #if hasLegend and Legend is None:        
+        #if hasLegend and Legend is None:
         #    plt.legend(Labels)
         #elif hasLegend:
         #    plt.legend(Legend)
@@ -393,7 +462,8 @@ class complexTableObject(scalarObject):
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         #print msg
-        assert -1<nodeID<1000000000,msg
+        assert 0<nodeID<1000000000,msg  # -1
+        assert -0.5<dt,msg              # remove
         assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
@@ -408,11 +478,12 @@ class complexTableObject(scalarObject):
         #print msg
         if dt not in self.translations:
             self.addNewTransient(dt)
-        #assert isinstance(nodeID,int),nodeID
+        assert isinstance(nodeID,int),nodeID # remove
         msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
         msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         #print msg
-        assert -1<nodeID<1000000000,msg
+        assert 0<nodeID<1000000000,msg  # -1
+        assert -0.5<dt,msg # remove
         assert isinstance(nodeID,int),msg
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
@@ -426,19 +497,61 @@ class complexTableObject(scalarObject):
         if dt not in self.translations:
             self.addNewTransient(dt)
 
-        msg  = "nodeID=%s v1=%s v2=%s v3=%s\n" %(nodeID,v1,v2,v3)
-        msg += "          v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
+        msg  = "dt=%s nodeID=%s v1=%s v2=%s v3=%s\n" %(dt,nodeID,v1,v2,v3)
+        msg += "                v4=%s v5=%s v6=%s"   %(       v4,v5,v6)
         #print msg
-        assert -1<nodeID<1000000000,msg
+        assert 0<nodeID<1000000000,msg # -1
+        assert -0.5<dt,msg # remove
         assert isinstance(nodeID,int),msg
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
-    def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None):
+    def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        msg = words
+        isMagPhase = True
+        for nodeID,translation in sorted(self.translations.iteritems()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+
+            if isMagPhase:
+                dxr=abs(dx); dxi=angle(dx,deg=True)
+                dyr=abs(dy); dyi=angle(dy,deg=True)
+                dzr=abs(dz); dzi=angle(dz,deg=True)
+
+                rxr=abs(rx); rxi=angle(rx,deg=True)
+                ryr=abs(ry); ryi=angle(ry,deg=True)
+                rzr=abs(rz); rzi=angle(rz,deg=True)
+            else:
+                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
+                rxr=rx.real; ryr=ry.real; rzr=rz.real
+                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+
+            vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
+            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
+            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
+            msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+        ###
+        msg.append(pageStamp+str(pageNum)+'\n')
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        return (''.join(msg),pageNum)
+
+    def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
+        isMagPhase = True
+        assert f is not None
         for dt,translations in sorted(self.translations.iteritems()):
+            #print "dt = ",dt
+            #sys.stdout.flush()
             header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
             for nodeID,translation in sorted(translations.iteritems()):
@@ -446,12 +559,22 @@ class complexTableObject(scalarObject):
                 gridType = self.gridTypes[nodeID]
 
                 (dx,dy,dz) = translation
-                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
                 (rx,ry,rz) = rotation
-                rxr=rx.real; ryr=ry.real; rzr=rz.real
-                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+                
+                if isMagPhase:
+                    dxr=abs(dx); dxi=angle(dx,deg=True)
+                    dyr=abs(dy); dyi=angle(dy,deg=True)
+                    dzr=abs(dz); dzi=angle(dz,deg=True)
+
+                    rxr=abs(rx); rxi=angle(rx,deg=True)
+                    ryr=abs(ry); ryi=angle(ry,deg=True)
+                    rzr=abs(rz); rzi=angle(rz,deg=True)
+                else:
+                    dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+                    dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
+                    rxr=rx.real; ryr=ry.real; rzr=rz.real
+                    rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
                 
                 vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
@@ -509,7 +632,7 @@ class complexTableObject(scalarObject):
                     val = res[coord]
                 ###
                 mag   = abs(val)
-                phase = degrees(val)
+                phase = angle(val,deg=True)
                 Ys.append(val)
             Label = 'Node %s' %(nodeID)
             Labels.append(Label)
@@ -520,7 +643,7 @@ class complexTableObject(scalarObject):
         #leg.get_frame().set_alpha(0.5)
         ax.set_title(Title)
         #ax.set_legend(Labels)
-        if hasLegend and Legend is None:        
+        if hasLegend and Legend is None:
             plt.legend(Labels)
         elif hasLegend:
             plt.legend(Legend)

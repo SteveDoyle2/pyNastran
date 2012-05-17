@@ -18,7 +18,7 @@ if dev:
 else:
     revision = 'dev'
 
-__author__  = 'Steven Doyle'
+__author__  = 'Steven Doyle, Al Danials'
 __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __copyright__   = 'Copyright 2011-2012, pyNastran; %s' %(__author__)

@@ -123,16 +123,22 @@ class OUG(object):
             print "EID = %s" %(eidDevice)
             print "floatVal = %s" %(floatVal)
 
-            self.isRegular = False
-            if self.analysisCode in [1]: # 5
-                self.addDataParameter(data,'freq','f',5)   ## frequency
-                self.applyDataCodeValue('dataNames',['freq'])
-            elif self.analysisCode==6: # transient
-                self.addDataParameter(data,'dt','f',5)   ## time step
-                self.applyDataCodeValue('dataNames',['dt'])
-            elif self.analysisCode==10: # freq/time step
-                self.addDataParameter(data,'fqts','f',5)   ## frequency / time step
-                self.applyDataCodeValue('dataNames',['fqts'])
+            if self.tableName=='OUGRMS2' and self.analysisCode==1:
+                self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency
+                self.applyDataCodeValue('dataNames',['nodeID'])
+
+            #self.isRegular = False
+            elif self.analysisCode in [1,5]: # 5 # freq
+                self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency
+                self.applyDataCodeValue('dataNames',['nodeID'])
+                print "nodeID = ",self.nodeID
+                #sys.exit(self.nodeID)
+            elif self.analysisCode==6: # transient dt
+                self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## time step
+                self.applyDataCodeValue('dataNames',['nodeID'])
+            elif self.analysisCode==10: # freq/time step fqts
+                self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency / time step
+                self.applyDataCodeValue('dataNames',['nodeID'])
             else:
                 self.isRegular = True
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## node ID
@@ -149,9 +155,43 @@ class OUG(object):
         #if not self.isSort1():
             #raise NotImplementedError('sort2...')
 
-
         #self.printBlock(data)
         self.readTitle()
+
+    def getOUG_FormatStart(self):
+        """
+        Returns an i or an f depending on if it's SORT2 or not.
+        Also returns an extraction function that is called on the first argument
+        """
+        isSort1 = self.isSort1()
+        if self.tableName=='OUGRMS2' and self.analysisCode==1:
+            format1 = 'i' # SORT2
+            extract = self.extractSort2
+
+        elif isSort1:
+            #print "SORT1 - %s" %(self.ElementType(self.elementType))
+            #print "SORT1"
+            format1 = 'i' # SORT1
+            extract = self.extractSort1
+            #if self.analysisCode in [5]:
+                #extract==self.extractSort2
+        else: # values from IDENT   #@todo test this...
+            #print "SORT2"
+            #print "SORT2 - %s" %(self.ElementType(self.elementType))
+            if self.analysisCode in [2,3,4,6,7,8,11]:
+                format1 = 'f' # SORT2
+                extract = self.extractSort2
+            elif self.analysisCode in [5]:
+                format1 = 'f'
+                extract = self.extractSort2
+            elif self.analysisCode in [1,9,10,12]:
+                format1 = 'f' # SORT1
+                extract = self.extractSort2
+            else:
+                raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            ###
+            #eid = self.nonlinearFactor
+        return (format1,extract)
 
     def readOUG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
@@ -235,13 +275,13 @@ class OUG(object):
                 #self.createTransientObject(self.scaledDisplacements,displacementObject)
             else:
                 raise NotImplementedError('***thermal=%s***\n%s' %(self.thermal,self.codeInformation()))
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.displacements,complexDisplacementObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -253,13 +293,13 @@ class OUG(object):
                 self.createTransientObject(self.eigenvectors,eigenVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.eigenvectors,complexEigenVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -273,13 +313,13 @@ class OUG(object):
                 self.createTransientObject(self.velocities,thermalVelocityVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.velocities,complexVelocityObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -291,44 +331,16 @@ class OUG(object):
                 self.createTransientObject(self.accelerations,accelerationObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.accelerations,complexAccelerationObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
-
-    def getOUG_FormatStart(self):
-        """
-        Returns an i or an f depending on if it's SORT2 or not.
-        Also returns an extraction function that is called on the first argument
-        """
-        isSort1 = self.isSort1()
-        if isSort1:
-            #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            #print "SORT1"
-            format1 = 'i' # SORT1
-            extract = self.extractSort1
-            #if self.analysisCode in [5]:
-                #extract==self.extractSort2
-        else: # values from IDENT   #@todo test this...
-            #print "SORT2"
-            #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            if self.analysisCode in [1,2,3,4,7,8,11]:
-                format1 = 'i' # SORT1
-            elif self.analysisCode in [5,6,9,10,12]:
-                format1 = 'f' # SORT1
-            else:
-                raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
-            ###
-
-            extract = self.extractSort2
-            #eid = self.nonlinearFactor
-        return (format1,extract)
 
     def OUG_RealTable(self):
         dt = self.nonlinearFactor
@@ -353,7 +365,6 @@ class OUG(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OUG_RealTable)
 
     def OUG_ComplexTable(self):
         dt = self.nonlinearFactor
@@ -390,4 +401,3 @@ class OUG(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OUG_ComplexTable)

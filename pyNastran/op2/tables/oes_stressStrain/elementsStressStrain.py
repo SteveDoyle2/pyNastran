@@ -11,14 +11,14 @@ from pyNastran.op2.op2Errors import *
 class ElementsStressStrain(object):
 
     def skipOES_Element(self):
-        #self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
+        self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
         #print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
         #print self.codeInformation()
-        self.skipOES_Element2()
+        #self.skipOES_Element2()
+        self.handleResultsBuffer3(self.dummyPass,debug=True)
 
-    def skipOES_Element2(self): # works???
+    def dummyPass(self):
         self.data = ''
-        self.handleResultsBuffer(self.skipOES_Element2)
 
     def OES_Thermal(self,debug=False): # works
         if self.makeOp2Debug:
@@ -45,7 +45,6 @@ class ElementsStressStrain(object):
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OES_Thermal)
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
             print "done with OES_Thermal"
@@ -75,7 +74,6 @@ class ElementsStressStrain(object):
             n+=nTotal
         ###
         self.data = self.data[n: ]
-        self.handleResultsBuffer(self.OES_basicElement)
 
     def OES_CBEAM_2(self):
         dt = self.nonlinearFactor
@@ -107,7 +105,6 @@ class ElementsStressStrain(object):
             #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OES_CBEAM_2)
 
     def OES_CQUAD4_33(self): # works
         """
@@ -173,7 +170,6 @@ class ElementsStressStrain(object):
             #self.printSection(100)
             #self.dn += 348
         ###
-        self.handleResultsBuffer(self.OES_CQUAD4_33)
 
     def OES_CBAR_34(self): # ???
         if self.makeOp2Debug:
@@ -201,7 +197,6 @@ class ElementsStressStrain(object):
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" %(s1b,s2b,s3b,s4b,smaxb,sminb)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OES_CBAR_34)
         if self.makeOp2Debug:
             print "done with CBAR-34"
 
@@ -306,7 +301,6 @@ class ElementsStressStrain(object):
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
         ###
-        self.handleResultsBuffer(self.OES_CSOLID_67)
         #print self.solidStress[self.iSubcase]
 
     def OES_CTRIA3_74(self): # works
@@ -337,7 +331,6 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.OES_CTRIA3_74)
 
     def OES_CSOLID_85(self):  # works
         """
@@ -446,7 +439,6 @@ class ElementsStressStrain(object):
             #self.printBlock(self.data[2:100])
             #self.printBlock(self.data[3:100])
         ###
-        self.handleResultsBuffer(self.OES_CSOLID_85)
         #print self.solidStress[self.iSubcase]
 
 
@@ -502,7 +494,6 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.OES_CTRIAX6_53)
 
     def OES_RODNL_89_92(self):
         dt = self.nonlinearFactor
@@ -527,7 +518,6 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.OES_RODNL_89_92)
 
     def OES_CQUAD4NL_90(self):
         dt = self.nonlinearFactor
@@ -569,7 +559,6 @@ class ElementsStressStrain(object):
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
-        self.handleResultsBuffer(self.OES_CQUAD4NL_90)
     
     def OES_CPENTANL_91(self):
         """
@@ -609,7 +598,6 @@ class ElementsStressStrain(object):
             #sys.exit('hexa...')
         #print "buffer time..."
         #self.firstPass = True
-        self.handleResultsBuffer(self.OES_CHEXANL_93,debug=True)
 
     def OES_CHEXANL_93(self):
         """
@@ -649,7 +637,6 @@ class ElementsStressStrain(object):
             #sys.exit('hexa...')
         #print "buffer time..."
         #self.firstPass = True
-        self.handleResultsBuffer(self.OES_CHEXANL_93,debug=True)
 
     def OES_CBEAM_94(self):
         if self.makeOp2Debug:
@@ -684,7 +671,6 @@ class ElementsStressStrain(object):
             ###
             #sys.exit('stoping in CBEAM_94')
 
-        self.handleResultsBuffer(self.OES_CBEAM_94)
         if self.makeOp2Debug:
             print "done with CBEAM-94"
         #raise Exception('add CBEAM-94...')
@@ -728,7 +714,6 @@ class ElementsStressStrain(object):
         ###
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
         #self.printSection(100)
-        self.handleResultsBuffer(self.OES_CQUAD4_95)
 
     def OES_QUAD4FD_139(self): # hyperelastic
         """
@@ -765,7 +750,6 @@ class ElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
         #sys.exit('end of hyperQuad')
-        self.handleResultsBuffer(self.OES_QUAD4FD_139)
     
     def OES_CQUADR_82(self): # not done...
         """
@@ -816,7 +800,6 @@ class ElementsStressStrain(object):
                 self.obj.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             ###
         ###
-        self.handleResultsBuffer(self.OES_CQUAD4_82)
 
     def OES_CQUAD4_144(self): # works
         """
@@ -951,5 +934,4 @@ class ElementsStressStrain(object):
        # ###
        # else:
        #     raise AddNewElementError('invalid numWide')
-        self.handleResultsBuffer(self.OES_CQUAD4_144)
 

@@ -30,6 +30,24 @@ class pyWidget(wxVTKRenderWindow):
         elif code == ord('O'): # clockwise
             camera.Roll(-5.)
 
+        # Yaw
+        #elif code == ord('a'): # counter-clockwise
+            #camera.Yaw(5.)
+        #elif code == ord('A'): # clockwise
+            #camera.Yaw(-5.)
+
+        # Elevation
+        #elif code == ord('v'): # counter-clockwise
+            #camera.Elevation(5.)
+        #elif code == ord('V'): # clockwise
+            #camera.Elevation(-5.)
+
+        # Pitch
+        #elif code == ord('c'): # counter-clockwise
+            #camera.Pitch(5.)
+        #elif code == ord('C'): # clockwise
+            #camera.Pitch(-5.)
+
         elif code == ord('x'): # set x-axis
             camera.SetFocalPoint(0.,0., 0.)
             camera.SetViewUp(    0.,0., 1.)

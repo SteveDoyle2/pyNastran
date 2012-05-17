@@ -180,13 +180,13 @@ class OPG(object):
                 self.createTransientObject(self.thermalLoadVectors,thermalLoadVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -198,13 +198,13 @@ class OPG(object):
                 self.createTransientObject(self.forceVectors,forceVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_RealTable()
+            self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.forceVectors,complexForceVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.OUG_ComplexTable()
+            self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -216,14 +216,14 @@ class OPG(object):
                 self.createTransientObject(self.appliedLoads,appliedLoadsObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            #self.OUG_RealTable()
+            #self.handleResultsBuffer3(self.OUG_RealTable)
             self.readOPGForces()
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.appliedLoads,complexAppliedLoadsObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            #self.OUG_ComplexTable()
+            #self.handleResultsBuffer3(self.OUG_ComplexTable)
             raise NotImplementedError(self.codeInformation())
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))

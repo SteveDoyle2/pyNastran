@@ -8,7 +8,7 @@ class displacementObject(TableObject): # approachCode=1, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
@@ -17,78 +17,12 @@ class displacementObject(TableObject): # approachCode=1, thermal=0
         words += self.getTableMarker()
         return self._writeF06Block(words,header,pageStamp,pageNum,f)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         words += self.getTableMarker()
         return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
-
-    def getTableMarker(self):
-        if self.isATO():
-            words = self.ATO_words()
-        elif self.isCRM():
-            words = self.CRM_words()
-        elif self.isPSD():
-            words = self.PSD_words()
-        elif self.isRMS():
-            words = self.RMS_words()
-        elif self.isZERO():
-            return self.ZERO_words()
-        else:
-            words = ['']
-        return words
-
-    def isATO(self):
-        """Auto-Correlation Function"""
-        if 'ATO' in self.tableName:
-            return True
-        return False
-
-    def isCRM(self):
-        """Correlated Root-Mean Square"""
-        if 'CRM' in self.tableName:
-            return True
-        return False
-
-    def isPSD(self):
-        """Power Spectral Density"""
-        if 'PSD' in self.tableName:
-            return True
-        return False
-
-    def isRMS(self):
-        """Root-Mean Square"""
-        if 'RMS' in self.tableName:
-            return True
-        return False
-
-    def isZERO(self):
-        """Zero Crossings"""
-        if 'NO' in self.tableName:
-            return True
-        return False
-
-
-    def ATO_words(self):
-        words = ['                                                 ( AUTO-CORRELATION FUNCTION )\n',' \n']
-        return words
-
-    def CRM_words(self):
-        words = ['                                               ( CUMULATIVE ROOT MEAN SQUARE )\n',' \n']
-        return words
-
-    def PSD_words(self):
-        words = ['                                             ( POWER SPECTRAL DENSITY FUNCTION )\n',' \n']
-        return words
-
-    def RMS_words(self):
-        words = ['                                                     ( ROOT MEAN SQUARE )\n',' \n']
-        return words
-        
-    def ZERO_words(self):
-        words = ['                                                 ( NUMBER OF ZERO CROSSINGS )\n',' \n']
-        return words
 
     def __repr__(self):
         #return ''
@@ -146,12 +80,24 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
+
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
+        #words += self.getTableMarker()
+        return self._writeF06Block(words,header,pageStamp,pageNum,f,isMagPhase)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
+                 '                                                          (REAL/IMAGINARY)\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #words += self.getTableMarker()
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def __repr__(self):
         return self.writeF06(['','',''],'PAGE ',1)[0]

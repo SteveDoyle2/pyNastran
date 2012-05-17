@@ -73,7 +73,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=Tr
     print msg
     sys.exit(msg)
 
-def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,deleteF06=False,iSubcases=[],debug=False,stopOnFailure=True):
+def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=False,deleteF06=False,printData=True,iSubcases=[],debug=False,stopOnFailure=True):
     assert '.op2' in op2FileName.lower(),'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
@@ -91,11 +91,12 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,deleteF06=Fal
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if writeF06:
             (model,ext) = os.path.splitext(op2FileName)
-            op2.writeF06(model+'.f06.out')
+            op2.writeF06(model+'.f06.out',isMagPhase=isMagPhase)
             if deleteF06:
                 os.remove(model+'.f06.out')
         #print op2.printResults()
-        op2.printResults()
+        if printData:
+            op2.printResults()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
@@ -191,10 +192,11 @@ def runArgParse():
     group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
     #group2 = parser.add_mutually_exclusive_group()  # should this be exclusive???
-    parser.add_argument('-g','--geometry', dest='geometry', action='store_true',help='Reads the OP2 for geometry, which can be written out')
-    parser.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
-    parser.add_argument('-f','--writeF06', dest='writeF06', action='store_true',help='Writes the f06 to fem.f06.out')
-
+    parser.add_argument('-g','--geometry', dest='geometry',   action='store_true', help='Reads the OP2 for geometry, which can be written out')
+    parser.add_argument('-w','--writeBDF', dest='writeBDF',   action='store_true', help='Writes the bdf to fem.bdf.out')
+    parser.add_argument('-f','--writeF06', dest='writeF06',   action='store_true', help='Writes the f06 to fem.f06.out')
+    parser.add_argument('-m','--magPhase', dest='isMagPhase', action='store_true', help='F06 Writer stores Magnitude/Phase instead of Real/Imaginary')
+    parser.add_argument('-p','--noPrint',  dest='noPrint',    action='store_false',help='Disables printing of objects to screen which requires lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
     
     if len(sys.argv)==1:
@@ -208,16 +210,18 @@ def runArgParse():
     makeGeom    = args.geometry
     writeBDF    = args.writeBDF
     writeF06    = args.writeF06
+    isMagPhase  = args.writeF06
+    printData   = args.noPrint
     op2FileName = args.op2FileName[0]
 
-    return (op2FileName,makeGeom,writeBDF,writeF06,debug)
+    return (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printData,debug)
 
 def main():
-    (op2FileName,makeGeom,writeBDF,writeF06,debug) = runArgParse()
+    (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printData,debug) = runArgParse()
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,debug=debug)
+    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,isMagPhase=isMagPhase,printData=printData,debug=debug)
 
 if __name__=='__main__':  # op2
     main()

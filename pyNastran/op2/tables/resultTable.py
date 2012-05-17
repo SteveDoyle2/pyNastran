@@ -73,7 +73,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         value = self.getValues(data,Type,fieldNum)
         if fixDeviceCode:
             value = (value-self.deviceCode)//10
-        print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysisCode,value)
+        #print "Name=%s Type=%s fieldNum=%s aCode=%s value=%s" %(Name,Type,fieldNum,self.analysisCode,value)
         setattr(self,Name,value)
         self.dataCode[Name] = value
         
@@ -364,6 +364,87 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             
         return readCase
 
+    def handleResultsBufferShort(self,func,debug=False):
+        nOld = self.n
+        markers = self.readHeader()
+
+        if markers<0:  # not a buffer, the table may be done
+            self.goto(nOld)
+            if markers is not None and markers%2==1:
+                self.isBufferDone = True
+        else:
+            data = self.readBlock()
+            self.data += data
+            func()
+        ###
+
+    def handleResultsBufferNoRecursion(self,f,debug=False):
+        """prototype method for getting results without recursion"""
+        stopBuffer = False
+        while not(stopBuffer):
+            f()
+            nOld = self.n
+            markers = self.readHeader()
+
+            if markers<0:  # not a buffer, the table may be done
+                self.goto(nOld)
+                if markers is not None and markers%2==1:
+                    self.isBufferDone = True
+            else:
+                data = self.readBlock()
+                self.data += data
+                stopBuffer = True
+            ###
+        ###
+
+    def OES_basicElementTest(self):
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        (nTotal,dataFormat) = self.obj.getLength()
+        dataFormat = format1+dataFormat
+        
+        n = 0
+        nEntries = len(self.data)//nTotal
+        for i in range(nEntries):
+            eData = self.data[n:n+nTotal]
+            out = unpack(dataFormat,eData)
+            eid = extract(out[0],dt)
+            self.obj.addNewEid(dt,eid,out[1:])
+            n+=nTotal
+        self.data = self.data[n: ]
+        #self.handleResultsBuffer(self.OES_basicElement)
+
+    def goTest(self):
+        self.handleResultsBuffer3(self.OES_basicElementTest)
+
+    def handleResultsBuffer3(self,f,debug=False):
+        """prototype method for getting results without recursion"""
+        #stopBuffer = False
+        i=0
+        while not(self.isBufferDone):
+            #print "n=%s len(data)=%s" %(self.n,len(self.data))
+            sys.stdout.flush()
+            f()
+            nOld = self.n
+            markers = self.readHeader()
+            #print "nOld=%s markers=%s" %(nOld,markers)
+
+            if markers<0:  # not a buffer, the table may be done
+                self.goto(nOld)
+                #print "markers%%2 = %s" %(markers%2)
+                if markers is not None and markers%2==1:
+                    self.isBufferDone = True
+            else:
+                data = self.readBlock()
+                self.data += data
+            ###
+            i+=1
+            if i==2000:
+                raise RuntimeError('Infinite Loop or a really big model...')
+            #print "isBufferDone=%s" %(self.isBufferDone)
+        ###
+        #print "---------------------------------"
+
     def handleResultsBuffer(self,func,debug=False):
         """
         works by knowing that:
@@ -429,43 +510,6 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             func()
         ###
 
-    def readScalars4(self,debug=False):
-        """
-        reads 4 values "ifff" and puts them into the result object
-        """
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
-
-        n = 0
-        nEntries = len(data)//16
-        for i in range(nEntries):
-            eData = data[n:n+16]
-            #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
-            #self.printBlock(data[16:])
-            #msg = 'len(data)=%s\n'%(len(data))
-            #assert len(data)>=16,msg+self.printSection(120)
-            out  = unpack('ifff',eData)
-            a,b,c,d,E,F,G = unpack('ssssfff',eData)
-            #print "abcd=|%s|" %(a+b+c+d)
-            (gridDevice,dx,dy,dz) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            grid = (gridDevice-deviceCode) // 10
-            #if grid<100:
-            if debug:
-                self.log.debug("grid=%-3i dx=%g dy=%g dz=%g" %(grid,dx,dy,dz))
-            #print "grid=%g dx=%g dy=%g dz=%g" %(grid,dx,dy,dz)
-            self.obj.add(grid,dx,dy,dz)
-            n+=16
-        ###
-        self.data = data[n:]
-        #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars4,debug=False)
-
     def readMappedScalarsOut(self,debug=False):
         readCase = True
         #print "isSort1() = ",self.isSort1()
@@ -504,198 +548,6 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         self.data = data[n:]
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalarsOut,debug=False)
-
-    def readScalarsX(self,strFormat,nTotal,debug=False):
-        """
-        unused...
-        """
-        assert debug==True or debug==False
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(self.boj)
-        
-        n = 0
-        nEntries = len(data)//nTotal
-        for i in range(nEntries):
-            eData = data[n:n+nTotal]
-            #print self.printBlock(data[n:n+nTotal])
-            out = unpack(strFormat,eData)
-            #print "Xout = ",out
-            self.obj.add(out)
-            n+=nTotal
-        ###
-        self.data = data[n:]
-        self.handleResultsBuffer(self.readScalarsX,strFormat,nTotal,debug=False)
-
-    #def readScalars8(self,debug=False):
-    #    self.readScalarsX(self,'iiffffff',32,debug)
-
-    def readScalars8(self,debug=False):
-        """
-        @see readScalars4
-        """
-        assert debug==True or debug==False
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
-        
-        n = 0
-        nEntries = len(data)//32
-        if debug:
-            self.log.debug('calling readScalars8 debug')
-            print "self.obj = ",self.obj
-            
-        for i in range(nEntries):
-            #if debug:
-            #    self.log.debug(self.printBlock(self.data[n:n+64]))
-            #print self.printBlock(self.data[n:n+64])
-            eData = data[n:n+32]
-            #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
-            #print self.printBlock(data[n:n+60])
-            out = unpack('iiffffff',eData)
-            (gridDevice,gridType,dx,dy,dz,rx,ry,rz) = out
-            #if self.makeOp2Debug:
-                #self.op2Debug.write('%s\n' %(str(out)))
-                
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            grid = (gridDevice-deviceCode) // 10
-            #if grid<100:
-            #print "grid=%-3s type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz)
-            if debug:
-                self.log.debug("grid=%-3i type=%s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,gridType,dx,dy,dz,rx,ry,rz))
-                #self.log.debug(self.printBlock(self.data[n:n+64]))
-                sys.stdout.flush()
-            self.obj.add(grid,gridType,dx,dy,dz,rx,ry,rz)
-            n+=32
-        ###
-        self.data = data[n:]
-        #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars8,debug=False)
-
-    #def readScalarsF8(self,debug=False):
-    #    self.readScalars(self,'fiffffff',32,debug)
-
-    def readScalarsF8(self,debug=False):
-        """
-        @see readScalars8
-        F is Float
-        """
-        assert debug==True or debug==False
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
-        
-        n = 0
-        nEntries = len(data)//32
-        #print "len(data) = ",len(data)
-        for i in range(nEntries):
-            #print self.printBlock(self.data[n:n+64])
-            eData = data[n:n+32]
-            #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
-            self.printBlock(data[n:n+60])
-            out = unpack('fiffffff',eData)
-            (freq,gridType,dx,dy,dz,rx,ry,rz) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            #if grid<100:
-            if debug:
-                self.log.debug("freq=%-3s dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(freq,dx,dy,dz,rx,ry,rz))
-            self.obj.add(freq,gridType,dx,dy,dz,rx,ry,rz)
-            n+=32
-        ###
-        self.data = data[n:]
-        #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalarsF8,debug=False)
-
-    #def readScalars14(self,debug=False):
-    #    self.readScalarsX(self,'iiffffffffffff',56,debug)
-
-    def readScalars14(self,debug=False):
-        """
-        @see readScalars8
-        """
-        assert debug==True or debug==False
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
-        #print "objName = ",self.obj.name()
-        n = 0
-        nEntries = len(data)//56
-        #print "len(data) = ",len(data)
-        #print "nEntries = %s" %(nEntries)
-        for i in range(nEntries):
-            eData = data[n:n+56]
-            #print self.printBlock(self.data[n:n+64])
-            #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
-            #self.printBlock(data[56:])
-            #msg = 'len(data)=%s\n'%(len(data))
-            #assert len(data)>=56,msg+self.printSection(120)
-            out = unpack('iiffffffffffff',eData)
-            (gridDevice,gridType,dx, dy, dz, rx, ry, rz,
-                                 dxi,dyi,dzi,rxi,ryi,rzi) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            grid = (gridDevice-deviceCode) // 10
-            #if grid<100:
-            if debug:
-                self.log.debug("grid=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(grid,dx, dy, dz, rx, ry, rz))
-                self.log.debug("     %-7s dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %('',  dxi,dyi,dzi,rxi,ryi,rzi))
-            self.obj.add([grid,gridType,dx, dy, dz, rx, ry, rz,
-                                        dxi,dyi,dzi,rxi,ryi,rzi])
-            n+=56
-        ###
-        self.data = data[n:]
-        #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars14,debug=False)
-
-    #def readScalarsF14(self,debug=False):
-    #    self.readScalarsX(self,'fiffffffffffff',56,debug)
-
-    def readScalarsF14(self,debug=False):
-        """
-        @see readScalars8
-        F is Float
-        """
-        assert debug==True or debug==False
-        data = self.data
-        deviceCode = self.deviceCode
-        #print type(scalarObject)
-
-        n = 0
-        nEntries = len(data)//56
-        for i in range(nEntries):
-            eData = data[n:n+56]
-            #print self.printBlock(self.data[n:n+64])
-            #print "self.numWide = ",self.numWide
-            #print "len(data) = ",len(data)
-            #self.printBlock(data[56:])
-            #msg = 'len(data)=%s\n'%(len(data))
-            #assert len(data)>=56,msg+self.printSection(120)
-            out = unpack('fiffffffffffff',eData)
-            (freq,gridType,dx, dy, dz, rx, ry, rz,
-                           dxi,dyi,dzi,rxi,ryi,rzi) = out
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            #print "gridDevice = ",gridDevice
-            #print "deviceCode = ",deviceCode
-            #if grid<100:
-            if debug:
-                self.log.debug("gridType=%s freq=%-7i dx=%.2g dy=%g dz=%g rx=%g ry=%g rz=%g" %(gridType,freq,dx,dy,dz,rx,ry,rz))
-            self.obj.add(freq,gridType,dx, dy, dz, rx, ry, rz,
-                                       dxi,dyi,dzi,rxi,ryi,rzi)
-            n+=56
-        ###
-        self.data = data[n:]
-        #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalars14,debug=False)
 
 def getCloseNum(v1,v2,closePoint):
     numList = [v1,v2]
