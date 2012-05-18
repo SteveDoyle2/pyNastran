@@ -203,15 +203,28 @@ class writeMesh(object):
     def writeNodes(self):
         """writes the NODE-type cards"""
         msg = ''
-        if self.nodes:
-            msg += '$NODES\n'
-            #print "nNodes = ",len(self.nodes)
-        #print "self.nodes = ",self.nodes
-        if self.gridSet:
-            msg += str(self.gridSet)
-        for key,node in sorted(self.nodes.iteritems()):
-            #print "node = ",node
-            msg += str(node)
+        associatedNodes = set([])
+        for eid,element in self.elements.iteritems():
+            associatedNodes = associatedNodes.union(set(element.nodeIDs()))
+        
+        allNodes = set(self.nodes.keys())
+        unassociatedNodes = list(allNodes.difference(associatedNodes))
+        associatedNodes = list(associatedNodes)
+        
+        
+        if associatedNodes:
+            msg += '$ASSOCIATED NODES\n'
+            if self.gridSet:
+                msg += str(self.gridSet)
+            for key in sorted(associatedNodes):
+                msg += str(self.nodes[key])
+
+        if unassociatedNodes:
+            msg += '$UNASSOCIATED NODES\n'
+            if self.gridSet and not associatedNodes:
+                msg += str(self.gridSet)
+            for key in sorted(unassociatedNodes):
+                msg += str(self.nodes[key])
 
         if self.spoints:
             msg += '$SPOINTS\n'
@@ -274,11 +287,14 @@ class writeMesh(object):
                 for eid in eids:
                     element = self.Element(eid)
                     #print "e.type = ",element.type
+                    #if element.type != 'CTRIA3':
                     try:
                         msg += str(element)
                     except:
                         print 'failed printing element...type=%s eid=%s' %(element.type,eid)
                         raise
+                    #else:
+                    #    print "element.type = ",element.type
                     ###
                 ###
                 eidsWritten+=eids
