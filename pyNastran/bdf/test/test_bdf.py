@@ -234,7 +234,7 @@ def getElementStats(fem1,fem2):
                 c   = e.Centroid()
                 #mid = e.Mid()
                 pid = e.Pid()
-                n    = e.Normal()
+                n     = e.Normal()
                 a,c,n = e.AreaCentroidNormal()
                 
             elif isinstance(e,SolidElement):
@@ -278,7 +278,7 @@ def getElementStats(fem1,fem2):
                 ###
             ###
         except:
-            print "*stats - e.type = ",e.type
+            print "*stats - e.type=%s eid=%s  element=\n%s" %(e.type,e.eid,str(e))
             raise
         ###
     ###
