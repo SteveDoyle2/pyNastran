@@ -116,7 +116,7 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return makeStamp(Title)
 
-    def writeF06(self,f06OutName,makeFile=True):
+    def writeF06(self,f06OutName,isMagPhase=False,makeFile=True):
         """
         Writes an F06 file based on the data we have stored in the object
         @param self the object pointer
