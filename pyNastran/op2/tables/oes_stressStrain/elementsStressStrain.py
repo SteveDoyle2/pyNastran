@@ -8,7 +8,7 @@ from pyNastran.op2.op2Errors import *
 #2   -> BEAM
 #33  -> TUBE
 #92  -> CONRODNL
-class ElementsStressStrain(object):
+class RealElementsStressStrain(object):
 
     def skipOES_Element(self):
         self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))

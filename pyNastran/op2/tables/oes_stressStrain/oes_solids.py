@@ -4,7 +4,7 @@ from numpy.linalg import eigh
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class solidStressObject(stressObject):
+class SolidStressObject(stressObject):
     """
     # sCode=0
             N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )
@@ -507,7 +507,7 @@ class solidStressObject(stressObject):
         ###
         return msg
 
-class solidStrainObject(strainObject):
+class SolidStrainObject(strainObject):
     """
     # code=[1,0,11]
                           S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )

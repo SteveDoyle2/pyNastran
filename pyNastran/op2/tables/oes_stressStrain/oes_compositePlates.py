@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class compositePlateStressObject(stressObject):
+class CompositePlateStressObject(stressObject):
     """
     # sCode = 0
                     S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
@@ -422,7 +422,7 @@ class compositePlateStressObject(stressObject):
         ###
         return msg
 
-class compositePlateStrainObject(strainObject):
+class CompositePlateStrainObject(strainObject):
     """
     ???
     ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX

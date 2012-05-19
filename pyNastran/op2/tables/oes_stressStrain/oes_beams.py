@@ -3,7 +3,7 @@ from struct import unpack
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class beamStressObject(stressObject):
+class BeamStressObject(stressObject):
     """
     [1,0,0]
                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )
@@ -287,7 +287,7 @@ class beamStressObject(stressObject):
         #print msg
         return msg
 
-class beamStrainObject(strainObject):
+class BeamStrainObject(strainObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CBEAM' #{} # 'CBEAM/CONBEAM'

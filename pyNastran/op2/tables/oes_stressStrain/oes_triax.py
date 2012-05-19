@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class ctriaxStressObject(stressObject):
+class CTriaxStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                       S T R E S S E S   I N   T R I A X 6   E L E M E N T S
@@ -218,7 +218,7 @@ class ctriaxStressObject(stressObject):
         if self.nonlinearFactor is not None:
             pass
 
-class ctriaxStrainObject(strainObject):
+class CTriaxStrainObject(strainObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                       S T R A I N S   I N   T R I A X 6   E L E M E N T S

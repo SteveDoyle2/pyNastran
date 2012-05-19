@@ -3,7 +3,7 @@ from math import isnan
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class nonlinearQuadObject(stressObject):
+class NonlinearQuadObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         #self.eType = 'QUAD4FD' # or CTRIA3
@@ -168,7 +168,7 @@ class nonlinearQuadObject(stressObject):
         return self.writeF06([],'PAGE ',1)[0]
 
                 
-class hyperelasticQuadObject(stressObject):
+class HyperelasticQuadObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'QUAD4FD'
@@ -272,7 +272,7 @@ class hyperelasticQuadObject(stressObject):
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]
 
-class nonlinearRodObject(stressObject):
+class NonlinearRodObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         #self.eType = 'CROD'

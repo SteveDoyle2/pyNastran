@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class celasStressObject(stressObject):
+class CelasStressObject(stressObject):
     """
                               S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )
         TIME         STRESS              TIME         STRESS              TIME         STRESS              TIME         STRESS
@@ -111,7 +111,7 @@ class celasStressObject(stressObject):
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-class celasStrainObject(strainObject):
+class CelasStrainObject(strainObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
         self.eType = {}

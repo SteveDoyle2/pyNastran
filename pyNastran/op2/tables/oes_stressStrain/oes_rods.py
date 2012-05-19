@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class rodDamperObject(stressObject):
+class RodDamperObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = 'CBUSH'
@@ -12,25 +12,18 @@ class rodDamperObject(stressObject):
         self.torsion    = {}
 
 
-class rodStressObject(stressObject):
+class RodStressObject(stressObject):
     """
-    # formatCode=1 sortCode=0 stressCode=0
+    # formatCode=1 stressCode=0
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
          ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
              1    5.000000E+03              0.0                               2    0.0                       0.0           
 
-    # formatCode=1 sortCode=0 stressCode=0
+    # formatCode=1 stressCode=0
                                      S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
-
-    # formatCode=2 sortCode=1 stressCode=0
-      COMPLEX EIGENVALUE = -3.575608E+04,  6.669431E+02
-                             C O M P L E X   F O R C E S   I N   R O D   E L E M E N T S   ( C R O D )
-                                                          (REAL/IMAGINARY)
-                 ELEMENT                             AXIAL                                         TORQUE
-                   ID.                               FORCE
     """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
@@ -266,9 +259,9 @@ class rodStressObject(stressObject):
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-class rodStrainObject(strainObject):
+class RodStrainObject(strainObject):
     """
-    # sCode=1???
+    # sCode=1
                                      S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
     ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
       ID.        STRAIN       MARGIN        STRAIN      MARGIN
