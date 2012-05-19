@@ -4,18 +4,20 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2Errors import *
-from elementsStressStrain import RealElementsStressStrain
-from oes_rods   import RodStressObject,RodStrainObject
-from oes_shear  import ShearStressObject,ShearStrainObject
-from oes_bars   import BarStressObject,BarStrainObject
-from oes_beams  import BeamStressObject,BeamStrainObject
+from real.elementsStressStrain import RealElementsStressStrain
+from real.oes_rods   import RodStressObject,RodStrainObject
+from real.oes_shear  import ShearStressObject,ShearStrainObject
+from real.oes_bars   import BarStressObject,BarStrainObject
+from real.oes_beams  import BeamStressObject,BeamStrainObject
 
-from oes_solids import SolidStressObject,SolidStrainObject
-from oes_plates import PlateStressObject,PlateStrainObject
-from oes_compositePlates import CompositePlateStressObject,CompositePlateStrainObject
-from oes_springs   import CelasStressObject,CelasStrainObject
+from real.oes_solids import SolidStressObject,SolidStrainObject
+from real.oes_plates import PlateStressObject,PlateStrainObject
+from real.oes_compositePlates import CompositePlateStressObject,CompositePlateStrainObject
+from real.oes_springs   import CelasStressObject,CelasStrainObject
+from real.oes_triax import CTriaxStressObject,CTriaxStrainObject
+
+
 from oes_nonlinear import NonlinearRodObject,NonlinearQuadObject,HyperelasticQuadObject
-from oes_triax import CTriaxStressObject,CTriaxStrainObject
 
 class OES(RealElementsStressStrain):
     """Table of stresses/strains"""
