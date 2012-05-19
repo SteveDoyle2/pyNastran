@@ -1,79 +1,92 @@
 import sys
 from struct import unpack
 
+from pyNastran.op2.op2_helper import polarToRealImag
 from pyNastran.op2.op2Errors import *
 
 #91  -> PENTANL
 #2   -> BEAM
 #33  -> TUBE
 #92  -> CONRODNL
-class RealElementsStressStrain(object):
+class ComplexElementsStressStrain(object):
 
-    def skipOES_Element(self):
-        self.log.debug('skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName))
-        #print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
-        #print self.codeInformation()
-        #self.skipOES_Element2()
-        self.handleResultsBuffer3(self.dummyPass,debug=True)
-
-    def dummyPass(self):
-        self.data = ''
-
-    def OES_Thermal(self,debug=False): # works
-        if self.makeOp2Debug:
-            self.op2Debug.write('---OES_Thermal---\n')
-        #assert self.numWide==5,'invalid numWide...numWide=%s' %(self.numWide)
-        
-        dt = self.nonlinearFactor
-        (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'iifffff'
-        while len(self.data)>=32:
-            #print self.printSection(40)
-            eData     = self.data[0:32]
-            self.data = self.data[32: ]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1,eData)
-            (eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal) = out
-            eid = extract(eid,dt)
-            #print "eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s fRad=%s fTotal=%s" %(eid,sideID,hbdyID,cnvCoeff,fApplied,fConv,fRad,fTotal)
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            #self.obj.addNewEid(eid,axial,axialMS,torsion,torsionMS)
-
-            #print "eid=%i axial=%i torsion=%i" %(eid,axial,torsion)
-            #print "len(data) = ",len(self.data)
-        ###
-        #print self.rodStress[self.iSubcase]
-        if self.makeOp2Debug:
-            print "done with OES_Thermal"
-        ###
-
-    def OES_basicElement(self):
+    def OES_Rod1_alt(self):
         """
         genericStressReader - works on CROD_1, CELAS2_12
         stress & strain
-        formatCode=1 sortCode=0 (eid,axial,axialMS,torsion,torsionMS)
+        formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
         """
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        (nTotal,dataFormat) = self.obj.getLength()
-        dataFormat = format1+dataFormat
-        #print "nTotal=%s dataFormat=%s len(data)=%s" %(nTotal,dataFormat,len(self.data))
+        nTotal = 12
+        format1 += 'ffff'
+        isMagnitudePhase = self.isMagnitudePhase()
         
         n = 0
         nEntries = len(self.data)//nTotal
         for i in range(nEntries):
             eData = self.data[n:n+nTotal]
-            out = unpack(dataFormat,eData)
+            (eid,axialReal,axialImag,torsionReal,torsionImag)= unpack(format1,eData)
+
+            if isMagnitudePhase:
+                (axial)   = polarToRealImag(axialReal,axialImag)
+                (torsion) = polarToRealImag(torsionReal,torsionImag)
+            else:
+                axial   = complex(axialReal,axialImag)
+                torsion = complex(torsionReal,torsionImag)
+            
             #print "out = ",out
-            eid = extract(out[0],dt)
-            self.obj.addNewEid(dt,eid,out[1:])
+            eid = extract(eid,dt)
+            self.obj.addNewEid(dt,eid,axial,torsion)
             n+=nTotal
         ###
         self.data = self.data[n: ]
 
-    def OES_CBEAM_2(self):
+    def OES_Elas1_alt(self):
+        """
+        genericStressReader - works on CROD_1, CELAS2_12
+        stress & strain
+        formatCode=1 sortCode=1 (eid,axial,axial,torsion,torsion)
+        """
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        nTotal = 12
+        format1 += 'ff'
+        isMagnitudePhase = self.isMagnitudePhase()
+        
+        n = 0
+        nEntries = len(self.data)//nTotal
+        for i in range(nEntries):
+            eData = self.data[n:n+nTotal]
+            (eid,axialReal,axialImag) = unpack(format1,eData)
+
+            if isMagnitudePhase:
+                axial = polarToRealImag(axialReal,axialImag)
+            else:
+                axial = complex(axialReal,axialImag)
+            
+            #print "out = ",out
+            eid = extract(eid,dt)
+            self.obj.addNewEid(dt,eid,axial)
+            n+=nTotal
+        ###
+        self.data = self.data[n: ]
+
+
+
+
+
+
+
+
+
+#====================================================
+# dont work...
+
+
+
+
+    def OES_CBEAM_2_alt(self):
         dt = self.nonlinearFactor
         (formatStart,extract) = self.getOUG_FormatStart()
 
@@ -104,7 +117,7 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
 
-    def OES_CQUAD4_33(self): # works
+    def OES_CQUAD4_33_alt(self): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -169,7 +182,7 @@ class RealElementsStressStrain(object):
             #self.dn += 348
         ###
 
-    def OES_CBAR_34(self): # ???
+    def OES_CBAR_34_alt(self): # ???
         if self.makeOp2Debug:
             self.op2Debug.write('---CBAR_34---\n')
         dt = self.nonlinearFactor
@@ -198,7 +211,7 @@ class RealElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with CBAR-34"
 
-    def OES_CSOLID_67(self):  # works
+    def OES_CSOLID_67_alt(self):  # works
         """
         stress is extracted at the centroid
         CTETRA_39
@@ -301,7 +314,7 @@ class RealElementsStressStrain(object):
         ###
         #print self.solidStress[self.iSubcase]
 
-    def OES_CTRIA3_74(self): # works
+    def OES_CTRIA3_74_alt(self): # works
         """
         DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
         stress is extracted at the centroid
@@ -330,7 +343,7 @@ class RealElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
 
-    def OES_CSOLID_85(self):  # works
+    def OES_CSOLID_85_alt(self):  # works
         """
         stress is extracted at the centroid
         CTETRA_85
@@ -440,33 +453,7 @@ class RealElementsStressStrain(object):
         #print self.solidStress[self.iSubcase]
 
 
-    def OES_field1(self):
-        if self.isSort1():
-            #raise NotImplementedError('SORT1 is not supported')
-            return 'i',self.scaleEid
-        elif self.isSort2():
-            if self.analysisCode in [1,2,3,4,7,8,9,11,12]: # eid
-                return 'i',self.scaleEid
-            elif self.analysisCode==5: # freq
-                #freq
-                return 'f',self.scaleDt
-                #raise NotImplementedError('freq is not supported')
-            elif self.analysisCode==6: # time
-                #time
-                return 'f',self.scaleDt
-                #raise NotImplementedError('time is not supported')
-            elif self.analysisCode==10: # fqts:
-                #fqts # freqTime
-                return 'f',self.scaleDt
-                #raise NotImplementedError('freqTime is not supported')
-            else:
-                raise NotImplementedError('invalid SORT2 analysisCode=%s' %(self.analysisCode))
-            ###
-        else:
-            raise NotImplementedError('invalid SORTx code')
-        ###
-
-    def OES_CTRIAX6_53(self):
+    def OES_CTRIAX6_53_alt(self):
         #(Format1,scaleValue) = self.OES_field1()
         #Format = Format1+'ifffffff'
         dt = self.nonlinearFactor
@@ -493,7 +480,7 @@ class RealElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
 
-    def OES_RODNL_89_92(self):
+    def OES_RODNL_89_92_alt(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffff'
@@ -517,7 +504,7 @@ class RealElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
 
-    def OES_CQUAD4NL_90(self):
+    def OES_CQUAD4NL_90_alt(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         
@@ -558,7 +545,7 @@ class RealElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
     
-    def OES_CPENTANL_91(self):
+    def OES_CPENTANL_91_alt(self):
         """
         The DMAP manual says fields 3-18 repeat 7 times. but they dont.
         They repeat 6 times.  Other DMAP cards are correct with
@@ -597,7 +584,7 @@ class RealElementsStressStrain(object):
         #print "buffer time..."
         #self.firstPass = True
 
-    def OES_CHEXANL_93(self):
+    def OES_CHEXANL_93_alt(self):
         """
         The DMAP manual says fields 3-18 repeat 9 times. but they dont.
         They repeat 8 times.  Other DMAP cards are correct with
@@ -636,7 +623,7 @@ class RealElementsStressStrain(object):
         #print "buffer time..."
         #self.firstPass = True
 
-    def OES_CBEAM_94(self):
+    def OES_CBEAM_94_alt(self):
         if self.makeOp2Debug:
             self.op2Debug.write('---BEAM_94---\n')
         nNodes = 10 # 11-1
@@ -673,7 +660,7 @@ class RealElementsStressStrain(object):
             print "done with CBEAM-94"
         #raise Exception('add CBEAM-94...')
 
-    def OES_CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho)
+    def OES_CQUAD4_95_alt(self): # works (doesnt handle all stress/strain cases tho)
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -749,7 +736,7 @@ class RealElementsStressStrain(object):
         ###
         #sys.exit('end of hyperQuad')
     
-    def OES_CQUADR_82(self): # not done...
+    def OES_CQUADR_82_alt(self): # not done...
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -799,7 +786,7 @@ class RealElementsStressStrain(object):
             ###
         ###
 
-    def OES_CQUAD4_144(self): # works
+    def OES_CQUAD4_144_alt(self): # works
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """

@@ -35,9 +35,6 @@ class ComplexCelasStressObject(complexStressObject):
             self.addNewEid = self.addNewEidSort2
         ###
 
-    def getLength(self):
-        return (12,'ff')
-
     def deleteTransient(self,dt):
         del self.stress[dt]
 
@@ -52,25 +49,82 @@ class ComplexCelasStressObject(complexStressObject):
         self.dt = dt
         self.stress[dt] = {}
 
-    def addNewEid(self,dt,eid,out):
-        (stress,) = out
+    def addNewEid(self,dt,eid,stress):
         self.eType[eid]  = self.elementName
         self.stress[eid] = stress
 
-    def addNewEidSort1(self,dt,eid,out):
+    def addNewEidSort1(self,dt,eid,stress):
         if dt not in self.stress:
             self.addNewTransient(dt)
-        (stress,) = out
         self.eType[eid]      = self.elementName
         self.stress[dt][eid] = stress
 
-    def addNewEidSort2(self,eid,dt,out):
+    def addNewEidSort2(self,eid,dt,stress):
         if dt not in self.stress:
             self.addNewTransient(dt)
-        (stress,) = out
         self.eType[eid]      = self.elementName
         self.stress[dt][eid] = stress
 
+
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        """
+        @todo doesnt write...
+        """
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
+        raise NotImplementedError()
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        """
+        @todo improve formatting
+        """
+        words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 1 )\n',
+                 '                                                          (REAL/IMAGINARY)\n',
+                 ' \n',
+                 '                ELEMENT                                                   ELEMENT\n',
+                 '                  ID.                    FORCE                              ID.                    FORCE\n']
+#                   1001       1.537879E+01 /  0.0                            1002       1.537879E+01 /  0.0
+#                   1003       1.537879E+01 /  0.0                            1004       1.537879E+01 /  0.0
+#                   1005       1.537879E+01 /  0.0                            1006       1.537879E+01 /  0.0
+#                   1007       7.689395E+00 /  0.0                            1008       7.689395E+00 /  0.0
+#                   1009       7.689395E+00 /  0.0                            1010       7.689395E+00 /  0.0
+        msg = []
+        isMagPhase = False
+        for dt,Stress in sorted(self.stress.iteritems()):
+            if isinstance(dt,float): # fix
+                header[1] = ' %s = %10.4E float %s\n' %(self.dataCode['name'],dt,self.analysisCode)
+            else:
+                header[1] = ' %s = %10i integer %s\n' %(self.dataCode['name'],dt,self.analysisCode)
+            msg += header+words
+
+            i = 0
+            for elementID,stress in sorted(Stress.iteritems()):
+
+                if isMagPhase:
+                    stressr=abs(stressr); stressi=angle(stress,deg=True)
+                else:
+                    stressr=stress.real
+                    stressi=stress.imag
+
+                (vals2,isAllZeros) = self.writeF06Floats13E([stressr,stressi])
+                if i==0:
+                    elementID1 = elementID
+                    [stress1Real,stress1Imag] = vals2
+                if i==1:
+                    elementID2 = elementID
+                    [stress2Real,stress2Imag] = vals2
+                    msg.append('%14i %13s / %13s  %14i %13s / %-s\n' %(elementID1,stress1Real,stress1Imag,elementID2,stress2Real,stress2Imag.rstrip() ))
+                    i=-1
+                ###
+                i+=1
+            ###
+            msg.append(pageStamp+str(pageNum)+'\n')
+            if f is not None:
+                f.write(''.join(msg))
+                msg = ['']
+            pageNum+=1
+        return (''.join(msg),pageNum-1)
+        
     def __reprTransient__(self):
         msg = '---CELASx STRESSES---\n'
         msg += '%-6s %6s ' %('EID','eType')
@@ -93,6 +147,8 @@ class ComplexCelasStressObject(complexStressObject):
         return msg
 
     def __repr__(self):
+        return self.writeF06(['','',''],'')[0]
+
         #print "spring dt=%s" %(self.dt)
         if self.dt is not None:
             return self.__reprTransient__()
@@ -139,9 +195,6 @@ class ComplexCelasStrainObject(complexStrainObject):
             self.addNewEid = self.addNewEidSort2
         ###
 
-    def getLength(self):
-        return (12,'ff')
-
     def deleteTransient(self,dt):
         del self.strain[dt]
 
@@ -156,22 +209,21 @@ class ComplexCelasStrainObject(complexStrainObject):
         """
         self.strain[dt] = {}
 
-    def addNewEid(self,dt,eid,out):
-        (strain,) = out
+    def addNewEid(self,dt,eid,strain):
         assert eid >= 0
         #self.eType = self.eType
         self.eType[eid]  = self.elementName
         self.strain[eid] = strain
 
-    def addNewEidSort1(self,dt,eid,out):
-        #print out
-        (strain,) = out
+    def addNewEidSort1(self,dt,eid,strain):
         assert eid >= 0
 
         self.eType[eid] = self.elementType
         self.strain[dt][eid] = strain
 
     def __repr__(self):
+        #return self.writeF06(['','',''],'')
+
         if self.dt is not None:
             return self.__reprTransient__()
 

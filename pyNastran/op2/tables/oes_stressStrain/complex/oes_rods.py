@@ -70,9 +70,6 @@ class ComplexRodStressObject(stressObject):
             self.torsion[dt][eid] = torsion
         ###
 
-    def getLength(self):
-        return (20,'ffff')
-
     def deleteTransient(self,dt):
         del self.axial[dt]
         del self.torsion[dt]
@@ -285,9 +282,6 @@ class ComplexRodStrainObject(strainObject):
             self.axial[dt][eid]   = axial
             self.torsion[dt][eid] = torsion
         ###
-
-    def getLength(self):
-        return (20,'ffff')
 
     def deleteTransient(self,dt):
         del self.axial[dt]

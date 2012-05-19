@@ -16,13 +16,15 @@ from real.oes_compositePlates import CompositePlateStressObject,CompositePlateSt
 from real.oes_springs   import CelasStressObject,CelasStrainObject
 from real.oes_triax import CTriaxStressObject,CTriaxStrainObject
 
+
+from complex.elementsStressStrain import ComplexElementsStressStrain
 from complex.oes_rods      import ComplexRodStressObject,ComplexRodStrainObject
 from complex.oes_springs   import ComplexCelasStressObject,ComplexCelasStrainObject
 
 
 from oes_nonlinear import NonlinearRodObject,NonlinearQuadObject,HyperelasticQuadObject
 
-class OES(RealElementsStressStrain):
+class OES(RealElementsStressStrain,ComplexElementsStressStrain):
     """Table of stresses/strains"""
 
     def readTable_OES(self):
@@ -218,7 +220,8 @@ class OES(RealElementsStressStrain):
             # Stress / Strain
             self.dataCode['elementName'] = self.ElementType(self.elementType)
             if self.tableCode==5 and self.isSort1():
-                assert self.tableName in ['OES1X','OES1X1','OSTR1X','OESNLXR','OESNLXD','OESNL1X','OESCP','OESTRCP'],'%s is not supported' %(self.tableName)
+                assert self.tableName in ['OES1X','OES1X1','OES1C','OESNLXR','OESNLXD','OESNL1X','OESCP','OESTRCP',
+                                          'OSTR1X','OSTR1C'],'%s is not supported' %(self.tableName)
                 self.readOES_Data()
             else:
                 #raise InvalidATFSCodeError('invalid atfsCode=%s' %(self.atfsCode))
@@ -259,6 +262,8 @@ class OES(RealElementsStressStrain):
                        40:  8,          # CBUSH1D
                        47:  5,          # CAXIF2
                        48:  10,         # CAXIF3
+                       50:  6,          # CSLOT3
+                       51:  7,          # CSLOT4
                        53:  1+(9-1)*4,  # CTRIAX6
                        60:  10,         # CRAC2D, CDUM8
                        61:  10,         # CRAC3D, CDUM9
@@ -293,6 +298,18 @@ class OES(RealElementsStressStrain):
                        140: 2+(22-2)*8, # hyperelastic HEXAFD
                        144: 2+(19-2)*5, # bilinear CQUAD4
                        147: 50,         # VUTETRA
+                       160: 2+(22-2)*6, # linear hyperelastic PENTAFD - 6 nodes
+                       161: 2+(22-2)*1, # linear hyperelastic TETRAFD - 4 nodes
+                       162: 2+(9-2)*1,  # linear hyperelastic TRIAFD
+                       163: 2+(22-2)*27,# linear hyperelastic HEXAFD - 20 nodes
+                       164: 2+(9-2)*9,  # linear hyperelastic QUADFD
+                       165: 2+(22-2)*21,# linear hyperelastic PENTAFD - 15 nodes
+                       166: 2+(22-2)*5, # linear hyperelastic TETRAFD - 10 nodes
+                       167: 2+(9-2)*3,  # linear hyperelastic TRIA6FD
+                       168: 2+(9-2)*1,  # linear hyperelastic TRIAXFD
+                       169: 2+(9-2)*3,  # linear hyperelastic TRIAX6FD
+                       170: 2+(9-2)*4,  # linear hyperelastic QUADXFD
+                       171: 2+(9-2)*9,  # linear hyperelastic QUAD9XFD
                        172: 13,         # Nonlinear CQUADR
                        173: 13,         # Nonlinear CTRIAR
                        189: 6+(23-6)*4, # VUQUAD
@@ -308,8 +325,14 @@ class OES(RealElementsStressStrain):
                        213: 2+(13-2)*3, # hyperelastic TRIAXFD
                        214: 2+(13-2)*4, # hyperelastic QUAD4XFD
                        215: 2+(13-2)*9, # hyperelastic QUADXFD
-                       216: 2+(17-2)*4, # hyperelastic TETRAFD - 4 nodes
-                       218: 2+(17-2)*8, # hyperelastic HEXAFD - 20 nodes
+                       216: 2+(17-2)*4, # hyperelastic TETRAFD -  4 nodes
+                       217: 2+(13-2)*3, # hyperelastic TRIA3FD -  3 nodes
+                       218: 2+(17-2)*8, # hyperelastic HEXAFD  - 20 nodes
+                       219: 2+(13-2)*4, # hyperelastic QUAD4FD -  4 nodes
+                       220: 2+(17-2)*8, # hyperelastic PENTAFD - 15 nodes
+                       221: 2+(17-2)*4, # hyperelastic TETRAFD -  4 nodes
+                       222: 2+(13-2)*3, # hyperelastic TRIAXFD -  3 nodes
+                       223: 2+(13-2)*4, # hyperelastic QUADXFD -  4 nodes
                        224: 3,          # nonlinear CELAS1
                        225: 3,          # nonlinear CELAS3
                        226: 19,         # nonlinear CBUSH
@@ -339,6 +362,8 @@ class OES(RealElementsStressStrain):
                        40:  9,          # CBUSH1D
                        47:  9,          # CAXIF2
                        48:  19,         # CAXIF3
+                       50:  11,         # CSLOT3
+                       51:  13,         # CSLOT4
                        53:  1+(10-1)*4, # CTRIAX6
                        60:  None,       # CRAC2D, CDUM8
                        61:  None,       # CRAC3D, CDUM9
@@ -373,6 +398,18 @@ class OES(RealElementsStressStrain):
                        145: 58,         # VUHEXA
                        146: 44,         # VUPENTA
                        147: 30,         # VUTETRA
+                       160: None,       # linear hyperelastic PENTAFD - 6 nodes
+                       161: None,       # linear hyperelastic TETRAFD - 4 nodes
+                       162: None,       # linear hyperelastic TRIAFD
+                       163: None,       # linear hyperelastic HEXAFD - 20 nodes
+                       164: None,       # linear hyperelastic QUADFD
+                       165: None,       # linear hyperelastic PENTAFD - 15 nodes
+                       166: None,       # linear hyperelastic TETRAFD - 10 nodes
+                       167: None,       # linear hyperelastic TRIA6FD
+                       168: None,       # linear hyperelastic TRIAXFD
+                       169: None,       # linear hyperelastic TRIAX6FD
+                       170: None,       # linear hyperelastic QUADXFD
+                       171: None,       # linear hyperelastic QUAD9XFD
                        172: 25,         # Nonlinear CQUADR
                        173: 25,         # Nonlinear CTRIAR
                        189: 6+(33-6)*4, # VUQUAD
@@ -388,8 +425,14 @@ class OES(RealElementsStressStrain):
                        213: None,       # hyperelastic TRIAXFD
                        214: None,       # hyperelastic QUAD4XFD
                        215: None,       # hyperelastic QUADXFD
-                       216: None,       # hyperelastic TETRAFD - 4 nodes
-                       218: None,       # hyperelastic HEXAFD - 20 nodes
+                       216: None,       # hyperelastic TETRAFD -  4 nodes
+                       217: None,       # hyperelastic TRIA3FD -  3 nodes
+                       218: None,       # hyperelastic HEXAFD  - 20 nodes
+                       219: None,       # hyperelastic QUAD4FD -  4 nodes
+                       220: None,       # hyperelastic PENTAFD - 15 nodes
+                       221: None,       # hyperelastic TETRAFD -  4 nodes
+                       222: None,       # hyperelastic TRIAXFD -  3 nodes
+                       223: None,       # hyperelastic QUADXFD -  4 nodes
                        224: None,       # nonlinear CELAS1
                        225: None,       # nonlinear CELAS3
                        226: None,       # nonlinear CBUSH
@@ -419,6 +462,8 @@ class OES(RealElementsStressStrain):
                        40:  2+(19-2)*5, # CBUSH1D
                        47:  5,          # CAXIF2
                        48:  10,         # CAXIF3
+                       50:  6,          # CSLOT3
+                       51:  7,          # CSLOT4
                        53:  1+(9-1)*4,  # CTRIAX6
                        60:  None,       # CRAC2D, CDUM8
                        61:  None,       # CRAC3D, CDUM9
@@ -453,6 +498,18 @@ class OES(RealElementsStressStrain):
                        145: 106,        # VUHEXA
                        146: 80,         # VUPENTA
                        147: 54,         # VUTETRA
+                       160: None,       # linear hyperelastic PENTAFD - 6 nodes
+                       161: None,       # linear hyperelastic TETRAFD - 4 nodes
+                       162: None,       # linear hyperelastic TRIAFD
+                       163: None,       # linear hyperelastic HEXAFD - 20 nodes
+                       164: None,       # linear hyperelastic QUADFD
+                       165: None,       # linear hyperelastic PENTAFD - 15 nodes
+                       166: None,       # linear hyperelastic TETRAFD - 10 nodes
+                       167: None,       # linear hyperelastic TRIA6FD
+                       168: None,       # linear hyperelastic TRIAXFD
+                       169: None,       # linear hyperelastic TRIAX6FD
+                       170: None,       # linear hyperelastic QUADXFD
+                       171: None,       # linear hyperelastic QUAD9XFD
                        172: None,       # Nonlinear CQUADR
                        173: None,       # Nonlinear CTRIAR
                        189: None,       # VUQUAD
@@ -468,8 +525,14 @@ class OES(RealElementsStressStrain):
                        213: None,       # hyperelastic TRIAXFD
                        214: None,       # hyperelastic QUAD4XFD
                        215: None,       # hyperelastic QUADXFD
-                       216: None,       # hyperelastic TETRAFD - 4 nodes
-                       218: None,       # hyperelastic HEXAFD - 20 nodes
+                       216: None,       # hyperelastic TETRAFD -  4 nodes
+                       217: None,       # hyperelastic TRIA3FD -  3 nodes
+                       218: None,       # hyperelastic HEXAFD  - 20 nodes
+                       219: None,       # hyperelastic QUAD4FD -  4 nodes
+                       220: None,       # hyperelastic PENTAFD - 15 nodes
+                       221: None,       # hyperelastic TETRAFD -  4 nodes
+                       222: None,       # hyperelastic TRIAXFD -  3 nodes
+                       223: None,       # hyperelastic QUADXFD -  4 nodes
                        224: None,       # nonlinear CELAS1
                        225: None,       # nonlinear CELAS3
                        226: None,       # nonlinear CBUSH
@@ -512,7 +575,7 @@ class OES(RealElementsStressStrain):
             elif self.numWide==numWideImag:
                 self.makeOES_Object(self.rodStress,ComplexRodStressObject,
                                     self.rodStrain,ComplexRodStrainObject)
-                self.handleResultsBuffer3(self.OES_basicElement)
+                self.handleResultsBuffer3(self.OES_Rod1_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
@@ -538,7 +601,7 @@ class OES(RealElementsStressStrain):
             elif self.numWide==numWideImag:
                 self.makeOES_Object(self.shearStress,ComplexShearStressObject,
                                     self.shearStrain,ComplexShearStrainObject)
-                self.handleResultsBuffer3(self.OES_basicElement)
+                self.handleResultsBuffer3(self.OES_shear4_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
         elif self.elementType in [11,12,13]:   # celas1/celas2/celas3
@@ -555,7 +618,9 @@ class OES(RealElementsStressStrain):
             elif self.numWide==numWideImag:
                 self.makeOES_Object(self.celasStress,ComplexCelasStressObject,
                                     self.celasStrain,ComplexCelasStrainObject)
-                self.handleResultsBuffer3(self.OES_basicElement)
+                self.handleResultsBuffer3(self.OES_Elas1_alt)
+                #print self.obj
+                #raise NotImplementedError('add printing to stress CELAS complex...')
             else:
                 raise NotImplementedError(self.codeInformation())
         elif self.elementType == 34:   # cbar
