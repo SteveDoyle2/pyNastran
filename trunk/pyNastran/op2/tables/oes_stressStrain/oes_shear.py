@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class shearStressObject(stressObject):
+class ShearStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                    S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )
@@ -148,7 +148,7 @@ class shearStressObject(stressObject):
             #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
         return msg
 
-class shearStrainObject(strainObject):
+class ShearStrainObject(strainObject):
     """
     """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):

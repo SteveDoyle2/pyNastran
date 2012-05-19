@@ -4,20 +4,20 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2Errors import *
-from elementsStressStrain import ElementsStressStrain
-from oes_rods   import rodStressObject,rodStrainObject
-from oes_shear  import shearStressObject,shearStrainObject
-from oes_bars   import barStressObject,barStrainObject
-from oes_beams  import beamStressObject,beamStrainObject
+from elementsStressStrain import RealElementsStressStrain
+from oes_rods   import RodStressObject,RodStrainObject
+from oes_shear  import ShearStressObject,ShearStrainObject
+from oes_bars   import BarStressObject,BarStrainObject
+from oes_beams  import BeamStressObject,BeamStrainObject
 
-from oes_solids import solidStressObject,solidStrainObject
-from oes_plates import plateStressObject,plateStrainObject
-from oes_compositePlates import compositePlateStressObject,compositePlateStrainObject
-from oes_springs   import celasStressObject,celasStrainObject
-from oes_nonlinear import nonlinearRodObject,nonlinearQuadObject,hyperelasticQuadObject
-from oes_triax import ctriaxStressObject,ctriaxStrainObject
+from oes_solids import SolidStressObject,SolidStrainObject
+from oes_plates import PlateStressObject,PlateStrainObject
+from oes_compositePlates import CompositePlateStressObject,CompositePlateStrainObject
+from oes_springs   import CelasStressObject,CelasStrainObject
+from oes_nonlinear import NonlinearRodObject,NonlinearQuadObject,HyperelasticQuadObject
+from oes_triax import CTriaxStressObject,CTriaxStrainObject
 
-class OES(ElementsStressStrain):
+class OES(RealElementsStressStrain):
     """Table of stresses/strains"""
 
     def readTable_OES(self):
@@ -212,12 +212,11 @@ class OES(ElementsStressStrain):
         elif self.thermal==0:
             # Stress / Strain
             self.dataCode['elementName'] = self.ElementType(self.elementType)
-            if tfsCode==[5,1,0]: # self.tableCode==5
-                self.readOES_Data_format1_sort0()
+            if self.tableCode==5 and self.isSort1():
+                self.readOES_Data()
             else:
                 #raise InvalidATFSCodeError('invalid atfsCode=%s' %(self.atfsCode))
                 self.skipOES_Element()
-                pass
             ###
         elif self.thermal==1:
             self.OES_Thermal()
@@ -228,7 +227,167 @@ class OES(ElementsStressStrain):
         
         #print self.obj
 
-    def readOES_Data_format1_sort0(self):
+    def OES_StressStrainCode(self):
+        """
+        Gets the numwide codes for the element to determine if
+        the real / complex / random result should be found.
+        The format and sort codes do not always give the right answer...
+        """
+        realMapper = {
+                       0:   17,         # GRID - OES1G
+                       1:   5,          # CROD
+                       2:   1+(11-1)*11, # CBEAM
+                       3:   5,          # CTUBE
+                       4:   4,          # CSHEAR
+                       10:  5,          # CONROD
+                       11:  2,          # CELAS1
+                       12:  2,          # CELAS2
+                       13:  2,          # CELAS3
+                      #14:  2,          # CELAS4
+                       24:  None,       # CVISC
+                       33:  17,         # CQUAD4
+                       34:  16,         # CBAR
+                       35:  18,         # CCONEAX
+                       38:  None,       # CGAP
+                       39:  4+(25-4)*4, # CTETRA
+                       40:  8,          # CBUSH1D
+                       53:  1+(9-1)*4,  # CTRIAX6
+                       64:  2+(19-2)*5, # CQUAD8
+                       67:  4+(25-4)*9, # CHEXA
+                       68:  4+(25-4)*7, # CPENTA
+                       69:  1+(11-1)*2, # CBEND
+                       70:  2+(19-2)*4, # CTRIAR
+                       74:  17,         # CTRIA3
+                       75:  2+(19-2)*4, # CTRIA6
+                       82:  2+(19-2)*5, # CQUADR
+                       85:  2+(18-2)*5, # Nonlinear CTETRA
+                       86:  11,         # Nonlinear CGAP
+                       87:  7,          # Nonlinear CTUBE
+                      #88:  11,         # Nonlinear CTRIA
+                       89:  7,          # Nonlinear CROD
+                       91:  4+(25-4)*7, # Nonlinear CPENTA
+                       92:  7,          # Nonlinear CONROD
+                       93:  4+(25-4)*9, # Nonlinear CHEXA
+                       94:  51,         # Nonlinear CBEAM
+                       95:  11,         # Composite QUAD4
+                       96:  11,         # Composite QUAD8
+                       97:  11,         # Composite CTRIA3
+                       98:  11,         # Composite CTRIA6
+                       100: 10,         # CBAR 100
+                       102: 7,          # CBUSH
+                       139: 2+(9-2)*4,  # hyperelastic QUAD4FD
+                       140: 2+(22-2)*8, # hyperelastic HEXAFD
+                       144: 2+(19-2)*5, # bilinear CQUAD4
+                 }
+
+        imagMapper = {
+                       0:   None,       # GRID - OES1G
+                       1:   5,          # CROD
+                       2:   1+(11-1)*11, # CBEAM
+                       3:   5,          # CTUBE
+                       4:   5,          # CSHEAR
+                       10:  5,          # CONROD
+                       11:  3,          # CELAS1
+                       12:  3,          # CELAS2
+                       13:  3,          # CELAS3
+                       14:  3,          # CELAS4
+                       24:  5,          # CVISC
+                       33:  15,         # CQUAD4
+                       34:  19,         # CBAR
+                       35:  None,       # CCONEAX
+                       38:  None,       # CGAP
+                       39:  4+(17-4)*4, # CTETRA
+                       40:  9,          # CBUSH1D
+                       53:  1+(10-1)*4, # CTRIAX6
+                       64:  2+(17-2)*5, # CQUAD8
+                       67:  4+(17-4)*9, # CHEXA
+                       68:  4+(17-4)*7, # CPENTA
+                       69:  1+(11-1)*2, # CBEND
+                       70:  2+(17-2)*4, # CTRIAR
+                       74:  15,         # CTRIA3
+                       75:  2+(17-2)*4, # CTRIA6
+                       82:  2+(17-2)*5, # CQUADR
+                       85:  None,       # Nonlinear CTETRA
+                       86:  None,       # Nonlinear CGAP
+                       87:  None,       # Nonlinear CTUBE
+                       89:  None,       # Nonlinear CROD
+                       91:  None,       # Nonlinear CPENTA
+                       92:  None,       # Nonlinear CONROD
+                       93:  None,       # Nonlinear CHEXA
+                       94:  None,       # Nonlinear CBEAM
+                       95:  None,       # Composite QUAD4
+                       96:  None,       # Composite QUAD8
+                       97:  None,       # Composite CTRIA3
+                       98:  None,       # Composite CTRIA6
+                       100: 16,         # CBAR 100
+                       102: 13,         # CBUSH
+                       139: None,       # hyperelastic QUADFD
+                       140: None,       # hyperelastic HEXAFD
+                       144: 2+(17-2)*5, # bilinear CQUAD4
+                 }
+
+        randomMapper = {
+                       0:   None,       # GRID - OES1G
+                       1:   3,          # CROD
+                       2:   1+(7-1)*11, # CBEAM
+                       3:   3,          # CTUBE
+                       4:   3,          # CSHEAR
+                       10:  3,          # CONROD
+                       11:  2,          # CELAS1
+                       12:  2,          # CELAS2
+                       13:  2,          # CELAS3
+                      #14:  2,          # CELAS4
+                       24:  3,          # CVISC   ## TODO:  ?????
+                       33:  9,          # CQUAD4
+                       34:  None,       # CBAR   ## TODO: 19 stress; 10 for strain???
+                       35:  None,       # CCONEAX
+                       38:  None,       # CGAP
+                       39:  4+(11-4)*4, # CTETRA
+                       40:  2+(19-2)*5, # CBUSH1D
+                       53:  1+(9-1)*4,  # CTRIAX6
+                       64:  2+(11-2)*5, # CQUAD8
+                       67:  4+(11-4)*9, # CHEXA
+                       68:  4+(11-4)*7, # CPENTA
+                       69:  1+(7-1)*2,  # CBEND
+                       70:  2+(11-2)*4, # CTRIAR
+                       74:  9,          # CTRIA3
+                       75:  2+(11-2)*4, # CTRIA6
+                       82:  2+(11-2)*5, # CQUADR
+                       85:  None,       # Nonlinear CTETRA
+                       86:  None,       # Nonlinear CGAP
+                       87:  None,       # Nonlinear CTUBE
+                       89:  None,       # Nonlinear CROD
+                       91:  None,       # Nonlinear CPENTA
+                       92:  None,       # Nonlinear CONROD
+                       93:  None,       # Nonlinear CHEXA
+                       94:  None,       # Nonlinear CBEAM
+                       95:  None,       # Composite QUAD4
+                       96:  None,       # Composite QUAD8
+                       97:  None,       # Composite CTRIA3
+                       98:  None,       # Composite CTRIA6
+                       100: 9,          # CBAR 100
+                       102: 7,          # CBUSH
+                       139: None,       # hyperelastic QUADFD
+                       140: None,       # hyperelastic HEXAFD
+                       144: 2+(11-2)*5  # bilinear CQUAD4
+                 }
+        
+                       #189: 6+(19-6)*4, # VUQUAD
+                       #190: 6+(19-6)*3, # VUTRIA
+                       #191: 4+(12-4)*2, # VUBEAM
+                       #200: 9,    # CWELD
+                       #232: 9,    # composite CQUADR ???
+                       #233: 9,    # composite TRIAR ???
+                       #235: 9,    # punch CQUADR...numWide in DMAP is wrong...left out first entry...
+                       #236: 8,    # punch CTRIAR
+
+        #raise NotImplementedError('need to update this for stress...')
+        Real   = realMapper[self.elementType]
+        Imag   = imagMapper[self.elementType]
+        Random = randomMapper[self.elementType]
+        return (Real,Imag,Random)
+
+    def readOES_Data(self):
         #msg = '%s-OES elementType=%-3s -> %-6s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType))
         msg = ''
         #if self.analysisCode not in [1,6,10]:
@@ -243,25 +402,47 @@ class OES(ElementsStressStrain):
             return
 
         #print 'self.elementType  = ',self.elementType
+        (numWideReal,numWideImag,numWideRandom) = self.OES_StressStrainCode()
         if self.elementType in [1,3,10]: # crod/ctube/conrod
             #if self.elementType==1:    self.dataCode['elementName'] = 'CROD'
             #if self.elementType==3:    self.dataCode['elementName'] = 'CTUBE'
             #if self.elementType==10:   self.dataCode['elementName'] = 'CONROD'
-            
-            self.makeOES_Object(self.rodStress,rodStressObject,
-                                self.rodStrain,rodStrainObject)
-            self.handleResultsBuffer3(self.OES_basicElement)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.rodStress,RodStressObject,
+                                    self.rodStrain,RodStrainObject)
+                self.handleResultsBuffer3(self.OES_basicElement)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.rodStress,ComplexRodStressObject,
+                                    self.rodStrain,ComplexRodStrainObject)
+                self.handleResultsBuffer3(self.OEF_Rod_basicElement_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
+            ###
         elif self.elementType == 2:   # cbeam
             self.dataCode['elementName'] = 'CBEAM'
-            self.makeOES_Object(self.beamStress,beamStressObject,
-                                self.beamStrain,beamStrainObject)
-            self.handleResultsBuffer3(self.OES_CBEAM_2)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.beamStress,beamStressObject,
+                                    self.beamStrain,beamStrainObject)
+                self.handleResultsBuffer3(self.OES_CBEAM_2)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.beamStress,ComplexBeamStressObject,
+                                    self.beamStrain,ComplexBeamStrainObject)
+                self.handleResultsBuffer3(self.OEF_Rod_CBEAM_2_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
             
         elif self.elementType in [4]: # cshear
             self.dataCode['elementName'] = 'CSHEAR'
-            self.makeOES_Object(self.shearStress,shearStressObject,
-                                self.shearStrain,shearStrainObject)
-            self.handleResultsBuffer3(self.OES_basicElement)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.shearStress,ShearStressObject,
+                                    self.shearStrain,ShearStrainObject)
+                self.handleResultsBuffer3(self.OES_basicElement)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.shearStress,ComplexShearStressObject,
+                                    self.shearStrain,ComplexShearStrainObject)
+                self.handleResultsBuffer3(self.OES_basicElement_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
         elif self.elementType in [11,12,13]:   # celas1/celas2/celas3
             #print "    found celas2_12"
             #if   self.elementType==11: self.dataCode['elementName'] = 'CELAS1'
@@ -269,34 +450,69 @@ class OES(ElementsStressStrain):
             #elif self.elementType==13: self.dataCode['elementName'] = 'CELAS3'
             #else:  raise Exception('not implemented error')
             
-            self.makeOES_Object(self.celasStress,celasStressObject,
-                                self.celasStrain,celasStrainObject)
-            self.handleResultsBuffer3(self.OES_basicElement)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.celasStress,CelasStressObject,
+                                    self.celasStrain,CelasStrainObject)
+                self.handleResultsBuffer3(self.OES_basicElement)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.celasStress,ComplexCelasStressObject,
+                                    self.celasStrain,ComplexCelasStrainObject)
+                self.handleResultsBuffer3(self.OES_basicElement_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
         elif self.elementType == 34:   # cbar
             self.dataCode['elementName'] = 'CBAR'
-            self.makeOES_Object(self.barStress,barStressObject,
-                                self.barStrain,barStrainObject)
-            self.handleResultsBuffer3(self.OES_CBAR_34)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.barStress,BarStressObject,
+                                    self.barStrain,BarStrainObject)
+                self.handleResultsBuffer3(self.OES_CBAR_34)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.barStress,ComplexBarStressObject,
+                                    self.barStrain,ComplexBarStrainObject)
+                self.handleResultsBuffer3(self.OES_CBAR_34)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         elif self.elementType==33: # cquad4_33
-            self.dataCode['elementName'] = 'CQUAD4'
-            self.makeOES_Object(self.plateStress,plateStressObject,
-                                self.plateStrain,plateStrainObject)
-            self.handleResultsBuffer3(self.OES_CQUAD4_33)
+            if self.numWide==numWideReal:
+                self.dataCode['elementName'] = 'CQUAD4'
+                self.makeOES_Object(self.plateStress,PlateStressObject,
+                                    self.plateStrain,PlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4_33)
             #print self.obj.writeF06(['',''],'PAGE ',1)[0]
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.plateStress,ComplexPlateStressObject,
+                                    self.plateStrain,ComplexPlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4_33_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         elif self.elementType==53: # ctriax6
             self.dataCode['elementName'] = 'CTRIAX6'
             #print self.codeInformation()
-            self.makeOES_Object(self.ctriaxStress,ctriaxStressObject,
-                                self.ctriaxStrain,ctriaxStrainObject)
-            self.handleResultsBuffer3(self.OES_CTRIAX6_53)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.ctriaxStress,CTriaxStressObject,
+                                    self.ctriaxStrain,CTriaxStrainObject)
+                self.handleResultsBuffer3(self.OES_CTRIAX6_53)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.ctriaxStress,ComplexCTriaxStressObject,
+                                    self.ctriaxStrain,ComplexCTriaxStrainObject)
+                self.handleResultsBuffer3(self.OES_CTRIAX6_53_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         elif self.elementType==74:  # ctria
             self.dataCode['elementName'] = 'CTRIA3'
-            self.makeOES_Object(self.plateStress,plateStressObject,
-                                self.plateStrain,plateStrainObject)
-            self.handleResultsBuffer3(self.OES_CTRIA3_74)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.plateStress,PlateStressObject,
+                                    self.plateStrain,PlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CTRIA3_74)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.plateStress,ComplexPlateStressObject,
+                                    self.plateStrain,ComplexPlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CTRIA3_74_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
         elif self.elementType in [144,75,82]: # 64-cquad8/cquad4/70-ctriar/ctria6/cquadr
             #print "    found cquad_144"
             if     self.elementType==64:  self.dataCode['elementName'] = 'CQUAD8'
@@ -305,22 +521,44 @@ class OES(ElementsStressStrain):
             elif   self.elementType==75:  self.dataCode['elementName'] = 'CTRIA6'
             elif   self.elementType==82:  self.dataCode['elementName'] = 'CQUADR'
             else:  raise NotImplementedError('card not implemented elementType=%s' %(self.elementType))
-            self.makeOES_Object(self.plateStress,plateStressObject,
-                                self.plateStrain,plateStrainObject)
-            self.handleResultsBuffer3(self.OES_CQUAD4_144)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.plateStress,PlateStressObject,
+                                    self.plateStrain,PlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4_144)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.plateStress,ComplexPlateStressObject,
+                                    self.plateStrain,ComplexPlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4_144_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         elif self.elementType in [39,67,68]:   # ctetra/chexa/cpenta (linear)
             #print "    found ctetra_39 / hexa_67 / cpenta_68"
-            self.makeOES_Object(self.solidStress,solidStressObject,
-                                self.solidStrain,solidStrainObject)
-            #self.handleResultsBuffer3(self.skipOES_Element)
-            self.handleResultsBuffer3(self.OES_CSOLID_67)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.solidStress,SolidStressObject,
+                                    self.solidStrain,SolidStrainObject)
+                #self.handleResultsBuffer3(self.skipOES_Element)
+                self.handleResultsBuffer3(self.OES_CSOLID_67)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.solidStress,ComplexSolidStressObject,
+                                    self.solidStrain,ComplexSolidStrainObject)
+                #self.handleResultsBuffer3(self.skipOES_Element)
+                self.handleResultsBuffer3(self.OES_CSOLID_67_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         elif self.elementType in [85]:   # ctetra/chexa/cpenta (91,93)  (nonlinear)
             #print "    found ctetra_85 / hexa_93 / cpenta_91"
-            self.makeOES_Object(self.solidStress,solidStressObject,
-                                self.solidStrain,solidStrainObject)
-            self.handleResultsBuffer3(self.OES_CSOLID_85)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.solidStress,SolidStressObject,
+                                    self.solidStrain,SolidStrainObject)
+                self.handleResultsBuffer3(self.OES_CSOLID_85)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.solidStress,ComplexSolidStressObject,
+                                    self.solidStrain,ComplexSolidStrainObject)
+                self.handleResultsBuffer3(self.OES_CSOLID_85_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         elif self.elementType in [87,89,92]:   # CTUBENL, RODNL, CONRODNL
             #print "    found RODNL_89"
@@ -330,9 +568,16 @@ class OES(ElementsStressStrain):
 
         elif self.elementType in [88,90]: # CTRIA3NL, CQUAD4NL
             #print "cquad4_90"
-            self.makeOES_Object(self.nonlinearPlateStress,nonlinearQuadObject,
-                                self.nonlinearPlateStrain,nonlinearQuadObject)
-            self.handleResultsBuffer3(self.OES_CQUAD4NL_90)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.nonlinearPlateStress,NonlinearQuadObject,
+                                    self.nonlinearPlateStrain,NonlinearQuadObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4NL_90)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.nonlinearPlateStress,NonlinearQuadObject,
+                                    self.nonlinearPlateStrain,NonlinearQuadObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4NL_90_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         #elif self.elementType in [91]: # CPENTANL
         #    #print "hexa_93"
@@ -344,9 +589,16 @@ class OES(ElementsStressStrain):
         elif self.elementType in [95,96,97,98]: # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
             #print "    found a 95/96/97 or 98!"
             self.eid2 = None # stores the previous elementID
-            self.makeOES_Object(self.compositePlateStress,compositePlateStressObject,
-                                self.compositePlateStrain,compositePlateStrainObject)
-            self.handleResultsBuffer3(self.OES_CQUAD4_95)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.compositePlateStress,CompositePlateStressObject,
+                                    self.compositePlateStrain,CompositePlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4_95)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.compositePlateStress,ComplexCompositePlateStressObject,
+                                    self.compositePlateStrain,ComplexCompositePlateStrainObject)
+                self.handleResultsBuffer3(self.OES_CQUAD4_95_alt)
+            else:
+                raise NotImplementedError(self.codeInformation())
             del self.eid2
 
         #elif self.elementType in [94]: # CBEAM (nonlinear)
@@ -360,9 +612,16 @@ class OES(ElementsStressStrain):
 
         elif self.elementType in [139]:   # QUAD4FD (hyperelastic)
             #print "    found QUAD4FD_139"
-            self.makeOES_Object(self.hyperelasticPlateStress,hyperelasticQuadObject,
-                                self.hyperelasticPlateStrain,hyperelasticQuadObject)
-            self.handleResultsBuffer3(self.OES_QUAD4FD_139)
+            if self.numWide==numWideReal:
+                self.makeOES_Object(self.hyperelasticPlateStress,HyperelasticQuadObject,
+                                    self.hyperelasticPlateStrain,HyperelasticQuadObject)
+                self.handleResultsBuffer3(self.OES_QUAD4FD_139)
+            elif self.numWide==numWideImag:
+                self.makeOES_Object(self.hyperelasticPlateStress,ComplexHyperelasticQuadObject,
+                                    self.hyperelasticPlateStrain,ComplexHyperelasticQuadObject)
+                self.handleResultsBuffer3(self.OES_QUAD4FD_139)
+            else:
+                raise NotImplementedError(self.codeInformation())
 
         #elif self.elementType in [2,53,61,70,86,88,90,94,102,189,232,]:
             #self.skipOES_Element()
@@ -386,7 +645,7 @@ class OES(ElementsStressStrain):
         else:
             #self.printBlock(self.data[0:100])
             self.skipOES_Element()
-            msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName.strip())
+            msg = '%s-OES format%s elementType=%-3s -> %s is not supported - fname=%s\n' %(self.tableName,self.formatCode,self.elementType,self.ElementType(self.elementType),self.op2FileName.strip())
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)
             #raise NotImplementedError(msg)

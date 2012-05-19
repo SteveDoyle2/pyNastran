@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class barStressObject(stressObject):
+class BarStressObject(stressObject):
     """
     # sCode=0
                                S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )
@@ -361,7 +361,7 @@ class barStressObject(stressObject):
         ###
         return msg
 
-class barStrainObject(strainObject):
+class BarStrainObject(strainObject):
     """
     # sCode=10
                                      S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )

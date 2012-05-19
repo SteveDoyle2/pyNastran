@@ -3,7 +3,7 @@ from oes_objects import stressObject,strainObject
 from pyNastran.op2.op2Errors import *
 
 
-class plateStressObject(stressObject):
+class PlateStressObject(stressObject):
     """
     ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
@@ -626,7 +626,7 @@ class plateStressObject(stressObject):
         ###
         return msg
 
-class plateStrainObject(strainObject):
+class PlateStrainObject(strainObject):
     """
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 
