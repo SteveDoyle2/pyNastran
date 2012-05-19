@@ -4,7 +4,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF
 
-class Tester(unittest.TestCase):
+class TestCoords(unittest.TestCase):
     def test_same(self):  # passes
         grids  = [
                      [0,  0.,  0.,  1.],

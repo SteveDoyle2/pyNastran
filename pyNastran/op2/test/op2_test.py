@@ -74,8 +74,10 @@ if __name__=='__main__':
     makeGeom  = False
     writeBDF  = False
     writeF06  = False
+    printResults = True
+
     deleteF06 = True
-    saveCases = False
+    saveCases = True
     regenerate = False
     stopOnFailure = False
     getSkipCards = False
@@ -109,7 +111,7 @@ if __name__=='__main__':
         pass
 
     print "nFiles = ",len(files)
-    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,deleteF06,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
+    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,deleteF06,printResults,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
     

@@ -150,10 +150,10 @@ class OUG(object):
         
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
-        print self.codeInformation()
+        #print self.codeInformation()
 
-        #if not self.isSort1():
-            #raise NotImplementedError('sort2...')
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
 
         #self.printBlock(data)
         self.readTitle()
@@ -251,10 +251,10 @@ class OUG(object):
         OUGATO2 - auto-correlated in sort 2
         """
         isSort1 = self.isSort1()
-        print "isSort2 = ",not(isSort1)
+        #print "isSort2 = ",not(isSort1)
         if self.numWide==8:  # real/random
             if self.thermal==0:
-                print self.dataCode
+                #print self.dataCode
                 if self.tableName in ['OUGV1']:
                     self.createTransientObject(self.displacements,displacementObject) # real
                 elif self.tableName in ['OUGATO2']:

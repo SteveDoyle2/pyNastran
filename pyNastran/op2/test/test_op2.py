@@ -32,7 +32,7 @@ def getFailedFiles(filename):
         files.append(line.strip())
     return files
 
-def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=True,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
+def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=True,printResults=True,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -49,7 +49,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=Tr
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n,op2file))
             nTotal += 1
-            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,deleteF06=deleteF06,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
+            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,deleteF06=deleteF06,printResults=printResults,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
                 sys.stderr.write('**file=%s\n' %(op2file))
                 failedCases.append(op2file)
@@ -73,7 +73,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=Tr
     print msg
     sys.exit(msg)
 
-def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=False,deleteF06=False,printData=True,iSubcases=[],debug=False,stopOnFailure=True):
+def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=False,deleteF06=False,printResults=True,iSubcases=[],debug=False,stopOnFailure=True):
     assert '.op2' in op2FileName.lower(),'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
@@ -95,7 +95,7 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=Fa
             if deleteF06:
                 os.remove(model+'.f06.out')
         #print op2.printResults()
-        if printData:
+        if printResults:
             op2.printResults()
         #print "subcases = ",op2.subcases
 
@@ -206,22 +206,22 @@ def runArgParse():
     print "op2FileName = ",args.op2FileName[0]
     print "debug       = ",not(args.quiet)
 
-    debug       = not(args.quiet)
-    makeGeom    = args.geometry
-    writeBDF    = args.writeBDF
-    writeF06    = args.writeF06
-    isMagPhase  = args.writeF06
-    printData   = args.noPrint
-    op2FileName = args.op2FileName[0]
+    debug        = not(args.quiet)
+    makeGeom     = args.geometry
+    writeBDF     = args.writeBDF
+    writeF06     = args.writeF06
+    isMagPhase   = args.writeF06
+    printResults = args.noPrint
+    op2FileName  = args.op2FileName[0]
 
-    return (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printData,debug)
+    return (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printResults,debug)
 
 def main():
-    (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printData,debug) = runArgParse()
+    (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printResults,debug) = runArgParse()
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,isMagPhase=isMagPhase,printData=printData,debug=debug)
+    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,isMagPhase=isMagPhase,printResults=printResults,debug=debug)
 
 if __name__=='__main__':  # op2
     main()
