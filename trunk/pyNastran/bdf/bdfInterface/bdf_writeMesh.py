@@ -203,28 +203,41 @@ class writeMesh(object):
     def writeNodes(self):
         """writes the NODE-type cards"""
         msg = ''
-        associatedNodes = set([])
-        for eid,element in self.elements.iteritems():
-            associatedNodes = associatedNodes.union(set(element.nodeIDs()))
-        
-        allNodes = set(self.nodes.keys())
-        unassociatedNodes = list(allNodes.difference(associatedNodes))
-        associatedNodes = list(associatedNodes)
-        
-        
-        if associatedNodes:
-            msg += '$ASSOCIATED NODES\n'
+        if self.nodes:
+            msg += '$NODES\n'
             if self.gridSet:
                 msg += str(self.gridSet)
-            for key in sorted(associatedNodes):
-                msg += str(self.nodes[key])
+            for key,node in sorted(self.nodes.iteritems()):
+                msg += str(node)
+        
+        if 0:
+            associatedNodes = set([])
+            for eid,element in self.elements.iteritems():
+                print element
+                associatedNodes = associatedNodes.union(set(element.nodeIDs()))
 
-        if unassociatedNodes:
-            msg += '$UNASSOCIATED NODES\n'
-            if self.gridSet and not associatedNodes:
-                msg += str(self.gridSet)
-            for key in sorted(unassociatedNodes):
-                msg += str(self.nodes[key])
+            allNodes = set(self.nodes.keys())
+            unassociatedNodes = list(allNodes.difference(associatedNodes))
+            #missingNodes = allNodes.difference(
+            associatedNodes = list(associatedNodes)
+
+
+            if associatedNodes:
+                msg += '$ASSOCIATED NODES\n'
+                if self.gridSet:
+                    msg += str(self.gridSet)
+                for key in sorted(associatedNodes):
+                    msg += str(self.nodes[key])
+
+            if unassociatedNodes:
+                msg += '$UNASSOCIATED NODES\n'
+                if self.gridSet and not associatedNodes:
+                    msg += str(self.gridSet)
+                for key in sorted(unassociatedNodes):
+                    if key in self.nodes:
+                        msg += str(self.nodes[key])
+                    else:
+                        msg += '$ Missing NodeID=%s' %(key)
 
         if self.spoints:
             msg += '$SPOINTS\n'

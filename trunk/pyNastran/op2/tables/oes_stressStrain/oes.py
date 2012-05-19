@@ -250,7 +250,7 @@ class OES(ElementsStressStrain):
             
             self.makeOES_Object(self.rodStress,rodStressObject,
                                 self.rodStrain,rodStrainObject)
-            self.handleResultsBuffer3(self.OES_BasicElement)
+            self.handleResultsBuffer3(self.OES_basicElement)
         elif self.elementType == 2:   # cbeam
             self.dataCode['elementName'] = 'CBEAM'
             self.makeOES_Object(self.beamStress,beamStressObject,

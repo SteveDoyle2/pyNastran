@@ -71,6 +71,17 @@ class CMASS2(PointElement):
             self.c2   = data[5]
         ###
 
+    def nodeIDs(self):
+        g1 = self.G1()
+        g2 = self.G2()
+        nodes = []
+        if g1:
+            nodes.append(g1)
+        if g2:
+            nodes.append(g2)
+        print nodes
+        return nodes
+
     def Mass(self):
         return self.mass
     
@@ -288,6 +299,9 @@ class CONM1(PointElement):
         ###
         self.massMatrix = m
 
+    def nodeIDs(self):
+        return [self.Nid()]
+
     def Nid(self):
         if isinstance(self.nid,int):
             return self.nid
@@ -327,7 +341,12 @@ class CONM1(PointElement):
 
 class CONM2(PointElement): ## @todo not done
     """
-    @todo support cid != 0
+    @param self the CONM2 object
+    @param eid element ID
+    @param nid node ID
+    @param cid coordinate frame of the offset (-1=absolute coordinates)
+    @param X offset vector
+    @param I mass moment of inertia matrix about the CG
     """
     type = 'CONM2'
     # 'CONM2    501274  11064          132.274'
@@ -389,6 +408,9 @@ class CONM2(PointElement): ## @todo not done
         if self.Cid()!=-1:
             self.cid = model.Coord(self.cid)
         self.nid = model.Node(self.nid)
+
+    def nodeIDs(self):
+        return [self.Nid()]
 
     def Nid(self):
         if isinstance(self.nid,int):

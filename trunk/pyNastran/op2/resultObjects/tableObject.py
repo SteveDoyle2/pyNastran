@@ -214,7 +214,7 @@ class TableObject(scalarObject):  # displacement style table
         
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None):
         msg = words
-        assert f is not None # remove
+        #assert f is not None # remove
         for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
@@ -234,7 +234,7 @@ class TableObject(scalarObject):  # displacement style table
 
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None):
         msg = []
-        assert f is not None # remove
+        #assert f is not None # remove
         for dt,translations in sorted(self.translations.iteritems()):
             if isinstance(dt,float): # fix
                 header[1] = ' %s = %10.4E float %s\n' %(self.dataCode['name'],dt,self.analysisCode)
@@ -548,7 +548,7 @@ class complexTableObject(scalarObject):
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         isMagPhase = True
-        assert f is not None
+        #assert f is not None
         for dt,translations in sorted(self.translations.iteritems()):
             #print "dt = ",dt
             #sys.stdout.flush()

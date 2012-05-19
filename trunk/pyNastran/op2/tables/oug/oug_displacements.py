@@ -25,7 +25,7 @@ class displacementObject(TableObject): # approachCode=1, thermal=0
         return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
 
     def __repr__(self):
-        #return ''
+        return ''
         if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
