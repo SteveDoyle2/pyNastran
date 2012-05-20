@@ -135,7 +135,7 @@ class ComplexElementsStressStrain(object):
         #if 0:
         
         assert self.numWide==15,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=60: # 2+15*5 = 77 -> 77*4 = 308
+        while len(self.data)>=308: # 2+15*5 = 77 -> 77*4 = 308
             #print self.printBlock(self.data[0:100])
             #(eid,) = unpack("i",self.data[0:4])
             #print "abcd=",a,b,c,d
@@ -149,12 +149,12 @@ class ComplexElementsStressStrain(object):
                  fd2,sx2r,sx2i,sy2r,sy2i,txy2r,txy2i) = out
 
             if isMagnitudePhase:
-                sx1  = polarToRealImag(sx1r,sx1i);   sy1  = polarToRealImag(sy1r,sy1i)
-                sx2  = polarToRealImag(sx2r,sx2i);   sy2  = polarToRealImag(sy2r,sy2i)
+                sx1  = polarToRealImag(sx1r,sx1i);   sx2  = polarToRealImag(sx2r,sx2i)
+                sy1  = polarToRealImag(sy1r,sy1i);   sy2  = polarToRealImag(sy2r,sy2i)
                 txy1 = polarToRealImag(txy1r,txy1i); txy2 = polarToRealImag(txy2r,txy2i)
             else:
-                sx1  = complex(sx1r,sx1i);   sy1  = complex(sy1r,sy1i)
-                sx2  = complex(sx2r,sx2i);   sy2  = complex(sy2r,sy2i)
+                sx1  = complex(sx1r,sx1i);   sx2  = complex(sx2r,sx2i)
+                sy1  = complex(sy1r,sy1i);   sy2  = complex(sy2r,sy2i)
                 txy1 = complex(txy1r,txy1i); txy2 = complex(txy2r,txy2i)
 
             eid = extract(eid,dt)
@@ -175,12 +175,12 @@ class ComplexElementsStressStrain(object):
                       fd2,sx2r,sx2i,sy2r,sy2i,txy2r,txy2i) = out
 
                 if isMagnitudePhase:
-                    sx1  = polarToRealImag(sx1r,sx1i);   sy1  = polarToRealImag(sy1r,sy1i)
-                    sx2  = polarToRealImag(sx2r,sx2i);   sy2  = polarToRealImag(sy2r,sy2i)
+                    sx1  = polarToRealImag(sx1r,sx1i);   sx2  = polarToRealImag(sx2r,sx2i)
+                    sy1  = polarToRealImag(sy1r,sy1i);   sy2  = polarToRealImag(sy2r,sy2i)
                     txy1 = polarToRealImag(txy1r,txy1i); txy2 = polarToRealImag(txy2r,txy2i)
                 else:
-                    sx1  = complex(sx1r,sx1i);   sy1  = complex(sy1r,sy1i)
-                    sx2  = complex(sx2r,sx2i);   sy2  = complex(sy2r,sy2i)
+                    sx1  = complex(sx1r,sx1i);   sx2  = complex(sx2r,sx2i)
+                    sy1  = complex(sy1r,sy1i);   sy2  = complex(sy2r,sy2i)
                     txy1 = complex(txy1r,txy1i); txy2 = complex(txy2r,txy2i)
 
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i\n" %(eid,grid,fd1,sx1,sy1,txy1)
@@ -198,21 +198,157 @@ class ComplexElementsStressStrain(object):
             #self.dn += 348
         ###
 
+    def OES_CQUAD4_144_alt(self):
+        """
+        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
+        """
+        if self.makeOp2Debug:
+            self.op2Debug.write('---CQUAD4_144---\n')
+
+        #self.printSection(20)
+        #term = data[0:4] CEN/
+        #data = data[4:]
+        #print "*****"
+        #self.printBlock(self.data)
+        #assert self.numWide==87,'invalid numWide...numWide=%s' %(self.numWide)
+        #if self.numWide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
+        
+        if self.elementType==144: # CQUAD4
+            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            nNodes = 4    # centroid + 4 corner points
+            eType  = 'CQUAD4'
+        elif self.elementType==64: # CQUAD8 - done
+            nTotal = 308  # 2+15*5 = 77 -> 77*4 = 308
+            nNodes = 4    # centroid + 4 corner points
+            eType  = 'CQUAD8'
+        elif self.elementType==82: # CQUADR
+            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            nNodes = 4    # centroid + 4 corner points
+            eType  = 'CQUAD4' ## @todo write the word CQUADR
+
+        elif self.elementType==75: # CTRIA6
+            nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            nNodes = 3    # centroid + 3 corner points
+            eType  = 'CTRIA6'
+        elif self.elementType==70: # CTRIAR
+            nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            nNodes = 3    # centroid + 3 corner points
+            eType  = 'CTRIAR' ## @todo write the word CTRIAR
+        else:
+            raise Exception('elementType=%s nTotal not defined...' %(self.elementType))
+        
+        assert nTotal==self.numWide*4,'eType=%s numWide*4=%s not nTotal=%s' %(self.elementType,self.numWide*4,nTotal)
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'ffffffffffffff'
+        isMagnitudePhase = self.isMagnitudePhase()
+
+        while len(self.data)>=nTotal:
+            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+            self.data = self.data[8:]  # 2
+            eid = extract(eid,dt)
+            eData     = self.data[0:4*15]
+            self.data = self.data[4*15: ]
+            out = unpack(format1,eData)  # len=15*4
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+            (grid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
+                  fd2,sx2r,sx2i,sy2r,sy2i,txy2r,txy2i) = out
+            grid = 'C'
+
+            if isMagnitudePhase:
+                sx1  = polarToRealImag(sx1r,sx1i);   sy1  = polarToRealImag(sy1r,sy1i)
+                sx2  = polarToRealImag(sx2r,sx2i);   sy2  = polarToRealImag(sy2r,sy2i)
+                txy1 = polarToRealImag(txy1r,txy1i); txy2 = polarToRealImag(txy2r,txy2i)
+            else:
+                sx1  = complex(sx1r,sx1i);   sy1  = complex(sy1r,sy1i)
+                sx2  = complex(sx2r,sx2i);   sy2  = complex(sy2r,sy2i)
+                txy1 = complex(txy1r,txy1i); txy2 = complex(txy2r,txy2i)
+
+            self.obj.addNewEid(eType,dt,eid,grid,fd1,sx1,sy1,txy1)
+            self.obj.add(            dt,eid,grid,fd2,sx2,sy2,txy2)
+
+            for nodeID in range(nNodes):   #nodes pts
+                eData     = self.data[0:4*15]
+                self.data = self.data[4*15: ]
+                out = unpack('iffffffffffffff',eData)
+                if self.makeOp2Debug:
+                    self.op2Debug.write('%s\n' %(str(out)))
+                (grid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
+                      fd2,sx2r,sx2i,sy2r,sy2i,txy2r,txy2i) = out
+
+                if isMagnitudePhase:
+                    sx1  = polarToRealImag(sx1r,sx1i);   sx2  = polarToRealImag(sx2r,sx2i)
+                    sy1  = polarToRealImag(sy1r,sy1i);   sy2  = polarToRealImag(sy2r,sy2i)
+                    txy1 = polarToRealImag(txy1r,txy1i); txy2 = polarToRealImag(txy2r,txy2i)
+                else:
+                    sx1  = complex(sx1r,sx1i);   sx2  = complex(sx2r,sx2i)
+                    sy1  = complex(sy1r,sy1i);   sy2  = complex(sy2r,sy2i)
+                    txy1 = complex(txy1r,txy1i); txy2 = complex(txy2r,txy2i)
+
+                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i"   %(eid,grid,fd1,sx1,sy1,txy1)
+                #print "               fd2=%i sx2=%i sy2=%i txy2=%i\n"          %(fd2,sx2,sy2,txy2)
+                #print "len(data) = ",len(self.data)
+                #self.printBlock(self.data)
+                self.obj.addNewNode(dt,eid,grid,fd1,sx1,sy1,txy1)
+                self.obj.add(       dt,eid,grid,fd2,sx2,sy2,txy2)
+            ###
+            #print '--------------------'
+            #print "len(data) = ",len(self.data)
+            #self.dn += 348
+        ###
+
+
+    def OES_CTRIA3_74_alt(self): # in progress
+        """
+        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
+        stress is extracted at the centroid
+        """
+        assert self.numWide==15,'invalid numWide...numWide=%s' %(self.numWide)
+
+        dt = self.nonlinearFactor
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'ffffffffffffff'
+        isMagnitudePhase = self.isMagnitudePhase()
+
+        while len(self.data)>=60:
+            eData     = self.data[0:4*15]
+            self.data = self.data[4*15: ]
+            out = unpack(format1,eData)
+
+            (eid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
+                 fd2,sx2r,sx2i,sy2r,sy2i,txy2r,txy2i) = out
+
+            if isMagnitudePhase:
+                sx1  = polarToRealImag(sx1r,sx1i);   sy1  = polarToRealImag(sy1r,sy1i)
+                sx2  = polarToRealImag(sx2r,sx2i);   sy2  = polarToRealImag(sy2r,sy2i)
+                txy1 = polarToRealImag(txy1r,txy1i); txy2 = polarToRealImag(txy2r,txy2i)
+            else:
+                sx1  = complex(sx1r,sx1i);   sy1  = complex(sy1r,sy1i)
+                sx2  = complex(sx2r,sx2i);   sy2  = complex(sy2r,sy2i)
+                txy1 = complex(txy1r,txy1i); txy2 = complex(txy2r,txy2i)
+
+            eid = extract(eid,dt)
+            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i" %(eid,fd1,sx1,sy1,txy1)
+            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i\n"   %(fd2,sx2,sy2,txy2)
+            self.obj.addNewEid('CTRIA3',dt,eid,'C',fd1,sx1,sy1,txy1)
+            self.obj.add(               dt,eid,'C',fd2,sx2,sy2,txy2)
+            if self.makeOp2Debug:
+                self.op2Debug.write('%s\n' %(str(out)))
+        ###
 
 
 
 
 
-
-
-
-#====================================================
+#==============================================================================
 # dont work...
 
 
 
 
     def OES_CBEAM_2_alt(self):
+        raise NotImplementedError()
         dt = self.nonlinearFactor
         (formatStart,extract) = self.getOUG_FormatStart()
 
@@ -250,8 +386,7 @@ class ComplexElementsStressStrain(object):
         CPENTA_67
         CHEXA_68
         """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CSOLID_67---\n')
+        raise NotImplementedError()
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += "issssi"
@@ -346,35 +481,6 @@ class ComplexElementsStressStrain(object):
         ###
         #print self.solidStress[self.iSubcase]
 
-    def OES_CTRIA3_74_alt(self): # works
-        """
-        DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR,MINOR,VONMISES
-        stress is extracted at the centroid
-        """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CTRIA3_74---\n')
-        assert self.numWide==17,'invalid numWide...numWide=%s' %(self.numWide)
-            
-        dt = self.nonlinearFactor
-        (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ffffffffffffffff'
-
-        while len(self.data)>=68:
-            eData     = self.data[0:4*17]
-            self.data = self.data[4*17: ]
-            out = unpack(format1,eData)
-
-            (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                 fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-            eid = extract(eid,dt)
-            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            self.obj.addNewEid('CTRIA3',dt,eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            self.obj.add(               dt,eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-        ###
-
     def OES_CSOLID_85_alt(self):  # works
         """
         stress is extracted at the centroid
@@ -382,8 +488,7 @@ class ComplexElementsStressStrain(object):
         CPENTA_91 ???
         CHEXA_93  ???
         """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CSOLID_85---\n')
+        raise NotImplementedError()
         #print "starting nonlinear solid element..."
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
@@ -486,6 +591,7 @@ class ComplexElementsStressStrain(object):
 
 
     def OES_CTRIAX6_53_alt(self):
+        raise NotImplementedError()
         #(Format1,scaleValue) = self.OES_field1()
         #Format = Format1+'ifffffff'
         dt = self.nonlinearFactor
@@ -513,6 +619,7 @@ class ComplexElementsStressStrain(object):
         ###
 
     def OES_RODNL_89_92_alt(self):
+        raise NotImplementedError()
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffff'
@@ -537,6 +644,7 @@ class ComplexElementsStressStrain(object):
         ###
 
     def OES_CQUAD4NL_90_alt(self):
+        raise NotImplementedError()
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         
@@ -586,6 +694,7 @@ class ComplexElementsStressStrain(object):
         #print "CHEXANL_93"
         #print "len(self.data) = ",len(self.data)
 
+        raise NotImplementedError()
         n = 0
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
@@ -625,6 +734,7 @@ class ComplexElementsStressStrain(object):
         #print "CHEXANL_93"
         #print "len(self.data) = ",len(self.data)
 
+        raise NotImplementedError()
         n = 0
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
@@ -656,8 +766,7 @@ class ComplexElementsStressStrain(object):
         #self.firstPass = True
 
     def OES_CBEAM_94_alt(self):
-        if self.makeOp2Debug:
-            self.op2Debug.write('---BEAM_94---\n')
+        raise NotImplementedError()
         nNodes = 10 # 11-1
 
         #nTotal       = self.obj.getLengthTotal()
@@ -737,6 +846,7 @@ class ComplexElementsStressStrain(object):
         Hyperelastic Quad
         36+4*7*4 = 148
         """
+        raise NotImplementedError()
         #x = 0
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
@@ -772,9 +882,7 @@ class ComplexElementsStressStrain(object):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CQUADR_82---\n')
-
+        raise NotImplementedError()
         if self.elementType==82: # CQUADR
             nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
             nNodes = 4    # centroid + 4 corner points
@@ -817,138 +925,4 @@ class ComplexElementsStressStrain(object):
                 self.obj.add(       eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
             ###
         ###
-
-    def OES_CQUAD4_144_alt(self): # works
-        """
-        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
-        """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CQUAD4_144---\n')
-
-        #self.printSection(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        #print "*****"
-        #self.printBlock(self.data)
-        #assert self.numWide==87,'invalid numWide...numWide=%s' %(self.numWide)
-        #if self.numWide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
-        
-        if self.elementType==144: # CQUAD4
-            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            nNodes = 4    # centroid + 4 corner points
-            eType  = 'CQUAD4'
-        elif self.elementType==64: # CQUAD8
-            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            nNodes = 4    # centroid + 4 corner points
-            eType  = 'CQUAD8'
-        elif self.elementType==82: # CQUADR
-            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            nNodes = 4    # centroid + 4 corner points
-            eType  = 'CQUAD4' ## @todo write the word CQUADR
-
-        elif self.elementType==75: # CTRIA6
-            nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
-            nNodes = 3    # centroid + 3 corner points
-            eType  = 'CTRIA6'
-        elif self.elementType==70: # CTRIAR
-            nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
-            nNodes = 3    # centroid + 3 corner points
-            eType  = 'CTRIAR' ## @todo write the word CTRIAR
-        else:
-            raise Exception('elementType=%s nTotal not defined...' %(self.elementType))
-
-        dt = self.nonlinearFactor
-        (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ffffffffffffffff'
-        while len(self.data)>=nTotal:
-            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
-            self.data = self.data[8:]  # 2
-            eid = extract(eid,dt)
-            eData     = self.data[0:4*17]
-            self.data = self.data[4*17: ]
-            out = unpack(format1,eData)  # len=17*4
-            if self.makeOp2Debug:
-                self.op2Debug.write('%s\n' %(str(out)))
-            (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                  fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-            grid = 'C'
-            self.obj.addNewEid(eType,dt,eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            self.obj.add(            dt,eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-
-            for nodeID in range(nNodes):   #nodes pts
-                eData     = self.data[0:4*17]
-                self.data = self.data[4*17: ]
-                out = unpack('iffffffffffffffff',eData)
-                if self.makeOp2Debug:
-                    self.op2Debug.write('%s\n' %(str(out)))
-                (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
-                      fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2,) = out
-
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                #print "len(data) = ",len(self.data)
-                #self.printBlock(self.data)
-                self.obj.addNewNode(dt,eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                self.obj.add(       dt,eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            ###
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-            #print "tell = ",self.op2.tell()
-
-            #self.printSection(100)
-            #sys.exit('asdf')
-            #self.dn += 348
-        ###
-        ###
-       # elif self.numWide==77:
-       #     while len(self.data)>=308: # 2+15*5 = 77 -> 77*4 = 308
-       #         (eid,_,_,_,_) = unpack("issss",self.data[0:8])
-       #         self.data = self.data[8:]  # 2
-       #         eData     = self.data[0:4*15]
-       #         self.data = self.data[4*15: ]
-       #
-       #         out = unpack('iffffffffffffff',eData)  # 15
-       #         if self.makeOp2Debug:
-       #             self.op2Debug.write('%s\n' %(str(out)))
-       #         (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
-       #               fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
-       #
-       #         for nodeID in range(nNodes):   #nodes pts
-       #             eData     = self.data[0:4*15]
-       #             self.data = self.data[4*15: ]
-       #             out = unpack('iffffffffffffff',eData)
-       #             if self.makeOp2Debug:
-       #                 self.op2Debug.write('%s\n' %(str(out)))
-       #             (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
-       #                   fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
-       #         ###
-       #     ###
-       # ###
-       # elif self.numWide==47:
-       #     while len(self.data)>=188: # 2+9*5 = 47 -> 47*4 = 188
-       #         (eid,_,_,_,_) = unpack("issss",self.data[0:8])
-       #         self.data = self.data[8:]  # 2
-       #         eData     = self.data[0:4*9]
-       #         self.data = self.data[4*9: ]
-       #
-       #         out = unpack('iffffffff',eData)  # 9
-       #         if self.makeOp2Debug:
-       #             self.op2Debug.write('%s\n' %(str(out)))
-       #         (grid,fd1,sx1,sy1,txy1,
-       #               fd2,sx2,sy2,txy2) = out
-       #
-       #         for nodeID in range(nNodes):   #nodes pts
-       #             eData     = self.data[0:4*9]
-       #             self.data = self.data[4*9: ]
-       #             out = unpack('iffffffff',eData)
-       #             if self.makeOp2Debug:
-       #                 self.op2Debug.write('%s\n' %(str(out)))
-       #             (grid,fd1,sx1,sy1,txy1,
-       #                   fd2,sx2,sy2,txy2) = out
-       #             ###
-       #         ###
-       #     ###
-       # ###
-       # else:
-       #     raise AddNewElementError('invalid numWide')
 

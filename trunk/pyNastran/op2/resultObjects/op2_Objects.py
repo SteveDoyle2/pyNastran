@@ -10,12 +10,13 @@ class baseScalarObject(Op2Codes):
         return self.__class__.__name__
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        msg = ['writeF06 is not implemented in %s' %(self.__class__.__name__)]
+        msg = ['writeF06 is not implemented in %s\n' %(self.__class__.__name__)]
         return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        msg = 'writeF06Transient is not implemented in %s' %(self.__class__.__name__)
-        raise NotImplementedError(msg)
+        msg = 'writeF06Transient is not implemented in %s\n' %(self.__class__.__name__)
+        return (''.join(msg),pageNum)
+        #raise NotImplementedError(msg)
 
     def writeF06Floats10E(self,vals):
         vals2 = []
@@ -104,9 +105,9 @@ class scalarObject(baseScalarObject):
         for key,value in sorted(self.dataCode.iteritems()):
             if key is not 'log':
                 self.__setattr__(key,value)
-                self.log.debug("  key=%s value=%s" %(key,value))
+                #self.log.debug("  key=%s value=%s" %(key,value))
                 #print "  key=%s value=%s" %(key,value)
-        self.log.debug("")
+        #self.log.debug("")
 
     def getUnsteadyValue(self):
         name = self.dataCode['name']

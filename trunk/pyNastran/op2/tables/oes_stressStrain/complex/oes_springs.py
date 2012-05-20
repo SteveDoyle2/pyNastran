@@ -103,8 +103,7 @@ class ComplexCelasStressObject(complexStressObject):
                 if isMagPhase:
                     stressr=abs(stressr); stressi=angle(stress,deg=True)
                 else:
-                    stressr=stress.real
-                    stressi=stress.imag
+                    stressr=stress.real;  stressi=stress.imag
 
                 (vals2,isAllZeros) = self.writeF06Floats13E([stressr,stressi])
                 if i==0:
