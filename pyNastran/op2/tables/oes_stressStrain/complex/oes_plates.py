@@ -1,9 +1,9 @@
 import sys
-from oes_objects import stressObject,strainObject
+from ..real.oes_objects import stressObject,strainObject
 from pyNastran.op2.op2Errors import *
 
 
-class PlateStressObject(stressObject):
+class ComplexPlateStressObject(stressObject):
     """
     ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
       ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
@@ -29,10 +29,6 @@ class PlateStressObject(stressObject):
         self.oxx    = {}
         self.oyy    = {}
         self.txy    = {}
-        self.angle  = {}
-        self.majorP = {}
-        self.minorP = {}
-        self.ovmShear = {}
 
         self.dt = dt
         if isSort1:
@@ -54,57 +50,41 @@ class PlateStressObject(stressObject):
             eType = data[0][0]
             for line in data:
                 if eType=='CTRIA3':
-                    (eType,eid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
-                               f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                    (eType,eid,f1,ox1,oy1,txy1,
+                               f2,ox2,oy2,txy2) = line
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {'C':[f1,f2]}
                     self.oxx[eid]      = {'C':[ox1,ox2]}
                     self.oyy[eid]      = {'C':[oy1,oy2]}
                     self.txy[eid]      = {'C':[txy1,txy2]}
-                    self.angle[eid]    = {'C':[angle1,angle2]}
-                    self.majorP[eid]   = {'C':[o11,o12]}
-                    self.minorP[eid]   = {'C':[o21,o22]}
-                    self.ovmShear[eid] = {'C':[ovm1,ovm2]}
                 elif eType=='CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line)==19: # Centroid - bilinear
-                        (eType,eid,nid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
-                                       f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                        (eType,eid,nid,f1,ox1,oy1,txy1,
+                                       f2,ox2,oy2,txy2) = line
                         if nid=='CEN/4': nid='C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid:[f1,f2]}
                         self.oxx[eid]      = {nid:[ox1,ox2]}
                         self.oyy[eid]      = {nid:[oy1,oy2]}
                         self.txy[eid]      = {nid:[txy1,txy2]}
-                        self.angle[eid]    = {nid:[angle1,angle2]}
-                        self.majorP[eid]   = {nid:[o11,o12]}
-                        self.minorP[eid]   = {nid:[o21,o22]}
-                        self.ovmShear[eid] = {nid:[ovm1,ovm2]}
                     elif len(line)==18: # Centroid
-                        (eType,eid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
-                                   f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                        (eType,eid,f1,ox1,oy1,txy1,
+                                   f2,ox2,oy2,txy2) = line
                         nid='C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid:[f1,f2]}
                         self.oxx[eid]      = {nid:[ox1,ox2]}
                         self.oyy[eid]      = {nid:[oy1,oy2]}
                         self.txy[eid]      = {nid:[txy1,txy2]}
-                        self.angle[eid]    = {nid:[angle1,angle2]}
-                        self.majorP[eid]   = {nid:[o11,o12]}
-                        self.minorP[eid]   = {nid:[o21,o22]}
-                        self.ovmShear[eid] = {nid:[ovm1,ovm2]}
                     elif len(line)==17: ## Bilinear
                         #print line
-                        (nid,f1,ox1,oy1,txy1,angle1,o11,o21,ovm1,
-                             f2,ox2,oy2,txy2,angle2,o12,o22,ovm2) = line
+                        (nid,f1,ox1,oy1,txy1,
+                             f2,ox2,oy2,txy2) = line
                         self.fiberCurvature[eid][nid] = [f1,f2]
                         self.oxx[eid][nid]      = [ox1,ox2]
                         self.oyy[eid][nid]      = [oy1,oy2]
                         self.txy[eid][nid]      = [txy1,txy2]
-                        self.angle[eid][nid]    = [angle1,angle2]
-                        self.majorP[eid][nid]   = [o11,o12]
-                        self.minorP[eid][nid]   = [o21,o22]
-                        self.ovmShear[eid][nid] = [ovm1,ovm2]
                     else:
                         assert len(line)==19,'len(line)=%s' %(len(line))
                         raise NotImplementedError()
@@ -121,10 +101,6 @@ class PlateStressObject(stressObject):
         del self.oxx[dt]
         del self.oyy[dt]
         del self.txy[dt]
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-        del self.ovmShear[dt]
 
     def getTransients(self):
         k = self.oxx.keys()
@@ -140,15 +116,11 @@ class PlateStressObject(stressObject):
         self.oxx[dt]      = {}
         self.oyy[dt]      = {}
         self.txy[dt]      = {}
-        self.angle[dt]    = {}
-        self.majorP[dt]   = {}
-        self.minorP[dt]   = {}
-        self.ovmShear[dt] = {}
 
-    def addNewEid(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewEid(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***addNewEid..."
         #if eid in self.oxx:
-            #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+            #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy)
 
         #assert eid not in self.oxx
         #print self.oxx
@@ -158,25 +130,21 @@ class PlateStressObject(stressObject):
         self.oxx[eid]    = {nodeID: [oxx]}
         self.oyy[eid]    = {nodeID: [oyy]}
         self.txy[eid]    = {nodeID: [txy]}
-        self.angle[eid]  = {nodeID: [angle]}
-        self.majorP[eid] = {nodeID: [majorP]}
-        self.minorP[eid] = {nodeID: [minorP]}
-        self.ovmShear[eid] = {nodeID: [ovm]}
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewEidSort1(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***addNewEidTransient..."
-        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" %(dt,eid,nodeID,fd,oxx,majorP,ovm)
+        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy)
+        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s" %(dt,eid,nodeID,fd,oxx)
         #print msg
         #if eid in self.ovmShear[dt]:
-        #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        #    return self.add(eid,nodeID,fd,oxx,oyy,txy)
 
         if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
            nid = nodeID
-           #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+           #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid])))
            self.deleteTransient(dt)
            self.addNewTransient(dt)
         
@@ -188,16 +156,12 @@ class PlateStressObject(stressObject):
         self.oxx[dt][eid]      = {nodeID: [oxx]}
         self.oyy[dt][eid]      = {nodeID: [oyy]}
         self.txy[dt][eid]      = {nodeID: [txy]}
-        self.angle[dt][eid]    = {nodeID: [angle]}
-        self.majorP[dt][eid]   = {nodeID: [majorP]}
-        self.minorP[dt][eid]   = {nodeID: [minorP]}
-        self.ovmShear[dt][eid] = {nodeID: [ovm]}
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def add(self,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***add"
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #print self.oxx
         #print self.fiberCurvature
@@ -206,15 +170,11 @@ class PlateStressObject(stressObject):
         self.oxx[eid][nodeID].append(oxx)
         self.oyy[eid][nodeID].append(oyy)
         self.txy[eid][nodeID].append(txy)
-        self.angle[eid][nodeID].append(angle)
-        self.majorP[eid][nodeID].append(majorP)
-        self.minorP[eid][nodeID].append(minorP)
-        self.ovmShear[eid][nodeID].append(ovm)
         if nodeID==0: raise Exception(msg)
 
-    def addSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***addTransient"
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(dt,eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #print self.oxx
         #print self.fiberCurvatrure
@@ -223,13 +183,9 @@ class PlateStressObject(stressObject):
         self.oxx[dt][eid][nodeID].append(oxx)
         self.oyy[dt][eid][nodeID].append(oyy)
         self.txy[dt][eid][nodeID].append(txy)
-        self.angle[dt][eid][nodeID].append(angle)
-        self.majorP[dt][eid][nodeID].append(majorP)
-        self.minorP[dt][eid][nodeID].append(minorP)
-        self.ovmShear[dt][eid][nodeID].append(ovm)
         if nodeID==0: raise Exception(msg)
 
-    def addNewNode(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewNode(self,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***addNewNode"
         #print self.oxx
         assert eid is not None
@@ -238,29 +194,21 @@ class PlateStressObject(stressObject):
         self.oxx[eid][nodeID]    = [oxx]
         self.oyy[eid][nodeID]    = [oyy]
         self.txy[eid][nodeID]    = [txy]
-        self.angle[eid][nodeID]  = [angle]
-        self.majorP[eid][nodeID] = [majorP]
-        self.minorP[eid][nodeID] = [minorP]
-        self.ovmShear[eid][nodeID]    = [ovm]
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewNodeSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
+    def addNewNodeSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***addNewNodeTransient"
         #print self.oxx
         assert eid is not None
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" %(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[dt][eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID]    = [oxx]
         self.oyy[dt][eid][nodeID]    = [oyy]
         self.txy[dt][eid][nodeID]    = [txy]
-        self.angle[dt][eid][nodeID]  = [angle]
-        self.majorP[dt][eid][nodeID] = [majorP]
-        self.minorP[dt][eid][nodeID] = [minorP]
-        self.ovmShear[dt][eid][nodeID]    = [ovm]
         if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
@@ -294,13 +242,9 @@ class PlateStressObject(stressObject):
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
                         oyy   = self.oyy[   dt][eid][nid][iLayer]
                         txy   = self.txy[   dt][eid][nid][iLayer]
-                        angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        ovm = self.ovmShear[dt][eid][nid][iLayer]
 
                         msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
-                        vals = [oxx,oyy,txy,major,minor,ovm]
+                        vals = [oxx,oyy,txy]
                         for val in vals:
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0')
@@ -573,19 +517,14 @@ class PlateStressObject(stressObject):
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
                 txy   = self.txy[eid][nid][iLayer]
-                angle = self.angle[eid][nid][iLayer]
-                major = self.majorP[eid][nid][iLayer]
-                minor = self.minorP[eid][nid][iLayer]
-                ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd,oxx,oyy,txy,major,minor,ovm],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy,major,minor,ovm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy)
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy)
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy)
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -604,21 +543,16 @@ class PlateStressObject(stressObject):
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd,oxx,oyy,txy,major,minor,ovm],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy,major,minor,ovm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy.strip)
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy.strip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy.strip())
                 else:
-                    #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy)
                     raise Exception('Invalid option for cquad4')
                 ###
             ###
@@ -634,17 +568,12 @@ class PlateStressObject(stressObject):
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
                 txy   = self.txy[eid][nid][iLayer]
-                angle = self.angle[eid][nid][iLayer]
-                major = self.majorP[eid][nid][iLayer]
-                minor = self.minorP[eid][nid][iLayer]
-                ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd,oxx,oyy,txy,major,minor,ovm],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy,major,minor,ovm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
 
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,oxx,oyy,txy)
                 ###
             ###
         ###
@@ -659,17 +588,12 @@ class PlateStressObject(stressObject):
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd,oxx,oyy,txy,major,minor,ovm],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy,major,minor,ovm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
 
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('',  fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('',  fd,oxx,oyy,txy)
                 ###
             ###
         ###
@@ -696,13 +620,9 @@ class PlateStressObject(stressObject):
                     oxx   = self.oxx[eid][nid][iLayer]
                     oyy   = self.oyy[eid][nid][iLayer]
                     txy   = self.txy[eid][nid][iLayer]
-                    angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    ovm = self.ovmShear[eid][nid][iLayer]
 
                     msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
-                    vals = [oxx,oyy,txy,major,minor,ovm]
+                    vals = [oxx,oyy,txy]
                     for val in vals:
                         if abs(val)<1e-6:
                             msg += '%10s ' %('0')
@@ -719,7 +639,7 @@ class PlateStressObject(stressObject):
         ###
         return msg
 
-class PlateStrainObject(strainObject):
+class ComplexPlateStrainObject(strainObject):
     """
     # ??? - is this just 11
     ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 
@@ -751,10 +671,6 @@ class PlateStrainObject(strainObject):
         self.exx    = {}
         self.eyy    = {}
         self.exy    = {}
-        self.angle  = {}
-        self.majorP = {}
-        self.minorP = {}
-        self.evmShear = {}
 
         self.dt = dt
         if isSort1:
@@ -773,58 +689,42 @@ class PlateStrainObject(strainObject):
             eType = data[0][0]
             for line in data:
                 if eType=='CTRIA3':
-                    (eType,eid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
-                               f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                    (eType,eid,f1,ex1,ey1,exy1,
+                               f2,ex2,ey2,exy2) = line
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {'C':[f1,f2]}
                     self.exx[eid]      = {'C':[ex1,ex2]}
                     self.eyy[eid]      = {'C':[ey1,ey2]}
                     self.exy[eid]      = {'C':[exy1,exy2]}
-                    self.angle[eid]    = {'C':[angle1,angle2]}
-                    self.majorP[eid]   = {'C':[e11,e12]}
-                    self.minorP[eid]   = {'C':[e21,e22]}
-                    self.evmShear[eid] = {'C':[evm1,evm2]}
                 elif eType=='CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     #print line
                     if len(line)==19: # Centroid - bilinear
-                        (eType,eid,nid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
-                                       f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                        (eType,eid,nid,f1,ex1,ey1,exy1,
+                                       f2,ex2,ey2,exy2) = line
                         if nid=='CEN/4': nid='C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid:[f1,f2]}
                         self.exx[eid]      = {nid:[ex1,ex2]}
                         self.eyy[eid]      = {nid:[ey1,ey2]}
                         self.exy[eid]      = {nid:[exy1,exy2]}
-                        self.angle[eid]    = {nid:[angle1,angle2]}
-                        self.majorP[eid]   = {nid:[e11,e12]}
-                        self.minorP[eid]   = {nid:[e21,e22]}
-                        self.evmShear[eid] = {nid:[evm1,evm2]}
                     elif len(line)==18: # Centroid
-                        (eType,eid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
-                                   f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                        (eType,eid,f1,ex1,ey1,exy1,
+                                   f2,ex2,ey2,exy2) = line
                         nid='C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid:[f1,f2]}
                         self.exx[eid]      = {nid:[ex1,ex2]}
                         self.eyy[eid]      = {nid:[ey1,ey2]}
                         self.exy[eid]      = {nid:[exy1,exy2]}
-                        self.angle[eid]    = {nid:[angle1,angle2]}
-                        self.majorP[eid]   = {nid:[e11,e12]}
-                        self.minorP[eid]   = {nid:[e21,e22]}
-                        self.evmShear[eid] = {nid:[evm1,evm2]}
                     elif len(line)==17: ## Bilinear node
                         #print line
-                        (nid,f1,ex1,ey1,exy1,angle1,e11,e21,evm1,
-                             f2,ex2,ey2,exy2,angle2,e12,e22,evm2) = line
+                        (nid,f1,ex1,ey1,exy1,
+                             f2,ex2,ey2,exy2) = line
                         self.fiberCurvature[eid][nid] = [f1,f2]
                         self.exx[eid][nid]      = [ex1,ex2]
                         self.eyy[eid][nid]      = [ey1,ey2]
                         self.txy[eid][nid]      = [exy1,exy2]
-                        self.angle[eid][nid]    = [angle1,angle2]
-                        self.majorP[eid][nid]   = [e11,e12]
-                        self.minorP[eid][nid]   = [e21,e22]
-                        self.evmShear[eid][nid] = [evm1,evm2]
                     else:
                         assert len(line)==19,'len(line)=%s' %(len(line))
                         raise NotImplementedError()
@@ -839,10 +739,6 @@ class PlateStrainObject(strainObject):
         del self.exx[dt]
         del self.eyy[dt]
         del self.exy[dt]
-        del self.angle[dt]
-        del self.majorP[dt]
-        del self.minorP[dt]
-        del self.evmShear[dt]
 
     def getTransients(self):
         k = self.exx.keys()
@@ -857,36 +753,28 @@ class PlateStrainObject(strainObject):
         self.exx[dt]    = {}
         self.eyy[dt]    = {}
         self.exy[dt]    = {}
-        self.angle[dt]  = {}
-        self.majorP[dt] = {}
-        self.minorP[dt] = {}
-        self.evmShear[dt] = {}
 
-    def addNewEid(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addNewEid(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
         
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
         #if eid in self.exx:
-            #return self.add(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+            #return self.add(eid,nodeID,curvature,exx,eyy,exy)
         #assert eid not in self.exx
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [curvature]}
         self.exx[eid]    = {nodeID: [exx]}
         self.eyy[eid]    = {nodeID: [eyy]}
         self.exy[eid]    = {nodeID: [exy]}
-        self.angle[eid]  = {nodeID: [angle]}
-        self.majorP[eid] = {nodeID: [majorP]}
-        self.minorP[eid] = {nodeID: [minorP]}
-        self.evmShear[eid]    = {nodeID: [evm]}
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def addNewEidSort1(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addNewEidSort1(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
 
         if nodeID is not 'C': # centroid
@@ -896,7 +784,7 @@ class PlateStrainObject(strainObject):
             self.addNewTransient(dt)
         #if eid in self.evmShear[dt]:  # SOL200, erase the old result
             #nid = nodeID
-            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]))
             #self.deleteTransient(dt)
             #self.addNewTransient()
         
@@ -905,16 +793,12 @@ class PlateStrainObject(strainObject):
         self.exx[dt][eid]    = {nodeID: [exx]}
         self.eyy[dt][eid]    = {nodeID: [eyy]}
         self.exy[dt][eid]    = {nodeID: [exy]}
-        self.angle[dt][eid]  = {nodeID: [angle]}
-        self.majorP[dt][eid] = {nodeID: [majorP]}
-        self.minorP[dt][eid] = {nodeID: [minorP]}
-        self.evmShear[dt][eid]    = {nodeID: [evm]}
         #print msg
         if nodeID==0: raise Exception(msg)
 
-    def add(self,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def add(self,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "***add"
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
         #print self.oxx
         #print self.fiberCurvature
@@ -924,15 +808,11 @@ class PlateStrainObject(strainObject):
         self.exx[eid][nodeID].append(exx)
         self.eyy[eid][nodeID].append(eyy)
         self.exy[eid][nodeID].append(exy)
-        self.angle[eid][nodeID].append(angle)
-        self.majorP[eid][nodeID].append(majorP)
-        self.minorP[eid][nodeID].append(minorP)
-        self.evmShear[eid][nodeID].append(evm)
         if nodeID==0: raise Exception(msg)
 
-    def addSort1(self,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addSort1(self,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "***add"
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
         #print self.oxx
         #print self.fiberCurvature
@@ -943,25 +823,17 @@ class PlateStrainObject(strainObject):
         self.exx[dt][eid][nodeID].append(exx)
         self.eyy[dt][eid][nodeID].append(eyy)
         self.exy[dt][eid][nodeID].append(exy)
-        self.angle[dt][eid][nodeID].append(angle)
-        self.majorP[dt][eid][nodeID].append(majorP)
-        self.minorP[dt][eid][nodeID].append(minorP)
-        self.evmShear[dt][eid][nodeID].append(evm)
         if nodeID==0: raise Exception(msg)
 
-    def addNewNode(self,dt,eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm):
+    def addNewNode(self,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "***addNewNode"
         #print self.oxx
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
         assert nodeID not in self.exx[eid],msg
         self.fiberCurvature[eid][nodeID] = [curvature]
         self.exx[eid][nodeID]    = [exx]
         self.eyy[eid][nodeID]    = [eyy]
         self.exy[eid][nodeID]    = [exy]
-        self.angle[eid][nodeID]  = [angle]
-        self.majorP[eid][nodeID] = [majorP]
-        self.minorP[eid][nodeID] = [minorP]
-        self.evmShear[eid][nodeID]    = [evm]
         #print msg
         if nodeID==0: raise Exception(msg)
 
@@ -1224,12 +1096,7 @@ class PlateStrainObject(strainObject):
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
                 exy   = self.exy[eid][nid][iLayer]
-                angle = self.angle[eid][nid][iLayer]
-                major = self.majorP[eid][nid][iLayer]
-                minor = self.minorP[eid][nid][iLayer]
-                evm   = self.evmShear[eid][nid][iLayer]
-                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
 
                 if nid=='C' and iLayer==0:
                     msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
@@ -1255,13 +1122,7 @@ class PlateStrainObject(strainObject):
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
                 exy   = self.exy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                evm   = self.evmShear[dt][eid][nid][iLayer]
-
-                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
 
                 if nid=='C' and iLayer==0:
                     msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
@@ -1285,13 +1146,8 @@ class PlateStrainObject(strainObject):
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
                 exy   = self.exy[eid][nid][iLayer]
-                angle = self.angle[eid][nid][iLayer]
-                major = self.majorP[eid][nid][iLayer]
-                minor = self.minorP[eid][nid][iLayer]
-                evm   = self.evmShear[eid][nid][iLayer]
 
-                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
                 if iLayer==0:
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 else:
@@ -1311,13 +1167,8 @@ class PlateStrainObject(strainObject):
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
                 exy   = self.exy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                evm   = self.evmShear[dt][eid][nid][iLayer]
 
-                ([fd,exx,eyy,exy,major,minor,evm],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy,major,minor,evm])
-                ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
+                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
                 if iLayer==0:
                     msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
                 else:
@@ -1348,13 +1199,9 @@ class PlateStrainObject(strainObject):
                     exx   = self.exx[eid][nid][iLayer]
                     eyy   = self.eyy[eid][nid][iLayer]
                     exy   = self.exy[eid][nid][iLayer]
-                    angle = self.angle[eid][nid][iLayer]
-                    major = self.majorP[eid][nid][iLayer]
-                    minor = self.minorP[eid][nid][iLayer]
-                    evm   = self.evmShear[eid][nid][iLayer]
                     
                     msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
-                    vals = [exx,eyy,exy,major,minor,evm]
+                    vals = [exx,eyy,exy]
                     for val in vals:
                         if abs(val)<1e-6:
                             msg += '%10s ' %('0.')
@@ -1387,13 +1234,9 @@ class PlateStrainObject(strainObject):
                         exx   = self.exx[   dt][eid][nid][iLayer]
                         eyy   = self.eyy[   dt][eid][nid][iLayer]
                         exy   = self.exy[   dt][eid][nid][iLayer]
-                        angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        evm   = self.evmShear[   dt][eid][nid][iLayer]
 
                         msg += '%-6i %6s %8s %7s %10g ' %(eid,eType,nid,iLayer+1,fd)
-                        vals = [exx,eyy,exy,major,minor,evm]
+                        vals = [exx,eyy,exy]
                         for val in vals:
                             if abs(val)<1e-6:
                                 msg += '%10s ' %('0.')
