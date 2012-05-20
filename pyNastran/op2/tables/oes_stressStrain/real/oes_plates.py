@@ -434,7 +434,7 @@ class PlateStressObject(stressObject):
             eids = orderedETypes[eType]
             if eids:
                 eids.sort()
-                print "eType = ",eType
+                #print "eType = ",eType
                 #print "eids = ",eids
                 #print "eType = ",eType
                 msgPack = msgPacks[eType]
@@ -532,7 +532,7 @@ class PlateStressObject(stressObject):
         if 'CTRIA6' in eTypes:
             tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
 
-        if 'CTRIA6' in eTypes:
+        if 'CTRIAR' in eTypes:
             trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
 
         msgPacks = {'CTRIA3':triMsg,
@@ -548,7 +548,9 @@ class PlateStressObject(stressObject):
 
         msg = []
         for eType in typesOut:
+            #print "eType = ",eType
             eids = orderedETypes[eType]
+            #print "eids = ",eids
             if eids:
                 msgPack = msgPacks[eType]
                 eids.sort()

@@ -181,7 +181,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             ###
         return msg
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                ' \n',
                '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']

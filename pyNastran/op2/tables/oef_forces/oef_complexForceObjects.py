@@ -292,9 +292,9 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
         msg = header+['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                       '                                                          (REAL/IMAGINARY)\n',
                       ' \n',
@@ -323,7 +323,7 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
             msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words=['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                '                                                          (REAL/IMAGINARY)\n',
                ' \n',
@@ -734,7 +734,7 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
 
         words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                  '                                                          (REAL/IMAGINARY)\n',
@@ -765,9 +765,9 @@ class ComplexCBARForce(scalarObject): # 34-CBAR
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
         msg = header+['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                '                                                          (REAL/IMAGINARY)\n',
                '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',

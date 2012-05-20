@@ -251,12 +251,12 @@ class TableObject(scalarObject):  # displacement style table
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
-                pageNum+=1
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
             if f is not None:
                 f.write(''.join(msg))
                 msg = ['']
+            pageNum+=1
         return (''.join(msg),pageNum-1)
 
     def getTableMarker(self):
@@ -509,8 +509,17 @@ class complexTableObject(scalarObject):
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        msg = words
         isMagPhase = True
+        
+        #words += self.getTableMarker()
+        if isMagPhase:
+            words += ['                                                         (MAGNITUDE/PHASE)\n']
+        else:
+            words += ['                                                          (REAL/IMAGINARY)\n',]
+        
+        words += [' \n','      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+
+        msg = words
         for nodeID,translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             gridType = self.gridTypes[nodeID]
@@ -546,8 +555,17 @@ class complexTableObject(scalarObject):
         return (''.join(msg),pageNum)
 
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        msg = []
         isMagPhase = True
+
+        if isMagPhase:
+            words += ['                                                         (MAGNITUDE/PHASE)\n']
+        else:
+            words += ['                                                          (REAL/IMAGINARY)\n',]
+                 
+        words += [' \n','      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #words += self.getTableMarker()
+
+        msg = []
         #assert f is not None
         for dt,translations in sorted(self.translations.iteritems()):
             #print "dt = ",dt

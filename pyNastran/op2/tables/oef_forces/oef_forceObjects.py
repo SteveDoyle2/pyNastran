@@ -464,12 +464,12 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
         msg = []
-        for dt,force in sorted(self.force.items()):
+        for dt,Force in sorted(self.force.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
 
@@ -477,9 +477,9 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
             forces = []
             elements = []
             line = '   '
-            for eid,f in sorted(force.items()):
+            for eid,force in sorted(Force.items()):
                 elements.append(eid)
-                forces.append(f)
+                forces.append(force)
                 #pack.append(eid)
                 #pack.append(f)
                 line += '%13s  %13s     ' %(eid,f)
@@ -499,7 +499,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         return (''.join(msg),pageNum-1)
         
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
@@ -509,12 +509,12 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         forces = []
         elements = []
         line = '   '
-        for eid,f in sorted(force.items()):
+        for eid,force in sorted(self.force.items()):
             elements.append(eid)
-            forces.append(f)
+            forces.append(force)
             #pack.append(eid)
             #pack.append(f)
-            line += '%13s  %13s     ' %(eid,f)
+            line += '%13s  %13s     ' %(eid,force)
             if len(forces)==3:
                 msg.append(line.rstrip()+'\n')
             ###                
@@ -861,7 +861,7 @@ class RealCBARForce(scalarObject): # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
@@ -1226,15 +1226,15 @@ class RealPentaPressureForce(scalarObject): # 77-PENTA_PR,78-TETRA_PR
         self.velocity[dt][eid] = [vx,vy,vz]
         self.pressure[dt][eid] = pressure
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
         if self.dt is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
         raise NotImplementedError()
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
