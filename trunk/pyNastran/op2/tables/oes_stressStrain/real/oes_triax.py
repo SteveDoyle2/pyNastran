@@ -2,7 +2,7 @@ import sys
 from oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
-class CTriaxStressObject(stressObject):
+class TriaxStressObject(stressObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                       S T R E S S E S   I N   T R I A X 6   E L E M E N T S
@@ -140,7 +140,7 @@ class CTriaxStressObject(stressObject):
         self.oms[dt][eid][nid]       = tmax
         self.ovm[dt][eid][nid]       = octs
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
 
@@ -176,7 +176,7 @@ class CTriaxStressObject(stressObject):
             msg = ['']
         return(''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]
@@ -218,7 +218,7 @@ class CTriaxStressObject(stressObject):
         if self.nonlinearFactor is not None:
             pass
 
-class CTriaxStrainObject(strainObject):
+class TriaxStrainObject(strainObject):
     """
     # formatCode=1 sortCode=0 stressCode=0
                                       S T R A I N S   I N   T R I A X 6   E L E M E N T S
@@ -327,7 +327,7 @@ class CTriaxStrainObject(strainObject):
         self.ems[dt][eid][nid]       = emax
         self.evm[dt][eid][nid]       = ects
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
 
@@ -363,7 +363,7 @@ class CTriaxStrainObject(strainObject):
             msg = ['']
         return(''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
                '      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n',]

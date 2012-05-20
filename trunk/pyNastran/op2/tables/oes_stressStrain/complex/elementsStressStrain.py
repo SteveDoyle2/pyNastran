@@ -73,6 +73,50 @@ class ComplexElementsStressStrain(object):
         self.data = self.data[n: ]
 
 
+    def OES_CBAR_34_alt(self):
+        dt = self.nonlinearFactor
+        #print "len(data) = ",len(self.data)
+        assert self.numWide==19,'invalid numWide...numWide=%s' %(self.numWide)
+
+        (format1,extract) = self.getOUG_FormatStart()
+        format1 += 'ffffffffffffffffff'
+        isMagnitudePhase = self.isMagnitudePhase()
+
+        while len(self.data)>=76:
+            #self.printBlock(self.data)
+            eData     = self.data[0:76]
+            self.data = self.data[76: ]
+            #print "len(data) = ",len(eData)
+
+            (eid,s1ar,s2ar,s3ar,s4ar,axialr,
+                 s1ai,s2ai,s3ai,s4ai,axiali,
+                 s1br,s2br,s3br,s4br,      
+                 s1bi,s2bi,s3bi,s4bi )= unpack(format1,eData)
+
+            if isMagnitudePhase:
+                s1a = polarToRealImag(s1ar,s1ai); s1b = polarToRealImag(s1br,s1bi)
+                s2a = polarToRealImag(s2ar,s2ai); s2b = polarToRealImag(s2br,s2bi)
+                s3a = polarToRealImag(s3ar,s3ai); s3b = polarToRealImag(s3br,s3bi)
+                s4a = polarToRealImag(s4ar,s4ai); s4b = polarToRealImag(s4br,s4bi)
+                axial = polarToRealImag(axialr,axiali)
+
+            else:
+                s1a = complex(s1ar,s1ai); s1b = complex(s1br,s1bi)
+                s2a = complex(s2ar,s2ai); s2b = complex(s2br,s2bi)
+                s3a = complex(s3ar,s3ai); s3b = complex(s3br,s3bi)
+                s4a = complex(s4ar,s4ai); s4b = complex(s4br,s4bi)
+                axial = complex(axialr,axiali)
+
+            eid2 = extract(eid,dt)
+            self.obj.addNewEid('CBAR',dt,eid2,s1a,s2a,s3a,s4a,axial,
+                                              s1b,s2b,s3b,s4b      )
+
+            #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i" %(eid,s1a,s2a,s3a,s4a,axial)
+            #print "         s1=%i s2=%i s3=%i s4=%i"          %(s1b,s2b,s3b,s4b)
+            #print "len(data) = ",len(self.data)
+        ###
+
+
 
 
 
@@ -181,35 +225,6 @@ class ComplexElementsStressStrain(object):
             #self.printSection(100)
             #self.dn += 348
         ###
-
-    def OES_CBAR_34_alt(self): # ???
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CBAR_34---\n')
-        dt = self.nonlinearFactor
-        #print "len(data) = ",len(self.data)
-        assert self.numWide==16,'invalid numWide...numWide=%s' %(self.numWide)
-
-        (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'fffffffffffffff'
-
-        while len(self.data)>=64:
-            #self.printBlock(self.data)
-            eData     = self.data[0:4*16]
-            self.data = self.data[4*16: ]
-            #print "len(data) = ",len(eData)
-
-            (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                 s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)= unpack(format1,eData)
-            eid2 = extract(eid,dt)
-            self.obj.addNewEid('CBAR',dt,eid2,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,
-                                              s1b,s2b,s3b,s4b,      smaxb,sminb,MSc)
-
-            #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i smax=%i smin=%i MSt=%i MSc=%i" %(eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,MSc)
-            #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" %(s1b,s2b,s3b,s4b,smaxb,sminb)
-            #print "len(data) = ",len(self.data)
-        ###
-        if self.makeOp2Debug:
-            print "done with CBAR-34"
 
     def OES_CSOLID_67_alt(self):  # works
         """
