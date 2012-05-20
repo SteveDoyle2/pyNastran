@@ -5,19 +5,16 @@ from pyNastran.op2.op2Errors import *
 
 class ComplexPlateStressObject(stressObject):
     """
-    ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 
-      ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
-          6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
-                       1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
-
-
-                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  
-    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)          MAX  
-      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR   
-          6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
-                       1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
+                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )
+                                                          (REAL/IMAGINARY)
+ 
+    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -
+      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY
+0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
+                       2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
     """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
+        #print "making complex plate stress obj"
         stressObject.__init__(self,dataCode,iSubcase)
         self.eType = {}
 
@@ -130,16 +127,16 @@ class ComplexPlateStressObject(stressObject):
         self.oxx[eid]    = {nodeID: [oxx]}
         self.oyy[eid]    = {nodeID: [oyy]}
         self.txy[eid]    = {nodeID: [txy]}
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         if nodeID==0: raise Exception(msg)
 
     def addNewEidSort1(self,eType,dt,eid,nodeID,fd,oxx,oyy,txy):
-        #print "***addNewEidTransient..."
-        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy)
+        #print "***addNewEidSort1..."
+        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(dt,eid,nodeID,fd,oxx,oyy,txy)
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s" %(dt,eid,nodeID,fd,oxx)
         #print msg
-        #if eid in self.ovmShear[dt]:
+        #if eid in self.oxx[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy)
 
         if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
@@ -161,7 +158,7 @@ class ComplexPlateStressObject(stressObject):
 
     def add(self,dt,eid,nodeID,fd,oxx,oyy,txy):
         #print "***add"
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #print self.oxx
         #print self.fiberCurvature
@@ -173,7 +170,7 @@ class ComplexPlateStressObject(stressObject):
         if nodeID==0: raise Exception(msg)
 
     def addSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy):
-        #print "***addTransient"
+        #print "***addSort1"
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(dt,eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #print self.oxx
@@ -194,15 +191,15 @@ class ComplexPlateStressObject(stressObject):
         self.oxx[eid][nodeID]    = [oxx]
         self.oyy[eid][nodeID]    = [oyy]
         self.txy[eid][nodeID]    = [txy]
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         if nodeID==0: raise Exception(msg)
 
     def addNewNodeSort1(self,dt,eid,nodeID,fd,oxx,oyy,txy):
-        #print "***addNewNodeTransient"
+        #print "***addNewNodeTransient_Sort1"
         #print self.oxx
         assert eid is not None
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g" %(eid,nodeID,fd,oxx,oyy,txy)
+        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[dt][eid][nodeID] = [fd]
@@ -216,7 +213,7 @@ class ComplexPlateStressObject(stressObject):
             headers = ['fiberDist']
         else:
             headers = ['curvature']
-        headers += ['oxx','oyy','txy','majorP','minorP']
+        headers += ['oxx','oyy','txy']
         if self.isVonMises():
             headers.append('oVonMises')
         else:
@@ -266,60 +263,40 @@ class ComplexPlateStressObject(stressObject):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
-        if self.isVonMises():
-            vonMises = 'VON MISES'
+        #if self.isVonMises():
+        #    vonMises = 'VON MISES'
+        #else:
+        #    vonMises = 'MAX SHEAR'
+
+        if isMagPhase:
+            pass
         else:
-            vonMises = 'MAX SHEAR'
+            magReal = ['                                                          (REAL/IMAGINARY)\n',' \n']
 
         if self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+            quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -',
+                           '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY']
         else:
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+            pass
 
+
+
+#'0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0'
+#'                       2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0'
         triMsg   = None
         tri6Msg  = None
         trirMsg  = None
         quadMsg  = None
         quad8Msg = None
         quadrMsg = None
+
+
+
+        quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )']+formWord+quadMsgTemp
+        quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )']+formWord+quadMsgTemp
+        quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )']+formWord+quadMsgTemp
+
         eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes:
-            qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
-            isBilinear=True
-            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
-            if len(ekey)==1:
-                isBilinear=False
-                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
-
-        if 'CQUAD8' in eTypes:
-            quad8Msg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+triMsgTemp
-
-        if 'CQUADR' in eTypes:
-            qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
-            isBilinear=True
-            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
-            if len(ekey)==1:
-                isBilinear=False
-                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+triMsgTemp
-
-        if 'CTRIA3' in eTypes:
-            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
-
-        if 'CTRIA6' in eTypes:
-            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
-
-        if 'CTRIAR' in eTypes:
-            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
 
         msgPacks = {'CTRIA3':triMsg,
                     'CTRIA6':tri6Msg,
@@ -358,7 +335,7 @@ class ComplexPlateStressObject(stressObject):
                         msg.append(out)
                 elif eType in ['CQUAD8']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid,5)
+                        out = self.writeF06_Quad4_Bilinear(eid,8)
                         msg.append(out)
                 elif eType in ['CTRIAR','CTRIA6']:
                     for eid in eids:
@@ -378,21 +355,34 @@ class ComplexPlateStressObject(stressObject):
 
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        if self.isVonMises():
-            vonMises = 'VON MISES'
+        if isMagPhase:
+            magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
-            vonMises = 'MAX SHEAR'
+            magReal = ['                                                          (REAL/IMAGINARY)\n \n']
 
         if self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+            quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                           '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
         else:
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+            pass
+
+
+        #if self.isFiberDistance():
+            #quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            #               '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
+            #triMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+            #              '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+
+        #else:
+            #quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            #               '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
+            #triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            #              '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
+
+        quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )']+magReal+quadMsgTemp
+        quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )']+magReal+quadMsgTemp
+        quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )']+magReal+quadMsgTemp
+
 
         triMsg   = None
         tri6Msg  = None
@@ -403,6 +393,8 @@ class ComplexPlateStressObject(stressObject):
 
         eTypes = self.eType.values()
         dts = self.oxx.keys()
+        #print self.oxx
+        #print "dts = ",dts
         dt = dts[0]
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
@@ -410,32 +402,32 @@ class ComplexPlateStressObject(stressObject):
             #print "qkey=%s kkey=%s" %(qkey,kkey)
             ekey = self.oxx[dt][kkey].keys()
             isBilinear=True
-            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+magReal+quadMsgTemp
             if len(ekey)==1:
                 isBilinear=False
-                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+magReal+quadMsgTemp
 
         if 'CQUAD8' in eTypes:
-            quad8Msg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+triMsgTemp
+            quad8Msg = header+['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+magReal+quadMsgTemp
 
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
             kkey = self.eType.keys()[qkey]
             ekey = self.oxx[kkey].keys()
             isBilinear=True
-            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
+            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+magReal+quadMsgTemp
             if len(ekey)==1:
                 isBilinear=False
-                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+triMsgTemp
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+magReal+quadMsgTemp
 
         if 'CTRIA3' in eTypes:
-            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
+            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+magReal+quadMsgTemp
 
         if 'CTRIA6' in eTypes:
-            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
+            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+magReal+quadMsgTemp
 
         if 'CTRIAR' in eTypes:
-            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
+            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+magReal+triMsgTemp
 
         msgPacks = {'CTRIA3':triMsg,
                     'CTRIA6':tri6Msg,
@@ -493,7 +485,7 @@ class ComplexPlateStressObject(stressObject):
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         msg += header+msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,5)
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,8)
                             msg.append(out)
                 else:
                     raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
@@ -503,7 +495,8 @@ class ComplexPlateStressObject(stressObject):
                     f.write(''.join(msg))
                     msg = ['']
                 pageNum+=1
-        ###
+            ### eids
+        ### all eTypes
         return (''.join(msg),pageNum-1)
 
     def writeF06_Quad4_Bilinear(self,eid,n):
@@ -543,14 +536,15 @@ class ComplexPlateStressObject(stressObject):
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
-                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
+                ([fd, oxxr,oyyr,txyr,
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy.strip)
+                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /  %-s\n' %(eid,'CEN/'+str(n),fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.strip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy.strip())
+                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /  %-s\n' %('',nid,           fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.strip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy.strip())
+                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /  %-s\n\n' %('','',          fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.strip())
                 else:
                     #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy)
                     raise Exception('Invalid option for cquad4')
@@ -756,7 +750,7 @@ class ComplexPlateStrainObject(strainObject):
 
     def addNewEid(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
@@ -774,7 +768,7 @@ class ComplexPlateStrainObject(strainObject):
 
     def addNewEidSort1(self,eType,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
 
         if nodeID is not 'C': # centroid
@@ -782,7 +776,7 @@ class ComplexPlateStrainObject(strainObject):
 
         if dt not in self.exx:
             self.addNewTransient(dt)
-        #if eid in self.evmShear[dt]:  # SOL200, erase the old result
+        #if eid in self.exx[dt]:  # SOL200, erase the old result
             #nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]))
             #self.deleteTransient(dt)
@@ -798,7 +792,7 @@ class ComplexPlateStrainObject(strainObject):
 
     def add(self,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "***add"
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
         #print self.oxx
         #print self.fiberCurvature
@@ -812,7 +806,7 @@ class ComplexPlateStrainObject(strainObject):
 
     def addSort1(self,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "***add"
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
         #print self.oxx
         #print self.fiberCurvature
@@ -828,7 +822,7 @@ class ComplexPlateStrainObject(strainObject):
     def addNewNode(self,dt,eid,nodeID,curvature,exx,eyy,exy):
         #print "***addNewNode"
         #print self.oxx
-        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g" %(eid,nodeID,curvature,exx,eyy,exy)
+        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         assert nodeID not in self.exx[eid],msg
         self.fiberCurvature[eid][nodeID] = [curvature]
         self.exx[eid][nodeID]    = [exx]
@@ -843,7 +837,7 @@ class ComplexPlateStrainObject(strainObject):
         else:
             headers = ['curvature']
     
-        headers += ['exx','eyy','exy','eMajor','eMinor']
+        headers += ['exx','eyy','exy']
         if self.isVonMises():
             headers.append('eVonMises')
         else:
@@ -1099,11 +1093,11 @@ class ComplexPlateStrainObject(strainObject):
                 ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy)
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy)
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy)
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -1125,11 +1119,11 @@ class ComplexPlateStrainObject(strainObject):
                 ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy)
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy)
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy)
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -1149,9 +1143,9 @@ class ComplexPlateStrainObject(strainObject):
 
                 ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy)
                 ###
             ###
         ###
@@ -1170,9 +1164,9 @@ class ComplexPlateStrainObject(strainObject):
 
                 ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy,angle,major,minor,evm)
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy)
                 ###
             ###
         ###
@@ -1210,7 +1204,7 @@ class ComplexPlateStrainObject(strainObject):
                         ###
                     msg += '\n'
 
-                    #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                    #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)
                 ###
             ###
         ###
@@ -1245,7 +1239,7 @@ class ComplexPlateStrainObject(strainObject):
                             ###
                         msg += '\n'
 
-                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g evm=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy,evm)
+                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)
                     ###
                 ###
             ###

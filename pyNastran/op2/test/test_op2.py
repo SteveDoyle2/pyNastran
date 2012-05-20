@@ -120,8 +120,8 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=Fa
         else:
             isPassed = True
         ###
-    except IOError: # missing file
-        pass
+    #except IOError: # missing file
+        #pass
     #except AssertionError:
     #    isPassed = True
 
@@ -196,7 +196,7 @@ def runArgParse():
     parser.add_argument('-w','--writeBDF', dest='writeBDF',   action='store_true', help='Writes the bdf to fem.bdf.out')
     parser.add_argument('-f','--writeF06', dest='writeF06',   action='store_true', help='Writes the f06 to fem.f06.out')
     parser.add_argument('-m','--magPhase', dest='isMagPhase', action='store_true', help='F06 Writer stores Magnitude/Phase instead of Real/Imaginary')
-    parser.add_argument('-p','--noPrint',  dest='noPrint',    action='store_false',help='Disables printing of objects to screen which requires lots of memory')
+    parser.add_argument('-p','--printResults',dest='printResults',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
     
     if len(sys.argv)==1:
@@ -211,7 +211,7 @@ def runArgParse():
     writeBDF     = args.writeBDF
     writeF06     = args.writeF06
     isMagPhase   = args.writeF06
-    printResults = args.noPrint
+    printResults = args.printResults
     op2FileName  = args.op2FileName[0]
 
     return (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printResults,debug)

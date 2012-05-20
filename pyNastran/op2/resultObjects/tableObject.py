@@ -223,8 +223,10 @@ class TableObject(scalarObject):  # displacement style table
             (rx,ry,rz) = rotation
             vals = [dx,dy,dz,rx,ry,rz]
             (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-            [dx,dy,dz,rx,ry,rz] = vals2
-            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            if not isAllZeros:
+                [dx,dy,dz,rx,ry,rz] = vals2
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+            ###
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         if f is not None:
@@ -249,8 +251,10 @@ class TableObject(scalarObject):  # displacement style table
                 (rx,ry,rz) = rotation
                 vals = [dx,dy,dz,rx,ry,rz]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [dx,dy,dz,rx,ry,rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                if not isAllZeros:
+                    [dx,dy,dz,rx,ry,rz] = vals2
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
+                ###
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
             if f is not None:
@@ -509,7 +513,7 @@ class complexTableObject(scalarObject):
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        isMagPhase = True
+        #isMagPhase = True
         
         #words += self.getTableMarker()
         if isMagPhase:
@@ -555,7 +559,7 @@ class complexTableObject(scalarObject):
         return (''.join(msg),pageNum)
 
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        isMagPhase = True
+        #isMagPhase = True
 
         if isMagPhase:
             words += ['                                                         (MAGNITUDE/PHASE)\n']
@@ -597,8 +601,9 @@ class complexTableObject(scalarObject):
                 vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
                 [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
-                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
-                msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
+                if not isAllZeros:
+                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
+                    msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
             if f is not None:

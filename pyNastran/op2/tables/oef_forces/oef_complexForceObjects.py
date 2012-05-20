@@ -327,7 +327,8 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         words=['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                '                                                          (REAL/IMAGINARY)\n',
                ' \n',
-               '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
+               '                ELEMENT                                                   ELEMENT\n',
+               '                  ID.                    FORCE                              ID.                    FORCE\n']
         msg = []
         for dt,Force in sorted(self.force.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
@@ -335,15 +336,19 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
             packs = []
             forces = []
             elements = []
-            line = '   '
+            line = ''
             for eid,force in sorted(Force.items()):
                 elements.append(eid)
                 forces.append(force)
                 #pack.append(eid)
                 #pack.append(f)
-                line += '%13s  %13s / %13s     ' %(eid,force.real,force.imag)
-                if len(forces)==3:
+                ([forceReal,forceImag],isAllZeros) = self.writeF06Floats13E([force.real,force.imag])
+
+                line += '          %13s      %13s / %13s' %(eid,forceReal,forceImag)
+                if len(forces)==2:
                     msg.append(line.rstrip()+'\n')
+                    line = ''
+                    forces = []
                 ###
             ###
             if forces:
@@ -668,6 +673,19 @@ class ComplexPLATE2Force(scalarObject): # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.bmxy[dt][eid].append(bmxy)
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
+
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        if self.nonlinearFactor is not None:
+            return self.writeF06Transient(header,pageStamp,pageNum,f)
+        raise NotImplementedError()
+        #words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
+        #       ' \n',
+        #       '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #words += self.getTableMarker()
+        #return self._writeF06Block(words,header,pageStamp,pageNum,f)
+
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        raise NotImplementedError()
 
     def __repr__(self):
         return str(self.mx)
