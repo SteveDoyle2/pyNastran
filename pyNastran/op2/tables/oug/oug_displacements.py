@@ -84,19 +84,11 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 
-        words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
+        words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
         return self._writeF06Block(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
+        words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
         return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def __repr__(self):

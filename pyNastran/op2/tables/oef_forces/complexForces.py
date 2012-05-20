@@ -36,7 +36,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Rod_alt)
         #print self.rodForces
         
     def OEF_Beam_alt(self): # 2-CBEAM
@@ -97,7 +96,6 @@ class ComplexForces(object):
 
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Beam_alt)
         #print self.beamForces
 
     def OEF_Shear_alt(self): # 4-CSHEAR
@@ -142,7 +140,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Shear_alt)
         #print self.shearForces
         
     def OEF_Spring_alt(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
@@ -172,7 +169,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Spring_alt)
         #print self.springForces
         
     def OEF_CVisc_alt(self): # 24-CVISC
@@ -204,7 +200,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CVisc_alt)
         #print self.viscForces
         
     def OEF_CBar_alt(self): # 34-CBAR
@@ -249,7 +244,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CBar_alt)
         #print self.barForces
         
     def OEF_Plate_alt(self): # 33-CQUAD4,74-CTRIA3
@@ -294,7 +288,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Plate_alt)
         #print self.plateForces
 
     def OEF_Plate2_alt(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
@@ -383,7 +376,6 @@ class ComplexForces(object):
             ###
         ###
         #sys.exit('Plate2 stop...')
-        self.handleResultsBuffer(self.OEF_Plate2_alt)
         #print self.plateForces2
 
     def OEF_Bend_alt(self): # 69-CBEND
@@ -427,7 +419,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Bend_alt)
         #print self.bendForces
         
     def OEF_PentaPressure_alt(self): # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR
@@ -463,7 +454,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_PentaPressure_alt)
         #print self.bendForces
 
     def OEF_CBush_alt(self): # 102-CBUSH
@@ -501,7 +491,6 @@ class ComplexForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CBush_alt)
         #print self.bushForces
 
     def OEF_Force_VU_alt(self): # 191-VUBEAM
@@ -565,7 +554,6 @@ class ComplexForces(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Force_VU_alt)
         if self.makeOp2Debug:
             print "done with OEF_Force_VU"
         #print self.force_VU
@@ -638,7 +626,6 @@ class ComplexForces(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Force_VUTRIA_alt)
         if self.makeOp2Debug:
             print "done with OEF_Force_VUTRIA"
         #print self.force_VU_2D

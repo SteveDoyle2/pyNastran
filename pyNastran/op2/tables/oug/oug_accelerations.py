@@ -82,19 +82,11 @@ class complexAccelerationObject(complexTableObject): # tableCode=11, approachCod
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 
-        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
+        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']
         return self._writeF06Block(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.getTableMarker()
+        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']
         return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def __repr__(self):

@@ -50,7 +50,7 @@ class RealRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
     def __repr__(self):
         return str(self.axialForce)
 
-class RealCBEAMForce(scalarObject): # 2-CBEAM
+class RealCBeamForce(scalarObject): # 2-CBEAM
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}
@@ -142,7 +142,7 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
         self.totalTorque[dt][eid] = {sd:ttrq}
         self.warpingTorque[dt][eid] = {sd:wtrq}
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                  '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
@@ -175,7 +175,7 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
             pageNum+=1
         return (''.join(msg),pageNum-1)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
@@ -191,7 +191,7 @@ class RealCBEAMForce(scalarObject): # 2-CBEAM
                 (vals2,isAllZeros) = self.writeF06Floats13E([bm1,bm2,ts1,ts2,af,ttrq,wtrq])
                 [bm1,bm2,ts1,ts2,af,ttrq,wtrq] = vals2
                 msg.append('0  %8i\n' %(eid))
-                msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' %(eid,bm1,bm2,ts1,ts2,af,ttrq,wtrq))
+                msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' %(eid,sd,bm1,bm2,ts1,ts2,af,ttrq,wtrq))
             ###
         msg.append(pageStamp+str(pageNum)+'\n')
         if f is not None:
@@ -354,7 +354,7 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                  ' \n',
                  '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
@@ -389,7 +389,7 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         return (''.join(msg),pageNum-1)
         
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',

@@ -33,7 +33,7 @@ class RealEigenvalues(baseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = header+['                                              R E A L   E I G E N V A L U E S\n',
                       '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                       '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
@@ -86,7 +86,7 @@ class ComplexEigenvalues(baseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def writeF06(self,header,pageStamp,pageNum=1):  # not proper msg start
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):  # not proper msg start
         msg = header+['                                        C O M P L E X   E I G E N V A L U E S\n',
                       '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
                       '    NO.       ORDER\n']

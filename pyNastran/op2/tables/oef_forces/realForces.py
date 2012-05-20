@@ -92,7 +92,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Rod)
         #print self.rodForces
         
     def OEF_CVisc(self): # 24-CVISC
@@ -116,7 +115,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CVisc)
         #print self.viscForces
         
     def OEF_Beam(self): # 2-CBEAM   ## @todo is this correct???
@@ -157,7 +155,6 @@ class RealForces(object):
 
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Beam)
         #print self.beamForces
 
     def OEF_Shear(self): # 4-CSHEAR
@@ -181,7 +178,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Shear)
         #print self.shearForces
         
     def OEF_Spring(self): # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
@@ -205,7 +201,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Spring)
         #print self.springForces
         
     def OEF_CBar(self): # 34-CBAR
@@ -229,7 +224,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CBar)
         #print self.barForces
         
     def OEF_CBar100(self): # 100-CBAR
@@ -253,7 +247,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CBar)
         #print self.bar100Forces
         
     def OEF_Plate(self): # 33-CQUAD4,74-CTRIA3
@@ -277,7 +270,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Plate)
         #print self.plateForces
 
     def OEF_Plate2(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
@@ -325,7 +317,6 @@ class RealForces(object):
             ###
         ###
         #sys.exit('Plate2 stop...')
-        self.handleResultsBuffer(self.OEF_Plate2)
         #print self.plateForces2
 
     def OEF_ConeAx(self): # 35-CCONEAX
@@ -349,7 +340,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_ConeAx)
         #print self.shearForces
         
     def OEF_CGap(self): # 38-CGAP
@@ -373,7 +363,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CGap)
         #print self.plateForces
 
     def OEF_Bend(self): # 69-CBEND
@@ -399,7 +388,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Bend)
         #print self.bendForces
         
     def OEF_PentaPressure(self): # 77-CPENTA_PR,78-CTETRA_PR
@@ -424,7 +412,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_PentaPressure)
         #print self.pentaPressureForces
         
     def OEF_CBush(self): # 102-CBUSH
@@ -448,7 +435,6 @@ class RealForces(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CBush)
         #print self.bushForces
 
     def OEF_Force_VU(self): # 191-VUBEAM
@@ -493,7 +479,6 @@ class RealForces(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Force_VU)
         if self.makeOp2Debug:
             print "done with OEF_Force_VU"
         #print self.force_VU
@@ -543,7 +528,6 @@ class RealForces(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_Force_VUTRIA)
         if self.makeOp2Debug:
             print "done with OEF_Force_VUTRIA"
         #print self.force_VU_2D

@@ -5,7 +5,7 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
 
@@ -31,7 +31,7 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
             msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         words = ['                                                     L O A D   V E C T O R\n',
                ' \n',
@@ -118,9 +118,9 @@ class complexLoadVectorObject(complexTableObject): # tableCode=11, approachCode=
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum,f)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
         msg = header+['                                       C O M P L E X   L O A D   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -149,11 +149,12 @@ class complexLoadVectorObject(complexTableObject): # tableCode=11, approachCode=
             msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                       C O M P L E X   L O A D   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
         msg = []
         for dt,translations in sorted(self.translations.iteritems()):
             header[2] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
@@ -217,7 +218,7 @@ class thermalVector(TableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
 
@@ -243,7 +244,7 @@ class thermalVector(TableObject):
             msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
