@@ -344,7 +344,7 @@ class SolidStressObject(stressObject):
         ###
         return (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids)
         
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = []
@@ -352,46 +352,98 @@ class SolidStressObject(stressObject):
         (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         if tetraEids:
-            msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
-            pageStamp+=1
+            msg += self.writeElement('CTETRA',4,tetraEids,header,tetraMsg,f)
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         if hexaEids:
-            msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
-            pageStamp+=1
+            msg += self.writeElement('CHEXA',8,hexaEids, header,hexaMsg,f)
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         if pentaEids:
-            msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
-            pageStamp+=1
+            msg += self.writeElement('CPENTA',6,pentaEids,header,pentaMsg,f)
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
+        dts = self.oxx.keys()
         for dt in dts:
             if tetraEids:
-                msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
-                pageStamp+=1
+                msg += self.writeElementTransient('CTETRA',4,tetraEids,dt,header,tetraMsg,f)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
             if hexaEids:
-                msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
-                pageStamp+=1
+                msg += self.writeElementTransient('CHEXA',8,hexaEids, dt,header,hexaMsg,f)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
             if pentaEids:
-                msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
-                pageStamp+=1
+                msg += self.writeElementTransient('CPENTA',6,pentaEids,dt,header,pentaMsg,f)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
             ###
-        return (''.join(msg),pageStamp-1)
+        return (''.join(msg),pageNum-1)
 
-    def writeElement(self,eType,nNodes,eids,dt,header,tetraMsg,pageStamp=1,f=None):
-        dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
-        header[1] = dtLine
+    def writeElement(self,eType,nNodes,eids,header,tetraMsg,f=None):
+        msg = header+tetraMsg
         for eid in eids:
             #eType = self.eType[eid]
 
-            k = self.oxxs[dt][eid].keys()
+            k = self.oxx[eid].keys()
             #kc = k.index('C')
             #k.pop(kc)
             k.sort()
             k.pop(-1)
             #print k
-            msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
+            msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes) )
+            for nid in ['C']+k:
+                oxx = self.oxx[eid][nid]
+                oyy = self.oyy[eid][nid]
+                ozz = self.ozz[eid][nid]
+                txy = self.txy[eid][nid]
+                tyz = self.tyz[eid][nid]
+                txz = self.txz[eid][nid]
+
+                o1 = self.o1[eid][nid]
+                o2 = self.o2[eid][nid]
+                o3 = self.o3[eid][nid]
+                ovm = self.ovmShear[eid][nid]
+                p = (o1+o2+o3)/-3.
+
+                if nid=='C': nid='CENTER'
+                #print "nid = |%r|" %(nid)
+                A = [[oxx,txy,txz],
+                     [txy,oyy,tyz],
+                     [txz,tyz,ozz]]
+                (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
+
+                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
+                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,1],v[0,2],v[0,0],p,ovm.strip()))
+                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,1],v[1,2],v[1,0]))
+                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,1],v[2,2],v[2,0]))
+            ###
+        ###
+        if f is not None:
+            f.write(''.join(msg))
+        ###
+        return ''.join(msg)
+
+    def writeElementTransient(self,eType,nNodes,eids,dt,header,tetraMsg,f=None):
+        dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
+        header[1] = dtLine
+        msg = header+tetraMsg
+        for eid in eids:
+            #eType = self.eType[eid]
+
+            k = self.oxx[dt][eid].keys()
+            #kc = k.index('C')
+            #k.pop(kc)
+            k.sort()
+            k.pop(-1)
+            #print k
+            msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes))
             for nid in ['C']+k:
                 oxx = self.oxx[dt][eid][nid]
                 oyy = self.oyy[dt][eid][nid]
@@ -410,17 +462,15 @@ class SolidStressObject(stressObject):
                 #print "nid = |%r|" %(nid)
                 A = [[oxx,txy,txz],
                      [txy,oyy,tyz],
-                     [txz,oyz,ozz]]
+                     [txz,tyz,ozz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([exx,oyy,ozz,oxy,oyz,oxz,o1,o2,o3,p,ovm])
-                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,1],v[0,2],v[0,0],p,ovm.strip())
-                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,1],v[1,2],v[1,0])
-                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,1],v[2,2],v[2,0])
+                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
+                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,1],v[0,2],v[0,0],p,ovm.strip()))
+                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,1],v[1,2],v[1,0]))
+                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,1],v[2,2],v[2,0]))
             ###
         ###
-        msg += header+tetraMsg
-        msg.append(pageStamp+str(pageNum)+'\n')
         if f is not None:
             f.write(''.join(msg))
             msg = ['']
@@ -866,7 +916,7 @@ class SolidStrainObject(strainObject):
         ###
         return (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = []
@@ -874,46 +924,99 @@ class SolidStrainObject(strainObject):
         (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         if tetraEids:
-            msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
-            pageStamp+=1
+            msg += self.writeElement('CTETRA',4,tetraEids,header,tetraMsg,f)
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         if hexaEids:
-            msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
-            pageStamp+=1
+            msg += self.writeElement('CHEXA',8,hexaEids,header,hexaMsg,f)
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         if pentaEids:
-            msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
-            pageStamp+=1
+            msg += self.writeElement('CPENTA',6,pentaEids,header,pentaMsg,f)
+            msg.append(pageStamp+str(pageNum)+'\n')
+            pageNum+=1
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         (tetraMsg,pentaMsg,hexaMsg,tetraEids,hexaEids,pentaEids) = self.getF06_Header()
+        dts = self.exx.keys()
         for dt in dts:
             if tetraEids:
-                msg += self.writeElement(self,eType,4,tetraEids,dts,header,tetraMsg,pageStamp,f)
-                pageStamp+=1
+                msg += self.writeElementTransient('CTETRA',4,tetraEids,dt,header,tetraMsg,f)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
             if hexaEids:
-                msg += self.writeElement(self,eType,8,hexaEids, dts,header,hexaMsg, pageStamp,f)
-                pageStamp+=1
+                msg += self.writeElementTransient('CHEXA',8,hexaEids, dt,header,hexaMsg,f)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
             if pentaEids:
-                msg += self.writeElement(self,eType,6,pentaEids,dts,header,pentaMsg,pageStamp,f)
-                pageStamp+=1
+                msg += self.writeElementTransient('CPENTA',6,pentaEids,dt,header,pentaMsg,f)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                pageNum+=1
             ###
-        return (''.join(msg),pageStamp-1)
+        return (''.join(msg),pageNum-1)
 
-    def writeElement(self,eType,nNodes,eids,dt,header,tetraMsg,pageStamp=1,f=None):
-        dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
-        header[1] = dtLine
+    def writeElement(self,eType,nNodes,eids,header,tetraMsg,f=None):
+        msg = header+tetraMsg
         for eid in eids:
             #eType = self.eType[eid]
 
-            k = self.exxs[dt][eid].keys()
+            k = self.exx[eid].keys()
             #kc = k.index('C')
             #k.pop(kc)
             k.sort()
             k.pop(-1)
             #print k
-            msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
+            msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes) )
+            for nid in ['C']+k:
+                exx = self.exx[eid][nid]
+                eyy = self.eyy[eid][nid]
+                ezz = self.ezz[eid][nid]
+                exy = self.exy[eid][nid]
+                eyz = self.eyz[eid][nid]
+                exz = self.exz[eid][nid]
+
+                e1 = self.e1[eid][nid]
+                e2 = self.e2[eid][nid]
+                e3 = self.e3[eid][nid]
+                evm = self.evmShear[eid][nid]
+                p = (e1+e2+e3)/-3.
+
+                if nid=='C': nid='CENTER'
+                #print "nid = |%r|" %(nid)
+                A = [[exx,exy,exz],
+                     [exy,eyy,eyz],
+                     [exz,eyz,ezz]]
+                (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
+
+                ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
+                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,1],v[0,2],v[0,0],p,evm.strip()))
+                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,1],v[1,2],v[1,0]))
+                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0]))
+            ###
+        ###
+        if f is not None:
+            f.write(''.join(msg))
+            msg = ['']
+        ###
+        return ''.join(msg)
+
+    def writeElementTransient(self,eType,nNodes,eids,dt,header,tetraMsg,pageStamp=1,f=None):
+        dtLine = '%14s = %12.5E\n'%(self.dataCode['name'],dt)
+        header[1] = dtLine
+        msg = header+tetraMsg
+        for eid in eids:
+            #eType = self.eType[eid]
+
+            k = self.exx[dt][eid].keys()
+            #kc = k.index('C')
+            #k.pop(kc)
+            k.sort()
+            k.pop(-1)
+            #print k
+            msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes)
             for nid in ['C']+k:
                 exx = self.exx[dt][eid][nid]
                 eyy = self.eyy[dt][eid][nid]
@@ -941,8 +1044,6 @@ class SolidStrainObject(strainObject):
                 msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0])
             ###
         ###
-        msg += header+tetraMsg
-        msg.append(pageStamp+str(pageNum)+'\n')
         if f is not None:
             f.write(''.join(msg))
             msg = ['']

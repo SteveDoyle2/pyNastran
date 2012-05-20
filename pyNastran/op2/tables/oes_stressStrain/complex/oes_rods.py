@@ -14,16 +14,6 @@ class ComplexRodDamperObject(stressObject):
 
 class ComplexRodStressObject(stressObject):
     """
-    # formatCode=1 stressCode=0
-                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
-             1    5.000000E+03              0.0                               2    0.0                       0.0           
-
-    # formatCode=1 stressCode=0
-                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-      ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-        ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
     """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         stressObject.__init__(self,dataCode,iSubcase)
@@ -32,7 +22,6 @@ class ComplexRodStressObject(stressObject):
         self.code = [self.formatCode,self.sortCode,self.sCode]
         self.axial   = {}
         self.torsion = {}
-        self.isImaginary = True
 
         self.dt = dt
         if isSort1:
@@ -137,6 +126,7 @@ class ComplexRodStressObject(stressObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        raise NotImplementedError()
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNumf,isMagPhase)
 
@@ -167,6 +157,7 @@ class ComplexRodStressObject(stressObject):
         return(''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        raise NotImplementedError()
         words = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
@@ -229,16 +220,6 @@ class ComplexRodStressObject(stressObject):
 
 class ComplexRodStrainObject(strainObject):
     """
-    # sCode=1
-                                     S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )
-    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-      ID.        STRAIN       MARGIN        STRAIN      MARGIN
-
-    # sCode=10
-                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )
-    ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
-      ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
-       1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         strainObject.__init__(self,dataCode,iSubcase)
@@ -248,7 +229,6 @@ class ComplexRodStrainObject(strainObject):
         
         self.axial      = {}
         self.torsion    = {}
-        self.isImaginary = True
 
         self.dt = dt
         if isSort1:
@@ -328,7 +308,7 @@ class ComplexRodStrainObject(strainObject):
     def __reprTransient__(self):
         msg = '---ROD STRAINS---\n'
         msg += '%-6s %6s ' %('EID','eType')
-        headers = ['axial','torsion','MS_axial','MS_torsion']
+        headers = ['axial','torsion']
         for header in headers:
             msg += '%10s ' %(header)
         msg += '\n'
@@ -352,6 +332,7 @@ class ComplexRodStrainObject(strainObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        raise NotImplementedError()
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 
@@ -381,6 +362,7 @@ class ComplexRodStrainObject(strainObject):
         return(''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        raise NotImplementedError()
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
@@ -417,7 +399,7 @@ class ComplexRodStrainObject(strainObject):
 
         msg = '---ROD STRAINS---\n'
         msg += '%-6s %6s ' %('EID','eType')
-        headers = ['axial','torsion','MS_tension','MS_compression']
+        headers = ['axial','torsion']
         for header in headers:
             msg += '%8s ' %(header)
         msg += '\n'

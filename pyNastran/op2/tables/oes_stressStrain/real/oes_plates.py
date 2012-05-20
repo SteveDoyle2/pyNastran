@@ -1,4 +1,5 @@
 import sys
+from numpy import argsort
 from oes_objects import stressObject,strainObject
 from pyNastran.op2.op2Errors import *
 
@@ -318,7 +319,48 @@ class PlateStressObject(stressObject):
         ###
         return msg
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def getOrderedETypes(self,validTypes):
+        """
+        @param validTypes list of valid element types
+               e.g. ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        
+        @retval TypesOut the ordered list of types
+        @retval orderedETypes dictionary of Type-IDs to write
+        """
+        orderedETypes = {}
+
+        #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        for eType in validTypes:
+            orderedETypes[eType] = []
+        for eid,eType in sorted(self.eType.items()):
+            #print "eType = ",eType
+            assert eType in validTypes,'unsupported eType=%s' %(eType)
+            orderedETypes[eType].append(eid)
+        ###
+        
+        minVals = []
+        for eType in validTypes:
+            vals = orderedETypes[eType]
+            #print "len(%s) = %s" %(eType,len(vals))
+            if len(vals)==0:
+                minVals.append(-1)
+            else:
+                minVals.append(min(vals))
+            
+        #print "minVals = ",minVals
+        argList = argsort(minVals)
+
+        TypesOut = []
+        for i in argList:
+            TypesOut.append(validTypes[i])
+        #print "validTypes = %s" %(validTypes)
+        #print "minVals    = %s" %(minVals)
+        #print "argList    = %s" %(argList)
+        #print "TypesOut   = %s" %(TypesOut)
+        #print "orderedETypes.keys = %s" %(orderedETypes.keys())
+        return (TypesOut,orderedETypes)
+
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
 
@@ -338,6 +380,12 @@ class PlateStressObject(stressObject):
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                           '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
 
+        triMsg   = None
+        tri6Msg  = None
+        trirMsg  = None
+        quadMsg  = None
+        quad8Msg = None
+        quadrMsg = None
         eTypes = self.eType.values()
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
@@ -348,48 +396,86 @@ class PlateStressObject(stressObject):
             if len(ekey)==1:
                 isBilinear=False
                 quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
-            isQuad = True
-        else:
-            quadMsg = []
-            isQuad = False
+
+        if 'CQUAD8' in eTypes:
+            quad8Msg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+triMsgTemp
+
+        if 'CQUADR' in eTypes:
+            qkey = eTypes.index('CQUADR')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.oxx[kkey].keys()
+            isBilinear=True
+            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+triMsgTemp
 
         if 'CTRIA3' in eTypes:
-            isTri = True
             triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
-        else:
-            isTri = False
-            triMsg = []
 
-        for eid,oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            if eType in 'CQUAD4':
-                if isBilinear:
-                    out = self.writeF06_Quad4_Bilinear(eid,oxxNodes)
+        if 'CTRIA6' in eTypes:
+            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
+
+        if 'CTRIAR' in eTypes:
+            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
+
+        msgPacks = {'CTRIA3':triMsg,
+                    'CTRIA6':tri6Msg,
+                    'CTRIAR':trirMsg,
+                    'CQUAD4':quadMsg,
+                    'CQUAD8':quad8Msg,
+                    'CQUADR':quadrMsg,}
+
+        validTypes = ['CTRIA3','CTRIA6','CTRIAR','CQUAD4','CQUAD8','CQUADR']
+        (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
+
+        msg = []
+        for eType in typesOut:
+            eids = orderedETypes[eType]
+            if eids:
+                eids.sort()
+                print "eType = ",eType
+                #print "eids = ",eids
+                #print "eType = ",eType
+                msgPack = msgPacks[eType]
+
+                msg += header+msgPack
+                if eType in ['CQUAD4']:
+                    if isBilinear:
+                        for eid in eids:
+                            out = self.writeF06_Quad4_Bilinear(eid,4)
+                            msg.append(out)
+                    else:
+                        for eid in eids:
+                            out = self.writeF06_Tri3(eid)
+                            msg.append(out)
+                    ###
+                elif eType in ['CTRIA3']:
+                    for eid in eids:
+                        out = self.writeF06_Tri3(eid)
+                        msg.append(out)
+                elif eType in ['CQUAD8']:
+                    for eid in eids:
+                        out = self.writeF06_Quad4_Bilinear(eid,5)
+                        msg.append(out)
+                elif eType in ['CTRIAR','CTRIA6']:
+                    for eid in eids:
+                        out = self.writeF06_Quad4_Bilinear(eid,3)
+                        msg.append(out)
                 else:
-                    out = self.writeF06_Tri3(eid,oxxNodes)
-                quadMsg.append(out)
-            elif eType in 'CTRIA3':
-                out = self.writeF06_Tri3(eid,oxxNodes)
-                triMsg.append(out)
-            else:
-                raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                ###
+                msg.append(pageStamp+str(pageNum)+'\n')
+                if f is not None:
+                    f.write(''.join(msg))
+                    msg = ['']
+                pageNum+=1
             ###
         ###
-        if isQuad:
-            quadMsg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        if isTri:
-            triMsg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
-        #print "quadMsg = ",quadMsg
-        #print "triMsg = ",triMsg
-        if f is None:
-            f.write(''.join(quadMsg+triMsg))
-            quadMsg=[]; triMsg=[]
-        return (''.join(quadMsg+triMsg),pageNum-1)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -398,7 +484,7 @@ class PlateStressObject(stressObject):
         if self.isFiberDistance():
             quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                            '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 ',
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                           '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         else:
             quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
@@ -406,74 +492,117 @@ class PlateStressObject(stressObject):
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                           '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
 
-        #print self.oxx
+        triMsg   = None
+        tri6Msg  = None
+        trirMsg  = None
+        quadMsg  = None
+        quad8Msg = None
+        quadrMsg = None
+
         eTypes = self.eType.values()
+        dts = self.oxx.keys()
+        dt = dts[0]
         if 'CQUAD4' in eTypes:
-            ElemKey = eTypes.index('CQUAD4')
-            #print qkey
-            eid = self.eType.keys()[ElemKey]
-            #print "self.oxx = ",self.oxx
-            #print "eid=%s" %(eid)
-            dt = self.oxx.keys()[0]
-            #print "dt=%s" %(dt)
-            nLayers = len(self.oxx[dt][eid])
-            #print "elementKeys = ",elementKeys
+            qkey = eTypes.index('CQUAD4')
+            kkey = self.eType.keys()[qkey]
+            #print "qkey=%s kkey=%s" %(qkey,kkey)
+            ekey = self.oxx[dt][kkey].keys()
             isBilinear=True
-            quadMsg2 = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
-            if nLayers==1:
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
                 isBilinear=False
-                quadMsg2 = ['                           S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n \n']+triMsgTemp
-            isQuad = True
-        else:
-            quadMsg2 = []
-            isQuad = False
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
+
+        if 'CQUAD8' in eTypes:
+            quad8Msg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+triMsgTemp
+
+        if 'CQUADR' in eTypes:
+            qkey = eTypes.index('CQUADR')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.oxx[kkey].keys()
+            isBilinear=True
+            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+triMsgTemp
 
         if 'CTRIA3' in eTypes:
-            isTri = True
-            triMsg2 = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
-        else:
-            isTri = False
-            triMsg2 = []
-        
+            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
+
+        if 'CTRIA6' in eTypes:
+            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
+
+        if 'CTRIA6' in eTypes:
+            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
+
+        msgPacks = {'CTRIA3':triMsg,
+                    'CTRIA6':tri6Msg,
+                    'CTRIAR':trirMsg,
+                    'CQUAD4':quadMsg,
+                    'CQUAD8':quad8Msg,
+                    'CQUADR':quadrMsg,}
+
+
+        validTypes = ['CTRIA3','CTRIA6','CTRIAR','CQUAD4','CQUAD8','CQUADR']
+        (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
+
         msg = []
-        for dt,OxxNodes in sorted(self.oxx.iteritems()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            #msg += header+words
-            quadMsg = []
-            triMsg = []
-            for eid,oxxNodes in sorted(OxxNodes.iteritems()):
-                eType = self.eType[eid]
-                if eType in 'CQUAD4':
+        for eType in typesOut:
+            eids = orderedETypes[eType]
+            if eids:
+                msgPack = msgPacks[eType]
+                eids.sort()
+                if eType in ['CQUAD4']:
                     if isBilinear:
-                        out = self.writeF06_Quad4_BilinearTransient(dt,eid,oxxNodes)
+                        for dt in self.oxx:
+                            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                            msg += header+msgPack
+                            for eid in eids:
+                                out = self.writeF06_Quad4_BilinearTransient(dt,eid,4)
+                                msg.append(out)
                     else:
-                        out = self.writeF06_Tri3Transient(dt,eid,oxxNodes)
-                    quadMsg.append(out)
-                elif eType in 'CTRIA3':
-                    out = self.writeF06_Tri3Transient(dt,eid,oxxNodes)
-                    triMsg.append(out)
+                        for dt in self.oxx:
+                            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                            msg += header+msgPack
+                            for eid in eids:
+                                out = self.writeF06_Tri3Transient(dt,eid)
+                                msg.append(out)
+                    ###
+                elif eType in ['CTRIA3']:
+                    for dt in self.oxx:
+                        header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                        msg += header+msgPack
+                        for eid in eids:
+                            out = self.writeF06_Tri3Transient(dt,eid)
+                            msg.append(out)
+                elif eType in ['CTRIA6','CTRIAR']:
+                    for dt in self.oxx:
+                        header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                        msg += header+msgPack
+                        for eid in eids:
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,3)
+                            msg.append(out)
+                elif eType in ['CQUAD8']:
+                    for dt in self.oxx:
+                        header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                        msg += header+msgPack
+                        for eid in eids:
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,5)
+                            msg.append(out)
                 else:
                     raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
                 ###
-            ###
-            if isQuad:
-                quadMsg.append(pageStamp+str(pageNum)+'\n')
-                msg += header+quadMsg2+quadMsg
+                msg.append(pageStamp+str(pageNum)+'\n')
+                if f is not None:
+                    f.write(''.join(msg))
+                    msg = ['']
                 pageNum+=1
-            if isTri:
-                triMsg.append(pageStamp+str(pageNum)+'\n')
-                msg += header+triMsg2+triMsg
-                pageNum+=1
-            ###
-            if f is None:
-                f.write(''.join(msg))
-                msg = ['']
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06_Quad4_Bilinear(self,eid,oxxNodes):
+    def writeF06_Quad4_Bilinear(self,eid,n):
         msg = ''
-        k = oxxNodes.keys()
+        k = self.oxx[eid].keys()
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
@@ -490,7 +619,7 @@ class PlateStressObject(stressObject):
                 ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,oxx,oyy,txy,angle,major,minor,ovm)
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy,angle,major,minor,ovm)
                 elif iLayer==0:
                     msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy,angle,major,minor,ovm)
                 elif iLayer==1:
@@ -502,9 +631,9 @@ class PlateStressObject(stressObject):
         ###
         return msg
 
-    def writeF06_Quad4_BilinearTransient(self,dt,eid,oxxNodes):
+    def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
         msg = ''
-        k = oxxNodes.keys()
+        k = self.oxx[dt][eid].keys()
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
@@ -521,7 +650,7 @@ class PlateStressObject(stressObject):
                 ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 elif iLayer==0:
                     msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 elif iLayer==1:
@@ -534,8 +663,9 @@ class PlateStressObject(stressObject):
         ###
         return msg
 
-    def writeF06_Tri3(self,eid,oxxNodes):
+    def writeF06_Tri3(self,eid):
         msg = ''
+        oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
             for iLayer in range(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
@@ -558,8 +688,9 @@ class PlateStressObject(stressObject):
         ###
         return msg
 
-    def writeF06_Tri3Transient(self,dt,eid,oxxNodes):
+    def writeF06_Tri3Transient(self,dt,eid):
         msg = ''
+        oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
             for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[dt][eid][nid][iLayer]
@@ -885,7 +1016,48 @@ class PlateStrainObject(strainObject):
             headers.append('maxShear')
         return headers
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def getOrderedETypes(self,validTypes):
+        """
+        @param validTypes list of valid element types
+               e.g. ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        
+        @retval TypesOut the ordered list of types
+        @retval orderedETypes dictionary of Type-IDs to write
+        """
+        orderedETypes = {}
+
+        #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        for eType in validTypes:
+            orderedETypes[eType] = []
+        for eid,eType in sorted(self.eType.items()):
+            #print "eType = ",eType
+            assert eType in validTypes,'unsupported eType=%s' %(eType)
+            orderedETypes[eType].append(eid)
+        ###
+        
+        minVals = []
+        for eType in validTypes:
+            vals = orderedETypes[eType]
+            #print "len(%s) = %s" %(eType,len(vals))
+            if len(vals)==0:
+                minVals.append(-1)
+            else:
+                minVals.append(min(vals))
+            
+        #print "minVals = ",minVals
+        argList = argsort(minVals)
+
+        TypesOut = []
+        for i in argList:
+            TypesOut.append(validTypes[i])
+        #print "validTypes = %s" %(validTypes)
+        #print "minVals    = %s" %(minVals)
+        #print "argList    = %s" %(argList)
+        #print "TypesOut   = %s" %(TypesOut)
+        #print "orderedETypes.keys = %s" %(orderedETypes.keys())
+        return (TypesOut,orderedETypes)
+
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
 
@@ -906,7 +1078,13 @@ class PlateStrainObject(strainObject):
                           '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         ###
 
-        triMsg = []
+        quadMsg  = None
+        quad8Msg = None
+        quadrMsg = None
+        triMsg   = None
+        tri6Msg  = None
+        trirMsg  = None
+
         eTypes = self.eType.values()
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
@@ -917,46 +1095,86 @@ class PlateStrainObject(strainObject):
             if len(ekey)==1:
                 isBilinear=False
                 quadMsg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
-            isQuad = True
-        else:
-            quadMsg = []
-            isQuad = False
+
+        if 'CQUAD8' in eTypes:
+            qkey = eTypes.index('CQUAD8')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.exx[kkey].keys()
+            isBilinear=True
+            quad8Msg     = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quad8Msg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+triMsgTemp
+
+        if 'CQUADR' in eTypes:
+            qkey = eTypes.index('CQUADR')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.exx[kkey].keys()
+            isBilinear=True
+            quadrMsg     = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadrMsg = header+['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+triMsgTemp
 
         if 'CTRIA3' in eTypes:
-            isTri = True
             triMsg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
-        else:
-            isTri = False
-            triMsg = []
 
-        for eid,exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
-            if eType in 'CQUAD4':
-                if isBilinear:
-                    out = self.writeF06_Quad4_Bilinear(eid,exxNodes)
+        if 'CTRIA6' in eTypes:
+            tri6Msg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
+
+        if 'CTRIAR' in eTypes:
+            trirMsg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
+
+        msgPacks = {'CTRIA3':triMsg,
+                    'CTRIA6':tri6Msg,
+                    'CTRIAR':trirMsg,
+                    'CQUAD4':quadMsg,
+                    'CQUAD8':quad8Msg,
+                    'CQUADR':quadrMsg,}
+
+        validTypes = ['CTRIA3','CTRIA6','CTRIAR','CQUAD4','CQUAD8','CQUADR']
+        (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
+
+        msg = []
+        for eType in typesOut:
+            eids = orderedETypes[eType]
+            if eids:
+                #print "eids = ",eids
+                #print "eType = ",eType
+                msgPack = msgPacks[eType]
+                eids.sort()
+                msg += header+msgPack
+                if eType in ['CQUAD4']:
+                    if isBilinear:
+                        for eid in eids:
+                            out = self.writeF06_Quad4_Bilinear(eid,4)
+                    else:
+                        for eid in eids:
+                            out = self.writeF06_Tri3(eid)
+                    ###
+                elif eType in ['CTRIA3']:
+                    for eid in eids:
+                        out = self.writeF06_Tri3(eid)
+                elif eType in ['CQUAD8']:
+                    for eid in eids:
+                        out = self.writeF06_Quad4_Bilinear(eid,5)
+                elif eType in ['CTRIA6','CTRIAR']:
+                    for eid in eids:
+                        out = self.writeF06_Quad4_Bilinear(eid,3)
                 else:
-                    out = self.writeF06_Tri3(eid,exxNodes)
-                quadMsg.append(out)
-            elif eType in 'CTRIA3':
-                out = self.writeF06_Tri3(eid,exxNodes)
-                triMsg.append(out)
-            else:
-                raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                ###
+                msg.append(out)
+                msg.append(pageStamp+str(pageNum)+'\n')
+                if f is not None:
+                    f.write(''.join(msg))
+                    msg = ['']
+                pageNum+=1
             ###
         ###
-        if isQuad:
-            quadMsg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
-        if isTri:
-            triMsg.append(pageStamp+str(pageNum)+'\n')
-            pageNum+=1
+        return (''.join(msg),pageNum-1)
 
-        #print "quadMsg = ",quadMsg
-        #print "triMsg = ",triMsg
-        msg = ''.join(quadMsg+triMsg)
-        return (msg,pageNum-1)
-
-    def writeF06Transient(self,header,pageStamp,pageNum=1):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -974,6 +1192,13 @@ class PlateStrainObject(strainObject):
                           '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
         ###
 
+        quadMsg  = None
+        quad8Msg = None
+        quadrMsg = None
+        triMsg   = None
+        tri6Msg  = None
+        trirMsg  = None
+
         eTypes = self.eType.values()
         if 'CQUAD4' in eTypes:
             ElemKey = eTypes.index('CQUAD4')
@@ -986,59 +1211,90 @@ class PlateStrainObject(strainObject):
             nLayers = len(self.exx[dt][eid])
             #print "elementKeys = ",elementKeys
             isBilinear=True
-            quadMsg2     = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
+            quadMsg     = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
             if nLayers==1:
                 isBilinear=False
-                quadMsg2 = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
-            isQuad = True
-        else:
-            quadMsg2 = []
-            isQuad = False
+                quadMsg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
 
         if 'CTRIA3' in eTypes:
-            isTri = True
-            triMsg2 = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
-        else:
-            isTri = False
-            triMsg2 = []
+            triMsg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
+
+        if 'CTRIA6' in eTypes:
+            tri6Msg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
+
+        if 'CTRIAR' in eTypes:
+            trirMsg = header+['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
 
         msg = []
-        for dt,ExxNodes in sorted(self.exx.iteritems()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            quadMsg = []
-            triMsg = []
-            if isQuad: quadMsg = header+quadMsg2
-            if isTri:  triMsg  = header+triMsg2
-            for eid,exxNodes in sorted(ExxNodes.iteritems()):
+        msgPacks = {'CTRIA3':triMsg,
+                    'CTRIA6':tri6Msg,
+                    'CTRIAR':trirMsg,
+                    'CQUAD4':quadMsg,
+                    'CQUAD8':quad8Msg,
+                    'CQUADR':quadrMsg,}
+
+        validTypes = ['CTRIA3','CTRIA6','CTRIAR','CQUAD4','CQUAD8','CQUADR']
+        (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
+
+        msg = []
+        dts = self.exx.keys()
+        dts.sort()
+        for eType in typesOut:
+            eids = orderedETypes[eType]
+            if eids:
+                eids.sort()
                 eType = self.eType[eid]
-                if eType in 'CQUAD4':
+                if eType in ['CQUAD4']:
                     if isBilinear:
-                        out = self.writeF06_Quad4_BilinearTransient(dt,eid,exxNodes)
+                        for dt in dts:
+                            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                            for eid in eids:
+                                out = self.writeF06_Quad4_BilinearTransient(dt,eid,4)
+                                msg.append(out)
+                            msg.append(pageStamp+str(pageNum)+'\n')
+                            pageNum+=1
                     else:
-                        out = self.writeF06_Tri3Transient(dt,eid,exxNodes)
-                    quadMsg.append(out)
-                elif eType in 'CTRIA3':
-                    out = self.writeF06_Tri3Transient(dt,eid,exxNodes)
-                    triMsg.append(out)
+                        for dt in dts:
+                            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                            for eid in eids:
+                                out = self.writeF06_Tri3Transient(dt,eid)
+                                msg.append(out)
+                            msg.append(pageStamp+str(pageNum)+'\n')
+                            pageNum+=1
+                elif eType in ['CTRIA3']:
+                    for dt in dts:
+                        header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                        for eid in eids:
+                            out = self.writeF06_Tri3Transient(dt,eid)
+                            msg.append(out)
+                        msg.append(pageStamp+str(pageNum)+'\n')
+                        pageNum+=1
+                elif eType in ['CQUAD8']:
+                    for dt in dts:
+                        header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                        for eid in eids:
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,5)
+                            msg.append(out)
+                        msg.append(pageStamp+str(pageNum)+'\n')
+                        pageNum+=1
+                elif eType in ['CTRIA6','CTRIAR']:
+                    for dt in dts:
+                        header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
+                        for eid in eids:
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,3)
+                            msg.append(out)
+                        msg.append(pageStamp+str(pageNum)+'\n')
+                        pageNum+=1
                 else:
                     raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
                 ###
             ###
-            if isQuad:
-                quadMsg.append(pageStamp+str(pageNum)+'\n')
-                msg += header+quadMsg2+quadMsg
-                pageNum+=1
-            if isTri:
-                triMsg.append(pageStamp+str(pageNum)+'\n')
-                msg += header+triMsg2+triMsg
-                pageNum+=1
-            ###
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06_Quad4_Bilinear(self,eid,exxNodes):
+    def writeF06_Quad4_Bilinear(self,eid,n):
         msg = ''
-        k = exxNodes.keys()
+        k = self.exx[eid].keys()
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
@@ -1055,7 +1311,7 @@ class PlateStrainObject(strainObject):
                 ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==0:
                     msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==1:
@@ -1067,9 +1323,9 @@ class PlateStrainObject(strainObject):
         ###
         return msg
 
-    def writeF06_Quad4_BilinearTransient(self,dt,eid,exxNodes):
+    def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
         msg = ''
-        k = exxNodes.keys()
+        k = self.exx[dt][eid].keys()
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
@@ -1087,7 +1343,7 @@ class PlateStrainObject(strainObject):
                 ([angle],isAllZeros) = self.writeF06Floats8p4F([angle])
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/4',fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
+                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==0:
                     msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy,angle,major,minor,evm.rstrip())
                 elif iLayer==1:
@@ -1099,9 +1355,10 @@ class PlateStrainObject(strainObject):
         ###
         return msg
 
-    def writeF06_Tri3(self,eid,exxNodes):
+    def writeF06_Tri3(self,eid):
         msg = ''
-        for nid in sorted(exxNodes):
+        k = self.exx[eid].keys()
+        for nid in sorted(k):
             for iLayer in range(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[eid][nid][iLayer]
@@ -1123,8 +1380,10 @@ class PlateStrainObject(strainObject):
         ###
         return msg
 
-    def writeF06_Tri3Transient(self,dt,eid,exxNodes):
+    def writeF06_Tri3Transient(self,dt,eid):
         msg = ''
+        exxNodes = self.exx[dt][eid]
+        k = exxNodes.keys()
         for nid in sorted(exxNodes):
             for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[dt][eid][nid][iLayer]
