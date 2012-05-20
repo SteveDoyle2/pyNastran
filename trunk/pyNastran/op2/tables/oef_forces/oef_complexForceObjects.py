@@ -50,7 +50,7 @@ class ComplexRodForce(scalarObject): # 1-ROD, 3-TUBE, 10-CONROD
     def __repr__(self):
         return str(self.axialForce)
 
-class ComplexCBEAMForce(scalarObject): # 2-CBEAM
+class ComplexCBeamForce(scalarObject): # 2-CBEAM
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         scalarObject.__init__(self,dataCode,iSubcase)
         #self.eType = {}

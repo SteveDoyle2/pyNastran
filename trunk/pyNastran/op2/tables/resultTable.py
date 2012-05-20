@@ -213,7 +213,11 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         nOld = self.op2.tell()
         #try:
         if not(exitFast):
+            #print self.printSection(100000)
             self.readMarkers([iTable,1,0],tableName)
+            #self.getMarker()
+            #self.getMarker()
+            #self.getMarker()
         #except InvalidMarkersError:
         #    self.goto(nOld)
             #print self.printBlock(self.data)
@@ -397,33 +401,14 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             ###
         ###
 
-    def OES_basicElementTest(self):
-        dt = self.nonlinearFactor
-        (format1,extract) = self.getOUG_FormatStart()
-        (nTotal,dataFormat) = self.obj.getLength()
-        dataFormat = format1+dataFormat
-        
-        n = 0
-        nEntries = len(self.data)//nTotal
-        for i in range(nEntries):
-            eData = self.data[n:n+nTotal]
-            out = unpack(dataFormat,eData)
-            eid = extract(out[0],dt)
-            self.obj.addNewEid(dt,eid,out[1:])
-            n+=nTotal
-        self.data = self.data[n: ]
-        #self.handleResultsBuffer(self.OES_basicElement)
-
-    def goTest(self):
-        self.handleResultsBuffer3(self.OES_basicElementTest)
-
     def handleResultsBuffer3(self,f,debug=False):
         """prototype method for getting results without recursion"""
         #stopBuffer = False
         i=0
+        #print self.codeInformation()
         while not(self.isBufferDone):
             #print "n=%s len(data)=%s" %(self.n,len(self.data))
-            sys.stdout.flush()
+            #sys.stdout.flush()
             f()
             nOld = self.n
             markers = self.readHeader()

@@ -5,7 +5,7 @@ class mpcForcesObject(TableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
@@ -30,7 +30,7 @@ class mpcForcesObject(TableObject):
             msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -122,9 +122,9 @@ class complexMpcForcesObject(complexTableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
         msg = header+['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                ' \n',
                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -154,7 +154,7 @@ class complexMpcForcesObject(complexTableObject):
             msg = ['']
         return (''.join(msg),pageNum)
 
-    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   M U L T I   P O I N T   C O N S T R A I N T\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',

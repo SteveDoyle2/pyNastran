@@ -80,7 +80,7 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         """
         EIGENVALUE =  6.158494E+07
             CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
@@ -228,7 +228,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
     def eigenvalues(self):
         return self.eigrs
 
-    def writeF06(self,header,pageStamp,pageNum=1):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         """
         EIGENVALUE =  6.158494E+07
                                            R E A L   E I G E N V E C T O R   N O .          1
@@ -352,7 +352,7 @@ class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
-    def writeF06(self,header,pageStamp,pageNum=1,f=None):
+    def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         #print self.dataCode
         for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):

@@ -268,63 +268,63 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         if self.elementType in [1,3,10]: # CROD,CTUBE,CONROD
             if self.numWide==numWideReal:
                 self.createTransientObject(self.rodForces,RealRodForce)
-                self.OEF_Rod()
+                self.handleResultsBuffer3(self.OEF_Rod)
                 #asdf
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.rodForces,ComplexRodForce)
-                self.OEF_Rod_alt()
+                self.handleResultsBuffer3(self.OEF_Rod_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [2]: # CBEAM
             if self.numWide==numWideReal:
-                self.createTransientObject(self.beamForces,RealCBEAMForce)
-                self.OEF_Beam()
+                self.createTransientObject(self.beamForces,RealCBeamForce)
+                self.handleResultsBuffer3(self.OEF_Beam)
             elif self.numWide==numWideImag:
-                self.createTransientObject(self.beamForces,ComplexCBEAMForce)
-                self.OEF_Beam_alt()
+                self.createTransientObject(self.beamForces,ComplexCBeamForce)
+                self.handleResultsBuffer3(self.OEF_Beam_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [4]: # CSHEAR
             if self.numWide==numWideReal:
                 self.createTransientObject(self.shearForces,RealCShearForce)
-                self.OEF_Shear()
+                self.handleResultsBuffer3(self.OEF_Shear)
                 #asf
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.shearForces,ComplexCShearForce)
-                self.OEF_Shear_alt()
+                self.handleResultsBuffer3(self.OEF_Shear_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [11,12,13,14]: # CELAS1,CELAS2,CELAS3,CELAS4
             if self.numWide==numWideReal: ## @todo is this correct or is DMAP wrong (CELAS1)???
                 self.createTransientObject(self.springForces,RealSpringForce)
-                self.OEF_Spring()
+                self.handleResultsBuffer3(self.OEF_Spring)
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.springForces,ComplexSpringForce)
-                self.OEF_Spring_alt()
+                self.handleResultsBuffer3(self.OEF_Spring_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [20,21,22,23]: # CDAMP1,CDAMP2,CDAMP3,CDAMP4
             if self.numWide==numWideReal:
                 self.createTransientObject(self.damperForces,RealDamperForce)
-                self.OEF_Spring() # same reader as for springs
+                self.handleResultsBuffer3(self.OEF_Spring) # same reader as for springs
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.damperForces,ComplexDamperForce)
-                self.OEF_Spring_alt()
+                self.handleResultsBuffer3(self.OEF_Spring_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [24]: # CVISC
             if self.numWide==numWideReal:
                 self.createTransientObject(self.viscForces,RealViscForce)
-                self.OEF_CVisc()
+                self.handleResultsBuffer3(self.OEF_CVisc)
                 #asdf
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.viscForces,ComplexViscForce)
-                self.OEF_CVisc_alt()
+                self.handleResultsBuffer3(self.OEF_CVisc_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
@@ -332,11 +332,11 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             if self.numWide==numWideReal:
                 #print self.codeInformation()
                 self.createTransientObject(self.plateForces,RealPlateForce)
-                self.OEF_Plate()
+                self.handleResultsBuffer3(self.OEF_Plate)
                 #sdaf
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.plateForces,ComplexPlateForce)
-                self.OEF_Plate_alt()
+                self.handleResultsBuffer3(self.OEF_Plate_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
@@ -351,7 +351,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         elif self.elementType in [35]: # CCONEAX
             if self.numWide==numWideReal:
                 self.createTransientObject(self.coneAxForces,RealConeAxForce)
-                self.OEF_ConeAx()
+                self.handleResultsBuffer3(self.OEF_ConeAx)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
@@ -359,103 +359,103 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             if self.numWide==numWideReal:
                 #print self.codeInformation()
                 self.createTransientObject(self.plateForces2,RealPLATE2Force)
-                self.OEF_Plate2()
+                self.handleResultsBuffer3(self.OEF_Plate2)
                 #asdf
             elif self.numWide==numWideImag:
                 #print self.codeInformation()
                 self.createTransientObject(self.plateForces2,ComplexPLATE2Force)
-                self.OEF_Plate2_alt()
+                self.handleResultsBuffer3(self.OEF_Plate2_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [34]: # CBAR
             if self.numWide==numWideReal:
                 self.createTransientObject(self.barForces,RealCBARForce)
-                self.OEF_CBar()
+                self.handleResultsBuffer3(self.OEF_CBar)
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.barForces,ComplexCBARForce)
-                self.OEF_CBar_alt()
+                self.handleResultsBuffer3(self.OEF_CBar_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [100]: # CBAR
             if self.numWide==numWideReal:
                 self.createTransientObject(self.bar100Forces,RealCBAR100Force)
-                self.OEF_CBar100()
+                self.handleResultsBuffer3(self.OEF_CBar100)
                 #asf
             elif self.numWide==numWideImag:
-                self.OEF_CBar100_alt()
+                self.handleResultsBuffer3(self.OEF_CBar100_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [38]: # CGAP
             if self.numWide==numWideReal:
                 self.createTransientObject(self.gapForces,RealCGAPForce)
-                self.OEF_CGap()
+                self.handleResultsBuffer3(self.OEF_CGap)
                 #asdf
             elif self.numWide==numWideImag:
-                self.OEF_CGap_alt()
+                self.handleResultsBuffer3(self.OEF_CGap_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [69]: # CBEND
             if self.numWide==numWideReal:
                 self.createTransientObject(self.bendForces,RealBendForce)
-                self.OEF_Bend()
+                self.handleResultsBuffer3(self.OEF_Bend)
                 #asdf
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.bendForces,ComplexBendForce)
-                self.OEF_Bend_alt()
+                self.handleResultsBuffer3(self.OEF_Bend_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [76,77,78]: # CHEXA_PR,PENTA_PR,CTETRA_PR
             if self.numWide==numWideReal:
                 self.createTransientObject(self.solidPressureForces,RealPentaPressureForce)
-                self.OEF_PentaPressure()
+                self.handleResultsBuffer3(self.OEF_PentaPressure)
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.solidPressureForces,ComplexPentaPressureForce)
-                self.OEF_PentaPressure_alt()
+                self.handleResultsBuffer3(self.OEF_PentaPressure_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
             if self.numWide==numWideReal:
-                self.OEF_CompositePlate()
+                self.handleResultsBuffer3(self.OEF_CompositePlate)
                 #asf
             elif self.numWide==numWideImag:
-                self.OEF_CompositePlate_alt()
+                self.handleResultsBuffer3(self.OEF_CompositePlate_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [102]: # CBUSH
             if self.numWide==numWideReal:
                 self.createTransientObject(self.bushForces,RealCBUSHForce)
-                self.OEF_CBush()
+                self.handleResultsBuffer3(self.OEF_CBush)
                 #asf
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.bushForces,ComplexCBUSHForce)
-                self.OEF_CBush_alt()
+                self.handleResultsBuffer3(self.OEF_CBush_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             if self.numWide==numWideReal:
                 self.createTransientObject(self.force_VU_2D,RealForce_VU_2D)
-                self.OEF_Force_VUTRIA()
+                self.handleResultsBuffer3(self.OEF_Force_VUTRIA)
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.force_VU_2D,ComplexForce_VU_2D)
-                self.OEF_Force_VUTRIA_alt()
+                self.handleResultsBuffer3(self.OEF_Force_VUTRIA_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
         elif self.elementType in [191]: # VUBEAM
             if self.numWide==numWideReal:
                 self.createTransientObject(self.force_VU,RealForce_VU)
-                self.OEF_Force_VU()
+                self.handleResultsBuffer3(self.OEF_Force_VU)
             elif self.numWide==numWideImag:
                 self.createTransientObject(self.force_VU,ComplexForce_VU)
-                self.OEF_Force_VU_alt()
+                self.handleResultsBuffer3(self.OEF_Force_VU_alt)
             else:
                 raise NotImplementedError(self.codeInformation())
             ###
