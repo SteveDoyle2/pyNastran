@@ -176,7 +176,7 @@ class RealCBeamForce(scalarObject): # 2-CBEAM
         return (''.join(msg),pageNum-1)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                       '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
@@ -390,7 +390,7 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                       ' \n',
@@ -500,7 +500,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                       ' \n',
@@ -1230,7 +1230,7 @@ class RealPentaPressureForce(scalarObject): # 77-PENTA_PR,78-TETRA_PR
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
                  ' \n',
                  '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
-        if self.dt is not None:
+        if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
         raise NotImplementedError()
 

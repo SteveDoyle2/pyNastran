@@ -1,5 +1,6 @@
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from numpy import argsort
 
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class OES_Object(scalarObject):
     def __init__(self,dataCode,iSubcase):
@@ -35,6 +36,47 @@ class OES_Object(scalarObject):
             return True
         #print 'isMaxShear = False'
         return False
+
+    def getOrderedETypes(self,validTypes):
+        """
+        @param validTypes list of valid element types
+               e.g. ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        
+        @retval TypesOut the ordered list of types
+        @retval orderedETypes dictionary of Type-IDs to write
+        """
+        orderedETypes = {}
+
+        #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
+        for eType in validTypes:
+            orderedETypes[eType] = []
+        for eid,eType in sorted(self.eType.items()):
+            #print "eType = ",eType
+            assert eType in validTypes,'unsupported eType=%s' %(eType)
+            orderedETypes[eType].append(eid)
+        ###
+        
+        minVals = []
+        for eType in validTypes:
+            vals = orderedETypes[eType]
+            #print "len(%s) = %s" %(eType,len(vals))
+            if len(vals)==0:
+                minVals.append(-1)
+            else:
+                minVals.append(min(vals))
+            
+        #print "minVals = ",minVals
+        argList = argsort(minVals)
+
+        TypesOut = []
+        for i in argList:
+            TypesOut.append(validTypes[i])
+        #print "validTypes = %s" %(validTypes)
+        #print "minVals    = %s" %(minVals)
+        #print "argList    = %s" %(argList)
+        #print "TypesOut   = %s" %(TypesOut)
+        #print "orderedETypes.keys = %s" %(orderedETypes.keys())
+        return (TypesOut,orderedETypes)
 
 class stressObject(OES_Object):
     def __init__(self,dataCode,iSubcase):

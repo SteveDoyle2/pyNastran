@@ -73,8 +73,8 @@ if __name__=='__main__':
     debug     = False
     makeGeom  = False
     writeBDF  = False
-    writeF06  = False
-    printResults = True
+    writeF06  = True
+    printResults = False
 
     deleteF06 = True
     saveCases = True

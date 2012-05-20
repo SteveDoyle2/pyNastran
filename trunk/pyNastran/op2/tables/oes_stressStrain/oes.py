@@ -17,9 +17,10 @@ from real.oes_compositePlates import CompositePlateStressObject,CompositePlateSt
 
 
 from complex.elementsStressStrain import ComplexElementsStressStrain
-from complex.oes_rods    import ComplexRodStressObject,  ComplexRodStrainObject
-from complex.oes_springs import ComplexCelasStressObject,ComplexCelasStrainObject
-from complex.oes_bars    import ComplexBarStressObject,  ComplexBarStrainObject
+from complex.oes_rods    import ComplexRodStressObject,   ComplexRodStrainObject
+from complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
+from complex.oes_bars    import ComplexBarStressObject,   ComplexBarStrainObject
+from complex.oes_plates  import ComplexPlateStressObject, ComplexPlateStrainObject
 
 
 from oes_nonlinear import NonlinearRodObject,NonlinearQuadObject,HyperelasticQuadObject
