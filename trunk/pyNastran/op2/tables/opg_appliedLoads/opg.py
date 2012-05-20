@@ -135,14 +135,9 @@ class OPG(object):
             #self.readOGS1_Data_table28()
             self.skipOES_Element() # skipping entire table
 
+        elif self.tableCode==35:  # OGS - Grid point stress discontinuities (plane strain)
+            self.skipOES_Element() # skipping entire table
         
-        #elif tfsCode==[28,1,0]:
-        #    self.readOPG_Data_format1_sort0()
-
-        # OGS - Grid point stress discontinuities (plane strain)
-        #elif tfsCode==[35,1,0]:
-        #    self.readOPG_Data_format1_sort0()
-
         # OFMPF2M - does this belong here?
         #elif tfsCode==[51,3,3]:
         #    self.readOPG_Data_format3_sort3()

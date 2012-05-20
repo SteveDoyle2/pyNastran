@@ -1,4 +1,6 @@
 from struct import pack
+from numpy import array,abs,angle
+
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
@@ -91,11 +93,18 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
             2003      G      0.0            0.0            0.0            0.0            0.0            0.0
         """
         msg = []
+        hasCycle = hasattr(self, 'modeCycle')
+
         for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %13E\n' %('EIGENVALUE',freq))
-            msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
+
+            if hasCycle:
+                msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
+            else:
+                msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
+
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID,displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
@@ -355,24 +364,44 @@ class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = []
         #print self.dataCode
+        hasCycle = hasattr(self, 'modeCycle')
         for i,(iMode,eigVals) in enumerate(sorted(self.translations.iteritems())):
             msg += header
             freq = self.eigrs[i]
             #freq = 0.0
             msg.append('%16s = %12E\n' %('EIGENVALUE',freq))
-            msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
+            if hasCycle:
+                msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %('CYCLES',self.modeCycle,iMode))
+            else:
+                msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' %(iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID,displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
                 gridType = self.gridTypes[nodeID]
-                (v1r,v2r,v3r,v1i,v2i,v3i) = displacement
-                (v4r,v5r,v6r,v4i,v5i,v6i) = rotation
-                
-                vals = [v1r,v2r,v3r,v1i,v2i,v3i,v4r,v5r,v6r,v4i,v5i,v6i]
+                (dx,dy,dz) = displacement
+                (rx,ry,rz) = rotation
+
+                if isMagPhase:
+                    dxr=abs(dx); dxi=angle(dx,deg=True)
+                    dyr=abs(dy); dyi=angle(dy,deg=True)
+                    dzr=abs(dz); dzi=angle(dz,deg=True)
+
+                    rxr=abs(rx); rxi=angle(rx,deg=True)
+                    ryr=abs(ry); ryi=angle(ry,deg=True)
+                    rzr=abs(rz); rzi=angle(rz,deg=True)
+                else:
+                    dxr=dx.real; dyr=dy.real; dzr=dz.real; 
+                    dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
+
+                    rxr=rx.real; ryr=ry.real; rzr=rz.real
+                    rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
+
+                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
                 (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                [v1r,v2r,v3r,v1i,v2i,v3i,v4r,v5r,v6r,v4i,v5i,v6i] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r.rstrip()))
-                msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          v1i,v2i,v3i,v4i,v5i,v6i.rstrip()))
+                [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
+
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
+                msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
             ###
             msg.append(pageStamp+str(pageNum)+'\n')
             if f is not None:

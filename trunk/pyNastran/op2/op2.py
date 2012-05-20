@@ -337,9 +337,9 @@ class OP2(BDF,  # BDF methods
                 #print "ints4 = ",ints
             #print ""
             #while marker != -1:
-            #    ints = self.readIntBlock()
-            #    marker = ints[0]
-            #    print "ints1 = ",ints
+                #ints = self.readIntBlock()
+                #marker = ints[0]
+                #print "ints1 = ",ints
             #print ""
             self.readMarkers([2])
 
