@@ -117,3 +117,13 @@ The list of modified cards include:
  * FREQ
  * FREQ1
  * FREQ2
+
+== When things go Wrong ==
+Try:
+{{{
+test_bdf.py -x fem.bdf > test.out
+}}}
+If it's still failing, you probably are have:
+  * an unsupported card in your deck
+  * the include files are too complicated (Nastran allows include files to be referenced from any previously referenced directory).  pyNastran only references from the base input file.  Stick all your include files in the same folder.
+  * you're missing cards
