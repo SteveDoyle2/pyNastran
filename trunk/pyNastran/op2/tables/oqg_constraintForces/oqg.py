@@ -114,8 +114,8 @@ class OQG(object):
 
     def readOQG_Data(self):
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        #self.skipOES_Element() # skipping entire table
-        #return
+        self.skipOES_Element() # skipping entire table
+        return
 
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1,8],self.codeInformation()
@@ -139,16 +139,18 @@ class OQG(object):
         magPhase = self.isMagnitudePhase()
         if magPhase or self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'spcForces'
                 self.createTransientObject(self.spcForces,complexSpcForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         elif self.numWide==8:  # real/random
-            #if self.thermal==0:
-            self.createTransientObject(self.spcForces,spcForcesObject) # real
-            #else:
-            #    raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            if self.thermal==0:
+                resultName = 'spcForces'
+                self.createTransientObject(self.spcForces,spcForcesObject) # real
+            else:
+                raise NotImplementedError(self.codeInformation())
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -161,16 +163,18 @@ class OQG(object):
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
+                resultName = 'mpcForces'
                 self.createTransientObject(self.mpcForces,mpcForcesObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'mpcForces'
                 self.createTransientObject(self.mpcForces,complexMpcForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###

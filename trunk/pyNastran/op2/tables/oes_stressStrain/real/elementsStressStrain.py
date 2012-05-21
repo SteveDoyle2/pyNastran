@@ -14,7 +14,7 @@ class RealElementsStressStrain(object):
         #print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
         #print self.codeInformation()
         #self.skipOES_Element2()
-        self.handleResultsBuffer3(self.dummyPass,debug=True)
+        self.handleResultsBuffer3(self.dummyPass,None,debug=True)
 
     def dummyPass(self):
         self.data = ''

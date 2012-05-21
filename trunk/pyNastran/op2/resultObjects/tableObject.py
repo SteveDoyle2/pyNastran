@@ -222,7 +222,7 @@ class TableObject(scalarObject):  # displacement style table
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
             vals = [dx,dy,dz,rx,ry,rz]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            (vals2,isAllZeros) = self.writeFloats13E(vals)
             if not isAllZeros:
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
@@ -250,7 +250,7 @@ class TableObject(scalarObject):  # displacement style table
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
                 vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                (vals2,isAllZeros) = self.writeFloats13E(vals)
                 if not isAllZeros:
                     [dx,dy,dz,rx,ry,rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
@@ -530,7 +530,7 @@ class complexTableObject(scalarObject):
             (rx,ry,rz) = rotation
 
             vals = [dx,dy,dz,rx,ry,rz]
-            (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals)
+            (vals2,isAllZeros) = self.writeImagFloats13E(vals)
             [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
@@ -565,7 +565,7 @@ class complexTableObject(scalarObject):
                 (rx,ry,rz) = rotation
                 
                 vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals,isMagPhase)
+                (vals2,isAllZeros) = self.writeImagFloats13E(vals,isMagPhase)
                 [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
                 if not isAllZeros:
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))

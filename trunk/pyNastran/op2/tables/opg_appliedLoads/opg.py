@@ -170,18 +170,21 @@ class OPG(object):
         #print "********\n",self.codeInformation()
         if self.numWide==8:  # real/random
             if self.thermal==0:
+                resultName = 'loadVectors'
                 self.createTransientObject(self.loadVectors,loadVectorObject) # real
             elif self.thermal==1:
+                resultName = 'thermalLoadVectors'
                 self.createTransientObject(self.thermalLoadVectors,thermalLoadVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'loadVectors'
                 self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -190,16 +193,18 @@ class OPG(object):
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
+                resultName = 'forceVectors'
                 self.createTransientObject(self.forceVectors,forceVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'forceVectors'
                 self.createTransientObject(self.forceVectors,complexForceVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -207,18 +212,19 @@ class OPG(object):
     def readOPG_Data_table19(self): # Applied Loads
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
+            resultName = 'appliedLoads'
             if self.thermal==0:
                 self.createTransientObject(self.appliedLoads,appliedLoadsObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            #self.handleResultsBuffer3(self.OUG_RealTable)
-            self.readOPGForces()
+            self.handleResultsBuffer3(self.readOPGForces,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 self.createTransientObject(self.appliedLoads,complexAppliedLoadsObject) # complex
+                raise NotImplementedError('can this use a OUG_Complex table???')
             else:
                 raise NotImplementedError(self.codeInformation())
-            #self.handleResultsBuffer3(self.OUG_ComplexTable)
+            #self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             raise NotImplementedError(self.codeInformation())
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
@@ -226,9 +232,10 @@ class OPG(object):
 
     def readOGS1_Data_table26(self): # OGS1 - grid point stresses - surface
         isSort1 = self.isSort1()
+        resultName = 'gridPointStresses'
         if self.numWide==11:  # real/random
             self.createTransientObject(self.gridPointStresses,gridPointStressesObject) # real
-            self.readOGS1_table26_numWide11()
+            self.handleResultsBuffer3(self.readOGS1_table26_numWide11,resultName)
         else:
             raise NotImplementedError('only numWide=11 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -249,14 +256,15 @@ class OPG(object):
 
             self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
         #print len(self.data)
-        self.handleResultsBuffer(self.readOGS1_table26_numWide11)
 
     def readOGS1_Data_table27(self): # OGS1 - grid point stresses - volume direct
         isSort1 = self.isSort1()
         #print self.codeInformation()
         if self.numWide==9:  # real/random
+            resultName = 'gridPointVolumeStresses'
             self.createTransientObject(self.gridPointVolumeStresses,gridPointStressesVolumeObject) # real
-            self.readOGS1_table27_numWide9()
+            self.handleResultsBuffer3(self.readOGS1_table27_numWide9,resultName)
+
         else:
             raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -275,7 +283,6 @@ class OPG(object):
 
             self.obj.add(dt,eKey,nx,ny,nz,txy,tyz,txz,pressure,ovm)
         #print len(self.data)
-        self.handleResultsBuffer(self.readOGS1_table27_numWide9)
 
 
     def readOPGForces(self): ## @todo needs some work...

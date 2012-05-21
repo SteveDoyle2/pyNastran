@@ -419,7 +419,7 @@ class SolidStressObject(stressObject):
                      [txz,tyz,ozz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
+                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeFloats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
                 msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,1],v[0,2],v[0,0],p,ovm.strip()))
                 msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,1],v[1,2],v[1,0]))
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,1],v[2,2],v[2,0]))
@@ -465,7 +465,7 @@ class SolidStressObject(stressObject):
                      [txz,tyz,ozz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
+                ([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm],isAllZeros) = self.writeFloats13E([oxx,oyy,ozz,txy,tyz,txz,o1,o2,o3,p,ovm])
                 msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,oxx,txy,o1,v[0,1],v[0,2],v[0,0],p,ovm.strip()))
                 msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', oyy,tyz,o2,v[1,1],v[1,2],v[1,0]))
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ozz,txz,o3,v[2,1],v[2,2],v[2,0]))
@@ -991,7 +991,7 @@ class SolidStrainObject(strainObject):
                      [exz,eyz,ezz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
+                ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeFloats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
                 msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,1],v[0,2],v[0,0],p,evm.strip()))
                 msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,1],v[1,2],v[1,0]))
                 msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0]))
@@ -1038,7 +1038,7 @@ class SolidStrainObject(strainObject):
                      [exz,eyz,ezz]]
                 (Lambda,v) = eigh(A) # a hermitian matrix is a symmetric-real matrix
 
-                ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeF06Floats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
+                ([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm],isAllZeros) = self.writeFloats13E([exx,eyy,ezz,exy,eyz,exz,e1,e2,e3,p,evm])
                 msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' %(nid,exx,exy,e1,v[0,1],v[0,2],v[0,0],p,evm.strip())
                 msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'             %('', eyy,eyz,e2,v[1,1],v[1,2],v[1,0])
                 msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'             %('', ezz,exz,e3,v[2,1],v[2,2],v[2,0])

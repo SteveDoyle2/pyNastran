@@ -1,4 +1,5 @@
 import sys
+import copy
 from datetime import date
 
 import pyNastran
@@ -119,9 +120,17 @@ class F06Writer(object):
     def writeF06(self,f06OutName,isMagPhase=False,makeFile=True):
         """
         Writes an F06 file based on the data we have stored in the object
-        @param self the object pointer
-        @param f06OutName the name of the F06 file to write
-        @param makeFile True->makes a file, False->makes a StringIO object for testing (default=True)
+        @param self
+               the object pointer
+        @param f06OutName
+               the name of the F06 file to write
+        @param isMagPhase
+               should complex data be written using 
+               Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
+               Real objects don't use this parameter.
+        @param makeFile
+               True  -> makes a file, 
+               False -> makes a StringIO object for testing (default=True)
         """
         if makeFile:
             f = open(f06OutName,'wb')
@@ -129,11 +138,12 @@ class F06Writer(object):
             import StringIO
             f = StringIO.StringIO()
 
-        f.write(self.makeF06Header())
+        #f.write(self.makeF06Header())
         pageStamp = self.makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
+        #isMagPhase = False
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
@@ -142,7 +152,9 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
+            print result.__class__.__name__
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
+            #(msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
             f.write(msg)
             pageNum +=1
         
@@ -151,16 +163,19 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
+            print result.__class__.__name__
+            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
+            #(msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
             f.write(msg)
             pageNum +=1
 
         # subcase name, subcase ID, transient word & value
-        header = ['     DEFAULT                                                                                                                        \n',
+        headerOld = ['     DEFAULT                                                                                                                        \n',
                   '\n',' \n']
-
+        header = copy.deepcopy(headerOld)
         resTypes = [
-                    self.displacements,self.scaledDisplacements,
+                    self.displacements,self.displacementsPSD,self.displacementsATO,self.displacementsRMS,
+                    self.scaledDisplacements, # ???
                     self.velocities,self.accelerations,self.eigenvectors,
                     self.temperatures,
                     self.loadVectors,self.thermalLoadVectors,
@@ -182,7 +197,7 @@ class F06Writer(object):
                     #self.shearStrain,self.shearStress,
                     
                     
-                    self.gridPointStresses,self.gridPointVolumeStresses,self.gridPointForces,
+                    self.gridPointStresses,self.gridPointVolumeStresses,#self.gridPointForces,
                     ]
 
         if 1:
@@ -194,12 +209,14 @@ class F06Writer(object):
                 #print "label = ",label
                 header[0] = '     %-127s\n' %(subtitle)
                 header[1] = '0    %-72s                                SUBCASE %-15i\n' %(label,iSubcase)
+                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
                 for resType in resTypes:
                     if resType.has_key(iSubcase):
+                        header = copy.deepcopy(headerOld) # fixes bug in case
                         result = resType[iSubcase]
                         try:
                             print result.__class__.__name__
-                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
+                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
@@ -211,7 +228,7 @@ class F06Writer(object):
         if 0:
             for res in resTypes:
                 for iSubcase,result in sorted(res.iteritems()):
-                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f)
+                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
                     f.write(msg)
                     pageNum +=1
                 ###

@@ -196,6 +196,9 @@ class OUG(object):
     def readOUG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #self.skipOES_Element()
+        #return
+
         #print self.dataCode
         #if self.thermal==2:
         #    self.skipOES_Element()
@@ -256,32 +259,41 @@ class OUG(object):
             if self.thermal==0:
                 #print self.dataCode
                 if self.tableName in ['OUGV1']:
+                    resultName = 'displacements'
                     self.createTransientObject(self.displacements,displacementObject) # real
                 elif self.tableName in ['OUGATO2']:
+                    resultName = 'displacementsATO'
                     self.createTransientObject(self.displacementsATO,displacementObject) # random
                 elif self.tableName in ['OUGCRM2']:
+                    resultName = 'displacementsCRM'
                     self.createTransientObject(self.displacementsCRM,displacementObject) # random
                 elif self.tableName in ['OUGPSD2']:
+                    resultName = 'displacementsPSD'
                     self.createTransientObject(self.displacementsPSD,displacementObject) # random
                 elif self.tableName in ['OUGRMS2']:
+                    resultName = 'displacementsRMS'
                     self.createTransientObject(self.displacementsRMS,displacementObject) # random
                 elif self.tableName in ['OUGNO2']:
+                    resultName = 'displacementsNO'
                     self.createTransientObject(self.displacementsNO,displacementObject) # random
                 else:
                     raise NotImplementedError('***table=%s***\n%s' %(self.tableName,self.codeInformation()))
             elif self.thermal==1:
+                resultName = 'temperatures'
                 self.createTransientObject(self.temperatures,temperatureObject)
             #elif self.thermal==8:
+                #resultName = 'scaledDisplacements'
                 #self.createTransientObject(self.scaledDisplacements,displacementObject)
             else:
                 raise NotImplementedError('***thermal=%s***\n%s' %(self.thermal,self.codeInformation()))
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'displacements'
                 self.createTransientObject(self.displacements,complexDisplacementObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -290,16 +302,18 @@ class OUG(object):
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
+                resultName = 'eigenvectors'
                 self.createTransientObject(self.eigenvectors,eigenVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'eigenvectors'
                 self.createTransientObject(self.eigenvectors,complexEigenVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -308,18 +322,21 @@ class OUG(object):
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
+                resultName = 'velocities'
                 self.createTransientObject(self.velocities,velocityObject) # real
             elif self.thermal==1:
+                resultName = 'velocities'
                 self.createTransientObject(self.velocities,thermalVelocityVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'velocities'
                 self.createTransientObject(self.velocities,complexVelocityObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
@@ -328,16 +345,18 @@ class OUG(object):
         isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
+                resultName = 'accelerations'
                 self.createTransientObject(self.accelerations,accelerationObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable)
+            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
+                resultName = 'accelerations'
                 self.createTransientObject(self.accelerations,complexAccelerationObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable)
+            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
         else:
             raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###

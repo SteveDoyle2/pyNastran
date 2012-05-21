@@ -147,7 +147,7 @@ class NonlinearQuadObject(stressObject):
                     es  = self.es[dt][eid][i]
                     eps = self.eps[dt][eid][i]
                     ecs = self.ecs[dt][eid][i]
-                    ([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy],isAllZeros) = self.writeF06Floats13E([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy])
+                    ([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy],isAllZeros) = self.writeFloats13E([oxx,oyy,ozz,txy,exx,eyy,es,eps,ecs,exx,eyy,ezz,exy])
                     if i==0:
                         msgT[eid].append(       '0 %9.3E %13s  %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' %(dt,fd,oxx,oyy,ozz,txy,es,eps,ecs))
                     else:

@@ -18,7 +18,7 @@ class mpcForcesObject(TableObject):
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
             vals = [dx,dy,dz,rx,ry,rz]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            (vals2,isAllZeros) = self.writeFloats13E(vals)
             if not isAllZeros:
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
@@ -45,7 +45,7 @@ class mpcForcesObject(TableObject):
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
                 vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                (vals2,isAllZeros) = self.writeFloats13E(vals)
                 if not isAllZeros:
                     [dx,dy,dz,rx,ry,rz] = vals2
                     msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
@@ -143,7 +143,7 @@ class complexMpcForcesObject(complexTableObject):
 
             #vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
             vals = list(translation)+list(rotation)
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            (vals2,isAllZeros) = self.writeFloats13E(vals)
             if not isAllZeros:
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
@@ -168,15 +168,10 @@ class complexMpcForcesObject(complexTableObject):
                 gridType = self.gridTypes[nodeID]
 
                 (dx,dy,dz) = translation
-                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
                 (rx,ry,rz) = rotation
-                rxr=rx.real; ryr=ry.real; rzr=rz.real
-                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
 
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeImagFloats13E(vals,isMagPhase)
                 if not isAllZeros:
                     [v1r,v2r,v3r,v4r,v5r,v6r,  v1i,v2i,v3i,v4i,v5i,v6i] = vals2
                     msg.append('0%13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r.rstrip()))
