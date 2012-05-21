@@ -29,10 +29,10 @@ Python 3.x *should* work, but hasn't really been tested.
  * [http://code.google.com/p/pythonxy/wiki/Welcome Python(x,y) ]
  * [http://scipy.org/ scipy 0.9.0  ]
  * [http://numpy.org/ numpy 1.6.1  ]
- * [http://www.vtk.org/VTK/resources/software.html vtk 5.8.0]
- * [http://wxpython.org/download.php#stable wxPython 2.8.12.0]
- * [http://matplotlib.sourceforge.net/ matplotlib 1.1.0] (version 0.5+)
- * [http://cython.org/ Cython 0.15.1]
+ * [http://www.vtk.org/VTK/resources/software.html vtk 5.8.0] (for the GUI)
+ * [http://wxpython.org/download.php#stable wxPython 2.8.12.0] (for the GUI)
+ * [http://matplotlib.sourceforge.net/ matplotlib 1.1.0] (version 0.5+, for plotting)
+ * [http://cython.org/ Cython 0.15.1] (for OP4 support)
 
 == Install Python C compiler & Cython==
  * Microsoft Visual Studio 2008 ([http://wiki.tiker.net/PyCuda/Installation/Windows follow this]).  The version of Visual Studio is important as Python is built against MSVC 2008.  Don't worry, it's free.
