@@ -22,17 +22,17 @@
 == Download Python ==
 The software has been tested with Python 2.7.
 
-I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.6 and 2.7 are both fine, but the code uses a few features that aren't available in Python 2.5.  If you cannot update your Python, you still can use the code if you modify it slightly.
+I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.6 and 2.7 are both fine, but the code uses a few features that aren't available in Python 2.5.  If youhttp://wxpython.org/ cannot update your Python, you still can use the code if you modify it slightly.
 
 Python 3.x *should* work, but hasn't really been tested.
 
  * [http://code.google.com/p/pythonxy/wiki/Welcome Python(x,y) ]
  * [http://scipy.org/ scipy 0.9.0  ]
  * [http://numpy.org/ numpy 1.6.1  ]
- * vtk 5.8.0
- * wxPython 2.8.12.0
+ * [http://www.vtk.org/VTK/resources/software.html vtk 5.8.0]
+ * [http://wxpython.org/download.php#stable wxPython 2.8.12.0]
  * [http://matplotlib.sourceforge.net/ matplotlib 1.1.0] (version 0.5+)
- * Cython 0.15.1
+ * [http://cython.org/ Cython 0.15.1]
 
 == Install Python C compiler & Cython==
  * Microsoft Visual Studio 2008 ([http://wiki.tiker.net/PyCuda/Installation/Windows follow this]).  The version of Visual Studio is important as Python is built against MSVC 2008.  Don't worry, it's free.
