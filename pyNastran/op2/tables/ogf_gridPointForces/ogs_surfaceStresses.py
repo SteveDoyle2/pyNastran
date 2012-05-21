@@ -137,7 +137,7 @@ class gridPointStressesObject(scalarObject):
                 (elemName) = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
                 vals = [nx,ny,txy,majorP,minorP,tmax,ovm]
-                (vals2,isAllZeros) = self.writeF06Floats10E(vals)
+                (vals2,isAllZeros) = self.writeFloats10E(vals)
                 [nx,ny,txy,majorP,minorP,tmax,ovm] = vals2
                 if eid==0:
                     eid = zero
@@ -171,7 +171,7 @@ class gridPointStressesObject(scalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1,f2,f3,m1,m2,m3]
-                    (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                    (vals2,isAllZeros) = self.writeFloats13E(vals)
                     [f1,f2,f3,m1,m2,m3] = vals2
                     if eid==0:
                         eid=''
@@ -329,7 +329,7 @@ class gridPointStressesVolumeObject(scalarObject):
                 #(elemName) = self.elemName[eKey][iLoad]
                 #eid = self.eids[eKey][iLoad]
                 vals = [nx,ny,nz,txy,tyz,txz,pressure,ovm]
-                (vals2,isAllZeros) = self.writeF06Floats10E(vals)
+                (vals2,isAllZeros) = self.writeFloats10E(vals)
                 [nx,ny,nz,txy,tyz,txz,pressure,ovm] = vals2
                 msg.append('%s%8s  %s %s %s   %s %s %s %s  %-s\n' %(zero,eKey,nx,ny,nz,txy,tyz,txz,pressure,ovm.rstrip()))
                 zero = ' '
@@ -361,7 +361,7 @@ class gridPointStressesVolumeObject(scalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1,f2,f3,m1,m2,m3]
-                    (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                    (vals2,isAllZeros) = self.writeFloats13E(vals)
                     [f1,f2,f3,m1,m2,m3] = vals2
                     if eid==0:
                         eid=''

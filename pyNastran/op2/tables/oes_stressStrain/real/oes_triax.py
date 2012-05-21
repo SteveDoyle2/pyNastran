@@ -164,7 +164,7 @@ class TriaxStressObject(stressObject):
                     Eid=eid
                 else:
                     Eid=''
-                ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,omax,oms,ovm])
+                ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,omax,oms,ovm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,omax,oms,ovm.rstrip()))
             ###
             msg.append('\n')
@@ -200,7 +200,7 @@ class TriaxStressObject(stressObject):
                         Eid=eid
                     else:
                         Eid=''
-                    ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,omax,oms,ovm])
+                    ([rad,azimuth,axial,shear,omax,oms,ovm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,omax,oms,ovm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,rad,azimuth,axial,shear,omax,oms,ovm.rstrip()))
                 ###
                 msg.append('\n')
@@ -351,7 +351,7 @@ class TriaxStrainObject(strainObject):
                     Eid=eid
                 else:
                     Eid=''
-                ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,emax,ems,evm])
+                ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,emax,ems,evm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,radial,azimuth,axial,shear,emax,ems,evm.rstrip()))
             ###
             msg.append('\n')
@@ -387,7 +387,7 @@ class TriaxStrainObject(strainObject):
                         Eid=eid
                     else:
                         Eid=''
-                    ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeF06Floats13E([rad,azimuth,axial,shear,emax,ems,evm])
+                    ([rad,azimuth,axial,shear,emax,ems,evm],isAllZeros) = self.writeFloats13E([rad,azimuth,axial,shear,emax,ems,evm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' %(Eid,nid,rad,azimuth,axial,shear,emax,ems,evm.rstrip()))
                 ###
                 msg.append('\n')

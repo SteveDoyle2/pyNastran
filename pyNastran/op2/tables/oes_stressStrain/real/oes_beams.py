@@ -177,7 +177,7 @@ class BeamStressObject(stressObject):
                 sMin = self.smin[eid][i]
                 SMt  = self.MS_tension[eid][i]
                 SMc  = self.MS_compression[eid][i]
-                (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                (vals2,isAllZeros) = self.writeFloats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
                 (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
         ###
@@ -208,7 +208,7 @@ class BeamStressObject(stressObject):
                     sMin = self.smin[dt][eid][i]
                     SMt  = self.MS_tension[dt][eid][i]
                     SMc  = self.MS_compression[dt][eid][i]
-                    (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                    (vals2,isAllZeros) = self.writeFloats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
                     (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
             ###
@@ -452,7 +452,7 @@ class BeamStrainObject(strainObject):
                 sMin = self.smin[eid][i]
                 SMt  = self.MS_tension[eid][i]
                 SMc  = self.MS_compression[eid][i]
-                (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                (vals2,isAllZeros) = self.writeFloats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
                 (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
         ###
@@ -482,7 +482,7 @@ class BeamStrainObject(strainObject):
                     sMin = self.smin[dt][eid][i]
                     SMt  = self.MS_tension[dt][eid][i]
                     SMc  = self.MS_compression[dt][eid][i]
-                    (vals2,isAllZeros) = self.writeF06Floats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
+                    (vals2,isAllZeros) = self.writeFloats13E([sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc])
                     (sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' %(nid,xxb,sxc,sxd,sxe,sxf,sMax,sMin,SMt,SMc.strip()))
             ###

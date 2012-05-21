@@ -137,7 +137,7 @@ class ComplexRodStressObject(stressObject):
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
-            (vals2,isAllZeros) = self.writeF06FloatsImag13E([axial,torsion])
+            (vals2,isAllZeros) = self.writeFloatsImag13E([axial,torsion])
             (axial,torsion) = vals2
             out.append([eid,axial,torsion])
         
@@ -171,7 +171,7 @@ class ComplexRodStressObject(stressObject):
                 axial   = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
 
-                (vals2,isAllZeros) = self.writeF06FloatsImag13E([axial,torsion])
+                (vals2,isAllZeros) = self.writeFloatsImag13E([axial,torsion])
                 (axial,torsion) = vals2
                 out.append([eid,axial,MSa,torsion,MSt])
 
@@ -343,7 +343,7 @@ class ComplexRodStrainObject(strainObject):
         for eid in sorted(self.axial):
             axial   = self.axial[eid]
             torsion = self.torsion[eid]
-            (vals2,isAllZeros) = self.writeF06FloatsImag13E([axial,torsion])
+            (vals2,isAllZeros) = self.writeFloatsImag13E([axial,torsion])
             (axial,torsion) = vals2
             out.append([eid,axial,torsion])
         

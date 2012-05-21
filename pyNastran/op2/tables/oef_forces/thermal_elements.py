@@ -10,25 +10,33 @@ class ThermalElements(object):
         #print "self.elementType = ",self.elementType
         if self.elementType in [107,108,109]: # CHBDYE, CHBDYG, CHBDYP
             assert self.numWide==8,self.codeInformation()
+            self.createTransientObject(self.thermalLoad_CHBDY,HeatFlux_CHBDYx)
             self.OEF_CHBDYx()
         elif self.elementType in [33,39,67,68]: # QUAD4,TETRA,HEXA,PENTA
             assert self.numWide in [9,10],self.codeInformation()
+            self.createTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D)
             self.OEF_2D_3D()
         elif self.elementType in [53,64,74,75]: # TRIAX6,QUAD8,TRIA3,TRIA6
             assert self.numWide==9,self.codeInformation()
+            self.createTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D)
             self.OEF_2D_3D()
         elif self.elementType in [1,2,3,10,34,69]: # ROD,BEAM,TUBE,CONROD,BAR,BEND
             assert self.numWide==9,self.codeInformation()
+            self.createTransientObject(self.thermalLoad_1D,HeatFlux_1D)
             self.OEF_1D()
         elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             #assert self.numWide==27,self.codeInformation()
+            self.createTransientObject(self.thermalLoad_VU,HeatFlux_VU)
             self.OEF_VU_Element()
         elif self.elementType in [191]: # VUBEAM
             #assert self.numWide==27,self.codeInformation()
+            self.createTransientObject(self.thermalLoad_VUBeam,HeatFlux_VUBEAM)
             self.OEF_VUBeam_Element()
         elif self.elementType in [145,146,147]: # VUHEXA,VUPENTA,VUTETRA
+            self.createTransientObject(self.thermalLoad_VU_3D,HeatFlux_VU_3D)
             self.OEF_VU_3D_Element()
         elif self.elementType in [110]:
+            self.createTransientObject(self.thermalLoad_CONV,HeatFlux_CONV)
             self.OEF_CONV()
         else:
             #print self.codeInformation()
@@ -52,8 +60,6 @@ class ThermalElements(object):
             format1 = 'fccccccccfffff' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
-
-        self.createTransientObject(self.thermalLoad_CHBDY,HeatFlux_CHBDYx)
 
         while len(self.data)>=32: # 8*4
             eData     = self.data[0:32]
@@ -94,8 +100,6 @@ class ThermalElements(object):
             format1 = 'ffif' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
-
-        self.createTransientObject(self.thermalLoad_CONV,HeatFlux_CONV)
 
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
@@ -142,7 +146,6 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createTransientObject(self.thermalLoad_VU,HeatFlux_VU)
 
         n = 24+28*nNodes
         while len(self.data)>=n:
@@ -202,7 +205,6 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createTransientObject(self.thermalLoad_VUBeam,HeatFlux_VUBEAM)
 
         n = 16+28*nNodes
         while len(self.data)>=n:
@@ -266,7 +268,6 @@ class ThermalElements(object):
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
-        self.createTransientObject(self.thermalLoad_VU_3D,HeatFlux_VU_3D)
 
         n = 8+28*nNodes
         while len(self.data)>=n:
@@ -314,7 +315,6 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
-        self.createTransientObject(self.thermalLoad_1D,HeatFlux_1D)
 
         n = 36
         while len(self.data)>=n: # 10*4
@@ -373,7 +373,6 @@ class ThermalElements(object):
         else:
             raise NotImplementedError(self.codeInformation())
         ###
-        self.createTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D)
 
         #n = 36
         while len(self.data)>=n: # 10*4

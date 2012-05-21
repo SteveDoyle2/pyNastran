@@ -43,7 +43,7 @@ class RealEigenvalues(baseScalarObject):
             freq  = self.cycles[iMode]
             mass  = self.generalizedMass[iMode]
             stiff = self.generalizedStiffness[iMode]
-            ([eigen,omega,freq,mass,stiff],isAllZeros) = self.writeF06Floats13E([eigen,omega,freq,mass,stiff])
+            ([eigen,omega,freq,mass,stiff],isAllZeros) = self.writeFloats13E([eigen,omega,freq,mass,stiff])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n'%(iMode,order,eigen,omega,freq,mass,stiff))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
@@ -94,7 +94,7 @@ class ComplexEigenvalues(baseScalarObject):
             eigen = self.eigenvalues[iMode]
             freq  = self.cycles[iMode]
             damping  = self.damping[iMode]
-            ([eigen,omega,freq,mass,stiff],isAllZeros) = self.writeF06Floats13E([eigen,omega,freq,mass,stiff])
+            ([eigen,omega,freq,mass,stiff],isAllZeros) = self.writeFloats13E([eigen,omega,freq,mass,stiff])
             msg.append(' %8s  %8s       %13s       %13s       %13s       %13s       %13s\n'%(iMode,order,eigen,omega,freq,mass,stiff))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')

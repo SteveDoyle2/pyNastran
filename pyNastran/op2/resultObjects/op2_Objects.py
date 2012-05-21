@@ -18,7 +18,7 @@ class baseScalarObject(Op2Codes):
         return (''.join(msg),pageNum)
         #raise NotImplementedError(msg)
 
-    def writeF06Floats10E(self,vals):
+    def writeFloats10E(self,vals):
         vals2 = []
         isAllZeros = True
         for v in vals:
@@ -30,7 +30,7 @@ class baseScalarObject(Op2Codes):
             vals2.append(v2)
         return (vals2,isAllZeros)
 
-    def writeF06Floats12E(self,vals):
+    def writeFloats12E(self,vals):
         vals2 = []
         isAllZeros = True
         for v in vals:
@@ -42,7 +42,7 @@ class baseScalarObject(Op2Codes):
             vals2.append(v2)
         return (vals2,isAllZeros)
 
-    def writeF06Floats13E(self,vals):
+    def writeFloats13E(self,vals):
         vals2 = []
         isAllZeros = True
         for v in vals:
@@ -54,7 +54,7 @@ class baseScalarObject(Op2Codes):
             vals2.append(v2)
         return (vals2,isAllZeros)
 
-    def writeF06ImagFloats13E(self,vals,isMagPhase):
+    def writeImagFloats13E(self,vals,isMagPhase):
         vals2 = []
         isAllZeros = True
         
@@ -92,7 +92,7 @@ class baseScalarObject(Op2Codes):
                 vals2.append(v3)
         return (vals2,isAllZeros)
 
-    def writeF06Floats8p4F(self,vals):
+    def writeFloats8p4F(self,vals):
         vals2 = []
         isAllZeros = True
         for v in vals:

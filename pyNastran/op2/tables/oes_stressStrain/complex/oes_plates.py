@@ -94,7 +94,7 @@ class ComplexPlateStressObject(stressObject):
         raise NotImplementedError('transient results not supported')
 
     def deleteTransient(self,dt):
-        del self.fiberCurvature[dt]
+        #del self.fiberCurvature[dt]
         del self.oxx[dt]
         del self.oyy[dt]
         del self.txy[dt]
@@ -109,7 +109,7 @@ class ComplexPlateStressObject(stressObject):
         initializes the transient variables
         """
         self.dt = dt
-        self.fiberCurvature[dt] = {}
+        #self.fiberCurvature[dt] = {}
         self.oxx[dt]      = {}
         self.oyy[dt]      = {}
         self.txy[dt]      = {}
@@ -141,7 +141,7 @@ class ComplexPlateStressObject(stressObject):
 
         if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
            nid = nodeID
-           #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid])))
+           #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid])))
            self.deleteTransient(dt)
            self.addNewTransient(dt)
         
@@ -149,7 +149,7 @@ class ComplexPlateStressObject(stressObject):
         self.eType[eid] = eType
         if dt not in self.oxx:
             self.addNewTransient(dt)
-        self.fiberCurvature[dt][eid] = {nodeID: [fd]}
+        self.fiberCurvature[eid] = {nodeID: [fd]}
         self.oxx[dt][eid]      = {nodeID: [oxx]}
         self.oyy[dt][eid]      = {nodeID: [oyy]}
         self.txy[dt][eid]      = {nodeID: [txy]}
@@ -176,7 +176,7 @@ class ComplexPlateStressObject(stressObject):
         #print self.oxx
         #print self.fiberCurvatrure
         assert eid is not None
-        self.fiberCurvature[dt][eid][nodeID].append(fd)
+        self.fiberCurvature[eid][nodeID].append(fd)
         self.oxx[dt][eid][nodeID].append(oxx)
         self.oyy[dt][eid][nodeID].append(oyy)
         self.txy[dt][eid][nodeID].append(txy)
@@ -202,7 +202,7 @@ class ComplexPlateStressObject(stressObject):
         msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(eid,nodeID,fd,oxx,oyy,txy)
         #print msg
         #assert nodeID not in self.oxx[dt][eid]
-        self.fiberCurvature[dt][eid][nodeID] = [fd]
+        self.fiberCurvature[eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID]    = [oxx]
         self.oyy[dt][eid][nodeID]    = [oyy]
         self.txy[dt][eid][nodeID]    = [txy]
@@ -235,7 +235,7 @@ class ComplexPlateStressObject(stressObject):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
                     for iLayer in range(len(self.oxx[dt][eid][nid])):
-                        fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                        fd    = self.fiberCurvature[eid][nid][iLayer]
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
                         oyy   = self.oyy[   dt][eid][nid][iLayer]
                         txy   = self.txy[   dt][eid][nid][iLayer]
@@ -260,8 +260,9 @@ class ComplexPlateStressObject(stressObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        assert f is not None
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNum)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 
         #if self.isVonMises():
         #    vonMises = 'VON MISES'
@@ -290,14 +291,11 @@ class ComplexPlateStressObject(stressObject):
         quad8Msg = None
         quadrMsg = None
 
-
-
         quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )']+formWord+quadMsgTemp
         quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )']+formWord+quadMsgTemp
         quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )']+formWord+quadMsgTemp
 
         eTypes = self.eType.values()
-
         msgPacks = {'CTRIA3':triMsg,
                     'CTRIA6':tri6Msg,
                     'CTRIAR':trirMsg,
@@ -533,7 +531,7 @@ class ComplexPlateStressObject(stressObject):
                 oyy   = self.oyy[eid][nid][iLayer]
                 txy   = self.txy[eid][nid][iLayer]
                 ([fd, oxxr,oyyr,txyr,
-                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
@@ -555,12 +553,12 @@ class ComplexPlateStressObject(stressObject):
         k.pop(-1)
         for nid in ['C']+k:
             for iLayer in range(len(self.oxx[dt][eid][nid])):
-                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr,oyyr,txyr,
-                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
@@ -585,7 +583,7 @@ class ComplexPlateStressObject(stressObject):
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
                 txy   = self.txy[eid][nid][iLayer]
-                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
+                ([fd,oxx,oyy,txy],isAllZeros) = self.writeFloats13E([fd,oxx,oyy,txy])
 
                 if iLayer==0:
                     msg += '0G  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy)
@@ -601,12 +599,12 @@ class ComplexPlateStressObject(stressObject):
         oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
             for iLayer in range(len(self.oxx[dt][eid][nid])):
-                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr,oyyr,txyr,
-                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
 
                 if iLayer==0:
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %(eid,fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi)
@@ -753,7 +751,7 @@ class ComplexPlateStrainObject(strainObject):
         raise NotImplementedError('transient results not supported')
 
     def deleteTransient(self,dt):
-        del self.fiberCurvature[dt]
+        #del self.fiberCurvature[dt]
         del self.exx[dt]
         del self.eyy[dt]
         del self.exy[dt]
@@ -767,7 +765,7 @@ class ComplexPlateStrainObject(strainObject):
         """
         initializes the transient variables
         """
-        self.fiberCurvature[dt] = {}
+        #self.fiberCurvature[dt] = {}
         self.exx[dt]    = {}
         self.eyy[dt]    = {}
         self.exy[dt]    = {}
@@ -802,12 +800,12 @@ class ComplexPlateStrainObject(strainObject):
             self.addNewTransient(dt)
         #if eid in self.exx[dt]:  # SOL200, erase the old result
             #nid = nodeID
-            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[dt][eid][nid]),str(self.oxx[dt][eid][nid]))
+            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]))
             #self.deleteTransient(dt)
             #self.addNewTransient()
         
         self.eType[eid] = eType
-        self.fiberCurvature[dt][eid] = {nodeID: [curvature]}
+        self.fiberCurvature[eid] = {nodeID: [curvature]}
         self.exx[dt][eid]    = {nodeID: [exx]}
         self.eyy[dt][eid]    = {nodeID: [eyy]}
         self.exy[dt][eid]    = {nodeID: [exy]}
@@ -837,7 +835,7 @@ class ComplexPlateStrainObject(strainObject):
         if nodeID is not 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
 
-        self.fiberCurvature[dt][eid][nodeID].append(curvature)
+        self.fiberCurvature[eid][nodeID].append(curvature)
         self.exx[dt][eid][nodeID].append(exx)
         self.eyy[dt][eid][nodeID].append(eyy)
         self.exy[dt][eid][nodeID].append(exy)
@@ -869,6 +867,7 @@ class ComplexPlateStrainObject(strainObject):
         return headers
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        assert f is not None
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
 
@@ -1130,7 +1129,7 @@ class ComplexPlateStrainObject(strainObject):
                 eyy   = self.eyy[eid][nid][iLayer]
                 exy   = self.exy[eid][nid][iLayer]
                 ([fd, exxr,eyyr,exyr,
-                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeImagFloats13E([fd,exx,eyy,exy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
@@ -1152,12 +1151,12 @@ class ComplexPlateStrainObject(strainObject):
         k.pop(-1)
         for nid in ['C']+k:
             for iLayer in range(len(self.exx[dt][eid][nid])):
-                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
                 exy   = self.exy[dt][eid][nid][iLayer]
                 ([fd, exxr,eyyr,exyr,
-                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeImagFloats13E([fd,exx,eyy,exy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
                     msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
@@ -1183,7 +1182,7 @@ class ComplexPlateStrainObject(strainObject):
                 exy   = self.exy[eid][nid][iLayer]
 
                 ([fd, exxr,eyyr,exyr,
-                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeImagFloats13E([fd,exx,eyy,exy],isMagPhase)
                 if iLayer==0:
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %(eid,fd,exxr,exxi,eyyr,eyyi,exyr,exyi)
                 else:
@@ -1199,13 +1198,13 @@ class ComplexPlateStrainObject(strainObject):
         k = exxNodes.keys()
         for nid in sorted(exxNodes):
             for iLayer in range(len(self.exx[dt][eid][nid])):
-                fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
                 exy   = self.exy[dt][eid][nid][iLayer]
 
                 ([fd, exxr,eyyr,exyr,
-                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeImagFloats13E([fd,exx,eyy,exy],isMagPhase)
                 if iLayer==0:
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %(eid,fd,exxr,exxi,eyyr,eyyi,exyr,exyi)
                 else:
@@ -1267,7 +1266,7 @@ class ComplexPlateStrainObject(strainObject):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
                     for iLayer in range(len(self.exx[dt][eid][nid])):
-                        fd    = self.fiberCurvature[dt][eid][nid][iLayer]
+                        fd    = self.fiberCurvature[eid][nid][iLayer]
                         exx   = self.exx[   dt][eid][nid][iLayer]
                         eyy   = self.eyy[   dt][eid][nid][iLayer]
                         exy   = self.exy[   dt][eid][nid][iLayer]

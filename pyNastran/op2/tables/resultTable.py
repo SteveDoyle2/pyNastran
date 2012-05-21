@@ -401,8 +401,11 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             ###
         ###
 
-    def handleResultsBuffer3(self,f,debug=False):
+    def handleResultsBuffer3(self,f,resultName,debug=False):
         """prototype method for getting results without recursion"""
+        #if resultName not in self.allowedResultNames:
+        #    return self.self.skipOES_Element()
+
         #stopBuffer = False
         i=0
         #print self.codeInformation()

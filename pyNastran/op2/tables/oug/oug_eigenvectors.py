@@ -113,7 +113,7 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
                 (rx,ry,rz) = rotation
                 
                 vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                (vals2,isAllZeros) = self.writeFloats13E(vals)
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
             ###
@@ -262,7 +262,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
                 (rx,ry,rz) = rotation
                 
                 vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                (vals2,isAllZeros) = self.writeFloats13E(vals)
                 [dx,dy,dz,rx,ry,rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
             ###
@@ -381,23 +381,8 @@ class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0
                 (dx,dy,dz) = displacement
                 (rx,ry,rz) = rotation
 
-                if isMagPhase:
-                    dxr=abs(dx); dxi=angle(dx,deg=True)
-                    dyr=abs(dy); dyi=angle(dy,deg=True)
-                    dzr=abs(dz); dzi=angle(dz,deg=True)
-
-                    rxr=abs(rx); rxi=angle(rx,deg=True)
-                    ryr=abs(ry); ryi=angle(ry,deg=True)
-                    rzr=abs(rz); rzi=angle(rz,deg=True)
-                else:
-                    dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                    dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-                    rxr=rx.real; ryr=ry.real; rzr=rz.real
-                    rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeImagFloats13E(vals,isMagPhase)
                 [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
 
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
