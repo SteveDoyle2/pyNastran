@@ -3,7 +3,7 @@
 
 = Introduction =
  * pyNastran v0.4 is a very easy package to install once you have the required Python modules.  It's a pure Python package so no one should really be having too many problems.
- * The OP4 reader is a bit harder to get working, but is an optional package that requires building of C code in addition to requiring Cython.  Assuming you can build a sample Cython project, it'll work.
+ * The OP4 reader is a bit harder to get working, but is an optional package that requires building of C code in addition to requiring Cython.  Assuming you can build one of the sample Cython examples, it'll work.
 
 = User Overview = 
  * Install Python 2.6 or 2.7
