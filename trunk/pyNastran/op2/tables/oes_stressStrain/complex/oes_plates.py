@@ -361,8 +361,12 @@ class ComplexPlateStressObject(stressObject):
             magReal = ['                                                          (REAL/IMAGINARY)\n \n']
 
         if self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+            gridMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                            '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+            fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                            '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+
+
         else:
             pass
 
@@ -379,9 +383,11 @@ class ComplexPlateStressObject(stressObject):
             #triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
             #              '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' %(vonMises)]
 
-        quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )']+magReal+quadMsgTemp
-        quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )']+magReal+quadMsgTemp
-        quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )']+magReal+quadMsgTemp
+
+
+        #quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )']+magReal+fiberMsgTemp
+        #quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )']+magReal+fiberMsgTemp
+        #quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )']+magReal+fiberMsgTemp
 
 
         triMsg   = None
@@ -402,32 +408,25 @@ class ComplexPlateStressObject(stressObject):
             #print "qkey=%s kkey=%s" %(qkey,kkey)
             ekey = self.oxx[dt][kkey].keys()
             isBilinear=True
-            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+magReal+quadMsgTemp
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+magReal+gridMsgTemp
             if len(ekey)==1:
                 isBilinear=False
-                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+magReal+quadMsgTemp
+                quadMsg = header+['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+magReal+fiberMsgTemp
 
         if 'CQUAD8' in eTypes:
-            quad8Msg = header+['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+magReal+quadMsgTemp
+            quad8Msg = header+['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+magReal+gridMsgTemp
 
         if 'CQUADR' in eTypes:
-            qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
-            isBilinear=True
-            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+magReal+quadMsgTemp
-            if len(ekey)==1:
-                isBilinear=False
-                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+magReal+quadMsgTemp
+            quadrMsg = header+['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+magReal+gridMsgTemp
 
         if 'CTRIA3' in eTypes:
-            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+magReal+quadMsgTemp
+            triMsg   = header+['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+magReal+fiberMsgTemp
 
         if 'CTRIA6' in eTypes:
-            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+magReal+quadMsgTemp
+            tri6Msg  = header+['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+magReal+gridMsgTemp
 
         if 'CTRIAR' in eTypes:
-            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+magReal+triMsgTemp
+            trirMsg  = header+['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+magReal+gridMsgTemp
 
         msgPacks = {'CTRIA3':triMsg,
                     'CTRIA6':tri6Msg,
@@ -456,50 +455,73 @@ class ComplexPlateStressObject(stressObject):
                             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                             msg += header+msgPack
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt,eid,4)
+                                out = self.writeF06_Quad4_BilinearTransient(dt,eid,4,isMagPhase)
                                 msg.append(out)
+                            msg.append(pageStamp+str(pageNum)+'\n')
+                            pageNum+=1
+                            if f is not None:
+                                f.write(''.join(msg))
+                                msg = ['']
                     else:
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                             msg += header+msgPack
                             for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt,eid)
+                                out = self.writeF06_Tri3Transient(dt,eid,isMagPhase)
                                 msg.append(out)
+                            msg.append(pageStamp+str(pageNum)+'\n')
+                            pageNum+=1
+                            if f is not None:
+                                f.write(''.join(msg))
+                                msg = ['']
                     ###
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         msg += header+msgPack
                         for eid in eids:
-                            out = self.writeF06_Tri3Transient(dt,eid)
+                            out = self.writeF06_Tri3Transient(dt,eid,isMagPhase)
                             msg.append(out)
+                        msg.append(pageStamp+str(pageNum)+'\n')
+                        pageNum+=1
+                        if f is not None:
+                            f.write(''.join(msg))
+                            msg = ['']
                 elif eType in ['CTRIA6','CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         msg += header+msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,3)
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,3,isMagPhase)
                             msg.append(out)
+                        msg.append(pageStamp+str(pageNum)+'\n')
+                        pageNum+=1
+                        if f is not None:
+                            f.write(''.join(msg))
+                            msg = ['']
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         msg += header+msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,8)
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,8,isMagPhase)
                             msg.append(out)
+                        msg.append(pageStamp+str(pageNum)+'\n')
+                        pageNum+=1
+                        if f is not None:
+                            f.write(''.join(msg))
+                            msg = ['']
                 else:
                     raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
                 ###
-                msg.append(pageStamp+str(pageNum)+'\n')
                 if f is not None:
                     f.write(''.join(msg))
                     msg = ['']
-                pageNum+=1
             ### eids
         ### all eTypes
         return (''.join(msg),pageNum-1)
 
-    def writeF06_Quad4_Bilinear(self,eid,n):
+    def writeF06_Quad4_Bilinear(self,eid,n,isMagPhase):
         msg = ''
         k = self.oxx[eid].keys()
         k.sort()
@@ -510,14 +532,15 @@ class ComplexPlateStressObject(stressObject):
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
                 txy   = self.txy[eid][nid][iLayer]
-                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
+                ([fd, oxxr,oyyr,txyr,
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,oxx,oyy,txy)
+                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,oxx,oyy,txy)
+                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %('',nid,           fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy)
+                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' %('','',          fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -525,7 +548,7 @@ class ComplexPlateStressObject(stressObject):
         ###
         return msg
 
-    def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
+    def writeF06_Quad4_BilinearTransient(self,dt,eid,n,isMagPhase):
         msg = ''
         k = self.oxx[dt][eid].keys()
         k.sort()
@@ -537,14 +560,14 @@ class ComplexPlateStressObject(stressObject):
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr,oyyr,txyr,
-                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy])
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /  %-s\n' %(eid,'CEN/'+str(n),fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.strip())
+                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /  %-s\n' %('',nid,           fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.strip())
+                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %('',nid,           fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /  %-s\n\n' %('','',          fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.strip())
+                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' %('','',          fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi.rstrip())
                 else:
                     #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy)
                     raise Exception('Invalid option for cquad4')
@@ -553,7 +576,7 @@ class ComplexPlateStressObject(stressObject):
         ###
         return msg
 
-    def writeF06_Tri3(self,eid):
+    def writeF06_Tri3(self,eid,isMagPhase):
         msg = ''
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
@@ -565,15 +588,15 @@ class ComplexPlateStressObject(stressObject):
                 ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
 
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy)
+                    msg += '0G  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,oxx,oyy,txy)
+                    msg += ' H  %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,oxx,oyy,txy)
                 ###
             ###
         ###
         return msg
 
-    def writeF06_Tri3Transient(self,dt,eid):
+    def writeF06_Tri3Transient(self,dt,eid,isMagPhase):
         msg = ''
         oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
@@ -582,12 +605,13 @@ class ComplexPlateStressObject(stressObject):
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
                 txy   = self.txy[dt][eid][nid][iLayer]
-                ([fd,oxx,oyy,txy],isAllZeros) = self.writeF06Floats13E([fd,oxx,oyy,txy])
+                ([fd, oxxr,oyyr,txyr,
+                  fdi,oxxi,oyyi,txyi],isAllZeros) = self.writeF06ImagFloats13E([fd,oxx,oyy,txy],isMagPhase)
 
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy)
+                    msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %(eid,fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('',  fd,oxx,oyy,txy)
+                    msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %('', fd,oxxr,oxxi,oyyr,oyyi,txyr,txyi)
                 ###
             ###
         ###
@@ -1036,41 +1060,56 @@ class ComplexPlateStrainObject(strainObject):
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt,eid,4)
+                                out = self.writeF06_Quad4_BilinearTransient(dt,eid,4,isMagPhase)
                                 msg.append(out)
                             msg.append(pageStamp+str(pageNum)+'\n')
+                            if f is not None:
+                                f.write(''.join(msg))
+                                msg = ['']
                             pageNum+=1
                     else:
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                             for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt,eid)
+                                out = self.writeF06_Tri3Transient(dt,eid,isMagPhase)
                                 msg.append(out)
                             msg.append(pageStamp+str(pageNum)+'\n')
+                            if f is not None:
+                                f.write(''.join(msg))
+                                msg = ['']
                             pageNum+=1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         for eid in eids:
-                            out = self.writeF06_Tri3Transient(dt,eid)
+                            out = self.writeF06_Tri3Transient(dt,eid,isMagPhase)
                             msg.append(out)
                         msg.append(pageStamp+str(pageNum)+'\n')
+                        if f is not None:
+                            f.write(''.join(msg))
+                            msg = ['']
                         pageNum+=1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,5)
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,5,isMagPhase)
                             msg.append(out)
                         msg.append(pageStamp+str(pageNum)+'\n')
+                        if f is not None:
+                            f.write(''.join(msg))
+                            msg = ['']
                         pageNum+=1
                 elif eType in ['CTRIA6','CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,3)
+                            out = self.writeF06_Quad4_BilinearTransient(dt,eid,3,isMagPhase)
                             msg.append(out)
                         msg.append(pageStamp+str(pageNum)+'\n')
+                        if f is not None:
+                            f.write(''.join(msg))
+                            msg = ['']
                         pageNum+=1
                 else:
                     raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
@@ -1079,7 +1118,7 @@ class ComplexPlateStrainObject(strainObject):
         ###
         return (''.join(msg),pageNum-1)
 
-    def writeF06_Quad4_Bilinear(self,eid,n):
+    def writeF06_Quad4_Bilinear(self,eid,n,isMagPhase):
         msg = ''
         k = self.exx[eid].keys()
         k.sort()
@@ -1090,14 +1129,15 @@ class ComplexPlateStrainObject(strainObject):
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
                 exy   = self.exy[eid][nid][iLayer]
-                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
+                ([fd, exxr,eyyr,exyr,
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy)
+                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy)
+                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %('',nid,           fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy)
+                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' %('','',          fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -1105,7 +1145,7 @@ class ComplexPlateStrainObject(strainObject):
         ###
         return msg
 
-    def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
+    def writeF06_Quad4_BilinearTransient(self,dt,eid,n,isMagPhase):
         msg = ''
         k = self.exx[dt][eid].keys()
         k.sort()
@@ -1116,14 +1156,15 @@ class ComplexPlateStrainObject(strainObject):
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
                 exy   = self.exy[dt][eid][nid][iLayer]
-                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
+                ([fd, exxr,eyyr,exyr,
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
 
                 if nid=='C' and iLayer==0:
-                    msg += '0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %(eid,'CEN/'+str(n),fd,exx,eyy,exy)
+                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %(eid,'CEN/'+str(n),fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
                 elif iLayer==0:
-                    msg += '   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' %('',nid,     fd,exx,eyy,exy)
+                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' %('',nid,           fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
                 elif iLayer==1:
-                    msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,exx,eyy,exy)
+                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' %('','',          fd,exxr,exxi,eyyr,eyyi,exyr,exyi.rstrip())
                 else:
                     raise Exception('Invalid option for cquad4')
                 ###
@@ -1131,7 +1172,7 @@ class ComplexPlateStrainObject(strainObject):
         ###
         return msg
 
-    def writeF06_Tri3(self,eid):
+    def writeF06_Tri3(self,eid,isMagPhase):
         msg = ''
         k = self.exx[eid].keys()
         for nid in sorted(k):
@@ -1141,17 +1182,18 @@ class ComplexPlateStrainObject(strainObject):
                 eyy   = self.eyy[eid][nid][iLayer]
                 exy   = self.exy[eid][nid][iLayer]
 
-                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
+                ([fd, exxr,eyyr,exyr,
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy)
+                    msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %(eid,fd,exxr,exxi,eyyr,eyyi,exyr,exyi)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy)
+                    msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %('', fd,exxr,exxi,eyyr,eyyi,exyr,exyi)
                 ###
             ###
         ###
         return msg
 
-    def writeF06_Tri3Transient(self,dt,eid):
+    def writeF06_Tri3Transient(self,dt,eid,isMagPhase):
         msg = ''
         exxNodes = self.exx[dt][eid]
         k = exxNodes.keys()
@@ -1162,11 +1204,12 @@ class ComplexPlateStrainObject(strainObject):
                 eyy   = self.eyy[dt][eid][nid][iLayer]
                 exy   = self.exy[dt][eid][nid][iLayer]
 
-                ([fd,exx,eyy,exy],isAllZeros) = self.writeF06Floats13E([fd,exx,eyy,exy])
+                ([fd, exxr,eyyr,exyr,
+                  fdi,exxi,eyyi,exyi],isAllZeros) = self.writeF06ImagFloats13E([fd,exx,eyy,exy],isMagPhase)
                 if iLayer==0:
-                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,exx,eyy,exy)
+                    msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %(eid,fd,exxr,exxi,eyyr,eyyi,exyr,exyi)
                 else:
-                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,exx,eyy,exy)
+                    msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' %('', fd,exxr,exxi,eyyr,eyyi,exyr,exyi)
                 ###
             ###
         ###

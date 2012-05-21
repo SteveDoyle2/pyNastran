@@ -164,20 +164,23 @@ class ComplexBarStressObject(stressObject):
         for eid,S1s in sorted(self.s1.iteritems()):
             eType = self.eType[eid]
             axial = self.axial[eid]
-            
             s1   = self.s1[eid]
             s2   = self.s2[eid]
             s3   = self.s3[eid]
             s4   = self.s4[eid]
-            smax = self.smax[eid]
-            smin = self.smin[eid]
+
             vals = [s1[0],s2[0],s3[0],s4[0],axial,
                     s1[1],s2[1],s3[1],s4[1],      ]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-            [s1a,s2a,s3a,s4a,axial,
-             s1b,s2b,s3b,s4b,     ] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' %(eid,  s1a,s2a,s3a,s4a,axial.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n'   %('', s1b,s2b,s3b,s4b.rstrip()))
+            (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals,isMagPhase)
+            [s1ar,s2ar,s3ar,s4ar,axialr,
+             s1br,s2br,s3br,s4br,     
+             s1ai,s2ai,s3ai,s4ai,axiali,
+             s1bi,s2bi,s3bi,s4bi,     ] = vals2
+            msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' %(eid,  s1ar,s2ar,s3ar,s4ar,axialr.rstrip()))
+            msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' %('',   s1ai,s2ai,s3ai,s4ai,axiali.rstrip()))
+
+            msg.append(' %8s   %13s  %13s  %13s  %-s\n'   %('', s1br,s2br,s3br,s4br.rstrip()))
+            msg.append(' %8s   %13s  %13s  %13s  %-s\n'   %('', s1bi,s2bi,s3bi,s4bi.rstrip()))
         ###
         msg.append(pageStamp+str(pageNum)+'\n')
         return (''.join(msg),pageNum)
@@ -201,7 +204,7 @@ class ComplexBarStressObject(stressObject):
                 s4   = self.s4[dt][eid]
                 vals = [s1[0],s2[0],s3[0],s4[0],axial,
                         s1[1],s2[1],s3[1],s4[1],     ]
-                (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals)
+                (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals,isMagPhase)
                 [s1ar,s2ar,s3ar,s4ar,axialr,
                  s1br,s2br,s3br,s4br,     
                  s1ai,s2ai,s3ai,s4ai,axiali,

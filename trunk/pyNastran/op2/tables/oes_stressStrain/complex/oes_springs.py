@@ -105,7 +105,7 @@ class ComplexCelasStressObject(complexStressObject):
                 else:
                     stressr=stress.real;  stressi=stress.imag
 
-                (vals2,isAllZeros) = self.writeF06Floats13E([stressr,stressi])
+                (vals2,isAllZeros) = self.writeF06ImagFloats13E([stress],isMagPhase)
                 if i==0:
                     elementID1 = elementID
                     [stress1Real,stress1Imag] = vals2
