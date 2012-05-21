@@ -116,15 +116,15 @@ class ComplexElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
 
-    def OES_CQUAD4_33_alt(self): # in progress
+    def OES_CQUAD4_33_alt(self):
         """
-        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
+        GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY
         """
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffff'
         isMagnitudePhase = self.isMagnitudePhase()
-
+        
         nNodes = 0 # centroid + 4 corner points
         #self.printSection(20)
         #term = data[0:4] CEN/
@@ -132,10 +132,10 @@ class ComplexElementsStressStrain(object):
         #print "*****"
         #self.printBlock(self.data)
         #print "self.numWide = ",self.numWide
-        #if 0:
+        #print "len(data) = ",len(self.data)
         
         assert self.numWide==15,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=308: # 2+15*5 = 77 -> 77*4 = 308
+        while len(self.data)>=60: # 2+15*5 = 77 -> 77*4 = 308
             #print self.printBlock(self.data[0:100])
             #(eid,) = unpack("i",self.data[0:4])
             #print "abcd=",a,b,c,d
@@ -159,8 +159,8 @@ class ComplexElementsStressStrain(object):
 
             eid = extract(eid,dt)
 
-            #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i" %(eid,'C',fd1,sx1,sy1,txy1)
-            #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i\n"       %(fd2,sx2,sy2,txy2)
+            #print "eid=%i grid=%s fd1=%-3.1f sx1=%s sy1=%s txy1=%s" %(eid,'C',fd1,sx1,sy1,txy1)
+            #print   "             fd2=%-3.1f sx2=%s sy2=%s txy2=%s\n"       %(fd2,sx2,sy2,txy2)
             #print "nNodes = ",nNodes
             self.obj.addNewEid('CQUAD4',dt,eid,'C',fd1,sx1,sy1,txy1)
             self.obj.add(               dt,eid,'C',fd2,sx2,sy2,txy2)
@@ -214,7 +214,7 @@ class ComplexElementsStressStrain(object):
         #if self.numWide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
         
         if self.elementType==144: # CQUAD4
-            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            nTotal = 308  # 2+15*5 = 77 -> 87*4 = 308
             nNodes = 4    # centroid + 4 corner points
             eType  = 'CQUAD4'
         elif self.elementType==64: # CQUAD8 - done
@@ -222,16 +222,16 @@ class ComplexElementsStressStrain(object):
             nNodes = 4    # centroid + 4 corner points
             eType  = 'CQUAD8'
         elif self.elementType==82: # CQUADR
-            nTotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+            nTotal = 308  # 2+15*5 = 77 -> 87*4 = 308
             nNodes = 4    # centroid + 4 corner points
             eType  = 'CQUAD4' ## @todo write the word CQUADR
 
         elif self.elementType==75: # CTRIA6
-            nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            nTotal = 248  # 2+15*3 = 62 -> 62*4 = 248
             nNodes = 3    # centroid + 3 corner points
             eType  = 'CTRIA6'
         elif self.elementType==70: # CTRIAR
-            nTotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+            nTotal = 248  # 2+15*4 = 62 -> 62*4 = 248
             nNodes = 3    # centroid + 3 corner points
             eType  = 'CTRIAR' ## @todo write the word CTRIAR
         else:
@@ -797,17 +797,12 @@ class ComplexElementsStressStrain(object):
             ###
             #sys.exit('stoping in CBEAM_94')
 
-        if self.makeOp2Debug:
-            print "done with CBEAM-94"
         #raise Exception('add CBEAM-94...')
 
     def OES_CQUAD4_95_alt(self): # works (doesnt handle all stress/strain cases tho)
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CQUAD4_95---\n')
-            print "getting a composite element..."
         eType = self.ElementType(self.elementType)
 
         #self.printSection(20)

@@ -513,11 +513,9 @@ class complexTableObject(scalarObject):
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
         
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        #isMagPhase = True
-        
         #words += self.getTableMarker()
         if isMagPhase:
-            words += ['                                                         (MAGNITUDE/PHASE)\n']
+            words += ['                                                         (MAGNITUDE/PHASE)\n',]
         else:
             words += ['                                                          (REAL/IMAGINARY)\n',]
         
@@ -531,23 +529,8 @@ class complexTableObject(scalarObject):
             (dx,dy,dz) = translation
             (rx,ry,rz) = rotation
 
-            if isMagPhase:
-                dxr=abs(dx); dxi=angle(dx,deg=True)
-                dyr=abs(dy); dyi=angle(dy,deg=True)
-                dzr=abs(dz); dzi=angle(dz,deg=True)
-
-                rxr=abs(rx); rxi=angle(rx,deg=True)
-                ryr=abs(ry); ryi=angle(ry,deg=True)
-                rzr=abs(rz); rzi=angle(rz,deg=True)
-            else:
-                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-                rxr=rx.real; ryr=ry.real; rzr=rz.real
-                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-
-            vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-            (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+            vals = [dx,dy,dz,rx,ry,rz]
+            (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals)
             [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
             msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %('','',          dxi,dyi,dzi,rxi,ryi,rzi.rstrip()))
@@ -559,10 +542,8 @@ class complexTableObject(scalarObject):
         return (''.join(msg),pageNum)
 
     def _writeF06TransientBlock(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        #isMagPhase = True
-
         if isMagPhase:
-            words += ['                                                         (MAGNITUDE/PHASE)\n']
+            words += ['                                                         (MAGNITUDE/PHASE)\n',]
         else:
             words += ['                                                          (REAL/IMAGINARY)\n',]
                  
@@ -583,23 +564,8 @@ class complexTableObject(scalarObject):
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
                 
-                if isMagPhase:
-                    dxr=abs(dx); dxi=angle(dx,deg=True)
-                    dyr=abs(dy); dyi=angle(dy,deg=True)
-                    dzr=abs(dz); dzi=angle(dz,deg=True)
-
-                    rxr=abs(rx); rxi=angle(rx,deg=True)
-                    ryr=abs(ry); ryi=angle(ry,deg=True)
-                    rzr=abs(rz); rzi=angle(rz,deg=True)
-                else:
-                    dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                    dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-                    rxr=rx.real; ryr=ry.real; rzr=rz.real
-                    rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-                
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
+                vals = [dx,dy,dz,rx,ry,rz]
+                (vals2,isAllZeros) = self.writeF06ImagFloats13E(vals,isMagPhase)
                 [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi] = vals2
                 if not isAllZeros:
                     msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dxr,dyr,dzr,rxr,ryr,rzr.rstrip()))

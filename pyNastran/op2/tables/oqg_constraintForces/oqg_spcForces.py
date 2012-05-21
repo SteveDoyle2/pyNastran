@@ -33,29 +33,7 @@ class spcForcesObject(TableObject):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg+= header+words
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-
-                (dx,dy,dz) = translation
-                (rx,ry,rz) = rotation
-                vals = [dx,dy,dz,rx,ry,rz]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                if not isAllZeros:
-                    [dx,dy,dz,rx,ry,rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,dx,dy,dz,rx,ry,rz.rstrip()))
-                ###
-            ###
-            msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f)
 
     def __reprTransient__(self):
         msg = '---SPC FORCES---\n'
@@ -156,40 +134,8 @@ class complexSpcForcesObject(complexTableObject):
         return (''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n',
-                 '                                                          (REAL/IMAGINARY)\n',
-                 ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        msg = []
-        for dt,translations in sorted(self.translations.iteritems()):
-            header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
-            msg+= header+words
-            for nodeID,translation in sorted(translations.iteritems()):
-                rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
-
-                (dx,dy,dz) = translation
-                dxr=dx.real; dyr=dy.real; dzr=dz.real; 
-                dxi=dx.imag; dyi=dy.imag; dzi=dz.imag
-
-                (rx,ry,rz) = rotation
-                rxr=rx.real; ryr=ry.real; rzr=rz.real
-                rxi=rx.imag; ryi=ry.imag; rzi=rz.imag
-
-                vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
-                (vals2,isAllZeros) = self.writeF06Floats13E(vals)
-                if not isAllZeros:
-                    [v1r,v2r,v3r,v4r,v5r,v6r,  v1i,v2i,v3i,v4i,v5i,v6i] = vals2
-                    msg.append('0%13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1r,v2r,v3r,v4r,v5r,v6r.rstrip()))
-                    msg.append(' %13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %(nodeID,gridType,v1i,v2i,v3i,v4i,v5i,v6i.rstrip()))
-                ###
-            ###
-            msg.append(pageStamp+str(pageNum)+'\n')
-            if f is not None:
-                f.write(''.join(msg))
-                msg = ['']
-            pageNum+=1
-        return (''.join(msg),pageNum-1)
+        words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']
+        return self._writeF06TransientBlock(words,header,pageStamp,pageNum,f,isMagPhase)
 
     def __reprTransient__(self):
         msg = '---COMPLEX SPC FORCES---\n'

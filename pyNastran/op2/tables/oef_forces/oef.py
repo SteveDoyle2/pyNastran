@@ -236,8 +236,9 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         OEF1X - 
         DOEF1 - 
         """
-        #self.skipOES_Element() # skipping entire table
-        #return
+        self.skipOES_Element() # skipping entire table
+        return
+
         if self.tableCode==4 and self.tableName in ['OEF1X','DOEF1']: # Forces/Heat Flux
             assert self.tableName in ['OEF1X','DOEF1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOEF_Data_table4()

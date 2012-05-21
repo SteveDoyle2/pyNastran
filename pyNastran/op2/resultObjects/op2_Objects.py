@@ -54,24 +54,42 @@ class baseScalarObject(Op2Codes):
             vals2.append(v2)
         return (vals2,isAllZeros)
 
-    def writeF06ImagFloats13E(self,vals):
+    def writeF06ImagFloats13E(self,vals,isMagPhase):
         vals2 = []
         isAllZeros = True
-        for v in vals:
-            v2 = '%13.6E' %(v.real)
-            if v2==' 0.000000E+00' or v2=='-0.000000E+00':
-                v2 = ' 0.0         '
-            else:
-                isAllZeros = False
-            vals2.append(v2)
+        
+        if isMagPhase:
+            for v in vals:
+                v2 = '%13.6E' %(abs(v))
+                if v2==' 0.000000E+00' or v2=='-0.000000E+00':
+                    v2 = ' 0.0         '
+                else:
+                    isAllZeros = False
+                vals2.append(v2)
 
-        for v in vals:
-            v3 = '%13.6E' %(v.imag)
-            if v3==' 0.000000E+00' or v3=='-0.000000E+00':
-                v3 = ' 0.0         '
-            else:
-                isAllZeros = False
-            vals2.append(v3)
+            for v in vals:
+                v3 = '%13.6E' %(angle(v,deg=True))
+                if v3==' 0.000000E+00' or v3=='-0.000000E+00':
+                    v3 = ' 0.0         '
+                else:
+                    isAllZeros = False
+                vals2.append(v3)
+        else:
+            for v in vals:
+                v2 = '%13.6E' %(v.real)
+                if v2==' 0.000000E+00' or v2=='-0.000000E+00':
+                    v2 = ' 0.0         '
+                else:
+                    isAllZeros = False
+                vals2.append(v2)
+
+            for v in vals:
+                v3 = '%13.6E' %(v.imag)
+                if v3==' 0.000000E+00' or v3=='-0.000000E+00':
+                    v3 = ' 0.0         '
+                else:
+                    isAllZeros = False
+                vals2.append(v3)
         return (vals2,isAllZeros)
 
     def writeF06Floats8p4F(self,vals):
