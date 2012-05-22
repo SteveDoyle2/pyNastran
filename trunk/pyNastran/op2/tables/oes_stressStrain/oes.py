@@ -552,6 +552,8 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
     def readOES_Data(self):
         #msg = '%s-OES elementType=%-3s -> %-6s\n' %(self.tableName,self.elementType,self.ElementType(self.elementType))
         msg = ''
+        #self.skipOES_Element()
+        #return
         #if self.analysisCode not in [1,6,10]:
             #raise InvalidATFSCodeError('self.atfsCode=%s' %(self.atfsCode))
 
@@ -747,9 +749,9 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
                 resultName = self.makeOES_Object(self.nonlinearPlateStress,NonlinearQuadObject,'nonlinearPlateStress',
                                                  self.nonlinearPlateStrain,NonlinearQuadObject,'nonlinearPlateStrain')
                 self.handleResultsBuffer3(self.OES_CQUAD4NL_90,resultName)
-            elif self.numWide==numWideImag:
-                resultName = self.makeOES_Object(self.nonlinearPlateStress,NonlinearQuadObject,'nonlinearPlateStress',
-                                                 self.nonlinearPlateStrain,NonlinearQuadObject,'nonlinearPlateStrain')
+            elif self.numWide==numWideImag: ## @todo switch to ComplexNonlinearPlateObject
+                resultName = self.makeOES_Object(self.nonlinearPlateStress,ComplexNonlinearQuadObject,'nonlinearPlateStress',
+                                                 self.nonlinearPlateStrain,ComplexNonlinearQuadObject,'nonlinearPlateStrain')
                 self.handleResultsBuffer3(self.OES_CQUAD4NL_90_alt,resultName)
             else:
                 raise NotImplementedError(self.codeInformation())

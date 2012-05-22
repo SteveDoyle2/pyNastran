@@ -74,6 +74,7 @@ if __name__=='__main__':
     makeGeom  = False
     writeBDF  = False
     writeF06  = True
+    writeMatlab = True
     printResults = False
 
     deleteF06 = True
@@ -111,7 +112,7 @@ if __name__=='__main__':
         pass
 
     print "nFiles = ",len(files)
-    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,deleteF06,printResults,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
+    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,printResults,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
     

@@ -82,6 +82,10 @@ class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
+    def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
+        name = 'eigenvectors'
+        return self._writeMatlabTransient(name,iSubcase,f,isMagPhase)
+
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         """
         EIGENVALUE =  6.158494E+07
@@ -236,6 +240,10 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
 
     def eigenvalues(self):
         return self.eigrs
+
+    def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
+        name = 'eigenvectors'
+        return self._writeMatlabTransient(name,iSubcase,f,isMagPhase)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         """

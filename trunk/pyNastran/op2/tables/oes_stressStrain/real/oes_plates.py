@@ -318,6 +318,134 @@ class PlateStressObject(stressObject):
         ###
         return msg
 
+    def writeMatlab(self,name,iSubcase,f=None,isMagPhase=False):
+        if self.nonlinearFactor is not None:
+            return self.writeMatlabTransient(name,iSubcase,f,isMagPhase)
+        
+        if self.isVonMises():
+            vonMises = 'vonMises'
+        else:
+            vonMises = 'maxShear'
+
+        if self.isFiberDistance():
+            fiberCurvature = 'fiberDistance'
+        else:
+            fiberCurvature = 'fiberCurvature'
+
+        triMsg   = None
+        tri6Msg  = None
+        trirMsg  = None
+        quadMsg  = None
+        quad8Msg = None
+        quadrMsg = None
+        eTypes = self.eType.values()
+        if 'CQUAD4' in eTypes:
+            qkey = eTypes.index('CQUAD4')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.oxx[kkey].keys()
+            isBilinear=True
+            quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']+triMsgTemp
+
+        if 'CQUAD8' in eTypes:
+            quad8Msg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']+triMsgTemp
+
+        if 'CQUADR' in eTypes:
+            qkey = eTypes.index('CQUADR')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.oxx[kkey].keys()
+            isBilinear=True
+            quadrMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n']+quadMsgTemp
+            if len(ekey)==1:
+                isBilinear=False
+                quadMsg = header+['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']+triMsgTemp
+
+        if 'CTRIA3' in eTypes:
+            triMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']+triMsgTemp
+
+        if 'CTRIA6' in eTypes:
+            tri6Msg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']+triMsgTemp
+
+        if 'CTRIAR' in eTypes:
+            trirMsg = header+['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']+triMsgTemp
+
+        msgPacks = {'CTRIA3':triMsg,
+                    'CTRIA6':tri6Msg,
+                    'CTRIAR':trirMsg,
+                    'CQUAD4':quadMsg,
+                    'CQUAD8':quad8Msg,
+                    'CQUADR':quadrMsg,}
+
+        validTypes = ['CTRIA3','CTRIA6','CTRIAR','CQUAD4','CQUAD8','CQUADR']
+        (typesOut,orderedETypes) = self.getOrderedETypes(validTypes)
+
+        msg = []
+        for eType in typesOut:
+            eids = orderedETypes[eType]
+            if eids:
+                eids.sort()
+                msgPack = msgPacks[eType]
+
+                msg += header+msgPack
+                if eType in ['CQUAD4']:
+                    if isBilinear:
+                        for eid in eids:
+                            out = self.writeMatlab_Quad4_Bilinear(eid,4)
+                            msg.append(out)
+                    else:
+                        for eid in eids:
+                            out = self.writeMatlab_Tri3(eid)
+                            msg.append(out)
+                    ###
+                elif eType in ['CTRIA3']:
+                    a = 'fem.plateStress(%i).tri3.elementIDs = %s\n' %(iSubcase,eids)
+                    b = 'fem.plateStress(%i).tri3.oxx = [' %(iSubcase)
+                    for eid in eids:
+                        out = self.writeMatlab_Tri3(eid)
+                        msg.append(out)
+                elif eType in ['CQUAD8']:
+                    for eid in eids:
+                        out = self.writeMatlab_Quad4_Bilinear(eid,5)
+                        msg.append(out)
+                elif eType in ['CTRIAR','CTRIA6']:
+                    for eid in eids:
+                        out = self.writeMatlab_Quad4_Bilinear(eid,3)
+                        msg.append(out)
+                else:
+                    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8, CTRIA6
+                ###
+                f.write(''.join(msg))
+                msg = []
+            ###
+        ###
+
+    def writeMatlab_Tri3(self,eid):
+        msg = ''
+        oxxNodes = self.oxx[eid].keys()
+        for nid in sorted(oxxNodes):
+            for iLayer in range(len(self.oxx[eid][nid])):
+                fd    = self.fiberCurvature[eid][nid][iLayer]
+                oxx   = self.oxx[eid][nid][iLayer]
+                oyy   = self.oyy[eid][nid][iLayer]
+                txy   = self.txy[eid][nid][iLayer]
+                angle = self.angle[eid][nid][iLayer]
+                major = self.majorP[eid][nid][iLayer]
+                minor = self.minorP[eid][nid][iLayer]
+                ovm = self.ovmShear[eid][nid][iLayer]
+                ([fd,oxx,oyy,txy,major,minor,ovm],isAllZeros) = self.writeFloats13E([fd,oxx,oyy,txy,major,minor,ovm])
+                ([angle],isAllZeros) = self.writeFloats8p4F([angle])
+
+                if iLayer==0:
+                    msg += '0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %(eid,fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                else:
+                    msg += '   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' %('', fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
+                ###
+            ###
+        ###
+        return msg
+
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)

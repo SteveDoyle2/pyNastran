@@ -32,7 +32,7 @@ def getFailedFiles(filename):
         files.append(line.strip())
     return files
 
-def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=True,printResults=True,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
+def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,writeMatlab=True,deleteF06=True,printResults=True,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -49,7 +49,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=Tr
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n,op2file))
             nTotal += 1
-            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,deleteF06=deleteF06,printResults=printResults,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
+            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,writeMatlab=writeMatlab,deleteF06=deleteF06,printResults=printResults,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
                 sys.stderr.write('**file=%s\n' %(op2file))
                 failedCases.append(op2file)
@@ -73,7 +73,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,deleteF06=Tr
     print msg
     sys.exit(msg)
 
-def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=False,deleteF06=False,printResults=True,iSubcases=[],debug=False,stopOnFailure=True):
+def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=True,isMagPhase=False,deleteF06=False,printResults=True,iSubcases=[],debug=False,stopOnFailure=True):
     assert '.op2' in op2FileName.lower(),'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
@@ -94,6 +94,11 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,isMagPhase=Fa
             op2.writeF06(model+'.f06.out',isMagPhase=isMagPhase)
             if deleteF06:
                 os.remove(model+'.f06.out')
+
+        if writeMatlab:
+            (model,ext) = os.path.splitext(op2FileName)
+            op2.writeMatlab(model+'.m',isMagPhase=isMagPhase)
+
         #print op2.printResults()
         if printResults:
             op2.printResults()
@@ -192,10 +197,11 @@ def runArgParse():
     group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
     #group2 = parser.add_mutually_exclusive_group()  # should this be exclusive???
-    parser.add_argument('-g','--geometry', dest='geometry',   action='store_true', help='Reads the OP2 for geometry, which can be written out')
-    parser.add_argument('-w','--writeBDF', dest='writeBDF',   action='store_true', help='Writes the bdf to fem.bdf.out')
-    parser.add_argument('-f','--writeF06', dest='writeF06',   action='store_true', help='Writes the f06 to fem.f06.out')
-    parser.add_argument('-m','--magPhase', dest='isMagPhase', action='store_true', help='F06 Writer stores Magnitude/Phase instead of Real/Imaginary')
+    parser.add_argument('-g','--geometry', dest='geometry',    action='store_true', help='Reads the OP2 for geometry, which can be written out')
+    parser.add_argument('-w','--writeBDF', dest='writeBDF',    action='store_true', help='Writes the bdf to fem.bdf.out')
+    parser.add_argument('-f','--writeF06', dest='writeF06',    action='store_true', help='Writes the f06 to fem.f06.out')
+    parser.add_argument('-z','--magPhase', dest='isMagPhase',  action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
+    parser.add_argument('-m','--matlab',   dest='writeMatlab', action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
     parser.add_argument('-p','--printResults',dest='printResults',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
     
@@ -210,18 +216,19 @@ def runArgParse():
     makeGeom     = args.geometry
     writeBDF     = args.writeBDF
     writeF06     = args.writeF06
-    isMagPhase   = args.writeF06
+    isMagPhase   = args.isMagPhase
+    writeMatlab  = args.writeMatlab
     printResults = args.printResults
     op2FileName  = args.op2FileName[0]
 
-    return (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printResults,debug)
+    return (op2FileName,makeGeom,writeBDF,writeF06,writeMatlab,isMagPhase,printResults,debug)
 
 def main():
-    (op2FileName,makeGeom,writeBDF,writeF06,isMagPhase,printResults,debug) = runArgParse()
+    (op2FileName,makeGeom,writeBDF,writeF06,writeMatlab,isMagPhase,printResults,debug) = runArgParse()
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,isMagPhase=isMagPhase,printResults=printResults,debug=debug)
+    runOP2(op2FileName,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,writeMatlab=writeMatlab,isMagPhase=isMagPhase,printResults=printResults,debug=debug)
 
 if __name__=='__main__':  # op2
     main()

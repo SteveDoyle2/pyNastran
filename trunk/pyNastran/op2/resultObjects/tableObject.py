@@ -212,6 +212,119 @@ class TableObject(scalarObject):  # displacement style table
         ###
         return translations2,rotations2
         
+    def _writeMatlab(self,name,iSubcase,f=None,isMagPhase=False):
+        """
+        name = displacements
+        """
+        if self.nonlinearFactor is not None:
+            self.writeMatlabTransient(name,iSubcase,f,isMagPhase)
+        #print "static!!!!"
+        msg = []
+        #magPhase = 0
+        #if isMagPhase:
+        #    magPhase = 1
+        #msg.append('fem.%s.isMagPhase = %s' %(name,magPhase))
+
+        nodes = self.translations.keys()
+        
+        nodes.sort()
+        nNodes = len(nodes)
+        self.writeMatlabArgs(name,iSubcase,f)
+        f.write('fem.%s(%i).nodes = %s;\n' %(name,iSubcase,nodes))
+
+        msgG = "fem.%s(%i).gridTypes    = ['" %(name,iSubcase)
+        msgT = 'fem.%s(%i).translations = ['  %(name,iSubcase)
+        msgR = 'fem.%s(%i).rotations    = ['  %(name,iSubcase)
+        spaceT = ' '*len(msgT)
+        spaceR = ' '*len(msgR)
+        i=0
+        for nodeID,translation in sorted(self.translations.iteritems()):
+            rotation = self.rotations[nodeID]
+            gridType = self.gridTypes[nodeID]
+            msgG += '%s' %(gridType)
+
+            (dx,dy,dz) = translation
+            (rx,ry,rz) = rotation
+            vals = [dx,dy,dz,rx,ry,rz]
+            (vals2,isAllZeros) = self.writeFloats13E(vals)
+            msgT += '[%s,%s,%s];' %(dx,dy,dz)
+            msgR += '[%s,%s,%s];' %(rx,ry,rz)
+            i+=1
+            if i==100:
+                msgT += '\n%s' %(spaceT)
+                msgR += '\n%s' %(spaceR)
+                i=0
+            ###
+        ###
+        msgG += "'];\n"
+        msgT += '];\n'
+        msgR += '];\n'
+        f.write(msgG)
+        f.write(msgT)
+        f.write(msgR)
+
+    def _writeMatlabTransient(self,name,iSubcase,f=None,isMagPhase=False):
+        """
+        name = displacements
+        """
+        print "transient!!!!"
+        msg = []
+
+        times = self.translations.keys()
+        nodes = self.translations[times[0]].keys()
+        times.sort()
+        nodes.sort()
+        nNodes = len(nodes)
+        self.writeMatlabArgs(name,iSubcase,f)
+        dtName = '%s' %(self.dataCode['name'])
+        f.write('fem.%s(%i).nodes = %s;\n' %(name,iSubcase,nodes))
+        f.write('fem.%s(%i).%s = %s;\n' %(name,iSubcase,dtName,times))
+        
+        msgG = "fem.%s(%i).gridTypes = ['" %(name,iSubcase)
+
+        for nodeID,gridType in sorted(self.gridTypes.items()):
+            msgG += '%s' %(gridType)
+        msgG += "'];\n"
+        f.write(msgG)
+        del msgG
+        
+        nDt = len(self.translations)
+        msgT = 'fem.%s(%i).translations.%s = cell(1,%i);\n' %(name,iSubcase,dtName,nDt)
+        msgR = 'fem.%s(%i).rotations.%s    = cell(1,%i);\n' %(name,iSubcase,dtName,nDt)
+        #msgT = 'fem.%s(%i).translations.%s = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
+        #msgR = 'fem.%s(%i).rotations.%s    = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
+        for n,(dt,translations) in enumerate(sorted(self.translations.iteritems())):
+            #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
+            #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
+
+            msgT += 'fem.%s(%i).translations.%s(%i) = [' %(name,iSubcase,dtName,n+1)
+            msgR += 'fem.%s(%i).rotations.%s(%i)    = [' %(name,iSubcase,dtName,n+1)
+
+            i=0
+            for nodeID,translation in sorted(translations.iteritems()):
+                rotation = self.rotations[dt][nodeID]
+                #gridType = self.gridTypes[nodeID]
+
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+                vals = [dx,dy,dz,rx,ry,rz]
+                msgT += '[%s,%s,%s];' %(dx,dy,dz)
+                msgR += '[%s,%s,%s];' %(rx,ry,rz)
+                i+=1
+                if i==100:
+                    msgT += '\n'
+                    msgR += '\n'
+                    i=0
+                ###
+            ###
+            msgT += '];\n'
+            msgR += '];\n'
+            f.write(msgT)
+            f.write(msgR)
+            msgT = ''
+            msgR = ''
+        ###
+
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None):
         msg = words
         #assert f is not None # remove
@@ -511,7 +624,59 @@ class complexTableObject(scalarObject):
         self.gridTypes[nodeID] = self.recastGridType(gridType)
         self.translations[dt][nodeID] = [v1,v2,v3] # dx,dy,dz
         self.rotations[dt][nodeID]    = [v4,v5,v6] # rx,ry,rz
+    
+    def _writeMatlabTransient(self,name,iSubcase,f=None,isMagPhase=False):
+        """
+        name = displacements
+        """
+        msg = []
+
+        times = self.translations.keys()
+        nodes = self.translations[times[0]].keys()
+        times.sort()
+        nodes.sort()
+        nNodes = len(nodes)
+        self.writeMatlabArgs(name,iSubcase,f)
+        dtName = '%s' %(self.dataCode['name'])
+        f.write('fem.%s(%i).nodes = %s;\n' %(name,iSubcase,nodes))
+        f.write('fem.%s(%i).%s = %s;\n' %(name,iSubcase,dtName,times))
         
+        msgG = "fem.%s(%i).gridTypes = ['" %(name,iSubcase)
+        for nodeID,gridType in sorted(self.gridTypes.items()):
+            msgG += '%s' %(gridType)
+        msgG += "'];\n"
+        f.write(msgG)
+        del msgG
+
+        for n,(dt,translations) in enumerate(sorted(self.translations.iteritems())):
+            #msgT = 'fem.%s(%i).translations.%s(%i) = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
+            #msgR = 'fem.%s(%i).rotations.%s(%i)    = zeros(%i,3);\n' %(name,iSubcase,dtName,n+1,nNodes)
+
+            msgT = 'fem.%s(%i).translations.%s(%i) = [' %(name,iSubcase,dtName,n+1)
+            msgR = 'fem.%s(%i).rotations.%s(%i)    = [' %(name,iSubcase,dtName,n+1)
+
+            i=0
+            for nodeID,translation in sorted(translations.iteritems()):
+                rotation = self.rotations[dt][nodeID]
+                (dx,dy,dz) = translation
+                (rx,ry,rz) = rotation
+
+                msgT += '[%s+%sj,%s+%sj,%s+%sj];' %(dx.real,dx.imag,dy.real,dy.imag,dz.real,dz.imag)
+                msgR += '[%s+%sj,%s+%sj,%s+%sj];' %(rx.real,rx.imag,ry.real,ry.imag,rz.real,rz.imag)
+                i+=1
+                if i==100:
+                    msgT += '\n'
+                    msgR += '\n'
+                    i=0
+                ###
+            ###
+            msgT += '];\n'
+            msgR += '];\n'
+            f.write(msgT)
+            f.write(msgR)
+            ###
+        ###
+
     def _writeF06Block(self,words,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         #words += self.getTableMarker()
         if isMagPhase:

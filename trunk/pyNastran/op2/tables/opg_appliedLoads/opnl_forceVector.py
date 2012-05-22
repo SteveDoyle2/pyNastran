@@ -6,6 +6,13 @@ class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
+    def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
+        name = 'forceVector'
+        if self.nonlinearFactor is None:
+            return self._writeMatlab(name,iSubcase,f)
+        else:
+            return self._writeMatlabTransient(name,iSubcase,f)
+
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
@@ -118,6 +125,13 @@ class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
 class complexForceVectorObject(complexTableObject): # tableCode=12, approachCode=???
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+
+    def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
+        name = 'forceVector'
+        if self.nonlinearFactor is None:
+            return self._writeMatlab(name,iSubcase,f,isMagPhase)
+        else:
+            return self._writeMatlabTransient(name,iSubcase,f,isMagPhase)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:

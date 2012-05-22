@@ -74,7 +74,7 @@ def makeEnd():
              ' \n']
     return ''.join(lines)
 
-class F06Writer(object):
+class MatlabWriter(object):
     def __init__(self,model='tria3'):
         self.Title = ''
         self.setF06Name(model)
@@ -117,29 +117,26 @@ class F06Writer(object):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return makeStamp(Title)
 
-    def writeF06(self,f06OutName,isMagPhase=False,makeFile=True,deleteObjects=True):
+    def writeMatlab(self,mFileOutName,isMagPhase=False,deleteObjects=True):
         """
         Writes an F06 file based on the data we have stored in the object
         @param self
                the object pointer
-        @param f06OutName
-               the name of the F06 file to write
+        @param mFileOutName
+               the name of the M (Matlab) file to write
         @param isMagPhase
                should complex data be written using 
                Magnitude/Phase instead of Real/Imaginary (default=False; Real/Imag)
                Real objects don't use this parameter.
-        @param makeFile
-               True  -> makes a file, 
-               False -> makes a StringIO object for testing (default=True)
         """
-        if makeFile:
-            f = open(f06OutName,'wb')
-        else:
-            import StringIO
-            f = StringIO.StringIO()
+        f = open(mFileOutName,'wb')
 
-        #f.write(self.makeF06Header())
-        pageStamp = self.makeStamp(self.Title)
+        strLines = self.makeF06Header()
+        lines = strLines.split('\n')
+        for line in lines:
+            f.write('%% %s\n' %(line))
+        
+        #pageStamp = self.makeStamp(self.Title)
         #print "pageStamp = |%r|" %(pageStamp)
         #print "stamp     = |%r|" %(stamp)
 
@@ -147,18 +144,35 @@ class F06Writer(object):
         pageNum = 1
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n']
+
+        f.write("fem.title = '%s';\n" %(self.Title))
+
+        subtitleMsg = 'fem.subtitles = {'
+        labelMsg    = 'fem.labels = {'
+        iSubcaseMsg = 'fem.iSubcases = ['
+
+        nSubcases = {}
+        for n,(iSubcase,(subtitle,label)) in enumerate(sorted(self.iSubcaseNameMap.items())):
+            labelMsg += "'%s'," %(label)
+            subtitleMsg += "'%s'," %(subtitle)
+            iSubcaseMsg += '%s,' %(iSubcase)
+            nSubcases[iSubcase] = n+1
+        labelMsg    += '};\n'
+        subtitleMsg += '};\n'
+        iSubcaseMsg += '];\n'
+        f.write(labelMsg)
+        f.write(subtitleMsg)
+        f.write(iSubcaseMsg)
+        
         for iSubcase,result in sorted(self.eigenvalues.iteritems()): # goes first
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
             print result.__class__.__name__
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
-            if deleteObjects:
-                del result
-            ###
-            f.write(msg)
-            pageNum +=1
+            nSubcase = nSubcases[iSubcase]
+            result.writeMatlab(nSubcase,f=f,isMagPhase=isMagPhase)
+           #result.writeMatlab(f=f)
         
         for iSubcase,result in sorted(self.eigenvectors.iteritems()): # has a special header
             (subtitle,label) = self.iSubcaseNameMap[iSubcase]
@@ -166,42 +180,39 @@ class F06Writer(object):
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
             print result.__class__.__name__
-            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
-            if deleteObjects:
-                del result
-            ###
-            f.write(msg)
-            pageNum +=1
+            nSubcase = nSubcases[iSubcase]
+            result.writeMatlab(nSubcase,f=f,isMagPhase=isMagPhase)
+           #result.writeMatlab(f=f)
 
         # subcase name, subcase ID, transient word & value
         headerOld = ['     DEFAULT                                                                                                                        \n',
                   '\n',' \n']
         header = copy.deepcopy(headerOld)
         resTypes = [
-                    self.displacements,self.displacementsPSD,self.displacementsATO,self.displacementsRMS,
-                    self.scaledDisplacements, # ???
-                    self.velocities,self.accelerations,self.eigenvectors,
-                    self.temperatures,
-                    self.loadVectors,self.thermalLoadVectors,
-                    self.forceVectors,
+                    self.displacements,#self.displacementsPSD,self.displacementsATO,self.displacementsRMS,
+                    #self.scaledDisplacements, # ???
+                    self.velocities,self.accelerations,#self.eigenvectors,
+                    #self.temperatures,
+                    #self.loadVectors,self.thermalLoadVectors,
+                    #self.forceVectors,
 
                     self.spcForces,self.mpcForces,
                     
-                    self.barForces,self.beamForces,self.springForces,self.damperForces,
-                    self.solidPressureForces,
+                    #self.barForces,self.beamForces,self.springForces,self.damperForces,
+                    #self.solidPressureForces,
                     
-                    self.rodStrain,self.nonlinearRodStress,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
-                    self.beamStrain,self.ctriaxStrain,self.hyperelasticPlateStress,
+                    #self.rodStrain,self.nonlinearRodStress,self.barStrain,self.plateStrain,self.nonlinearPlateStrain,self.compositePlateStrain,self.solidStrain,
+                    #self.beamStrain,self.ctriaxStrain,self.hyperelasticPlateStress,
 
-                    self.rodStress,self.nonlinearRodStrain,self.barStress,self.plateStress,self.nonlinearPlateStress,self.compositePlateStress,self.solidStress,
-                    self.beamStress,self.ctriaxStress,self.hyperelasticPlateStrain,
+                    #self.rodStress,self.nonlinearRodStrain,self.barStress,self.plateStress,self.nonlinearPlateStress,self.compositePlateStress,self.solidStress,
+                    #self.beamStress,self.ctriaxStress,self.hyperelasticPlateStrain,
                     
                     
                     # beam, shear...not done
                     #self.shearStrain,self.shearStress,
                     
                     
-                    self.gridPointStresses,self.gridPointVolumeStresses,#self.gridPointForces,
+                    #self.gridPointStresses,self.gridPointVolumeStresses,#self.gridPointForces,
                     ]
 
         if 1:
@@ -216,36 +227,29 @@ class F06Writer(object):
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
                 for resType in resTypes:
                     if resType.has_key(iSubcase):
-                        header = copy.deepcopy(headerOld) # fixes bug in case
                         result = resType[iSubcase]
                         try:
                             print result.__class__.__name__
-                            (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
+                            nSubcase = nSubcases[iSubcase]
+                            result.writeMatlab(nSubcase,f=f,isMagPhase=False)
                         except:
                             #print "result name = %s" %(result.name())
                             raise
+                        ###
                         if deleteObjects:
                             del result
                         ###
-                        f.write(msg)
-                        pageNum +=1
                     ###
                 ###
             ###
         if 0:
             for res in resTypes:
                 for iSubcase,result in sorted(res.iteritems()):
-                    (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
-                    if deleteObjects:
-                        del result
-                    ###
+                    (msg,pageNum) = result.writeMatlab(iSubcase,f=f,isMagPhase=False)
                     f.write(msg)
                     pageNum +=1
                 ###
             ###
-        f.write(makeEnd())
-        if not makeFile:
-            print f.getvalue()
         ###
         f.close()
 
@@ -255,8 +259,8 @@ if __name__=='__main__':
     #print "|%s|" %(stamp+'22')
     
     model = sys.argv[1]
-    f06 = F06Writer(model)
+    f06 = MatlabWriter(model)
     f06.loadOp2(isTesting=True)
-    f06.writeF06()
+    f06.writeMatlab()
 
 
