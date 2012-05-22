@@ -118,6 +118,24 @@ class scalarObject(baseScalarObject):
     def isImaginary(self):
         return bool(self.sortBits[1])
 
+    def writeMatlabArgs(self,name,iSubcase,f):
+        for key,value,in sorted(self.dataCode.iteritems()):
+            if key is not 'log':
+                if isinstance(value,str):
+                    value = "'%s'" %(value)
+                    msg = 'fem.%s(%i).%s = %s;\n' %(name,iSubcase,key,value)
+                elif isinstance(value,list) and isinstance(value[0],str):
+                    msgTemp = "','".join(value)
+                    msg = "fem.%s(%i).%s = {'%s'};\n" %(name,iSubcase,key,msgTemp)
+
+                elif value is None:
+                    value = "'%s'" %(value)
+                else:
+                    msg = 'fem.%s(%i).%s = %s;\n' %(name,iSubcase,key,value)
+                f.write(msg)
+            ###
+        ###
+
     def applyDataCode(self):
         self.log = self.dataCode['log']
         for key,value in sorted(self.dataCode.iteritems()):

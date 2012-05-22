@@ -5,6 +5,13 @@ class mpcForcesObject(TableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
+    def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
+        name = 'mpcForces'
+        if self.nonlinearFactor is None:
+            return self._writeMatlab(name,iSubcase,f)
+        else:
+            return self._writeMatlabTransient(name,iSubcase,f)
+
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum)
@@ -121,6 +128,13 @@ class mpcForcesObject(TableObject):
 class complexMpcForcesObject(complexTableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+
+    def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
+        name = 'mpcForces'
+        if self.nonlinearFactor is None:
+            return self._writeMatlab(name,iSubcase,f,isMagPhase)
+        else:
+            return self._writeMatlabTransient(name,iSubcase,f,isMagPhase)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         if self.nonlinearFactor is not None:

@@ -19,7 +19,7 @@ class RealElementsStressStrain(object):
     def dummyPass(self):
         self.data = ''
 
-    def OES_Thermal(self,debug=False): # works
+    def OES_Thermal(self,debug=False):
         if self.makeOp2Debug:
             self.op2Debug.write('---OES_Thermal---\n')
         #assert self.numWide==5,'invalid numWide...numWide=%s' %(self.numWide)
@@ -104,7 +104,7 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
 
-    def OES_CQUAD4_33(self): # works
+    def OES_CQUAD4_33(self):
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -198,7 +198,7 @@ class RealElementsStressStrain(object):
         if self.makeOp2Debug:
             print "done with CBAR-34"
 
-    def OES_CSOLID_67(self):  # works
+    def OES_CSOLID_67(self):
         """
         stress is extracted at the centroid
         CTETRA_39
@@ -284,8 +284,6 @@ class RealElementsStressStrain(object):
                     self.obj.addNewEid(ElementType,cid,dt,eid2,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
                 else:
                     self.obj.add(                      dt,eid2,grid,sxx,syy,szz,sxy,syz,sxz,s1,s2,s3,aCos,bCos,cCos,pressure,svm)
-                #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 #self.printBlock(data)
             #sys.exit('finished a CEHXA')
             #print self.solidStress[self.iSubcase]
@@ -508,9 +506,6 @@ class RealElementsStressStrain(object):
             data = (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
             
             #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
-            #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" %(eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-            #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   %(fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            #self.obj.addNewEid('CTRIA3',eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(self.elementType,dt,data)
             
             if self.makeOp2Debug:
@@ -521,36 +516,19 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         
-        numWide = self.numWide
-        if numWide==13:
-            nStep = 52  #4*13
-            format1 += 'ffffffffffff'
-        elif numWide==25:
-            nStep = 100 #4*25
-            format1 += 'ffffffffffffffffffffffff'
-        else:
-            raise Exception('invalid CQUAD4NL_90')
+        nStep = 52  #4*13
+        format1 += 'ffffffffffff'
+        assert 13==self.numWide,'numWide=%s not 13' %(self.numWide)
 
         while len(self.data)>=nStep:
             eData     = self.data[0:nStep]
             self.data = self.data[nStep: ]
             
-            if numWide==13:
-                out = unpack(format1,eData) # numWide=13
-                (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1) = out
-                eid = extract(eid,dt)
-                data = (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1)
-                self.obj.addNewEid(self.elementType,dt,data)
-            elif numWide==25:
-                out = unpack(format1,eData) # numWide=25
-                (eid,fd1,sx1,sy1,xxx,txy1,es1,eps1,ecs1,ex1,ey1,xxx,exy1,
-                     fd2,sx2,sy2,xxx,txy2,es2,eps2,ecs2,ex2,ey2,xxx,exy2) = out
-                eid = extract(eid,dt)
-
-                data = (eid,fd1,sx1,sy1,xxx,txy1,es1,eps1,ecs1,ex1,ey1,xxx,exy1)
-                self.obj.addNewEid(self.elementType,dt,data)
-                data = (eid,fd2,sx2,sy2,xxx,txy2,es2,eps2,ecs2,ex2,ey2,xxx,exy2)
-                self.obj.add(dt,data)
+            out = unpack(format1,eData) # numWide=13
+            (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1) = out
+            eid = extract(eid,dt)
+            data = (eid,fd1,sx1,sy1,sz1,txy1,es1,eps1,ecs1,ex1,ey1,ez1,exy1)
+            self.obj.addNewEid(self.elementType,dt,data)
             
             #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
             

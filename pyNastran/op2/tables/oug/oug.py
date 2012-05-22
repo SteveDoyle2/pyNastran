@@ -215,9 +215,13 @@ class OUG(object):
             self.readOUG_Data_table7()
         elif self.tableCode==10: # velocity
             assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+            #self.skipOES_Element()
+            #return
             self.readOUG_Data_table10()
         elif self.tableCode==11: # Acceleration vector
             assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+            #self.skipOES_Element()
+            #return
             self.readOUG_Data_table11()
         else:
             #print "***start skipping***"
