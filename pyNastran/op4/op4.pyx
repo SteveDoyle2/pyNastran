@@ -401,21 +401,18 @@ class OP4:                                                # {{{1
         cdef char    line[83]        # not liking line[OP4_TXT_LINE_SIZE+1]
         cdef int     size
         cdef int     filetype
-#       cdef np.ndarray[np.int_t, ndim=1, mode="c"] I_coo
-#       cdef np.ndarray[np.int_t, ndim=1, mode="c"] J_coo
         cdef double *unused
         cdef int     n_str
         cdef str_t  *unused_s
         cdef str_t  *str_data
+        cdef int     n_nnz = self.nnz[skip]
         cdef int    *N_index
         cdef float  *array_RS
         cdef float  *array_CS
         cdef double *array_RD
         cdef double *array_CD
-#       cdef np.ndarray I_coo = np.zeros((self.nnz[i],), dtype=DTYPE)  # syntax error
-#       cdef np.ndarray J_coo = np.zeros((self.nnz[i],), dtype=DTYPE)  # syntax error
-        cdef np.ndarray I_coo = np.zeros((100000,), dtype=DTYPE)  # KLUDGE!! must be dynamic size!
-        cdef np.ndarray J_coo = np.zeros((100000,), dtype=DTYPE)  # KLUDGE!! must be dynamic size!
+        cdef np.ndarray I_coo = np.zeros((n_nnz,), dtype=DTYPE)  # only true for first matrix
+        cdef np.ndarray J_coo = np.zeros((n_nnz,), dtype=DTYPE)  # only true for first matrix
         cdef np.ndarray ndarray
         All_Matrices = []
 
