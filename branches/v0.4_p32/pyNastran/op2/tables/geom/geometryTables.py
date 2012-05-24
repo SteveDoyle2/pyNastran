@@ -314,7 +314,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         self.readMarkers([-4,1,0])
 
 
-        print self.printSection(240)
+        print(self.printSection(240))
         sys.exit('CASECC...')
 
     def readTable_OMM2(self):

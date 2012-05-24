@@ -24,7 +24,7 @@
 ## 
 import copy
 import sys
-from subcase import Subcase
+from .subcase import Subcase
 from pyNastran.bdf.errors import *
 
 class CaseControlDeck(object):
@@ -57,7 +57,7 @@ class CaseControlDeck(object):
         #paramName = self.updateParamName(paramName)
         #print "iSubcase = ",iSubcase,'\n'
         if self.hasSubcase(iSubcase):
-            print str(self.subcases[iSubcase])
+            print(str(self.subcases[iSubcase]))
             return self.subcases[iSubcase].getParameter(paramName.upper())
         ###
         raise RuntimeError('iSubcase=%s does not exist...' %(iSubcase))
@@ -274,7 +274,7 @@ class CaseControlDeck(object):
 
             key   = key.strip()
             value = value.strip()
-            if self.debug:  print "key=|%s| value=|%s|" %(key,value)
+            if self.debug:  print("key=|%s| value=|%s|" %(key,value))
             paramType = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
@@ -372,7 +372,7 @@ class CaseControlDeck(object):
             b = 'value=|%s|'     %(value)
             c = 'options=|%s|'   %(options)
             d = 'paramType=|%s|' %(paramType)
-            print "_adding iSubcase=%s %-12s %-12s %-12s %-12s" %(iSubcase,a,b,c,d)
+            print("_adding iSubcase=%s %-12s %-12s %-12s %-12s" %(iSubcase,a,b,c,d))
 
         if key=='SUBCASE':
             assert value not in self.subcases
@@ -381,7 +381,7 @@ class CaseControlDeck(object):
             #print "value=",value
             self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
             if self.debug:
-                print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)    
+                print("copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase))
         elif iSubcase not in self.subcases: # initialize new subcase
             #self.iSubcase += 1 # is handled in the read code
             raise
@@ -444,20 +444,20 @@ if __name__=='__main__':
              'STRESS= ALL',
              'DISPLACEMENT(PLOT,PUNCH) = 8',]
     deck = CaseControlDeck(lines)
-    print "has SPC  True  = ",deck.hasParameter(0,'SPC')
-    print "has sPC  True  = ",deck.hasParameter(0,'sPC')
-    print "has junk False = ",deck.hasParameter(0,'JUNK')
+    print("has SPC  True  = ",deck.hasParameter(0,'SPC'))
+    print("has sPC  True  = ",deck.hasParameter(0,'sPC'))
+    print("has junk False = ",deck.hasParameter(0,'JUNK'))
     
-    print "getSubcaseParameter(MPC) 3 = ",deck.getSubcaseParameter(0,'MPC')
+    print("getSubcaseParameter(MPC) 3 = ",deck.getSubcaseParameter(0,'MPC'))
     deck.addParameterToGlobalSubcase('STRAIN = 7')
     deck.addParameterToLocalSubcase(1,'STRAIN = 7')
-    print "-----added----"
+    print("-----added----")
 
     out = deck.getSubcaseParameter(0,'STRAIN')
-    print "getSubcaseParameter(STRAIN) 7 = ",out
+    print("getSubcaseParameter(STRAIN) 7 = ",out)
 
     deck.addParameterToLocalSubcase(2,'SOL=200')
-    print "-----added2----"
+    print("-----added2----")
     out = deck.getSubcaseParameter(2,'SOL')
-    print "getSubcaseParameter(SOL) 200 = ",out
+    print("getSubcaseParameter(SOL) 200 = ",out)
     

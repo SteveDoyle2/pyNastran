@@ -26,7 +26,7 @@
 from numpy import array,cross
 from numpy.linalg import norm
 
-from baseCard import BaseCard
+from .baseCard import BaseCard
 
 class Load(BaseCard):
     """defines the DefaultLoad class"""
@@ -303,7 +303,7 @@ class DLOAD(Load):
         self.scale = card.field(2)
 
         fields = card.fields(3)
-        n = len(fields)/2
+        n = len(fields)//2
         if len(fields)%2==1:
             n+=1
             raise Exception('missing last magnitude on DLOAD card=%s' %(card.fields()) )
@@ -716,7 +716,7 @@ class PLOAD(Load):
             self.lid   = data[0]
             self.p     = data[1]
             self.nodes = data[2:]
-            print "PLOAD = ",data
+            print("PLOAD = ",data)
             raise NotImplementedError('PLOAD')
         assert len(self.nodes) in [3,4],'nodes=%s' %(self.nodes)
     
@@ -905,9 +905,9 @@ class PLOAD4(Load):
                     fields.append('THRU')
                     eid = self.eids[-1]
                 except:
-                    print "g3 = ",self.g3
-                    print "g4 = ",self.g4
-                    print "self.eids = ",self.eids
+                    print("g3 = ",self.g3)
+                    print("g4 = ",self.g4)
+                    print("self.eids = ",self.eids)
                     raise
                 ###
                 fields.append(self.getElementIDs(eid) )

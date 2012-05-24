@@ -29,7 +29,7 @@ from numpy.linalg import norm
 
 # my code
 from pyNastran.bdf.errors import *
-from baseCard import BaseCard
+from .baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
 class InvalidUnitVectorError(Exception):
@@ -94,29 +94,29 @@ class Coord(BaseCard):
             ## i = j cross k
             self.i = cross(self.j,self.k)
         except InvalidUnitVectorError:
-            print "---InvalidUnitVectorError---"
-            print "Cp = ",self.Cid()
-            print "e1 = ",self.e1
-            print "e2 = ",self.e2
-            print "e3 = ",self.e3
-            print "e13 = ",e13
-            print "e12 = ",e12
-            print "k = norm(e12)"
-            print "k   = ",self.k,'\n'
-            print "j = norm(cross(k,e13))"
-            print "j   = ",self.j
+            print("---InvalidUnitVectorError---")
+            print("Cp = ",self.Cid())
+            print("e1 = ",self.e1)
+            print("e2 = ",self.e2)
+            print("e3 = ",self.e3)
+            print("e13 = ",e13)
+            print("e12 = ",e12)
+            print("k = norm(e12)")
+            print("k   = ",self.k,'\n')
+            print("j = norm(cross(k,e13))")
+            print("j   = ",self.j)
             raise
         
         if debug:
-            print "Cp = ",self.Cid()
-            print "e1 = ",self.e1
-            print "e2 = ",self.e2
-            print "e3 = ",self.e3
-            print "e13 = ",e13
-            print "e12 = ",e12
-            print "i   = ",self.i
-            print "j   = ",self.j
-            print "k   = ",self.k,'\n'
+            print("Cp = ",self.Cid())
+            print("e1 = ",self.e1)
+            print("e2 = ",self.e2)
+            print("e3 = ",self.e3)
+            print("e13 = ",e13)
+            print("e12 = ",e12)
+            print("i   = ",self.i)
+            print("j   = ",self.j)
+            print("k   = ",self.k,'\n')
         
 
         #except TypeError:
@@ -155,9 +155,9 @@ class Coord(BaseCard):
         pCoord = dot(p-self.e1,transpose(matrix))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
-            print "p = ",p-self.e1
-            print "pLocal = ",pLocal,'\n'
-            print "pCoord = ",pCoord
+            print("p = ",p-self.e1)
+            print("pLocal = ",pLocal,'\n')
+            print("pCoord = ",pCoord)
         return pLocal
         #return pGlobal
 
@@ -426,20 +426,21 @@ class Cord2x(Coord):
         matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
                         [dot(gy,i),dot(gy,j),dot(gy,k)],
                         [dot(gz,i),dot(gz,j),dot(gz,k)]])
+        matrix = transpose(matrix)
         p2 = dot(p-self.e1,matrix)
         p3 = p2+self.e1
         
         if debug:
-            print "Cp = ",self.Cid()
-            print "gx = ",gx
-            print "gy = ",gy
-            print "gz = ",gz
-            print "p = ",ListPrint(p)
-            print "matrix = \n",matrix
-            print "e1 = ",ListPrint(self.e1)
-            print "p2 = ",ListPrint(p2)
-            print '------------------------'
-            print "p3 = %s\n" %(ListPrint(p3))
+            print("Cp = ",self.Cid())
+            print("gx = ",gx)
+            print("gy = ",gy)
+            print("gz = ",gz)
+            print("p = ",ListPrint(p))
+            print("matrix = \n",matrix)
+            print("e1 = ",ListPrint(self.e1))
+            print("p2 = ",ListPrint(p2))
+            print('------------------------')
+            print("p3 = %s\n" %(ListPrint(p3)))
         
         #print str(self)
         if isinstance(self.rid,int):

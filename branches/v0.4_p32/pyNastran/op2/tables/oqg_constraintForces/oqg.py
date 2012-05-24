@@ -27,8 +27,8 @@ import copy
 from struct import unpack
 
 # pyNastran
-from oqg_spcForces import spcForcesObject,complexSpcForcesObject
-from oqg_mpcForces import mpcForcesObject,complexMpcForcesObject
+from .oqg_spcForces import spcForcesObject,complexSpcForcesObject
+from .oqg_mpcForces import mpcForcesObject,complexMpcForcesObject
 
 from pyNastran.op2.tables.oug.oug_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0

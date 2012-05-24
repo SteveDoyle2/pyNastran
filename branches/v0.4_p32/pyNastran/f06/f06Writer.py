@@ -148,7 +148,7 @@ class F06Writer(object):
         @param makeFile True->makes a file, False->makes a StringIO object for testing (default=True)
         """
         if makeFile:
-            f = open(f06OutName,'wb')
+            f = open(f06OutName,'w',encoding='utf-8')
         else:
             import StringIO
             f = StringIO.StringIO()
@@ -234,7 +234,7 @@ class F06Writer(object):
             ###
         f.write(makeEnd())
         if not makeFile:
-            print f.getvalue()
+            print(f.getvalue())
         ###
         f.close()
 

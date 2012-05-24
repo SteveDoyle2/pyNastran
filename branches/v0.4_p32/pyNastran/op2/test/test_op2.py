@@ -68,8 +68,8 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
         baseName = os.path.basename(op2file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles:
-            print "%"*80
-            print 'file=%s\n' %(op2file)
+            print("%"*80)
+            print('file=%s\n' %(op2file))
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n,op2file))
             nTotal += 1
@@ -88,7 +88,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
         for op2file in failedCases:
             f.write('%s\n' %(op2file))
         f.close()
-    print "dt = %s seconds" %(time.time()-t0)
+    print("dt = %s seconds" %(time.time()-t0))
     
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.readOP2()
@@ -220,8 +220,8 @@ def runArgParse():
         parser.print_help()
         sys.exit()
     args = parser.parse_args()
-    print "op2FileName = ",args.op2FileName[0]
-    print "debug       = ",not(args.quiet)
+    print("op2FileName = ",args.op2FileName[0])
+    print("debug       = ",not(args.quiet))
 
     debug       = not(args.quiet)
     makeGeom    = args.geometry

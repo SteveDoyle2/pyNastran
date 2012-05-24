@@ -28,7 +28,7 @@ from numpy import array
 #from numpy.linalg import norm
 
 # my code
-from baseCard import BaseCard
+from .baseCard import BaseCard
 
 class Ring(BaseCard): # base class
     def __init__(self,card,data):
@@ -103,7 +103,7 @@ class SPOINT(Node):
         if isinstance(self.nid,int):
             fields = ['SPOINT']+[self.nid]
         else:
-            print "self.nid = ",self.nid
+            print("self.nid = ",self.nid)
             fields = ['SPOINT']+self.nid
         return fields
 
@@ -206,7 +206,7 @@ class GRIDB(Node):
         if card:
             raise Exception('not implemented...')
         else:
-            print data
+            print(data)
             self.nid  = data[0]
             self.phi  = data[1]
             self.cd   = data[2]

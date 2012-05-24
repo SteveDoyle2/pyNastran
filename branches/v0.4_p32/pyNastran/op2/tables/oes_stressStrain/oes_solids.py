@@ -25,7 +25,7 @@
 import sys
 from numpy.linalg import eigh
 
-from oes_objects import stressObject,strainObject #,array
+from .oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class solidStressObject(stressObject):

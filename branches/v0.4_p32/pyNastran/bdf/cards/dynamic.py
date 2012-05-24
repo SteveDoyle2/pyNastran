@@ -22,7 +22,7 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from baseCard import BaseCard
+from .baseCard import BaseCard
 from math import log,exp
 
 class DAREA(BaseCard):

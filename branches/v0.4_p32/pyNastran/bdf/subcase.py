@@ -305,7 +305,7 @@ class Subcase(object):
                   (101,'VUGRID'):    10,
 
                  }
-        print "key=%s" %(str(key))
+        print("key=%s" %(str(key)))
         if key not in tables:
             raise InvalidResultCode(key)
         tableCode = tables[key]
@@ -431,7 +431,7 @@ class Subcase(object):
             (value,options,paramType) = param
             
             sol = solmap_toValue[value.upper()]
-            print "***value=%s sol=%s" %(value,sol)
+            print("***value=%s sol=%s" %(value,sol))
         else:  # leaves SOL the same
             sol  = self.sol
         ###
@@ -448,7 +448,7 @@ class Subcase(object):
             key = key.upper()
             (value,options,paramType) = param
             msg = "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
-            print msg
+            print(msg)
             #msg += self.printParam(key,param,printBeginBulk=False)
             if paramType=='SUBCASE-type':
                 op2Params['iSubcase'].append(value)
@@ -497,10 +497,10 @@ class Subcase(object):
         ###
         op2Params['thermal'] = thermal
         
-        print "\nThe estimated results..."
+        print("\nThe estimated results...")
         for key,value in sorted(op2Params.items()):
             if value is not None:
-                print "   key=|%s| value=|%s|" %(key,value)
+                print("   key=|%s| value=|%s|" %(key,value))
         #sys.exit('exit subcase.py in bdf/subcase.py')
         
 
@@ -576,7 +576,7 @@ class Subcase(object):
         return msg
 
     def crossReference(self,mesh):
-        print "keys = ",sorted(self.params.keys())
+        print("keys = ",sorted(self.params.keys()))
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
             loadObj = mesh.loads[loadID]

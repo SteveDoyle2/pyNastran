@@ -360,7 +360,7 @@ class addMethods(object):
         key = node.nid
         if key in self.nodes and allowOverwrites==False:
             if not node.isSameCard(self.nodes[key]):
-                print 'nid=%s\noldNode=\n%snewNode=\n%s' %(key,self.nodes[key],node)
+                print('nid=%s\noldNode=\n%snewNode=\n%s' %(key,self.nodes[key],node))
                 assert node.nid not in self.nodes,'nid=%s\noldNode=\n%snewNode=\n%s' %(node.nid,self.nodes[key],node)
             else:                
                 #print 'Node was duplicated...nid=%s\nnode=\n%s' %(key,node)
@@ -407,7 +407,7 @@ class addMethods(object):
     def addRigidElement(self,elem,allowOverwrites=False):
         key = elem.eid
         if key in self.rigidElements and not allowOverwrites:
-            print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.rigidElements[key],elem)
+            print('eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.rigidElements[key],elem))
             #assert elem.eid not in self.rigidElements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.rigidElements[elem.eid],elem)
             pass
         assert key>0,'eid=%s elem=%s' %(key,elem)

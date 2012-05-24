@@ -32,7 +32,6 @@ from numpy.linalg import norm, solve
 from scipy.linalg      import solve_banded
 from scipy.interpolate import splrep,splev
 from scipy.integrate   import quad
-import scipy.weave  # "fixes" bug where scipy screws up return code handling
 
 def integrateLine(x,y):
     """

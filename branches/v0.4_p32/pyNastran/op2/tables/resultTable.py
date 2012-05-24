@@ -78,8 +78,8 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
         @note dt can also be loadStep depending on the class
         """
         if debug:
-            print "create Transient Object"
-            print "***NF = ",self.nonlinearFactor
+            print("create Transient Object")
+            print("***NF = ",self.nonlinearFactor)
             #print "DC = ",self.dataCode
         
         if self.iSubcase in storageObj:
@@ -142,7 +142,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
             marker = self.getMarker()
             self.goto(n)
             if marker!=146:
-                print "marker = ",marker
+                print("marker = ",marker)
                 exitFast = True
                 break
 
@@ -508,7 +508,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
         nEntries = len(data)//32
         if debug:
             self.log.debug('calling readScalars8 debug')
-            print "self.obj = ",self.obj
+            print("self.obj = ",self.obj)
             
         for i in range(nEntries):
             #if debug:

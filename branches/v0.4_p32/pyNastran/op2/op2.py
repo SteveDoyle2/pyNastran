@@ -27,9 +27,9 @@ import sys
 from numpy import array
 from struct import unpack
 
-from fortranFile import FortranFile
-from op2Codes import Op2Codes
-from op2Errors import *
+from .fortranFile import FortranFile
+from .op2Codes import Op2Codes
+from .op2Errors import *
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.tables.resultTable import ResultTable
@@ -734,7 +734,7 @@ class OP2(BDF,  # BDF methods
                 try:
                     msg += str(res) + '\n'
                 except:
-                    print 'failed on %s' %(res.__class__.__name__)
+                    print('failed on %s' %(res.__class__.__name__))
                     raise
                 ###
             ###

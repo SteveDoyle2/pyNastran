@@ -129,7 +129,7 @@ class scalarObject(baseScalarObject):
                 try:
                     n = len(listA)
                 except:
-                    print "listA = ",listA
+                    print("listA = ",listA)
                     raise
                 listA.append(value)
                 assert len(listA)==n+1

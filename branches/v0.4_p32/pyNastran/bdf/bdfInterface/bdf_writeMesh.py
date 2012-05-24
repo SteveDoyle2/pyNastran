@@ -113,7 +113,7 @@ class writeMesh(object):
         fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
         
-        outfile = open(outFileName,'wb')
+        outfile = open(outFileName,'w',encoding='utf-8')
         outfile.write(msg)
         outfile.close()
     
@@ -252,7 +252,7 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
         return msg
@@ -266,7 +266,7 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
         return msg
@@ -301,7 +301,7 @@ class writeMesh(object):
                     try:
                         msg += str(element)
                     except:
-                        print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                        print('failed printing element...type=%s eid=%s' %(element.type,eid))
                         raise
                     ###
                 ###
@@ -320,7 +320,7 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
             ###
@@ -417,7 +417,7 @@ class writeMesh(object):
                     try:
                         msg += str(load)
                     except:
-                        print 'failed printing load...type=%s key=%s' %(load.type,key)
+                        print('failed printing load...type=%s key=%s' %(load.type,key))
                         raise
                     ###
             for ID,grav in sorted(self.gravs.items()):

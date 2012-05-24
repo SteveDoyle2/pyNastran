@@ -77,7 +77,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     def parseLength(self):
         self.mainHeaders = []
         self.strFormat = ''
-        print "analysisCode = %s" %(self.analysisCode)
+        print("analysisCode = %s" %(self.analysisCode))
         if 0: #self.analysisCode==6:  # disabled
             self.mainHeaders.append('Freq')
             self.strFormat += 'fi'

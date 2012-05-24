@@ -23,7 +23,7 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # my code
-from baseCard import BaseCard
+from .baseCard import BaseCard
 
 class PARAM(BaseCard):
     type = 'PARAM'

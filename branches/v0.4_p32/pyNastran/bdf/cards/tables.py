@@ -25,7 +25,7 @@
 #import sys
 
 # my code
-from baseCard import BaseCard
+from .baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
 class TIC(BaseCard): # Transient Initial Condition
@@ -113,8 +113,8 @@ class TableObj(object):
                 msg += '\n'
             ###
         except:
-            print fields
-            print msg
+            print(fields)
+            print(msg)
             #assert nFields%nRepeated==0,msg
             raise
         ###

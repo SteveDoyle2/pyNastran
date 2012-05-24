@@ -50,7 +50,7 @@ class debugLogger(object):
 
     def frame(self):
        #print help(inspect)
-       return inspect.currentframe(4) # jump 4 levels down to get out of the logger code
+       return inspect.currentframe() # jump 4 levels down to get out of the logger code
 
     def lineno(self):
         """Returns the current line number in our program."""

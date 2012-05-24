@@ -31,8 +31,8 @@ from struct import unpack
 #    temperatureObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
-from opg_Objects import appliedLoadsObject
-from opg_loadVector import loadVectorObject
+from .opg_Objects import appliedLoadsObject
+from .opg_loadVector import loadVectorObject
 
 class OPG(object):
     """Table of element forces"""

@@ -79,7 +79,7 @@ class DEQATN(BaseCard):# needs work...
         eq = line0[16:]
         eq = eq.replace(' ','').lower()
         (self.name,self.eq) = eq.split('=')
-        print "EQ = ",self.eq
+        print("EQ = ",self.eq)
         
     def evaluate(args):
         #eqLow = self.eq.lower()

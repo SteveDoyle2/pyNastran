@@ -23,7 +23,7 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 import sys
-from oes_objects import stressObject,strainObject
+from .oes_objects import stressObject,strainObject
 from pyNastran.op2.op2Errors import *
 
 
@@ -330,7 +330,7 @@ class plateStressObject(stressObject):
                                 try:
                                     msg += '%10i ' %(int(val))
                                 except:
-                                    print "bad val = ",val
+                                    print("bad val = ",val)
                                     raise
                             ###
                         msg += '\n'
@@ -633,7 +633,7 @@ class plateStressObject(stressObject):
                             try:
                                 msg += '%10i ' %(val)
                             except:
-                                print "bad val = ",val
+                                print("bad val = ",val)
                                 raise
                         ###
                     msg += '\n'

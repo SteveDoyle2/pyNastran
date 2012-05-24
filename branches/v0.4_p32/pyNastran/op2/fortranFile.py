@@ -28,7 +28,7 @@ import sys
 from struct import unpack,pack
 
 #pyNastran
-from op2Errors import *
+from .op2Errors import *
 
 class FortranFile(object):
     def __init__(self):
@@ -216,6 +216,8 @@ class FortranFile(object):
         #msg += "longs  = %s\n" %(longs)
         msg += "floats  = %s\n" %(str(floats))
         #msg += "doubles = %s\n" %(doubles)
+        
+        strings = [str(byte) for byte in strings]
         msg += "strings = |%r|\n" %(''.join(strings))
         msg += "nWords  = %s\n" %(len(data)//4)
         #msg += "tell    = %s\n" %(self.op2.tell())
@@ -436,6 +438,7 @@ class FortranFile(object):
         data = self.readBlock()
         nLetters = len(data)
         letters = unpack('s'*nLetters,data)  ## @todo should this be c instead of s???
+        letters = [str(letter) for letter in letters]
         word = ''.join(letters)
 
         #print "word = |%s|" %(word)

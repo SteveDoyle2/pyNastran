@@ -23,7 +23,7 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 import sys
-from baseCard import BaseCard
+from .baseCard import BaseCard
 
 class OptConstraint(BaseCard):
     def __init__(self):
@@ -307,10 +307,10 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
-            print card
-            print "dvids = ",self.dvids
-            print "coeffs = ",self.coeffs
-            print str(self)
+            print(card)
+            print("dvids = ",self.dvids)
+            print("coeffs = ",self.coeffs)
+            print(str(self))
             raise Exception('invalid DVMREL1...')
 
     def crossReference(self,model):
@@ -365,10 +365,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
-            print card
-            print "dvids = ",self.dvids
-            print "coeffs = ",self.coeffs
-            print str(self)
+            print(card)
+            print("dvids = ",self.dvids)
+            print("coeffs = ",self.coeffs)
+            print(str(self))
             raise Exception('invalid DVPREL1...')
 
     def crossReference(self,model):

@@ -40,7 +40,7 @@ class cardMethods(object):
             line = line.split('$')[0].rstrip('\n\r\t ')
             if('$' not in line and len(line)>0):
                 if debug:
-                    print "line = |%r|" %(line)
+                    print("line = |%r|" %(line))
                 self.linesPack[-1].append(line)
             else:
                 emptyLines += 1
@@ -150,8 +150,8 @@ class cardMethods(object):
         isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
         #debug = True
         if debug:
-            print "get MultiLineCard...i=%s" %(i)
-            print "tempcard1 = ",tempcard
+            print("get MultiLineCard...i=%s" %(i))
+            print("tempcard1 = ",tempcard)
 
             self.log.debug("CRITERIA A")
             self.log.debug("  iline      = |%r|" %(iline))
@@ -163,7 +163,7 @@ class cardMethods(object):
         
         while(isNotDone):
             if debug:
-                print "not done...i=%s" %(i)
+                print("not done...i=%s" %(i))
             tempcard.append(iline)
             i+=1
             #if debug:
@@ -195,7 +195,7 @@ class cardMethods(object):
             #sCardName = slot0.strip()  # trying to find if it's blank...
             isNotDone = len(iline)>0 and (iline.strip()[0] in ['*','+',','] or sCardName=='')
             if debug:
-                print tempcard
+                print(tempcard)
                 self.log.debug("CRITERIA B")
                 self.log.debug("  iline       = |%r|" %(iline))
                 self.log.debug("  len(iline) = %-10s -> len(iline)>0         = %s" %('|'+str(len(iline))+'|',str(len(iline)>0)))
@@ -208,8 +208,8 @@ class cardMethods(object):
             #print ""
         #sys.exit('asdf')
         if debug:
-            print "done...i=%s" %(i)
-            print ""
+            print("done...i=%s" %(i))
+            print("")
         return (i,tempcard)
     
     def nastranSplit(self,line,isLargeField,debug=False):
@@ -224,7 +224,7 @@ class cardMethods(object):
         @note tabs are handled prior to running this
         """
         if debug:
-            print "isLargeField = %s" %(isLargeField)
+            print("isLargeField = %s" %(isLargeField))
         if isLargeField:
             #print "large"
             #print "line = |%s|" %(line)
@@ -287,7 +287,7 @@ class cardMethods(object):
                 try:
                     sline = self.parseCSV(sline)
                 except:
-                    print "cant parse sline=%s" %(sline)
+                    print("cant parse sline=%s" %(sline))
                     raise
                 #print "sline  = ",sline
                 #self.log.debug("sline = %s" %(sline))
@@ -355,7 +355,7 @@ class cardMethods(object):
         ###
         #fields.append(field)
         sline = [field]+line[i:72].split(',')
-        print "expandTabCommas = |%r|" %(sline)
+        print("expandTabCommas = |%r|" %(sline))
         #print field
         return fields
 
@@ -414,7 +414,7 @@ class cardMethods(object):
     def getValue(self,valueRaw,card,debug=False):
         """converts a value from nastran format into python format."""
         if debug:
-            print "v1 = |%s|" %(valueRaw)
+            print("v1 = |%s|" %(valueRaw))
         lvalue = valueRaw.lstrip()
         if self.isDynamicSyntax and '%' in lvalue[0:1]:
             return self.parseDynamicSyntax(valueRaw)
@@ -425,31 +425,31 @@ class cardMethods(object):
             #print "v2 = |%s|" %(valueIn)
         if len(valueIn)==0:
             if debug:
-                print "BLANK!"
+                print("BLANK!")
             return None
 
         if valueIn[0].isalpha():
             if debug:
-                print "STRING!"
+                print("STRING!")
             return valueIn
 
         if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
             if debug:
-                print "=(! - special formatting"
+                print("=(! - special formatting")
             return valueRaw.strip()
         #valueIn = valueIn.upper()
         # int, float, string, exponent
         valuePositive = valueIn.strip('+-')
         if debug:
-            print "isDigit = ",valuePositive.isdigit()
+            print("isDigit = ",valuePositive.isdigit())
         if valuePositive.isdigit():
             if debug:
-                print "INT!"
+                print("INT!")
             return int(valueIn)
         try:
             value = float(valueIn)
             if debug:
-                print "FLOAT!"
+                print("FLOAT!")
             return value
         except:
              pass
@@ -463,7 +463,7 @@ class cardMethods(object):
         #print "word=|%s|" %word
         if word.isalpha():
             if debug:
-                print "WORD!"
+                print("WORD!")
             return valueIn
 
         v0 = valueIn[0]
@@ -506,14 +506,14 @@ class cardMethods(object):
         #print "valueOut = |%s|" %value
 
         if debug:
-            print "SCIENTIFIC!"
+            print("SCIENTIFIC!")
         return value
     
 
 def getValue(valueRaw,debug=False):
     """converts a value from nastran format into python format."""
     if debug:
-        print "v1 = |%s|" %(valueRaw)
+        print("v1 = |%s|" %(valueRaw))
     lvalue = valueRaw.lstrip()
     valueIn = valueRaw.lstrip().rstrip(' *').upper()
 
@@ -522,31 +522,31 @@ def getValue(valueRaw,debug=False):
         #print "v2 = |%s|" %(valueIn)
     if len(valueIn)==0:
         if debug:
-            print "BLANK!"
+            print("BLANK!")
         return None
 
     if valueIn[0].isalpha():
         if debug:
-            print "STRING!"
+            print("STRING!")
         return valueIn
 
     if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
         if debug:
-            print "=(! - special formatting"
+            print("=(! - special formatting")
         return valueRaw.strip()
     #valueIn = valueIn.upper()
     # int, float, string, exponent
     valuePositive = valueIn.strip('+-')
     if debug:
-        print "isDigit = ",valuePositive.isdigit()
+        print("isDigit = ",valuePositive.isdigit())
     if valuePositive.isdigit():
         if debug:
-            print "INT!"
+            print("INT!")
         return int(valueIn)
     try:
         value = float(valueIn)
         if debug:
-            print "FLOAT!"
+            print("FLOAT!")
         return value
     except:
          pass
@@ -560,7 +560,7 @@ def getValue(valueRaw,debug=False):
     #print "word=|%s|" %word
     if word.isalpha():
         if debug:
-            print "WORD!"
+            print("WORD!")
         return valueIn
 
     v0 = valueIn[0]
@@ -603,7 +603,7 @@ def getValue(valueRaw,debug=False):
     #print "valueOut = |%s|" %value
 
     if debug:
-        print "SCIENTIFIC!"
+        print("SCIENTIFIC!")
     return value
 
 def stringParser(stringIn):
@@ -657,7 +657,7 @@ def stringParser(stringIn):
         lString.insert(-i-1,'e')
         #print "lString = ",lString
         out = ''.join(lString)
-        print "out = ",out
+        print("out = ",out)
         return float(out)
     else:
         #print "string = ",stringIn
@@ -665,18 +665,18 @@ def stringParser(stringIn):
         #return 'string'
         return stringIn
     
-    print "typeCheck = |%s|" %(typeCheck)
+    print("typeCheck = |%s|" %(typeCheck))
     raise Exception('this should never happen...')
 
 if __name__=='__main__':
-    print stringParser('123')
-    print stringParser('+123')
-    print stringParser('.234')
-    print stringParser('+.234')
-    print stringParser('-.234')
-    print stringParser('1+5')
-    print "abc = |%s|" %(stringParser('abc'))
-    print "eeg = |%s|" %(stringParser('eeg'))
-    #print "e1 = |%s|" %(stringParser('\T'))
-    print stringParser('.e1')
+    print(stringParser('123'))
+    print(stringParser('+123'))
+    print(stringParser('.234'))
+    print(stringParser('+.234'))
+    print(stringParser('-.234'))
+    print(stringParser('1+5'))
+    print("abc = |%s|" %(stringParser('abc')))
+    print("eeg = |%s|" %(stringParser('eeg')))
+    #print("e1 = |%s|" %(stringParser('\T')))
+    print(stringParser('.e1'))
  

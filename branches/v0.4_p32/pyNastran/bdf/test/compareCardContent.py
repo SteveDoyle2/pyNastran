@@ -30,8 +30,8 @@ def assertFields(card1,card2):
             fields1 = wipeEmptyFields(card1.reprFields())
             fields2 = wipeEmptyFields(card2.reprFields())
         except:
-            print "card1 = \n%s" %(card1)
-            print "card2 = \n%s" %(card2)
+            print("card1 = \n%s" %(card1))
+            print("card2 = \n%s" %(card2))
             raise
         assert len(fields1)==len(fields2),'len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s' %(len(fields1),len(fields2),fields1,fields2,printCard(fields1),printCard(fields2))
         for i,(f1,f2) in enumerate(zip(fields1,fields2)):

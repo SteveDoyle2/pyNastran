@@ -143,11 +143,11 @@ class BDF_Card(object):
         d = 0
         for n in range(i,j):
             if debug:
-                print "  default = ",defaults[d]
+                print("  default = ",defaults[d])
             value = self.field(n,defaults[d])
             if debug:
-                print "  n = ",n
-                print "  self.field(n) = ",self.field(n)
+                print("  n = ",n)
+                print("  self.field(n) = ",self.field(n))
             out.append(value)
             d+=1
         ###
@@ -200,15 +200,15 @@ class BDF_Card(object):
             #self.applyOldFields(self,cardCount=1)
             cardCount = self.oldCard.cardCount+cardCount
             if self.debug:
-                print "newCount = ",cardCount
+                print("newCount = ",cardCount)
             self.card = copy.deepcopy(self.oldCard.cardTextOld)
             self.nfields = len(self.card)
             self.oldCard.nfields = len(self.oldCard.card)
             
             if self.debug:
-                print "oldCard = ",self.oldCard
-                print "selfCard = ",self.card
-                print "asfdasdfasdfasdfasfasdf"
+                print("oldCard = ",self.oldCard)
+                print("selfCard = ",self.card)
+                print("asfdasdfasdfasdfasfasdf")
             #stop = True
 
         fieldsNew = self.fields()
@@ -246,12 +246,12 @@ class BDF_Card(object):
             else:
                 b = "|%s|" %(fieldNew)
                 c = "|%s|" %(fieldOld)
-                print "i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c)
+                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c))
                 raise Exception('unhandled case...')
             b = "|%s|" %(fieldNew)
             c = "|%s|" %(fieldOld)
             if self.debug:
-                print "i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c)
+                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c))
             cardBuilt.append(fieldNew)
             i+=1
         ###
@@ -266,7 +266,7 @@ class BDF_Card(object):
             pass
         
         if self.debug:
-            print "cardBuilt = ",cardBuilt
+            print("cardBuilt = ",cardBuilt)
         self.card = cardBuilt
         self.nfields = len(self.card)
         

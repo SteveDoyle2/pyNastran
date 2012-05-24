@@ -28,8 +28,8 @@
 #from numpy.linalg import norm
 
 # my code
-from baseCard import BaseCard,Material
-from tables import Table
+from .baseCard import BaseCard,Material
+from .tables import Table
 #from thermal.materials import *
 
 class IsotropicMaterial(Material):

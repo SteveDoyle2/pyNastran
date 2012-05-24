@@ -22,7 +22,7 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from types import NoneType
+NoneType = type(None)
 from numpy import allclose,isinf
 
 def isSame(value1,value2):
@@ -300,7 +300,7 @@ def printCard(fields,tol=0.):
     try:
         out = '%-8s' %(fields[0])
     except:
-        print "ERROR!  fields=%s" %(fields)
+        print("ERROR!  fields=%s" %(fields))
         sys.stdout.flush()
         raise
     
@@ -310,7 +310,7 @@ def printCard(fields,tol=0.):
             out += printField(field,tol=tol)
             #print "|%r|" %(printField(field))
         except AssertionError:
-            print "bad fields = ",fields
+            print("bad fields = ",fields)
             raise
         if i%8==0: # allow 1+8 fields per line
             #print "-------------------------"
@@ -337,7 +337,7 @@ def printIntCard(fields,tol=0.):
     try:
         out = '%-8s' %(fields[0])
     except:
-        print "ERROR!  fields=%s" %(fields)
+        print("ERROR!  fields=%s" %(fields))
         sys.stdout.flush()
         raise
     
@@ -346,7 +346,7 @@ def printIntCard(fields,tol=0.):
         try:
             out += "%8i" %(field) # balks if you have None or string fields
         except AssertionError:
-            print "bad fields = ",fields
+            print("bad fields = ",fields)
             raise
         if i%8==0: # allow 1+8 fields per line
             out = out.rstrip(' ')
@@ -364,7 +364,7 @@ def displayCard(fields):
     of card printing methods, but it's still useful.
     """
     for i,field in enumerate(fields):
-        print "field[%s] = %s" %(i,field)
+        print("field[%s] = %s" %(i,field))
     ###
 
 if __name__=='__main__':

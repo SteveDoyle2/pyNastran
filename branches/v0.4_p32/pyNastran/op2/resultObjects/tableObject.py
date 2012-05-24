@@ -25,7 +25,7 @@
 import sys
 from struct import pack
 from numpy import array
-from op2_Objects import scalarObject
+from .op2_Objects import scalarObject
 
 class TableObject(scalarObject):  # displacement style table
     def __init__(self,dataCode,iSubcase,dt):

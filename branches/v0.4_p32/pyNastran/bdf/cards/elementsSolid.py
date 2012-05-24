@@ -26,7 +26,7 @@ from numpy import dot,cross,matrix,sqrt
 from numpy.linalg import solve
 
 # pyNastran
-from elements import Element
+from .elements import Element
 from pyNastran.general.generalMath import Area
 
 def Volume4(n1,n2,n3,n4):

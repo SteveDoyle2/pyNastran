@@ -85,7 +85,7 @@ class TestFieldWriter(unittest.TestCase):
     def compare(self,valueIn):
         #print "a = |%s|" %(valueIn)
         field = printField(valueIn)
-        print "a = |%s|" %(field)
+        print("a = |%s|" %(field))
 
         val = getValue(field)
         if val != 0:

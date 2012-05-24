@@ -1,1 +1,1 @@
-import cards
+from .cards import *

@@ -445,8 +445,8 @@ class QuadShell(ShellElement):
         area = area1+area2
         centroid = (c1*area1+c2*area2)/area
         if debug:
-            print "c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2)
-            print "type(centroid=%s centroid=%s \n" %(type(centroid),centroid)
+            print("c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2))
+            print("type(centroid=%s centroid=%s \n" %(type(centroid),centroid))
         return(area,centroid)
     ###
 
@@ -521,21 +521,21 @@ class QuadShell(ShellElement):
         T4 = self.setBlankIfDefault(self.T4,1.0)
         if debug:
         #if 1:
-            print "eid       = ",self.eid
-            print "nodes     = ",self.nodes
+            print("eid       = ",self.eid)
+            print("nodes     = ",self.nodes)
 
-            print "self.zOffset   = ",self.zOffset
-            print "self.TFlag     = ",self.TFlag
-            print "self.thetaMcid = ",self.thetaMcid
+            print("self.zOffset   = ",self.zOffset)
+            print("self.TFlag     = ",self.TFlag)
+            print("self.thetaMcid = ",self.thetaMcid)
 
-            print "zOffset   = ",zOffset
-            print "TFlag     = ",TFlag
-            print "thetaMcid = ",thetaMcid
+            print("zOffset   = ",zOffset)
+            print("TFlag     = ",TFlag)
+            print("thetaMcid = ",thetaMcid)
 
-            print "T1 = ",T1
-            print "T2 = ",T2
-            print "T3 = ",T3
-            print "T4 = ",T4,'\n'
+            print("T1 = ",T1)
+            print("T2 = ",T2)
+            print("T3 = ",T3)
+            print("T4 = ",T4,'\n')
         return (thetaMcid,zOffset,TFlag,T1,T2,T3,T4)
 
 class CSHEAR(QuadShell):
@@ -596,8 +596,8 @@ class CSHEAR(QuadShell):
         area = area1+area2
         centroid = (c1*area1+c2*area2)/area
         if debug:
-            print "c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2)
-            print "type(centroid=%s centroid=%s \n" %(type(centroid),centroid)
+            print("c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2))
+            print("type(centroid=%s centroid=%s \n" %(type(centroid),centroid))
         return(area,centroid)
     ###
 

@@ -26,10 +26,10 @@
 
 # pyNastran
 #from baseCard import Property
-from    bars.propertiesBars    import *
-from  plates.propertiesShell   import *
-from springs.propertiesSprings import *
-from    mass.propertiesMass    import *
+from    .bars.propertiesBars    import *
+from  .plates.propertiesShell   import *
+from .springs.propertiesSprings import *
+from    .mass.propertiesMass    import *
 
 
 class BushingProperty(Property):
@@ -360,7 +360,7 @@ class PLSOLID(SolidProperty):
             self.mid = data[1]
             self.ge  = data[2]
             self.str = data[3]
-            print "data = ",data
+            print("data = ",data)
         ###
         assert self.str in ['GRID','GAUS'],'STR=|%s| doesnt have a valid stress/strain output value set\n' %(self.str)
 
