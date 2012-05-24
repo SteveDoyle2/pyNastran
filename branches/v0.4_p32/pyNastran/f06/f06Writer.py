@@ -211,7 +211,7 @@ class F06Writer(object):
                 header[0] = '     %s\n' %(subtitle)
                 header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
                 for resType in resTypes:
-                    if resType.has_key(iSubcase):
+                    if iSubcase in resType:
                         result = resType[iSubcase]
                         try:
                             #print result.__class__.__name__

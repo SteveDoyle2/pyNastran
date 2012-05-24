@@ -88,6 +88,20 @@ class scalarObject(baseScalarObject):
         self.applyDataCode()
         self.log.debug(self.codeInformation())
 
+    def sortedKeys(self,oxxNodes):
+        keys = list(oxxNodes.keys())
+        i = keys.index('C')
+        keys.pop(i)
+        keys.sort()
+        return ['C']+keys
+
+    def sortedKeyValues(self,oxxNodes):
+        keys = list(oxxNodes.keys())
+        i = keys.index('C')
+        keys.pop(i)
+        keys.sort()
+        return ['C']+keys,oxxNodes.values()
+
     def isImaginary(self):
         return bool(self.sortBits[1])
 

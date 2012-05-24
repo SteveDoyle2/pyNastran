@@ -57,7 +57,8 @@ class FortranFile(object):
         """
         a header is defined as (4,i,4), where i is an integer
         """
-        #self.printSection(60)
+        #debug = True
+        #print(self.printSection(60))
         #data = self.op2.read(12)
         ints = self.readFullIntBlock()
         #print "header ints = %s" %(repr(ints))
@@ -86,7 +87,7 @@ class FortranFile(object):
         reads nCharacters that are assumed to be a string
         """
         data = self.op2.read(nData)
-        string = ''.join(self.getStrings(data))
+        string = self.getStrings(data)
         if self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(string)))
         self.n += nData
@@ -147,8 +148,8 @@ class FortranFile(object):
         unpacks a data set into a series of characters
         """
         n = len(data)
-        sFormat = 's'*n
-        strings = unpack(sFormat,data)
+        sFormat = '%ss' %(n)
+        strings, = unpack(sFormat,data)
         #self.op2Debug.write('|%s|\n' %(str(strings)))
         return strings
 
@@ -217,8 +218,7 @@ class FortranFile(object):
         msg += "floats  = %s\n" %(str(floats))
         #msg += "doubles = %s\n" %(doubles)
         
-        strings = [str(byte) for byte in strings]
-        msg += "strings = |%r|\n" %(''.join(strings))
+        msg += "strings = |%r|\n" %(strings)
         msg += "nWords  = %s\n" %(len(data)//4)
         #msg += "tell    = %s\n" %(self.op2.tell())
         return msg
@@ -255,7 +255,9 @@ class FortranFile(object):
         @retval msg ints/floats/strings of the next nBytes (handles poorly sized nBytes; uncrashable :) )
         @note this the BEST function when adding new cards/tables/debugging
         """
+        #print("nBytes = ",nBytes)
         data = self.op2.read(nBytes)
+        #print("len(data) = ",len(data))
         msg = self.printBlock(data)
         self.op2.seek(self.n)
         return msg
@@ -264,7 +266,7 @@ class FortranFile(object):
         """skips nBits"""
         if self.makeOp2Debug:
             self.op2Debug.write('skipping\n')
-        self.printSection(4)
+        #self.printSection(4)
         if self.makeOp2Debug:
             self.op2Debug.write('skipped\n')
         #print "\n--SKIP--"
@@ -280,7 +282,7 @@ class FortranFile(object):
         """same as skip, but actually reads the data instead of using seek"""
         if self.makeOp2Debug:
             self.op2Debug.write('skipping %s\n' %(n))
-        self.printSection(4)
+        #self.printSection(4)
         if self.makeOp2Debug:
             self.op2Debug.write('skipped\n')
         data = self.op2.read(n)
@@ -325,6 +327,7 @@ class FortranFile(object):
                 if printErrorOnFailure:
                     msg  = '\nmarkers=%s foundMarkers=%s\n' %(markers,foundMarkers)
                     msg += 'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
+                    print(msg)
                 raise InvalidMarkersError(msg)
             foundMarkers.append(marker)
             ###
@@ -437,15 +440,13 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nLetters = len(data)
-        letters = unpack('s'*nLetters,data)  ## @todo should this be c instead of s???
-        letters = [str(letter) for letter in letters]
-        word = ''.join(letters)
+        word, = unpack('%is'%(nLetters),data)  ## @todo should this be c instead of s???
 
         #print "word = |%s|" %(word)
         #print "nLetters=%s word=|%s|" %(nLetters,word)
         if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(word)))
-        return word
+        return word.decode()
 
     def readIntBlock(self):
         """
@@ -499,7 +500,7 @@ class FortranFile(object):
             #print ""
             self.readMarkers([0,2],debug)
             word = self.readStringBlock(debug)
-            #print "*word = |%r|" %(word)
+            #print("*word = |%r|" %(word))
 
             #print "n      = ",n
             #print "self.n = ",self.n

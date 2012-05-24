@@ -323,9 +323,9 @@ class OP2(BDF,  # BDF methods
                 #print "ints4 = ",ints
             #print ""
             #while marker != -1:
-            #    ints = self.readIntBlock()
-            #    marker = ints[0]
-            #    print "ints1 = ",ints
+                #ints = self.readIntBlock()
+                #marker = ints[0]
+                #print "ints1 = ",ints
             #print ""
             self.readMarkers([2])
 
@@ -337,7 +337,7 @@ class OP2(BDF,  # BDF methods
             sys.exit('stopping...')
 
         self.readMarkers([3])
-        self.printSection(20)
+        #print(self.printSection(20))
         ints = self.readIntBlock()
         if self.makeOp2Debug:
             self.op2Debug.write('%s\n' %(str(ints)))
@@ -370,14 +370,14 @@ class OP2(BDF,  # BDF methods
         self.n = self.op2.tell()
 
         #self.readTapeCode()
-        try:
-            self.readTapeCode()
-        except:
-            msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
-            msg += '  If the F06 is OK:\n'
-            msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            msg += '      2.  Run the problem on a different Operating System'
-            raise TapeCodeError(msg)
+        #try:
+        self.readTapeCode()
+        #except:
+            #msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
+            #msg += '  If the F06 is OK:\n'
+            #msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
+            #msg += '      2.  Run the problem on a different Operating System'
+            #raise TapeCodeError(msg)
         ###
 
         isAnotherTable = True
@@ -385,6 +385,7 @@ class OP2(BDF,  # BDF methods
             self.log.debug('-'*80)
             try:
                 tableName = self.readTableName(rewind=True,stopOnFailure=False)
+                #print("tableName = ",tableName)
             except EndOfFileError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 self.log.debug("***ok exit, but it could be better...")

@@ -378,12 +378,12 @@ class solidStressObject(stressObject):
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
-
-            k = oxxNodes.keys()
+            k = self.sortedKeys(oxxNodes)
+            #k = list(oxxNodes.keys())
             #kc = k.index('C')
             #k.pop(kc)
-            k.sort()
-            k.pop(-1)
+            #k.sort()
+            k.pop(0)
             #print k
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
             for nid in ['C']+k:
@@ -550,7 +550,7 @@ class solidStressObject(stressObject):
         msg += '\n'
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
+            for nid in self.sortedKeys(oxxNodes):
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
                 ozz = self.ozz[eid][nid]
