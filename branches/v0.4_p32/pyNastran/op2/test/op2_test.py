@@ -113,7 +113,7 @@ if __name__=='__main__':
     except:
         pass
 
-    print "nFiles = ",len(files)
+    print("nFiles = ",len(files))
     runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')

@@ -144,11 +144,45 @@ def getLogger(log=None,level='debug'):
         logger = log
     return logger
 
+def buildDummyLogger2(level='debug'):
+    import logging
+    try:
+        os.remove('pyNastran.log')
+
+        # create logger with 'pyNastran'
+        logger = logging.getLogger('pyNastran')
+        logger.setLevel(logging.DEBUG)
+        # create file handler which logs even debug messages
+        fh = logging.FileHandler('pyNastran.log')
+        fh.setLevel(logging.DEBUG)
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(levelname)-8s:  %(filename)-25s linenum=%(lineno)-4s %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+
+        logger.info('logger is initialized---')
+    except:
+        logger = logging.getLogger('pyNastran')
+
+    return logger
+
 if __name__=='__main__':
     # how to use a dummy logger
-    logger = dummyLogger()
-    log = logger.startLog('debug') # or info
+    if sys.version_info <(3,):
+        logger = dummyLogger()
+        log = logger.startLog('debug') # or info
+    else:
+        log = buildDummyLogger2()
+    
     log.debug('test message')
     log.warning('asf')
+    
+
     
 

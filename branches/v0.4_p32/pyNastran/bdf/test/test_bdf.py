@@ -32,7 +32,7 @@ import pyNastran
 from pyNastran.bdf.errors import *
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
-from .compareCardContent import compareCardContent
+from pyNastran.bdf.test.compareCardContent import compareCardContent
 
 import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
@@ -72,25 +72,25 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
             traceback.print_exc(file=sys.stdout)
             #raise
         ###
-        print('-'*80)
+        fem1.log.info('-'*80)
     ###
-    print('*'*80)
+    fem1.log.info('*'*80)
     try:
-        print("diffCards1 = ",list(set(diffCards)))
+        fem1.log.info("diffCards1 = %s" %list(set(diffCards)))
     except TypeError:
         #print "type(diffCards) =",type(diffCards)
-        print("diffCards2 = ",diffCards)
+        fem1.log.info("diffCards2 = %s" %(diffCards))
 ###
 
 def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm='combined',isFolder=False):
     bdfModel = str(bdfFilename)
-    print("bdfModel = ",bdfModel)
     if isFolder:
         bdfModel = os.path.join(testPath,folder,bdfFilename)
     
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
     fem1 = BDF(debug=debug,log=None)
+    fem1.log.info("\n\nbdfModel = %s" %(bdfModel))
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
@@ -100,7 +100,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
         try:
             fem1.readBDF(bdfModel,xref=xref)
         except:
-            print("failed reading |%s|" %(bdfModel))
+            fem1.log.info("failed reading |%s|" %(bdfModel))
             raise
         #fem1.sumForces()
         #fem1.sumMoments()
@@ -121,7 +121,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
         try:
             fem2.readBDF(outModel,xref=xref)
         except:
-            print("failed reading |%s|" %(outModel))
+            fem2.log.info("failed reading |%s|" %(outModel))
             raise
         
         #fem2.sumForces()
@@ -184,7 +184,7 @@ def computeInts(cards1,cards2,fem1):
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
     msg = ' diffKeys1=%s diffKeys2=%s' %(diffKeys2,diffKeys2)
-    print(msg)
+    fem1.log.info(msg)
     for key in sorted(allKeys):
         msg = ''
         if key in listKeys1: value1 = cards1[key]
@@ -208,7 +208,7 @@ def computeInts(cards1,cards2,fem1):
 
         msg += '  %skey=%-7s value1=%-7s value2=%-7s' %(star,key,value1,value2)+factorMsg #+'\n'
         msg = msg.rstrip()
-        print(msg)
+        fem1.log.info(msg)
     ###
     return listKeys1+listKeys2
 

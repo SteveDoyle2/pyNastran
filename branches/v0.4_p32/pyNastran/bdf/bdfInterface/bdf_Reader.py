@@ -36,13 +36,17 @@ class bdfReader(object):
             #raise Exception("must use python 2.6 or greater...version=%s" %(str(version)))
 
         if log is None:
-            from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
+            from pyNastran.general.logger import dummyLogger,buildDummyLogger2
             if debug:
                 word = 'debug'
             else:
                 word = 'info'
-            log = loggerObj.startLog(word) # or info
+
+            if sys.version_info <(3,):
+                loggerObj = dummyLogger()
+                log = loggerObj.startLog(word) # or info
+            else:
+                log = buildDummyLogger2(word)
         self.log = log
 
     def printFileName(self,filename):
