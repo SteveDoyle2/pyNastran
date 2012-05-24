@@ -1,0 +1,106 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+
+
+class OES_Object(scalarObject):
+    def __init__(self,dataCode,iSubcase):
+        scalarObject.__init__(self,dataCode,iSubcase)
+        self.log.debug("starting OES...elementName=%s iSubcase=%s" %(self.elementName,self.iSubcase))
+        #print self.dataCode
+
+    def isCurvatureOld(self):
+        if self.stressBits[2]==0:
+            return True
+        return False
+
+    def isCurvature(self):
+        if self.sCode in [0,1,14,15,16,17,27,30,31]: # fiber distance
+            return False
+        elif self.sCode in [10,11,26,]: # fiber curvature
+            return True
+        raise NotImplementedError('add sCode=%s' %(self.sCode))
+
+    def isFiberDistance(self):
+        return not(self.isCurvature())
+
+    def isVonMises(self):
+        #print self.stressBits
+        #iMs = not(self.isMaxShear())
+        #print 'isVonMises = ',iMs
+        return not(self.isMaxShear())
+
+    def isMaxShear(self):
+        #print self.stressBits
+        if self.stressBits[4]==0:
+            #print 'isMaxShear = True'
+            return True
+        #print 'isMaxShear = False'
+        return False
+
+class stressObject(OES_Object):
+    def __init__(self,dataCode,iSubcase):
+        OES_Object.__init__(self,dataCode,iSubcase)
+
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #assert dt>=0.
+        #print "dataCode=",self.dataCode
+        self.elementName = self.dataCode['elementName']
+        if dt is not None:
+            self.log.debug("updating stress...%s=%s elementName=%s" %(self.dataCode['name'],dt,self.elementName))
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
+    def isStrain(self):
+        return True
+
+    def isStress(self):
+        return False
+    
+
+class strainObject(OES_Object):
+    def __init__(self,dataCode,iSubcase):
+        OES_Object.__init__(self,dataCode,iSubcase)
+
+    def updateDt(self,dataCode,dt):
+        self.dataCode = dataCode
+        self.applyDataCode()
+        #print "dataCode=",self.dataCode
+        self.elementName = self.dataCode['elementName']
+        #assert dt>=0.
+        if dt is not None:
+            self.log.debug("updating strain...%s=%s elementName=%s" %(self.dataCode['name'],dt,self.elementName))
+            self.dt = dt
+            self.addNewTransient()
+        ###
+
+    def isStress(self):
+        return False
+    
+    def isStrain(self):
+        return True
