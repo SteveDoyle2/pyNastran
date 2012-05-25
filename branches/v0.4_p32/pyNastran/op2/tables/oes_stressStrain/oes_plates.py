@@ -434,7 +434,7 @@ class plateStressObject(stressObject):
             eid = list(self.eType.keys())[ElemKey]
             #print "self.oxx = ",self.oxx
             #print "eid=%s" %(eid)
-            dt = self.oxx.keys()[0]
+            dt = list(self.oxx.keys())[0]
             #print "dt=%s" %(dt)
             nLayers = len(self.oxx[dt][eid])
             #print "elementKeys = ",elementKeys
@@ -988,7 +988,7 @@ class plateStrainObject(strainObject):
             eid = list(self.eType.keys())[ElemKey]
             #print "self.oxx = ",self.oxx
             #print "eid=%s" %(eid)
-            dt = self.exx.keys()[0]
+            dt = list(self.exx.keys())[0]
             #print "dt=%s" %(dt)
             nLayers = len(self.exx[dt][eid])
             #print "elementKeys = ",elementKeys

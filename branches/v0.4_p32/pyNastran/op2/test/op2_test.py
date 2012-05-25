@@ -72,6 +72,7 @@ if __name__=='__main__':
     # works
     files = getFilesOfType('tests','.op2')
     
+    #moveDir = r'C:\Users\steve\Desktop\pyNastran\pyNastran\op2\test\tests'
     #moveDir = r'D:\work\move\hard_demo'
     moveDir = r'D:\work\move\move_tpl'
     #moveDir = r'D:\work\move\solid_shell_bar'
@@ -82,7 +83,7 @@ if __name__=='__main__':
     makeGeom  = False
     writeBDF  = False
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
     getSkipCards = False
 

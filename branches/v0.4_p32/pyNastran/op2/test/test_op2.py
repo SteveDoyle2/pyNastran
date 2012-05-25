@@ -68,8 +68,6 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
         baseName = os.path.basename(op2file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles:
-            print("%"*80)
-            print('file=%s\n' %(op2file))
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n,op2file))
             nTotal += 1
@@ -101,6 +99,8 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
     #debug = True
     try:
         op2 = OP2(op2file,makeGeom=makeGeom,debug=debug)
+        op2.log.info("%"*80+'\n')
+        op2.log.info('file=%s\n\n' %(op2file))
         op2.setSubcases(iSubcases)
 
         #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
@@ -189,6 +189,7 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
     #    isPassed = True
     except Exception as e:
         op2.log.error(e)
+        #op2.log.exception(e)
         #print e
         print_exc(file=sys.stdout)
         if stopOnFailure:

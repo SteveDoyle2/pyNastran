@@ -187,7 +187,7 @@ class solidStressObject(stressObject):
         del self.o3[dt]
 
     def getTransients(self):
-        k = self.oxx.keys()
+        k = list(self.oxx.keys())
         k.sort()
         return k
 
@@ -378,15 +378,9 @@ class solidStressObject(stressObject):
         nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         for eid,oxxNodes in sorted(self.oxx.items()):
             eType = self.eType[eid]
-            k = self.sortedKeys(oxxNodes)
-            #k = list(oxxNodes.keys())
-            #kc = k.index('C')
-            #k.pop(kc)
-            #k.sort()
-            k.pop(0)
-            #print k
+
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
-            for nid in ['C']+k:
+            for nid in self.sortedKeys(oxxNodes):
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
                 ozz = self.ozz[eid][nid]
@@ -477,14 +471,8 @@ class solidStressObject(stressObject):
                 #self.eType[eid] = eType
                 #print "eid=%s eType=%s" %(eid,eType)
 
-                k = oxxNodes.keys()
-                #kc = k.index('C')
-                #k.pop(kc)
-                k.sort()
-                k.pop(-1)
-                #print k
                 msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
-                for nid in ['C']+k:
+                for nid in self.sortedKeys(oxxNodes):
                     oxx = self.oxx[dt][eid][nid]
                     oyy = self.oyy[dt][eid][nid]
                     ozz = self.ozz[dt][eid][nid]
@@ -588,7 +576,7 @@ class solidStressObject(stressObject):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,oxxNodes in sorted(oxxs.items()):
                 eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
+                for nid in self.sortedKeys(oxxNodes):
                     oxx = self.oxx[dt][eid][nid]
                     oyy = self.oyy[dt][eid][nid]
                     ozz = self.ozz[dt][eid][nid]
@@ -772,7 +760,7 @@ class solidStrainObject(strainObject):
         del self.e3[dt]
 
     def getTransients(self):
-        k = self.exx.keys()
+        k = list(self.exx.keys())
         k.sort()
         return k
 
@@ -975,14 +963,8 @@ class solidStrainObject(strainObject):
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
 
-            k = exxNodes.keys()
-            #kc = k.index('C')
-            #k.pop(kc)
-            k.sort()
-            k.pop(-1)
-            #print k
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
-            for nid in ['C']+k:
+            for nid in self.sortedKeys(exxNodes):
                 exx = self.exx[eid][nid]
                 eyy = self.eyy[eid][nid]
                 ezz = self.ezz[eid][nid]
@@ -1069,14 +1051,8 @@ class solidStrainObject(strainObject):
             for eid,exxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
 
-                k = exxNodes.keys()
-                #kc = k.index('C')
-                #k.pop(kc)
-                k.sort()
-                k.pop(-1)
-                #print k
                 msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes[eType])
-                for nid in ['C']+k:
+                for nid in self.sortedKeys(exxNodes):
                     exx = self.exx[dt][eid][nid]
                     eyy = self.eyy[dt][eid][nid]
                     ezz = self.ezz[dt][eid][nid]
@@ -1132,44 +1108,6 @@ class solidStrainObject(strainObject):
         if self.isTransient:
             return self.__reprTransient__()
 
-        msg = '---SOLID STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
-        for header in headers:
-            msg += '%9s ' %(header)
-        msg += '\n'
-        for eid,oxxNodes in sorted(self.oxx.items()):
-            eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
-                oxx = self.oxx[eid][nid]
-                oyy = self.oyy[eid][nid]
-                ozz = self.ozz[eid][nid]
-                txy = self.txy[eid][nid]
-                tyz = self.tyz[eid][nid]
-                txz = self.txz[eid][nid]
-
-                #o1 = self.o1[eid][nid]
-                #o2 = self.o2[eid][nid]
-                #o3 = self.o3[eid][nid]
-                ovm = self.ovmShear[eid][nid]
-                msg += '%-6i %6s %8s ' %(eid,eType,nid)
-                vals = [oxx,oyy,ozz,txy,tyz,txz,ovm]
-                for val in vals:
-                    if abs(val)<1e-6:
-                        msg += '%9s ' %('0')
-                    else:
-                        msg += '%9i ' %(val)
-                    ###
-                msg += '\n'
-                #msg += "eid=%-4s eType=%-6s nid=%-2i oxx=%-5i oyy=%-5i ozz=%-5i txy=%-5i tyz=%-5i txz=%-5i ovm=%-5i\n" %(eid,eType,nid,oxx,oyy,ozz,txy,tyz,txz,ovm)
-            ###
-        ###
-        return msg
-
-    def __repr__(self):
-        if self.isTransient:
-            return self.__reprTransient__()
-
         msg = '---SOLID STRAIN---\n'
         headers = self.getHeaders()
         msg += '%-6s %6s %8s ' %('EID','eType','nodeID')
@@ -1178,7 +1116,7 @@ class solidStrainObject(strainObject):
         msg += '\n'
         for eid,exxNodes in sorted(self.exx.items()):
             eType = self.eType[eid]
-            for nid in sorted(exxNodes):
+            for nid in self.sortedKeys(exxNodes):
                 exx = self.exx[eid][nid]
                 eyy = self.eyy[eid][nid]
                 ezz = self.ezz[eid][nid]
@@ -1211,7 +1149,7 @@ class solidStrainObject(strainObject):
             msg += '%s = %g\n' %(self.dataCode['name'],self.dt)
             for eid,exxNodes in sorted(exxs.items()):
                 eType = self.eType[eid]
-                for nid in sorted(exxNodes):
+                for nid in self.sortedKeys(exxNodes):
                     exx = self.exx[dt][eid][nid]
                     eyy = self.eyy[dt][eid][nid]
                     ezz = self.ezz[dt][eid][nid]
