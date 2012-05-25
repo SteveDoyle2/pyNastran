@@ -327,7 +327,7 @@ class FortranFile(object):
                 if printErrorOnFailure:
                     msg  = '\nmarkers=%s foundMarkers=%s\n' %(markers,foundMarkers)
                     msg += 'tableName=%s found=%s expected=%s leftover=%s' %(tableName,tableCode,marker,self.printSection(40))
-                    print(msg)
+                    #print(msg)
                 raise InvalidMarkersError(msg)
             foundMarkers.append(marker)
             ###

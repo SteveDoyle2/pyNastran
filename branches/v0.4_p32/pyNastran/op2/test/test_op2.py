@@ -84,7 +84,7 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,debug=True,saveCases=True,
         ###
     ###
     if saveCases:
-        f = open('failedCases.in','wb')
+        f = open('failedCases.in','w',encoding='ascii')
         for op2file in failedCases:
             f.write('%s\n' %(op2file))
         f.close()
@@ -187,7 +187,8 @@ def runOP2(op2file,makeGeom=False,writeBDF=False,iSubcases=[],writeF06=True,debu
     #    isPassed = True
     #except InvalidFieldError: # bad bdf field
     #    isPassed = True
-    except:
+    except Exception as e:
+        op2.log.error(e)
         #print e
         print_exc(file=sys.stdout)
         if stopOnFailure:

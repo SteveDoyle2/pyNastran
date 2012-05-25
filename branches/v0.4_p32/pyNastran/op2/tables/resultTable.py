@@ -142,7 +142,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
             marker = self.getMarker()
             self.goto(n)
             if marker!=146:
-                print("marker = ",marker)
+                #print("marker = ",marker)
                 exitFast = True
                 break
 
@@ -509,6 +509,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):
         if debug:
             self.log.debug('calling readScalars8 debug')
             print("self.obj = ",self.obj)
+            asdf
             
         for i in range(nEntries):
             #if debug:

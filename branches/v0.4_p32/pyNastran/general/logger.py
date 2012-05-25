@@ -147,13 +147,17 @@ def getLogger(log=None,level='debug'):
 def buildDummyLogger2(level='debug'):
     import logging
     try:
-        os.remove('pyNastran.log')
+        version = sys.version_info
+        fname = 'pyNastran.py%s%s.log' %(version.major,version.minor)
+        logPath = os.path.join(os.getcwd(),fname)
+        if os.path.exists(logPath):
+            os.remove(logPath)
 
         # create logger with 'pyNastran'
         logger = logging.getLogger('pyNastran')
         logger.setLevel(logging.DEBUG)
         # create file handler which logs even debug messages
-        fh = logging.FileHandler('pyNastran.log')
+        fh = logging.FileHandler(logPath)
         fh.setLevel(logging.DEBUG)
         # create console handler with a higher log level
         ch = logging.StreamHandler()

@@ -39,7 +39,7 @@ class ElementsStressStrain(object):
         self.skipOES_Element2()
 
     def skipOES_Element2(self): # works???
-        self.data = ''
+        self.data = b''
         self.handleResultsBuffer(self.skipOES_Element2)
 
     def OES_Thermal(self,debug=False): # works

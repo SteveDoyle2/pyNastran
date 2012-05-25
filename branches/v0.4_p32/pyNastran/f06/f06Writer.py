@@ -213,6 +213,7 @@ class F06Writer(object):
                 for resType in resTypes:
                     if iSubcase in resType:
                         result = resType[iSubcase]
+                        self.log.info(result.__class__.__name__)
                         try:
                             #print result.__class__.__name__
                             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
@@ -227,6 +228,7 @@ class F06Writer(object):
         if 0:
             for res in resTypes:
                 for iSubcase,result in sorted(res.items()):
+                    self.log.info(result.__class__.__name__)
                     (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum)
                     f.write(msg)
                     pageNum +=1

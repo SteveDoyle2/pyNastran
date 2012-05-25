@@ -129,6 +129,7 @@ class OP2(BDF,  # BDF methods
 
         ## the list of supported tables (dont edit this)
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
+                             'GEOM1S','GEOM2S','GEOM3S','GEOM4S',
                              'EPT','MPT','MPTS', # properties/materials
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # tables
@@ -405,15 +406,15 @@ class OP2(BDF,  # BDF methods
                 self.tableName = tableName
                 try:
                     #print "startTell = ",self.op2.tell()
-                    if tableName=='GEOM1': # nodes,coords,etc.
+                    if tableName in ['GEOM1','GEOM1S']: # nodes,coords,etc.
                         self.readTable_Geom1()
                     #elif tableName=='GEOM1N':
                     #    self.readTable_Geom1N()
-                    elif tableName=='GEOM2': # elements
+                    elif tableName in ['GEOM2','GEOM2S']: # elements
                         self.readTable_Geom2()
-                    elif tableName=='GEOM3': # static/thermal loads
+                    elif tableName in ['GEOM3','GEOM3S']: # static/thermal loads
                         self.readTable_Geom3()
-                    elif tableName=='GEOM4': # constraints
+                    elif tableName in ['GEOM4','GEOM4S']: # constraints
                         self.readTable_Geom4()
 
                     elif tableName in ['EPT','EPTS']:  # element properties
