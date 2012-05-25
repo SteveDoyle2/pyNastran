@@ -8,7 +8,7 @@
 = User Overview = 
  * Install Python 2.6 or 2.7
  * Install numpy, scipy, vtk, & wxPython (Python 2.x)
- * Install numpy, scipy (Python 3.1+)
+ * Install numpy, scipy, distribute (Python 3.1+)
  * Install Cython for OP4 support
  * Download the latest pyNastran release
  * Extract the zip file
@@ -24,13 +24,14 @@ The software has been tested with Python 2.7.
 
 I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.6 and 2.7 are both fine, but the code uses a few features that aren't available in Python 2.5.  If youhttp://wxpython.org/ cannot update your Python, you still can use the code if you modify it slightly.
 
-Python 3.x *should* work, but hasn't really been tested.
+Python 3.x is *broken* at the moment, but version 0.4 is currently being fixed.
 
  * [http://code.google.com/p/pythonxy/wiki/Welcome Python(x,y) ]
  * [http://scipy.org/ scipy 0.9.0  ]
  * [http://numpy.org/ numpy 1.6.1  ]
  * [http://www.vtk.org/VTK/resources/software.html vtk 5.8.0] (for the GUI)
  * [http://wxpython.org/download.php#stable wxPython 2.8.12.0] (for the GUI)
+ * [http://pypi.python.org/pypi/distribute distribute_setup.py]
  * [http://matplotlib.sourceforge.net/ matplotlib 1.1.0] (version 0.5+, for plotting)
  * [http://cython.org/ Cython 0.15.1] (for OP4 support)
 
@@ -39,6 +40,9 @@ Python 3.x *should* work, but hasn't really been tested.
  * Linux/Mac: Install gcc
  * Open a command prompt / terminal
  * run *easy_install cython==0.15.1* to install Cython
+
+== Download Distribute_Setup.py (Python 3.1+ ONLY) ==
+ * Download [http://pypi.python.org/pypi/distribute distribute_setup.py] to replace setuptools.  pyNastran needs it to run setup.py.
 
 == Download pyNastran ==
  * Click the downloads page and download the most recent [http://code.google.com/p/pynastran/downloads/list version]
