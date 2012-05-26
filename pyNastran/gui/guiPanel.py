@@ -403,86 +403,93 @@ class Pan(wx.Panel,NastranIO):
             self.iCase +=1
         else:
             self.iCase = 0
-        key = self.caseKeys[self.iCase]
-        if key[2] ==3: # vector size=3 -> vector
-            self.incrementCycle()
+
+        if len(self.caseKeys)>0:
+            key = self.caseKeys[self.iCase]
         
+            if key[2] ==3: # vector size=3 -> vector
+                self.incrementCycle()
+            foundCases = True
+        else:
+            print "No Results found.  Many results are not supported in the GUI.\n"
+            foundCases = False
         #print "next key = ",key
-        return
+        return foundCases
 
     def cycleResults(self):
         if self.nCases==0:
             return
 
-        self.incrementCycle()
-        self.gridResult = vtk.vtkFloatArray()
+        foundCases = self.incrementCycle()
+        if foundCases:
+            self.gridResult = vtk.vtkFloatArray()
 
-        key = self.caseKeys[self.iCase]
-        case = self.resultCases[key]
-        (subcaseID,resultType,vectorSize,location,dataFormat) = key
+            key = self.caseKeys[self.iCase]
+            case = self.resultCases[key]
+            (subcaseID,resultType,vectorSize,location,dataFormat) = key
 
-        if location=='centroid':
-            #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
-            self.gridResult.Allocate(self.nElements,1000)
-        #else: # node
-            #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
-            #self.gridResult.Allocate(self.nNodes*vectorSize,1000)
-            #self.gridResult.SetNumberOfComponents(vectorSize)
+            if location=='centroid':
+                #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
+                self.gridResult.Allocate(self.nElements,1000)
+            #else: # node
+                #allocationSize = vectorSize*location (where location='node'-> self.nNodes)
+                #self.gridResult.Allocate(self.nNodes*vectorSize,1000)
+                #self.gridResult.SetNumberOfComponents(vectorSize)
 
-        #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
-        caseName = self.iSubcaseNameMap[subcaseID]
-        (subtitle,label) = caseName
+            #self.iSubcaseNameMap[self.iSubcase] = [Subtitle,Label]
+            caseName = self.iSubcaseNameMap[subcaseID]
+            (subtitle,label) = caseName
 
-        print "subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
+            print "subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
 
-        for value in case:
-            maxValue = value
-            minValue = value
-            break
-
-        for value in case:
-            maxValue = max(value,maxValue)
-            minValue = min(value,minValue)
-        
-        # flips sign to make colors go from blue -> red
-        normValue = maxValue-minValue
-        #print "case = ",case
-        #if normValue==0.: # avoids division by 0.
-        #    normValue = 1.
-        
-        if vectorSize==1:
             for value in case:
-                self.gridResult.InsertNextValue(value)
-            ###
-        else: # vectorSize=3
-            pass
-            #for value in case:
-            #    self.gridResult.InsertNextTuple3(value)  # x,y,z
-            ###
-        ###
-        print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
+                maxValue = value
+                minValue = value
+                break
 
-        self.textActors[0].SetInput('Max:  %g' %(maxValue)) # max
-        self.textActors[1].SetInput('Min:  %g' %(minValue)) # min
-        self.textActors[2].SetInput('Subcase=%s Subtitle: %s' %(subcaseID,subtitle)) # info
-        self.textActors[3].SetInput('Label: %s'               %(label)) # info
-        self.UpdateScalarBar(resultType,minValue,maxValue,dataFormat)
+            for value in case:
+                maxValue = max(value,maxValue)
+                minValue = min(value,minValue)
 
-        # @todo results can only go from centroid->node and not back to centroid
-        if location=='centroid':
-            self.grid.GetCellData().SetScalars(self.gridResult)
-            #self.grid.GetPointData().SetScalars(self.emptyResult) # causes a crash
-            self.grid.Modified()
-        else:
-            #self.grid.GetCellData().SetScalars(self.emptyResult)
-            #if vectorSize==1:
-            #    self.grid.GetPointData().SetScalars(self.gridResult)
-            #else:
-            #    self.grid.GetPointData().SetScalars(self.gridResult)
-            #self.grid.Modified()
-            pass
-        ###
-        
+            # flips sign to make colors go from blue -> red
+            normValue = maxValue-minValue
+            #print "case = ",case
+            #if normValue==0.: # avoids division by 0.
+            #    normValue = 1.
+
+            if vectorSize==1:
+                for value in case:
+                    self.gridResult.InsertNextValue(value)
+                ###
+            else: # vectorSize=3
+                pass
+                #for value in case:
+                #    self.gridResult.InsertNextTuple3(value)  # x,y,z
+                ###
+            ###
+            print "max=%g min=%g norm=%g\n" %(maxValue,minValue,normValue)
+
+            self.textActors[0].SetInput('Max:  %g' %(maxValue)) # max
+            self.textActors[1].SetInput('Min:  %g' %(minValue)) # min
+            self.textActors[2].SetInput('Subcase=%s Subtitle: %s' %(subcaseID,subtitle)) # info
+            self.textActors[3].SetInput('Label: %s'               %(label)) # info
+            self.UpdateScalarBar(resultType,minValue,maxValue,dataFormat)
+
+            # @todo results can only go from centroid->node and not back to centroid
+            if location=='centroid':
+                self.grid.GetCellData().SetScalars(self.gridResult)
+                #self.grid.GetPointData().SetScalars(self.emptyResult) # causes a crash
+                self.grid.Modified()
+            else:
+                #self.grid.GetCellData().SetScalars(self.emptyResult)
+                #if vectorSize==1:
+                #    self.grid.GetPointData().SetScalars(self.gridResult)
+                #else:
+                #    self.grid.GetPointData().SetScalars(self.gridResult)
+                #self.grid.Modified()
+                pass
+            ###
+        ### if results       
 
     def OnKeyPress(self,obj,event):
         rwi = obj

@@ -12,6 +12,8 @@ from guiPanel import Pan
 ID_SAVEAS = 803
 ID_ABOUT = 3
 
+ID_PLOT = 200
+
 ID_SURFACE   = 901
 ID_WIREFRAME = 902
 ID_HIDDEN    = 903
@@ -20,11 +22,16 @@ ID_CAMERA    = 910
 
 ID_BDF = 920
 ID_OP2 = 921
+ID_F06 = 922
+
 
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = |%r|" %(pkgPath)
 
-iconPath = os.path.join(pkgPath,'icons')
+if '?' in pkgPath:
+   iconPath = 'icons'
+else:
+    iconPath = os.path.join(pkgPath,'icons')
 #print "iconPath = |%r|" %(iconPath)
 
 #------------------------------------------------------------------------------
@@ -262,11 +269,13 @@ class AppFrame( wx.Frame ) :
         events = self.eventsHandler
 
         menubar = wx.MenuBar()
-        # file menu
+        # --------- File Menu -------------------------------------------------
         fileMenu = wx.Menu()
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
         loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
         loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
+        #print "topen = ",os.path.join(iconPath,'topen.png')
+        sys.stdout.flush()
         assert os.path.exists(os.path.join(iconPath,'topen.png'))
         loadBDF.SetBitmap(   wx.Image(os.path.join(iconPath,'topen.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
 
@@ -286,7 +295,7 @@ class AppFrame( wx.Frame ) :
         exitButton.SetBitmap(wx.Image(os.path.join(iconPath,'texit.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap())
         fileMenu.AppendItem(exitButton)
 
-        # view menu
+        # --------- View Menu -------------------------------------------------
         # status bar at bottom - toggles
         viewMenu = wx.Menu()
         camera    = viewMenu.Append(ID_CAMERA, 'Take a Screenshot','Take a Screenshot')
@@ -316,21 +325,80 @@ class AppFrame( wx.Frame ) :
         #viewMenu.Check(self.showStatusBar.GetId(), True)
         #viewMenu.Check(self.showToolBar.GetId(),   True)
 
+        # --------- Plot Menu -------------------------------------------------
+        #plotMenu = wx.Menu()
+        #plot = plotMenu.Append(ID_PLOT, '&Plot Data','Plot Data')
+        #self.Bind(wx.EVT_MENU, self.onPlot, id=ID_PLOT)
+        
+
+        # --------- Help / About Menu -----------------------------------------
         # help/about menu
         helpMenu = wx.Menu()
         helpMenu.Append(ID_ABOUT, '&About', 'About pyNastran')
 
         # menu bar
         menubar.Append(fileMenu, '&File')
+        #menubar.Append(plotMenu, '&Plot')
         menubar.Append(viewMenu, '&View')
         menubar.Append(helpMenu, '&Help')
         self.menubar = menubar
 
-
-
+    def onPlot(self,event):
+        #e = Example(self)
+        e = TestFrame(self)
+        e.Show()
 #end AppFrame class
 
 #------------------------------------------------------------------------------
+
+class TestFrame(wx.Frame):
+    def __init__(self,parent):
+        wx.Frame.__init__(self, parent, -1, "GridBagSizer Test")
+        sizer = wx.GridBagSizer(hgap=5, vgap=5)
+        
+        
+        labels = "1 2 3 4 5 6 7 8 9 0".split()
+        for col in range(3):
+            for row in range(3):
+                bw = wx.Button(self, label=labels[row*3 + col])
+                sizer.Add(bw, pos=(row,col))
+
+        bw = wx.Button(self, label="span 3 rows")
+        sizer.Add(bw, pos=(0,3), span=(3,1), flag=wx.EXPAND)
+
+        bw = wx.Button(self, label="span all columns")
+        sizer.Add(bw, pos=(3,0), span=(1,4), flag=wx.EXPAND)
+
+        sizer.AddGrowableCol(3)
+        sizer.AddGrowableRow(3)
+
+        self.SetSizer(sizer)
+        self.Fit()
+
+class Example(wx.Frame):
+    
+    def __init__(self, *args, **kwargs):
+        super(Example, self).__init__(*args, **kwargs) 
+            
+        self.InitUI()
+        
+    def InitUI(self):    
+
+        menubar = wx.MenuBar()
+        fileMenu = wx.Menu()
+        fitem = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
+        menubar.Append(fileMenu, '&File')
+        self.SetMenuBar(menubar)
+        
+        self.Bind(wx.EVT_MENU, self.OnQuit, fitem)
+
+        self.SetSize((300, 200))
+        self.SetTitle('Simple menu')
+        self.Centre()
+        self.Show(True)
+        
+    def OnQuit(self, e):
+        self.Close()
 
 class EventsHandler(object) :
 

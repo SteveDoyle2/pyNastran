@@ -33,7 +33,7 @@ class FortranFile(object):
         """
         a header is defined as (4,i,4), where i is an integer
         """
-        #self.printSection(60)
+        print self.printSection(60)
         #data = self.op2.read(12)
         ints = self.readFullIntBlock()
         #print "header ints = %s" %(repr(ints))
@@ -194,7 +194,7 @@ class FortranFile(object):
         #msg += "longs  = %s\n" %(longs)
         msg += "floats  = %s\n" %(str(floats))
         #msg += "doubles = %s\n" %(doubles)
-        msg += "strings = |%r|\n" %(''.join(strings))
+        msg += "strings = |b%r|\n" %(''.join(strings))
         msg += "nWords  = %s\n" %(len(data)//4)
         #msg += "tell    = %s\n" %(self.op2.tell())
         return msg

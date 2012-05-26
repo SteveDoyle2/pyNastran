@@ -2,6 +2,8 @@ from numpy import array
 from pyNastran.bdf.cards.loads import *
 from pyNastran.bdf.errors import *
 
+from pyNastran.bdf.cards.plates.elementsShell import ShellElement
+
 # 3rd party
 #import numpy
 #from numpy import any,cross
@@ -55,6 +57,82 @@ class bdfMethods(object):
             m = e.Mass()
             mass += m
         return (mass)
+
+    def flipNormals(self,starterEid,eids=None,flipStarter=False):
+        """
+        Takes the normals of SHELL elements and flips it to a common direction
+        This method follows the contour of the body, so assuming
+        no internal elements, all the normals on the outside will point
+        outwards (or inwards).
+
+        @param starterEid the element to copy the normal of
+        @param eids       the element IDs to flip to the common direction (default=None -> all)
+        @param flipStarter should the staring element be flipped (default=False)
+        
+        @todo finish method...think i need to build a edge list...
+              that'd be a lot easier to loop through stuff...
+        """
+        normals   = {}
+        validNids = set([])
+        isCorrectNormal = set([])
+
+        allEids = eids
+        if allEids==None:
+            allEids==self.elements.keys()
+        ###
+        setAllEids = set(allEids)
+
+
+        if flipStarter:
+            elem = self.Element(starterEid)
+            elem.flipNormal()
+        normals[starterEid] = elem.Normal()
+        
+        for eid in allEids:
+            if isinstance(element,ShellElement):
+                elem = self.Element(starterEid)
+                normals[starterEid] = elem.Normal()
+                validNids = validNids.union(set(elem.nodeIDs()))
+            ###
+        ###
+        
+        ## clean up the elements that will be considered
+        elemsToCheck = set([])
+        nidToEidMap = self.getNodeIDToElementIDsMap()
+        for nid,eidsMap in sorted(nidToEidMap.iteritems()):
+            if nid not in validNids:  # clean up extra nodes
+                del nidToEidMap[nid]
+            else:
+                eids = list(set(eids))  # do i need this?
+                for eid in eids:  # clean up ROD/SOLID elements
+                    eids2 = []
+                    if eid in setAllEids:
+                        eids2.append(eid)
+                    ###
+                    elemsToCheck = elemsToCheck.union(set(eids2))
+                nidToEidMap[nid] = eids2
+            ###
+        ###
+        
+        ## starts with the starter element, loops thru adjacent elements
+        ## and checks to see if the normal is 'close' to the elements
+        ## normal from before
+        goEid = starterEid
+        
+        # no recursion to avoid recursion limit
+        while 1:
+            elem = self.Element(goEid)
+            nids = elem.getNodeIDs()
+            normals = self.getAdjacentNormals(nids,nidToEidMap)
+            normal = normals[goEid]
+        ###
+
+    def getAdjacentElements(self,nids,nidToEidMap):
+        """
+        @todo doesnt work...
+        """
+        normals = {}
+        #for nid in 
 
     def resolveGrids(self,cid=0):
         """

@@ -16,14 +16,14 @@ if dev:
     print "changes = ",changes
     #client.update('./examples/pysvn')
 else:
-    revision = 'dev'
+    revision = 'dev790'
 
 __author__  = 'Steven Doyle, Al Danials'
 __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __copyright__   = 'Copyright 2011-2012, pyNastran; %s' %(__author__)
 __license__     = 'LGPLv3'
-__releaseDate__ = '2012/6/??'
-__releaseDate2__ = 'JUNE  ??, 2012'
-__version__     = '0.5.0.r%s' %(revision)
+__releaseDate__ = '2012/5/25'
+__releaseDate2__ = 'MAY 25, 2012'
+__version__     = '0.5.r%s' %(revision)
 __website__     = 'http://code.google.com/p/pynastran/'

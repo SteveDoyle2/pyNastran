@@ -385,15 +385,15 @@ class OP2(BDF,  # BDF methods
         self.n = self.op2.tell()
 
         #self.readTapeCode()
-        try:
-            self.readTapeCode()
-        except:
-            msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
-            msg += '  If the F06 is OK:\n'
-            msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            msg += '      2.  Run the problem on a different Operating System\n'
-            msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
-            raise TapeCodeError(msg)
+        #try:
+        self.readTapeCode()
+        #except:
+            #msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
+            #msg += '  If the F06 is OK:\n'
+            #msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
+            #msg += '      2.  Run the problem on a different Operating System\n'
+            #msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
+            #raise TapeCodeError(msg)
             #raise
         ###
 
@@ -402,6 +402,7 @@ class OP2(BDF,  # BDF methods
             self.log.debug('-'*80)
             try:
                 tableName = self.readTableName(rewind=True,stopOnFailure=False)
+                print("tableName = ",tableName)
             except EndOfFileError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 self.log.debug("***ok exit, but it could be better...")

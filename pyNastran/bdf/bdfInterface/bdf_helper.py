@@ -311,10 +311,27 @@ class getMethods(object):
     ###
 
     #--------------------
+    # MATRIX ENTRY CARDS
+    def DMIG(self,dname):
+        return self.dmig[dname]
+    #--------------------
+
+
 
 class addMethods(object):
     def __init__(self):
         pass
+
+    def addDMIG(self,dmig,allowOverwrites=False):
+        name = dmig.name
+        #if key in self.params and allowOverwrites==False:
+            #if not param.isSameCard(self.params[key]):
+                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
+                #self.log.warning('key=%s param=%s oldPARAM=%s' %(key,param,self.params[key]))
+                #self.params[key] = param
+        #else:
+        self.dmigs[name] = dmig
+        ###
 
     def addParam(self,param,allowOverwrites=False):
         key = param.key
