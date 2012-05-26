@@ -48,7 +48,7 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.OnMiddleButtonUp()
         return
 
-    def OnChar(self,obj,event):
+    def onChar(self,obj,event):
         rwi = obj
         key = rwi.GetKeySym()
         print "*Pressed %s" %(key)

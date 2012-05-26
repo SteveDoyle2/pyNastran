@@ -8,9 +8,10 @@ from numpy import zeros,ones
 import pyNastran
 version = pyNastran.__version__
 
-from mouseStyle import MouseStyle
-from actionsControl import pyWidget
-from nastranIO import NastranIO
+from pyNastran.gui.mouseStyle import MouseStyle
+from pyNastran.gui.actionsControl import pyWidget
+from pyNastran.gui.nastranIO import NastranIO
+from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
 
 def getScreenCorner(x,y):
     #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
@@ -19,7 +20,7 @@ def getScreenCorner(x,y):
     yCorner = (yScreen-y)//2
     return(xCorner,yCorner)
 
-class Pan(wx.Panel,NastranIO):
+class Pan(wx.Panel,NastranIO,Cart3dIO):
     def __init__(self, *args, **kwargs):
         isEdges=kwargs['isEdges']
         del kwargs['isEdges']
@@ -90,17 +91,17 @@ class Pan(wx.Panel,NastranIO):
         self.widget.Render()
         self.widget.Update()
 
-    def SetToWireframe(self,event):
+    def onSetToWireframe(self,event):
         if self.bdfFileName is not None:
             self.widget.Wireframe()
             self.widget.Update()
 
-    def SetToSurface(self,event):
+    def onSetToSurface(self,event):
         if self.bdfFileName is not None:
             self.widget.Surface()
             self.widget.Update()
 
-    def SetToFlatShading(self,event): # Flat
+    def onSetToFlatShading(self,event): # Flat
         if self.bdfFileName is not None:
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
@@ -111,7 +112,7 @@ class Pan(wx.Panel,NastranIO):
             self.widget.Render()
         ###
 
-    def SetToGouraudShading(self,event): # Gouraud
+    def onSetToGouraudShading(self,event): # Gouraud
         if self.bdfFileName is not None:
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
@@ -122,7 +123,7 @@ class Pan(wx.Panel,NastranIO):
             self.widget.Render()
         ###
 
-    def SetToPhongShading(self,event): # Phong
+    def onSetToPhongShading(self,event): # Phong
         if self.bdfFileName is not None:
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
@@ -406,7 +407,7 @@ class Pan(wx.Panel,NastranIO):
 
         if len(self.caseKeys)>0:
             key = self.caseKeys[self.iCase]
-        
+            print "key = ",key
             if key[2] ==3: # vector size=3 -> vector
                 self.incrementCycle()
             foundCases = True
@@ -421,7 +422,9 @@ class Pan(wx.Panel,NastranIO):
             return
 
         foundCases = self.incrementCycle()
-        if foundCases:
+        #if foundCases:
+        if 1:
+            print "incremented case"
             self.gridResult = vtk.vtkFloatArray()
 
             key = self.caseKeys[self.iCase]
@@ -491,7 +494,7 @@ class Pan(wx.Panel,NastranIO):
             ###
         ### if results       
 
-    def OnKeyPress(self,obj,event):
+    def onKeyPress(self,obj,event):
         rwi = obj
         key = rwi.GetKeySym()
         #print "*Pressed %s" %(key)

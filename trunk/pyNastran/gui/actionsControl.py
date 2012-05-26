@@ -82,7 +82,7 @@ class pyWidget(wxVTKRenderWindow):
             self.ResetCamera()
 
         elif code == ord('i'):
-            self.TakePicture(event)
+            self.onTakePicture(event)
 
         #elif code == ord('e'): # edges dont work right yet
             #self.parent.DisplayEdges(event)
@@ -109,7 +109,7 @@ class pyWidget(wxVTKRenderWindow):
             self.parent.TurnTextOn()
         self.parent.scalarBar.Modified()
 
-    def TakePicture(self,event):
+    def onTakePicture(self,event):
         renderLarge = vtk.vtkRenderLargeImage()
         renderLarge.SetInput(self.getRenderer())
         renderLarge.SetMagnification(4)
