@@ -4,11 +4,11 @@ from numpy import array,sqrt,dot,abs,angle
 
 from op2_Objects import scalarObject
 
-try:
-    from pylab import xlabel,ylabel,show,grid,legend,plot,title
-    import matplotlib.pyplot as plt
-except ImportError:
-    pass
+#try:
+#    from pylab import xlabel,ylabel,show,grid,legend,plot,title
+#    import matplotlib.pyplot as plt
+#except ImportError:
+#    pass
 
 class TableObject(scalarObject):  # displacement style table
     def __init__(self,dataCode,isSort1,iSubcase,dt):

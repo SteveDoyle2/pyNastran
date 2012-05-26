@@ -136,7 +136,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'FREQ','FREQ1','FREQ2',
         
         # direct matrix input cards
-        #'DMIG',
+        'DMIG',
         #'DEQATN',
         
         # optimization cards
@@ -891,9 +891,17 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.rejectCards.append(card)
             elif card==[] or cardName=='':
                 pass
-            #elif cardName=='DMIG': # not done...
-                #dmig = DMIG(cardObj)
-                #self.addDMIG(dmig)
+            elif cardName=='DMIG': # not done...
+                if cardObj.field(2)==0:
+                    print("adding a DMIG")
+                    dmig = DMIG(cardObj)
+                    self.addDMIG(dmig)
+                else:
+                    name = cardObj.field(1)
+                    print("found a DMIG column for %s" %(name))
+                    dmig = self.dmigs[name]
+                    dmig.addColumn(cardObj)
+                ###
             elif cardName=='DEQATN':  # buggy for commas
                 #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
                 equation = DEQATN(cardObj)

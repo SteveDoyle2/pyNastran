@@ -81,20 +81,63 @@ class DMIG(BaseCard):  # not done...
     is required for each column with nonzero elements.
     """
     type = 'DMIG'
+    def addColumn(self,card=None,data=None):
+        #print "hi column"
+        Gj = card.field(2)
+        Cj = card.field(3)
+        #
+        
+        nFields = card.nFields()
+        nLoops = (nFields-5)//4
+        minLoop = nLoops-1
+        if minLoop==0:
+            minLoop = 1
+        #assert nFields <= 8,'nFields=%s' %(nFields)
+
+        print "minLoop = ",minLoop
+        print "nLoops  = ",nLoops
+        for i in range(nLoops):
+            self.GCj.append((Gj,Cj))
+
+        for i in range(nLoops):
+            n = 5+4*i
+            Gi = card.field(n)
+            Ci = card.field(n+1)
+            self.GCi.append((Gi,Ci))
+
+            self.Real.append(card.field(n+2))
+            self.Complex.append(card.field(n+3))
+        
+        assert len(self.GCj)==len(self.GCi),'(len(GCj)=%s len(GCi)=%s' %(len(self.GCj),len(self.GCi))
+        #if isComplex():
+            #self.Complex(card.field(v)
+    def buildMatrices(self):
+        pass
+    #def renameMatrix(self,nameNew):
+        #pass
+    def isComplex(self):
+        if self.tin in [3,4]:
+            return True
+        return False
+
     def __init__(self,card=None,data=None):
         self.name = card.field(1)
         #zero
         self.ifo   = card.field(3)
         self.tin   = card.field(4)
         self.tout  = card.field(5,0)
+        
         self.polar = card.field(6)
         self.ncol  = card.field(8)
 
         #self.name = card.field(1)
-        #self.Gj = []
-        #self.Cj = []
+        self.GCj = []
+        self.GCi = []
         #self.Gi = []
         #self.Ci = []
-        #self.Ai = []
-        #self.Bi = []
-        
+        self.Real = []
+        self.Complex = []
+
+    def __repr__(self):
+        fields = ['DMIG',self.name,0,self.ifo,self.tin,self.tout,self.polar,None,self.ncol]
+        return fields
