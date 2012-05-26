@@ -23,6 +23,7 @@ ID_CAMERA    = 910
 ID_BDF = 920
 ID_OP2 = 921
 ID_F06 = 922
+ID_CART3D = 923
 
 
 pkgPath = pyNastran.gui.__path__[0]
@@ -161,20 +162,20 @@ class AppFrame( wx.Frame ) :
         #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
         
         # Bind View Menu
-        self.Bind(wx.EVT_MENU, self.frmPanel.widget.TakePicture, id=ID_CAMERA)
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe,     id=ID_WIREFRAME)
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,       id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.widget.onTakePicture, id=ID_CAMERA)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe,     id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface,       id=ID_SURFACE)
 
-        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToFlatShading,    self.flatShading)
-        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToGouraudShading, self.gouraudShading)
-        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToPhongShading,   self.phongShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToFlatShading,    self.flatShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToGouraudShading, self.gouraudShading)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToPhongShading,   self.phongShading)
 
-        self.Bind(wx.EVT_MENU, events.OnBackgroundColor, self.bkgColorView)
-        #self.Bind(wx.EVT_MENU, events.ToggleStatusBar, self.showStatusBar)
-        #self.Bind(wx.EVT_MENU, events.ToggleToolBar, self.showToolBar)
+        self.Bind(wx.EVT_MENU, events.onBackgroundColor, self.bkgColorView)
+        #self.Bind(wx.EVT_MENU, events.onToggleStatusBar, self.showStatusBar)
+        #self.Bind(wx.EVT_MENU, events.onToggleToolBar, self.showToolBar)
         
         # Bind Help Menu
-        self.Bind(wx.EVT_MENU, events.OnAbout, id=ID_ABOUT)
+        self.Bind(wx.EVT_MENU, events.onAbout, id=ID_ABOUT)
     #end __init__
 
     def buildTree(self,panel1):
@@ -250,20 +251,21 @@ class AppFrame( wx.Frame ) :
 
 
         # Bind File Menu
-        self.Bind(wx.EVT_TOOL, events.OnLoadBDF,  id=ID_BDF)
-        self.Bind(wx.EVT_TOOL, events.OnLoadOP2,  id=ID_OP2)
+        self.Bind(wx.EVT_TOOL, events.onLoadBDF,    id=ID_BDF)
+        self.Bind(wx.EVT_TOOL, events.onLoadOP2,    id=ID_OP2)
+        self.Bind(wx.EVT_TOOL, events.onLoadCart3d, id=ID_CART3D)
 
-        self.Bind(wx.EVT_MENU, events.OnExit,     id=wx.ID_EXIT)
-        #self.Bind(wx.EVT_TOOL, events.OnExit,     id=wx.ID_EXIT)
+        self.Bind(wx.EVT_MENU, events.onExit,     id=wx.ID_EXIT)
+       #self.Bind(wx.EVT_TOOL, events.onExit,     id=wx.ID_EXIT)
 
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe, id=ID_WIREFRAME)
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,   id=ID_SURFACE)
-        self.Bind(wx.EVT_MENU, self.frmPanel.SetToSurface,   id=ID_CAMERA)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface,   id=ID_SURFACE)
+        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface,   id=ID_CAMERA)
 
 
-        #self.Bind(wx.EVT_TOOL, events.OnSaveAsFile, id=ID_SAVEAS)
-        #self.Bind(wx.EVT_TOOL, events.OnUndo, tundo)
-        #self.Bind(wx.EVT_TOOL, events.OnRedo, tredo)
+        #self.Bind(wx.EVT_TOOL, events.onSaveAsFile, id=ID_SAVEAS)
+        #self.Bind(wx.EVT_TOOL, events.onUndo, tundo)
+        #self.Bind(wx.EVT_TOOL, events.onRedo, tredo)
 
     def buildMenuBar(self):
         events = self.eventsHandler
@@ -272,8 +274,9 @@ class AppFrame( wx.Frame ) :
         # --------- File Menu -------------------------------------------------
         fileMenu = wx.Menu()
         #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
-        loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
+        loadBDF    = fileMenu.Append(ID_BDF,   'Load &BDF', 'Loads a BDF Input File')
+        loadOP2    = fileMenu.Append(ID_OP2,   'Load O&P2', 'Loads an OP2 Results File')
+        loadCart3d = fileMenu.Append(ID_CART3D,'Load &Cart3D', 'Loads a Cart3D Results File')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()
         assert os.path.exists(os.path.join(iconPath,'topen.png'))
@@ -397,7 +400,7 @@ class Example(wx.Frame):
         self.Centre()
         self.Show(True)
         
-    def OnQuit(self, e):
+    def onQuit(self, e):
         self.Close()
 
 class EventsHandler(object) :
@@ -406,7 +409,7 @@ class EventsHandler(object) :
         self.parent = parent
 
     # File Menu
-    def OnLoadBDF(self, event):
+    def onLoadBDF(self, event):
         """ Open a file"""
         #print "OnOpen..."
 
@@ -424,7 +427,7 @@ class EventsHandler(object) :
             self.parent.frmPanel.Update()
         dlg.Destroy()
 
-    def OnLoadOP2(self, event):
+    def onLoadOP2(self, event):
         """ Open a file"""
         #print "OnOpen..."
 
@@ -455,11 +458,34 @@ class EventsHandler(object) :
             self.parent.frmPanel.Update()
         dlg.Destroy()
 
-    def OnExit(self,event):
+    def onLoadCart3d(self, event):
+        """ Open a file"""
+        #print "OnOpen..."
+
+        #wildcard = "Cart3d (*.i.tri;*.a.tri)|(*.i.triq;*.a.triq)|" \
+        # "All files (*.*)|*.*"
+
+        wildcard = "Cart3d (*.i.tri; *.a.tri)|*.i.tri;*.a.tri|" \
+         "All files (*.*)|*.*"
+        #wildcard = "Cart3d (*.tri;)|(*.triq;)|" \
+        # "All files (*.*)|*.*"
+        
+        dlg = wx.FileDialog(None, "Choose a Cart3d Input File to Load ", self.parent.dirname, "", wildcard, wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:
+            bdfFileName         = dlg.GetFilename()
+            self.parent.dirname = dlg.GetDirectory()
+            fname = os.path.join(self.parent.dirname, bdfFileName)
+            print "fname = ",fname
+            self.parent.UpdateWindowName(bdfFileName)
+            self.parent.frmPanel.loadCart3dGeometry(fname,self.parent.dirname)
+            self.parent.frmPanel.Update()
+        dlg.Destroy()
+
+    def onExit(self,event):
         self.parent.Destroy()
 
     # View Menu
-    def OnBackgroundColor(self,event):
+    def onBackgroundColor(self,event):
         dlg = wx.ColourDialog(self.parent)
         dlg.GetColourData().SetChooseFull(True)
         if dlg.ShowModal() == wx.ID_OK:
@@ -487,20 +513,20 @@ class EventsHandler(object) :
         rend.SetBackground(color)
         self.parent.frmPanel.widget.Render()
 
-    def ToggleStatusBar(self, e):
+    def onToggleStatusBar(self, e):
         if self.parent.showStatusBar.IsChecked():
             self.parent.statusbar.Show()
         else:
             self.parent.statusbar.Hide()
 
-    def ToggleToolBar(self, e):
+    def onToggleToolBar(self, e):
         if self.parent.showToolBar.IsChecked():
             self.parent.toolbar1.Show()
         else:
             self.parent.toolbar1.Hide()
 
     # Help Menu
-    def OnAbout(self, event):
+    def onAbout(self, event):
         about = [
             'pyNastran v%s'%(pyNastran.__version__),
             'Copyright %s; Steven Doyle 2011-2012\n' %(pyNastran.__license__),
