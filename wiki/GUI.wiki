@@ -2,9 +2,11 @@
 #labels Featured
 
 = Setup Note =
-Make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGuide Installation Guide] and use *setup.py develop* and not *setup.py install*.  Otherwise, the GUI will not work in v0.3.
+Download the entire package from the [http://code.google.com/p/pynastran/downloads/list Downloads] page or just the GUI.
 
-If you're using Python 3.x, the GUI will *not* work because [http://wiki.wxpython.org/TentativeRoadmap wxPython] does not support Python 3.x.
+If you download the source, make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGuide Installation Guide] and use *setup.py develop* and not *setup.py install*.  
+
+If you're using Python 3.x, the GUI will *not* work because [http://wiki.wxpython.org/TentativeRoadmap wxPython] does not support Python 3.x (but it is [http://wiki.wxpython.org/ProjectPhoenix very close]).  Same with [http://www.vtk.org/Wiki/VTK/Python_Wrapping_FAQ VTK].
 
 = Introduction =
 
@@ -28,7 +30,7 @@ Tests to see if an OP2 will work with pyNastran.
 optional arguments:
   -h, --help     show this help message and exit
   -q, --quiet    Prints debug messages (default=True)
-  -g, --edges    Shows element edges as black lines
+  -g, --edges    Shows element edges as black lines (this option was changed to -e in the executable version and will be -e in future versions)
   -v, --version  show program's version number and exit
 }}}
 
@@ -81,11 +83,12 @@ The *solidBending.bdf* and *solidBending.op2* files have been included as exampl
 || o/O || Rotate clockwise/counter-clockwise 5 degrees ||
 || s   || Display surface mode    ||
 || w   || Display wireframe mode  ||
+|| h   || Hide the scale bar and text  ||
 || x/X || Snap to x/-x axis ||
 || y/Y || Snap to y/-y axis ||
 || z/Z || Snap to z/-z axis ||
 
-== Warning ==
+== Graphical Issues ==
 You'll have the best performance if you run the GUI on Windows with an new NVIDIA graphics card and on a desktop.
 
 If you're having issues, you should update the driver for your graphics card, especially if you have a laptop or Radeon card. For a desktop machine, go to the web site of the manufacturer of the graphics card. For a laptop, you should normally go to the web site of the laptop manufacturer, though for NVIDIA you may now find a newer driver available from NVIDIA.
@@ -93,7 +96,7 @@ If you're having issues, you should update the driver for your graphics card, es
 == TODO ==
  * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
  * support composite elements
- * allow edges to be shown from without passing in a command line argument
+ * allow edges to be shown without passing in a command line argument
  * Allow point picking (p)
  * Allow element picking (e)
  * Display element edges (d)
