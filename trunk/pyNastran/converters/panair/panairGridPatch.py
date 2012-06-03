@@ -10,11 +10,13 @@ def sInt(value):
 
 
 class PanairPatch(object):
-    def __init__(self,iNetwork,netName,kt,cpNorm,x,y,z):
+    def __init__(self,iNetwork,netName,kt,cpNorm,x,y,z,log):
+        self.log = log
+
         self.iNetwork = iNetwork # lets it print out in order, does it need a deepcopy???
         self.netName = netName.strip()
-        print 'netName=|%s|' %(netName)
-        print "****patch.netName=%s" %(self.netName)
+        self.log.debug('netName=|%s|' %(netName))
+        self.log.debug("****patch.netName=%s" %(self.netName))
         self.kt      = kt
         self.cpNorm  = cpNorm
         self.matchw=0
@@ -24,7 +26,8 @@ class PanairPatch(object):
         shape = x.shape
         self.nRows = shape[0]
         self.nCols = shape[1]
-        print "shape = ",shape
+        
+        self.log.debug("shape = %s" %(str(shape)))
 
     def process(self):
         msg = '     network # being processed %3i\n\n' %(self.iNetwork+1)
@@ -39,7 +42,7 @@ class PanairPatch(object):
         elif self.kt==18:
             src=0; dblt=18; nlopt1=0; nropt1=9; nlopt2=15; nropt2= 2; ipot=2
             if self.matchw==1.:  nlopt2=6
-            print "18...matchw = ",self.matchw
+            self.log.debug("18...matchw = %s" %(self.matchw))
         elif self.kt==20:
             src=0; dblt=20; nlopt1=0; nropt1=9; nlopt2=6; nropt2= 2; ipot=2
         else:
@@ -69,6 +72,17 @@ class PanairPatch(object):
         p2 = self.getPoint(r,  c+1)
         p3 = self.getPoint(r+1,c+1)
         p4 = self.getPoint(r+1,c  )
+        return (p1,p2,p3,p4)
+
+    def getPanelPointIDs(self,iPanel):
+        r = iPanel%(self.nRows-1)
+        c = iPanel/(self.nRows-1)
+
+        #print "r=%s c=%s" %(r,c)
+        p1 = self.getPointID(r,  c  )
+        p2 = self.getPointID(r,  c+1)
+        p3 = self.getPointID(r+1,c+1)
+        p4 = self.getPointID(r+1,c  )
         return (p1,p2,p3,p4)
 
     def getSubpanelProperties(self,iPanel):
@@ -138,10 +152,13 @@ class PanairPatch(object):
                       self.y[row][col],
                       self.z[row][col]])
 
+    def getPointID(self,row,col):
+        return col*self.nRows+row
+
     def getIPoint(self,iPoint):
         iRow = iPoint/(self.nCols)
         iCol = iPoint%(self.nCols)
-        print "iPoint=%s iRow=%s iCol=%s" %(iPoint,iRow,iCol)
+        self.log.debug("iPoint=%s iRow=%s iCol=%s" %(iPoint,iRow,iCol))
         return self.getPoint(iRow,iCol)
 
     def getEdge(self,edgeNumber):
@@ -165,7 +182,7 @@ class PanairPatch(object):
             z = self.z[0][:] # pretty sure edge 1 is the 0th row
             p = [iCol for iCol in range(self.nCols)] # good
         elif edgeNumber==2:
-            print "x.shape = ",self.x.shape
+            self.log.debug("x.shape = %s" %(str(self.x.shape)))
             x = self.x[:][self.nCols-1]
             y = self.y[:][self.nCols-1]
             z = self.z[:][self.nCols-1] # pretty sure edge 2 is the 0th row
@@ -184,17 +201,17 @@ class PanairPatch(object):
             p = [self.nRows*iCol for iCol in range(self.nCols)] # good
         else:
             raise Exception('invalid edge; edgeNumber=%s' %(edgeNumber))
-        print "nRows=%s nCols=%s edgeNumber=%s" %(self.nRows,self.nCols,edgeNumber)
-        print "nx = ",len(x)
-        print "p = ",p
-        print "x = ",x
-        print "y = ",y
-        print "z = ",z
+        self.log.debug("nRows=%s nCols=%s edgeNumber=%s" %(self.nRows,self.nCols,edgeNumber))
+        #print "nx = ",len(x)
+        #print "p = ",p
+        #print "x = ",x
+        #print "y = ",y
+        #print "z = ",z
         p = [iPoint for iPoint in range(self.nPoints())]
         for pointID in p:
             #pointID = 2
             p2 = self.getIPoint(pointID)
-            print "point[%s]=%s" %(pointID,p2)
+            #print "point[%s]=%s" %(pointID,p2)
 
         #if edgeNumber != 1:
         #    sys.exit('asdf')
@@ -215,9 +232,34 @@ class PanairPatch(object):
             x[i:i+nx1] = x1[0:nx1]
             y[i:i+nx1] = y1[0:nx1]
             z[i:i+nx1] = z1[0:nx1]
-            print "-----"
+            self.log.debug("-----")
         return (p,x,y,z)
             
+    def getElements(self,pointI):
+        panels = []
+        #print "pointI=%s" %(pointI)
+        for iPanel in range(self.nPanels()):
+            panel = self.getPanelPointIDs(iPanel)
+            panel2 = []
+            
+            for p in panel:
+                panel2.append(p+pointI)
+            #print "panel=%s panel2=%s" %(str(panel),str(panel2))
+            panels.append(panel2)
+        return panels
+    
+    def getPoints(self):
+        points = []
+        #self.log.debug("size(X) = %s" %( str( self.x.shape ) ))
+        #print "size(X) = %s" %( str(X.size())
+        
+        for j in range(self.nCols):
+            for i in range(self.nRows):
+                point = [self.x[i][j],self.y[i][j],self.z[i][j]]
+                points.append(point)
+
+        return points,len(points)
+
     def writeAsPlot3D(self):
         out = ''
         x = self.x.ravel() # unravel
@@ -235,7 +277,7 @@ class PanairPatch(object):
         for zi in z:
             out += "%s " %(zi)
         out += "\n"
-        print out
+        self.log.debug(out)
         #print x
         #for c in range(self.nCols):
         #    nPointsLeft = nFullLines*2+nPartialLines
@@ -263,7 +305,7 @@ class PanairPatch(object):
         """
         #x = self.writeAsPlot3D()
 
-        print "*******"
+        self.log.debug("*******")
         header = '$points - surface panels\n'
         points = ''
 
@@ -327,17 +369,18 @@ class PanairPatch(object):
         return pointOut
 
 class PanairWakePatch(PanairPatch):
-    def __init__(self,iNetwork,netName,options,x,y,z):
+    def __init__(self,iNetwork,netName,options,x,y,z,log):
         (kt,cpNorm,matchw,trailedPanel,edgeNumber,xWake,tWake) = options
-        PanairPatch.__init__(self,iNetwork,netName,kt,cpNorm,x,y,z)
+        PanairPatch.__init__(self,iNetwork,netName,kt,cpNorm,x,y,z,log)
 
+        self.log = log
         self.matchw = matchw
         self.trailedPanel = trailedPanel
         self.edgeNumber = edgeNumber
         self.xWake = xWake
         self.tWake = tWake
-        print "matchw = ",self.matchw
-        print "wake patch"
+        self.log.debug("matchw = %s" %(self.matchw))
+        self.log.debug("wake patch")
 
     def __repr__(self):
         header = '$trailing wakes\n'
@@ -363,7 +406,7 @@ class PanairGridHelper(object):
         1.
         """
         self.ncases = int(float(section[1][0:10]))
-        print "ncases = %s" %(self.ncases)
+        self.log.debug("ncases = %s" %(self.ncases))
         return True
 
     def getMach(self,section):
@@ -373,7 +416,7 @@ class PanairGridHelper(object):
         .6
         """
         self.mach = float(section[1][0:10])
-        print "mach = %s" %(self.mach)
+        self.log.debug("mach = %s" %(self.mach))
         return True
 
     def setMach(self,mach):
@@ -401,7 +444,7 @@ class PanairGridHelper(object):
         self.alphaC = float(section[1][0:10]) # alphaCompressibility
         sline = section[2].split()
         self.alphas = [float(slot) for slot in sline]
-        print "alphaC=%s alphas=%s" %(self.alphaC,self.alphas)
+        self.log.debug("alphaC=%s alphas=%s" %(self.alphaC,self.alphas))
         return True
 
     def setAlphas(self,alphas,alphaC):
@@ -427,7 +470,7 @@ class PanairGridHelper(object):
         self.betaC = float(section[1][0:10]) # betaCompressibility
         sline = section[2].split()
         self.betas = [float(slot) for slot in sline]
-        print "betaC=%s betas=%s" %(self.betaC,self.betas)
+        self.log.debug("betaC=%s betas=%s" %(self.betaC,self.betas))
         return True
 
     def setBetas(self,betas,betaC):
@@ -457,8 +500,8 @@ class PanairGridHelper(object):
         self.bref = float(section[2][10:20])
         self.cref = float(section[2][20:30])
         self.dref = float(section[2][30:40])
-        print "xref=%s yref=%s zref=%s" %(self.xref,self.yref,self.zref)
-        print "sref=%s bref=%s cref=%s dref=%s " %(self.sref,self.bref,self.cref,self.dref)
+        self.log.debug("xref=%s yref=%s zref=%s" %(self.xref,self.yref,self.zref))
+        self.log.debug("sref=%s bref=%s cref=%s dref=%s " %(self.sref,self.bref,self.cref,self.dref))
         return True
 
     def writeReferenceQuantities(self):
@@ -469,7 +512,7 @@ class PanairGridHelper(object):
 
     def getEnd(self,section):
         self.isEnd = True
-        print "end..."
+        self.log.debug("end...")
         return True
 
     def writeEnd(self):
