@@ -158,7 +158,7 @@ class PanairPatch(object):
     def getIPoint(self,iPoint):
         iRow = iPoint/(self.nCols)
         iCol = iPoint%(self.nCols)
-        self.log.debug("iPoint=%s iRow=%s iCol=%s" %(iPoint,iRow,iCol))
+        #self.log.debug("iPoint=%s iRow=%s iCol=%s" %(iPoint,iRow,iCol))
         return self.getPoint(iRow,iCol)
 
     def getEdge(self,edgeNumber):

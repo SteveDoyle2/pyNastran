@@ -1,6 +1,8 @@
 import os
 import sys
 import copy
+
+from math import ceil,sin,cos,radians
 from numpy import array,zeros,ones,transpose,cross,dot
 from numpy.linalg import norm
 
@@ -237,7 +239,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         names = []
         for patchID,patch in self.patches.items():
             self.log.debug("patchID=%s" %(patchID))
-            self.log.debug("*patch = %s" %(patch))
+            #self.log.debug("*patch = %s" %(patch))
             self.log.debug("patch.netName=%s" %(patch.netName))
             if patch.netName==netName:
                 return patch
@@ -298,6 +300,167 @@ class PanairGrid(PanairGridHelper,PanairWrite):
             #print x
             self.addPatch(netName,kt,cpNorm,x,y,z)
             n+=1
+        return True
+
+    def getCircularSection(self,section):
+        """
+        $circular sections - nacelle with composite panels
+        =kn 
+        2.
+        =kt
+        1.
+        =nopt                                                                 netname
+        0.                                                                    cowlu
+        =nm
+        20.
+        =xs(1)    ri(1)     xs(2)     ri(2)     xs(*)     ri(*)
+            2.0000    2.3000    1.5756    2.3000    1.1486    2.3000
+            0.7460    2.3030    0.4069    2.3286    0.1624    2.3790
+            0.0214    2.4542   -0.0200    2.5485    0.0388    2.6522
+            0.2056    2.7554    0.4869    2.8522    0.8883    2.9413
+            1.4250    3.0178    2.1188    3.0656    2.9586    3.0658
+            3.8551    3.0175    4.6715    2.9439    5.3492    2.8700
+            6.0000    2.7842    6.4687    2.7442
+        =nn
+        5.
+        =th(1)    th(2)     th(3)     th(4)     th(5)
+        -90.      -45.      0.        45.       90.
+        """
+        nNetworks = int(float(section[1][0 :10]))
+        cpNorm = section[1][50:60].strip()
+        
+        kt = int(float(section[2][0 :10]))
+        if cpNorm:
+            self.log.debug("nNetworks=%s cpNorm=%s" %(nNetworks,cpNorm))
+        else:
+            self.log.debug("nNetworks=%s" %(nNetworks))
+        
+        n=3
+        self.msg += '      kn,kt            %i          %i\n' %(nNetworks,kt)
+
+        for iNetwork in range(nNetworks):
+            self.log.debug("lines[%s] = %s" %(n,section[n]))
+            nDisplacement = int(float(section[n][0 :10]))  # 0-noDisplacement; 1-Specify
+            assert nDisplacement in [0,1],section[n]
+            n+=1
+
+            print "\nsection[n] = ",section[n].strip()
+            nXR = int(float(section[n][ 0:10]))
+            assert nXR>0,section[n]
+            print "nXR = %s" %(nXR)
+            netName = section[n][70:80]
+            self.log.debug("kt=%s nXR=%s nDisplacement=%s netname=%s" %(kt,nXR,nDisplacement,netName))
+
+            nFullLines = nXR/3
+            nPartialLines = int(ceil(nXR%3/3.))
+            nXR_Lines = nFullLines+nPartialLines
+            print "X,Rad - nFullLines=%s nPartialLines=%s nLines=%s\n" %(nFullLines,nPartialLines,nXR_Lines)
+            n+=1
+
+            Xin = []
+            R = []
+            lines = section[n:n+nXR_Lines]
+            n+=nXR_Lines
+            
+            for line in lines:
+                print line
+                try:
+                    (x1,r1) = float(line[0 :10]),float(line[10:20])
+                    print "x1=%s r1=%s" %(x1,r1)
+                    Xin.append(x1); R.append(r1);
+                except ValueError:
+                    pass
+
+                try:
+                    (x2,r2) = float(line[20:30]),float(line[30:40])
+                    print "x2=%s r2=%s" %(x2,r2)
+                    Xin.append(x2); R.append(r2);
+                except ValueError:
+                    pass
+
+                try:
+                    (x3,r3) = float(line[40:50]),float(line[50:60])
+                    print "x3=%s r3=%s" %(x3,r3)
+                    Xin.append(x3); R.append(r3);
+                except ValueError:
+                    pass
+            assert nXR==len(Xin),'nXR=%s Xin=%s' %(nXR,len(Xin))
+
+            #----------------------------------------------------
+            print "section[n] = ",section[n].strip()
+            nTheta = int(float(section[n][ 0:10]))
+            assert nTheta>0,section[n]
+            print "nTheta = %s" %(nTheta)
+            nFullLines    = nTheta/6
+            nPartialLines = int(ceil(nTheta%6/6.))
+            nTheta_Lines  = nFullLines+nPartialLines
+            print "Theta - nFullLines=%s nPartialLines=%s nLines=%s" %(nFullLines,nPartialLines,nTheta_Lines)
+            n+=1
+            
+            lines = section[n:n+nTheta_Lines]
+            theta = []
+            for line in lines:
+                print line
+                try:
+                    (theta1) = float(line[0 :10])
+                    theta.append(theta1)
+                except ValueError:
+                    pass
+                try:
+                    (theta2) = float(line[10:20])
+                    theta.append(theta2)
+                except ValueError:
+                    pass
+                try:
+                    (theta3) = float(line[20:30])
+                    theta.append(theta3)
+                except ValueError:
+                    pass
+                try:
+                    (theta4) = float(line[30:40])
+                    theta.append(theta4)
+                except ValueError:
+                    pass
+                try:
+                    (theta5) = float(line[40:50])
+                    theta.append(theta5)
+                except ValueError:
+                    pass
+                try:
+                    (theta6) = float(line[50:60])
+                    theta.append(theta6)
+                except ValueError:
+                    pass
+            print "theta = ",theta
+            n+=nTheta_Lines
+            
+            assert nTheta==len(theta)
+            sinThetaR = [sin(radians(thetai)) for thetai in theta]
+            cosThetaR = [cos(radians(thetai)) for thetai in theta]
+            
+            zi = 0.
+            X = zeros([nXR,nTheta])
+            Y = zeros([nXR,nTheta])
+            Z = zeros([nXR,nTheta])
+            print "Xin=%s \nR=%s" %(Xin,R)
+            print "X.shape = ",X.shape
+            for i,(x,r) in enumerate(zip(Xin,R)):
+                for j,(sinTheta,cosTheta) in enumerate(zip(sinThetaR,cosThetaR)):
+                    y = r*sinTheta
+                    z = r*cosTheta+zi
+                    print "x=%s y=%s z=%s" %(x,y,z)
+                    X[i][j] = x
+                    Y[i][j] = y
+                    Z[i][j] = z
+            ###
+            #for i,point in enumerate(points):
+            #    x[i][j] = point[0]
+            #    y[i][j] = point[1]
+            #    z[i][j] = point[2]
+
+            #print "--X--"
+            #print x
+            self.addPatch(netName,kt,cpNorm,X,Y,Z)
         return True
 
     def getGrid(self,section):
@@ -583,6 +746,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
             'yaw':self.getBetas,
             'pri':self.getPrintout,
             'poi':self.getPoints,
+            'cir':self.getCircularSection,
             'tra':self.getTrailingWakes,
             'pea':self.getPartialEdgeAbutments,
             'eat':self.getLiberalizedAbutments,
