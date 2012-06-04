@@ -14,6 +14,7 @@
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 
+from numpy import zeros
 
 import vtk
 from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
@@ -27,10 +28,15 @@ class NastranIO(object):
     def __init__(self):
         pass
 
-    def loadGeometry(self,bdfFileName,dirname):
+    def loadNastranGeometry(self,bdfFileName,dirname,isNodal,isCentroidal):
+        self.isNodal = isNodal
+        self.isCentroidal = isCentroidal
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
         
+        #skipReading = self.removeOldGeometry(bdfFileName)
+        #if skipReading:
+            #return
         if bdfFileName is None:
             self.grid       = vtk.vtkUnstructuredGrid()
             self.gridResult = vtk.vtkFloatArray()
@@ -64,6 +70,7 @@ class NastranIO(object):
         self.scalarBar.Modified()
 
         model = BDF()
+        self.modelType = model.modelType
         model.readBDF(bdfFileName,includeDir=dirname)
 
         nNodes    = model.nNodes()
@@ -72,8 +79,8 @@ class NastranIO(object):
         self.nNodes = nNodes
         self.nElements = nElements
 
-        #print "nNodes = ",nNodes
-        print "nElements = ",nElements
+        #print "nNodes = ",self.nNodes
+        print "nElements = ",self.nElements
 
         #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
 
@@ -81,13 +88,17 @@ class NastranIO(object):
             nCONM2 = model.cardCount['CONM2']
         else:
             nCONM2 = 0
-        self.grid.Allocate(nElements, 1000)
-        self.gridResult.SetNumberOfComponents(nElements)
+        self.grid.Allocate(self.nElements, 1000)
+        #self.gridResult.SetNumberOfComponents(self.nElements)
+        #self.gridResult.SetNumberOfComponents(0)
+        self.gridResult.SetNumberOfComponents(self.nElements)
+        #self.gridResult.Allocate(self.nNodes,1000)
+
         self.grid2.Allocate(nCAeros +nCONM2, 1000)
 
         points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nNodes)
-        self.gridResult.Allocate(nNodes,1000)
+        points.SetNumberOfPoints(self.nNodes)
+        self.gridResult.Allocate(self.nNodes,1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -353,7 +364,8 @@ class NastranIO(object):
         print "updated grid"
 
 
-    def loadResults(self,op2FileName):
+    def loadNastranResults(self,op2FileName,dirname,isNodal,isCentroidal):
+        #self.gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
@@ -376,12 +388,12 @@ class NastranIO(object):
         #print "nElements = ",nElements
         nidsSet = False # set to False to disable nodeIDs
         eidsSet = True
-        for ID in subcaseIDs:
+        for subcaseID in subcaseIDs:
             if nidsSet:
                 nids = zeros(self.nNodes,'d')
                 for nid,nid2 in self.nidMap.iteritems():
                     nids[nid2] = nid
-                cases[(ID,'Node_ID',1,'node','%.0f')] = nids
+                cases[(subcaseID,'Node_ID',1,'node','%.0f')] = nids
                 nidsSet = True
 
             if eidsSet:
@@ -389,22 +401,22 @@ class NastranIO(object):
                 for eid,eid2 in self.eidMap.iteritems():
                     eids[eid2] = eid
                
-                eKey = (ID,'isElementOn',1,'centroid','%.0g')
-                cases[(ID,'Element_ID',1,'centroid','%.0f')] = eids
+                eKey = (subcaseID,'isElementOn',1,'centroid','%.0g')
+                cases[(subcaseID,'Element_ID',1,'centroid','%.0f')] = eids
                 cases[eKey] = zeros(nElements) # is the element supported
                 eidsSet = True
             
             if False:
-                if ID in op2.displacements: # not correct?
+                if subcaseID in op2.displacements: # not correct?
                     case = op2.displacements[ID]
-                    key = (ID,'DisplacementX',3,'node','%g')
+                    key = (subcaseID,'DisplacementX',3,'node','%g')
                     #cases[key] = case.translations
 
-                if ID in op2.temperatures:
-                    case = op2.temperatures[ID]
+                if subcaseID in op2.temperatures:
+                    case = op2.temperatures[subcaseID]
                     #print case
                     temps = zeros(self.nNodes)
-                    key = (ID,'Temperature',1,'node','%g')
+                    key = (subcaseID,'Temperature',1,'node','%g')
                     for nid,T in case.temperatures.iteritems():
                         #print T
                         nid2 = self.nidMap[nid]
@@ -412,8 +424,8 @@ class NastranIO(object):
                     ###
                     #cases[key] = temps
 
-            if self.isStress(op2,ID):
-                cases = self.fillStressCase(cases,op2,ID,eKey,nElements)
+            if self.isStress(op2,subcaseID):
+                cases = self.fillStressCase(cases,op2,subcaseID,eKey,nElements)
             ###
         ###
         self.resultCases = cases
@@ -424,7 +436,7 @@ class NastranIO(object):
         self.nCases = len(self.resultCases)-1 # number of keys in dictionary
         self.cycleResults() # start at nCase=0
 
-    def fillStressCase(self,cases,op2,ID,eKey,nElements):
+    def fillStressCase(self,cases,op2,subcaseID,eKey,nElements):
         oxx = zeros(nElements)
         oyy = zeros(nElements)
         ozz = zeros(nElements)
@@ -435,8 +447,8 @@ class NastranIO(object):
         ovm = zeros(nElements)
 
         vmWord = 'N/A'
-        if ID in op2.rodStress:
-            case = op2.rodStress[ID]
+        if subcaseID in op2.rodStress:
+            case = op2.rodStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
@@ -453,12 +465,12 @@ class NastranIO(object):
                 #o2[eid2] = 0.  #(o1i+o3i)/2.
                 o3[eid2] = min(axial,torsion)
 
-        if ID in op2.barStress:
+        if subcaseID in op2.barStress:
             #self.s1    = {}
             #self.s2    = {}
             #self.s3    = {}
             #self.s4    = {}
-            case = op2.barStress[ID]
+            case = op2.barStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
@@ -477,9 +489,9 @@ class NastranIO(object):
                 o3[eid2] = o3i
                 #ovm[eid2] = ovmi
 
-        if ID in op2.plateStress:
+        if subcaseID in op2.plateStress:
             #self.txy    = {}
-            case = op2.plateStress[ID]
+            case = op2.plateStress[subcaseID]
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
@@ -511,8 +523,8 @@ class NastranIO(object):
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 
-        if ID in op2.solidStress:
-            case = op2.solidStress[ID]
+        if subcaseID in op2.solidStress:
+            case = op2.solidStress[subcaseID]
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
@@ -529,7 +541,7 @@ class NastranIO(object):
                 o2i = case.o2[eid]['C']
                 o3i = case.o3[eid]['C']
                 ovmi = case.ovmShear[eid]['C']
-                #if ID==1:
+                #if subcaseID==1:
                     #print "ovm[%s] = %s" %(eid,ovmi)
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
@@ -541,13 +553,15 @@ class NastranIO(object):
                 ovm[eid2] = ovmi
             ###
 
-        cases[(ID,'StressXX',1,'centroid','%.3f')] = oxx
-        cases[(ID,'StressYY',1,'centroid','%.3f')] = oyy
-        cases[(ID,'StressZZ',1,'centroid','%.3f')] = ozz
+        # subcaseID,resultType,vectorSize,location,dataFormat
+        cases[(subcaseID,'StressXX',1,'centroid','%.3f')] = oxx
+        cases[(subcaseID,'StressYY',1,'centroid','%.3f')] = oyy
+        cases[(subcaseID,'StressZZ',1,'centroid','%.3f')] = ozz
 
-        cases[(ID,'Stress1',1,'centroid','%.3f')] = o1
-        cases[(ID,'Stress2',1,'centroid','%.3f')] = o2
-        cases[(ID,'Stress3',1,'centroid','%.3f')] = o3
-        cases[(ID,vmWord   ,1,'centroid','%.3f')] = ovm
+        cases[(subcaseID,'Stress1',1,'centroid','%.3f')] = o1
+        cases[(subcaseID,'Stress2',1,'centroid','%.3f')] = o2
+        cases[(subcaseID,'Stress3',1,'centroid','%.3f')] = o3
+        cases[(subcaseID,vmWord   ,1,'centroid','%.3f')] = ovm
         return cases
     
+
