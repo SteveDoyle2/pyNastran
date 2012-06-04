@@ -112,4 +112,5 @@ if __name__=='__main__':
     test = PanairIO()
     test.removeOldGeometry = removeOldGeometry
 
-    test.loadPanairGeometry('SWB.INP','',True,True)
+    #test.loadPanairGeometry('SWB.INP','',True,True)
+    test.loadPanairGeometry('models/NAC6.INP','',True,True)
