@@ -22,6 +22,7 @@ BDF Bug Fixes:
    - Fluid Structure Interaction coordinate system of -1 is now allowed
    - nastran double precision format (e.g. 1.23456D+03) now supported
    - better rounding of floats when writing BDF
+    - fixed python 3 support
 
 Added BDF:
    - coordinate systems in CONM2 are fully supported

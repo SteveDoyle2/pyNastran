@@ -28,7 +28,7 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2Errors import *
-from oee_objects import *
+from pyNastran.op2.tables.oee_energy.oee_objects import *
 
 class OEE(object):
     """Table of energy"""

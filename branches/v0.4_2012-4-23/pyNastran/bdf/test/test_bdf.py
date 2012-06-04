@@ -32,7 +32,7 @@ import pyNastran
 from pyNastran.bdf.errors import *
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
-from compareCardContent import compareCardContent
+from pyNastran.bdf.test.compareCardContent import compareCardContent
 
 import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]

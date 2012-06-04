@@ -27,9 +27,9 @@ import sys
 from numpy import array
 from struct import unpack
 
-from fortranFile import FortranFile
-from op2Codes import Op2Codes
-from op2Errors import *
+from pyNastran.op2.fortranFile import FortranFile
+from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.op2.op2Errors import *
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.tables.resultTable import ResultTable
@@ -340,7 +340,7 @@ class OP2(BDF,  # BDF methods
             sys.exit('stopping...')
 
         self.readMarkers([3])
-        self.printSection(20)
+        #print(self.printSection(20))
         ints = self.readIntBlock()
         if self.makeOp2Debug:
             self.op2Debug.write('%s\n' %(str(ints)))
@@ -389,6 +389,7 @@ class OP2(BDF,  # BDF methods
             self.log.debug('-'*80)
             try:
                 tableName = self.readTableName(rewind=True,stopOnFailure=False)
+                #print("tableName = ",tableName)
             except EndOfFileError:  # the isAnotherTable method sucks...
                 isAnotherTable = False
                 self.log.debug("***ok exit, but it could be better...")
@@ -418,7 +419,6 @@ class OP2(BDF,  # BDF methods
                         self.readTable_Geom3S()
                     elif tableName=='GEOM4S': # superelements - constraints
                         self.readTable_Geom4S()
-
                     #elif tableName=='GEOM1N':
                     #    self.readTable_Geom1N()
                     elif tableName=='GEOM2': # elements

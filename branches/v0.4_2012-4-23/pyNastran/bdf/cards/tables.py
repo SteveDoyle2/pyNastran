@@ -25,7 +25,7 @@
 #import sys
 
 # my code
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
 class TIC(BaseCard): # Transient Initial Condition

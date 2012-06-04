@@ -264,7 +264,7 @@ class FortranFile(object):
         """skips nBits"""
         if self.makeOp2Debug:
             self.op2Debug.write('skipping\n')
-        self.printSection(4)
+        #self.printSection(4)
         if self.makeOp2Debug:
             self.op2Debug.write('skipped\n')
         #print "\n--SKIP--"
@@ -280,7 +280,7 @@ class FortranFile(object):
         """same as skip, but actually reads the data instead of using seek"""
         if self.makeOp2Debug:
             self.op2Debug.write('skipping %s\n' %(n))
-        self.printSection(4)
+        #self.printSection(4)
         if self.makeOp2Debug:
             self.op2Debug.write('skipped\n')
         data = self.op2.read(n)

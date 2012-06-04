@@ -1,1 +1,1 @@
-import cards
+from pyNastran.bdf.cards import *

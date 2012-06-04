@@ -23,7 +23,7 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 import sys
-from oes_objects import stressObject,strainObject #,array
+from pyNastran.op2.tables.oes_stressStrain.oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
 
 class rodDamperObject(stressObject):

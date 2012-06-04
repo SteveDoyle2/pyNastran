@@ -28,7 +28,7 @@ from numpy import array
 #from numpy.linalg import norm
 
 # my code
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Ring(BaseCard): # base class
     def __init__(self,card,data):

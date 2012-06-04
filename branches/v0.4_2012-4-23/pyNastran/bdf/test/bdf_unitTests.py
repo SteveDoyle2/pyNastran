@@ -28,7 +28,7 @@ import unittest
 import pyNastran
 testPath = pyNastran.__path__[0]
 #print "testPath = ",testPath
-from test_bdf import runBDF,runAllFilesInFolder
+from pyNastran.bdf.test.test_bdf import runBDF,runAllFilesInFolder
 
 class Tester(unittest.TestCase):
 

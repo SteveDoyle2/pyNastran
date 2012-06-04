@@ -37,7 +37,7 @@ from pyNastran.op2.tables.oug.oug_displacements import displacementObject
 #    displacementObject,temperatureObject)
 #from pyNastran.op2.tables.oug.oug_eigenvectors import (
 #    eigenVectorObject)
-from oef_Objects import (nonlinearFluxObject)
+from pyNastran.op2.tables.oef_forces.oef_Objects import (nonlinearFluxObject)
 
 class OEF(object):
     """Table of element forces"""

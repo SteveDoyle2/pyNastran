@@ -67,8 +67,6 @@ class ElementsStressStrain(object):
         ###
         self.handleResultsBuffer(self.OES_Thermal)
         #print self.rodStress[self.iSubcase]
-        if self.makeOp2Debug:
-            print "done with OES_Thermal"
         ###
 
     def basicElement(self):
@@ -124,8 +122,6 @@ class ElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.CBEAM_2)
-        if self.makeOp2Debug:
-            print "done with CBEAM-2"
         #raise Exception('add CBEAM-2...')
 
     def CQUAD4_33(self): # works
@@ -213,8 +209,6 @@ class ElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
         self.handleResultsBuffer(self.CBAR_34)
-        if self.makeOp2Debug:
-            print "done with CBAR-34"
 
     def CSOLID_67(self):  # works
         """
@@ -684,17 +678,12 @@ class ElementsStressStrain(object):
             #sys.exit('stoping in CBEAM_94')
 
         self.handleResultsBuffer(self.CBEAM_94)
-        if self.makeOp2Debug:
-            print "done with CBEAM-94"
         #raise Exception('add CBEAM-94...')
 
     def CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho)
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
-        if self.makeOp2Debug:
-            self.op2Debug.write('---CQUAD4_95---\n')
-            print "getting a composite element..."
         deviceCode = self.deviceCode
         eType = self.ElementType(self.elementType)
 

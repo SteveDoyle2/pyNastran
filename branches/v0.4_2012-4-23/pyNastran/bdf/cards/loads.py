@@ -26,7 +26,7 @@
 from numpy import array,cross
 from numpy.linalg import norm
 
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Load(BaseCard):
     """defines the DefaultLoad class"""
@@ -309,7 +309,7 @@ class DLOAD(Load):
         self.scale = card.field(2)
 
         fields = card.fields(3)
-        n = len(fields)/2
+        n = len(fields)//2
         if len(fields)%2==1:
             n+=1
             raise Exception('missing last magnitude on DLOAD card=%s' %(card.fields()) )
