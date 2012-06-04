@@ -332,7 +332,8 @@ class GRID(Node):
             if not self.ps:   self.ps   = grdset.ps
             if not self.seid: self.seid = grdset.seid
         self.cp = model.Coord(self.cp)
-        self.cd = model.Coord(self.cd)
+        if self.cd != -1:
+            self.cd = model.Coord(self.cd)
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):

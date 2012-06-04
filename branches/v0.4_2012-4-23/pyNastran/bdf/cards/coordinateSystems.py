@@ -112,11 +112,14 @@ class Coord(BaseCard):
             print "e1 = ",self.e1
             print "e2 = ",self.e2
             print "e3 = ",self.e3
+            print '-----'
             print "e13 = ",e13
             print "e12 = ",e12
+            print '-----'
             print "i   = ",self.i
             print "j   = ",self.j
             print "k   = ",self.k,'\n'
+            print '-----'
         
 
         #except TypeError:
@@ -155,7 +158,8 @@ class Coord(BaseCard):
         pCoord = dot(p-self.e1,transpose(matrix))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
-            print "p = ",p-self.e1
+            print "p = ",p
+            print "p-e1 = ",p-self.e1
             print "pLocal = ",pLocal,'\n'
             print "pCoord = ",pCoord
         return pLocal
@@ -398,6 +402,10 @@ class Cord2x(Coord):
         @warning make sure you cross-reference before calling this
         @warning you probably shouldnt call this, call the Node methods Position and PositionWRT
         """
+        if debug:
+            print "p = ",p
+            print "p-e1 = ",p-self.e1
+
         if not self.isResolved:
             self.resolveCid()
         if self.cid==0:
@@ -423,9 +431,9 @@ class Cord2x(Coord):
             gz = self.rid.k
         ###
         
-        matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
-                        [dot(gy,i),dot(gy,j),dot(gy,k)],
-                        [dot(gz,i),dot(gz,j),dot(gz,k)]])
+        matrix = array([[dot(gx,i),dot(gy,i),dot(gz,i)],
+                        [dot(gx,j),dot(gy,j),dot(gz,j)],
+                        [dot(gx,k),dot(gy,k),dot(gz,k)]])
         p2 = dot(p-self.e1,matrix)
         p3 = p2+self.e1
         

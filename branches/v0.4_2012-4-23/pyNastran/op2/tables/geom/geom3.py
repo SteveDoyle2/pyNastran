@@ -66,6 +66,11 @@ class Geometry3(object):
                          }
         self.readRecordTable('GEOM3')
 
+    def readTable_Geom3S(self):
+        self.readTable_Geom3()
+        #self.iTableMap = {
+        #                 }
+        #self.readRecordTable('GEOM3S')
 
 # ACCEL
 # ACCEL1

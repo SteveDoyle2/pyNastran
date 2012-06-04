@@ -495,12 +495,14 @@ class cardMethods(object):
             msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s\nYou also might have mixed tabs/spaces/commas.' %(valueRaw,valueLeft,card)
             raise ScientificParseError(msg)
 
+        sline0 = sline[0].rstrip('Dd')
+        sline1 = sline[1]
         try:
-            s0 = vFactor*float(sline[0])
-            s1 = expFactor*int(sline[1])
+            s0 = vFactor*float(sline0)
+            s1 = expFactor*int(sline1)
         except ValueError:
-            msg = "vm=%s vp=%s valueRaw=|%s| sline=%s\ncard=%s" %(vm,vp,valueRaw,sline,card)
-            raise ScientificParseError('cannot parse sline[0] into a float and sline[1] into an integer\n%s\nYou HAVE mixed tabs/spaces/commas!  Fix it!' %(msg))
+            msg = "vm=%s vp=%s valueRaw=|%s| sline0=%s sline1=%s\ncard=%s" %(vm,vp,valueRaw,sline0,sline1,card)
+            raise ScientificParseError('cannot parse sline0 into a float and sline1 into an integer\n%s\nYou might have mixed tabs/spaces/commas!  Fix it!' %(msg))
 
         value = s0*10**(s1)
         #print "valueOut = |%s|" %value

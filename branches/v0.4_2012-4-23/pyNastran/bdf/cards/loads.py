@@ -111,10 +111,16 @@ class GRAV(BaseCard):
         return p
 
     def rawFields(self):
+        fields = ['GRAV',self.sid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
+        return fields
+
+    def reprFields(self):
         N = []
         for n in self.N:
             N.append(self.setBlankIfDefault(n,0.0))
-        fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[self.mb]
+        
+        mb = self.setBlankIfDefault(self.mb,0)
+        fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[mb]
         return fields
 
 class LSEQ(BaseCard): # Requires LOADSET in case control deck

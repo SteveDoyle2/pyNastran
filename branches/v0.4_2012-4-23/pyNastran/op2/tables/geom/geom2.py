@@ -97,6 +97,12 @@ class Geometry2(object):
                          }
         self.readRecordTable('GEOM2')
 
+    def readTable_Geom2S(self):
+        self.readTable_Geom2()
+        #self.iTableMap = {
+        #                 }
+        #self.readRecordTable('GEOM2S')
+
     def readFake(self,data):
         pass
 

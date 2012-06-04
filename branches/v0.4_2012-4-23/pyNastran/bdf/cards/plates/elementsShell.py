@@ -36,7 +36,7 @@ class ShellElement(Element):
         Element.__init__(self,card,data)
 
     def Area(self):
-        raise Exception('area undefined for %s' %(self.type))
+        raise NotImplementedError('Area undefined for %s' %(self.type))
 
     def Thickness(self):
         #raise Exception('area undefined for %s' %(self.type))

@@ -513,7 +513,7 @@ def runArgParse():
     group.add_argument( '-q','--quiet',    dest='quiet',    action='store_true',help='Prints   debug messages (default=True)')
 
     group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument('-g','--edges',    dest='edges', action='store_true',help='Reads the OP2 for geometry, which can be written out')
+    group2.add_argument('-e','--edges',    dest='edges', action='store_true',help='shows element edges as black lines')
     #group2.add_argument('-w','--writeBDF', dest='writeBDF', action='store_true',help='Writes the bdf to fem.bdf.out')
 
     parser.add_argument('-v','--version',action='version',version=ver)

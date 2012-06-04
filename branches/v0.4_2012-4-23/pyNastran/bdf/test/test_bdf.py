@@ -45,7 +45,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
     filenames2 = []
     diffCards = []
     for filename in filenames:
-        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas'):
+        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas') or filename.endswith('.nas'):
             filenames2.append(filename)
         ###
     ###
@@ -295,7 +295,7 @@ def getElementStats(fem1,fem2):
                 ###
             ###
         except:
-            print "*stats - e.type = ",e.type
+            print "*stats - e.type=%s eid=%s  element=\n%s" %(e.type,e.eid,str(e))
             raise
         ###
     ###

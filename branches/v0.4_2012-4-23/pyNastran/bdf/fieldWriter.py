@@ -66,7 +66,7 @@ def printScientific8(value):
     @see printFloat for a better method
     """
     #print "scientific...%s" %(value)
-    pythonValue = '%8.6e' %(value)
+    pythonValue = '%8.11e' %(value)
     #print "pythonValue = ",pythonValue
     svalue,sExponent = pythonValue.strip().split('e')
     exponent = int(sExponent) # removes 0s
@@ -111,10 +111,11 @@ def printScientific8(value):
 
 def printFloat8(value,tol=0.):
     """
-    Prints a float in nastran 8-character width syntax.
+    Prints a float in nastran 8-character width syntax
     using the highest precision possbile.
     @todo bad for small values...positive or negative...
-    @warning hasnt really be tested for tolerancing    """
+    @warning hasnt really be tested for tolerancing
+    """
     #value = round(value,4)
     #print "float...%s" %value
     if abs(value)<=tol:  # tol=1e-8
@@ -130,41 +131,27 @@ def printFloat8(value,tol=0.):
                 return field
             elif value<0.001:
                 #print "A"
-                if 1:
-                    #print value
-                    field = printScientific8(value)
-                    field2 = "%8.7f" %(value) # small value
-                    field2 = field2.strip('0 ')
+                #print value
+                field = printScientific8(value)
+                field2 = "%8.7f" %(value) # small value
+                field2 = field2.strip('0 ')
 
-                    #if 'e' not in field:
-                    field1 = field.replace('-','e-')
+                #if 'e' not in field:
+                field1 = field.replace('-','e-')
 
-                    #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
-                    #print "same - ",float(field1)==float(field2)
-                    if field2=='.':
-                        return "%8s" %(field)
-                    if len(field2)<=8 and float(field1)==float(field2):
-                        field = field2
-                        #print "*field = ",field
-                        field = field.strip(' 0')
+                #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
+                #print "same - ",float(field1)==float(field2)
+                if field2=='.':
+                    return "%8s" %(field)
+                if len(field2)<=8 and float(field1)==float(field2):
+                    field = field2
+                    #print "*field = ",field
+                    field = field.strip(' 0')
 
-                        #print "AA"
-                        #print "field  = ",field
-                        #print "field1 = ",field1
-                        #print "field2 = ",field2
-                        #print ""
-                    ###
-                ###
-                if 0:
-                    field = "%8.7f" %(value)
-                    #print "field = ",field
-                    field = field.strip('0')
-                    if len(field)<8:
-                        assert '.' == field[0],field
-                    else:
-                        field = printScientific8(value)
-                        return field
-                    ###
+                    #print "AA"
+                    #print "field  = ",field
+                    #print "field1 = ",field1
+                    #print "field2 = ",field2
                     #print "field = ",field
                 ###
             elif value<0.1:
@@ -186,6 +173,7 @@ def printFloat8(value,tol=0.):
                 if field.index('.')<8:
                     field = '%8.1f' %(round(value))
                     field = field[0:8]
+                    #field = '%7s.' %(int(field))
                     assert '.' != field[0],field
                 else:
                     field = printScientific8(value)
@@ -211,9 +199,8 @@ def printFloat8(value,tol=0.):
                 #print "value=%s field=%s field1=%s field2=%s" %(value,field[1:],field1,field2)
                 #print "same - ",float(field1)==float(field2)
                 if len(field2)<=8 and float(field1)==float(field2):
-                    field = field2
-                    #print "*field = ",field
-                    field = field.strip(' 0')
+                    field = field2.rstrip(' 0')
+                    field = field.replace('-0.','-.')
 
                     #print "AA"
                     #print "field  = ",field
@@ -241,7 +228,7 @@ def printFloat8(value,tol=0.):
             else:
                 field = "%8.1f" %(value)
                 if field.index('.')<8:
-                    field = field[0:8]
+                    field = '%7s.' %(int(round(value,0)))
                     assert '.' != field[0],field
                 else:
                     field = printScientific8(value)
@@ -261,7 +248,8 @@ def printField(value,tol=0.):
     """
     prints a single 8-character width field
     @param value the value to print
-    @param tol the abs(tol) to consider value=0 (default=0.)    @retval field an 8-character (tested) string
+    @param tol the abs(tol) to consider value=0 (default=0.)
+    @retval field an 8-character (tested) string
     """
     if isinstance(value,int):
         field = "%8s" %(value)
@@ -278,6 +266,9 @@ def printField(value,tol=0.):
 #def printCard(fields,size=8):
     #"""
     #prints a nastran-style card with 8 or 16-character width fields
+    #@param fields all the fields in the BDF card (no blanks)
+    #@param tol the abs(tol) to consider value=0 (default=0.)
+    #prints a nastran-style card with 8 or 16-character width fields
     #@warning 8 or 16 is required, but 16 is not checked for
     #"""
     #if size==8:
@@ -289,7 +280,8 @@ def printField(value,tol=0.):
 def printCard(fields,tol=0.):
     """
     Prints a nastran-style card with 8-character width fields.
-    
+    @param fields all the fields in the BDF card (no blanks)
+    @param tol the abs(tol) to consider value=0 (default=0.)
     @note A small field format follows the  8-8-8-8-8-8-8-8 = 80
     format where the first 8 is the card name or blank (continuation).
     The last 8-character field indicates an optional continuation,
@@ -396,3 +388,7 @@ if __name__=='__main__':
     #print printField(-5.007e-3)
     
 
+    #print printField(1.60665017692e-09)
+    #print printField(3.22614998029e-08)
+    #print printField(1.33564999731e-09)
+    print printField(-0.00082999792)

@@ -129,7 +129,11 @@ class OP2(BDF,  # BDF methods
 
         ## the list of supported tables (dont edit this)
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
-                             'EPT','MPT','MPTS', # properties/materials
+                             'GEOM1S','GEOM2S','GEOM3S','GEOM4S', # nodes/geometry/loads/BCs - superelements
+                             'GEOM1N', #???
+                             'EPT', 'MPT',  # properties/materials
+                             'EPTS','MPTS', # properties/materials - superelements
+                             'EDTS',         # ???
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # tables
                              'LAMA',
@@ -180,8 +184,7 @@ class OP2(BDF,  # BDF methods
                              # new
                              'AFRF',             'AGRF',
                              'PMRF','PERF','PFRF',
-                             'FOL','GEOM1N',
-                             
+                             'FOL',
                              ]
         
         ## a dictionary that maps an integer of the subcaseName to the subcaseID
@@ -300,7 +303,7 @@ class OP2(BDF,  # BDF methods
         if 0:
             marker = 0
             #print self.printSection(200)
-            sys.exit()
+            sys.exit('stopping in readTapeCode in op2.py')
             while marker != -1:
                 ints = self.readIntBlock()
                 marker = ints[0]
@@ -323,9 +326,9 @@ class OP2(BDF,  # BDF methods
                 #print "ints4 = ",ints
             #print ""
             #while marker != -1:
-            #    ints = self.readIntBlock()
-            #    marker = ints[0]
-            #    print "ints1 = ",ints
+                #ints = self.readIntBlock()
+                #marker = ints[0]
+                #print "ints1 = ",ints
             #print ""
             self.readMarkers([2])
 
@@ -377,6 +380,7 @@ class OP2(BDF,  # BDF methods
             msg += '  If the F06 is OK:\n'
             msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
             msg += '      2.  Run the problem on a different Operating System'
+            msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
             raise TapeCodeError(msg)
         ###
 
@@ -406,6 +410,15 @@ class OP2(BDF,  # BDF methods
                     #print "startTell = ",self.op2.tell()
                     if tableName=='GEOM1': # nodes,coords,etc.
                         self.readTable_Geom1()
+                    elif tableName=='GEOM1S': # superelements - nodes,coords,etc.
+                        self.readTable_Geom1S()
+                    elif tableName=='GEOM2S': # superelements - elements
+                        self.readTable_Geom2S()
+                    elif tableName=='GEOM3S': # superelements - static/thermal loads
+                        self.readTable_Geom3S()
+                    elif tableName=='GEOM4S': # superelements - constraints
+                        self.readTable_Geom4S()
+
                     #elif tableName=='GEOM1N':
                     #    self.readTable_Geom1N()
                     elif tableName=='GEOM2': # elements
@@ -502,7 +515,9 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DUMMY_GEOM(tableName)
                     elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
                         self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
+                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','EDOM',]:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['BGPDT','BGPDTS','EDTS',]:
                         self.readTable_DUMMY_GEOM(tableName)
                     else:
                         raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))

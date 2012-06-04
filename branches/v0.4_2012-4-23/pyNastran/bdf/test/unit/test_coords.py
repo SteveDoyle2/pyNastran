@@ -28,7 +28,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF
 
-class Tester(unittest.TestCase):
+class TestCoords(unittest.TestCase):
     def test_same(self):  # passes
         grids  = [
                      [0,  0.,  0.,  1.],
@@ -131,7 +131,7 @@ class Tester(unittest.TestCase):
 
 
     def test_rid_1(self):
-        print 'test_rid_2'
+        print 'test_rid_1'
         grids  = [
                      [2,    10., 5.,  3.],
                  ]
@@ -141,11 +141,31 @@ class Tester(unittest.TestCase):
 
         coords = [   #rid origin,     zaxis        xaxis
                    [  0,  [0.,0.,0.], [0.,0.,-1.], [1.,0.,0.]  ],  # cid=1
-                   [  1,  [1.,1.,1.], [1.,1.,2.],  [2.,1., 1.]   ],  # cid=2
+                   [  1,  [1.,1.,1.], [1.,1., 2.], [2.,1.,1.]  ],  # cid=2
                  ]
         self.getNodes(grids,gridsExpected,coords)
 
+    def test_cord2r_1(self):
+        grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
+        coord = ['CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
+                 '           1.135 .089237   .9324']
+        
+        mesh = BDF()
+        card = mesh.processCard(grid)
+        mesh.addCard(card,card[0])
+        card = mesh.processCard(coord)
+        mesh.addCard(card,card[0])
+        mesh.crossReference()
 
+        g = mesh.Node(20143)
+        print g.Position(debug=False)
+        diff = g.Position() - array([1.106704,.207647,-0.068531])
+        
+        assert allclose(diff,0.)
+
+    def makeNodes(self,grids,coords):
+        grids2 = []
+        
     def getNodes(self,grids,gridsExpected,coords,debug=False):
         mesh = BDF(debug=False)
 
@@ -175,7 +195,6 @@ class Tester(unittest.TestCase):
             msg = 'expected=%s actual=%s' %(n,pos)
             assert allclose(n,pos),msg
         ###
-        #print "hi"
 
 if __name__=='__main__':
     unittest.main()
