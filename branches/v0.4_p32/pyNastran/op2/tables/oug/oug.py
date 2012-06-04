@@ -33,24 +33,24 @@ from struct import unpack
     #nonlinearTemperatureObject,            # analysisCode=10,formatCode=1 sortCode=0 ???
 #     )
 
-from .oug_displacements import (
+from pyNastran.op2.tables.oug.oug_displacements import (
      displacementObject,                    # tableCode=1, formatCode=1 sortCode=0
      complexDisplacementObject,             # analysisCode=5  formatCode=3 sortCode=1
      )
 
-from .oug_velocities import (                # tableCode=10,formatCode=1 sortCode=0
+from pyNastran.op2.tables.oug.oug_velocities import (     # tableCode=10,formatCode=1 sortCode=0
      velocityObject,
      )
 
-from .oug_accelerations import (             # tableCode=11,formatCode=1 sortCode=0
+from pyNastran.op2.tables.oug.oug_accelerations import (  # tableCode=11,formatCode=1 sortCode=0
      accelerationObject,
      )
 
-from .oug_temperatures import (              # tableCode=1, formatCode=1 sortCode=0
+from pyNastran.op2.tables.oug.oug_temperatures import (   # tableCode=1, formatCode=1 sortCode=0
      temperatureObject,
      )
 
-from .oug_eigenvectors import (
+from pyNastran.op2.tables.oug.oug_eigenvectors import (
      eigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
      complexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
      realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7

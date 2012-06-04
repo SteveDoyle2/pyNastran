@@ -28,9 +28,9 @@
 #from numpy.linalg import norm
 
 # my code
-from .baseCard import BaseCard,Material
-from .tables import Table
-#from thermal.materials import *
+from pyNastran.bdf.cards.baseCard import BaseCard,Material
+from pyNastran.bdf.cards.tables import Table
+#from pyNastran.bdf.cards.thermal.materials import *
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""

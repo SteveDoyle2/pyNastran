@@ -24,7 +24,7 @@
 ## 
 # my code
 import sys
-from .baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 
 class constraintObject2(object):

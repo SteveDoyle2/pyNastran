@@ -95,6 +95,16 @@ class CMASS2(PointElement):
             self.c2   = data[5]
         ###
 
+    def nodeIDs(self):
+        g1 = self.G1()
+        g2 = self.G2()
+        nodes = []
+        if g1:
+            nodes.append(g1)
+        if g2:
+            nodes.append(g2)
+        return nodes
+
     def Mass(self):
         return self.mass
     
@@ -104,7 +114,6 @@ class CMASS2(PointElement):
         If g2 is blank, then the centroid is the location of g1.
         """
         f=0.
-        print(str(self))
         p1=array([0.,0.,0.])
         p2=array([0.,0.,0.])
         if self.g1 is not None:
@@ -312,6 +321,9 @@ class CONM1(PointElement):
         ###
         self.massMatrix = m
 
+    def nodeIDs(self):
+        return [self.Nid()]
+
     def Nid(self):
         if isinstance(self.nid,int):
             return self.nid
@@ -351,7 +363,12 @@ class CONM1(PointElement):
 
 class CONM2(PointElement): ## @todo not done
     """
-    @todo support cid != 0
+    @param self the CONM2 object
+    @param eid element ID
+    @param nid node ID
+    @param cid coordinate frame of the offset (-1=absolute coordinates)
+    @param X offset vector
+    @param I mass moment of inertia matrix about the CG
     """
     type = 'CONM2'
     # 'CONM2    501274  11064          132.274'
@@ -377,14 +394,30 @@ class CONM2(PointElement): ## @todo not done
         ###
 
     def Mass(self):
-        if self.cid==0:
-            raise NotImplementedError('cid=0 is not supported for CONM2...')
         return self.mass
 
+    def Inertia(self):
+        """
+        Returns the 3x3 inertia matrix
+        @warning doesnt handle offsets or coordinate systems
+        """
+        I = self.I
+        A = [ [ I[0],I[1],I[3] ],
+              [ I[1],I[2],I[4] ],
+              [ I[3],I[4],I[5] ]]
+        if self.Cid()==-1:
+            return A
+        else:
+            # transform to global
+            dx,matrix = self.cid.transformToGlobal(self.X)
+            raise NotImplementedError()
+            A2 = A*matrix
+            return A2 # correct for offset using dx???
+
     def Centroid(self):
-        if self.cid==0:
-            raise NotImplementedError('cid=0 is not supported for CONM2...')
-        if self.cid==-1:
+        if self.Cid()==0:
+            X2  = self.nid.Position()+self.X
+        elif self.Cid()==-1:
             return self.X
         else:
             dx,matrix = self.cid.transformToGlobal(self.X)
@@ -394,12 +427,12 @@ class CONM2(PointElement): ## @todo not done
         return X2
 
     def crossReference(self,model):
-        """
-        @warning only supports cid=0
-        """
-        if self.cid!=-1:
+        if self.Cid()!=-1:
             self.cid = model.Coord(self.cid)
         self.nid = model.Node(self.nid)
+
+    def nodeIDs(self):
+        return [self.Nid()]
 
     def Nid(self):
         if isinstance(self.nid,int):

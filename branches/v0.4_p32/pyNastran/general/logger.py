@@ -158,7 +158,10 @@ def buildDummyLogger2(level='debug'):
         logger.setLevel(logging.DEBUG)
         # create file handler which logs even debug messages
         fh = logging.FileHandler(logPath)
-        fh.setLevel(logging.DEBUG)
+        if debug:
+            fh.setLevel(logging.DEBUG)
+        else:
+            fh.setLevel(logging.INFO)
         # create console handler with a higher log level
         ch = logging.StreamHandler()
         ch.setLevel(logging.ERROR)

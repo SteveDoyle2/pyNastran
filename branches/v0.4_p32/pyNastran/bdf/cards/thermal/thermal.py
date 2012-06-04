@@ -41,6 +41,9 @@ class ThermalElement(ThermalCard):
     def __init__(self,card,data):
         pass
 
+    def nodeIDs(self):
+        return []
+
     def Pid(self):
         if isinstance(self.pid,int):
             return self.pid

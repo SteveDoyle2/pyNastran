@@ -28,7 +28,7 @@ from numpy import array
 #from numpy.linalg import norm
 
 # my code
-from .baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Ring(BaseCard): # base class
     def __init__(self,card,data):
@@ -332,7 +332,8 @@ class GRID(Node):
             if not self.ps:   self.ps   = grdset.ps
             if not self.seid: self.seid = grdset.seid
         self.cp = model.Coord(self.cp)
-        self.cd = model.Coord(self.cd)
+        if self.cd != -1:
+            self.cd = model.Coord(self.cd)
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):

@@ -25,14 +25,14 @@
 #import sys
 
 # pyNastran
-from .baseCard import Element
+from pyNastran.bdf.cards.baseCard import Element
 
-from .elementsRigid  import *
-from .elementsSolid  import *
-from    .bars.elementsBars    import *
-from  .plates.elementsShell   import *
-from .springs.elementsSprings import *
-from    .mass.elementsMass    import *
+from pyNastran.bdf.cards.elementsRigid import *
+from pyNastran.bdf.cards.elementsSolid import *
+from pyNastran.bdf.cards.bars.elementsBars import *
+from pyNastran.bdf.cards.plates.elementsShell import *
+from pyNastran.bdf.cards.springs.elementsSprings import *
+from pyNastran.bdf.cards.mass.elementsMass import *
 
 
 class BushingElement(Element):

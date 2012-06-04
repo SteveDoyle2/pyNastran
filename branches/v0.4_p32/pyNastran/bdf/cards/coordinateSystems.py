@@ -29,7 +29,7 @@ from numpy.linalg import norm
 
 # my code
 from pyNastran.bdf.errors import *
-from .baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
 class InvalidUnitVectorError(Exception):
@@ -423,10 +423,9 @@ class Cord2x(Coord):
             gz = self.rid.k
         ###
         
-        matrix = array([[dot(gx,i),dot(gx,j),dot(gx,k)],
-                        [dot(gy,i),dot(gy,j),dot(gy,k)],
-                        [dot(gz,i),dot(gz,j),dot(gz,k)]])
-        matrix = transpose(matrix)
+        matrix = array([[dot(gx,i),dot(gy,i),dot(gz,i)],
+                        [dot(gx,j),dot(gy,j),dot(gz,j)],
+                        [dot(gx,k),dot(gy,k),dot(gz,k)]])
         p2 = dot(p-self.e1,matrix)
         p3 = p2+self.e1
         

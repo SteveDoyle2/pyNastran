@@ -68,6 +68,12 @@ class Geometry4(object):
                          }
         self.readRecordTable('GEOM4')
 
+    def readTable_Geom4S(self):
+        self.readTable_Geom4()
+        #self.iTableMap = {
+        #                 }
+        #self.readRecordTable('GEOM4S')
+
     def readASET(self,data):
         """ASET(5561,76,215) - Record 1"""
         self.skippedCardsFile.write('skipping ASET in GEOM4\n')

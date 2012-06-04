@@ -24,7 +24,7 @@
 ## 
 import copy
 import sys
-from .subcase import Subcase
+from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.errors import *
 
 class CaseControlDeck(object):

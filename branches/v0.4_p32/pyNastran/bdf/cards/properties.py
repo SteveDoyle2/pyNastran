@@ -26,10 +26,10 @@
 
 # pyNastran
 #from baseCard import Property
-from    .bars.propertiesBars    import *
-from  .plates.propertiesShell   import *
-from .springs.propertiesSprings import *
-from    .mass.propertiesMass    import *
+from pyNastran.bdf.cards.bars.propertiesBars import *
+from pyNastran.bdf.cards.plates.propertiesShell import *
+from pyNastran.bdf.cards.springs.propertiesSprings import *
+from pyNastran.bdf.cards.mass.propertiesMass import *
 
 
 class BushingProperty(Property):

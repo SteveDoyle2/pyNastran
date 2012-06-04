@@ -12,7 +12,7 @@ print("version = ",sys.version_info)
 extra = {}
 if sys.version_info >= (3,):
     print("python 3")
-    extra['use_2to3'] = True
+    #extra['use_2to3'] = True
     #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
     #extra['use_2to3_fixers'] = ['your.fixers']
 

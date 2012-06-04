@@ -15,6 +15,22 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
+-----------------------v0.4.1 released 2012/06/04???-----------------------
+BDF Bug Fixes:
+   - coordinte system transpose bug (messed up all coordinate systems)
+     affected CORD1R, CORD2R, CORD1C, CORD2C, CORD1S, CORD2S
+   - Fluid Structure Interaction coordinate system of -1 is now allowed
+   - nastran double precision format (e.g. 1.23456D+03) now supported
+   - better rounding of floats when writing BDF
+    - fixed python 3 support
+
+Added BDF:
+   - coordinate systems in CONM2 are fully supported
+   - GRAV card prints out nicer
+
+Added OP2:
+   - GEOM1S, GEOM2S, GEOM3S, GEOM4S tables (for Radioss)
+
 -----------------------v0.4 released 2012/04/23-----------------------
 Overall Notes
    - new ASCII/binary OP4 reader for dense matrices

@@ -23,7 +23,7 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 from numpy import array,log,exp
-from .baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.fieldWriter import printIntCard
 
 class Set(BaseCard):

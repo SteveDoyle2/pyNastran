@@ -52,6 +52,12 @@ class Geometry1(object):
                          }
         self.readRecordTable('GEOM1')
 
+    def readTable_Geom1S(self):
+        self.readTable_Geom1()
+        #self.iTableMap = {
+        #                 }
+        #self.readRecordTable('GEOM1S')
+
     def readTable_Geom1N(self):
         self.iTableMap = {
                          }

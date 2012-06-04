@@ -27,9 +27,9 @@ import sys
 from numpy import array
 from struct import unpack
 
-from .fortranFile import FortranFile
-from .op2Codes import Op2Codes
-from .op2Errors import *
+from pyNastran.op2.fortranFile import FortranFile
+from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.op2.op2Errors import *
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.tables.resultTable import ResultTable
@@ -130,7 +130,10 @@ class OP2(BDF,  # BDF methods
         ## the list of supported tables (dont edit this)
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
                              'GEOM1S','GEOM2S','GEOM3S','GEOM4S',
-                             'EPT','MPT','MPTS', # properties/materials
+                             'GEOM1N', #???
+                             'EPT', 'MPT',  # properties/materials
+                             'EPTS','MPTS', # properties/materials - superelements
+                             'EDTS',         # ???
                              'DYNAMIC','DYNAMICS',
                              'DIT',  # tables
                              'LAMA',
@@ -181,8 +184,7 @@ class OP2(BDF,  # BDF methods
                              # new
                              'AFRF',             'AGRF',
                              'PMRF','PERF','PFRF',
-                             'FOL','GEOM1N',
-                             
+                             'FOL',
                              ]
         
         ## a dictionary that maps an integer of the subcaseName to the subcaseID
@@ -301,7 +303,7 @@ class OP2(BDF,  # BDF methods
         if 0:
             marker = 0
             #print self.printSection(200)
-            sys.exit()
+            sys.exit('stopping in readTapeCode in op2.py')
             while marker != -1:
                 ints = self.readIntBlock()
                 marker = ints[0]
@@ -371,14 +373,15 @@ class OP2(BDF,  # BDF methods
         self.n = self.op2.tell()
 
         #self.readTapeCode()
-        #try:
-        self.readTapeCode()
-        #except:
-            #msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
-            #msg += '  If the F06 is OK:\n'
-            #msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            #msg += '      2.  Run the problem on a different Operating System'
-            #raise TapeCodeError(msg)
+        try:
+            self.readTapeCode()
+        except:
+            msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
+            msg += '  If the F06 is OK:\n'
+            msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
+            msg += '      2.  Run the problem on a different Operating System'
+            msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
+            raise TapeCodeError(msg)
         ###
 
         isAnotherTable = True
@@ -406,15 +409,23 @@ class OP2(BDF,  # BDF methods
                 self.tableName = tableName
                 try:
                     #print "startTell = ",self.op2.tell()
-                    if tableName in ['GEOM1','GEOM1S']: # nodes,coords,etc.
+                    if tableName=='GEOM1': # nodes,coords,etc.
                         self.readTable_Geom1()
+                    elif tableName=='GEOM1S': # superelements - nodes,coords,etc.
+                        self.readTable_Geom1S()
+                    elif tableName=='GEOM2S': # superelements - elements
+                        self.readTable_Geom2S()
+                    elif tableName=='GEOM3S': # superelements - static/thermal loads
+                        self.readTable_Geom3S()
+                    elif tableName=='GEOM4S': # superelements - constraints
+                        self.readTable_Geom4S()
                     #elif tableName=='GEOM1N':
                     #    self.readTable_Geom1N()
-                    elif tableName in ['GEOM2','GEOM2S']: # elements
+                    elif tableName=='GEOM2': # elements
                         self.readTable_Geom2()
-                    elif tableName in ['GEOM3','GEOM3S']: # static/thermal loads
+                    elif tableName=='GEOM3': # static/thermal loads
                         self.readTable_Geom3()
-                    elif tableName in ['GEOM4','GEOM4S']: # constraints
+                    elif tableName=='GEOM4': # constraints
                         self.readTable_Geom4()
 
                     elif tableName in ['EPT','EPTS']:  # element properties
@@ -504,7 +515,9 @@ class OP2(BDF,  # BDF methods
                         self.readTable_DUMMY_GEOM(tableName)
                     elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
                         self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','BGPDT','EDOM',]:
+                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','EDOM',]:
+                        self.readTable_DUMMY_GEOM(tableName)
+                    elif tableName in ['BGPDT','BGPDTS','EDTS',]:
                         self.readTable_DUMMY_GEOM(tableName)
                     else:
                         raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))
