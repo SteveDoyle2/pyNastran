@@ -1,6 +1,6 @@
 import os
 import sys
-from math import ceil
+from math import ceil,sqrt
 from numpy import array
 from pyNastran.general.general import ListPrint
 
@@ -24,7 +24,8 @@ class Cart3DReader(object):
         self.nElements = None
         self.infile = None
         self.infilename = None
-        
+        self.readHalf = False
+
         if log is None:
             from pyNastran.general.logger import dummyLogger
             loggerObj = dummyLogger()
@@ -67,8 +68,7 @@ class Cart3DReader(object):
             ###
         ###
         return (yZeroNodes,outerNodes,isInnerNode)
-    
-    
+
     def makeFullModel(self,nodes,elements,regions,loads):
         """assumes a y=0 line of nodes"""
         self.log.info('---starting makeFullModel---')
@@ -285,6 +285,13 @@ class Cart3DReader(object):
         else:
             raise Exception('invalid result type')
 
+        if self.readHalf:
+            self.nElementsRead = self.nElements/2
+            self.nElementsSkip = self.nElements/2
+        else:
+            self.nElementsRead = self.nElements
+            self.nElementsSkip = 0
+
     def getPoints(self):
         """
         A point is defined by x,y,z and the ID is the location in points.
@@ -325,10 +332,16 @@ class Cart3DReader(object):
         """
         assert bypass==False
         elements = {}
-        for e in range(self.nElements):
+
+        print "nElementsRead=%s nElementsSkip=%s" %(self.nElementsRead,self.nElementsSkip)
+        for e in range(self.nElementsRead):
             element = self.infile.readline().strip().split()
             element = [int(spot) for spot in element] # converts eid strings into ints
             elements[e+1] = element
+
+        for e in range(self.nElementsSkip):
+            element = self.infile.readline()
+
         return elements
 
     def getRegions(self,bypass=True):
@@ -337,53 +350,81 @@ class Cart3DReader(object):
             for i in range(self.nElements):
                 self.infile.readline()
         else:
-            for i in range(self.nElements):
+            for i in range(self.nElementsRead):
                 line = self.infile.readline()
                 regions[i+1] = line.strip()
             ###
+            for i in range(self.nElementsSkip):
+                line = self.infile.readline()
         ###
         return regions
     
     def getLoads(self,outputs):   ## TODO:  outputs isnt used...
-        readResults(self,i,self.infile)
+        loads = readResults(self,i,self.infile)
         #Cp = [0.1]*self.nElements ## TODO:  Cp is hardcoded to 0.1
         loads = {'Cp':Cp,'rho':[],'U':[],'V':[],'W':[],'pressure':[]}
         raise Exception('DEPRECIATED...')
         return loads
 
     def readResults(self,i,infile):
-        """Reads the Cp results."""
+        """
+        Reads the Cp results.
+        Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
+        (pV)^2 = (pu)^2+(pv)^2+(pw)^2
+        M^2 = (pV)^2/rho^2
+
+        # ???
+        p = (gamma-1)*(e- (rhoU**2+rhoV**2+rhoW**2)/(2.*rho))
+        
+        # ???
+        rho,rhoU,rhoV,rhoW,rhoE 
+        """
         Cp = {}
+        Mach = {}
+        U = {}
+        V = {}
+        W = {}
         if(self.cartType=='result'):
             nResultLines = int(ceil(self.nResults/5.))-1
             #print "nResultLines = ",nResultLines
             for pointNum in range(self.nPoints):
                 #print "pointNum = ", pointNum
-                sline = infile.readline().strip().split() #Cp
+                sline = infile.readline().strip().split() # rho rhoU,rhoV,rhoW,pressure/rhoE/E
                 i+=1
                 for n in range(nResultLines):
                     #print "nResultLines = ",n
-                    infile.readline()
+                    sline+=infile.readline().strip().split() # Cp
+                    #infile.readline()
                     i+=1
-                    #sline+=infile.readline().strip().split() #rho U,V,W,pressure
                     #print "sline = ",sline
                     #gamma = 1.4
-                    #rho = float(sline[1])
-                    #if(rho>abs(0.000001)):
-                    #    U   = float(sline[2])
-                    #    V   = float(sline[3])
-                    #    W   = float(sline[4])
-                    #    p   = float(sline[5])
                     #else:
                     #    p=0.
                 sline = self.getList(sline)
 
                 #p=0
-                Cp[pointNum+1] = sline[0]
+                cp = sline[0]
+                rho = float(sline[1])
+                if(rho>abs(0.000001)):
+                    rhoU = float(sline[2])
+                    rhoV = float(sline[3])
+                    rhoW = float(sline[4])
+                    #rhoE = float(sline[5])
+                    VV = (rhoU)**2+(rhoV)**2+(rhoW)**2/rho**2
+                    mach = sqrt(VV)
+                    if mach>10:
+                        print "nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" %(pointNum,cp,mach,rho,rhoU,rhoV,rhoW)
+
+                Cp[pointNum+1] = cp
+                Mach[pointNum+1] = mach
+                U[pointNum+1] = rhoU/rho
+                V[pointNum+1] = rhoV/rho
+                W[pointNum+1] = rhoW/rho
                 #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
             ###
         ###
-        return Cp
+        loads = {'Cp':Cp,'Mach':Mach,'U':U,'V':V,'W':W}
+        return loads
     ###
 
     def getList(self,sline):
@@ -400,7 +441,32 @@ class Cart3DReader(object):
         value = float(sline[1])
         return value
     ###
-###
+    
+    def exportToNastran(self,fname,points,elements,regions):
+        from pyNastran.bdf.fieldWriter import printCard
+        
+        f = open(fname,'wb')
+        for nid,grid in enumerate(1,points):
+            (x,y,z) = grid
+            f.write(printCard(['GRID',nid,'',x,y,z]))
+        ###
+
+        e = 1e7
+        nu = 0.3
+        g = ''
+        thickness = 0.25
+        setRegions = list(set(regions))
+        for pidMid in setRegions:
+            f.write(printCard(['MAT1',pidMid,e,g,nu]))
+            f.write(printCard(['PSHELL',pidMid,pidMid,thickness]))
+        ###
+
+        for eid,(nodes,region) in enumerate(1,zip(elements,regions)):
+            (n1,n2,n3) = nodes
+            f.write(printCard(['CTRIA3',eid,region,n1,n2,n3]))
+        ###
+        f.close()
+
 #------------------------------------------------------------------
 
 if __name__=='__main__':
@@ -427,9 +493,9 @@ if __name__=='__main__':
     #(cartPoints,elements,regions,loads) = cart.read()
     #points2 = {}
     #for (iPoint,point) in sorted(points.items()):
-    #    (x,y,z) = point
-    #    print "p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.)
-    #    points2[iPoint] = [x,y,z+x/10.]
+        #(x,y,z) = point
+        #print "p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.)
+        #points2[iPoint] = [x,y,z+x/10.]
     #(points,elements,regions,loads) = cart.makeMirrorModel(points2,elements,regions,loads)
     
     cart2 = Cart3DReader(cart3dGeom2)
