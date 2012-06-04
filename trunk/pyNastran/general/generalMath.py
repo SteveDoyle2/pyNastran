@@ -30,7 +30,7 @@ def integrateLine(x,y):
     return A
 
 def evaluatePositiveSpline(x,spline,minValue):
-    y = scipy.splev(x)
+    y = splev(x,spline)
     return max(y,minValue)
 
 def buildSpline(x,y):
