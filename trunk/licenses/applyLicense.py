@@ -96,7 +96,7 @@ def cleanHeader(lines):
     ###
     #print "i = ",i
     return lines2
- 
+
 def updateCopyright():
     (folders,files) = getFoldersFiles('pyNastran')
     printTree(files)
