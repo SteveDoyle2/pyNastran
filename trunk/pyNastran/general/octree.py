@@ -38,41 +38,47 @@ try:
 except:
     print "Could not import psyco, speed may suffer :)"
 
-class OctNode:
-    # New Octnode Class, can be appended to as well i think
+class OctNode(object):
+    """
+    New Octnode Class, can be appended to as well i think
+    """
     def __init__(self, position, size, data):
-        # OctNode Cubes have a position and size
-        # position is related to, but not the same as the objects the node contains.
+        """
+        OctNode Cubes have a position and size
+        position is related to, but not the same as the objects the node contains.
+        """
         self.position = position
         self.size = size
 
-        # All OctNodes will be leaf nodes at first
-        # Then subdivided later as more objects get added
+        ## All OctNodes will be leaf nodes at first
+        ## Then subdivided later as more objects get added
         self.isLeafNode = True
 
-        # store our object, typically this will be one, but maybe more
+        ## store our object, typically this will be one, but maybe more
         self.data = data
         
-        # might as well give it some emtpy branches while we are here.
+        ## might as well give it some emtpy branches while we are here.
         self.branches = [None, None, None, None, None, None, None, None]
 
-        # The cube's bounding coordinates -- Not currently used
+        ## The cube's bounding coordinates -- Not currently used
         self.ldb = (position[0] - (size / 2), position[1] - (size / 2), position[2] - (size / 2))
         self.ruf = (position[0] + (size / 2), position[1] + (size / 2), position[2] + (size / 2))
         
 
-class Octree:
+class Octree(object):
     def __init__(self, worldSize):
-        # Init the world bounding root cube
-        # all world geometry is inside this
-        # it will first be created as a leaf node (ie, without branches)
-        # this is because it has no objects, which is less than MAX_OBJECTS_PER_CUBE
-        # if we insert more objects into it than MAX_OBJECTS_PER_CUBE, then it will subdivide itself.
+        """
+        Init the world bounding root cube
+        all world geometry is inside this
+        it will first be created as a leaf node (ie, without branches)
+        this is because it has no objects, which is less than MAX_OBJECTS_PER_CUBE
+        if we insert more objects into it than MAX_OBJECTS_PER_CUBE, then it will subdivide itself.
+        """
         self.root = self.addNode((0,0,0), worldSize, [])
         self.worldSize = worldSize
 
     def addNode(self, position, size, objects):
-        # This creates the actual OctNode itself.
+        """This creates the actual OctNode itself."""
         return OctNode(position, size, objects)
 
     def insertNode(self, root, size, parent, objData):
@@ -83,43 +89,33 @@ class Octree:
             # Find the Real Geometric centre point of our new node:
             # Found from the position of the parent node supplied in the arguments
             pos = parent.position
-            # offset is halfway across the size allocated for this node
+            
+            ## offset is halfway across the size allocated for this node
             offset = size / 2
-            # find out which direction we're heading in
+            
+            ## find out which direction we're heading in
             branch = self.findBranch(parent, objData.position)
-            # new center = parent position + (branch direction * offset)
+            
+            ## new center = parent position + (branch direction * offset)
             newCenter = (0,0,0)
-            if branch == 0:
-                # left down back
+
+            if branch == 0: # left down back
                 newCenter = (pos[0] - offset, pos[1] - offset, pos[2] - offset )
-                
-            elif branch == 1:
-                # left down forwards
+            elif branch == 1: # left down forwards
                 newCenter = (pos[0] - offset, pos[1] - offset, pos[2] + offset )
-                
-            elif branch == 2:
-                # right down forwards
+            elif branch == 2: # right down forwards
                 newCenter = (pos[0] + offset, pos[1] - offset, pos[2] + offset )
-                
-            elif branch == 3:
-                # right down back
+            elif branch == 3: # right down back
                 newCenter = (pos[0] + offset, pos[1] - offset, pos[2] - offset )
-
-            elif branch == 4:
-                # left up back
+            elif branch == 4: # left up back
                 newCenter = (pos[0] - offset, pos[1] + offset, pos[2] - offset )
-
-            elif branch == 5:
-                # left up forward
+            elif branch == 5: # left up forward
                 newCenter = (pos[0] - offset, pos[1] + offset, pos[2] + offset )
-                
-            elif branch == 6:
-                # right up forward
-                newCenter = (pos[0] + offset, pos[1] - offset, pos[2] - offset )
-
-            elif branch == 7:
-                # right up back
+            elif branch == 6: # right up forward
+                newCenter = (pos[0] + offset, pos[1] + offset, pos[2] + offset )
+            elif branch == 7: # right up back
                 newCenter = (pos[0] + offset, pos[1] + offset, pos[2] - offset )
+
             # Now we know the centre point of the new node
             # we already know the size as supplied by the parent node
             # So create a new node at this position in the tree
@@ -167,8 +163,10 @@ class Octree:
         return root
 
     def findPosition(self, root, position):
-        # Basic collision lookup that finds the leaf node containing the specified position
-        # Returns the child objects of the leaf, or None if the leaf is empty or none
+        """
+        Basic collision lookup that finds the leaf node containing the specified position
+        Returns the child objects of the leaf, or None if the leaf is empty or none
+        """
         if root == None:
             return None
         elif root.isLeafNode:
@@ -179,9 +177,11 @@ class Octree:
             
 
     def findBranch(self, root, position):
-        # helper function
-        # returns an index corresponding to a branch
-        # pointing in the direction we want to go
+        """
+        helper function
+        returns an index corresponding to a branch
+        pointing in the direction we want to go
+        """
         vec1 = root.position
         vec2 = position
         result = 0
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     import time
 
     #Dummy object class to test with
-    class TestObject:
+    class TestObject(object):
         def __init__(self, name, position):
             self.name = name
             self.position = position
@@ -246,11 +246,11 @@ if __name__ == "__main__":
         ##################################################################################
         # This proves that results are being returned - but may result in a large printout
         # I'd just comment it out and trust me :)
-        # print "Results for test at: " + str(pos)
-        # if result != None:
-        #    for i in result:
-        #        print i.name, i.position,
-        # print
+        print "Results for test at: " + str(pos)
+        if result != None:
+            for i in result:
+                print i.name, i.position,
+        print
         ##################################################################################
         
     End = time.time() - Start
@@ -259,4 +259,4 @@ if __name__ == "__main__":
     print str(NUM_COLLISION_LOOKUPS) + " Collision Lookups performed in " + str(End) + " Seconds"
     print "Tree Leaves contain a maximum of " + str(MAX_OBJECTS_PER_CUBE) + " objects each."
 
-    x = raw_input("Press any key (Wheres the any key?):")
+    #x = raw_input("Press any key (Wheres the any key?):")
