@@ -129,7 +129,7 @@ class OP2(BDF,  # BDF methods
 
         ## the list of supported tables (dont edit this)
         self.tablesToRead = ['GEOM1','GEOM2','GEOM3','GEOM4', # nodes/geometry/loads/BCs
-                             'GEOM1S','GEOM2S','GEOM3S','GEOM4S',
+                             'GEOM1S','GEOM2S','GEOM3S','GEOM4S', # nodes/geometry/loads/BCs - superelements
                              'GEOM1N', #???
                              'EPT', 'MPT',  # properties/materials
                              'EPTS','MPTS', # properties/materials - superelements
@@ -379,8 +379,8 @@ class OP2(BDF,  # BDF methods
             msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
             msg += '  If the F06 is OK:\n'
             msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            msg += '      2.  Run the problem on a different Operating System'
-            msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
+            msg += '      2.  Run the problem on a different Operating System\n'
+            msg += '      3.  Are you running an OP2? :)  \nfname=%s' %(self.op2FileName)
             raise TapeCodeError(msg)
         ###
 
