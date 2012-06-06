@@ -26,12 +26,12 @@ import os
 import sys
 from numpy import array
 
+from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
 from pyNastran.f06.tables.oes import *  # OES
 from pyNastran.f06.tables.oug import *  # OUG
 from pyNastran.f06.tables.oqg import *  # OUG
 from pyNastran.f06.f06_classes import * # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
 
 class EndOfFileError(Exception):
     pass
