@@ -1,6 +1,6 @@
 import sys
 
-from baseCard import Element
+from pyNastran.bdf.cards.baseCard import Element
 
 class RigidElement(Element):
     #def __repr__(self):

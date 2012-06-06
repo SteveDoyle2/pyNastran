@@ -7,7 +7,7 @@ from struct import unpack
 #    temperatureObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
-from opg_Objects      import appliedLoadsObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import appliedLoadsObject
 from opg_loadVector   import loadVectorObject,complexLoadVectorObject,thermalLoadVectorObject
 from opnl_forceVector import forceVectorObject,complexForceVectorObject
 

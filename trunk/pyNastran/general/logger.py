@@ -105,7 +105,7 @@ class dummyLogger(object):
         elif level=='info':
             return infoLogger()
         else:
-            raise Exception("invalid logger:  debug, info ONLY!")
+            raise RuntimeError("invalid logger:  debug, info ONLY!")
 
 def getLogger(log=None,level='debug'):
     """
@@ -118,6 +118,42 @@ def getLogger(log=None,level='debug'):
         logger = log.startLog(level)
     else:
         logger = log
+    return logger
+
+def buildDummyLogger2(level='debug'):
+    try:
+        version = sys.version_info
+        fname = 'pyNastran.py%s%s.log' %(version.major,version.minor)
+        logPath = os.path.join(os.getcwd(),fname)
+        if os.path.exists(logPath):
+            os.remove(logPath)
+
+        # create logger with 'pyNastran'
+        logger = logging.getLogger('pyNastran')
+        logger.setLevel(logging.DEBUG)
+        # create file handler which logs even debug messages
+        fh = logging.FileHandler(logPath)
+        if level=='debug':
+            fh.setLevel(logging.DEBUG)
+        elif level=='info':
+            fh.setLevel(logging.INFO)
+        else:
+            raise RuntimeError("invalid logger:  debug, info ONLY!")
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(levelname)-8s:  %(filename)-25s linenum=%(lineno)-4s %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+
+        logger.info('logger is initialized---')
+    except:
+        logger = logging.getLogger('pyNastran')
+
     return logger
 
 if __name__=='__main__':

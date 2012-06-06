@@ -1,6 +1,6 @@
 # my code
 import sys
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 
 class constraintObject2(object):
@@ -11,7 +11,7 @@ class constraintObject2(object):
     def Add(self,ADD_Constraint):
         """bad name, but adds an SPCADD or MPCADD"""
         key = ADD_Constraint.conid
-        if self.addConstraints.has_key(key):
+        if key in self.addConstraints:
             print "already has key...key=%s\n%s" %(key,str(ADD_Constraint))
         else:
             self.addConstraints[key] = ADD_Constraint
@@ -20,7 +20,7 @@ class constraintObject2(object):
     
     def append(self,constraint):
         key = constraint.conid
-        if self.constraints.has_key(key):
+        if key in self.constraints:
             #print "already has key...key=%s\n%s" %(key,str(constraint))
             self.constraints[key].append(constraint)
         else:

@@ -79,7 +79,6 @@ class CMASS2(PointElement):
             nodes.append(g1)
         if g2:
             nodes.append(g2)
-        print nodes
         return nodes
 
     def Mass(self):
@@ -91,7 +90,6 @@ class CMASS2(PointElement):
         If g2 is blank, then the centroid is the location of g1.
         """
         f=0.
-        print str(self)
         p1=array([0.,0.,0.])
         p2=array([0.,0.,0.])
         if self.g1 is not None:
