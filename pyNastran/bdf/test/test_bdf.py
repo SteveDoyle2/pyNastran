@@ -12,6 +12,7 @@ from compareCardContent import compareCardContent
 
 import pyNastran.bdf.test
 testPath = pyNastran.bdf.test.__path__[0]
+testPath = r'C:\Users\steve\Desktop\pyNastran\pyNastran\bdf\test'
 #print "testPath = ",testPath
 
 def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):

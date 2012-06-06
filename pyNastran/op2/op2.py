@@ -3,13 +3,13 @@ import sys
 from numpy import array
 from struct import unpack
 
-from fortranFile import FortranFile
-from op2Codes import Op2Codes
-from op2Errors import *
-
-from pyNastran.bdf.bdf import BDF
+from pyNastran.op2.fortranFile import FortranFile
+from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.op2.op2Errors import *
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
+
+from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.f06.matlabWriter import MatlabWriter
 

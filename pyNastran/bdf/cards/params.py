@@ -1,5 +1,5 @@
 # my code
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class PARAM(BaseCard):
     type = 'PARAM'

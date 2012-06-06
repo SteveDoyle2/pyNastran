@@ -1,6 +1,6 @@
 import sys
 from numpy import array,log,exp,pi
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class AEFACT(BaseCard):
     """

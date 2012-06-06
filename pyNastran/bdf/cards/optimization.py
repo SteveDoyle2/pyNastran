@@ -1,5 +1,5 @@
 import sys
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 
 class OptConstraint(BaseCard):
     def __init__(self):

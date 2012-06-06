@@ -21,6 +21,7 @@ Overall BDF
 BDF API Changes
 Added BDF
    - *** TIC
+   - *** DMIG
 
 Overall OP2
    - test_op2 now crashes if there isn't a .op2 in the filename
@@ -77,6 +78,26 @@ Solver
       - still uses dense matricies, but layout will be easier to add sparse matricies later
       - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
+
+-----------------------v0.4.1 released Py3.x 2012/06/06???-----------------------
+Overall:
+   - Python 3.x works!
+
+-----------------------v0.4.1 released Py2.x 2012/06/05-----------------------
+BDF Bug Fixes:
+   - coordinte system transpose bug (messed up most coordinate systems)
+     affected CORD1R, CORD2R, CORD1C, CORD2C, CORD1S, CORD2S
+   - Fluid Structure Interaction coordinate system of -1 is now allowed
+   - nastran double precision format (e.g. 1.23456D+03) now supported
+   - better rounding of floats when writing BDF
+   - SET3 printing
+
+Added BDF:
+   - coordinate systems in CONM2 are fully supported
+   - GRAV card prints out nicer
+
+Added OP2:
+   - GEOM1S, GEOM2S, GEOM3S, GEOM4S tables (for Radioss)
 
 -----------------------v0.4 released 2012/04/23-----------------------
 Overall Notes

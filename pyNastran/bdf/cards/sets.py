@@ -1,5 +1,5 @@
 from numpy import array,log,exp
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.fieldWriter import printIntCard
 
 class Set(BaseCard):
@@ -94,7 +94,7 @@ class SET3(Set):
         self.IDs = self.expandThru(fields)
         self.cleanIDs()
 
-    def IsPoint(self):
+    def IsGrid(self):
         if self.desc=='GRID':
             return True
         return False
@@ -117,6 +117,10 @@ class SET3(Set):
     def rawFields(self):
         fields = ['SET3',self.sid,self.desc]+self.SetIDs()
         return fields
+
+    def __repr__(self):
+        fields = ['SET3',self.sid,self.desc]+self.SetIDs()
+        return self.printCard(fields)
 
 class SESET(SetSuper):
     """

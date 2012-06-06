@@ -1,4 +1,4 @@
-from baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard
 from math import log,exp
 
 class DAREA(BaseCard):

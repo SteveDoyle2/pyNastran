@@ -4,7 +4,7 @@ import sys
 from struct import unpack,pack
 
 #pyNastran
-from op2Errors import *
+from pyNastran.op2.op2Errors import *
 
 class FortranFile(object):
     def __init__(self):
@@ -54,6 +54,7 @@ class FortranFile(object):
             msg  = "pyNastran reading failed because an improperly formatted (or unsupported) table is in the OP2.\n"
             msg += "If you remove the offending table (make sure you're using PARAM,POST,-1 first) the code should work.\n"
             msg += "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
+            msg += 'tableName=|%s|' %(self.tableName)
             raise InvalidMarkerError(msg)
         if debug and self.makeOp2Debug:
             self.op2Debug.write('[4,%s,4]\n' %(ints[1]))
