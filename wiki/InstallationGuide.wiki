@@ -2,7 +2,7 @@
 #labels Featured,Phase-Deploy
 
 = Introduction =
- * pyNastran v0.4 is a very easy package to install once you have the required Python modules.  It's a pure Python package so no one should really be having too many problems.
+ * pyNastran is a very easy package to install once you have the required Python modules.  It's a pure Python package so no one should really be having too many problems.
  * The OP4 reader is a bit harder to get working, but is an optional package that requires building of C code in addition to requiring Cython.  Assuming you can build one of the sample Cython examples, it'll work.
 
 = User Overview = 
@@ -24,7 +24,7 @@ The software has been tested with Python 2.7.
 
 I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your versions of numpy/scipy are consistent.  Python 2.6 and 2.7 are both fine, but the code uses a few features that aren't available in Python 2.5.  If youhttp://wxpython.org/ cannot update your Python, you still can use the code if you modify it slightly.
 
-Python 3.x is *broken* at the moment, but version 0.4 is currently being fixed.
+Python 3.x is *broken* at the moment, but version is currently being fixed.
 
  * [http://code.google.com/p/pythonxy/wiki/Welcome Python(x,y) ]
  * [http://scipy.org/ scipy 0.9.0  ]
