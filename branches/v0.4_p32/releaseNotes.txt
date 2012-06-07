@@ -15,14 +15,18 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
------------------------v0.4.1 released 2012/06/04???-----------------------
+-----------------------v0.4.1 released Py3.x 2012/06/06???-----------------------
+Overall:
+   - Python 3.x works!
+
+-----------------------v0.4.1 released Py2.x 2012/06/05-----------------------
 BDF Bug Fixes:
-   - coordinte system transpose bug (messed up all coordinate systems)
+   - coordinte system transpose bug (messed up most coordinate systems)
      affected CORD1R, CORD2R, CORD1C, CORD2C, CORD1S, CORD2S
    - Fluid Structure Interaction coordinate system of -1 is now allowed
    - nastran double precision format (e.g. 1.23456D+03) now supported
    - better rounding of floats when writing BDF
-    - fixed python 3 support
+   - SET3 printing
 
 Added BDF:
    - coordinate systems in CONM2 are fully supported
