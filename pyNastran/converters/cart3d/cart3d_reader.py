@@ -3,6 +3,8 @@ import sys
 from math import ceil,sqrt
 from numpy import array
 from pyNastran.general.general import ListPrint
+from struct import unpack
+from pyNastran.op2.fortranFile import FortranFile
 
 def convertToFloat(svalues):
     values = []
@@ -223,13 +225,13 @@ class Cart3DReader(object):
     def writeOutfile(self,outfilename,points,elements,regions):
         assert len(points)>0
         self.log.info("---writing cart3d file...|%s|---" %(outfilename))
-        outfile = open(outfilename,'wb')
+        f = open(outfilename,'wb')
 
         msg = self.writeHeader(f,points,elements)
         msg = self.writePoints(f,points)
         msg = self.writeElements(f,points,elements)
         msg = self.writeRegions(f,regions)
-        outfile.close()
+        f.close()
 
     def writeRegions(self,f,regions):
         msg = ''
@@ -259,6 +261,7 @@ class Cart3DReader(object):
         f.write(msg)
 
     def writePoints(self,f,points):
+        msg = ''
         for (iPoint,point) in sorted(points.items()):
             #msg += "%-10s %-15s %-15s %-15s\n" %(iPoint,point[0],point[1],point[2])
             msg  += "%6.6f  %6.6f  %6.6f\n" %(point[0],point[1],point[2])
@@ -297,9 +300,17 @@ class Cart3DReader(object):
         A point is defined by x,y,z and the ID is the location in points.
         """
         points = {}
-        for p in range(self.nPoints):
-            x,y,z       = self.infile.readline().strip().split()
-            points[p+1] = array([float(x),float(y),float(z)])
+        p=0
+        data = []
+        while p<self.nPoints:
+            data += self.infile.readline().strip().split()
+            while len(data)>2:
+                x = data.pop(0)
+                y = data.pop(0)
+                z = data.pop(0)
+                points[p+1] = array([float(x),float(y),float(z)])
+                p+=1
+            ###
         
         maxX = self.getMax(points,0)
         maxY = self.getMax(points,1)
@@ -334,13 +345,26 @@ class Cart3DReader(object):
         elements = {}
 
         print "nElementsRead=%s nElementsSkip=%s" %(self.nElementsRead,self.nElementsSkip)
-        for e in range(self.nElementsRead):
-            element = self.infile.readline().strip().split()
-            element = [int(spot) for spot in element] # converts eid strings into ints
-            elements[e+1] = element
 
-        for e in range(self.nElementsSkip):
-            element = self.infile.readline()
+        e=0
+        data = []
+        while e<self.nElementsRead:
+            data += self.infile.readline().strip().split()
+            while len(data)>2:
+                n1 = int(data.pop(0))
+                n2 = int(data.pop(0))
+                n3 = int(data.pop(0))
+                elements[e+1] = [n1,n2,n3]
+                e+=1
+
+        e=0
+        while e<self.nElementsSkip:
+            data += self.infile.readline().strip().split()
+            while len(data)>2:
+                data.pop() # popping from the end is faster
+                data.pop()
+                data.pop()
+                e+=1
 
         return elements
 
@@ -350,12 +374,20 @@ class Cart3DReader(object):
             for i in range(self.nElements):
                 self.infile.readline()
         else:
-            for i in range(self.nElementsRead):
-                line = self.infile.readline()
-                regions[i+1] = line.strip()
-            ###
-            for i in range(self.nElementsSkip):
-                line = self.infile.readline()
+            r=0
+            data = []
+            while r<self.nElementsRead:
+                data += self.infile.readline().strip().split()
+                while len(data)>0:
+                    regions[r+1] = int(data.pop(0))
+                    r+=1
+
+            r=0
+            while r<self.nElementsSkip:
+                data += self.infile.readline().strip().split()
+                while len(data)>0:
+                    data.pop()
+                    r+=1
         ###
         return regions
     
@@ -468,8 +500,242 @@ class Cart3DReader(object):
         f.close()
 
 #------------------------------------------------------------------
+class Cart3DBinary(FortranFile,Cart3DReader):
+
+    modelType = 'cart3d'
+    isStructured = False
+    isOutwardNormals = True
+
+    def __init__(self,log=None,debug=False):
+        Cart3DReader.__init__(self,log,debug)
+        FortranFile.__init__(self)
+        self.isHalfModel = True
+        self.cartType  = None # grid, result
+        self.nPoints   = None
+        self.nElements = None
+        self.infile = None
+        self.infilename = None
+        self.readHalf = False
+
+        self.makeOp2Debug = False
+        self.n = 0
+
+    def readCart3d(self,infileName):
+        self.infilename = infileName
+        self.op2 = open(infileName,'rb')
+        (self.nPoints,self.nElements) = self.readHeader()
+        points = self.readNodes(self.nPoints)
+        elements = self.readElements(self.nElements)
+        regions = self.readRegions(self.nElements)
+        loads = {}
+        #print "size = ",size
+        print self.printSection2(200,'>')
+        
+        
+        #print self.printSection2(200,'>')
+        return (points,elements,regions,loads)
+
+    def readHeader(self):
+        data = self.op2.read(4)
+        size, = unpack('>i',data)
+        print "size = ",size
+        
+        data = self.op2.read(size)
+        so4 = size//4  # size over 4
+        if so4==3:
+            (nPoints,nElements,nResults) = unpack('>iii',data)
+            print "nPoints=%s nElements=%s nResults=%s" %(nPoints,nElements,nResults)
+        elif so4==2:
+            (nPoints,nElements) = unpack('>ii',data)
+            print "nPoints=%s nElements=%s" %(nPoints,nElements)
+        else:
+            raise RuntimeError('in the wrong spot...endian...')
+        self.op2.read(8)  # end of first block, start of second block
+
+        return (nPoints,nElements)
+
+    def readNodes(self,nPoints):
+        print "starting Nodes"
+        isBuffered = True
+        size = nPoints*12 # 12=3*4 all the points
+        Format = '>'+'f'*3000
+
+        nodes = {}
+        
+        np=0
+        while size>12000: # 4k is 1000 points
+            print "size = ",size
+            n=np+1000
+            data = self.op2.read(4*3000)
+            nodeXYZs = list(unpack(Format,data))
+            while nodeXYZs:
+                z = nodeXYZs.pop()
+                y = nodeXYZs.pop()
+                x = nodeXYZs.pop()
+                node = [x,y,z]
+                nodes[n] = node
+                n-=1
+                np+=1
+            size -= 4*3000
+
+        assert size>=0
+        print "size = ",size
+        #while size>0: # 4k is 1000 points
+        if size>0:
+            leftover = size-(nPoints-np)*12
+            data = self.op2.read(size)
+            print "leftover=%s size//4=%s" %(leftover,size//4)
+            Format = '>'+'f'*(size//4)
+
+            print "len(data) = ",len(data)
+            nodeXYZs = list(unpack(Format,data))
+            n=nPoints
+            while nodeXYZs:
+                z = nodeXYZs.pop()
+                y = nodeXYZs.pop()
+                x = nodeXYZs.pop()
+                node = [x,y,z]
+                nodes[n] = node
+                n-=1
+                np+=1
+            ###
+            size=0
+        
+        #for p,point in sorted(nodes.iteritems()):
+            #print "%s %s %s" %(tuple(point))
+
+        if isBuffered:
+            pass
+        else:
+            raise RuntimeError('unBuffered')
+
+        self.op2.read(8)  # end of second block, start of third block
+        return nodes
+
+    def readElements(self,nElements):
+        self.nElementsRead = nElements
+        self.nElementsSkip = 0
+        print "starting Elements"
+        isBuffered = True
+        size = nElements*12 # 12=3*4 all the elements
+        Format = '>'+'i'*3000
+
+        elements = {}
+        
+        ne=0
+        while size>12000: # 4k is 1000 elements
+            print "size = ",size
+            e=ne+1000
+            data = self.op2.read(4*3000)
+            nodes = list(unpack(Format,data))
+            while nodes:
+                n3 = nodes.pop()
+                n2 = nodes.pop()
+                n1 = nodes.pop()
+                element = [n1,n2,n3]
+                elements[e] = element
+                e-=1
+                ne+=1
+            size -= 4*3000
+
+        assert size>=0
+        print "size = ",size
+        #while size>0: # 4k is 1000 elements
+        if size>0:
+            leftover = size-(nElements-ne)*12
+            data = self.op2.read(size)
+            print "leftover=%s size//4=%s" %(leftover,size//4)
+            Format = '>'+'i'*(size//4)
+
+            print "len(data) = ",len(data)
+            nodeXYZs = list(unpack(Format,data))
+            e=nElements
+            while nodes:
+                n3 = nodes.pop()
+                n2 = nodes.pop()
+                n1 = nodes.pop()
+                element = [n1,n2,n3]
+                elements[e] = element
+                e-=1
+                ne+=1
+            ###
+            size=0
+        
+        #for p,point in sorted(nodes.iteritems()):
+            #print "%s %s %s" %(tuple(point))
+
+        if isBuffered:
+            pass
+        else:
+            raise RuntimeError('unBuffered')
+
+        self.op2.read(8)  # end of third (element) block, start of regions (fourth) block
+        print "finished Elements"
+        return elements
+        
+    def readRegions(self,nElements):
+        print "starting Regions"
+        isBuffered = True
+        size = nElements*4 # 12=3*4 all the elements
+        Format = '>'+'i'*3000
+
+        regions = {}
+        
+        nr=0
+        while size>12000: # 12k is 3000 elements
+            print "size = ",size
+            data = self.op2.read(4*3000)
+            regionData = list(unpack(Format,data))
+
+            r=nr+3000
+            print "len(regionData) = ",len(regionData)
+            while regionData:
+                regions[r] = regionData.pop()
+                r-=1
+                nr+=1
+            size -= 4*3000
+            print "size = ",size
+
+        assert size>=0
+        print "size = ",size
+
+        if size>0:
+            leftover = size-(nElements-nr)*4
+            data = self.op2.read(size)
+            print "leftover=%s size//4=%s" %(leftover,size//4)
+            Format = '>'+'i'*(size//4)
+
+            #print "len(data) = ",len(data)
+            regionData = list(unpack(Format,data))
+            r=nElements
+            while regionData:
+                regions[r] = regionData.pop()
+                r-=1
+                nr+=1
+            ###
+            size=0
+
+
+        self.op2.read(4)  # end of regions (fourth) block
+        print "finished Regions"
+        return regions
+#------------------------------------------------------------------
+
+#Cart3DReader = Cart3DBinary
+
+
 
 if __name__=='__main__':
+    cart3dGeom  = os.path.join('models','threePlugs.a.tri')
+    cart3dGeom  = os.path.join('models','threePlugs.tri')
+    #cart = Cart3DReader()
+    cart = Cart3DBinary()
+    (points,elements,regions,loads) = cart.readCart3d(cart3dGeom)
+    outfilename = os.path.join('models','threePlugs2.a.tri')
+    cart.writeOutfile(outfilename,points,elements,regions)
+    #print points
+    
+if 0:
     basepath = os.getcwd()
     configpath = os.path.join(basepath,'inputs')
     workpath   = os.path.join(basepath,'outputsFinal')
@@ -484,8 +750,8 @@ if __name__=='__main__':
     cart3dGeom3 = os.path.join(workpath,'Cart3d_full.i.tri')
     #cart3dGeom4 = os.path.join(workpath,'Cart3d_full2.i.tri')
 
-    cart = Cart3DReader(cart3dGeom)
-    (points,elements,regions,loads) = cart.read()
+    cart = Cart3DReader()
+    (points,elements,regions,loads) = cart.readCart3d(cart3dGeom)
     (points,elements,regions,loads) = cart.makeHalfModel(points,elements,regions,loads)
     cart.writeOutfile(cart3dGeom2,points,elements,regions)
 
