@@ -113,7 +113,7 @@ class writeMesh(object):
         fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
         
-        outfile = open(outFileName,'w',encoding='utf-8')
+        outfile = open(outFileName,'w',encoding='ascii')
         outfile.write(msg)
         outfile.close()
     
@@ -140,7 +140,7 @@ class writeMesh(object):
         fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
 
-        outfile = open(outFileName,'wb')
+        outfile = open(outFileName,'w',encoding='ascii')
         outfile.write(msg)
         outfile.close()
 
@@ -165,7 +165,7 @@ class writeMesh(object):
         fname = self.printFileName(outFileName)
         self.log.debug("***writing %s" %(fname))
 
-        outfile = open(outFileName,'wb')
+        outfile = open(outFileName,'w',encoding='ascii')
         outfile.write(msg)
         outfile.close()
 

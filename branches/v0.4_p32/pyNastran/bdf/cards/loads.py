@@ -348,7 +348,7 @@ class SLOAD(Load):
         self.lid = card.field(1)
         
         fields = card.fields(2)
-        n = len(fields)/2
+        n = len(fields)//2
         if len(fields)%2==1:
             n+=1
             raise Exception('missing last magnitude on SLOAD card=%s' %(card.fields()) )

@@ -25,6 +25,7 @@
 import os
 import sys
 import inspect
+import logging
 
 def frame(n):
     return inspect.currentframe(n+4) # jump 4 levels down to get out of the logger code
@@ -129,7 +130,7 @@ class dummyLogger(object):
         elif level=='info':
             return infoLogger()
         else:
-            raise Exception("invalid logger:  debug, info ONLY!")
+            raise RuntimeError("invalid logger:  debug, info ONLY!")
 
 def getLogger(log=None,level='debug'):
     """
@@ -145,7 +146,6 @@ def getLogger(log=None,level='debug'):
     return logger
 
 def buildDummyLogger2(level='debug'):
-    import logging
     try:
         version = sys.version_info
         fname = 'pyNastran.py%s%s.log' %(version.major,version.minor)
@@ -158,10 +158,12 @@ def buildDummyLogger2(level='debug'):
         logger.setLevel(logging.DEBUG)
         # create file handler which logs even debug messages
         fh = logging.FileHandler(logPath)
-        if debug:
+        if level=='debug':
             fh.setLevel(logging.DEBUG)
-        else:
+        elif level=='info':
             fh.setLevel(logging.INFO)
+        else:
+            raise RuntimeError("invalid logger:  debug, info ONLY!")
         # create console handler with a higher log level
         ch = logging.StreamHandler()
         ch.setLevel(logging.ERROR)

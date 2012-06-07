@@ -75,7 +75,7 @@ class bdfReader(object):
             #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
             if not os.path.exists(infileName):
                 raise MissingFileError("infileName=|%s| does not exist..." %(infileName))
-            infile = open(infileName,'r')
+            infile = open(infileName,'r',encoding='ascii')
             self.infilesPack.append(infile)
             self.lineNumbers.append(0)
             self.isOpened[infileName]=True

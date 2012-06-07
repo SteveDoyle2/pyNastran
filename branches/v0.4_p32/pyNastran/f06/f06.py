@@ -113,7 +113,7 @@ class F06(OES,OUG,OQG,F06Writer):
           #'* * * END OF JOB * * *': self.end(),
          }
         self.markers = self.markerMap.keys()
-        self.infile = open(self.f06FileName,'r')
+        self.infile = open(self.f06FileName,'r',encoding='ascii')
         self.storedLines = []
 
         self.eigenvalues = {}

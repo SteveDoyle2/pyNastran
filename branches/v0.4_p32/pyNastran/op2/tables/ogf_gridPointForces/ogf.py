@@ -28,7 +28,7 @@ from numpy import array
 from struct import unpack
 
 # pyNastran
-from from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import gridPointForcesObject,complexGridPointForcesObject
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import gridPointForcesObject,complexGridPointForcesObject
 
 class OGF(object):
     """Table of Grid Point Forces"""

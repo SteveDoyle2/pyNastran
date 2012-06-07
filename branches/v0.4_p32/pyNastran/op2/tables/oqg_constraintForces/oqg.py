@@ -55,8 +55,6 @@ class OQG(object):
         #print self.obj
         params = ['lsdvm','mode','eigr','modeCycle','freq','dt','lftsfq','thermal','rCode','fCode','numWide','acousticFlag','thermal']
         self.deleteAttributes(params)
-        #sys.exit('stopping in oqg1.py')
-        
     
     def readTable_OQG_3(self,iTable): # iTable=-3
         bufferWords = self.getMarker()

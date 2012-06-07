@@ -146,15 +146,16 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
     #    pass
     except SystemExit:
         sys.exit('sys.exit...')
-    except:
+    except Exception as e:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
         traceback.print_exc(file=sys.stdout)
         #print msg
-        print("-"*80)
+        fem1.log.error(e)
+        fem1.log.info("-"*80)
         raise
     ###
-    print("-"*80)
+    fem1.log.info("-"*80)
     return (fem1,fem2,diffCards)
 
 def divide(value1,value2):
@@ -274,7 +275,7 @@ def getElementStats(fem1,fem2):
                 mid = e.Mid()
                 pid = e.Pid()
                 if J is None:
-                    print("Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid))
+                   fem1.log.info("Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid))
             elif isinstance(e,RigidElement):
                 pass
             elif isinstance(e,DamperElement):
@@ -287,7 +288,7 @@ def getElementStats(fem1,fem2):
                 m = e.Mass()
                 c = e.Centroid()
             else:
-                print("statistics not available - e.type=%s e.eid=%s" %(e.type,e.eid))
+                fem1.log.info("statistics not available - e.type=%s e.eid=%s" %(e.type,e.eid))
                 #try:
                 #    print "e.type = ",e.type
                 #except:

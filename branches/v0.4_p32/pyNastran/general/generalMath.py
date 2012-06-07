@@ -52,8 +52,9 @@ def integrateLine(x,y):
         raise
     return A
 
-def evaluatePositiveSpline(x,spline,minValue):
-    y = scipy.splev(x)
+def evaluatePositiveSpline(x,*args):
+    spline,minValue = args
+    y = splev([x],spline)
     return max(y,minValue)
 
 def buildSpline(x,y):
@@ -80,11 +81,10 @@ def integratePositiveLine(x,y,minValue=0.):
     try:
         assert len(x)==len(y), 'x=%s y=%s' %(x,y)
         spline = buildSpline(x,y)
-        #y = splev(xi,spline)
-        out = quad(splev,0.,1.,args=(spline,minValue))  # now integrate the area
+        out = quad(evaluatePositiveSpline,0.,1.,args=(spline,minValue))  # now integrate the area
         A = out[0]
     except:
-        raise Exception('spline Error x=%s y=%s' %(x,y))
+        raise RuntimeError('spline Error x=%s y=%s' %(x,y))
     return A
 
 def reduceMatrix(matA,nids):

@@ -260,7 +260,7 @@ class PCOMP(ShellProperty):
             #plyCards = card.fields(9)
 
             # counting plies
-            nMajor    = nPlyFields/4
+            nMajor    = nPlyFields//4
             nLeftover = nPlyFields%4
             if nLeftover:
                 nMajor+=1

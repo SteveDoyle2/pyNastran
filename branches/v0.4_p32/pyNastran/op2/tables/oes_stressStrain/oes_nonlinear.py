@@ -24,8 +24,8 @@
 ## 
 import sys
 from math import isnan
-from pyNastran.op2.tables.oes_stressStrain.oes_objects import stressObject,strainObject #,array
 from pyNastran.op2.op2Errors import *
+from pyNastran.op2.tables.oes_stressStrain.oes_objects import stressObject,strainObject #,array
 
 class nonlinearQuadObject(stressObject):
     def __init__(self,dataCode,iSubcase,dt=None):

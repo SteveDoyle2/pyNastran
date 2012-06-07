@@ -882,7 +882,7 @@ class PBEAM(IntegratedLineProperty):
             #print "  nFields = ",nFields
             #nFields = card.nFields()-16 # 17+16 (leading + trailing fields)
             # counting continuation cards
-            nMajor    = nFields/16
+            nMajor    = nFields//16
             nLeftover = nFields%16
             #print "  nMajor=%s nLeftover=%s" %(nMajor,nLeftover)
             if nLeftover==0:
