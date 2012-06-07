@@ -303,6 +303,9 @@ class getMethods(object):
     def Method(self,sid):
         return self.methods[sid]
 
+    def CMethod(self,sid):
+        return self.cMethods[sid]
+
     #--------------------
     # NONLINEAR CARDS
 
@@ -777,6 +780,16 @@ class addMethods(object):
         else:
             assert key>0,'sid=%s method=\n%s' %(key,method)
             self.methods[key] = method
+        ###
+
+    def addCMethod(self,cMethod,allowOverwrites=False):
+        key = cMethod.sid
+        if key in self.cMethods and allowOverwrites==False:
+            if not cMethod.isSameCard(self.cMethods[key]):
+                assert key not in self.cMethods,'sid=%s\noldCMethod=\n%snewCMethod=\n%s' %(key,self.cMethods[key],cMethod)
+        else:
+            assert key>0,'sid=%s cMethod=\n%s' %(key,cMethod)
+            self.cMethods[key] = cMethod
         ###
 
     def addMKAero(self,mkaero):

@@ -5,7 +5,7 @@ class Method(BaseCard):
     def __init__(self,card=None,data=None):
         pass
 
-class EIGB(Method):
+class EIGB(Method): # self.methods
     """
     Defines data needed to perform buckling analysis
     """
