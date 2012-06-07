@@ -159,8 +159,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # initial conditions - sid (set ID)
         #'TIC',  (in tables.py)
 
-        # methods - EIGC,EIGRL not done
-        'EIGB','EIGC','EIGR','EIGP','EIGRL',
+        # methods - @todo EIGRL not done???
+        'EIGB','EIGR','EIGRL',
+        
+        # cMethods - @todo EIGC not done???
+        'EIGC','EIGP',
         
         # other
         'INCLUDE',  # '='
@@ -367,7 +370,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.tables = {}
         
         ## methods
-        self.methods = {}
+        self.methods  = {} ## EIGB, EIGR, EIGRL
+        self.cMethods = {} ## EIGC, EIGP
 
     def _initAeroDefaults(self):
         # aero cards
@@ -1621,18 +1625,19 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='EIGB':
                 method = EIGB(cardObj)
                 self.addMethod(method)
-            elif cardName=='EIGC':
-                method = EIGC(cardObj)
-                self.addMethod(method)
-            elif cardName=='EIGP':
-                method = EIGP(cardObj)
-                self.addMethod(method)
             elif cardName=='EIGR':
                 method = EIGR(cardObj)
                 self.addMethod(method)
             elif cardName=='EIGRL':
                 method = EIGRL(cardObj,sol=self.sol)
                 self.addMethod(method)
+
+            elif cardName=='EIGC':
+                method = EIGC(cardObj)
+                self.addCMethod(method)
+            elif cardName=='EIGP':
+                method = EIGP(cardObj)
+                self.addCMethod(method)
 
 
             elif cardName=='PARAM':
