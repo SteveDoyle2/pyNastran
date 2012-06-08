@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import array
 from pyNastran.op2.op2Errors import *
 from pyNastran.op2.op2Codes import Op2Codes
@@ -175,7 +176,7 @@ class scalarObject(baseScalarObject):
                 try:
                     n = len(listA)
                 except:
-                    print "listA = ",listA
+                    print("listA = ",listA)
                     raise
                 listA.append(value)
                 assert len(listA)==n+1
@@ -228,12 +229,12 @@ class scalarObject(baseScalarObject):
         ###
         return msg+'\n'
             
-    def printDataMember(word,selfVarName):
-        msg = ''
-        if self.getVar(selfVarName):
-            msg += '%s = %s' %(word,selfVarName)
-        raise Exception('do i need this...msg=%s' %(msg))
-        return msg
+    #def printDataMember(word,selfVarName):
+        #msg = ''
+        #if self.getVar(selfVarName):
+            #msg += '%s = %s' %(word,selfVarName)
+        #raise Exception('do i need this...msg=%s' %(msg))
+        #return msg
 
     def recastGridType(self,gridType):
         """converts a gridType integer to a string"""
@@ -246,7 +247,7 @@ class scalarObject(baseScalarObject):
         elif gridType==0:
             Type = 'H'      # SECTOR/HARMONIC/RING POINT
         else:
-            raise Exception('gridType=%s' %(gridType))
+            raise RuntimeError('gridType=%s' %(gridType))
         ###
         return Type
         
@@ -257,7 +258,7 @@ class scalarObject(baseScalarObject):
         """
         self.dataCode = dataCode
         self.applyDataCode()
-        raise Exception('updateDt not implemented in the %s class' %(self.__class__.__name__))
+        raise RuntimeError('updateDt not implemented in the %s class' %(self.__class__.__name__))
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         if dt is not None:

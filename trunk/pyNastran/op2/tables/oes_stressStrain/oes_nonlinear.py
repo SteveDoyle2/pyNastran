@@ -368,7 +368,7 @@ class NonlinearRodObject(stressObject):
             msg += header+[e]+msgStart+msgT[eid]
             msg.append(pageStamp+str(pageNum))
 
-        return (''.join(msg),pageNum)    
+        return (''.join(msg),pageNum)
 
     def __repr__(self):
         return self.writeF06([],'PAGE ',1)[0]

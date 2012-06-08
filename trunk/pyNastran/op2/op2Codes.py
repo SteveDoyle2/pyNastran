@@ -373,7 +373,7 @@ class Op2Codes(object):
         else:                     sortWord2 = 'Real/Imaginary'
         if   self.sortBits[2]==0: sortWord3 = 'Sorted Responses'
         else:                     sortWord3 = 'Random Responses'
-    
+
         #if(  self.sortCode==0): sortWord = 'Real'
         #elif(self.sortCode==1): sortWord = 'Real/Imaginary'
         #elif(self.sortCode==2): sortWord = 'Random Responses'

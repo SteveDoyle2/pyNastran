@@ -85,7 +85,7 @@ class F06Writer(object):
 
     def loadOp2(self,isTesting=False):
         if isTesting==False:  ## @todo implement in way that doesnt require a variable (e.g. check parent class)
-            raise Exception("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
+            raise RuntimeError("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
         from pyNastran.op2.op2 import OP2
         self.op2Name = model+'.op2'
         op2 = OP2(self.op2Name)
@@ -152,7 +152,7 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
-            print result.__class__.__name__
+            print(result.__class__.__name__)
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
             if deleteObjects:
                 del result
@@ -165,7 +165,7 @@ class F06Writer(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-            print result.__class__.__name__
+            print(result.__class__.__name__)
             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=isMagPhase)
             if deleteObjects:
                 del result
@@ -215,11 +215,11 @@ class F06Writer(object):
                 header[1] = '0    %-72s                                SUBCASE %-15i\n' %(label,iSubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
                 for resType in resTypes:
-                    if resType.has_key(iSubcase):
+                    if iSubcase in resType:
                         header = copy.deepcopy(headerOld) # fixes bug in case
                         result = resType[iSubcase]
                         try:
-                            print result.__class__.__name__
+                            print(result.__class__.__name__)
                             (msg,pageNum) = result.writeF06(header,pageStamp,pageNum=pageNum,f=f,isMagPhase=False)
                         except:
                             #print "result name = %s" %(result.name())
@@ -245,7 +245,7 @@ class F06Writer(object):
             ###
         f.write(makeEnd())
         if not makeFile:
-            print f.getvalue()
+            print(f.getvalue())
         ###
         f.close()
 
