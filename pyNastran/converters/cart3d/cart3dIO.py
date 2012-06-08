@@ -5,7 +5,7 @@ from numpy import zeros
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d_reader import genericCart3DReader
 
 class Cart3dIO(object):
     def __init__(self):
@@ -57,7 +57,7 @@ class Cart3dIO(object):
         if skipReading:
             return
 
-        model = Cart3DReader()
+        model = genericCart3DReader(cart3dFileName)
         self.modelType = model.modelType
         (nodes,elements,regions,loads) = model.readCart3d(cart3dFileName)
         self.nNodes = model.nPoints
