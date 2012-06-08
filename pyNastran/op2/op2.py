@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from numpy import array
@@ -123,7 +124,7 @@ class OP2(BDF,  # BDF methods
                              
                              'OUGV1',                         # displacements                             
                              'OGPFB1',                        # grid point forces
-                             'OGS1',                          # grid poitn stresses
+                             'OGS1',                          # grid point stresses
                              
                              'OEF1X', 'DOEF1','OEFIT',        # element forces
                              'OPG1','OPGV1','OPNL1',          # applied forces
@@ -352,7 +353,7 @@ class OP2(BDF,  # BDF methods
             sys.exit('stopping...')
 
         self.readMarkers([3])
-        self.printSection(20)
+        #print(self.printSection(20))
         ints = self.readIntBlock()
         if self.makeOp2Debug:
             self.op2Debug.write('%s\n' %(str(ints)))
@@ -686,7 +687,6 @@ class OP2(BDF,  # BDF methods
         reads the Title, Subtitle, and Label.
         Puts them in self.iSubcaseNameMap[iSubcase] = [Subtitle,Label]
         """
-
         ## the title of the analysis
         word = self.readString(384) # titleSubtitleLabel
         self.Title    = word[0:128].strip()
@@ -768,7 +768,7 @@ class OP2(BDF,  # BDF methods
                 try:
                     msg += str(res) + '\n'
                 except:
-                    print 'failed on %s' %(res.__class__.__name__)
+                    print('failed on %s' %(res.__class__.__name__))
                     raise
                 ###
             ###

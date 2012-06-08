@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from numpy import matrix
 from types import NoneType
@@ -30,8 +31,8 @@ def deObscure(num):
     A base 52 value takes up a fewer characters than a base 10 number
     which helps to do Mat12345678 when there's an 8 character limit on variable names.
     """
-    print "***"
-    print "type(num) = ",type(num)
+    print("***")
+    print("type(num) = ",type(num))
     num.reverse()
     vals = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
             'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',]
@@ -41,13 +42,13 @@ def deObscure(num):
     for i in range(n):
         dictA[vals[i]] = i
 
-    print "n = ",n
+    print("n = ",n)
     val = 0
     for i,letter in enumerate(reversed(num)):
-        print "letter = ",letter
+        print("letter = ",letter)
         val += dictA[letter]*n**i
-        print "factor = ",dictA[letter]*n**i
-    print "val = ",val
+        print("factor = ",dictA[letter]*n**i)
+    print("val = ",val)
     return val
 
 def obscure(num):
@@ -69,19 +70,42 @@ def obscure(num):
     pack = []
     i=0
     while num>0:
-        print "num = ",num
-        print "factor = ",num%n
+        print("num = ",num)
+        print("factor = ",num%n)
         var = dictA[num%n]
         num = num/n
         pack.append(var)
         i+=1
         if i==100:
             break
-    print pack
-    print 
-    print "%s > %s" %(lenNum,len(pack))
+    print(pack)
+    print('')
+    print("%s > %s" %(lenNum,len(pack)))
     return pack
     
+
+def is_binary(filename):
+    """
+    Return true if the given filename is binary.
+    @raise EnvironmentError: if the file does not exist or cannot be accessed.
+    @attention: found @ http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text on 6/08/2010
+    @author: Trent Mick <TrentM@ActiveState.com>
+    @author: Jorge Orpinel <jorge@orpinel.com>
+    @warning this may not work for unicode...
+    """
+    fin = open(filename, 'rb')
+    try:
+        CHUNKSIZE = 1024
+        while 1:
+            chunk = fin.read(CHUNKSIZE)
+            if '\0' in chunk: # found null byte
+                return True
+            if len(chunk) < CHUNKSIZE:
+                break # done
+    finally: # no need for 
+        fin.close()
+
+    return False
 
 def ListPrint(listA):
     """
@@ -123,7 +147,7 @@ def ListPrint(listA):
                 try:
                     msg += ' %g,' %(a)
                 except TypeError:
-                    print "a = |%s|" %(a)
+                    print("a = |%s|" %(a))
                     raise
                 ###
             ###
@@ -136,5 +160,5 @@ def ListPrint(listA):
 if __name__=='__main__':
     n = 99999999
     o = obscure(n)
-    print ''.join(o)
+    print(''.join(o))
     deObscure(o)

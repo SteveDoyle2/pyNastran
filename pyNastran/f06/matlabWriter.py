@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import copy
 from datetime import date
@@ -169,7 +170,7 @@ class MatlabWriter(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n \n' %(iSubcase)
-            print result.__class__.__name__
+            print(result.__class__.__name__)
             nSubcase = nSubcases[iSubcase]
             result.writeMatlab(nSubcase,f=f,isMagPhase=isMagPhase)
            #result.writeMatlab(f=f)
@@ -179,7 +180,7 @@ class MatlabWriter(object):
             subtitle = subtitle.strip()
             header[0] = '     %s\n' %(subtitle)
             header[1] = '0                                                                                                            SUBCASE %i\n' %(iSubcase)
-            print result.__class__.__name__
+            print(result.__class__.__name__)
             nSubcase = nSubcases[iSubcase]
             result.writeMatlab(nSubcase,f=f,isMagPhase=isMagPhase)
            #result.writeMatlab(f=f)
@@ -226,10 +227,10 @@ class MatlabWriter(object):
                 header[1] = '0    %-72s                                SUBCASE %-15i\n' %(label,iSubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
                 for resType in resTypes:
-                    if resType.has_key(iSubcase):
+                    if iSubcase in resType:
                         result = resType[iSubcase]
                         try:
-                            print result.__class__.__name__
+                            print(result.__class__.__name__)
                             nSubcase = nSubcases[iSubcase]
                             result.writeMatlab(nSubcase,f=f,isMagPhase=False)
                         except:

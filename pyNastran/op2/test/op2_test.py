@@ -74,11 +74,11 @@ if __name__=='__main__':
     makeGeom  = False
     writeBDF  = False
     writeF06  = True
-    writeMatlab = True
+    writeMatlab = False
     printResults = False
 
     deleteF06 = True
-    saveCases = True
+    saveCases = False
     regenerate = False
     stopOnFailure = False
     getSkipCards = False

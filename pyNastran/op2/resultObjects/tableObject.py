@@ -2,7 +2,7 @@ import sys
 from struct import pack
 from numpy import array,sqrt,dot,abs,angle
 
-from op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 #try:
 #    from pylab import xlabel,ylabel,show,grid,legend,plot,title

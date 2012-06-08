@@ -1,4 +1,6 @@
 from numpy import sin,cos,radians,abs,angle
+from math import radians
+from cmath import rect #polar
 
 def polarToRealImag(mag,phase):
     """
@@ -9,9 +11,10 @@ def polarToRealImag(mag,phase):
     @retval realValue the real component a of a+bi
     @retval imagValue the imaginary component b of a+bi
     """
-    realValue = mag*cos(radians(phase)) # is phase in degrees/radians?
-    imagValue = mag*sin(radians(phase))
-    return complex(realValue,imagValue)
+    return rect(mag,radians(phase))
+    #realValue = mag*cos(radians(phase)) # is phase in degrees/radians?
+    #imagValue = mag*sin(radians(phase))
+    #return complex(realValue,imagValue)
 
 def realImagToMagPhase(realImag):
     """returns the magnitude and phase (degrees) of a complex number"""

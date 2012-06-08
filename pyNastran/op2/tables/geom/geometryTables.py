@@ -115,7 +115,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
             #print "**tableName = |%r|" %(tableName)
             return tableName,isNextTable,isNextSubTable,False
 
-        data = ''
+        data = b''
         isTableActive=False
         while isNextSubTable==False and isNextTable==False:
             #print self.printSection(200)
@@ -170,16 +170,16 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         self.tableInit(tableName)
         self.readMarkers([-1,7])
         ints = self.readIntBlock()  # ??? ints
-        #print ints
+        #print(ints)
         #data = self.readBlock()
         #print self.printBlock(data) 
-        #print "fields = ",fields
+        #print("fields = ",fields)
 
         #-------------------------------------------
         self.readMarkers([-2,1,0]) # 2
         self.readMarkers([2]) # 2
         strings = self.readStringBlock()  # IPCOMPT
-        #print strings
+        #print(strings)
 
         #-------------------------------------------
         #print "3"
@@ -290,7 +290,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,DYNAMIC
         self.readMarkers([-4,1,0])
 
 
-        print self.printSection(240)
+        #print(self.printSection(240))
         sys.exit('CASECC...')
 
     def readTable_OMM2(self):
