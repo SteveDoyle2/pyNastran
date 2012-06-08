@@ -5,6 +5,7 @@ from numpy import array
 from pyNastran.general.general import ListPrint
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
+from pyNastran.general.general import is_binary
 
 def convertToFloat(svalues):
     values = []
@@ -14,7 +15,7 @@ def convertToFloat(svalues):
 
 #------------------------------------------------------------------
 
-class Cart3DReader(object):
+class Cart3DAsciiReader(object):
     modelType = 'cart3d'
     isStructured = False
     isOutwardNormals = True
@@ -252,8 +253,8 @@ class Cart3DReader(object):
             #self.log.info("element = %s" %(element))
             #msg += format %(iElement,element[0],element[1],element[2])
             msg  += "%s  %s  %s\n" %(element[0],element[1],element[2])
-            for nID in element:
-                assert nodes.has_key(nID),'nID=%s is missing' %(nID)
+            for nid in element:
+                assert nid in nodes,'nid=%s is missing' %(nid)
 
             maxNode = max(element)
             maxNodes.append(maxNode)
@@ -289,8 +290,8 @@ class Cart3DReader(object):
             raise Exception('invalid result type')
 
         if self.readHalf:
-            self.nElementsRead = self.nElements/2
-            self.nElementsSkip = self.nElements/2
+            self.nElementsRead = self.nElements//2
+            self.nElementsSkip = self.nElements//2
         else:
             self.nElementsRead = self.nElements
             self.nElementsSkip = 0
@@ -455,7 +456,15 @@ class Cart3DReader(object):
                 #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
             ###
         ###
-        loads = {'Cp':Cp,'Mach':Mach,'U':U,'V':V,'W':W}
+        loads = {}
+        if Cp:
+            loads['Cp'] = Cp
+        if Mach:
+            loads['Mach'] = Mach
+        if U:
+            loads['U'] = U
+            loads['V'] = V
+            loads['W'] = W
         return loads
     ###
 
@@ -500,15 +509,15 @@ class Cart3DReader(object):
         f.close()
 
 #------------------------------------------------------------------
-class Cart3DBinary(FortranFile,Cart3DReader):
-
+class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
     modelType = 'cart3d'
     isStructured = False
     isOutwardNormals = True
 
     def __init__(self,log=None,debug=False):
-        Cart3DReader.__init__(self,log,debug)
+        Cart3DAsciiReader.__init__(self)
         FortranFile.__init__(self)
+
         self.isHalfModel = True
         self.cartType  = None # grid, result
         self.nPoints   = None
@@ -519,6 +528,15 @@ class Cart3DBinary(FortranFile,Cart3DReader):
 
         self.makeOp2Debug = False
         self.n = 0
+
+        if log is None:
+            from pyNastran.general.logger import dummyLogger
+            loggerObj = dummyLogger()
+            if debug:
+                log = loggerObj.startLog('debug') # or info
+            else:
+                log = loggerObj.startLog('info') # or info
+        self.log = log
 
     def readCart3d(self,infileName):
         self.infilename = infileName
@@ -538,7 +556,7 @@ class Cart3DBinary(FortranFile,Cart3DReader):
     def readHeader(self):
         data = self.op2.read(4)
         size, = unpack('>i',data)
-        print "size = ",size
+        #print "size = ",size
         
         data = self.op2.read(size)
         so4 = size//4  # size over 4
@@ -555,17 +573,18 @@ class Cart3DBinary(FortranFile,Cart3DReader):
         return (nPoints,nElements)
 
     def readNodes(self,nPoints):
-        print "starting Nodes"
+        #print "starting Nodes"
         isBuffered = True
         size = nPoints*12 # 12=3*4 all the points
-        Format = '>'+'f'*3000
+        Format = '>'+'f'*3000 # 3000 floats; 1000 points
 
         nodes = {}
         
-        np=0
-        while size>12000: # 4k is 1000 points
-            print "size = ",size
-            n=np+1000
+        np=1
+        while size>12000: # 12k = 4 bytes/float*3 floats/point*1000 points
+            #print "size = ",size
+            n=np+999
+            #print "nStart=%s np=%s" %(n,np)
             data = self.op2.read(4*3000)
             nodeXYZs = list(unpack(Format,data))
             while nodeXYZs:
@@ -573,28 +592,30 @@ class Cart3DBinary(FortranFile,Cart3DReader):
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
                 node = [x,y,z]
+                assert n not in nodes,'nid=%s in nodes' %(nid)
                 nodes[n] = node
                 n-=1
                 np+=1
             size -= 4*3000
 
         assert size>=0
-        print "size = ",size
+        #print "size = ",size
         #while size>0: # 4k is 1000 points
+        n=nPoints
         if size>0:
             leftover = size-(nPoints-np)*12
             data = self.op2.read(size)
-            print "leftover=%s size//4=%s" %(leftover,size//4)
+            #print "leftover=%s size//4=%s" %(leftover,size//4)
             Format = '>'+'f'*(size//4)
 
-            print "len(data) = ",len(data)
+            #print "len(data) = ",len(data)
             nodeXYZs = list(unpack(Format,data))
-            n=nPoints
             while nodeXYZs:
                 z = nodeXYZs.pop()
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
                 node = [x,y,z]
+                assert n not in nodes,'nid=%s in nodes' %(nid)
                 nodes[n] = node
                 n-=1
                 np+=1
@@ -609,13 +630,15 @@ class Cart3DBinary(FortranFile,Cart3DReader):
         else:
             raise RuntimeError('unBuffered')
 
+        for nid in range(1,nPoints+1):
+            assert nid in nodes,'nid=%s not in nodes' %(nid)
         self.op2.read(8)  # end of second block, start of third block
         return nodes
 
     def readElements(self,nElements):
         self.nElementsRead = nElements
         self.nElementsSkip = 0
-        print "starting Elements"
+        #print "starting Elements"
         isBuffered = True
         size = nElements*12 # 12=3*4 all the elements
         Format = '>'+'i'*3000
@@ -624,7 +647,7 @@ class Cart3DBinary(FortranFile,Cart3DReader):
         
         ne=0
         while size>12000: # 4k is 1000 elements
-            print "size = ",size
+            #print "size = ",size
             e=ne+1000
             data = self.op2.read(4*3000)
             nodes = list(unpack(Format,data))
@@ -639,16 +662,16 @@ class Cart3DBinary(FortranFile,Cart3DReader):
             size -= 4*3000
 
         assert size>=0
-        print "size = ",size
+        #print "size = ",size
         #while size>0: # 4k is 1000 elements
         if size>0:
             leftover = size-(nElements-ne)*12
             data = self.op2.read(size)
-            print "leftover=%s size//4=%s" %(leftover,size//4)
+            #print "leftover=%s size//4=%s" %(leftover,size//4)
             Format = '>'+'i'*(size//4)
 
-            print "len(data) = ",len(data)
-            nodeXYZs = list(unpack(Format,data))
+            #print "len(data) = ",len(data)
+            nodes = list(unpack(Format,data))
             e=nElements
             while nodes:
                 n3 = nodes.pop()
@@ -670,11 +693,11 @@ class Cart3DBinary(FortranFile,Cart3DReader):
             raise RuntimeError('unBuffered')
 
         self.op2.read(8)  # end of third (element) block, start of regions (fourth) block
-        print "finished Elements"
+        #print "finished Elements"
         return elements
         
     def readRegions(self,nElements):
-        print "starting Regions"
+        #print "starting Regions"
         isBuffered = True
         size = nElements*4 # 12=3*4 all the elements
         Format = '>'+'i'*3000
@@ -683,26 +706,26 @@ class Cart3DBinary(FortranFile,Cart3DReader):
         
         nr=0
         while size>12000: # 12k is 3000 elements
-            print "size = ",size
+            #print "size = ",size
             data = self.op2.read(4*3000)
             regionData = list(unpack(Format,data))
 
             r=nr+3000
-            print "len(regionData) = ",len(regionData)
+            #print "len(regionData) = ",len(regionData)
             while regionData:
                 regions[r] = regionData.pop()
                 r-=1
                 nr+=1
             size -= 4*3000
-            print "size = ",size
+            #print "size = ",size
 
         assert size>=0
-        print "size = ",size
+        #print "size = ",size
 
         if size>0:
             leftover = size-(nElements-nr)*4
             data = self.op2.read(size)
-            print "leftover=%s size//4=%s" %(leftover,size//4)
+            #print "leftover=%s size//4=%s" %(leftover,size//4)
             Format = '>'+'i'*(size//4)
 
             #print "len(data) = ",len(data)
@@ -717,22 +740,46 @@ class Cart3DBinary(FortranFile,Cart3DReader):
 
 
         self.op2.read(4)  # end of regions (fourth) block
-        print "finished Regions"
+        #print "finished Regions"
         return regions
+
 #------------------------------------------------------------------
 
-#Cart3DReader = Cart3DBinary
+def genericCart3DReader(infileName,log=None,debug=False):
+    print "infileName = ",infileName
+    f = open(infileName,'rb')
+    data = f.read(4)
+    f.close()
+    
+    if is_binary(infileName):
+
+    #eight, = unpack('>i',data)
+    #if eight==8:  # is binary
+        #print "Binary eight = ",eight
+        obj = Cart3DBinaryReader(log,debug)
+    else:
+        #print "Ascii eight = ",eight
+        obj = Cart3DAsciiReader(log,debug)
+
+    return obj
+
 
 
 
 if __name__=='__main__':
-    cart3dGeom  = os.path.join('models','threePlugs.a.tri')
+    # binary
     cart3dGeom  = os.path.join('models','threePlugs.tri')
-    #cart = Cart3DReader()
-    cart = Cart3DBinary()
+    outfilename = os.path.join('models','threePlugs2.tri')
+    cart = genericCart3DReader(cart3dGeom)
     (points,elements,regions,loads) = cart.readCart3d(cart3dGeom)
-    outfilename = os.path.join('models','threePlugs2.a.tri')
     cart.writeOutfile(outfilename,points,elements,regions)
+
+    # ascii
+    cart3dGeom  = os.path.join('models','threePlugs.a.tri')
+    outfilename = os.path.join('models','threePlugs2.a.tri')
+    cart2 = genericCart3DReader(cart3dGeom)
+    (points,elements,regions,loads) = cart2.readCart3d(cart3dGeom)
+    cart2.writeOutfile(outfilename,points,elements,regions)
     #print points
     
 if 0:
@@ -750,12 +797,12 @@ if 0:
     cart3dGeom3 = os.path.join(workpath,'Cart3d_full.i.tri')
     #cart3dGeom4 = os.path.join(workpath,'Cart3d_full2.i.tri')
 
-    cart = Cart3DReader()
+    cart = Cart3DAsciiReader()
     (points,elements,regions,loads) = cart.readCart3d(cart3dGeom)
     (points,elements,regions,loads) = cart.makeHalfModel(points,elements,regions,loads)
     cart.writeOutfile(cart3dGeom2,points,elements,regions)
 
-    #cart = Cart3DReader(cart3dGeom)  # bJet.a.tri
+    #cart = Cart3DAsciiReader(cart3dGeom)  # bJet.a.tri
     #(cartPoints,elements,regions,loads) = cart.read()
     #points2 = {}
     #for (iPoint,point) in sorted(points.items()):
@@ -764,14 +811,14 @@ if 0:
         #points2[iPoint] = [x,y,z+x/10.]
     #(points,elements,regions,loads) = cart.makeMirrorModel(points2,elements,regions,loads)
     
-    cart2 = Cart3DReader(cart3dGeom2)
+    cart2 = Cart3DAsciiReader(cart3dGeom2)
     (points,elements,regions,loads) = cart2.read()
     
     #makeFullModel
     (points,elements,regions,loads) = cart2.makeFullModel(points,elements,regions,loads)  # half model values going in
     cart2.writeOutfile(cart3dGeom3,points,elements,regions)
     
-    #cart3 = Cart3DReader(cart3dGeom2)
+    #cart3 = Cart3DAsciiReader(cart3dGeom2)
     #(points,elements,regions,loads) = cart3.read()
     #(points,elements,regions,loads) = cart3.makeMirrorModel(points,elements,regions,loads)
     
