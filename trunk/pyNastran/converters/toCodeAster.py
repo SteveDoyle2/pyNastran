@@ -2,6 +2,29 @@
 from pyNastran.bdf.bdf import BDF,PBAR,PBARL,PBEAM,PBEAML
 
 class CodeAsterConverter(BDF):
+    """
+    Converts a BDF to Code Aster
+    
+    Limitations:
+     * Ignores Case Control Deck
+     * All Loads are assumed to be included using a LOAD card.
+       Loads that do NOT have load card will NOT be written.
+     
+     Supported Cards:
+       * GRID, COORDx
+       * LOAD, FORCEx, MOMENTx, PLOAD4
+       * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
+       * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
+       * MAT1
+     
+     TODO:
+       * PCOMP
+       * SPC, SPC1, MPC
+       * GRAV
+
+     @note FORCEx/MOMENTx/PLOAD4 cards will print out saying they're unsupported,
+           which is partially true.  They must be referenced by a LOAD card.
+    """
     def __init__(self,language='english'):
         self.language = 'english'
         BDF.__init__(self)
@@ -218,10 +241,13 @@ class CodeAsterConverter(BDF):
     def CA_Loads(self):
         """writes the load cards sorted by ID"""
         comm = '# CA_Loads\n'
-        if self.language=='english':
-            comm += '# Loads\n'
-        else:
-            comm += ''
+        #if self.language=='english':
+            #comm += '# Loads\n'
+        #else:
+            #comm += ''
+        
+        
+        skippedLids = {}
         if self.loads:
             comm += '# LOADS\n'
             for key,loadcase in sorted(self.loads.iteritems()):
@@ -232,7 +258,14 @@ class CodeAsterConverter(BDF):
                     #try:
                     if 1:
                         #print 'trying to write load...type=%s key=%s' %(load.type,key)
-                        comm += load.writeCodeAsterLoad(self,gridWord='N')
+                        out = load.writeCodeAsterLoad(self,gridWord='N')
+                        if len(out)==3: # LOAD card
+                            (commi,loadIDs,loadTypes) = out
+                            #print 
+                            comm += commi
+                        else: # FORCEx, MOMENTx, GRAV
+                            #comm += out
+                            skippedLids[(load.lid,load.type)] = out
                     #except:
                         #print 'failed printing load...type=%s key=%s' %(load.type,key)
                         #raise
@@ -242,6 +275,10 @@ class CodeAsterConverter(BDF):
             #    comm += grav.writeCodeAster(mag)
             ###
         ###
+
+        for lid_loadType,commi in sorted(skippedLids.iteritems()):
+            comm += commi
+
         comm += self.breaker()
         return comm
 

@@ -110,7 +110,7 @@ class LineProperty(Property):
     def Nu(self):
         return self.mid.nu
 
-    def CA_Section(self,iFace,iStart,dim):
+    def CA_Section(self,iFace,iStart,dims):
         """
         ---msg1---
         H1=0.1
@@ -128,9 +128,9 @@ class LineProperty(Property):
         """
         msg1 = ''
         msg2 = 'Face_%s = geompy.MakeFaceHW(' %(iFace+1)
-        for i,d in enumerate(dim):
-            msg1 += 'D%s = \n' %(iStart+d)
-            msg2 += 'D%s,'
+        for i,dim in enumerate(dims):
+            msg1 += 'D%s = %s\n' %(iStart+i,dim)
+            msg2 += 'D%s,' %(iStart+i)
         msg2 += '1)\n'
         msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" %(iFace,iFace)
         return (msg1+msg2)
@@ -791,8 +791,8 @@ class PBARL(LineProperty):
         return None
     
     def writeCodeAster(self,iCut=0,iFace=0,iStart=0):  # PBARL
+        msg = '# BAR Type=%s pid=%s\n' %(self.type,self.pid)
         msg1=''; msg2=''
-        msg = ''
         (msg) += self.CA_Section(iFace,iStart,self.dim)
         iFace += 1
         iStart += len(self.dim)

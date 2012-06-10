@@ -208,6 +208,9 @@ class LOAD(Load):
         return self.lid
     
     def getLoads(self):
+        """
+        @note requires a cross referenced load
+        """
         loads = []
         for load in self.loadIDs:
             #loads += loadID.getLoads()
@@ -215,12 +218,56 @@ class LOAD(Load):
         ###
         return loads
 
+    def getLoadIDs(self):
+        """
+        @note requires a cross referenced load
+        """
+        load_IDs = []
+        for loads in self.loadIDs:
+            for load in loads:
+                #if isinstance(load,int):
+                #    load_IDs += [load]
+                if isinstance(load,LOAD):
+                    load_IDs += load.lid
+                elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
+                    load_IDs += [load.lid]
+                else:
+                    print load
+                    raise RuntimeError()
+                ###
+        ###
+        load_IDs = list(set(load_IDs))
+        print "load_IDs = ",load_IDs
+        return load_IDs
+
+    def getLoadTypes(self):
+        """
+        @note requires a cross referenced load
+        """
+        loadTypes = []
+        for loads in self.loadIDs:
+            for load in loads:
+                if isinstance(load,LOAD):
+                    loadTypes += load.type
+                elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
+                    loadTypes += [load.type]
+                else:
+                    print load
+                    raise RuntimeError()
+                ###
+        ###
+        loadTypes = list(set(loadTypes))
+        print "loadTypes = ",loadTypes
+        return loadTypes
+
     def writeCodeAsterLoad(self,model,gridWord='node'):
-        msg = '# Loads\n'
+        loadIDs   = self.getLoadIDs()
+        loadTypes = self.getLoadTypes()
+        
+        #msg = '# Loads\n'
+        msg = ''
         (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoadsForCodeAster(model)
 
-        #mags = {}
-        
         nids = []
         for nid in forceLoads:
             nids.append(nid)
@@ -229,6 +276,7 @@ class LOAD(Load):
 
         if nids:
             msg += '# typesFound = %s\n' %(list(typesFound))
+            msg += '# loadIDs    = %s\n' %(loadIDs)
             msg += "load_bc=AFFE_CHAR_MECA(MODELE=modmod,\n"
             #msg += "                      DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
             msg += "                       FORCE_NODALE=(\n"
@@ -273,7 +321,7 @@ class LOAD(Load):
             #msg += "                                   DZ=0.0,),),\n"
         msg = msg[:-2]
         msg += ');\n'
-        return msg
+        return msg,loadIDs,loadTypes
 
     def organizeLoadsForCodeAster(self,model):
         forceLoads  = {} # spc enforced displacement (e.g. FORCE=0)
@@ -936,10 +984,10 @@ class PLOAD4(Load):
         if self.eids:
             self.eids = model.Elements(self.eids)
 
-    def Eid(self,element):
-        if isinstance(element,int):
-            return element
-        return element.eid
+    def Eid(self):
+        if isinstance(self.eid,int):
+            return self.eid
+        return self.eid.eid
 
     def getElementIDs(self,eid=None):
         if eid:
@@ -955,10 +1003,10 @@ class PLOAD4(Load):
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
         ldir = self.setBlankIfDefault(self.ldir,'NORM')
         p1   = self.pressures[0]
-        p2   = self.setBlankIfDefault(self.p[1],p1)
-        p3   = self.setBlankIfDefault(self.p[2],p1)
-        p4   = self.setBlankIfDefault(self.p[3],p1)
-        fields = ['PLOAD4',self.lid,eid,self.p[0],p2,p3,p4]
+        p2   = self.setBlankIfDefault(self.pressures[1],p1)
+        p3   = self.setBlankIfDefault(self.pressures[2],p1)
+        p4   = self.setBlankIfDefault(self.pressures[3],p1)
+        fields = ['PLOAD4',self.lid,eid,self.pressures[0],p2,p3,p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
         if self.g1 is not None: # is it a SOLID element

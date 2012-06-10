@@ -171,7 +171,11 @@ class getMethods(object):
         return self.properties.keys()
 
     def Property(self,pid):
-        return self.properties[pid]
+        try:
+            return self.properties[pid]
+        except KeyError:
+            raise KeyError('pid=%s not found.  Allowed Pids=%s' %(pid,self.propertyIDs()))
+        ###
 
     def Properties(self,pids):
         properties = []
