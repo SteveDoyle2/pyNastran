@@ -18,7 +18,7 @@ class BaseCard(BDF_Card):
         return '# skipping %s  because writeCodeAster is not implemented\n' %(self.type)
 
     def writeCodeAsterLoad(self,model,gridWord='node'):
-        return '# skipping %s because writeCodeAsterLoad is not implemented\n' %(self.type)
+        return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' %(self.type,self.lid)
 
     def verify(self,model,iSubcase):
         """

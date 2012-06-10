@@ -188,7 +188,7 @@ class MAT1(Material):
         #print ""
 
     def writeCodeAster(self):
-        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1\n' %(self.mid,self.e)
+        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1 mid=%s\n' %(self.mid,self.e,self.mid)
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
         #msg += '                       E  =%g,\n'  %(self.e)
         msg += '                       NU =%g,\n'  %(self.nu)
