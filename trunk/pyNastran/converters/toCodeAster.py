@@ -1,8 +1,9 @@
-language = 'english'
+
 from pyNastran.bdf.bdf import BDF,PBAR,PBARL,PBEAM,PBEAML
 
 class CodeAsterConverter(BDF):
-    def __init__(self):
+    def __init__(self,language='english'):
+        self.language = 'english'
         BDF.__init__(self)
     
     def getElementsByPid(self):
@@ -37,7 +38,7 @@ class CodeAsterConverter(BDF):
         #for eid,elements in self.elements:
             #elems[eid] = []
         for eid,element in self.elements.iteritems():
-            Type = element.type
+            Type = element.asterType
             if Type not in elems:
                 elems[Type] = []
 
@@ -63,137 +64,127 @@ class CodeAsterConverter(BDF):
         return mats
 
     def CA_Executive(self):
-        msg = ''
+        comm = ''
         if self.sol==101:
-            #msg += 'MECA_STATIQUE % SOL 101 - linear statics\n'
-            msg += 'stat(MECA_STATIQUE(MODELE=model,CHAM_MATER=material,CARA_ELEM=elemcar,\n'
+            #comm += 'MECA_STATIQUE % SOL 101 - linear statics\n'
+            comm += 'stat(MECA_STATIQUE(MODELE=model,CHAM_MATER=material,CARA_ELEM=elemcar,\n'
 
-            msg += 'ECIT=(_F(Charge=AllBoundaryConditions,),\n',
-            msg += '      _F(Charge=AllLoads,),\n',
-            msg += '      ),\n',
+            comm += 'ECIT=(_F(Charge=AllBoundaryConditions,),\n',
+            comm += '      _F(Charge=AllLoads,),\n',
+            comm += '      ),\n',
 
-            msg += "TITRE='My Title'\n"
-        return msg
+            comm += "TITRE='My Title'\n"
+        return comm
 
-    def CA_Nodes(self):
-        if language=='english':
-            msg = '# Grid Points\n'
+    def CA_Nodes(self,gridWord='grid'):
+        mail  = ''
+        mail += '# CA_Nodes\n'
+        if self.language=='english':
+            mail += '# Grid Points\n'
         else:
-            msg = ''
+            mail += ''
 
-        msg += 'COORD_3D\n'
-        form = '    grid%-'+str(self.maxNIDlen)+'s %8g %8g %8g\n'
+        mail += 'COOR_3D\n'
+        form = '    %s%-'+str(self.maxNIDlen)+'s %8s %8s %8s\n'
 
         for nid,node in sorted(self.nodes.iteritems()):
             p = node.Position()
-            msg += form %(nid,p[0],p[1],p[2])
+            mail += form %(gridWord,nid,p[0],p[1],p[2])
         ###
-        #msg += 'FINSF\n\n'
-        msg += '\n'
-        return ''
-        return msg
+        mail += 'FINSF\n\n'
+        mail += self.breaker()
+        return mail
 
-    def CA_Elements(self):
-        if language=='english':
-            msg = '# Elements\n'
+    def CA_Elements(self,elemWord='elem',gridWord='grid'):
+        mail  = ''
+        mail += '# CA_Elements\n'
+        if self.language=='english':
+            mail += '# Elements\n'
         else:
-            msg = ''
+            mail += ''
 
         elems = self.getElementsByType()
 
-        formE = '    elem%-'+str(self.maxEIDlen)+'s '
-        formG =     'grid%-'+str(self.maxNIDlen)+'s '
+        formE = '    %s%-'+str(self.maxEIDlen)+'s '
+        formG =     '%s%-'+str(self.maxNIDlen)+'s '
         for Type,eids in sorted(elems.iteritems()):
-            msg += '%s\n' %(Type)
+            mail += '%s\n' %(Type)
             for eid in eids:
-                msg += formE %(eid)
+                mail += formE %(elemWord,eid)
                 element = self.elements[eid]
                 for nid in element.nodeIDs():
-                    msg += formG %(nid)
-                msg += '\n'
-            msg += 'FINSF\n\n'
-        msg += self.breaker()
-        return msg
+                    mail += formG %(gridWord,nid)
+                mail += '\n'
+            mail += 'FINSF\n\n'
+        mail += self.breaker()
+        return mail
 
     def CA_Properties(self):
-        if language=='english':
-            msg = '# Properties\n'
+        comm  = ''
+        comm += '# CA_Properties\n'
+        if self.language=='english':
+            comm += '# Properties\n'
         else:
-            msg = ''
+            comm += ''
         
         #p = []
         #for pid,prop in sorted(self.properties.iteritems()):
         #    p.append('%s_%s' %(prop.type,pid))
         #p = str(p)[1:-1] # chops the [] signs
-        #msg += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
-        #msg += "          AFFE=_F(GROUP_MA=(%s),\n" %(p)
-        #msg += "                  PHENOMENE='MECANIQUE',\n"
-        #msg += "                  MODELISATION=('POU_D_T'),),);\n\n"
+        #comm += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
+        #comm += "          AFFE=_F(GROUP_MA=(%s),\n" %(p)
+        #comm += "                  PHENOMENE='MECANIQUE',\n"
+        #comm += "                  MODELISATION=('POU_D_T'),),);\n\n"
 
-        msg += "Prop = AFFE_CARA_ELEM(MODELE=FEMODL,\n"
+        comm += "Prop = AFFE_CARA_ELEM(MODELE=FEMODL,\n"
         pyCA = ''
         iCut=0; iFace=0; iStart=0
         for pid,prop in sorted(self.properties.iteritems()):
             if isinstance(prop,PBARL) or isinstance(prop,PBEAML):
                 (pyCAi,iCut,iFace,iStart) = prop.writeCodeAster(iCut,iFace,iStart)
                 pyCA += pyCAi
+                isSkipped = False
             else:
-                (msg) += prop.writeCodeAster()
+                prop = prop.writeCodeAster()
+                isSkipped = False
+                if 'skipped' in prop:
+                    isSkipped = True
             ###
-        msg = msg[:-2]
-        msg += ');\n'
-        #msg += ');\nFINSF\n\n'
-        msg += self.breaker()
-        return msg,pyCA
-
-    def CA_Loads(self):
-        """writes the load cards sorted by ID"""
-        if language=='english':
-            msg = '# Loads\n'
-        else:
-            msg = ''
-        if self.loads or self.gravs:
-            msg += '# LOADS\n'
-            for key,loadcase in sorted(self.loads.iteritems()):
-                for load in loadcase:
-                    try:
-                        msg += load.writeCodeAster()
-                    except:
-                        print 'failed printing load...type=%s key=%s' %(load.type,key)
-                        raise
-                    ###
-            for ID,grav in sorted(self.gravs.iteritems()):
-                msg += grav.writeCodeAster()
-            ###
-        ###
-        return msg
+        if not isSkipped:
+            comm = comm[:-2]
+        comm += ');\n'
+        #comm += ');\nFINSF\n\n'
+        comm += self.breaker()
+        return comm,pyCA
 
     def CA_Materials(self):
         """
-        might need to make this byPid instead...
+        might need to make this by pid instead...
         steel=DEFI_MATERIAU(ELAS=_F(E=210000.,NU=0.3,RHO=8e-9),);
         """
-        if language=='english':
-            msg = '# Materials\n'
+        comm  = ''
+        comm += '# CA_Materials\n'
+        if self.language=='english':
+            comm += '# Materials\n'
         else:
-            msg = ''
+            comm += ''
         mats = self.getElementsByMid()
         for mid,material in sorted(self.materials.iteritems()):
-            #msg += 'GROUP_MA name = %s_%s\n' %(material.type,mid)
-            msg += material.writeCodeAster()
+            #comm += 'GROUP_MA name = %s_%s\n' %(material.type,mid)
+            comm += material.writeCodeAster()
 
             eids = mats[mid]
-            #msg += '    '
+            #comm += '    '
             #for eid in eids:
-            #    msg += 'elem%s ' %(eid)
-            #msg = msg[:-1]
-            #msg += '\n'
-        #msg = msg[:-2]
-        #msg += '\n'
-        #msg += ');\n'
-        #msg += 'FINSF\n\n'
-        msg += self.breaker()
-        return msg
+            #    comm += 'elem%s ' %(eid)
+            #comm = comm[:-1]
+            #comm += '\n'
+        #comm = comm[:-2]
+        #comm += '\n'
+        #comm += ');\n'
+        #comm += 'FINSF\n\n'
+        comm += self.breaker()
+        return comm
 
     def CA_MaterialField(self):
         """
@@ -204,28 +195,62 @@ class CodeAsterConverter(BDF):
                                     _F(GROUP_MA=('P11','P13','P14','P15','P55','P56','P59',),
                                        MATER=M6,),
         """
-        msg = ''
-        msg += 'MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,\n'
-        msg += '                      AFFE=(\n'
+        comm = ''
+        comm += '# CA_MaterialField\n'
+        comm += 'MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,\n'
+        comm += '                      AFFE=(\n'
 
         mat2Props = self.getPropertiesByMid()
         for mid,material in sorted(self.materials.iteritems()):
-            msg += '                      _F(GROUP_MA=('
+            comm += '                      _F(GROUP_MA=('
             pids = mat2Props[mid]
-            #msg += "                      "
+            #comm += "                      "
             for pid in pids:
-                msg += "'P%s'," %(pid)
-            msg = msg[:-1]+'),\n'
-            msg += "                      MATER=M%s),\n" %(mid)
+                comm += "'P%s'," %(pid)
+            comm = comm[:-1]+'),\n'
+            comm += "                      MATER=M%s),\n" %(mid)
         ###
-        msg = msg[:-1] + '));\n'
+        comm = comm[:-1] + '));\n'
         
-        msg += self.breaker()
-        return msg
+        comm += self.breaker()
+        return comm
+
+    def CA_Loads(self):
+        """writes the load cards sorted by ID"""
+        comm = '# CA_Loads\n'
+        if self.language=='english':
+            comm += '# Loads\n'
+        else:
+            comm += ''
+        if self.loads:
+            comm += '# LOADS\n'
+            for key,loadcase in sorted(self.loads.iteritems()):
+                #print loadcase
+                print "loadID = ",key
+                for load in loadcase:
+                    #print load.strip()
+                    #try:
+                    if 1:
+                        #print 'trying to write load...type=%s key=%s' %(load.type,key)
+                        comm += load.writeCodeAsterLoad(self,gridWord='N')
+                    #except:
+                        #print 'failed printing load...type=%s key=%s' %(load.type,key)
+                        #raise
+                    ###
+            #loadcase.
+            #for ID,grav in sorted(self.gravs.iteritems()):
+            #    comm += grav.writeCodeAster(mag)
+            ###
+        ###
+        comm += self.breaker()
+        return comm
 
     def CA_SPCs(self):
         #for spcID,spcs in self.spcObject2.iteritems():
-        pass
+        comm = ''
+        comm += '# CA_SPCs\n'
+        comm += self.breaker()
+        return comm
 
     def breaker(self):
         return '#-------------------------------------------------------------------------\n'
@@ -237,53 +262,63 @@ class CodeAsterConverter(BDF):
         self.maxMIDlen = len(str(max(self.materials)))
 
     def writeAsCodeAster(self,fname='fem'):
-        self.buildMaxs()
-
-        msg = ''
-        msg += '# BEGIN BULK\n'
-        msg += 'DEBUT();\n\n'
+        comm = ''
+        mail = ''
+        self.buildMaxs() # gets number of nodes/elements/properties/materials
         
-        msg += "#'Read the mesh' - we use the 'med' file format here.\n"
-        msg += 'mesh=LIRE_MAILLAGE(UNITE=20,\n'
-        msg += "                   FORMAT='MED',\n"
-        msg += '                   INFO_MED=2,);\n\n'
+        comm += '# BEGIN BULK\n'
+        comm += 'DEBUT();\n\n'
         
-        msg += "# Assigning the model for which CA will calculate the results: 'Mecanique' - since we are dealing with a linear elastic beam and '3D' since it's a 3D model.\n"
-        msg += 'Meca=AFFE_MODELE(MAILLAGE=mesh,\n'
-        msg += "                 AFFE=_F(TOUT='OUI',\n"
-        msg += "                         PHENOMENE='MECANIQUE',\n"
-        msg += "                         MODELISATION='3D',),);\n\n"
+        comm += "#'Read the mesh' - we use the 'aster' file format here.\n"
+        comm += 'mesh=LIRE_MAILLAGE(UNITE=20,\n'
+        comm += "                   FORMAT='ASTER');\n\n"
         
+        comm += "# Assigning the model for which CA will calculate the results:\n"
+        comm += "# 'Mecanique' - since we are dealing with a linear elastic beam and '3D' since it's a 3D model.\n"
+        comm += 'Meca=AFFE_MODELE(MAILLAGE=mesh,\n'
+        comm += "                 AFFE=_F(TOUT='OUI',\n"
+        comm += "                         PHENOMENE='MECANIQUE',\n"
+        comm += "                         MODELISATION='3D',),);\n\n"
+        comm += self.breaker()
         
 
+        #mail += self.CA_Nodes(gridWord='N')
+        #mail += self.CA_Elements(elemWord='E',gridWord='N')
+        comm += self.CA_Materials()
+        comm += self.CA_MaterialField()
+        (commi,pyCA) = self.CA_Properties()
+        comm += commi
+        comm += self.CA_Loads()
+        comm += self.CA_SPCs()
 
-        msg += self.CA_Nodes()
-        #msg += self.CA_Elements()
-        msg += self.CA_Materials()
-        msg += self.CA_MaterialField()
-        (msgi,pyCA) = self.CA_Properties()
-        msg += msgi
-        msg += self.CA_Loads()
-
-        msg += 'FIN();\n'
-        msg += '# ENDDATA\n'
+        comm += 'FIN();\n'
+        comm += '# ENDDATA\n'
+        print "writing fname=%s" %(fname+'.comm')
         f = open(fname+'.comm','wb')
-        f.write(msg)
+        f.write(comm)
         f.close()
         
+        if mail:
+            f = open(fname+'.mail','wb')
+            print "writing fname=%s" %(fname+'.mail')
+            f.write(mail)
+            f.close()
+
         if pyCA:
             f = open(fname+'.py','wb')
+            print "writing fname=%s" %(fname+'.py')
             f.write(pyCA)
             f.close()
         ###
 
-        
 
-if __name__=='__main__':
+def main():
     import sys
     ca = CodeAsterConverter()
     #model = 'solidBending'
     model = sys.argv[1]
-    ca.readBDF(model+'.bdf')
+    ca.readBDF(model)
     ca.writeAsCodeAster(model)  # comm, py
     
+if __name__=='__main__':
+    main()
