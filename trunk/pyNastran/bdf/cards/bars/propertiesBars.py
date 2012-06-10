@@ -793,16 +793,16 @@ class PBARL(LineProperty):
     def writeCodeAster(self,iCut=0,iFace=0,iStart=0):  # PBARL
         msg1=''; msg2=''
         msg = ''
-        (msg) += CA_Section(self,iFace,iStart,self.dim)
-        nFace += 1
+        (msg) += self.CA_Section(iFace,iStart,self.dim)
+        iFace += 1
         iStart += len(self.dim)
 
-        (msg) += CA_Section(self,iFace,iStart,self.dim)
-        nFace += 1
+        (msg) += self.CA_Section(iFace,iStart,self.dim)
+        iFace += 1
         msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' %(iCut+1,iFace+1,iFace+2)
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  %(iCut+1,iCut+1)
         iStart += len(self.dim)
-        return (msg+msg2,iCut,nFace,iStart)
+        return (msg+msg2,iCut,iFace,iStart)
 
     def rawFields(self):
         fields = ['PBARL',self.pid,self.Mid(),self.group,self.Type,None,None,None,None,
@@ -1208,7 +1208,7 @@ class PBEAML(IntegratedLineProperty):
         
         msg2 = 'Cut_%s = geompy.MakeCut(' %(iCut+1)
         for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
-            (msg) += CA_Section(self,iFace,iStart,self.dim)
+            (msg) += self.CA_Section(iFace,iStart,self.dim)
             msg2 += 'Face_%i, ' %(iFace+1)
             nFace += 1
             iStart += len(self.dim)

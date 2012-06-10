@@ -219,11 +219,16 @@ class getMethods(object):
     # LOADS/CONSTRAINTS
 
     def Load(self,lid):
+        #print 'lid=%s self.loads=%s' %(lid,(self.loads.keys()))
+        assert isinstance(lid,int),'lid=%s is not an integer' %(lid)
         if lid in self.loads:
             load = self.loads[lid]
-        if lid in self.gravs:
-            return self.Grav(lid)
-        raise Exception('cannot find LoadID=%s' %(lid))
+        elif lid in self.gravs:
+            load = self.Grav(lid)
+        else:
+            raise KeyError('cannot find LoadID=%s.' %(lid))
+        #print "returning load..."
+        return load
 
     def Grav(self,sid):
         return self.gravs[sid]

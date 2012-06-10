@@ -559,6 +559,7 @@ class CBAR(LineElement):
                                0.0+0   0.0+0     -9.   0.0+0   0.0+0     -9.
     """
     type = 'CBAR'
+    asterType = 'CBAR'
     def __init__(self,card=None,data=None):
         LineElement.__init__(self,card,data)
         if card:

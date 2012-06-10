@@ -73,7 +73,13 @@ class GRAV(BaseCard):
             assert len(data)==7
         ###
 
+    def writeCodeAster(self,mag):
+        p = self.GravityVector()
+        msg = 'GRAV([%s,%s,%s])' %(p)
+        return msg
+
     def crossReference(self,model):
+        #print("xref GRAV")
         self.cid = model.Cid(self.cid)
     
     def Cid(self):
@@ -196,44 +202,97 @@ class LOAD(Load):
         self.loadIDs = loadIDs2
     
     def LoadID(self,ID):
-        if isinstance(ID,int):
-            return ID
-        return ID.lid
+        #print("ID = ",ID)
+        #if isinstance(ID,int):
+        #    return ID
+        return self.lid
     
     def getLoads(self):
         loads = []
         for load in self.loadIDs:
-            loads += loadID.getLoads()
+            #loads += loadID.getLoads()
+            loads += self.ID
         ###
         return loads
 
-    def writeCodeAster(self):
+    def writeCodeAsterLoad(self,model,gridWord='node'):
         msg = '# Loads\n'
-        (forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoadsForCodeAster()
-        # stuff
-        msg += "load_bc=AFFE_CHAR_MECA(MODELE=modmod,\n"
-        msg += "                      DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
-        msg += "                                   DX=0.0,\n"
-        msg += "                                   DY=0.0,\n"
-        msg += "                                   DZ=0.0,),\n"
-        msg += "                                _F(GROUP_MA='Lright',\n"
-        msg += "                                   DZ=0.0,),),\n"
+        (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoadsForCodeAster(model)
 
-        mags = {}
-        for node,load in sorted(forceLoads.iteritems()):
-            pass
+        #mags = {}
+        
+        nids = []
+        for nid in forceLoads:
+            nids.append(nid)
+        for nid in momentLoads:
+            nids.append(nid)
+
+        if nids:
+            msg += '# typesFound = %s\n' %(list(typesFound))
+            msg += "load_bc=AFFE_CHAR_MECA(MODELE=modmod,\n"
+            #msg += "                      DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
+            msg += "                       FORCE_NODALE=(\n"
+
+        #CHAR=AFFE_CHAR_MECA(MODELE=MODE,
+        #             FORCE_NODALE=(
+        #                     _F(NOEUD='N1',
+        #                        FZ=-500.0),)
+
+        #print("nids = ",nids)
+        for nid in sorted(nids): # ,load in sorted(forceLoads.iteritems())
+            #print("nid = ",nid)
+            msg += "                                 _F(NOEUD='%s%s',\n" %(gridWord,nid)
+            #print "load = ",load
+            
+            if nid in forceLoads:
+                force = forceLoads[nid]
+                if abs(force[0])>0.:
+                    msg += "                                   FX=%s,\n" %(force[0])
+                if abs(force[1])>0.:
+                    msg += "                                   FY=%s,\n" %(force[1])
+                if abs(force[2])>0.:
+                    msg += "                                   FZ=%s,\n" %(force[2])
+
+            if nid in momentLoads:
+                moment = momentLoads[nid]
+                if abs(moment[0])>0.:
+                    msg += "                                   MX=%s,\n" %(moment[0])
+                if abs(moment[1])>0.:
+                    msg += "                                   MY=%s,\n" %(moment[1])
+                if abs(moment[2])>0.:
+                    msg += "                                   MZ=%s,\n" %(moment[2])
+            msg = msg[:-2]
+            msg += '),\n'
+            # finish the load
+            
+            #if moment in
+            #msg += "                                   DX=0.0,\n"
+            #msg += "                                   DY=0.0,\n"
+            #msg += "                                   DZ=0.0,),\n"
+            #msg += "                                _F(GROUP_MA='Lright',\n"
+            #msg += "                                   DZ=0.0,),),\n"
+        msg = msg[:-2]
+        msg += ');\n'
         return msg
 
-    def organizeLoadsForCodeAster(self):
+    def organizeLoadsForCodeAster(self,model):
         forceLoads  = {} # spc enforced displacement (e.g. FORCE=0)
         momentLoads = {}
         forceConstraints  = {}
         momentConstraints = {}
         allLoads = array([0.,0.,0.])
-        for loadID in self.loadIDs():
-            loads = loadID.getLoads()
+        #print("self.loadIDs = ",self.loadIDs)
+        
+        typesFound = set()
+        for loadID in self.loadIDs:
+            loadID = loadID[0].lid
+            loads = model.Load(loadID)
+            #loads = load.getLoads()
+            #print("**loads = ",loads)
             for load in loads:
-                isLoad,node,vector = load.transformLoad()
+                #print("*load = ",load_
+                (isLoad,node,vector) = load.transformLoad()
+                typesFound.add(load.__class__.__name__)
                 if isinstance(load,Force):
                     if isLoad:  #load
                         if node not in forceLoads:
@@ -248,8 +307,7 @@ class LOAD(Load):
                             forceConstraints[node] += vector
                         ###
                     ###
-                else:  # Moment
-                    #if 
+                elif isinstance(load,Moment):
                     if isLoad: # load
                         if node not in momentLoads:
                             momentLoads[node]  = vector
@@ -263,10 +321,15 @@ class LOAD(Load):
                             momentConstraints[node] += vector
                         ###
                     ###
+                elif isinstance(load,PLOAD4):
+                    for nid,vectori in zip(node,vector):
+                        forceLoads[nid] = vectori # not the same vector for all nodes
+                else:
+                    raise NotImplementedError('%s not supported' %(load.__class__.__name__))
                 ###
             ###
         ###
-        return (forceLoads,momentLoads,forceConstraints,momentConstraints)
+        return (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints)
 
     def rawFields(self):
         fields = ['LOAD',self.lid,self.s]
@@ -365,8 +428,10 @@ class OneDeeLoad(Load): # FORCE/MOMENT
         return [self]
 
     def transformLoad(self):
-        xyxz = self.cid.transformToGlobal(self.xyz)
+        #print("self.xyz = ",self.xyz)
+        xyz,matrix = self.cid.transformToGlobal(self.xyz)
         if self.mag>0.:
+            #print("mag=%s xyz=%s" %(self.mag,xyz))
             return (True,self.node,self.mag*xyz) # load
         return (False,self.node,xyz) # enforced displacement
 
@@ -433,7 +498,8 @@ class FORCE(Force):
 
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
-        pass
+        #print "xref FORCE"
+        self.cid = model.Coord(self.cid)
 
     def rawFields(self):
         fields = ['FORCE',self.lid,self.node,self.Cid(),self.mag] + list(self.xyz)
@@ -698,7 +764,7 @@ class PLOAD(Load):
             self.lid   = data[0]
             self.p     = data[1]
             self.nodes = data[2:]
-            print "PLOAD = ",data
+            print("PLOAD = ",data)
             raise NotImplementedError('PLOAD')
         assert len(self.nodes) in [3,4],'nodes=%s' %(self.nodes)
     
@@ -790,9 +856,6 @@ class PLOAD2(Load):
         return self.rawFields()
 
 class PLOAD4(Load):
-    """
-    @todo needs work on g1
-    """
     type = 'PLOAD4'
     def __init__(self,card=None,data=None):
         if card:
@@ -800,20 +863,20 @@ class PLOAD4(Load):
             self.lid = card.field(1)
             self.eid = card.field(2)
             p1 = card.field(3)
-            p  = card.fields(4,7,[p1,p1,p1])
-            self.p = [p1]+p
+            p  = card.fields(4,7,[p1,p1,p1]) # [p1,p1,p1] are the defaults
+            self.pressures = [p1]+p
 
             if card.field(7)=='THRU' and card.field(8):
                 #print "found a THRU on PLOAD4"
                 pass
                 eid2 = card.field(8)
                 self.eids= self.expandThru([self.eid,'THRU',eid2])
-                self.g3 = None
-                self.g4 = None
+                self.g1  = None
+                self.g34 = None
             else:   # used for CPENTA, CHEXA
                 self.eids = None
-                self.g3 = card.field(7)
-                self.g4 = card.field(8)
+                self.g1  = card.field(7) # used for solid element only
+                self.g34 = card.field(8) # g3/g4 - different depending on CHEXA/CPENTA or CTETRA
             ###
 
             ## Coordinate system identification number. See Remark 2. (Integer >= 0;Default=0)
@@ -821,11 +884,12 @@ class PLOAD4(Load):
             #print "PLOAD4 cid = ",self.cid
             self.NVector = card.fields(10,13,[0.,0.,0.])
             self.sorl    = card.field(13,'SURF')
+            self.ldir    = card.field(14,'NORM')
         else:
             #print "PLOAD4 = ",data
             self.lid     = data[0]
             self.eid     = data[1]
-            self.p       = data[2]
+            self.pressures = data[2]
 
             self.g1      = data[3]
             self.g34     = data[4]
@@ -833,12 +897,31 @@ class PLOAD4(Load):
             self.NVector = data[6]
 
             self.sorl    = data[7]
+            #self.ldir    = data[8]
             #assert len(data)==8
             
-            self.g3 = self.g1
-            self.g4 = self.g34
+            self.g1  = self.g1
+            self.g34 = self.g34
             self.eids = []
         ###
+
+    def transformLoad(self):
+        if self.g1 and self.g34: # solid elements
+            nid = self.g1.nid
+            nidOpposite = self.g34.nid
+            (faceNodeIDs,Area) = self.eid.getFaceNodesAndArea(self,nid,nidOpposite)
+        else:
+            faceNodeIDs = self.eid.nodeIDs()
+            Area = self.eid.Area()
+        n = len(faceNodeIDs)
+
+        vector = array(self.eid.Normal())
+        vectors = []
+        for nid,p in zip(faceNodeIDs,self.pressures):
+            vectors.append(vector*p*Area/n) # Force_i; ## @warning only supports normal pressures
+            
+        isLoad = None
+        return (isLoad,faceNodeIDs,vectors)
 
     def Cid(self):
         if isinstance(self.cid,int):
@@ -846,10 +929,10 @@ class PLOAD4(Load):
         return self.cid.cid
 
     def crossReference(self,model):
+        self.eid = model.Element(self.eid)
         self.cid = model.Coord(self.cid)
-        if self.g1: self.g1 = model.Node(self.g1)
-        if self.g3: self.g3 = model.Node(self.g3)
-        if self.g4: self.g4 = model.Node(self.g4)
+        if self.g1:  self.g1  = model.Node(self.g1)
+        if self.g34: self.g34 = model.Node(self.g34)
         if self.eids:
             self.eids = model.Elements(self.eids)
 
@@ -865,21 +948,23 @@ class PLOAD4(Load):
         for element in self.eids:
             eids.append(self.Eid(element))
         return eids
-            
+
     def rawFields(self):
+        eid  = self.Eid()
         cid  = self.setBlankIfDefault(self.Cid(),0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
-        p1   = self.p[0]
+        ldir = self.setBlankIfDefault(self.ldir,'NORM')
+        p1   = self.pressures[0]
         p2   = self.setBlankIfDefault(self.p[1],p1)
         p3   = self.setBlankIfDefault(self.p[2],p1)
         p4   = self.setBlankIfDefault(self.p[3],p1)
-        fields = ['PLOAD4',self.lid,self.eid,self.p[0],p2,p3,p4]
+        fields = ['PLOAD4',self.lid,eid,self.p[0],p2,p3,p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
-        if self.g3 is not None:
-            (g3,g4) = self.nodeIDs([self.g3,self.g4])
-            fields.append(g3)
-            fields.append(g4)
+        if self.g1 is not None: # is it a SOLID element
+            (g1,g34) = self.nodeIDs([self.g1,self.g34])
+            fields.append(g1)
+            fields.append(g34)
         else:
             #print "eids = %s" %(self.eids)
             if not self.eids==None:
@@ -887,9 +972,9 @@ class PLOAD4(Load):
                     fields.append('THRU')
                     eid = self.eids[-1]
                 except:
-                    print "g3 = ",self.g3
-                    print "g4 = ",self.g4
-                    print "self.eids = ",self.eids
+                    print("g1  = ",self.g1)
+                    print("g34 = ",self.g34)
+                    print("self.eids = ",self.eids)
                     raise
                 ###
                 fields.append(self.getElementIDs(eid) )
@@ -903,6 +988,7 @@ class PLOAD4(Load):
         n3 = self.setBlankIfDefault(self.NVector[2],0.0)
         fields += [n1,n2,n3]
         fields.append(sorl)
+        fields.append(ldir)
         #print "fields = ",fields
         return fields
 

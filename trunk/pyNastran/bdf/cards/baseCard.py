@@ -15,7 +15,10 @@ class BaseCard(BDF_Card):
     #def wipeEmptyFields(self,card): # BaseCard
 
     def writeCodeAster(self):
-        return '# skipping %s\n' %(self.type)
+        return '# skipping %s  because writeCodeAster is not implemented\n' %(self.type)
+
+    def writeCodeAsterLoad(self,model,gridWord='node'):
+        return '# skipping %s because writeCodeAsterLoad is not implemented\n' %(self.type)
 
     def verify(self,model,iSubcase):
         """

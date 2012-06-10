@@ -110,6 +110,7 @@ class TriShell(ShellElement):
 
 class CTRIA3(TriShell):
     type = 'CTRIA3'
+    asterType = 'TRIA3'
     def __init__(self,card=None,data=None):
         TriShell.__init__(self,card,data)
         if card:
@@ -210,6 +211,7 @@ class CTRIA3(TriShell):
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
+    asterType = 'TRIA6'
     def __init__(self,card=None,data=None):
         TriShell.__init__(self,card,data)
         if card:
@@ -246,6 +248,44 @@ class CTRIA6(TriShell):
 
     def Thickness(self):
         return self.pid.Thickness()
+
+    def AreaCentroidNormal(self):
+        """
+        returns area,centroid, normal as it's more efficient to do them together
+        """
+        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
+        return Triangle_AreaCentroidNormal([n1,n2,n3])
+
+    def Area(self):
+        """
+        returns the normal vector
+        \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
+        """
+        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
+        a = n1-n2
+        b = n1-n3
+        area = Area(a,b)
+        return area
+
+    def Normal(self):
+        """
+        returns the normal vector
+        \f[ \large a = (n_0-n_1) \cross (n_0-n_2)  \f]
+        \f[ \large n = \frac{n}{norm(N)}           \f]
+        """
+        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
+        a = n1-n2
+        b = n1-n3
+        return Normal(a,b)
+
+    def Centroid(self,debug=False):
+        """
+        returns the centroid
+        \f[ \large CG = \frac{1}{3} (n_1+n_2+n_3)  \f]
+        """
+        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
+        centroid = self.CentroidTriangle(n1,n2,n3,debug)
+        return centroid
 
     def flipNormal(self):
         """
@@ -669,6 +709,7 @@ class CSHEAR(QuadShell):
 
 class CQUAD4(QuadShell):
     type = 'CQUAD4'
+    asterType = 'QUAD4 # CQUAD4'
     def __init__(self,card=None,data=None):
         QuadShell.__init__(self,card,data)
         if card:
@@ -859,6 +900,7 @@ class CQUAD(QuadShell):
 
 class CQUAD8(QuadShell):
     type = 'CQUAD8'
+    asterType = 'QUAD8'
     def __init__(self,card=None,data=None):
         QuadShell.__init__(self,card,data)
         if card:
@@ -897,6 +939,7 @@ class CQUAD8(QuadShell):
     def Thickness(self):
         return self.pid.Thickness()
 
+    def flipNormal(self):
         """
         1--5--2        1--8--4
         |     |  -->   |     |
@@ -906,6 +949,60 @@ class CQUAD8(QuadShell):
         """
         (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodes
         self.nodes = [n1,n4,n3,n2,  n8,n7,n6,n5]
+
+    def Normal(self):
+        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
+        a = n1-n3
+        b = n2-n4
+        return Normal(a,b)
+
+    def AreaCentroid(self,debug=False):
+        """
+        1-----2
+        |    /|
+        | A1/ |
+        |  /  |
+        |/ A2 |
+        4-----3
+        
+        centroid
+           c = sum(ci*Ai)/sum(A)
+           where:
+             c=centroid
+             A=area
+        """
+        #if debug:
+        #    print "nodes = ",self.nodes
+        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
+        a = n1-n2
+        b = n2-n4
+        area1 = Area(a,b)
+        c1 = self.CentroidTriangle(n1,n2,n4)
+
+        a = n2-n4
+        b = n2-n3
+        area2 = Area(a,b)
+        c2 = self.CentroidTriangle(n2,n3,n4)
+        
+        area = area1+area2
+        centroid = (c1*area1+c2*area2)/area
+        if debug:
+            print "c1=%s \n c2=%s \n a1=%s a2=%s" %(c1,c2,area1,area2)
+            print "type(centroid=%s centroid=%s \n" %(type(centroid),centroid)
+        return(area,centroid)
+    ###
+
+    def Area(self):
+        """
+        \f[ A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert \f]
+        where a and b are the quad's cross node point vectors
+        """
+        (n1,n2,n3,n4,n5,n6,n7,n8) = self.nodePositions()
+        a = n1-n3
+        b = n2-n4
+        area = Area(a,b)
+        return area
+    ###
 
     def rawFields(self):
         fields = ['CQUAD8',self.eid,self.Pid()]+self.nodeIDs()+[
