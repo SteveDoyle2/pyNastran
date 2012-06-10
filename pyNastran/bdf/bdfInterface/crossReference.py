@@ -24,7 +24,7 @@ class XrefMesh(object):
 
             self.crossReference_Aero()
             self.crossReference_Constraints()
-            #self.crossReference_Loads()
+            self.crossReference_Loads()
             #self.caseControlDeck.crossReference(self)
         ###
     
@@ -145,11 +145,12 @@ class XrefMesh(object):
         Links the loads to nodes, coordinate systems, and other loads
         """
         for lid,sid in self.loads.iteritems():
-            self.log.debug("lid=%s sid=%s" %(lid,sid))
+            #self.log.debug("lid=%s sid=%s" %(lid,sid))
             for load in sid:
                 try:
                     load.crossReference(self)
                 except:
+                    self.log.debug("lid=%s sid=%s" %(lid,sid))
                     sys.stderr.write("Couldn't cross reference Load\n%s" %(str(load)))
                     raise
         ###

@@ -94,6 +94,7 @@ class SpringElement(Element):
 
 class CELAS1(SpringElement):
     type = 'CELAS1'
+    asterType = 'CELAS1'
     def __init__(self,card=None,data=None):
         SpringElement.__init__(self,card,data)
         if card:
@@ -136,6 +137,7 @@ class CELAS1(SpringElement):
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
+    asterType = 'CELAS2'
     def __init__(self,card=None,data=None):
         SpringElement.__init__(self,card,data)
         
@@ -213,6 +215,7 @@ class CELAS2(SpringElement):
 
 class CELAS3(SpringElement):
     type = 'CELAS3'
+    asterType = 'CELAS3'
     def __init__(self,card=None,data=None):
         SpringElement.__init__(self,card,data)
 
@@ -256,6 +259,7 @@ class CELAS3(SpringElement):
 
 class CELAS4(SpringElement):
     type = 'CELAS4'
+    asterType = 'CELAS4'
     def __init__(self,card=None,data=None):
         SpringElement.__init__(self,card,data)
         

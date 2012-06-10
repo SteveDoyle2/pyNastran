@@ -508,7 +508,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             line = lineIn.strip()
             if self.debug:
                 (n) = self.getLineNumber()
-                self.log.debug("line[%s]*= |%r|" %(n,line))
+                self.log.debug("executiveLine[%s]*= |%r|" %(n,line))
             self.executiveControlLines.append(lineIn)
             if 'CEND' in line.upper():
                 break
