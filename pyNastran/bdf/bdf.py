@@ -144,6 +144,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'DVMREL1','DLINK','DRESP3',
         
         # sets
+        'ASET', 'BSET', 'QSET', 'CSET',
+        'ASET1','BSET1','QSET1',#'CSET1',  # CSET1 isnt done
         'SET1','SET3',
         
         # super-element sets
@@ -1241,6 +1243,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    material = MATT9(cardObj)
             #    self.addTempMaterial(material)
 
+            # cards contained within the LOAD card
             elif cardName=='FORCE':
                 force = FORCE(cardObj)
                 self.addLoad(force)
@@ -1259,9 +1262,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='MOMENT2':
                 moment = MOMENT2(cardObj)
                 self.addLoad(moment)
-            elif cardName=='LSEQ':
-                load = LSEQ(cardObj)
-                self.addLoad(load)
+            elif cardName=='GRAV':
+                grav = GRAV(cardObj)
+                self.addLoad(grav)
             elif cardName=='LOAD':
                 load = LOAD(cardObj)
                 self.addLoad(load)
@@ -1276,6 +1279,11 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addLoad(load)
             elif cardName=='PLOAD4':
                 load = PLOAD4(cardObj)
+                self.addLoad(load)
+
+
+            elif cardName=='LSEQ':
+                load = LSEQ(cardObj)
                 self.addLoad(load)
 
             elif cardName=='DLOAD':
@@ -1455,9 +1463,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='GUST':
                 gust = GUST(cardObj)
                 self.addGust(gust)
-            elif cardName=='GRAV':
-                grav = GRAV(cardObj)
-                self.addGrav(grav)
 
             # dynamic
             elif cardName=='DAREA':
@@ -1497,6 +1502,31 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    self.addFREQ(freq)
 
             # SETx
+            elif cardName=='ASET':
+                setObj = ASET(cardObj)
+                self.addSet(setObj)
+            elif cardName=='BSET':
+                setObj = BSET(cardObj)
+                self.addSet(setObj)
+            elif cardName=='CSET':
+                setObj = CSET(cardObj)
+                self.addSet(setObj)
+            elif cardName=='QSET':
+                setObj = QSET(cardObj)
+                self.addSet(setObj)
+            elif cardName=='ASET1':
+                setObj = ASET1(cardObj)
+                self.addSet(setObj)
+            elif cardName=='BSET1':
+                setObj = BSET1(cardObj)
+                self.addSet(setObj)
+            #elif cardName=='CSET1': # has a quirk
+                #setObj = CSET1(cardObj)
+                #self.addSet(setObj)
+            elif cardName=='QSET1':
+                setObj = QSET1(cardObj)
+                self.addSet(setObj)
+
             elif cardName=='SET1':
                 setObj = SET1(cardObj)
                 self.addSet(setObj)

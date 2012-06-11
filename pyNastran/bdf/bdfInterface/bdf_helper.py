@@ -234,8 +234,10 @@ class getMethods(object):
         #print "returning load..."
         return load
 
-    def Grav(self,sid):
-        return self.gravs[sid]
+    def Grav(self,lid):
+        raise DeprecatedWarning('use Load(lid) instead of Grav(lid)')
+        return self.Load(lid)
+        #return self.gravs[lid]
 
     #--------------------
     # COORDINATES CARDS

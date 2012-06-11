@@ -51,7 +51,7 @@ class GRAV(BaseCard):
     def __init__(self,card=None,data=None):
         if card:
             ## Set identification number
-            self.sid = card.field(1)
+            self.lid = card.field(1)
             ## Coordinate system identification number.
             self.cid = card.field(2,0)
             ## scale factor
@@ -65,7 +65,7 @@ class GRAV(BaseCard):
             ## coordinate system. See Remark 10. (Integer; Default = 0)
             self.mb  = card.field(7,0)
         else:
-            self.sid = data[0]
+            self.lid = data[0]
             self.cid = data[1]
             self.a   = data[2]
             self.N   = data[3:6]
@@ -73,14 +73,19 @@ class GRAV(BaseCard):
             assert len(data)==7
         ###
 
-    def writeCodeAster(self,mag):
-        p = self.GravityVector()
-        msg = 'GRAV([%s,%s,%s])' %(p)
-        return msg
+    def transformLoad(self):
+        g = self.GravityVector()
+        g2,matrix = self.cid.transformToGlobal(g)
+        return (g2)
+
+    #def writeCodeAster(self,mag):
+        #p = self.GravityVector()
+        #msg = 'GRAV([%s,%s,%s])' %(p)
+        #return msg
 
     def crossReference(self,model):
         #print("xref GRAV")
-        self.cid = model.Cid(self.cid)
+        self.cid = model.Coord(self.cid)
     
     def Cid(self):
         if isinstance(self.cid,int):
@@ -93,7 +98,7 @@ class GRAV(BaseCard):
         return p
 
     def rawFields(self):
-        fields = ['GRAV',self.sid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
+        fields = ['GRAV',self.lid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
         return fields
 
     def reprFields(self):
@@ -102,7 +107,7 @@ class GRAV(BaseCard):
             N.append(self.setBlankIfDefault(n,0.0))
         
         mb = self.setBlankIfDefault(self.mb,0)
-        fields = ['GRAV',self.sid,self.Cid(),self.a]+N+[mb]
+        fields = ['GRAV',self.lid,self.Cid(),self.a]+N+[mb]
         return fields
 
 class LSEQ(BaseCard): # Requires LOADSET in case control deck
@@ -234,11 +239,11 @@ class LOAD(Load):
                         load_IDs += load.lid
                     else: # int
                         load_IDs += load.getLoadIDs()
-                elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
+                elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4) or isinstance(load,GRAV):
                     load_IDs += [load.lid]
                 else:
-                    print load
-                    raise RuntimeError()
+                    raise NotImplementedError('The getLoadIDs method doesnt support %s cards.\n%s' %(load.__class__.__name__,str(load)))
+ 
                 ###
         ###
         load_IDs = list(set(load_IDs))
@@ -258,15 +263,14 @@ class LOAD(Load):
                         loadTypes += load.type
                     else: # int
                         loadTypes += [load.type]+load.getLoadTypes()
-                elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
+                elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4) or isinstance(load,GRAV):
                     loadTypes += [load.type]
                 else:
-                    print load
-                    raise RuntimeError()
+                    raise RuntimeError(load)
                 ###
         ###
         loadTypes = list(set(loadTypes))
-        print "loadTypes = ",loadTypes
+        #print "loadTypes = ",loadTypes
         return loadTypes
 
     def writeCodeAsterLoad(self,model,gridWord='node'):
@@ -275,7 +279,9 @@ class LOAD(Load):
         
         #msg = '# Loads\n'
         msg = ''
-        (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoads(model)
+        (typesFound,forceLoads,momentLoads,
+                    forceConstraints,momentConstraints,
+                    gravityLoads) = self.organizeLoads(model)
 
         nids = []
         for nid in forceLoads:
@@ -330,6 +336,9 @@ class LOAD(Load):
             #msg += "                                   DZ=0.0,),),\n"
         msg = msg[:-2]
         msg += ');\n'
+        
+        for gravityLoad in gravityLoads:
+            msg += 'CA_GRAVITY(%s);\n' %(str(gravityLoad))
         return msg,loadIDs,loadTypes
 
     def getReducedLoads(self):
@@ -345,7 +354,7 @@ class LOAD(Load):
         for loadsPack,scaleFactorI in zip(self.loadIDs,self.scaleFactors):
             scale2 = scaleFactorI*scale
             for load in loadsPack:
-                if isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
+                if isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4) or isinstance(load,GRAV):
                     loads.append(load)
                     scaleFactors.append(scale2)
                 elif isinstance(load,LOAD):
@@ -353,7 +362,10 @@ class LOAD(Load):
                     loads += loadsi
                     scaleFactors += [scale2*scalei for scalei in scaleFactorsi]
                 else:
-                    raise NotImplementedError('%s isnt supported in  getLoads method' %(load.__class__.__name__))
+                    raise NotImplementedError('%s isnt supported in getReducedLoads method' %(load.__class__.__name__))
+                ###
+            ###
+        ###
         return scaleFactors,loads
 
     def organizeLoads(self,model):
@@ -365,6 +377,7 @@ class LOAD(Load):
         momentLoads = {}
         forceConstraints  = {}
         momentConstraints = {}
+        gravityLoads = []
         #print("self.loadIDs = ",self.loadIDs)
         
         typesFound = set()
@@ -372,9 +385,10 @@ class LOAD(Load):
 
         for scaleFactor,load in zip(scaleFactors,loads):
             #print("*load = ",load_
-            (isLoad,node,vector) = load.transformLoad()
+            out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
             if isinstance(load,Force):
+                (isLoad,node,vector) = out
                 if isLoad:  #load
                     if node not in forceLoads:
                         forceLoads[node]  = vector*scaleFactor
@@ -389,6 +403,7 @@ class LOAD(Load):
                     ###
                 ###
             elif isinstance(load,Moment):
+                (isLoad,node,vector) = out
                 if isLoad: # load
                     if node not in momentLoads:
                         momentLoads[node]  = vector*scaleFactor
@@ -403,13 +418,18 @@ class LOAD(Load):
                     ###
                 ###
             elif isinstance(load,PLOAD4):
-                for nid,vectori in zip(node,vector):
-                    forceLoads[nid] = vectori*scaleFactor # not the same vector for all nodes
+                (isLoad,nodes,vectors) = out
+                for nid,vector in zip(nodes,vectors):
+                    forceLoads[nid] = vector*scaleFactor # not the same vector for all nodes
+
+            elif isinstance(load,GRAV):
+                #(grav) = out
+                gravityLoads.append(out*scaleFactor) # grav
             else:
                 raise NotImplementedError('%s not supported' %(load.__class__.__name__))
             ###
         ###
-        return (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints)
+        return (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints,gravityLoads)
 
     def rawFields(self):
         fields = ['LOAD',self.lid,self.scale]

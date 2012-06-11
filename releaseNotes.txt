@@ -15,11 +15,23 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
------------------------v0.5 released 2012/04/??-----------------------
+-----------------------v0.5 released 2012/06/??-----------------------
 Overall Notes
 Overall BDF
+
 BDF API Changes
+   - moved storage location of EIGC, EIGP
+   - grav card are now accessed using Load(lid) and not Grav(lid)
+   - grav card loadID renamed from sid to lid
+   - LOAD cards now have a getReducedLoads() which gets the scale factors and load objects
+     for all sub-loads
+
+BDF Bug Fixes:
+   - EIGC, EIGP now stored in self.cMethods instead of self.methods
+
 Added BDF
+   - ASET, ASET1, BSET, BSET1, CSET, QSET, QSET1
+   - *** CSET1, SET2
    - *** TIC
    - *** DMIG
 
@@ -27,7 +39,7 @@ Overall OP2
    - test_op2 now crashes if there isn't a .op2 in the filename
    - major changes to reader to support non-standard solutions
      reader should be much better at getting correct values
-   - added support for SORT2
+   - ***added support for SORT2
    - added majority of element forces
    - added majority of element heat fluxes
    - significantly more support for complex results
