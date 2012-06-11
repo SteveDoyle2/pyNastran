@@ -15,6 +15,7 @@ class CodeAsterConverter(BDF):
     
     Limitations:
       * All Case Control inputs must come from SUBCASE 1.
+      * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
     
     Supported Cards:
       * GRID, COORDx
@@ -253,7 +254,7 @@ class CodeAsterConverter(BDF):
         iSubcase = 1
         paramName = 'LOAD'
 
-        skippedLids = {}
+        #skippedLids = {}
         if self.loads:
             comm += '# LOADS\n'
             loadKeys = self.loads.keys()
@@ -271,7 +272,8 @@ class CodeAsterConverter(BDF):
                             (commi,loadIDs,loadTypes) = out
                             comm += commi
                         else: # FORCEx, MOMENTx, GRAV
-                            skippedLids[(load.lid,load.type)] = out
+                            #skippedLids[(load.lid,load.type)] = out
+                            comm += out
                     #except:
                         #print 'failed printing load...type=%s key=%s' %(load.type,key)
                         #raise
@@ -282,8 +284,8 @@ class CodeAsterConverter(BDF):
             ###
         ###
 
-        for lid_loadType,commi in sorted(skippedLids.iteritems()):
-            comm += commi
+        #for lid_loadType,commi in sorted(skippedLids.iteritems()):
+            #comm += commi
 
         comm += self.breaker()
         return comm
