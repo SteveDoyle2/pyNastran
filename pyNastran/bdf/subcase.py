@@ -294,6 +294,8 @@ class Subcase(object):
 
     def getParameter(self,paramName):
         paramName = self.updateParamName(paramName)
+        if paramName not in self.params:
+            raise KeyError('%s doesnt exist in subcase=%s in the case control deck.' %(paramName,self.id))
         return self.params[paramName][0:2]
 
     def updateParamName(self,paramName):
@@ -546,7 +548,7 @@ class Subcase(object):
             ###
             msg += msg2.rstrip(' \n,')+'\n'
         else:
-            raise Exception((key,param))  # SET-type is not supported yet...
+            raise NotImplementedError((key,param))  # SET-type is not supported yet...
         ###
         #print "msg = |%r|" %(msg)
         return msg

@@ -229,8 +229,11 @@ class LOAD(Load):
                     #load_IDs += [load]
                     
                 if isinstance(load,LOAD):
-                    print "load = ",load
-                    load_IDs += load.lid
+                    lid = load.lid
+                    if isinstance(lid,list):
+                        load_IDs += load.lid
+                    else: # int
+                        load_IDs += load.getLoadIDs()
                 elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
                     load_IDs += [load.lid]
                 else:
@@ -250,7 +253,11 @@ class LOAD(Load):
         for loads in self.loadIDs:
             for load in loads:
                 if isinstance(load,LOAD):
-                    loadTypes += load.type
+                    lid = load.lid
+                    if isinstance(lid,list):
+                        loadTypes += load.type
+                    else: # int
+                        loadTypes += [load.type]+load.getLoadTypes()
                 elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
                     loadTypes += [load.type]
                 else:
@@ -268,7 +275,7 @@ class LOAD(Load):
         
         #msg = '# Loads\n'
         msg = ''
-        (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoadsForCodeAster(model)
+        (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints) = self.organizeLoads(model)
 
         nids = []
         for nid in forceLoads:
@@ -325,59 +332,81 @@ class LOAD(Load):
         msg += ');\n'
         return msg,loadIDs,loadTypes
 
-    def organizeLoadsForCodeAster(self,model):
+    def getReducedLoads(self):
+        """
+        Get all load objects in a simplified form,
+        which means all scale factors are already applied and
+        only base objects (no LOAD cards) will be returned.
+        @todo lots more object types to support
+        """
+        scaleFactors = []
+        loads  = []
+        scale = self.scale
+        for loadsPack,scaleFactorI in zip(self.loadIDs,self.scaleFactors):
+            scale2 = scaleFactorI*scale
+            for load in loadsPack:
+                if isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
+                    loads.append(load)
+                    scaleFactors.append(scale2)
+                elif isinstance(load,LOAD):
+                    scaleFactorsi,loadsi = load.getReducedLoads()
+                    loads += loadsi
+                    scaleFactors += [scale2*scalei for scalei in scaleFactorsi]
+                else:
+                    raise NotImplementedError('%s isnt supported in  getLoads method' %(load.__class__.__name__))
+        return scaleFactors,loads
+
+    def organizeLoads(self,model):
+        """
+        Figures out magnitudes of the loads to be applied to the various nodes.
+        This includes figuring out scale factors.
+        """
         forceLoads  = {} # spc enforced displacement (e.g. FORCE=0)
         momentLoads = {}
         forceConstraints  = {}
         momentConstraints = {}
-        allLoads = array([0.,0.,0.])
         #print("self.loadIDs = ",self.loadIDs)
         
         typesFound = set()
-        for loadID,scaleFactorI in zip(self.loadIDs,self.scaleFactors):
-            scaleFactor = self.scale*scaleFactorI
-            loadID = loadID[0].lid
-            loads = model.Load(loadID)
-            #loads = load.getLoads()
-            #print("**loads = ",loads)
-            for load in loads:
-                #print("*load = ",load_
-                (isLoad,node,vector) = load.transformLoad()
-                typesFound.add(load.__class__.__name__)
-                if isinstance(load,Force):
-                    if isLoad:  #load
-                        if node not in forceLoads:
-                            forceLoads[node]  = vector*scaleFactor
-                        else:
-                            forceLoads[node] += vector*scaleFactor
-                        ###
-                    else: # constraint
-                        if node not in forceLoads:
-                            forceConstraints[node]  = vector*scaleFactor
-                        else:
-                            forceConstraints[node] += vector*scaleFactor
-                        ###
+        (scaleFactors,loads) = self.getReducedLoads()
+
+        for scaleFactor,load in zip(scaleFactors,loads):
+            #print("*load = ",load_
+            (isLoad,node,vector) = load.transformLoad()
+            typesFound.add(load.__class__.__name__)
+            if isinstance(load,Force):
+                if isLoad:  #load
+                    if node not in forceLoads:
+                        forceLoads[node]  = vector*scaleFactor
+                    else:
+                        forceLoads[node] += vector*scaleFactor
                     ###
-                elif isinstance(load,Moment):
-                    if isLoad: # load
-                        if node not in momentLoads:
-                            momentLoads[node]  = vector*scaleFactor
-                        else:
-                            momentLoads[node] += vector*scaleFactor
-                        ###
-                    else: # constraint
-                        if node not in momentLoads:
-                            momentConstraints[node]  = vector*scaleFactor
-                        else:
-                            momentConstraints[node] += vector*scaleFactor
-                        ###
+                else: # constraint
+                    if node not in forceLoads:
+                        forceConstraints[node]  = vector*scaleFactor
+                    else:
+                        forceConstraints[node] += vector*scaleFactor
                     ###
-                elif isinstance(load,PLOAD4):
-                    for nid,vectori in zip(node,vector):
-                        forceLoads[nid] = vectori*scaleFactor # not the same vector for all nodes
-                else:
-                    raise NotImplementedError('%s not supported' %(load.__class__.__name__))
                 ###
+            elif isinstance(load,Moment):
+                if isLoad: # load
+                    if node not in momentLoads:
+                        momentLoads[node]  = vector*scaleFactor
+                    else:
+                        momentLoads[node] += vector*scaleFactor
+                    ###
+                else: # constraint
+                    if node not in momentLoads:
+                        momentConstraints[node]  = vector*scaleFactor
+                    else:
+                        momentConstraints[node] += vector*scaleFactor
+                    ###
+                ###
+            elif isinstance(load,PLOAD4):
+                for nid,vectori in zip(node,vector):
+                    forceLoads[nid] = vectori*scaleFactor # not the same vector for all nodes
+            else:
+                raise NotImplementedError('%s not supported' %(load.__class__.__name__))
             ###
         ###
         return (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints)
