@@ -168,7 +168,7 @@ class LOAD(Load):
             #self.id  = self.lid
 
             ## overall scale factor
-            self.s  = card.field(2)
+            self.scale  = card.field(2)
 
             #print "nFields = ",nFields
             #print "nLoads  = ",nLoads
@@ -189,7 +189,7 @@ class LOAD(Load):
                 self.loadIDs.append(     loads[i+1])
         else:
             self.lid = data[0]
-            self.s   = data[1]
+            self.scale = data[1]
             self.scaleFactors = data[2]
             self.loadIDs      = data[3]
         ###
@@ -226,8 +226,10 @@ class LOAD(Load):
         for loads in self.loadIDs:
             for load in loads:
                 #if isinstance(load,int):
-                #    load_IDs += [load]
+                    #load_IDs += [load]
+                    
                 if isinstance(load,LOAD):
+                    print "load = ",load
                     load_IDs += load.lid
                 elif isinstance(load,Force) or isinstance(load,Moment) or isinstance(load,PLOAD4):
                     load_IDs += [load.lid]
@@ -237,7 +239,7 @@ class LOAD(Load):
                 ###
         ###
         load_IDs = list(set(load_IDs))
-        print "load_IDs = ",load_IDs
+        #print "load_IDs = ",load_IDs
         return load_IDs
 
     def getLoadTypes(self):
@@ -332,7 +334,8 @@ class LOAD(Load):
         #print("self.loadIDs = ",self.loadIDs)
         
         typesFound = set()
-        for loadID in self.loadIDs:
+        for loadID,scaleFactorI in zip(self.loadIDs,self.scaleFactors):
+            scaleFactor = self.scale*scaleFactorI
             loadID = loadID[0].lid
             loads = model.Load(loadID)
             #loads = load.getLoads()
@@ -344,34 +347,34 @@ class LOAD(Load):
                 if isinstance(load,Force):
                     if isLoad:  #load
                         if node not in forceLoads:
-                            forceLoads[node]  = vector
+                            forceLoads[node]  = vector*scaleFactor
                         else:
-                            forceLoads[node] += vector
+                            forceLoads[node] += vector*scaleFactor
                         ###
                     else: # constraint
                         if node not in forceLoads:
-                            forceConstraints[node]  = vector
+                            forceConstraints[node]  = vector*scaleFactor
                         else:
-                            forceConstraints[node] += vector
+                            forceConstraints[node] += vector*scaleFactor
                         ###
                     ###
                 elif isinstance(load,Moment):
                     if isLoad: # load
                         if node not in momentLoads:
-                            momentLoads[node]  = vector
+                            momentLoads[node]  = vector*scaleFactor
                         else:
-                            momentLoads[node] += vector
+                            momentLoads[node] += vector*scaleFactor
                         ###
                     else: # constraint
                         if node not in momentLoads:
-                            momentConstraints[node]  = vector
+                            momentConstraints[node]  = vector*scaleFactor
                         else:
-                            momentConstraints[node] += vector
+                            momentConstraints[node] += vector*scaleFactor
                         ###
                     ###
                 elif isinstance(load,PLOAD4):
                     for nid,vectori in zip(node,vector):
-                        forceLoads[nid] = vectori # not the same vector for all nodes
+                        forceLoads[nid] = vectori*scaleFactor # not the same vector for all nodes
                 else:
                     raise NotImplementedError('%s not supported' %(load.__class__.__name__))
                 ###
@@ -380,7 +383,7 @@ class LOAD(Load):
         return (typesFound,forceLoads,momentLoads,forceConstraints,momentConstraints)
 
     def rawFields(self):
-        fields = ['LOAD',self.lid,self.s]
+        fields = ['LOAD',self.lid,self.scale]
         for scaleFactor,loadID in zip(self.scaleFactors,self.loadIDs):
             fields += [scaleFactor,self.LoadID(loadID)]
         return fields
@@ -914,17 +917,20 @@ class PLOAD4(Load):
             p  = card.fields(4,7,[p1,p1,p1]) # [p1,p1,p1] are the defaults
             self.pressures = [p1]+p
 
-            if card.field(7)=='THRU' and card.field(8):
+            self.eids = [self.eid]
+            if card.field(7)=='THRU' and card.field(8): # plates
                 #print "found a THRU on PLOAD4"
                 pass
                 eid2 = card.field(8)
-                self.eids= self.expandThru([self.eid,'THRU',eid2])
-                self.g1  = None
-                self.g34 = None
+                if eid2:
+                    self.eids = self.expandThru([self.eid,'THRU',eid2])
+
+                self.g1   = None
+                self.g34  = None
             else:   # used for CPENTA, CHEXA
-                self.eids = None
-                self.g1  = card.field(7) # used for solid element only
-                self.g34 = card.field(8) # g3/g4 - different depending on CHEXA/CPENTA or CTETRA
+                self.eids = [self.eid]
+                self.g1   = card.field(7) # used for solid element only
+                self.g34  = card.field(8) # g3/g4 - different depending on CHEXA/CPENTA or CTETRA
             ###
 
             ## Coordinate system identification number. See Remark 2. (Integer >= 0;Default=0)
@@ -950,10 +956,18 @@ class PLOAD4(Load):
             
             self.g1  = self.g1
             self.g34 = self.g34
-            self.eids = []
+            self.eids = [self.eid]
         ###
 
     def transformLoad(self):
+        """
+        @warning sorl=SURF is supported (not LINE)
+        @warning ldir=NORM is supported (not X,Y,Z)
+        """
+        assert self.sorl=='SURF','only surface loads are supported.  required_sorl=SURF.  actual=%s' %(self.sorl)
+        assert self.ldir=='NORM','only normal loads are supported.   required_ldir=NORM.  actual=%s' %(self.ldir)
+        assert len(self.eids)==1,'only one load may be defined on each PLOAD4.  nLoads=%s\n%s' %(len(self.eids),str(self))
+
         if self.g1 and self.g34: # solid elements
             nid = self.g1.nid
             nidOpposite = self.g34.nid
@@ -1015,7 +1029,7 @@ class PLOAD4(Load):
             fields.append(g34)
         else:
             #print "eids = %s" %(self.eids)
-            if not self.eids==None:
+            if len(self.eids)>1:
                 try:
                     fields.append('THRU')
                     eid = self.eids[-1]
