@@ -33,7 +33,7 @@ class CaseControlDeck(object):
         #paramName = self.updateParamName(paramName)
         #print "iSubcase = ",iSubcase,'\n'
         if self.hasSubcase(iSubcase):
-            print str(self.subcases[iSubcase])
+            #print str(self.subcases[iSubcase])
             return self.subcases[iSubcase].getParameter(paramName.upper())
         ###
         raise RuntimeError('iSubcase=%s does not exist...' %(iSubcase))

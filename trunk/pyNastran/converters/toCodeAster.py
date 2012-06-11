@@ -16,6 +16,7 @@ class CodeAsterConverter(BDF):
     Limitations:
       * All Case Control inputs must come from SUBCASE 1.
       * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
+      * Only SOL 101 (Static)
     
     Supported Cards:
       * GRID, COORDx
@@ -23,11 +24,12 @@ class CodeAsterConverter(BDF):
       * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
       * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
       * MAT1
+      * GRAV (incorrect writing, but really easy to make it correct given proper format)
     
     TODO:
       * PCOMP
       * SPC, SPC1, MPC
-      * GRAV
+      * RBE2, RBE3
     """
     def __init__(self,language='english'):
         self.language = 'english'
@@ -93,7 +95,7 @@ class CodeAsterConverter(BDF):
     def CA_Executive(self):
         comm = ''
         if self.sol==101:
-            #comm += 'MECA_STATIQUE % SOL 101 - linear statics\n'
+            comm += 'MECA_STATIQUE % SOL 101 - linear statics\n'
             comm += 'stat(MECA_STATIQUE(MODELE=model,CHAM_MATER=material,CARA_ELEM=elemcar,\n'
 
             comm += 'ECIT=(_F(Charge=AllBoundaryConditions,),\n',
@@ -318,8 +320,9 @@ class CodeAsterConverter(BDF):
         comm += 'mesh=LIRE_MAILLAGE(UNITE=20,\n'
         comm += "                   FORMAT='ASTER');\n\n"
         
+        #comm += "#'MECA_STATIQUE' % SOL 101 - linear statics\n"
         comm += "# Assigning the model for which CA will calculate the results:\n"
-        comm += "# 'Mecanique' - since we are dealing with a linear elastic beam and '3D' since it's a 3D model.\n"
+        comm += "# 'Mecanique' - since we are dealing with a linear elastic model and '3D' since it's a 3D model.\n"
         comm += 'Meca=AFFE_MODELE(MAILLAGE=mesh,\n'
         comm += "                 AFFE=_F(TOUT='OUI',\n"
         comm += "                         PHENOMENE='MECANIQUE',\n"
@@ -327,8 +330,8 @@ class CodeAsterConverter(BDF):
         comm += self.breaker()
         
 
-        #mail += self.CA_Nodes(gridWord='N')
-        #mail += self.CA_Elements(elemWord='E',gridWord='N')
+        mail += self.CA_Nodes(gridWord='N')
+        mail += self.CA_Elements(elemWord='E',gridWord='N')
         comm += self.CA_Materials()
         comm += self.CA_MaterialField()
         (commi,pyCA) = self.CA_Properties()
