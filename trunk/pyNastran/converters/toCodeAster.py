@@ -3,27 +3,30 @@ from pyNastran.bdf.bdf import BDF,PBAR,PBARL,PBEAM,PBEAML
 
 class CodeAsterConverter(BDF):
     """
-    Converts a BDF to Code Aster
+    Converts a BDF to Code Aster (comm/mail/py files).
+    How:
+      * Nodes/Coordinate Systems/Elements/Properties/Materials are
+        directly extracted from the BDF.  All objects must reference
+        each other properly.
+      * Just like Nastran, extra materials/properties are allowed.
+        No idea how Code_Aster handles SPOINTs or unassociated GRIDs.
+      * Loads must be referenced by a single LOAD card in the Case Control deck.
+        This is consistent with standard Nastran.
     
     Limitations:
-     * Ignores Case Control Deck
-     * All Loads are assumed to be included using a LOAD card.
-       Loads that do NOT have load card will NOT be written.
-     
-     Supported Cards:
-       * GRID, COORDx
-       * LOAD, FORCEx, MOMENTx, PLOAD4
-       * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
-       * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
-       * MAT1
-     
-     TODO:
-       * PCOMP
-       * SPC, SPC1, MPC
-       * GRAV
-
-     @note FORCEx/MOMENTx/PLOAD4 cards will print out saying they're unsupported,
-           which is partially true.  They must be referenced by a LOAD card.
+      * All Case Control inputs must come from SUBCASE 1.
+    
+    Supported Cards:
+      * GRID, COORDx
+      * LOAD, FORCEx, MOMENTx, PLOAD4
+      * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
+      * PBAR, PBEAM, PROD, PTUBE, PSOLID, PSHELL
+      * MAT1
+    
+    TODO:
+      * PCOMP
+      * SPC, SPC1, MPC
+      * GRAV
     """
     def __init__(self,language='english'):
         self.language = 'english'
@@ -246,25 +249,28 @@ class CodeAsterConverter(BDF):
         #else:
             #comm += ''
         
-        
+
+        iSubcase = 1
+        paramName = 'LOAD'
+
         skippedLids = {}
         if self.loads:
             comm += '# LOADS\n'
-            for key,loadcase in sorted(self.loads.iteritems()):
+            loadKeys = self.loads.keys()
+            if 1:
+                key = self.caseControlDeck.getSubcaseParameter(iSubcase,paramName)[0]
+                loadcase = self.loads[key]
                 #print loadcase
-                print "loadID = ",key
-                for load in loadcase:
-                    #print load.strip()
+                for i,load in enumerate(loadcase):
+                    comm += '# main LOAD lid=%s type=%s\n' %(loadcase[i].lid,loadcase[i].__class__.__name__)
+
                     #try:
-                    if 1:
-                        #print 'trying to write load...type=%s key=%s' %(load.type,key)
+                    if 1: # LOAD card
                         out = load.writeCodeAsterLoad(self,gridWord='N')
                         if len(out)==3: # LOAD card
                             (commi,loadIDs,loadTypes) = out
-                            #print 
                             comm += commi
                         else: # FORCEx, MOMENTx, GRAV
-                            #comm += out
                             skippedLids[(load.lid,load.type)] = out
                     #except:
                         #print 'failed printing load...type=%s key=%s' %(load.type,key)

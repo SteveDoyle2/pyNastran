@@ -230,7 +230,7 @@ class getMethods(object):
         elif lid in self.gravs:
             load = self.Grav(lid)
         else:
-            raise KeyError('cannot find LoadID=%s.' %(lid))
+            raise KeyError('cannot find LoadID=|%s|.' %(lid))
         #print "returning load..."
         return load
 
