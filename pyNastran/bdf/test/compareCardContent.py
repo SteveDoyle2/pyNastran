@@ -130,7 +130,8 @@ def compareCardContent(fem1,fem2):
     for key in fem1.dmigs:
         card1 = fem1.dmigs[key]
         card2 = fem2.dmigs[key]
-        assertFields(card1,card2)
+        assert str(card1)==str(card2)
+        #assertFields(card1,card2)
 
     for key in fem1.dequations:
         card1 = fem1.dequations

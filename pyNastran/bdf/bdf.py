@@ -144,8 +144,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'DVMREL1','DLINK','DRESP3',
         
         # sets
-        'ASET', 'BSET', 'QSET', 'CSET',
-        'ASET1','BSET1','QSET1',#'CSET1',  # CSET1 isnt done
+        'ASET', 'BSET', 'CSET', 'QSET', 
+        'ASET1','BSET1','CSET1','QSET1',
         'SET1','SET3',
         
         # super-element sets
@@ -1520,9 +1520,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='BSET1':
                 setObj = BSET1(cardObj)
                 self.addSet(setObj)
-            #elif cardName=='CSET1': # has a quirk
-                #setObj = CSET1(cardObj)
-                #self.addSet(setObj)
+            elif cardName=='CSET1': # has a quirk
+                setObj = CSET1(cardObj)
+                self.addSet(setObj)
             elif cardName=='QSET1':
                 setObj = QSET1(cardObj)
                 self.addSet(setObj)
