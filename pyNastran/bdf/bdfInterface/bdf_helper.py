@@ -378,7 +378,7 @@ class addMethods(object):
         ###
 
     def addSPoint(self,spoint):
-        if self.spoints is not None:
+        if self.spoints is None:
             self.spoints = spoint
         else:
             self.spoints.addSPoints(spoint.spoints)

@@ -141,9 +141,9 @@ class TABLED1(Table):
         return fields
 
     def reprFields(self):
-        xaxis = self.setBlankIfDefault(self.xaxis,'LINEAR')
-        yaxis = self.setBlankIfDefault(self.yaxis,'LINEAR')
-        fields = ['TABLED1',self.tid,xaxis,yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
+        #xaxis = self.setBlankIfDefault(self.xaxis,'LINEAR')
+        #yaxis = self.setBlankIfDefault(self.yaxis,'LINEAR')
+        fields = ['TABLED1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
 class TABLED2(Table):

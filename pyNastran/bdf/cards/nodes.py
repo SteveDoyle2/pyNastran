@@ -76,6 +76,7 @@ class SPOINT(Node):
         """
         @todo support THRU in output
         """
+        print("SPOINT")
         if isinstance(self.nid,int):
             fields = ['SPOINT']+[self.nid]
         else:
@@ -99,8 +100,7 @@ class SPOINTs(Node):
             fields  = card.fields(1)
         else:
             fields = data
-
-        self.spoints = self.expandThru(fields)
+        self.spoints = set(self.expandThru(fields))
         #i = 0
         #while i<nFields: # =1 ???
         #    if fields[i]=='THRU':
@@ -115,7 +115,8 @@ class SPOINTs(Node):
         return len(self.spoints)
 
     def addSPoints(self,sList):
-        self.spoints = list(set(self.spoints+sList))
+        #print('old=%s new=%s' %(self.spoints,sList))
+        self.spoints = self.spoints.union(set(sList))
         
     def crossReference(self,model):
         pass
@@ -128,7 +129,11 @@ class SPOINTs(Node):
         return spoints
 
     def rawFields(self):
-        spoints = self.collapseThru(self.spoints)
+        #print("SPOINTi")
+        spoints = list(self.spoints)
+        spoints.sort()
+        #print("self.spoints = %s" %(self.spoints))
+        spoints = self.collapseThru(spoints)
         fields = ['SPOINT']+spoints
         return fields
 

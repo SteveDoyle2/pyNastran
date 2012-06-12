@@ -74,13 +74,10 @@ class DEQATN(BaseCard):# needs work...
             fields += ['        '+eqLine]
         return ''.join(fields)
 
-class DMIG(BaseCard):
+class NastranMatrix(BaseCard):
     """
-    Defines direct input matrices related to grid, extra, and/or scalar points. The matrix
-    is defined by a single header entry and one or more column entries. A column entry
-    is required for each column with nonzero elements.
+    Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
-    type = 'DMIG'
     def __init__(self,card=None,data=None):
         self.name = card.field(1)
         #zero
@@ -91,11 +88,8 @@ class DMIG(BaseCard):
         self.polar = card.field(6)
         self.ncol  = card.field(8)
 
-        #self.name = card.field(1)
         self.GCj = []
         self.GCi = []
-        #self.Gi = []
-        #self.Ci = []
         self.Real = []
         self.Complex = []
 
@@ -129,24 +123,31 @@ class DMIG(BaseCard):
         #if self.isComplex():
             #self.Complex(card.field(v)
 
-    def buildMatrix(self):
+    def getMatrix(self):
+        """
+        builds the Matrix
+        @param self the object pointer
+        @retval M the matrix
+        @retval rows dictionary of keys=rowID,    values=(Grid,Component) for the matrix
+        @retval cols dictionary of keys=columnID, values=(Grid,Component) for the matrix
+        """
         i=0
         rows = {}
+        rowsReversed = {}
         for GCi in self.GCi:
             if GCi not in rows:
                 rows[GCi] = i
+                rowsReversed[i] = GCi
                 i+=1
-            ###
-        ###
 
         j=0
         cols = {}
+        colsReversed = {}
         for GCj in self.GCj:
             if GCj not in cols:
                 cols[GCj] = j
+                colsReversed[j] = GCj
                 j+=1
-            ###
-        ###
         
         if self.isComplex():
             M = zeros((i,j),'complex')
@@ -162,7 +163,7 @@ class DMIG(BaseCard):
                 M[i,j] = reali
             ###
         ###
-        return M
+        return (M,rowsReversed,colsReversed)
 
     def rename(self,nameNew):
         self.name = newName
@@ -174,17 +175,71 @@ class DMIG(BaseCard):
 
     def __repr__(self):
         msg = '\n$'+'-'*80
-        msg += '\n$ DMIG Matrix %s\n' %(self.name)
-        fields = ['DMIG',self.name,0,self.ifo,self.tin,self.tout,self.polar,None,self.ncol]
+        msg += '\n$ %s Matrix %s\n' %(self.type,self.name)
+        fields = [self.type,self.name,0,self.ifo,self.tin,self.tout,self.polar,None,self.ncol]
         msg += self.printCard(fields)
 
         if self.isComplex():
             for (GCi,GCj,reali,imagi) in zip(self.GCi,self.GCj,self.Real,self.Complex):
-                fields = ['DMIG',self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,imagi]
+                fields = [self.type,self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,imagi]
                 msg += self.printCard(fields)
         else:
             for (GCi,GCj,reali) in zip(self.GCi,self.GCj,self.Real):
-                fields = ['DMIG',self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,None]
+                fields = [self.type,self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,None]
                 msg += self.printCard(fields)
         return msg
+
+
+class DMIG(NastranMatrix):
+    """
+    Defines direct input matrices related to grid, extra, and/or scalar points. The matrix
+    is defined by a single header entry and one or more column entries. A column entry
+    is required for each column with nonzero elements.
+    """
+    type = 'DMIG'
+    def __init__(self,card=None,data=None):
+        NastranMatrix.__init__(self,card,data)
+
+class DMIJ(NastranMatrix):
+    """
+    Direct Matrix Input at js-Set of the Aerodynamic Mesh
+    Defines direct input matrices related to collation degrees-of-freedom (js-set) of
+    aerodynamic mesh points for CAERO1, CAERO3, CAERO4 and CAERO5 and for the
+    slender body elements of CAERO2. These include W2GJ, FA2J and input pressures
+    and downwashes associated with AEPRESS and AEDW entries. The matrix is
+    described by a single header entry and one or more column entries. A column entry is
+    required for each column with nonzero elements. For entering data for the
+    interference elements of a CAERO2, use DMIJI or DMI.
+    """
+    type = 'DMIJ'
+    def __init__(self,card=None,data=None):
+        NastranMatrix.__init__(self,card,data)
+
+class DMIJI(NastranMatrix):
+    """
+    Direct Matrix Input at js-Set of the Interference Body
+    Defines direct input matrices related to collation degrees-of-freedom (js-set) of
+    aerodynamic mesh points for the interference elements of CAERO2. These include
+    W2GJ, FA2J and input pressures and downwashes associated with AEPRESS and
+    AEDW entries. The matrix is described by a single header entry and one or more
+    column entries. A column entry is required for each column with nonzero elements.
+    For entering data for the slender elements of a CAERO2, or a CAERO1, 3, 4 or 5 use
+    DMIJ or DMI.
+    """
+    type = 'DMIJI'
+    def __init__(self,card=None,data=None):
+        NastranMatrix.__init__(self,card,data)
+
+class DMIK(NastranMatrix):
+    """
+    Direct Matrix Input at ks-Set of the Aerodynamic Mesh
+    Defines direct input matrices related to physical (displacement) degrees-of-freedom
+    (ks-set) of aerodynamic grid points. These include WKK, WTFACT and input forces
+    associated with AEFORCE entries. The matrix is described by a single header entry
+    and one or more column entries. A column entry is required for each column with
+    nonzero elements.
+    """
+    type = 'DMIK'
+    def __init__(self,card=None,data=None):
+        NastranMatrix.__init__(self,card,data)
 

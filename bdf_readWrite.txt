@@ -24,6 +24,9 @@ CORD3G (partial)
 CONM1  (done)
 CONM2  (cid!=0)
 CBUSH  (done)
+CBUSH1D (done, no PBUSH1D so not integrated)
+CBUSH2D (done, no PBUSH2D so not integrated)
+
 CFAST  (done)
 CGAP   (done)
 
@@ -69,6 +72,8 @@ CMASS4 (done)
 
 CRAC2D (done, not well tested)
 CRAC3D (done, not well tested)
+PRAC2D
+PRAC3D
 
 ----Rigid Elements----:
 RROD
@@ -88,7 +93,10 @@ PDAMP   (done)
 PDAMP5  (done)
 PDAMPT  (done)
 PBUSH   (done)
+PBUSH1D (not added)
+PBUSH2D (not added)
 PBUSHT
+
 PFAST   (done)
 
 PROD    (done)
@@ -167,8 +175,8 @@ MOMENT1 (done)
 MOMENT2 (done)
 
 DLOAD  (done)
-RLOAD1 (done, dynamic)
-RLOAD2 (done, dynamic)
+RLOAD1 (done)
+RLOAD2 (done)
 SLOAD  (done)
 TLOAD1
 
@@ -269,7 +277,6 @@ DVPREL2  (done)
 DVMREL1  (done) # material DV
 DVMREL2
 DLINK   (done)
-DMIG    (in progress)
 DEQATN  (in progress)
 
 ---Tables---
@@ -292,7 +299,14 @@ TIC      (not integrated)
 
 ----Sets----:
 ASET   (done)
+BSET   (done)
+CSET   (done)
+QSET   (done)
 ASET1  (done)
+BSET1  (done)
+CSET1  (done)
+QSET1  (done)
+
 SET1   (done)
 SET2
 SET3   (done)
@@ -309,6 +323,13 @@ EIGR    (done)
 EIGRL   (done)
 MKAERO1 (done)
 MKAERO2 (done)
+
+----MATRICES----:
+DMIG        (done)
+DMIG,UACCEL
+DMIJ        (done)
+DMIJI       (done)
+DMIK        (done)
 
 ----Other----:
 INCLUDE (partial - case control deck & bulk data deck ONLY)

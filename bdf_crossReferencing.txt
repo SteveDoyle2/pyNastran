@@ -39,8 +39,11 @@ CORD3G
 CONM1   (done, does this card need cross-referencing???)
 CONM2   (cid!=0, cid=0 requires CG location...)
 CBUSH   (???)
+CBUSH1D (done, no PBUSH1D so not integrated)
+CBUSH2D (done, no PBUSH2D so not integrated)
+
 CFAST   (no)
-CGAP    (no spoints)
+CGAP    (done)
 
 CDAMP1  (???)
 CDAMP2  (???)
@@ -48,10 +51,10 @@ CDAMP3  (???)
 CDAMP4  (???)
 CDAMP5  (???)
 
-CELAS1 (no spoints)
-CELAS2 (no spoints)
-CELAS3 (no spoints)
-CELAS4 (no spoints)
+CELAS1 (done)
+CELAS2 (done)
+CELAS3 (done)
+CELAS4 (done)
 
 CBAR   (done)
 CROD   (done)
@@ -84,6 +87,8 @@ CMASS4 (no)
 
 CRAC2D (???)
 CRAC3D (???)
+PRAC2D
+PRAC3D
 
 ----Rigid Elements----:
 RROD
@@ -103,7 +108,10 @@ PDAMP   (???)
 PDAMP5  (???)
 PDAMPT  (???)
 PBUSH   (???)
+PBUSH1D (not added)
+PBUSH2D (not added)
 PBUSHT
+
 PFAST   (no)
 
 PROD    (done)
@@ -114,6 +122,7 @@ PBEAML  (done)
 PBEAM3
 PBEND   (done)
 PTUBE   (done)
+PVISC   (???)
 
 PSHELL  (done)
 PCOMP   (done)
@@ -131,6 +140,7 @@ MAT3  (NA)
 MAT8  (NA)
 MAT9  (NA)
 MAT10 (NA)
+MATHP (NA)
 
 ----Thermal Materials----:
 MAT4  (NA)
@@ -167,7 +177,7 @@ FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
 
-GRAV    (???)
+GRAV    (done)
 
 PLOAD   (done)
 PLOAD1  (done)
@@ -249,7 +259,7 @@ SPLINE5
 SPLINE6
 SPLINE7
 
-CSSCHD
+CSSCHD  (???)
 TRIM    (???)
 
 ----Dynamic----:
@@ -277,26 +287,25 @@ DRESP3
 DVGRID
 DVCREL1         # element  DV
 DVCREL2
-DVPREL1  (???)
+DVPREL1  (???)  # property DV
 DVPREL2  (???)
-DVMREL1  (???)
+DVMREL1  (???)  # material DV
 DVMREL2
 DLINK   (???)
-DMIG
-DEQATN
+DEQATN  (no)
 
 ---Tables---
 DTABLE
-TABLED1  (???)
-TABLED2  (???)
-TABLED3  (???)
+TABLED1  (NA)
+TABLED2  (NA)
+TABLED3  (NA)
 TABLED4
 TABLEHT
 TABLEH1
-TABLEM1  (???)
-TABLEM2  (???)
-TABLEM3  (???)
-TABLEM4  (???)
+TABLEM1  (NA)
+TABLEM2  (NA)
+TABLEM3  (NA)
+TABLEM4  (NA)
 TABLES1  (???)
 TABLEST  (???)
 TABRND1  (???)
@@ -304,6 +313,15 @@ TABRNDG
 TIC
 
 ----Sets----:
+ASET   (no)
+BSET   (no)
+CSET   (no)
+QSET   (no)
+ASET1  (no)
+BSET1  (no)
+CSET1  (no)
+QSET1  (no)
+
 SET1   (???)
 SET2
 SET3   (???)
@@ -321,6 +339,13 @@ EIGRL   (???)
 MKAERO1  (NA)
 MKAERO2  (NA)
 
+----MATRICES----:
+DMIG        (NA)
+DMIG,UACCEL
+DMIJ        (NA)
+DMIJI       (NA)
+DMIK        (NA)
+
 ----Other----:
 INCLUDE (NA)
 PARAM   (???)
@@ -330,6 +355,7 @@ PARAM   (???)
 ----Axial Nodes----:
 RINGAX
 POINTAX
+
 ----Axial Elements----:
 CCONEAX
 CTRIAX  (done)
