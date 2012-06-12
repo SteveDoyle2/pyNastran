@@ -43,6 +43,12 @@ class writeMesh(object):
         ###
         return msg
 
+    def writeDMIGs(self):
+        msg = ''
+        for name,dmig in sorted(self.dmigs.iteritems()):
+            msg += str(dmig)
+        return msg
+
     def writeCommon(self):
         """
         method to write the common outputs so none get missed...
@@ -51,6 +57,7 @@ class writeMesh(object):
         """
         msg = ''
         msg += self.writeRigidElements()
+        msg += self.writeDMIGs()
         msg += self.writeLoads()
         msg += self.writeDynamic()
         msg += self.writeAero()

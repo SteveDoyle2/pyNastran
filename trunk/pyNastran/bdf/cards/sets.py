@@ -138,21 +138,54 @@ class ASET1(ABSet1):
     ASET1 C ID1 'THRU' ID2
     """
     type = 'ASET1'
-    def __init__(self,card=None,data=None): ## @todo doesnt support data
+    def __init__(self,card=None,data=None):
         ABSet1.__init__(self,card,data)
 
 class BSET1(ABSet1):
     """
     """
     type = 'BSET1'
-    def __init__(self,card=None,data=None): ## @todo doesnt support data
+    def __init__(self,card=None,data=None):
         ABSet1.__init__(self,card,data)
+
+class CSET1(Set):
+    """
+    Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during generalized
+    dynamic reduction or component mode synthesis calculations.
+    CSET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
+    ID8 ID9
+    CSET1 C ID1 'THRU' ID2
+    CSET1,,'ALL'
+    """
+    def __init__(self,card=None,data=None): ## @todo doesnt support data
+        Set.__init__(self,card,data)
+        ## Unique identification number. (Integer > 0)
+        self.sid = card.field(1)
+
+        ## Identifiers of grids points. (Integer > 0)
+        self.IDs = []
+        if card.field(2)=='ALL':
+            self.components = '123456'
+        else:
+            self.components = str(card.field(1))
+            self.IDs = self.expandThru(card.fields(2))
+        ###
+
+    def rawFields(self):
+        fields = [self.type,self.component]+self.IDs
+        return fields
+
+    def __repr__(self):
+        fields = self.rawFields()
+        return self.printCard(fields)
 
 class QSET1(ABSet1):
     """
+    Defines generalized degrees-of-freedom (q-set) to be used for dynamic reduction or
+    component mode synthesis.
     """
     type = 'QSET1'
-    def __init__(self,card=None,data=None): ## @todo doesnt support data
+    def __init__(self,card=None,data=None):
         ABSet1.__init__(self,card,data)
 
 class SET1(Set):
@@ -296,7 +329,7 @@ class RADSET(Set): # not integrated
     RADSET ICAVITY1 ICAVITY2 ICAVITY3 ICAVITY4 ICAVITY5 ICAVITY6 ICAVITY7 ICAVITY8
     ICAVITY9 -etc.-
     """
-    type = 'SESET'
+    type = 'RADSET'
     def __init__(self,card=None,data=None):
         Set.__init__(self,card,data)
         self.seid = card.field(1)
@@ -312,6 +345,6 @@ class RADSET(Set): # not integrated
         self.cleanIDs()
         
     def rawFields(self):
-        fields = ['SESET',self.seid]+self.SetIDs()
+        fields = ['RADSET',self.seid]+self.SetIDs()
         return fields
 

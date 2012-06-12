@@ -74,52 +74,13 @@ class DEQATN(BaseCard):# needs work...
             fields += ['        '+eqLine]
         return ''.join(fields)
 
-class DMIG(BaseCard):  # not done...
+class DMIG(BaseCard):
     """
     Defines direct input matrices related to grid, extra, and/or scalar points. The matrix
     is defined by a single header entry and one or more column entries. A column entry
     is required for each column with nonzero elements.
     """
     type = 'DMIG'
-    def addColumn(self,card=None,data=None):
-        #print "hi column"
-        Gj = card.field(2)
-        Cj = card.field(3)
-        #
-        
-        nFields = card.nFields()
-        nLoops = (nFields-5)//4
-        minLoop = nLoops-1
-        if minLoop==0:
-            minLoop = 1
-        #assert nFields <= 8,'nFields=%s' %(nFields)
-
-        print "minLoop = ",minLoop
-        print "nLoops  = ",nLoops
-        for i in range(nLoops):
-            self.GCj.append((Gj,Cj))
-
-        for i in range(nLoops):
-            n = 5+4*i
-            Gi = card.field(n)
-            Ci = card.field(n+1)
-            self.GCi.append((Gi,Ci))
-
-            self.Real.append(card.field(n+2))
-            self.Complex.append(card.field(n+3))
-        
-        assert len(self.GCj)==len(self.GCi),'(len(GCj)=%s len(GCi)=%s' %(len(self.GCj),len(self.GCi))
-        #if isComplex():
-            #self.Complex(card.field(v)
-    def buildMatrices(self):
-        pass
-    #def renameMatrix(self,nameNew):
-        #pass
-    def isComplex(self):
-        if self.tin in [3,4]:
-            return True
-        return False
-
     def __init__(self,card=None,data=None):
         self.name = card.field(1)
         #zero
@@ -138,6 +99,92 @@ class DMIG(BaseCard):  # not done...
         self.Real = []
         self.Complex = []
 
+    def addColumn(self,card=None,data=None):
+        #print "hi column"
+        Gj = card.field(2)
+        Cj = card.field(3)
+        
+        nFields = card.nFields()
+        nLoops = (nFields-5)//4
+        minLoops = nLoops-1
+        if minLoops<=0:
+            minLoops = 1
+        #assert nFields <= 8,'nFields=%s' %(nFields)
+
+        #print "minLoops = ",minLoops
+        #print "nLoops   = ",nLoops
+        for i in range(minLoops):
+            self.GCj.append((Gj,Cj))
+
+        for i in range(minLoops):
+            n = 5+4*i
+            Gi = card.field(n)
+            Ci = card.field(n+1)
+            self.GCi.append((Gi,Ci))
+
+            self.Real.append(card.field(n+2))
+            self.Complex.append(card.field(n+3))
+        
+        assert len(self.GCj)==len(self.GCi),'(len(GCj)=%s len(GCi)=%s' %(len(self.GCj),len(self.GCi))
+        #if self.isComplex():
+            #self.Complex(card.field(v)
+
+    def buildMatrix(self):
+        i=0
+        rows = {}
+        for GCi in self.GCi:
+            if GCi not in rows:
+                rows[GCi] = i
+                i+=1
+            ###
+        ###
+
+        j=0
+        cols = {}
+        for GCj in self.GCj:
+            if GCj not in cols:
+                cols[GCj] = j
+                j+=1
+            ###
+        ###
+        
+        if self.isComplex():
+            M = zeros((i,j),'complex')
+            for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
+                i = rows[GCi]
+                j = cols[GCj]
+                M[i,j] = complex(reali,complexi)
+        else:
+            M = zeros((i,j),'d')
+            for (GCj,GCi,reali) in zip(self.GCj,self.GCi,self.Real):
+                i = rows[GCi]
+                j = cols[GCj]
+                M[i,j] = reali
+            ###
+        ###
+        return M
+
+    def rename(self,nameNew):
+        self.name = newName
+
+    def isComplex(self):
+        if self.tin in [3,4]:
+            return True
+        return False
+
     def __repr__(self):
+        msg = '\n$'+'-'*80
+        msg += '\n$ DMIG Matrix %s\n' %(self.name)
         fields = ['DMIG',self.name,0,self.ifo,self.tin,self.tout,self.polar,None,self.ncol]
-        return fields
+        msg += self.printCard(fields)
+
+        if self.isComplex():
+            for (GCi,GCj,reali,imagi) in zip(self.GCi,self.GCj,self.Real,self.Complex):
+                fields = ['DMIG',self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,imagi]
+                msg += self.printCard(fields)
+        else:
+            for (GCi,GCj,reali) in zip(self.GCi,self.GCj,self.Real):
+                fields = ['DMIG',self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,None]
+                msg += self.printCard(fields)
+        return msg
+
