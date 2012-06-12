@@ -92,6 +92,7 @@ class XrefMesh(object):
                 raise
         ###
         if self.spoints:
+            print("createSPOINTi")
             self.spointi = self.spoints.createSPOINTi()
         ###
 

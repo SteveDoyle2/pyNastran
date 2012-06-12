@@ -297,7 +297,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.params = {}
         ## stores SPOINT, GRID cards
         self.nodes = {}
-        self.spoints = []
+        self.spoints = None
         ## stores GRIDSET card
         self.gridSet = None
         ## stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD, etc.)
@@ -348,6 +348,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         ## direct matrix input - DMIG
         self.dmigs = {}
+        self.dmijs = {}
+        self.dmijis = {}
+        self.dmiks = {}
         self.dequations = {}
         
         ## frequencies
@@ -898,15 +901,42 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif card==[] or cardName=='':
                 pass
             elif cardName=='DMIG': # not done...
-                if cardObj.field(2)==0:
-                    print("adding a DMIG")
+                if cardObj.field(2)=='UACCEL': # special DMIG card
+                    self.rejectCards.append(card)
+                elif cardObj.field(2)==0:
                     dmig = DMIG(cardObj)
                     self.addDMIG(dmig)
                 else:
                     name = cardObj.field(1)
-                    print("found a DMIG column for %s" %(name))
                     dmig = self.dmigs[name]
                     dmig.addColumn(cardObj)
+                ###
+            elif cardName=='DMIJ':
+                if cardObj.field(2)==0:
+                    dmij = DMIJ(cardObj)
+                    self.addDMIJ(dmij)
+                else:
+                    name = cardObj.field(1)
+                    dmij = self.dmijs[name]
+                    dmij.addColumn(cardObj)
+                ###
+            elif cardName=='DMIJ':
+                if cardObj.field(2)==0:
+                    dmiji = DMIJI(cardObj)
+                    self.addDMIJI(dmiji)
+                else:
+                    name = cardObj.field(1)
+                    dmiji = self.dmijis[name]
+                    dmiji.addColumn(cardObj)
+                ###
+            elif cardName=='DMIK':
+                if cardObj.field(2)==0:
+                    dmik = DMIK(cardObj)
+                    self.addDMIK(dmij)
+                else:
+                    name = cardObj.field(1)
+                    dmik = self.dmiks[name]
+                    dmik.addColumn(cardObj)
                 ###
             elif cardName=='DEQATN':  # buggy for commas
                 #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
