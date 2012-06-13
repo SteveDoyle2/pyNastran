@@ -66,6 +66,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
         'CBUSH','CBUSH1D','CBUSH2D',
+        
         'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
         'CFAST',
         
@@ -81,7 +82,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # properties
         'PMASS',
-        'PELAS','PGAP','PBUSH','PFAST',
+        'PELAS','PGAP','PFAST',
+        'PBUSH','PBUSH1D',
         'PDAMP','PDAMP5','PDAMPT',
         'PROD','PBAR','PBARL','PBEAM','PTUBE','PBEND',#'PBEAML','PBEAM3',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
@@ -1192,12 +1194,16 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 prop = PLSOLID(cardObj)
                 self.addProperty(prop)
 
-            elif cardName=='PBUSH':
-                prop = PBUSH(cardObj)
+            elif cardName=='PBUSH1D':
+                prop = PBUSH1D(cardObj)
                 self.addProperty(prop)
             #elif cardName=='PBUSHT':
             #    prop = PBUSHT(cardObj)
             #    self.addProperty(prop)
+            elif cardName=='PBUSH':
+                print("***",cardObj.field(0))
+                prop = PBUSH(cardObj)
+                self.addProperty(prop)
             elif cardName=='PFAST':
                 prop = PFAST(cardObj)
                 self.addProperty(prop)

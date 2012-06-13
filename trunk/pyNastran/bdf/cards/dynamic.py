@@ -153,7 +153,12 @@ class TSTEPNL(BaseCard):
             self.dt      = card.field(3)
             self.no      = card.field(4,1)
             self.method  = card.field(5,'ADAPT') ## @note not listed in all QRGs
-            self.kStep   = card.field(6,10)
+            if self.method=='ADAPT':
+                self.kStep = card.field(6,2)
+            elif self.method=='ITER':
+                self.kStep = card.field(6,10)
+            else:
+                raise RuntimeError('invalid TSTEPNL Method.  method=|%s|' %(self.method))
             self.maxIter = card.field(7,10)
             self.conv    = card.field(8,'PW')
 
@@ -214,9 +219,18 @@ class TSTEPNL(BaseCard):
         return fields
 
     def reprFields(self):
-        no      = self.setBlankIfDefault(self.no,1)
+        #no      = self.setBlankIfDefault(self.no,1)
+        no = self.no
         method  = self.setBlankIfDefault(self.method,'ADAPT')
-        kStep   = self.setBlankIfDefault(self.kStep,10)
+
+        kStep = self.kStep
+        #if self.method=='ADAPT':
+            #kStep = self.setBlankIfDefault(self.kStep,2)
+        #elif self.method=='ITER':
+            #kStep = self.setBlankIfDefault(self.kStep,10)
+        #else:
+            #raise RuntimeError('invalid TSTEPNL Method.  method=|%s|' %(self.method))
+
         maxIter = self.setBlankIfDefault(self.maxIter,10)
         conv    = self.setBlankIfDefault(self.conv,'PW')
 

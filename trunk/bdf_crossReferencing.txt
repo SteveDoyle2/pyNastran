@@ -22,72 +22,115 @@ Notations
  - no label means the card isnt done and probably isnt even added in readWrite
 
 ----Nodes----:
-GRID   (done)
-GRDSET   (NA)
-SPOINT   (NA)
+GRID    (done)
+GRDSET  (NA)
+SPOINT  (NA)
 
 ----Coordinates----:
-CORD1R (done)
-CORD2R (done)
-CORD1C (done)
-CORD2C (done)
-CORD1S (done)
-CORD2S (done)
+CORD1R  (done)
+CORD2R  (done)
+CORD1C  (done)
+CORD2C  (done)
+CORD1S  (done)
+CORD2S  (done)
 CORD3G
 
-----Elements----:
-CONM1   (done, does this card need cross-referencing???)
-CONM2   (cid!=0, cid=0 requires CG location...is this still true???)
+----Rods/Bars/Beams (Elements/Properties)----:
+CBAR    (done)
+CROD    (done)
+CTUBE   (done)
+CBEAM   (done)
+CBEAM3  (???)
+CBEND   (partial)
+CONROD  (done)
 
+PROD    (done)
+PBAR    (done)
+PBARL   (done)
+PBEAM   (done)
+PBEAML  (done)
+PBEAM3
+PBEND   (done)
+PTUBE   (done)
+
+----Plates/Shells (Elements/Properties)----:
+CTRIA3  (done)
+CTRIA6  (done)
+CTRIAR  (done)
+
+CQUAD   (done)
+CQUAD4  (done)
+CQUAD8  (done)
+CQUADR  (done)
+
+PSHELL  (done)
+PCOMP   (done)
+PCOMPG  (done)
+
+CSHEAR  (done)
+PSHEAR  (done)
+
+----Springs (Elements/Properties)----:
+CELAS1  (done)
+CELAS2  (done)
+CELAS3  (done)
+CELAS4  (done)
+PELAS   (NA)
+PELAST  (not added, references PELAS, Tables)
+
+----Bushings (Elements/Properties)----:
 CBUSH   (no PBUSH, PBUSHT)
-CBUSH1D (no PBUSH1D)
+CBUSH1D (done)
 CBUSH2D (no PBUSH2D)
 
-CFAST   (no)
-CGAP    (done)
+PBUSH   (NA)
+PBUSH1D (NA)
+PBUSH2D (not added)
+PBUSHT  (not added, references PBUSH)
 
+----Dampers (Elements/Properties)----:
 CDAMP1  (???)
 CDAMP2  (???)
 CDAMP3  (???)
 CDAMP4  (???)
 CDAMP5  (???)
 
-CELAS1 (done)
-CELAS2 (done)
-CELAS3 (done)
-CELAS4 (done)
+PDAMP   (???)
+PDAMP5  (???)
+PDAMPT  (???)
 
-CBAR   (done)
-CROD   (done)
-CTUBE  (done)
-CBEAM  (done)
-CBEAM3 (???)
-CBEND  (partial)
-CONROD (done)
+CVISC   (???)
+PVISC   (???)
 
-CTRIA3  (done)
-CTRIA6  (done)
-CTRIAR  (done)
+----Masses (Elements/Properties)----:
+CONM1   (done, does this card need cross-referencing???)
+CONM2   (cid!=0, cid=0 requires CG location...is this still true???)
 
-CQUAD  (done)
-CQUAD4 (done)
-CQUAD8 (done)
-CQUADR (done)
+CMASS1  (no)
+CMASS2  (no)
+CMASS3  (no)
+CMASS4  (no)
+PMASS   (NA)
 
-CSHEAR (done)
-CVISC  (???)
+----Solids (Elements/Properties)----:
+CTETRA  (done)
+CPENTA  (done)
+CHEXA   (done)
 
-CTETRA (done)
-CPENTA (done)
-CHEXA  (done)
+PSOLID  (done)
+PLSOLID (done)
 
-CMASS1 (no)
-CMASS2 (no)
-CMASS3 (no)
-CMASS4 (no)
+----Other Elements/Properties----:
+CFAST   (no)
+PFAST   (no)
 
-CRAC2D (???)
-CRAC3D (???)
+CGAP    (done)
+PGAP    (???)
+
+PBCOMP
+
+CRAC2D  (???)
+CRAC3D  (???)
 PRAC2D
 PRAC3D
 
@@ -99,39 +142,6 @@ RBAR1 (???)
 RBE1  (???)
 RBE2  (???)
 RBE3  (???)
-
-----Properties----:
-PGAP    (???)
-PMASS    (NA)
-
-PELAS    (NA)
-PDAMP   (???)
-PDAMP5  (???)
-PDAMPT  (???)
-PBUSH   (???)
-PBUSH1D (not added)
-PBUSH2D (not added)
-PBUSHT  (not added)
-
-PFAST   (no)
-
-PROD    (done)
-PBAR    (done)
-PBARL   (done)
-PBEAM   (done)
-PBEAML  (done)
-PBEAM3
-PBEND   (done)
-PTUBE   (done)
-PVISC   (???)
-
-PSHELL  (done)
-PCOMP   (done)
-PCOMPG  (done)
-PSHEAR  (done)
-PSOLID  (done)
-PLSOLID (done)
-PBCOMP
 
 ----Materials----:
 CREEP (???)
@@ -192,6 +202,7 @@ MOMENT2 (done)
 
 DLOAD   (???)
 SLOAD   (???)
+
 TLOAD1  (no delay)
 TLOAD2
 RLOAD1  (no delay)
@@ -254,10 +265,10 @@ PAERO4
 PAERO5
 
 SPLINE1 (done)
-SPLINE2 (???)
+SPLINE2 (no aefact ID1/ID2 reference)
 SPLINE3
-SPLINE4
-SPLINE5
+SPLINE4 (done)
+SPLINE5 (done)
 SPLINE6
 SPLINE7
 

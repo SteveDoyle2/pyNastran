@@ -98,7 +98,15 @@ class CBUSH(BushElement):
         return fields
 
     def reprFields(self):
-        return self.rawFields()
+        if self.g0 is not None:
+            x = [self.g0,None,None]
+        else:
+            x = self.x
+        
+        cid = self.setBlankIfDefault(self.Cid(),0)
+        fields = ['CBUSH',self.eid,self.Pid(),self.ga,self.gb]+x+[cid,
+                          self.s,self.ocid]+self.si
+        return fields
 
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
@@ -117,19 +125,21 @@ class CBUSH1D(BushElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
 
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        self.pid = model.Property(self.pid)
+        self.cid = model.Coord(self.cid)
+
     def rawFields(self):
         nodeIDs = self.nodeIDs()
         fields = ['CBUSH1D',self.eid,self.Pid(),nodeIDs[0],nodeIDs[1],self.Cid()]
         return fields
 
-    def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
-        #self.pid = model.Property(self.pid)
-        self.cid = model.Coord(self.cid)
-
-    #def reprFields(self):
-        #return self.rawFields()
-###
+    def reprFields(self):
+        nodeIDs = self.nodeIDs()
+        cid = self.setBlankIfDefault(self.Cid(),0)
+        fields = ['CBUSH1D',self.eid,self.Pid(),nodeIDs[0],nodeIDs[1],cid]
+        return fields
 
 class CBUSH2D(BushElement):
     """

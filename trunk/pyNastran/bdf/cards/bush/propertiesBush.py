@@ -83,7 +83,7 @@ class PBUSH(BushingProperty):
             elif var=='RCV':
                 fields += ['RCV',self.sa,self.st,self.ea,self.et]
             else:
-                raise Exception('not supported PBUSH field...')
+                raise RuntimeError('not supported PBUSH field...')
             nSpaces = 8-(len(fields)-1)%8
             
             #print "nSpaces = ",nSpaces
@@ -95,6 +95,105 @@ class PBUSH(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
-#class PBUSH1D
+class PBUSH1D(BushingProperty):
+    type = 'PBUSH1D'
+    def __init__(self,card=None,data=None):
+        BushingProperty.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid = card.field(1)
+            self.k  = card.field(2)
+            self.c  = card.field(3)
+            self.m  = card.field(4)
+            #
+            self.sa = card.field(6)
+            self.se = card.field(7)
+            
+            nFields = card.nFields()
+            self.vars = []
+            iStart = 9
+            while iStart<nFields:
+                pname = card.field(iStart)
+                if   pname=='SHOCKA': iStart = self.getShockA(card,iStart)
+                elif pname=='SPRING': self.getSpring(card,iStart)
+                elif pname=='DAMPER': self.getDamper(card,iStart)
+                elif pname=='GENER':  self.getGener(card,iStart)
+                else:
+                    break
+                iStart += 8
+            ###
+        else:
+            self.pid = data[0]
+            self.b   = data[1]
+            raise NotImplementedError('PBUSH1D data...')
+        ###
+        #print self
+        #sys.exit()
+
+    def getShockA(self,card,iStart):
+        self.shockType  = card.field(iStart+1)
+        self.shockCVT    = card.field(iStart+2)
+        self.shockCVC    = card.field(iStart+3)
+        self.shockExpVT  = card.field(iStart+4)
+        self.shockExpVC  = card.field(iStart+5)
+        self.shockIDTS   = card.field(iStart+6)
+        
+        self.shockIDETS  = card.field(iStart+9)
+        self.shockIDECS  = card.field(iStart+10)
+        self.shockIDETSD = card.field(iStart+11)
+        self.shockIDECSD = card.field(iStart+12)
+        iStart+=8
+        return iStart
+
+    def getSpring(self,card,iStart):
+        self.springType  = card.field(iStart+1)
+        self.springIDT   = card.field(iStart+2)
+        self.springIDC   = card.field(iStart+3)
+        self.springIDTDU = card.field(iStart+4)
+        self.springIDCDU = card.field(iStart+5)
+        self.vars.append('SPRING')
+
+    def getDamper(self,card,iStart):
+        self.damperType  = card.field(iStart+1)
+        self.damperIDT   = card.field(iStart+2)
+        self.damperIDC   = card.field(iStart+3)
+        self.damperIDTDV = card.field(iStart+4)
+        self.damperIDCDV = card.field(iStart+5)
+        self.vars.append('DAMPER')
+
+    def getGener(self,card,iStart):
+        self.generIDT   = card.field(iStart+2)
+        self.generIDC   = card.field(iStart+3)
+        self.generIDTDU = card.field(iStart+4)
+        self.generIDCDU = card.field(iStart+5)
+        self.generIDTDV = card.field(iStart+6)
+        self.generIDCDV = card.field(iStart+7)
+        self.vars.append('GENER')
+
+    def rawFields(self):
+        fields = ['PBUSH1D',self.pid,self.k,self.c,self.m,None,self.sa,self.se,None]
+        for var in self.vars:
+            if var=='SHOCKA':
+                fields += ['SHOCKA',self.shockType,self.shockCVT,self.shockCVC,self.shockExpVT,self.shockExpVC,self.shockIDTS,
+                            None,None,self.shockIDETS,self.shockIDECS,self.shockIDETSD,self.shockIDECSD]
+            elif var=='SPRING':
+                fields += ['SPRING',self.springType,self.springIDT,self.springIDC,self.springIDTDU,self.springIDCDU]
+            elif var=='DAMPER':
+                fields += ['DAMPER',self.damperType,self.damperIDT,self.damperIDC,self.damperIDTDV,self.damperIDCDV]
+            elif var=='GENER':
+                fields += ['GENER',None,self.generIDT,self.generIDC,self.generIDTDU,self.generIDCDU,self.generIDTDV,self.generIDCDV]
+            else:
+                raise RuntimeError('not supported PBUSH1D field...')
+            nSpaces = 8-(len(fields)-1)%8
+            
+            #print "nSpaces = ",nSpaces
+            if nSpaces<8:
+                fields += [None]*(nSpaces+1)
+            ###
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
 #class PBUSH2D
 #class PBUSHT
