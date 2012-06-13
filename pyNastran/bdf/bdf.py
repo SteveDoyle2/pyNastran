@@ -116,7 +116,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'AEFACT','AELINK','AELIST','AEPARAM','AESTAT','AESURF',
         'CAERO1','CAERO2',#'CAERO3','CAERO4','CAERO5',
         'PAERO1','PAERO2',#'PAERO3','PAERO4','PAERO5',
-        'SPLINE1','SPLINE2',#'SPLINE3','SPLINE4','SPLINE5','SPLINE6','SPLINE7',
+        'SPLINE1','SPLINE2','SPLINE4','SPLINE5',#'SPLINE3','SPLINE6','SPLINE7',
         'TRIM',
         
         # coords
@@ -413,7 +413,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.flutters = {}
         ## mkaeros
         self.mkaeros = []
-        ## store SPLINE1,SPLINE2
+        ## store SPLINE1,SPLINE2,SPLINE4,SPLINE5
         self.splines  = {}
         ## stores TRIM
         self.trims = {}
@@ -1153,8 +1153,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    prop = PBEAM3(cardObj)
             #    self.addProperty(prop)
             #elif cardName=='PBEAML':   # disabled
-                #prop = PBEAML(cardObj)
-                #self.addProperty(prop)
+            #    prop = PBEAML(cardObj)
+            #    self.addProperty(prop)
             elif cardName=='PELAS':
                 prop = PELAS(cardObj)
                 self.addProperty(prop)
@@ -1437,8 +1437,15 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 aero = SPLINE2(cardObj)
                 self.addSpline(aero)
             #elif cardName=='SPLINE3':
-            #    aero = SPLINE3(cardObj)
-            #    self.addSpline(aero)
+                #aero = SPLINE3(cardObj)
+                #self.addSpline(aero)
+            elif cardName=='SPLINE4':
+                aero = SPLINE4(cardObj)
+                self.addSpline(aero)
+            elif cardName=='SPLINE5':
+                aero = SPLINE5(cardObj)
+                self.addSpline(aero)
+
             elif cardName=='CAERO1':
                 aero = CAERO1(cardObj)
                 self.addCAero(aero)

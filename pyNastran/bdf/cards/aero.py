@@ -902,8 +902,13 @@ class PAERO2(BaseCard):
     def reprFields(self):
         return self.rawFields()
 
-class SPLINE1(BaseCard):
+class Spline(BaseCard):
+    def __init__(self,card,data):
+        pass
+
+class SPLINE1(Spline):
     """
+    Surface Spline Methods
     Defines a surface spline for interpolating motion and/or forces for aeroelastic
     problems on aerodynamic geometries defined by regular arrays of aerodynamic
     points
@@ -914,6 +919,7 @@ class SPLINE1(BaseCard):
     """
     type = 'SPLINE1'
     def __init__(self,card=None,data=None):
+        Spline.__init__(self,card,data)
         if card:
             self.eid    = card.field(1)
             self.caero  = card.field(2)
@@ -974,8 +980,9 @@ class SPLINE1(BaseCard):
         fields = self.wipeEmptyFields(fields)
         return fields
 
-class SPLINE2(BaseCard):
+class SPLINE2(Spline):
     """
+    Linear Spline
     Defines a surface spline for interpolating motion and/or forces for aeroelastic
     problems on aerodynamic geometries defined by regular arrays of aerodynamic
     points
@@ -986,11 +993,154 @@ class SPLINE2(BaseCard):
     """
     type = 'SPLINE2'
     def __init__(self,card=None,data=None):
+        Spline.__init__(self,card,data)
         if card:
             self.eid   = card.field(1)
             self.caero = card.field(2)
             self.id1   = card.field(3)
             self.id2   = card.field(4)
+            self.setg  = card.field(5)
+            self.dz    = card.field(6,0.0)
+            self.dtor  = card.field(7,1.0)
+            self.cid   = card.field(8,0)
+            self.thx   = card.field(9)
+            self.thy   = card.field(10)
+            
+            self.usage = card.field(12,'BOTH')
+            #print self
+            #raise Exception(str(self))
+        else:
+            raise NotImplementedError('not supported')
+        ###
+
+    def crossReference(self,model):
+        self.caero = model.CAero(self.caero)
+        self.setg  = model.Set(self.setg)
+
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    def CAero(self):
+        if isinstance(self.caero,int):
+            return self.caero
+        return self.caero.eid
+
+    def Set(self):
+        if isinstance(self.setg,int):
+            return self.setg
+        return self.setg.sid
+
+    def rawFields(self):
+        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
+                            self.thx,self.thy,None,self.usage]
+        return fields
+
+    def reprFields(self):
+        dz    = self.setBlankIfDefault(self.dz,0.)
+        usage = self.setBlankIfDefault(self.usage,'BOTH')
+        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),dz,self.dtor,self.Cid(),
+                            self.thx,self.thy,None,usage]
+        return fields
+
+class SPLINE4(Spline):
+    """
+    Surface Spline Methods
+    Defines a curved surface spline for interpolating motion and/or forces for aeroelastic
+    problems on general aerodynamic geometries using either the Infinite Plate, Thin
+    Plate or Finite Plate splining method.
+    SPLINE4 EID CAERO AELIST --- SETG DZ METH USAGE
+    NELEM MELEM
+    
+    SPLINE4 3 111 115 --- 14 0. IPS
+    """
+    type = 'SPLINE4'
+    def __init__(self,card=None,data=None):
+        Spline.__init__(self,card,data)
+        if card:
+            self.eid    = card.field(1)
+            self.caero  = card.field(2)
+            self.aelist = card.field(3)
+            # None
+            self.setg   = card.field(5)
+            self.dz     = card.field(6,0.0)
+            self.method = card.field(7,'IPS')
+            self.usage  = card.field(8,'BOTH')
+            self.nelements = card.field(9,10)
+            self.melements = card.field(10,10)
+        else:
+            self.eid       = data[0]
+            self.caero     = data[1]
+            self.aelist    = data[2]
+            self.setg      = data[3]
+            self.dz        = data[4]
+            self.method    = data[5]
+            self.usage     = data[6]
+            self.nelements = data[7]
+            self.melements = data[8]
+            assert len(data)==9,'data = %s' %(data)
+        ###
+
+        assert self.box2>=self.box1
+        assert self.method in ['IPS','TPS','FPS']
+        assert self.usage  in ['FORCE','DISP','BOTH']
+    
+    def CAero(self):
+        if isinstance(self.caero,int):
+            return self.caero
+        return self.caero.eid
+
+    def AEList(self):
+        if isinstance(self.aelist,int):
+            return self.aelist
+        return self.aelist.aelist
+
+    def Set(self):
+        if isinstance(self.setg,int):
+            return self.setg
+        return self.setg.sid
+
+    def crossReference(self,model):
+        self.caero = model.CAero(self.caero)
+        self.setg  = model.Set(self.setg)
+        self.aelist = model.AEList(self.aelist)
+
+    def rawFields(self):
+        fields = ['SPLINE1',self.eid,self.CAero(),self.AEList(),None,self.Set(),self.dz,self.method,self.usage,
+                            self.nelements,self.melements]
+        return fields
+
+    def reprFields(self):
+        dz        = self.setBlankIfDefault(self.dz,0.)
+        method    = self.setBlankIfDefault(self.method,'IPS')
+        usage     = self.setBlankIfDefault(self.usage,'BOTH')
+        nelements = self.setBlankIfDefault(self.nelements,10)
+        melements = self.setBlankIfDefault(self.melements,10)
+        
+        fields = ['SPLINE4',self.eid,self.CAero(),self.AEList(),None,self.Set(),dz,method,usage,
+                            nelements,melements]
+        fields = self.wipeEmptyFields(fields)
+        return fields
+
+class SPLINE5(Spline):
+    """
+    Linear Spline
+    Defines a 1D beam spline for interpolating motion and/or forces for aeroelastic
+    problems on aerodynamic geometries defined by irregular arrays of aerodynamic
+    points. The interpolating beam supports axial rotation and bending in the yz-plane.
+
+    SPLINE5 EID CAERO AELIST ---   SETG DZ DTOR CID
+            DTHX DTHY ---    USAGE
+    """
+    type = 'SPLINE5'
+    def __init__(self,card=None,data=None):
+        Spline.__init__(self,card,data)
+        if card:
+            self.eid   = card.field(1)
+            self.caero = card.field(2)
+            self.aelist = card.field(3)
+            # None
             self.setg  = card.field(5)
             self.dz    = card.field(6,0.0)
             self.dtor  = card.field(7,1.0)
@@ -1015,6 +1165,11 @@ class SPLINE2(BaseCard):
             return self.caero
         return self.caero.eid
 
+    def AEList(self):
+        if isinstance(self.aelist,int):
+            return self.aelist
+        return self.aelist.aelist
+
     def Set(self):
         if isinstance(self.setg,int):
             return self.setg
@@ -1023,16 +1178,17 @@ class SPLINE2(BaseCard):
     def crossReference(self,model):
         self.caero = model.CAero(self.caero)
         self.setg  = model.Set(self.setg)
+        self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
+        fields = ['SPLINE2',self.eid,self.CAero(),self.AEList(),None,self.Set(),self.dz,self.dtor,self.Cid(),
                             self.thx,self.thy,None,self.usage]
         return fields
 
     def reprFields(self):
         dz    = self.setBlankIfDefault(self.dz,0.)
         usage = self.setBlankIfDefault(self.usage,'BOTH')
-        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),dz,self.dtor,self.Cid(),
+        fields = ['SPLINE5',self.eid,self.CAero(),self.AEList(),None,self.Set(),dz,self.dtor,self.Cid(),
                             self.thx,self.thy,None,usage]
         return fields
 
