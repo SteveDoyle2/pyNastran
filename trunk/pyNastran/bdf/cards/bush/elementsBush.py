@@ -8,6 +8,26 @@ class BushElement(Element):
     def __init__(self,card,data):
         Element.__init__(self,card,data)
 
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    #def Ga(self):
+        #print dir(self)
+        #if isinstance(self.ga,int):
+            #return self.ga
+        #return self.ga.nid
+
+    #def Gb(self):
+        #if isinstance(self.gb,int):
+            #return self.gb
+        #return self.gb.nid
+
+    #def NodeIDs(self):
+        #print self.nodeIDs()
+        #return [self.Ga(),self.Gb()]
+
 class CBUSH(BushElement):
     type = 'CBUSH'
     def __init__(self,card=None,data=None):
@@ -64,8 +84,8 @@ class CBUSH(BushElement):
         return self.cid.cid
 
     def crossReference(self,model):
-        #self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        self.nodes = model.Nodes(self.nodes)
+        #self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
         
     def rawFields(self):
@@ -88,7 +108,7 @@ class CBUSH1D(BushElement):
             self.eid = int(card.field(1))
             self.pid = int(card.field(2,self.eid))
             nids = card.fields(3,5)
-            self.cid = int(card.field(5))
+            self.cid = card.field(5,0)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -96,15 +116,15 @@ class CBUSH1D(BushElement):
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
-    ###
+
     def rawFields(self):
-        nodeIDs = self.NodeIDs()
+        nodeIDs = self.nodeIDs()
         fields = ['CBUSH1D',self.eid,self.Pid(),nodeIDs[0],nodeIDs[1],self.Cid()]
         return fields
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        #self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
 
     #def reprFields(self):
@@ -136,13 +156,13 @@ class CBUSH2D(BushElement):
         assert len(self.nodes)==2
     ###
     def rawFields(self):
-        nodeIDs = self.NodeIDs()
+        nodeIDs = self.nodeIDs()
         fields = ['CBUSH1D',self.eid,self.Pid(),nodeIDs[0],nodeIDs[0],self.Cid(),self.plane,self.sptid]
         return fields
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
-        self.pid = model.Property(self.pid)
+        #self.pid = model.Property(self.pid)
         self.cid = model.Coord(self.cid)
 
     #def reprFields(self):

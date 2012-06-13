@@ -61,7 +61,7 @@ class BaseCard(BDF_Card):
 
     def crossReference(self,model):
         #self.mid = model.Material(self.mid)
-        raise Exception('%s needs to implement this method' %(self.type))
+        raise NotImplementedError("%s needs to implement the 'crossReference' method" %(self.type))
 
    # def off_expandThru(self,fields):
    #     """

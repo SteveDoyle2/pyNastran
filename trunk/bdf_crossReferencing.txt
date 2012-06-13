@@ -37,10 +37,11 @@ CORD3G
 
 ----Elements----:
 CONM1   (done, does this card need cross-referencing???)
-CONM2   (cid!=0, cid=0 requires CG location...)
-CBUSH   (???)
-CBUSH1D (done, no PBUSH1D so not integrated)
-CBUSH2D (done, no PBUSH2D so not integrated)
+CONM2   (cid!=0, cid=0 requires CG location...is this still true???)
+
+CBUSH   (no PBUSH, PBUSHT)
+CBUSH1D (no PBUSH1D)
+CBUSH2D (no PBUSH2D)
 
 CFAST   (no)
 CGAP    (done)
@@ -110,7 +111,7 @@ PDAMPT  (???)
 PBUSH   (???)
 PBUSH1D (not added)
 PBUSH2D (not added)
-PBUSHT
+PBUSHT  (not added)
 
 PFAST   (no)
 
@@ -190,10 +191,11 @@ MOMENT1 (done)
 MOMENT2 (done)
 
 DLOAD   (???)
-RLOAD1  (???)
-RLOAD2  (???)
 SLOAD   (???)
-TLOAD1
+TLOAD1  (no delay)
+TLOAD2
+RLOAD1  (no delay)
+RLOAD2  (no delay)
 
 ----Thermal Loads----:
 TEMP   (???)
@@ -308,11 +310,11 @@ TABLEM3  (NA)
 TABLEM4  (NA)
 TABLES1  (???)
 TABLEST  (???)
+TIC
 
 ---Random Tables---
-TABRND1  (???)
+TABRND1  (NA)
 TABRNDG  (NA)
-TIC
 
 ----Sets----:
 ASET   (no)
