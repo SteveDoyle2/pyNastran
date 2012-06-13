@@ -1,170 +1,11 @@
-#import sys
 from numpy import array,cross
 from numpy.linalg import norm
 
-from pyNastran.bdf.cards.baseCard import BaseCard
-
-class Load(BaseCard):
-    """defines the DefaultLoad class"""
-    type = 'DefLoad'
-    def __init__(self,card,data):
-        pass
-        #self.type = card[0]
-
-    #def normalize(self,v):
-    #    #print "v = ",v
-    #    return v/norm(v)
-
-    def Cid(self):
-        if isinstance(self.cid,int):
-            return self.cid
-        else:
-            return self.cid.cid
-        ###
-
-    def nodeIDs(self,nodes=None):
-        """returns nodeIDs for repr functions"""
-        if not nodes:
-           nodes = self.nodes
-        if isinstance(nodes[0],int):
-            #print 'if'
-            return [node     for node in nodes]
-        else:
-            #print 'else'
-            return [node.nid for node in nodes]
-        ###
-
-    def rawFields(self):
-        fields = [self.type,self.lid]
-        return fields
-
-    def reprFields(self):
-        return self.rawFields()
-
-class GRAV(BaseCard):
-    """
-    Defines acceleration vectors for gravity or other acceleration loading
-    GRAV SID CID A     N1  N2 N3    MB
-    GRAV 1   3   32.2 0.0 0.0 -1.0
-    """
-    type = 'GRAV'
-    def __init__(self,card=None,data=None):
-        if card:
-            ## Set identification number
-            self.lid = card.field(1)
-            ## Coordinate system identification number.
-            self.cid = card.field(2,0)
-            ## scale factor
-            self.a   = card.field(3)
-            ## Acceleration vector components measured in coordinate system CID
-            self.N   = array(card.fields(4,7,[0.,0.,0.]))
-            ## Indicates whether the CID coordinate system is defined in the main Bulk
-            ## Data Section (MB = -1) or the partitioned superelement Bulk Data
-            ## Section (MB = 0). Coordinate systems referenced in the main Bulk Data
-            ## Section are considered stationary with respect to the assembly basic
-            ## coordinate system. See Remark 10. (Integer; Default = 0)
-            self.mb  = card.field(7,0)
-        else:
-            self.lid = data[0]
-            self.cid = data[1]
-            self.a   = data[2]
-            self.N   = data[3:6]
-            self.mb  = data[6]
-            assert len(data)==7
-        ###
-
-    def transformLoad(self):
-        g = self.GravityVector()
-        g2,matrix = self.cid.transformToGlobal(g)
-        return (g2)
-
-    #def writeCodeAster(self,mag):
-        #p = self.GravityVector()
-        #msg = 'GRAV([%s,%s,%s])' %(p)
-        #return msg
-
-    def crossReference(self,model):
-        #print("xref GRAV")
-        self.cid = model.Coord(self.cid)
-    
-    def Cid(self):
-        if isinstance(self.cid,int):
-            return self.cid
-        return self.cid.cid
-
-    def GravityVector(self):
-        """returns the gravity vector in absolute coordinates"""
-        p,matrix = self.cid.transformToGlobal(self.N)
-        return p
-
-    def rawFields(self):
-        fields = ['GRAV',self.lid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
-        return fields
-
-    def reprFields(self):
-        N = []
-        for n in self.N:
-            N.append(self.setBlankIfDefault(n,0.0))
-        
-        mb = self.setBlankIfDefault(self.mb,0)
-        fields = ['GRAV',self.lid,self.Cid(),self.a]+N+[mb]
-        return fields
-
-class LSEQ(BaseCard): # Requires LOADSET in case control deck
-    """
-    Defines a sequence of static load sets
-    @todo how does this work...
-    """
-    type = 'LSEQ'
-    def __init__(self,card=None,data=None):
-        self.sid  = card.field(1)
-        self.exciteID = card.field(2)
-        self.lid = card.field(3)
-        self.tid = card.field(4)
-
-    def nodeIDs(self,nodes=None):
-        """returns nodeIDs for repr functions"""
-        if not nodes:
-           nodes = self.nodes
-        if isinstance(nodes[0],int):
-            #print 'if'
-            return [node     for node in nodes]
-        else:
-            #print 'else'
-            return [node.nid for node in nodes]
-        ###
-
-    def crossReference(self,model):
-        self.lid = model.Load(self.lid)
-        if self.tid:
-            self.tid = model.Load(self.tid)
-        ###
-    
-    def Lid(self):
-        if isinstance(self.lid,int):
-            return self.lid
-        return self.lid.lid
-        
-    def Tid(self):
-        if self.tid is None:
-            return None
-        if isinstance(self.tid,int):
-            return self.tid
-        return self.tid.tid
-
-    def rawFields(self):
-        fields = ['LSEQ',self.sid,self.exciteID,self.Lid(),self.Tid()]
-        return fields
-
-    def reprFields(self):
-        return self.rawFields()
+from .loads import BaseCard,Load
 
 class LOAD(Load):
     type = 'LOAD'
     def __init__(self,card=None,data=None):
-        """
-        @todo parse the loads data to have scale factor and load
-        """
         if card:
             #fields   = card.fields()
 
@@ -440,85 +281,77 @@ class LOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
-class DLOAD(Load):
-    type = 'DLOAD'
+#------------------------------------------------------------------------------
+class GRAV(BaseCard):
+    """
+    Defines acceleration vectors for gravity or other acceleration loading
+    GRAV SID CID A     N1  N2 N3    MB
+    GRAV 1   3   32.2 0.0 0.0 -1.0
+    """
+    type = 'GRAV'
     def __init__(self,card=None,data=None):
-        ## load ID
-        self.lid   = card.field(1)
-        self.scale = card.field(2)
-
-        fields = card.fields(3)
-        n = len(fields)//2
-        if len(fields)%2==1:
-            n+=1
-            raise Exception('missing last magnitude on DLOAD card=%s' %(card.fields()) )
-
-        self.sids = []
-        self.mags = []
-        for i in range(n):
-            j = 2*i
-            self.mags.append(fields[j  ])
-            self.sids.append(fields[j+1])  # RLOADx,TLOADx,ACSRC
+        if card:
+            ## Set identification number
+            self.lid = card.field(1)
+            ## Coordinate system identification number.
+            self.cid = card.field(2,0)
+            ## scale factor
+            self.a   = card.field(3)
+            ## Acceleration vector components measured in coordinate system CID
+            self.N   = array(card.fields(4,7,[0.,0.,0.]))
+            ## Indicates whether the CID coordinate system is defined in the main Bulk
+            ## Data Section (MB = -1) or the partitioned superelement Bulk Data
+            ## Section (MB = 0). Coordinate systems referenced in the main Bulk Data
+            ## Section are considered stationary with respect to the assembly basic
+            ## coordinate system. See Remark 10. (Integer; Default = 0)
+            self.mb  = card.field(7,0)
+        else:
+            self.lid = data[0]
+            self.cid = data[1]
+            self.a   = data[2]
+            self.N   = data[3:6]
+            self.mb  = data[6]
+            assert len(data)==7
         ###
+
+    def transformLoad(self):
+        g = self.GravityVector()
+        g2,matrix = self.cid.transformToGlobal(g)
+        return (g2)
+
+    #def writeCodeAster(self,mag):
+        #p = self.GravityVector()
+        #msg = 'GRAV([%s,%s,%s])' %(p)
+        #return msg
 
     def crossReference(self,model):
-        for (i,sid) in enumerate(self.sids):
-            self.sids[i] = model.Load(sid)
-        ###
+        #print("xref GRAV")
+        self.cid = model.Coord(self.cid)
+    
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
 
-    def Sid(self,sid):
-        if isinstance(sid,int):
-            return sid
-        return sid.lid
+    def GravityVector(self):
+        """returns the gravity vector in absolute coordinates"""
+        p,matrix = self.cid.transformToGlobal(self.N)
+        return p
 
     def rawFields(self):
-        fields = ['DLOAD',self.lid,self.scale]
-        for (mag,sid) in zip(self.mags,self.sids):
-            fields += [mag,self.Sid(sid)]
+        fields = ['GRAV',self.lid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
         return fields
 
     def reprFields(self):
-        return self.rawFields()
-
-class SLOAD(Load):
-    type = 'SLOAD'
-    def __init__(self,card=None,data=None):
-        ## load ID
-        self.lid = card.field(1)
+        N = []
+        for n in self.N:
+            N.append(self.setBlankIfDefault(n,0.0))
         
-        fields = card.fields(2)
-        n = len(fields)//2
-        if len(fields)%2==1:
-            n+=1
-            raise Exception('missing last magnitude on SLOAD card=%s' %(card.fields()) )
-
-        self.sids = []
-        self.mags = []
-        for i in range(n):
-            j = 2*i
-            self.sids.append(fields[j  ])
-            self.mags.append(fields[j+1])
-        ###
-
-    def crossReference(self,model):
-        for (i,sid) in enumerate(self.sids):
-            self.sids[i] = model.Load(sid)
-        ###
-
-    def Sid(self,sid):
-        if isinstance(sid,int):
-            return sid
-        return sid.lid
-
-    def rawFields(self):
-        fields = ['SLOAD',self.lid]
-        for sid,mag in zip(self.sids,self.mags):
-            fields += [self.Sid(sid),mag]
+        mb = self.setBlankIfDefault(self.mb,0)
+        fields = ['GRAV',self.lid,self.Cid(),self.a]+N+[mb]
         return fields
 
-    def reprFields(self):
-        return self.rawFields()
-
+#------------------------------------------------------------------------------
 class OneDeeLoad(Load): # FORCE/MOMENT
     type = '1D_Load'
     def __init__(self,card,data):
@@ -546,6 +379,7 @@ class OneDeeLoad(Load): # FORCE/MOMENT
             self.mag *= normXYZ
             self.xyz = self.xyz/normXYZ
 
+#------------------------------------------------------------------------------
 class Force(OneDeeLoad):
     type = '1D_Load'
     def __init__(self,card,data):
@@ -562,6 +396,7 @@ class Moment(OneDeeLoad):
     def M(self):
         return self.xyz*self.mag
 
+#------------------------------------------------------------------------------
 class FORCE(Force):
     type = 'FORCE'
     def __init__(self,card=None,data=None):
@@ -717,6 +552,7 @@ class FORCE2(Force):
     def reprFields(self):
         return self.rawFields()
 
+#------------------------------------------------------------------------------
 class MOMENT(Moment):  # can i copy the force init without making the MOMENT a FORCE ???
     type = 'MOMENT'
     def __init__(self,card=None,data=None):
@@ -852,6 +688,7 @@ class MOMENT2(Moment):
     def reprFields(self):
         return self.rawFields()
 
+#------------------------------------------------------------------------------
 class PLOAD(Load):
     type = 'PLOAD'
     def __init__(self,card=None,data=None):
@@ -1107,38 +944,4 @@ class PLOAD4(Load):
     def reprFields(self):
         return self.rawFields()
 
-class RANDPS(BaseCard):
-    """
-    Power Spectral Density Specification
-    Defines load set power spectral density factors for use in random analysis having the
-    frequency dependent form
-    \f[ S_{jk}(F) = (X+iY)G(F) \f]
-    """
-    type = 'RANDPS'
-    def __init__(self,card=None,data=None):
-        if card:
-            ## Random analysis set identification number. (Integer > 0)
-            ## Defined by RANDOM in the Case Control Deck.
-            self.lid = card.field(2)
-            ## Subcase identification number of the excited load set. (Integer > 0)
-            self.j   = card.field(3)
-            ## Subcase identification number of the applied load set. (Integer >= 0; K >= J)
-            self.k   = card.field(4)
-            ## Components of the complex number. (Real)
-            self.x   = card.field(5)
-            self.y   = card.field(6)
-            ## Identification number of a TABRNDi entry that defines G(F).
-            self.tid = card.field(7)
-
-    def crossReference(self,model):
-        self.tid = model.Table(self.tid)
-    
-    def Tid(self):
-        if isinstance(self.tid,int):
-            return self.tid
-        return self.tid.tid
-
-    def rawFields(self):
-        fields = [self.lid,self.j,self.k,self.x,self.y,self.Tid()]
-        return fields
-
+#------------------------------------------------------------------------------
