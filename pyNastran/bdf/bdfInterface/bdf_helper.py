@@ -318,6 +318,14 @@ class getMethods(object):
         return self.cMethods[sid]
 
     #--------------------
+    # TABLE CARDS
+    def Table(self,tid):
+        return self.tables[tid]
+
+    def RandomTable(self,sid): # 
+        return self.randomTables[tid]
+
+    #--------------------
     # NONLINEAR CARDS
 
     def NLParm(self,nid):

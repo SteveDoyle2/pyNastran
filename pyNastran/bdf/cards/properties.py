@@ -8,7 +8,6 @@ from pyNastran.bdf.cards.springs.propertiesSprings import *
 from pyNastran.bdf.cards.mass.propertiesMass import *
 from pyNastran.bdf.cards.bush.propertiesBush import *
 
-
 class PFAST(Property):
     type = 'PFAST'
     def __init__(self,card=None,data=None):
@@ -125,8 +124,8 @@ class PDAMPT(DamperProperty):
         if card:
             ## Property ID
             self.pid  = card.field(1)
-            ## Identification number of a TABLEDi entry that defines the damping
-            ## force per-unit velocity versus frequency relationship
+            ## Identification number of a TABLEDi entry that defines the
+            ## damping force per-unit velocity versus frequency relationship
             self.tbid = card.field(2,0)
         else:
             self.pid  = data[0]

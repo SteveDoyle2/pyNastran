@@ -175,10 +175,12 @@ MOMENT1 (done)
 MOMENT2 (done)
 
 DLOAD  (done)
-RLOAD1 (done)
-RLOAD2 (done)
 SLOAD  (done)
-TLOAD1
+
+TLOAD1  (done)
+TLOAD2
+RLOAD1  (done)
+RLOAD2  (done)
 
 ----Thermal Loads----:
 TEMP   (done)
@@ -293,9 +295,11 @@ TABLEM3  (done)
 TABLEM4  (done)
 TABLES1  (done)
 TABLEST  (done)
+TIC      (not integrated)
+
+---Random Tables---
 TABRND1  (done)
 TABRNDG  (done)
-TIC      (not integrated)
 
 ----Sets----:
 ASET   (done)

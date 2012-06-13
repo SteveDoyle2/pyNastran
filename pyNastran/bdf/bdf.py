@@ -65,8 +65,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # elements
         'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
-        'CBUSH','CFAST',
+        'CBUSH','CBUSH1D','CBUSH2D',
         'CDAMP1','CDAMP2','CDAMP3','CDAMP4','CDAMP5',
+        'CFAST',
         
         'CBAR','CROD','CTUBE','CBEAM','CBEAM3','CONROD','CBEND',
         'CTRIA3','CTRIA6','CTRIAR','CTRIAX','CTRIAX6',
@@ -104,7 +105,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
         # loads
         'LOAD','LSEQ',
-        'DLOAD','SLOAD','RLOAD1','RLOAD2',
+        'DLOAD','SLOAD','TLOAD1','RLOAD1','RLOAD2',
         'FORCE','FORCE1','FORCE2',
         'GRAV',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
@@ -1046,6 +1047,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='CBUSH':
                 (elem) = CBUSH(cardObj)
                 self.addDamperElement(elem)
+            elif cardName=='CBUSH1D':
+                (elem) = CBUSH1D(cardObj)
+                self.addDamperElement(elem)
             elif cardName=='CFAST':
                 (elem) = CFAST(cardObj)
                 self.addDamperElement(elem)
@@ -1323,6 +1327,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addLoad(load)
             elif cardName=='SLOAD':
                 load = SLOAD(cardObj)
+                self.addLoad(load)
+
+            elif cardName=='TLOAD1':
+                load = TLOAD1(cardObj)
                 self.addLoad(load)
             elif cardName=='RLOAD1':
                 load = RLOAD1(cardObj)

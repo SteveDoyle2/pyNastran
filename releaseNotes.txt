@@ -36,11 +36,13 @@ BDF Bug Fixes:
    - CREEP field g now reads/writes out
    - PLOAD4 bug with g1 vs g3/g4
    - EIGB keeps method (INV/SINV) now (not clear if there's a default)
+   - QBDY3 cross referencing fixed
 
 Added BDF
    - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
    - DMIG, DMIJ, DMIJI, DMIK
    - TABRNDG
+   - TLOAD1
    - *** SET2
    - *** TIC
 
