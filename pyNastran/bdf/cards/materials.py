@@ -48,6 +48,7 @@ class CREEP(Material):
             self.d = card.field(13)
             self.e = card.field(14)
             self.f = card.field(15)
+            self.g = card.field(16)
         else:
             self.mid    = data[0]
             self.T0     = data[1]
@@ -64,6 +65,7 @@ class CREEP(Material):
             self.d = data[12]
             self.e = data[13]
             self.f = data[14]
+            self.g = data[15]
         ###
     
     def crossReference(self,model):
@@ -76,7 +78,7 @@ class CREEP(Material):
 
     def rawFields(self):
         fields = ['CREEP',self.Mid(),self.T0,self.exp,self.form,self.tidkp,self.tidcp,self.tidcs,self.thresh,
-        self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
+        self.Type,self.a,self.b,self.c,self.d,self.e,self.f,self.g]
         return fields
 
     def reprFields(self):
@@ -84,7 +86,7 @@ class CREEP(Material):
         exp    = self.setBlankIfDefault(self.exp,4.1e-9)
         T0     = self.setBlankIfDefault(self.T0,0.0)
         fields = ['CREEP',self.Mid(),T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
-        self.Type,self.a,self.b,self.c,self.d,self.e,self.f]
+        self.Type,self.a,self.b,self.c,self.d,self.e,self.f,self.g]
         return fields
 
 class MAT1(Material):

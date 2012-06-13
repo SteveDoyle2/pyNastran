@@ -614,7 +614,7 @@ class QBDY3(ThermalLoad):
         ###
 
     def crossReference(self,model):
-        for i,eid in enumerate(self,eids):
+        for i,eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
         ###
 

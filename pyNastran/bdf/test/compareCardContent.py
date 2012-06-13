@@ -39,7 +39,9 @@ def compareCardContent(fem1,fem2):
     assert len(fem1.sets)           == len(fem2.sets)
     assert len(fem1.setsSuper)      == len(fem2.setsSuper)
     assert len(fem1.tables)         == len(fem2.tables)
+    assert len(fem1.randomTables)   == len(fem2.randomTables)
     assert len(fem1.methods)        == len(fem2.methods),'len(fem1.methods)=%s len(fem2.methods)=%s' %(len(fem1.methods),len(fem2.methods))
+    assert len(fem1.cMethods)       == len(fem2.cMethods),'len(fem1.cMethods)=%s len(fem2.cMethods)=%s' %(len(fem1.cMethods),len(fem2.cMethods))
 
     for key in fem1.params:
         card1 = fem1.params[key]
@@ -158,9 +160,19 @@ def compareCardContent(fem1,fem2):
         card2 = fem2.tables[key]
         assertFields(card1,card2)
 
+    for key in fem1.randomTables:
+        card1 = fem1.randomTables[key]
+        card2 = fem2.randomTables[key]
+        assertFields(card1,card2)
+
     for key in fem1.methods:
         card1 = fem1.methods[key]
         card2 = fem2.methods[key]
+        assertFields(card1,card2)
+
+    for key in fem1.cMethods:
+        card1 = fem1.cMethods[key]
+        card2 = fem2.cMethods[key]
         assertFields(card1,card2)
 
     compareOptimizationContent(fem1,fem2)

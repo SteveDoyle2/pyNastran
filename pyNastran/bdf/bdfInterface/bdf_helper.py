@@ -779,9 +779,15 @@ class addMethods(object):
 
     def addTable(self,table):
         key = table.tid
-        assert key not in self.tables
+        assert key not in self.tables,'\nTable=\n%s oldTable=\n%s' %(table,self.tables[key])
         assert key>0
         self.tables[key] = table
+
+    def addRandomTable(self,table):
+        key = table.tid
+        assert key not in self.randomTables,'\nTable=\n%s oldTable=\n%s' %(table,self.randomTables[key])
+        assert key>0
+        self.randomTables[key] = table
 
     def addMethod(self,method,allowOverwrites=False):
         key = method.sid

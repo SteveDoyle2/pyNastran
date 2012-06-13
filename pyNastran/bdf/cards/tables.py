@@ -4,36 +4,6 @@
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
-class TIC(BaseCard): # Transient Initial Condition
-    type = 'TIC'
-    def __init__(self,card=None,data=None):
-        """
-        Defines values for the initial conditions of variables used in structural transient
-        analysis. Both displacement and velocity values may be specified at independent
-        degrees-of-freedom. This entry may not be used for heat transfer analysis.
-        """
-        Table.__init__(self,card,data)
-        if card:
-            self.sid = card.field(1)
-            self.G   = card.field(2)
-            self.C   = card.field(3)
-            self.U0  = card.field(4)
-            self.V0  = card.field(5)
-        else:
-            self.sid = data[0]
-            self.G   = data[1]
-            self.C   = data[2]
-            self.U0  = data[3]
-            self.V0  = data[4]
-        ###
-
-    def rawFields(self):
-        fields = ['TIC',self.sid,self.G,self.C,self.U0,self.V0]
-        return fields
-
-    def reprFields(self):
-        return self.rawFields()
-   
 class Table(BaseCard):
     type = 'TABLE??'
     def __init__(self,card,data):
@@ -149,7 +119,7 @@ class TABLED1(Table):
 class TABLED2(Table):
     type = 'TABLED2'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -172,7 +142,7 @@ class TABLED2(Table):
 class TABLED3(Table):
     type = 'TABLED3'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -215,7 +185,7 @@ class TABLEM1(Table):
 class TABLEM2(Table):
     type = 'TABLEM2'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -239,7 +209,7 @@ class TABLEM2(Table):
 class TABLEM3(Table):
     type = 'TABLEM3'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -293,7 +263,7 @@ class TABLEM4(Table):
 class TABLES1(Table):
     type = 'TABLES1'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -332,10 +302,15 @@ class TABLEST(Table):
     def reprFields(self):
         return self.rawFields()
 
-class TABRND1(Table):
+class RandomTable(BaseCard):
+    type = 'TABLE??'
+    def __init__(self,card,data):
+        pass
+
+class TABRND1(RandomTable):  # randomTable
     type = 'TABRND1'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        RandomTable.__init__(self,card,data)
         if card:
             self.tid   = card.field(1)
             self.xaxis = card.field(2,'LINEAR')
@@ -352,6 +327,16 @@ class TABRND1(Table):
         assert self.yaxis in ['LINEAR','LOG'],'yaxis=|%s|' %(self.yaxis)
         self.parseFields(fields,nRepeated=2,isData=isData)
 
+    def parseFields(self,fields,nRepeated,isData=False):
+        self.table = TableObj(fields,nRepeated,isData)
+
+    def mapAxis(self,axis):
+        if axis==0:
+            axisType = 'LINEAR'
+        else:
+            raise Exception('axis=|%s|' %(axis))
+        return axisType
+
     def rawFields(self):
         fields = ['TABRND1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
@@ -361,3 +346,61 @@ class TABRND1(Table):
         yaxis = self.setBlankIfDefault(self.yaxis,'LINEAR')
         fields = ['TABRND1',self.tid,xaxis,yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
+
+class TABRNDG(RandomTable): # randomTable
+    """
+    Gust Power Spectral Density
+    Defines the power spectral density (PSD) of a gust for aeroelastic response analysis.
+    """
+    type = 'TABRNDG'
+    def __init__(self,card=None,data=None):
+        RandomTable.__init__(self,card,data)
+        if card:
+            ## Table identification number. (Integer >0)
+            self.tid  = card.field(1)
+            ## PSD Type: 1. von Karman; 2. Dryden
+            self.Type = card.field(2)
+            ## Scale of turbulence divided by velocity (units of time; Real)
+            self.LU   = card.field(3)
+            ## Root-mean-square gust velocity. (Real)
+            self.WG   = card.field(4)
+            assert self.Type in [1,2],'Type must be 1 or 2.  Type=%s' %(self.Type)
+        else:
+            raise NotImplementedError()
+
+    def rawFields(self):
+        fields = ['TABRNDG',self.tid,self.Type,self.LU,self.WG]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+class TIC(Table): # Transient Initial Condition
+    type = 'TIC'
+    def __init__(self,card=None,data=None):
+        """
+        Defines values for the initial conditions of variables used in structural transient
+        analysis. Both displacement and velocity values may be specified at independent
+        degrees-of-freedom. This entry may not be used for heat transfer analysis.
+        """
+        Table.__init__(self,card,data)
+        if card:
+            self.sid = card.field(1)
+            self.G   = card.field(2)
+            self.C   = card.field(3)
+            self.U0  = card.field(4)
+            self.V0  = card.field(5)
+        else:
+            self.sid = data[0]
+            self.G   = data[1]
+            self.C   = data[2]
+            self.U0  = data[3]
+            self.V0  = data[4]
+        ###
+
+    def rawFields(self):
+        fields = ['TIC',self.sid,self.G,self.C,self.U0,self.V0]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()

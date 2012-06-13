@@ -469,6 +469,10 @@ class writeMesh(object):
             msg += '$TABLES\n'
             for ID,table in sorted(self.tables.iteritems()):
                 msg += str(table)
+        if self.randomTables:
+            msg += '$RANDOM TABLES\n'
+            for ID,table in sorted(self.randomTables.iteritems()):
+                msg += str(table)
         return msg
 
     def writeSets(self):
@@ -483,10 +487,12 @@ class writeMesh(object):
 
     def writeDynamic(self):
         msg = ''
-        if self.dareas or self.nlparms or self.frequencies or self.methods or self.tsteps:
+        if self.dareas or self.nlparms or self.frequencies or self.methods or self.cMethods or self.tsteps:
             msg += '$DYNAMIC\n'
             for ID,method in sorted(self.methods.iteritems()):
                 msg += str(method)
+            for ID,cMethod in sorted(self.cMethods.iteritems()):
+                msg += str(cMethod)
             for ID,darea in sorted(self.dareas.iteritems()):
                 msg += str(darea)
             for ID,nlparm in sorted(self.nlparms.iteritems()):
