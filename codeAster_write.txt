@@ -1,0 +1,186 @@
+------------------------------Code Aster Writing------------------------------
+
+For a card to meet the criteria of "done" in this list,
+it must Write ALL fields AND link to interfacing cards.
+
+NOTES:  (1) See the documentation (in the folder) for a list of methods for the card.
+        (2) If a card interfaces with other cards, the other card doesn't
+            need to be linked for the first card to be considered "done".
+
+For example, an element (e.g. CQUAD4) links to 4 nodes, and a property (e.g. PSHELL).
+The nodes then link to coordinate systems (e.g. CORD2R).
+The property then links to a material (e.g. MAT1).
+The CQUAD4 must ONLY link to the nodes and the property to be considered done.  The
+nodes and property do not have to be linked.
+
+
+Notations
+ - done - finished
+ - NA   - card doesn't have any cross-referencing (e.g. a MAT1 card) and is done
+ - ??? no check has been done on this card
+ - any other note means a card isn't done
+ - no label means the card isnt done and probably isnt even added in readWrite
+
+----Nodes----:
+GRID    (done)
+GRDSET  (done)
+SPOINT  (no)
+
+----Coordinates----:
+CORD1R  (done)
+CORD2R  (done)
+CORD1C  (done)
+CORD2C  (done)
+CORD1S  (done)
+CORD2S  (done)
+CORD3G
+
+----Rods/Bars/Beams (Elements/Properties)----:
+CBAR   (done)
+CROD   (done)
+CTUBE  (done)
+CBEAM  (done)
+CBEAM3 (no)
+CBEND  (no)
+CONROD (done)
+
+PROD    (done)
+PBAR    (done)
+PBARL   (done)
+PBEAM   (done)
+PBEAML  (no)
+PBEAM3  (no)
+PBEND   (no)
+PTUBE   (done)
+
+----Plates/Shells (Elements/Properties)----:
+CTRIA3  (done)
+CTRIA6  (done)
+CTRIAR  (no)
+
+CQUAD   (no)
+CQUAD4  (done)
+CQUAD8  (done)
+CQUADR  (no)
+
+PSHELL  (done)
+PCOMP   (no)
+PCOMPG  (no)
+
+CSHEAR  (no)
+PSHEAR  (no)
+
+----Springs (Elements/Properties)----:
+CELAS1  (no)
+CELAS2  (no)
+CELAS3  (no)
+CELAS4  (no)
+PELAS   (NA)
+
+----Bushings (Elements/Properties)----:
+
+----Dampers (Elements/Properties)----:
+
+----Masses (Elements/Properties)----:
+CONM1   (no)
+CONM2   (no)
+
+CMASS1  (no)
+CMASS2  (no)
+CMASS3  (no)
+CMASS4  (no)
+PMASS   (no)
+
+----Solids (Elements/Properties)----:
+CTETRA  (done)
+CPENTA  (done)
+CHEXA   (done)
+
+PSOLID  (done)
+
+----Other Elements/Properties----:
+
+----Rigid Elements----:
+RROD    (no)
+RTRPLT  (no)
+RBAR    (no)
+RBAR1   (no)
+RBE1    (no)
+RBE2    (no)
+RBE3    (no)
+
+----Materials----:
+MAT1    (done)
+
+----Thermal Materials----:
+
+----Nonlinear Materials----:
+
+----Constraints----:
+SPC     (no)
+SPC1    (no)
+SPCD    (no)
+SPCADD  (no)
+
+MPC     (no)
+MPCADD  (no)
+
+----Loads----:
+LOAD    (done)
+
+FORCE   (done)
+FORCE1  (done)
+FORCE2  (done)
+
+GRAV    (done)
+
+PLOAD   (done)
+PLOAD1  (done)
+PLOAD2  (done)
+PLOAD4  (done)
+PLOADB3
+
+MOMENT  (done)
+MOMENT1 (done)
+MOMENT2 (done)
+
+----Thermal Loads----:
+
+----Thermal Elements----:
+
+----Thermal BCs----:
+
+----Thermal Properties----:
+
+----Dynamic----:
+
+----Modal Cards----:
+
+----Optimization----:
+
+---Tables---
+
+----Sets----:
+
+----Methods----:
+
+----Other----:
+INCLUDE (NA)
+PARAM   (???)
+
+-----------------------------------------------
+
+----Axial Nodes----:
+
+----Axial Elements----:
+
+----Axial Properties----:
+
+----Axial Loads----:
+
+----Axial Constraints----:
+
+----Axial Other----:
+
+-----------------------------------------------
+

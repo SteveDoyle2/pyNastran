@@ -28,21 +28,25 @@ BDF API Changes
    - grav card are now accessed using Load(lid) and not Grav(lid)
    - grav card loadID renamed from sid to lid
    - LOAD cards now have a getReducedLoads() which gets the scale factors and load objects
-     for all sub-loads
+     for all sub-loads (supports LOAD, FORCEx, MOMENTx, GRAV)
 
 BDF Bug Fixes:
+   - SPOINTs were lost when cross referencing
    - EIGC, EIGP now stored in self.cMethods instead of self.methods
    - TABRNDG is now in randomTables
    - CREEP field g now reads/writes out
    - PLOAD4 bug with g1 vs g3/g4
    - EIGB keeps method (INV/SINV) now (not clear if there's a default)
    - QBDY3 cross referencing fixed
+   - fixed possible issue (kStep default) with TSTEPNL caused by unlisted METHOD field
 
 Added BDF
    - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
    - DMIG, DMIJ, DMIJI, DMIK
    - TABRNDG
    - TLOAD1
+   - SPLINE4, SPLINE5
+   - CBUSH1D, PBUSH1D
    - *** SET2
    - *** TIC
 

@@ -1107,7 +1107,7 @@ class SPLINE4(Spline):
         self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE1',self.eid,self.CAero(),self.AEList(),None,self.Set(),self.dz,self.method,self.usage,
+        fields = ['SPLINE4',self.eid,self.CAero(),self.AEList(),None,self.Set(),self.dz,self.method,self.usage,
                             self.nelements,self.melements]
         return fields
 
