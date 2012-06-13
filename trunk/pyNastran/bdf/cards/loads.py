@@ -1047,10 +1047,10 @@ class PLOAD4(Load):
         if self.eids:
             self.eids = model.Elements(self.eids)
 
-    def Eid(self):
-        if isinstance(self.eid,int):
-            return self.eid
-        return self.eid.eid
+    def Eid(self,eid):
+        if isinstance(eid,int):
+            return eid
+        return eid.eid
 
     def getElementIDs(self,eid=None):
         if eid:
@@ -1061,7 +1061,7 @@ class PLOAD4(Load):
         return eids
 
     def rawFields(self):
-        eid  = self.Eid()
+        eid  = self.Eid(self.eid)
         cid  = self.setBlankIfDefault(self.Cid(),0)
         sorl = self.setBlankIfDefault(self.sorl,'SURF')
         ldir = self.setBlankIfDefault(self.ldir,'NORM')
@@ -1079,6 +1079,7 @@ class PLOAD4(Load):
         else:
             #print "eids = %s" %(self.eids)
             if len(self.eids)>1:
+                #print("self.eids = %s" %(self.eids))
                 try:
                     fields.append('THRU')
                     eid = self.eids[-1]
@@ -1105,3 +1106,39 @@ class PLOAD4(Load):
 
     def reprFields(self):
         return self.rawFields()
+
+class RANDPS(BaseCard):
+    """
+    Power Spectral Density Specification
+    Defines load set power spectral density factors for use in random analysis having the
+    frequency dependent form
+    \f[ S_{jk}(F) = (X+iY)G(F) \f]
+    """
+    type = 'RANDPS'
+    def __init__(self,card=None,data=None):
+        if card:
+            ## Random analysis set identification number. (Integer > 0)
+            ## Defined by RANDOM in the Case Control Deck.
+            self.lid = card.field(2)
+            ## Subcase identification number of the excited load set. (Integer > 0)
+            self.j   = card.field(3)
+            ## Subcase identification number of the applied load set. (Integer >= 0; K >= J)
+            self.k   = card.field(4)
+            ## Components of the complex number. (Real)
+            self.x   = card.field(5)
+            self.y   = card.field(6)
+            ## Identification number of a TABRNDi entry that defines G(F).
+            self.tid = card.field(7)
+
+    def crossReference(self,model):
+        self.tid = model.Table(self.tid)
+    
+    def Tid(self):
+        if isinstance(self.tid,int):
+            return self.tid
+        return self.tid.tid
+
+    def rawFields(self):
+        fields = [self.lid,self.j,self.k,self.x,self.y,self.Tid()]
+        return fields
+

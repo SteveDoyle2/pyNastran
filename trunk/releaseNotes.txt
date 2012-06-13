@@ -19,6 +19,10 @@ This code was written entirely in Python and should install easily.
 Overall Notes
 Overall BDF
 
+BDF API Additions
+   - LOAD objects now have a getReducedLoads() method that determines
+     a list of scaleFactors and FORCE/MOMENT/GRAV/etc. cards
+
 BDF API Changes
    - moved storage location of EIGC, EIGP
    - grav card are now accessed using Load(lid) and not Grav(lid)
@@ -28,12 +32,17 @@ BDF API Changes
 
 BDF Bug Fixes:
    - EIGC, EIGP now stored in self.cMethods instead of self.methods
+   - TABRNDG is now in randomTables
+   - CREEP field g now reads/writes out
+   - PLOAD4 bug with g1 vs g3/g4
+   - EIGB keeps method (INV/SINV) now (not clear if there's a default)
 
 Added BDF
-   - ASET, ASET1, BSET, BSET1, CSET, QSET, QSET1
-   - *** CSET1, SET2
+   - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
+   - DMIG, DMIJ, DMIJI, DMIK
+   - TABRNDG
+   - *** SET2
    - *** TIC
-   - *** DMIG
 
 Overall OP2
    - test_op2 now crashes if there isn't a .op2 in the filename

@@ -26,8 +26,6 @@ CQUAD   16410   16411   16411   16412   16413   16414   16415   16416   +QD1
 $UNASSOCIATED_PROPERTIES
 PBUSH          1       K 100000.
                      RCV     1.5      1.      1.      1.
-PBEAML       100     200             BOX
-      , 40., 50., 5., 5.
 $MATERIALS
 MAT1    1           1.+7                      .1
           25000.  25000.
@@ -88,8 +86,8 @@ QBDY3         34     20.               1       2       3       4       5
 QBDY3,500,50000.0,,10,THRU,60,BY,10
 PLOAD4       510     101      5.                            THRU     112
 $DYNAMIC
-EIGRL   1       0.      800.    6       4                               +001
-+001    nums=4
+EIGRL          1      0.    800.       6       4
+          NUMS=4
 EIGB     5      INV     0.0     2.      20      2       2
 EIGC    10      CLAN    MAX                     1.E-12
                                                         20
@@ -109,7 +107,7 @@ NLPARM        2       10           AUTO      5      25        PW      NO
 $THERMAL
 $CHBDYP,21,,,,,110,111
 $OPTIMIZATION
-DCONSTR 1       16      -999999.1000000.
+DCONSTR        1      16-999999.1000000.
 DRESP2,1,LBUCK,5,3
 ,DESVAR,101,3,4,5,1,205,209
 ,,201
@@ -126,8 +124,8 @@ DRESP2,1,LBUCK,5,3
 ,DVPREL2,401,402
 DRESP2  16      SUMFORC 1
         DRESP1  14      15
-DVMREL1 1       MAT1    1       E
-        30      1.44+9
+DVMREL1        1    MAT1       1       E
+              30  1.44+9
 DVPREL2 11      PBAR    3       6                       2
         DESVAR  5       6
 DVPREL2,12,     PBAR,   3,      5,      1.0-6,  ,       101,    ,       +
@@ -139,15 +137,17 @@ DOPTPRM APRCOD  2       IPRINT  0       DESMAX  8       DELP    0.50
 DOPTPRM IPRINT  3       DESMAX  15      DELP    0.5	P1	1	
 	P2	15		
 $TABLES
-TABLED1 1
-        1.0     1.0     2.0     2.0     3.0     3.0     ENDT
-TABLED1      310
+TABLED1        1  LINEAR  LINEAR
+              1.      1.      2.      2.      3.      3.    ENDT
+TABLED1      310  LINEAR  LINEAR
               0.      1. 200000.      1.    ENDT
-TLOAD2  310     320             1       0.      .10472  4.77465 -90.
-        0.0     0.0
 $SETS
 SESET   0       1       THRU    10
 $REJECT_LINES
+PBEAML       100     200             BOX
+      , 40., 50., 5., 5.
+TLOAD2  310     320             1       0.      .10472  4.77465 -90.
+        0.0     0.0
 DEQATN  2       F(A,B)=B*A*A*A/12.0
 DSCREEN STRESS  -100.   100
 DSCREEN LAMA    -100.0

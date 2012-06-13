@@ -308,8 +308,10 @@ TABLEM3  (NA)
 TABLEM4  (NA)
 TABLES1  (???)
 TABLEST  (???)
+
+---Random Tables---
 TABRND1  (???)
-TABRNDG
+TABRNDG  (NA)
 TIC
 
 ----Sets----:

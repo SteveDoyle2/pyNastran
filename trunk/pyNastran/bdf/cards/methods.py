@@ -17,7 +17,8 @@ class EIGB(Method): # self.methods
             self.sid = card.field(1)
             ## Method of eigenvalue extraction. (Character: 'INV' for inverse power
             ## method or 'SINV' for enhanced inverse power method.)
-            self.method = card.field(2,'INV')
+            self.method = card.field(2)
+            assert self.method in ['INV','SINV'],'method must be INV or SINV.  method=|%s|' %(self.method)
             ## Eigenvalue range of interest. (Real, L1 < L2)
             self.L1   = card.field(3)
             self.L2   = card.field(4)
@@ -49,13 +50,13 @@ class EIGB(Method): # self.methods
         return fields
 
     def reprFields(self):
-        method = self.setBlankIfDefault(self.method,'INV')
+        #method = self.setBlankIfDefault(self.method,'INV')
         nep = self.setBlankIfDefault(self.nep,0)
         ndp = self.setBlankIfDefault(self.ndp,3*self.nep)
         ndn = self.setBlankIfDefault(self.ndn,3*self.nep)
         #print "nep = ",self.nep,ndn
         norm = self.setBlankIfDefault(self.norm,'MAX')
-        fields = ['EIGB',self.sid,method,self.L1,self.L2,nep,ndp,ndn,None,
+        fields = ['EIGB',self.sid,self.method,self.L1,self.L2,nep,ndp,ndn,None,
                          norm,self.G,self.C]
         return fields
 

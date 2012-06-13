@@ -156,7 +156,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'TABLED1','TABLED2','TABLED3',#'TABLED4',
         'TABLEM1','TABLEM2','TABLEM3','TABLEM4',
         'TABLES1','TABLEST',
-        'TABRND1',
+        'TABRND1','TABRNDG',
         
         # initial conditions - sid (set ID)
         #'TIC',  (in tables.py)
@@ -373,6 +373,8 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.setsSuper = {}
         ## tables
         self.tables = {}
+        ## randomTables
+        self.randomTables = {}
         
         ## methods
         self.methods  = {} ## EIGB, EIGR, EIGRL
@@ -1643,7 +1645,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #    coord = CORD3G(cardObj)
             #    self.addCoord(coord)
 
-            # tables
+            # Table
             elif cardName=='TABLED1':
                 table = TABLED1(cardObj)
                 self.addTable(table)
@@ -1656,7 +1658,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='TABLED4':
             #    table = TABLED4(cardObj)
             #    self.addTable(table)
-
 
             elif cardName=='TABLEM1':
                 table = TABLEM1(cardObj)
@@ -1677,11 +1678,16 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='TABLEST':
                 table = TABLEST(cardObj)
                 self.addTable(table)
+            
+            # randomTables
             elif cardName=='TABRND1':
                 table = TABRND1(cardObj)
-                self.addTable(table)
-            
+                self.addRandomTable(table)
+            elif cardName=='TABRNDG':
+                table = TABRNDG(cardObj)
+                self.addRandomTable(table)
 
+            # Methods
             elif cardName=='EIGB':
                 method = EIGB(cardObj)
                 self.addMethod(method)
@@ -1692,6 +1698,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 method = EIGRL(cardObj,sol=self.sol)
                 self.addMethod(method)
 
+            # CMethods
             elif cardName=='EIGC':
                 method = EIGC(cardObj)
                 self.addCMethod(method)
