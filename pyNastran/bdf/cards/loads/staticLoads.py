@@ -296,7 +296,7 @@ class GRAV(BaseCard):
             ## Coordinate system identification number.
             self.cid = card.field(2,0)
             ## scale factor
-            self.a   = card.field(3)
+            self.scale = card.field(3)
             ## Acceleration vector components measured in coordinate system CID
             self.N   = array(card.fields(4,7,[0.,0.,0.]))
             ## Indicates whether the CID coordinate system is defined in the main Bulk
@@ -335,11 +335,11 @@ class GRAV(BaseCard):
 
     def GravityVector(self):
         """returns the gravity vector in absolute coordinates"""
-        p,matrix = self.cid.transformToGlobal(self.N)
+        p,matrix = self.scale*self.cid.transformToGlobal(self.N)
         return p
 
     def rawFields(self):
-        fields = ['GRAV',self.lid,self.Cid(),self.a,self.N[0],self.N[1],self.N[2],self.mb]
+        fields = ['GRAV',self.lid,self.Cid(),self.scale,self.N[0],self.N[1],self.N[2],self.mb]
         return fields
 
     def reprFields(self):
@@ -348,8 +348,54 @@ class GRAV(BaseCard):
             N.append(self.setBlankIfDefault(n,0.0))
         
         mb = self.setBlankIfDefault(self.mb,0)
-        fields = ['GRAV',self.lid,self.Cid(),self.a]+N+[mb]
+        fields = ['GRAV',self.lid,self.Cid(),self.scale]+N+[mb]
         return fields
+
+class ACCEL1(BaseCard):
+    """
+    Acceleration Load
+    Defines static acceleration loads at individual GRID points.
+    """
+    type = 'ACCEL1'
+    def __init__(self,card=None,data=None):
+        ## Load set identification number (Integer>0)
+        self.lid = card.field(1)
+        ## Coordinate system identification number. (Integer>0: Default=0)
+        self.cid = card.field(2,0)
+        ## Acceleration vector scale factor. (Real)
+        self.scale = card.field(3)
+        ## Components of the acceleration vector measured in coordinate system
+        ## CID. (Real; at least one Ni != 0)
+        self.N = array([card.field(4,0.),card.field(5,0.),card.field(6,0.)])
+        assert max(abs(self.N))>0.
+        ## nodes to apply the acceleration to
+        self.nodes = self.expandThruBy(card.fields(9))
+
+    def crossReference(self,model):
+        self.cid = model.Coord(self.cid)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
+    
+    def Cid(self):
+        if isinstance(self.cid,int):
+            return self.cid
+        return self.cid.cid
+
+    def nodeIDs(self,nodes=None):  # this function comes from BaseCard.py
+        """returns nodeIDs for repr functions"""
+        if not nodes:
+           nodes = self.nodes
+        if isinstance(nodes[0],int):
+            nodeIDs = [node     for node in nodes]
+        else:
+            nodeIDs = [node.nid for node in nodes]
+        ###
+        assert 0 not in nodeIDs,'nodeIDs = %s' %(nodeIDs)
+        return nodeIDs
+
+    def rawFields(self):
+        fields = ['ACCEL1',self.lid,self.Cid(),self.scale,self.N[0],self.N[1],self.N[2],None,None]+self.nodeIDs()
+        return fields
+
 
 #------------------------------------------------------------------------------
 class OneDeeLoad(Load): # FORCE/MOMENT

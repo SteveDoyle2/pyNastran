@@ -103,7 +103,9 @@ class XrefMesh(object):
             try:
                 e.crossReference(self)
             except:
-                sys.stderr.write("Couldn't cross reference Element.  Are all Properties supported?\n%s" %(str(e)))
+                msg = "Couldn't cross reference Element.  Are all Properties supported?\n%s" %(str(e))
+                #sys.stderr.write()
+                self.log.error(msg)
                 raise
         ###
 

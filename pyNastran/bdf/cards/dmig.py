@@ -1,10 +1,10 @@
 import os
 import sys
+from math import sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2 #,acosh,acos,asin,asinh,atanh #,atanh2
+from numpy import average,zeros
+import scipy.sparse as ss
 
 from pyNastran.bdf.cards.baseCard import BaseCard
-
-from math import sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2 #,acosh,acos,asin,asinh,atanh #,atanh2
-from numpy import average
 
 def ssq(*listA):
     out = 0.
@@ -123,10 +123,11 @@ class NastranMatrix(BaseCard):
         #if self.isComplex():
             #self.Complex(card.field(v)
 
-    def getMatrix(self):
+    def getMatrix(self,isSparse=True):
         """
         builds the Matrix
         @param self the object pointer
+        @param isSparse should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
         @retval M the matrix
         @retval rows dictionary of keys=rowID,    values=(Grid,Component) for the matrix
         @retval cols dictionary of keys=columnID, values=(Grid,Component) for the matrix
@@ -139,6 +140,7 @@ class NastranMatrix(BaseCard):
                 rows[GCi] = i
                 rowsReversed[i] = GCi
                 i+=1
+        #nRows = len(rows2)
 
         j=0
         cols = {}
@@ -148,21 +150,67 @@ class NastranMatrix(BaseCard):
                 cols[GCj] = j
                 colsReversed[j] = GCj
                 j+=1
+        #nCols = len(cols2)
         
-        if self.isComplex():
-            M = zeros((i,j),'complex')
+        #A = ss.lil_matrix((3,3), dtype='d') # double precision
+
+        #rows=[]; cols=[]; data=[]
+        #for i in range(3):
+        #    for j in range(3):
+        #        k = float((i+1)*(j+1))
+        #        rows.append(i)
+        #        cols.append(j)
+        #        data.append(k)
+        #        A[i,j] = k
+        #    ###
+        ###
+
+        #isSparse = False
+        if isSparse:
+            data = []
+            rows2 = []
+            cols2 = []
             for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
                 i = rows[GCi]
                 j = cols[GCj]
-                M[i,j] = complex(reali,complexi)
+
+            if self.isComplex():
+                Format = 'complex'
+                for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    rows2.append(i)
+                    cols2.append(j)
+                    data.append(complex(reali,complexi))
+            else:
+                for (GCj,GCi) in zip(self.GCj,self.GCi):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    rows2.append(i)
+                    cols2.append(j)
+                Format = 'd'
+                data = self.Real
+            print "i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s" %(i,j,len(self.GCi),len(self.GCj),len(data))
+            # ,dtype=Format
+            print rows2
+            M = ss.coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j))
+            print M.todense()
         else:
-            M = zeros((i,j),'d')
-            for (GCj,GCi,reali) in zip(self.GCj,self.GCi,self.Real):
-                i = rows[GCi]
-                j = cols[GCj]
-                M[i,j] = reali
+            if self.isComplex():
+                M = zeros((i,j),dtype='complex')
+                for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    M[i,j] = complex(reali,complexi)
+            else:
+                M = zeros((i,j),dtype='d')
+                for (GCj,GCi,reali) in zip(self.GCj,self.GCi,self.Real):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    M[i,j] = reali
+                ###
             ###
-        ###
+        print M
         return (M,rowsReversed,colsReversed)
 
     def rename(self,nameNew):

@@ -1,4 +1,4 @@
-#import sys
+import sys
 
 from pyNastran.bdf.cards.baseCard import BaseCard
 
@@ -73,7 +73,10 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
     def Lid(self):
         if isinstance(self.lid,int):
             return self.lid
-        return self.lid.lid
+        try:
+            return self.lid.lid
+        except:
+            sys.stderr.write("self.lid=%s\n" %(str(self.lid)))
         
     def Tid(self):
         if self.tid is None:
@@ -94,7 +97,10 @@ class SLOAD(Load):
     Static Scalar Load
     Defines concentrated static loads on scalar or grid points.
     
-    @ntoe Can be used in statics OR dynamics.
+    @note Can be used in statics OR dynamics.
+
+    If Si refers to a grid point, the load is applied to component T1 of the
+    displacement coordinate system (see the CD field on the GRID entry).
     """
     type = 'SLOAD'
     def __init__(self,card=None,data=None):
@@ -107,28 +113,28 @@ class SLOAD(Load):
             n+=1
             raise RuntimeError('missing last magnitude on SLOAD card=%s' %(card.fields()) )
 
-        self.sids = []
+        self.nids = []
         self.mags = []
         for i in range(n):
             j = 2*i
-            self.sids.append(fields[j  ])
+            self.nids.append(fields[j  ])
             self.mags.append(fields[j+1])
         ###
 
     def crossReference(self,model):
-        for (i,sid) in enumerate(self.sids):
-            self.sids[i] = model.Load(sid)
+        for (i,nid) in enumerate(self.nids):
+            self.nids[i] = model.Node(nid)
         ###
 
-    def Sid(self,sid):
-        if isinstance(sid,int):
-            return sid
-        return sid.lid
+    def Nid(self,node):
+        if isinstance(node,int):
+            return node
+        return node.nid
 
     def rawFields(self):
         fields = ['SLOAD',self.lid]
-        for sid,mag in zip(self.sids,self.mags):
-            fields += [self.Sid(sid),mag]
+        for nid,mag in zip(self.nids,self.mags):
+            fields += [self.Nid(nid),mag]
         return fields
 
     def reprFields(self):
@@ -191,17 +197,17 @@ class DAREA(BaseCard):
             self.sid   = card.field(1)
             self.p     = card.field(2+nOffset)
             self.c     = card.field(3+nOffset)
-            self.a     = card.field(4+nOffset)
+            self.scale = card.field(4+nOffset)
         else:
             self.sid   = data[0]
             self.p     = data[1]
             self.c     = data[2]
-            self.a     = data[3]
+            self.scale = data[3]
             assert len(data)==4,'data = %s' %(data)
         ###
         
     def rawFields(self):
-        fields = ['DAREA',self.sid, self.p,self.c,self.a]
+        fields = ['DAREA',self.sid, self.p,self.c,self.scale]
         return fields
 
 class TabularLoad(BaseCard):
@@ -244,10 +250,13 @@ class TLOAD1(TabularLoad):
         else: raise RuntimeError('invalid TLOAD1 type  Type=|%s|' %(self.Type))
 
     def crossReference(self,model):
-        self.tid = model.Table(self.tid)
+        if self.tid:
+            self.tid = model.Table(self.tid)
 
     def Tid(self):
-        if isinstance(self.tid,int):
+        if self.tid==0:
+            return None
+        elif isinstance(self.tid,int):
             return self.tid
         return self.tid.tid
 
@@ -276,8 +285,8 @@ class RLOAD1(TabularLoad):
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
         self.dphase   = card.field(4)
-        self.tc    = card.field(5)
-        self.td    = card.field(6)
+        self.tc    = card.field(5,0)
+        self.td    = card.field(6,0)
         self.Type  = card.field(7,'LOAD')
 
         if   self.Type in [0,'L','LO','LOA','LOAD']: self.Type = 'LOAD'
@@ -287,16 +296,22 @@ class RLOAD1(TabularLoad):
         else: raise RuntimeError('invalid RLOAD1 type  Type=|%s|' %(self.Type))
 
     def crossReference(self,model):
-        self.tc = model.Table(self.tc)
-        self.td = model.Table(self.td)
+        if self.tc:
+            self.tc = model.Table(self.tc)
+        if self.td:
+            self.td = model.Table(self.td)
     
     def Tc(self):
-        if isinstance(self.tc,int):
+        if self.tc==0:
+            return None
+        elif isinstance(self.tc,int):
             return self.tc
         return self.tc.tid
 
     def Td(self):
-        if isinstance(self.td,int):
+        if self.td==0:
+            return None
+        elif isinstance(self.td,int):
             return self.td
         return self.td.tid
 
@@ -325,8 +340,8 @@ class RLOAD2(TabularLoad):
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
         self.dphase   = card.field(4)
-        self.tb    = card.field(5)
-        self.tp    = card.field(6)
+        self.tb    = card.field(5,0)
+        self.tp    = card.field(6,0)
         self.Type  = card.field(7,'LOAD')
 
         if   self.Type in [0,'L','LO','LOA','LOAD']: self.Type = 'LOAD'
@@ -336,16 +351,22 @@ class RLOAD2(TabularLoad):
         else: raise RuntimeError('invalid RLOAD2 type  Type=|%s|' %(self.Type))
 
     def crossReference(self,model):
-        self.tc = model.Table(self.tc)
-        self.td = model.Table(self.td)
+        if self.tb:
+            self.tb = model.Table(self.tb)
+        if self.tp:
+            self.tp = model.Table(self.tp)
     
     def Tb(self):
-        if isinstance(self.tb,int):
+        if self.tb==0:
+            return None
+        elif isinstance(self.tb,int):
             return self.tb
         return self.tb.tid
 
     def Tp(self):
-        if isinstance(self.tp,int):
+        if self.tp==0:
+            return None
+        elif isinstance(self.tp,int):
             return self.tp
         return self.tp.tid
 
@@ -386,13 +407,16 @@ class RANDPS(RandomLoad):
             self.x   = card.field(5)
             self.y   = card.field(6)
             ## Identification number of a TABRNDi entry that defines G(F).
-            self.tid = card.field(7)
+            self.tid = card.field(7,0)
 
     def crossReference(self,model):
-        self.tid = model.Table(self.tid)
+        if self.tid:
+            self.tid = model.Table(self.tid)
     
     def Tid(self):
-        if isinstance(self.tid,int):
+        if self.tid==0:
+            return None
+        elif isinstance(self.tid,int):
             return self.tid
         return self.tid.tid
 

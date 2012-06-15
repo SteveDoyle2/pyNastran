@@ -220,7 +220,7 @@ class writeMesh(object):
         if 0:
             associatedNodes = set([])
             for eid,element in self.elements.iteritems():
-                print element
+                print(element)
                 associatedNodes = associatedNodes.union(set(element.nodeIDs()))
 
             allNodes = set(self.nodes.keys())
@@ -261,7 +261,7 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
         return msg
@@ -275,7 +275,7 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
         return msg
@@ -311,10 +311,10 @@ class writeMesh(object):
                     try:
                         msg += str(element)
                     except:
-                        print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                        print('failed printing element...type=%s eid=%s' %(element.type,eid))
                         raise
                     #else:
-                    #    print "element.type = ",element.type
+                    #    print("element.type = ",element.type)
                     ###
                 ###
                 eidsWritten+=eids
@@ -332,7 +332,7 @@ class writeMesh(object):
                 try:
                     msg += str(element)
                 except:
-                    print 'failed printing element...type=%s eid=%s' %(element.type,eid)
+                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
             ###
@@ -429,7 +429,7 @@ class writeMesh(object):
                     try:
                         msg += str(load)
                     except:
-                        print 'failed printing load...type=%s key=%s' %(load.type,key)
+                        print('failed printing load...type=%s key=%s' %(load.type,key))
                         raise
                     ###
             for ID,grav in sorted(self.gravs.iteritems()):

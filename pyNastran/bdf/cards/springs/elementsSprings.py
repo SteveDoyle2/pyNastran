@@ -103,10 +103,11 @@ class CELAS1(SpringElement):
             ## property ID
             self.pid = card.field(2,self.eid)
 
-            nids = [card.field(3),card.field(5)]
+            nids = [card.field(3,0),card.field(5,0)]
             ## component number
-            self.c1 = card.field(4)
-            self.c2 = card.field(6)
+            self.c1 = card.field(4,0)
+            self.c2 = card.field(6,0)
+
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -114,6 +115,8 @@ class CELAS1(SpringElement):
             self.c1 = data[4]
             self.c2 = data[5]
         ###
+        assert self.c1 in [0,1,2,3,4,5,6],'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c1)
+        assert self.c2 in [0,1,2,3,4,5,6],'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c2)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
@@ -127,11 +130,11 @@ class CELAS1(SpringElement):
         return self.pid.k
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
         self.pid   = model.Property(self.pid)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CELAS1',self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
         return fields
 
@@ -147,17 +150,17 @@ class CELAS2(SpringElement):
             ## stiffness of the scalar spring
             self.k   = card.field(2)
 
-            nids = [card.field(3),card.field(5)]
+            nids = [card.field(3,0),card.field(5,0)]
 
             ## component number
-            self.c1 = card.field(4)
-            self.c2 = card.field(6)
+            self.c1 = card.field(4,0)
+            self.c2 = card.field(6,0)
 
             ## damping coefficient
-            self.ge = card.field(7)
+            self.ge = card.field(7,0.)
 
             ## stress coefficient
-            self.s  = card.field(8)
+            self.s  = card.field(8,0.)
         else:
             self.eid = data[0]
             self.k   = data[1]
@@ -167,6 +170,8 @@ class CELAS2(SpringElement):
             self.ge  = data[6]
             self.s   = data[7]
         ###
+        assert self.c1 in [0,1,2,3,4,5,6],'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c1)
+        assert self.c2 in [0,1,2,3,4,5,6],'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c2)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
@@ -180,7 +185,8 @@ class CELAS2(SpringElement):
         return self.k
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
+        #print("nodes = ",self.nodes)
         
     def writeCodeAster(self):
         nodes = self.nodeIDs()
@@ -209,8 +215,15 @@ class CELAS2(SpringElement):
         return msg
 
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True,msg=str(['CELAS2',self.eid]))
         fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]
+        return fields
+
+    def rawFields(self):
+        nodes = self.nodeIDs(allowEmptyNodes=True,msg=str(['CELAS2',self.eid]))
+        ge = self.setBlankIfDefault(self.ge,0.)
+        s  = self.setBlankIfDefault(self.s,0.)
+        fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,ge,s]
         return fields
 
 class CELAS3(SpringElement):
@@ -229,8 +242,8 @@ class CELAS3(SpringElement):
             self.pid = card.field(2,self.eid)
 
             ## Scalar point identification numbers
-            self.s1 = card.field(3)
-            self.s2 = card.field(4)
+            self.s1 = card.field(3,0)
+            self.s2 = card.field(4,0)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -248,14 +261,18 @@ class CELAS3(SpringElement):
         return self.pid.k
 
     def crossReference(self,model):
-        pass
-        #self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes)
         self.pid   = model.Property(self.pid)
     
     def rawFields(self):
-        #nodes = self.nodeIDs()
         fields = ['CELAS3',self.eid,self.Pid(),self.s1,self.s2]
         return fields
+
+    #def reprFields(self):
+        #s1 = self.setBlankIfDefault(self.s1,0)
+        #s2 = self.setBlankIfDefault(self.s2,0)
+        #fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
+        #return fields
 
 class CELAS4(SpringElement):
     type = 'CELAS4'
@@ -274,8 +291,8 @@ class CELAS4(SpringElement):
             self.k   = card.field(2)
 
             ## Scalar point identification numbers
-            self.s1 = card.field(3)
-            self.s2 = card.field(4)
+            self.s1 = card.field(3,0)
+            self.s2 = card.field(4,0)
         else:
             self.eid = data[0]
             self.k   = data[1]
@@ -293,10 +310,15 @@ class CELAS4(SpringElement):
         return self.k
 
     def crossReference(self,model):
-        pass
-        #self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes)
 
     def rawFields(self):
         fields = ['CELAS4',self.eid,self.k,self.s1,self.s2]
         return fields
+
+    #def reprFields(self):
+        #s1 = self.setBlankIfDefault(self.s1,0)
+        #s2 = self.setBlankIfDefault(self.s2,0)
+        #fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
+        #return fields
 
