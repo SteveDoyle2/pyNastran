@@ -106,10 +106,10 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'SUPORT','SUPORT1',
 
         # loads
-        'LOAD','LSEQ',
+        'LOAD','LSEQ','RANDPS',
         'DLOAD','SLOAD','TLOAD1','RLOAD1','RLOAD2',
         'FORCE','FORCE1','FORCE2',
-        'GRAV',
+        'GRAV','ACCEL1',
         'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
 
@@ -1307,6 +1307,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='GRAV':
                 grav = GRAV(cardObj)
                 self.addLoad(grav)
+            elif cardName=='ACCEL1':
+                grav = ACCEL1(cardObj)
+                self.addLoad(grav)
             elif cardName=='LOAD':
                 load = LOAD(cardObj)
                 self.addLoad(load)
@@ -1343,6 +1346,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                 self.addLoad(load)
             elif cardName=='RLOAD2':
                 load = RLOAD2(cardObj)
+                self.addLoad(load)
+            elif cardName=='RANDPS':
+                load = RANDPS(cardObj)
                 self.addLoad(load)
 
             # thermal loads

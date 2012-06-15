@@ -7,7 +7,7 @@ import traceback
 import pyNastran
 from pyNastran.bdf.errors import *
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement
+from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement,NastranMatrix
 from compareCardContent import compareCardContent
 
 import pyNastran.bdf.test
@@ -237,7 +237,6 @@ def getElementStats(fem1,fem2):
                 pid = e.Pid()
                 n     = e.Normal()
                 a,c,n = e.AreaCentroidNormal()
-                
             elif isinstance(e,SolidElement):
                 v   = e.Volume()
                 m   = e.Mass()
@@ -264,7 +263,7 @@ def getElementStats(fem1,fem2):
             elif isinstance(e,DamperElement):
                 b = e.B()
             elif isinstance(e,SpringElement):
-                L = e.Length()
+                #L = e.Length()
                 K = e.K()
                 pid = e.Pid()
             elif isinstance(e,PointElement):
@@ -284,10 +283,24 @@ def getElementStats(fem1,fem2):
         ###
     ###
 
+def getMatrixStats(fem1,fem2):
+    for key,dmig in sorted(fem1.dmigs.iteritems()):
+        try:
+            if isinstance(dmig,NastranMatrix):
+                dmig.getMatrix()
+            else:
+                print "statistics not available - matrix.type=%s matrix.name=%s" %(dmig.type,dmig.name)
+        except:
+            print "*stats - matrix.type=%s name=%s  matrix=\n%s" %(dmig.type,dmig.name,str(dmig))
+            raise
+        ###
+
+
 def compare(fem1,fem2,xref=True,check=True):
     diffCards = compareCardCount(fem1,fem2)
     if xref and check:
         getElementStats(fem1,fem2)
+        getMatrixStats(fem1,fem2)
     compareCardContent(fem1,fem2)
     #compareParams(fem1,fem2)
     #printPoints(fem1,fem2)

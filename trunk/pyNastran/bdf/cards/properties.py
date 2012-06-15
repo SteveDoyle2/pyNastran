@@ -45,9 +45,19 @@ class PFAST(Property):
 
     def rawFields(self):
         fields = ['PFAST',self.pid,self.d,self.Mcid(),self.mflag,self.kt1,self.kt2,self.kt3,self.kr1,
-                          self.kr2,self.kr2,self.mass,self.ge]
+                          self.kr2,self.kr3,self.mass,self.ge]
     
     def reprFields(self):
+        mcid = self.setBlankIfDefault(self.mcid,-1)
+        mflag = self.setBlankIfDefault(self.mflag,0)
+        kr1 = self.setBlankIfDefault(self.kr1,0.0)
+        kr2 = self.setBlankIfDefault(self.kr2,0.0)
+        kr3 = self.setBlankIfDefault(self.kr3,0.0)
+
+        mass = self.setBlankIfDefault(self.mass,0.0)
+        ge = self.setBlankIfDefault(self.ge,0.0)
+        fields = ['PFAST',self.pid,self.d,self.Mcid(),self.mflag,self.kt1,self.kt2,self.kt3,self.kr1,
+                          self.kr2,self.kr3,mass,ge]
         return self.rawFields()
 
 class DamperProperty(Property):
@@ -136,7 +146,9 @@ class PDAMPT(DamperProperty):
         self.tbid = Table(self.tbid)
     
     def Tbid(self):
-        if isinstance(self.tbid,int):
+        if self.tbid==0:
+            return None
+        elif isinstance(self.tbid,int):
             return self.tbid
         return self.tbid.tid
 
@@ -241,7 +253,7 @@ class PLSOLID(SolidProperty):
             self.mid = data[1]
             self.ge  = data[2]
             self.str = data[3]
-            print "data = ",data
+            #print "data = ",data
         ###
         assert self.str in ['GRID','GAUS'],'STR=|%s| doesnt have a valid stress/strain output value set\n' %(self.str)
 
@@ -295,6 +307,95 @@ class PSOLID(SolidProperty):
         fctn  = self.setBlankIfDefault(self.fctn,'SMECH')
         fields = ['PSOLID',self.pid,self.Mid(),cordm,self.integ,self.stress,self.isop,fctn]
         return fields
+
+class CrackProperty(Property):
+    def __init__(self,card,data):
+        pass
+
+    def Mid(self):
+        if isinstance(self.mid,int):
+            return self.mid
+        return self.mid.mid
+
+class PRAC2D(CrackProperty):
+    """
+    CRAC2D Element Property
+    Defines the properties and stress evaluation techniques to be used with the CRAC2D
+    structural element.
+    """
+    type = 'PRAC2D'
+    def __init__(self,card=None,data=None):
+        CrackProperty.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid   = card.field(1)
+            ## Material ID
+            self.mid   = card.field(2)
+            self.thick = card.field(3)
+            ## Plane strain or plane stress option. Use 0 for plane strain; 1 for plane
+            ## stress. (Integer = 0 or 1)
+            self.iPlane = card.field(4)
+            assert self.iPlane in [0,1],'Invalid value for iPlane on PRAC2D, can only be 0,1 iPlane=|%s|' %(self.iPlane)
+            ## Non-structural mass per unit area.(Real >= 0.0; Default = 0)
+            self.nsm = card.field(5,0.)
+            ## Exponent used in the displacement field. See Remark 4. (Real; Default = 0.5)
+            self.gamma = card.field(6,0.5)
+            ## Angle (in degrees) relative to the element x-axis along which stress
+            ## intensity factors are to be calculated. See Remark 4. (Real; Default = 180.0)
+            self.phi = card.field(7,180.)
+            
+        else:
+            raise NotImplementedError('not supported')
+        ###
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid) # MAT1, MAT2, MAT8
+
+    def rawFields(self):
+        fields = ['PRAC2D',self.pid,self.Mid(),self.thick,self.iPlane,self.nsm,self.gamma,self.phi]
+        return fields
+
+    def reprFields(self):
+        nsm   = self.setBlankIfDefault(self.nsm,0.)
+        gamma = self.setBlankIfDefault(self.nsm,0.5)
+        phi   = self.setBlankIfDefault(self.nsm,180.)
+        fields = ['PRAC2D',self.pid,self.Mid(),self.thick,self.iPlane,nsm,gamma,phi]
+        return fields
+
+class PRAC3D(CrackProperty):
+    """
+    CRAC3D Element Property
+    Defines the properties of the CRAC3D structural element.
+    """
+    type = 'PRAC3D'
+    def __init__(self,card=None,data=None):
+        CrackProperty.__init__(self,card,data)
+        if card:
+            ## Property ID
+            self.pid   = card.field(1)
+            ## Material ID
+            self.mid   = card.field(2)
+            ## Exponent used in the displacement field. See Remark 4. (Real; Default = 0.5)
+            self.gamma = card.field(3,0.5)
+            ## Angle (in degrees) relative to the element x-axis along which stress
+            ## intensity factors are to be calculated. See Remark 4. (Real; Default = 180.0)
+            self.phi = card.field(4,180.)
+            
+        else:
+            raise NotImplementedError('not supported')
+        ###
+
+    def crossReference(self,model):
+        self.mid = model.Material(self.mid) # MAT1, MAT9
+
+    def rawFields(self):
+        fields = ['PRAC3D',self.pid,self.Mid(),self.gamma,self.phi]
+        return fields
+
+    def reprFields(self):
+        gamma = self.setBlankIfDefault(self.nsm,0.5)
+        phi   = self.setBlankIfDefault(self.nsm,180.)
+        fields = ['PRAC3D',self.pid,self.Mid(),gamma,phi]
 
 class PCONEAX(Property): #not done
     type = 'PCONEAX'

@@ -36,8 +36,10 @@ class getMethods(object):
         ###
         return nids2
 
-    def Node(self,nid):
-        if nid in self.nodes:
+    def Node(self,nid,allowEmptyNodes=False):
+        if nid==0 and allowEmptyNodes:
+            return None
+        elif nid in self.nodes:
             return self.nodes[nid]
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
@@ -45,14 +47,21 @@ class getMethods(object):
             raise RuntimeError('nid=%s is not a GRID or SPOINT' %(nid))
         ###
 
-    def Nodes(self,nids):
+    def Nodes(self,nids,allowEmptyNodes=False):
         """
         Returns a series of node objects given a list of node IDs
         """
         #print "nids",nids
         nodes = []
-        for nid in nids:
-            nodes.append(self.nodes[nid])
+        if allowEmptyNodes:
+            for nid in nids:
+                if nid==0:
+                    nodes.append(None)
+                else:
+                    nodes.append(self.nodes[nid])
+        else:
+            for nid in nids:
+                nodes.append(self.nodes[nid])
         return nodes
 
     #--------------------
@@ -224,7 +233,7 @@ class getMethods(object):
 
     def Load(self,lid):
         #print 'lid=%s self.loads=%s' %(lid,(self.loads.keys()))
-        assert isinstance(lid,int),'lid=%s is not an integer' %(lid)
+        assert isinstance(lid,int),'lid=%s is not an integer\n' %(lid)
         if lid in self.loads:
             load = self.loads[lid]
         elif lid in self.gravs:
@@ -394,8 +403,8 @@ class addMethods(object):
 
     def addElement(self,elem,allowOverwrites=False):
         key = elem.eid
-        self.elements[key] = elem  ## @todo temporary
-        return                     ## @todo temporary
+        #self.elements[key] = elem  ## @todo temporary
+        #return                     ## @todo temporary
 
         if key in self.elements and allowOverwrites==False:
             if not elem.isSameCard(self.elements[key]):
@@ -444,13 +453,17 @@ class addMethods(object):
 
     def addProperty(self,prop,allowOverwrites=False):   
         key = prop.pid
-        self.properties[key] = prop  ## @todo temporary
-        return                       ## @todo temporary
+        #self.properties[key] = prop  ## @todo temporary
+        #return                       ## @todo temporary
 
-        if not allowOverwrites:
-            assert key not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
-        assert key>0,'property=\n%s' %(key,prop)
-        self.properties[key] = prop
+        if key in self.properties and allowOverwrites==False:
+            if not prop.isSameCard(self.properties[key]):
+                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
+                assert key not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
+        else:
+            assert key>0,'pid=%s prop=%s' %(key,prop)
+            self.properties[key] = prop
+        ###
 
     def addMaterial(self,material,allowOverwrites=False):
         """

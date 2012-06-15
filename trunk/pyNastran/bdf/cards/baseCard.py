@@ -431,15 +431,33 @@ class Element(BaseCard):
            nodes = self.nodes
         return [node.Position() for node in nodes]
 
-    def nodeIDs(self,nodes=None):
+    def nodeIDs(self,nodes=None,allowEmptyNodes=False,msg=''):
         """returns nodeIDs for repr functions"""
-        if not nodes:
-           nodes = self.nodes
-        if isinstance(nodes[0],int):
-            return [node     for node in nodes]
-        else:
-            return [node.nid for node in nodes]
-        ###
+        try:
+            if not nodes:
+               nodes = self.nodes
+
+            if allowEmptyNodes:
+                nodes2 = []
+                for i,node in enumerate(nodes):
+                    if node==0 or node is None:
+                        nodes2.append(None)
+                    elif isinstance(node,int):
+                        nodes2.append(node)
+                    else:
+                        nodes2.append(node.nid)
+                return nodes2
+            else:
+                if isinstance(nodes[0],int):
+                    nodeIDs = [node     for node in nodes]
+                else:
+                    nodeIDs = [node.nid for node in nodes]
+                ###
+                assert 0 not in nodeIDs,'nodeIDs = %s' %(nodeIDs)
+                return nodeIDs
+        except:
+            print("nodes=%s allowEmptyNodes=%s\nmsg=%s" %(nodes,allowEmptyNodes,msg))
+            raise
 
     def prepareNodeIDs(self,nids,allowEmptyNodes=False):
         """verifies all node IDs exist and that they're integers"""

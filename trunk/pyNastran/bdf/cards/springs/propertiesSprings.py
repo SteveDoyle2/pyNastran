@@ -28,8 +28,10 @@ class PELAS(SpringProperty):
         ###
 
     def crossReference(self,model):
+        #if self.sol in [108,129]:
+            #self.pid = self.pelasts[self.pid]
         pass
-
+        
     def writeCodeAster(self):
         """
         @todo check if there are 1 (DISCRET=>K_T_D_N) or 2 (DISCRET_2D=>K_T_D_L) nodes
@@ -69,3 +71,56 @@ class PELAS(SpringProperty):
         s  = self.setBlankIfDefault(self.s,0.)
         fields = ['PELAS',self.pid,self.k,ge,s]
         return fields
+
+class PELAST(SpringProperty):
+    """
+    Frequency Dependent Elastic Property
+    Defines the frequency dependent properties for a PELAS Bulk Data entry.
+    
+    The PELAST entry is ignored in all solution sequences except frequency
+    response (108) or nonlinear analyses (129).
+    """
+    type = 'PELAST'
+    def __init__(self,card=None,nPELAS=0,data=None):
+        SpringProperty.__init__(self,card,data)
+        self.pid   = card.field(1)
+        ## Identification number of a TABLEDi entry that defines the force per unit
+        ## displacement vs. frequency relationship. (Integer > 0; Default = 0)
+        self.tkid  = card.field(2,0)
+        ## Identification number of a TABLEDi entry that defines the
+        ## nondimensional structural damping coefficient vs. frequency
+        ## relationship. (Integer > 0; Default = 0)
+        self.tgeid = card.field(3,0)
+        ## Identification number of a TABELDi entry that defines the nonlinear
+        ## force vs. displacement relationship. (Integer > 0; Default = 0)
+        self.tknid = card.field(4,0)
+
+    def crossReference(self,model):
+        self.pid = model.Property(self.pid)
+        if self.tkid>0:
+            self.tkid  = model.Table(self.tkid)
+        if self.tgeid>0:
+            self.tgeid = model.Table(self.tgeid)
+        if self.tknid>0:
+            self.tknid = model.Table(self.tknid)
+        ###
+    
+    def Pid(self):
+        if isinstance(self.pid,int):
+            return self.pid
+        return self.pid.pid
+
+    def Tkid(self):
+        if isinstance(self.tkid,int):
+            return self.tkid
+        return self.tkid.tid
+
+    def Tknid(self):
+        if isinstance(self.tknid,int):
+            return self.tknid
+        return self.tknid.tid
+
+    def Tgeid(self):
+        if isinstance(self.tgeid,int):
+            return self.tgeid
+        return self.tgeid.tid

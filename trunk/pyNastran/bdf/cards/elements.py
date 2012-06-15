@@ -11,7 +11,8 @@ from pyNastran.bdf.cards.springs.elementsSprings import *
 from pyNastran.bdf.cards.mass.elementsMass import *
 from pyNastran.bdf.cards.bush.elementsBush import *
 
-class CFAST(Element):
+#------------------------------------------------------------------------------
+class CFAST(Element):  ## @todo xref
     type = 'CFAST'
     def __init__(self,card=None,data=None):
         Element.__init__(self,card,data)
@@ -43,6 +44,7 @@ class CFAST(Element):
     def reprFields(self):
         return self.rawFields()
 
+#------------------------------------------------------------------------------
 class DamperElement(Element):
     def __init__(self,card,data):
         Element.__init__(self,card,data)
@@ -56,11 +58,11 @@ class CDAMP1(DamperElement):
             self.eid = card.field(1)
             self.pid = card.field(2)
 
-            nids = [card.field(3),card.field(5)]
+            nids = [card.field(3,0),card.field(5,0)]
 
             ## component number
-            self.c1 = card.field(4)
-            self.c2 = card.field(6)
+            self.c1 = card.field(4,0)
+            self.c2 = card.field(6,0)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -68,6 +70,8 @@ class CDAMP1(DamperElement):
             self.c1  = data[3]
             self.c2  = data[5]
         ###
+        assert self.c1 in [0,1,2,3,4,5,6],'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c1)
+        assert self.c2 in [0,1,2,3,4,5,6],'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c2)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
@@ -85,7 +89,7 @@ class CDAMP1(DamperElement):
         self.pid   = model.Property(self.pid)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CDAMP1',self.eid,self.Pid(),nodes[0],self.c1,nodes[1],self.c2]
         return fields
 
@@ -100,11 +104,11 @@ class CDAMP2(DamperElement):
             ## Value of the scalar damper (Real)
             self.b   = card.field(2)
 
-            nids = [card.field(3),card.field(5)]
+            nids = [card.field(3,0),card.field(5,0)]
 
             ## component number
-            self.c1 = card.field(4)
-            self.c2 = card.field(6)
+            self.c1 = card.field(4,0)
+            self.c2 = card.field(6,0)
         else:
             self.eid = data[0]
             self.b   = data[1]
@@ -112,6 +116,8 @@ class CDAMP2(DamperElement):
             self.c1  = data[3]
             self.c2  = data[5]
         ###
+        assert self.c1 in [0,1,2,3,4,5,6],'c1=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c1)
+        assert self.c2 in [0,1,2,3,4,5,6],'c2=|%s| on \n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' %(str(self),self.c2)
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
@@ -119,10 +125,10 @@ class CDAMP2(DamperElement):
         return self.b
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CDAMP2',self.eid,self.b,nodes[0],self.c1,nodes[1],self.c2]
         return fields
 
@@ -134,7 +140,7 @@ class CDAMP3(DamperElement):
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
-            nids = [card.field(3),card.field(4)]
+            nids = [card.field(3,0),card.field(4,0)]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -147,11 +153,11 @@ class CDAMP3(DamperElement):
         return self.pid.b
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
         self.pid   = model.Property(self.pid)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CDAMP3',self.eid,self.pid,nodes[0],nodes[1]]
         return fields
 
@@ -164,7 +170,7 @@ class CDAMP4(DamperElement):
             self.eid = card.field(1)
             ## Value of the scalar damper (Real)
             self.b   = card.field(2)
-            nids = [card.field(3),card.field(4)]
+            nids = [card.field(3,0),card.field(4,0)]
         else:
             self.eid = data[0]
             self.b   = data[1]
@@ -177,10 +183,10 @@ class CDAMP4(DamperElement):
         return self.b
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CDAMP4',self.eid,self.b,nodes[0],nodes[1]]
         return fields
 
@@ -193,7 +199,7 @@ class CDAMP5(DamperElement):
             self.eid = card.field(1)
             ## Property ID
             self.pid = card.field(2)
-            nids = [card.field(3),card.field(4)]
+            nids = [card.field(3,0),card.field(4,0)]
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -203,14 +209,15 @@ class CDAMP5(DamperElement):
         assert len(self.nodes)==2
 
     def crossReference(self,model):
-        self.nodes = model.Nodes(self.nodes)
+        self.nodes = model.Nodes(self.nodes,allowEmptyNodes=True)
         self.pid   = model.Property(self.pid)
         
     def rawFields(self):
-        nodes = self.nodeIDs()
+        nodes = self.nodeIDs(allowEmptyNodes=True)
         fields = ['CDAMP5',self.eid,self.Pid(),nodes[0],nodes[1]]
         return fields
 
+#------------------------------------------------------------------------------
 class CGAP(Element):
     type = 'CGAP'
     def __init__(self,card=None,data=None):
@@ -275,10 +282,23 @@ class CGAP(Element):
         fields = ['CGAP',self.eid,self.Pid(),self.ga,self.gb]+x+[self.Cid()]
         return fields
 
-class CRAC2D(Element):
+#------------------------------------------------------------------------------
+class CrackElement(Element):
+    def __init__(self,card,data):
+        pass
+
+    def crossReference(self,model):
+        self.nodes = model.Nodes(self.nodes)
+        self.pid = self.Property(self.pid)
+
+    def rawFields(self):
+        fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()
+        return fields
+
+class CRAC2D(CrackElement):
     type = 'CRAC2D'
     def __init__(self,card=None,data=None):
-        Element.__init__(self,card,data)
+        CrackElement.__init__(self,card,data)
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -291,14 +311,10 @@ class CRAC2D(Element):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==18
 
-    def rawFields(self):
-        fields = ['CRAC2D',self.eid,self.Pid()]+self.nodes
-        return fields
-
-class CRAC3D(Element):
+class CRAC3D(CrackElement):
     type = 'CRAC3D'
     def __init__(self,card=None,data=None):
-        Element.__init__(self,card,data)
+        CrackElement.__init__(self,card,data)
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -310,7 +326,3 @@ class CRAC3D(Element):
         ###
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==64
-
-    def rawFields(self):
-        fields = ['CRAC3D',self.eid,self.Pid()]+self.nodes
-        return fields

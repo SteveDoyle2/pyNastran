@@ -696,7 +696,11 @@ class PSHELL(ShellProperty):
         calculates mass per area
         \f[ \large  \frac{mass}{A} = nsm + \rho t \f]
         """
-        massPerArea = self.nsm + self.Rho()*self.t
+        try:
+            massPerArea = self.nsm + self.Rho()*self.t
+        except:
+            print "nsm=%s rho=%s t=%s" %(self.nsm,self.Rho(),self.t)
+            raise
         return massPerArea
 
     def D(self):
