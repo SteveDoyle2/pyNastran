@@ -111,6 +111,7 @@ class TriShell(ShellElement):
 class CTRIA3(TriShell):
     type = 'CTRIA3'
     asterType = 'TRIA3'
+    calculixType = 'S3'
     def __init__(self,card=None,data=None):
         TriShell.__init__(self,card,data)
         if card:
@@ -212,6 +213,7 @@ class CTRIA3(TriShell):
 class CTRIA6(TriShell):
     type = 'CTRIA6'
     asterType = 'TRIA6'
+    calculixType = 'S6'
     def __init__(self,card=None,data=None):
         TriShell.__init__(self,card,data)
         if card:
@@ -375,6 +377,7 @@ class CTRIAR(TriShell):
 
 class CTRIAX(TriShell):
     type = 'CTRIAX'
+    calculixType = 'CAX6'
     def __init__(self,card=None,data=None):
         TriShell.__init__(self,card,data)
         ## element ID number
@@ -401,6 +404,7 @@ class CTRIAX6(TriShell):
     1----2----3
     """
     type = 'CTRIAX6'
+    #calculixType = 'CAX6'
     def __init__(self,card=None,data=None):
         TriShell.__init__(self,card,data)
         ## element ID number
@@ -612,6 +616,7 @@ class QuadShell(ShellElement):
 
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
+    calculixType = 'S4'
     def __init__(self,card=None,data=None):
         QuadShell.__init__(self,card,data)
         if card:
@@ -710,6 +715,7 @@ class CSHEAR(QuadShell):
 class CQUAD4(QuadShell):
     type = 'CQUAD4'
     asterType = 'QUAD4 # CQUAD4'
+    calculixType = 'S4'
     def __init__(self,card=None,data=None):
         QuadShell.__init__(self,card,data)
         if card:
@@ -793,6 +799,7 @@ class CQUAD4(QuadShell):
 
 class CQUADR(QuadShell):
     type = 'CQUADR'
+    #calculixType = 'CAX8'
     def __init__(self,card=None,data=None):
         QuadShell.__init__(self,card,data)
         if card:
@@ -1019,6 +1026,7 @@ class CQUAD8(QuadShell):
 
 class CQUADX(QuadShell):
     type = 'CQUADX'
+    calculixType = 'CAX8'
     def __init__(self,card=None,data=None):
         QuadShell.__init__(self,card,data)
         ## element ID number

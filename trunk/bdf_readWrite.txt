@@ -105,6 +105,12 @@ CHEXA   (done)
 PSOLID  (done)
 PLSOLID (done)
 
+----Cracks (Elements/Properties)----:
+CRAC2D (done)
+CRAC3D (done)
+PRAC2D (done)
+PRAC3D (done)
+
 ----Other Elements/Properties----:
 CFAST   (done)
 PFAST   (done)
@@ -113,11 +119,6 @@ CGAP    (done)
 PGAP    (done)
 
 PBCOMP  (not added)
-
-CRAC2D (done, not well tested)
-CRAC3D (done, not well tested)
-PRAC2D
-PRAC3D
 
 ----Rigid Elements----:
 RROD

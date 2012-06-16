@@ -189,6 +189,21 @@ class MAT1(Material):
         #print "nu = ",nu
         #print ""
 
+    def writeCalculix(self,elementSet='ELSetDummyMat'):
+        temperature = self.TRef # default value - same properties for all values
+        msg  = '*ELASTIC,TYPE=ISO,ELSET=%s\n' %(elementSet)
+        msg += '** E,NU,TEMPERATURE\n'
+        msg += '%s,%s,%s\n' %(self.e,self.nu,temperature)
+        
+        if self.rho > 0.:
+            msg += '*DENSITY\n'
+            msg += '%s\n' %(self.rho)
+        if self.a > 0:
+            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' %(self.TRef)
+            msg += '** ALPHA,ALPHA*TREF\n'
+            msg += '%s,%s\n\n' %(self.a,self.a*self.TRef)
+        return msg
+
     def writeCodeAster(self):
         msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1 mid=%s\n' %(self.mid,self.e,self.mid)
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
@@ -320,6 +335,37 @@ class MAT2(AnisotropicMaterial):
         #D[5,5] = G22
         #D[6,6] = G33
         return D
+
+    def writeCalculix(self):
+        msg  = '*ELASTIC,TYPE=ORTHO\n'
+        temperature = 0. # default value - same properties for all values
+        msg += '%s,%s,%s\n' %(self.e,self.nu,temperature)
+        D = Dplate
+        D1111 = D[0,0]
+        D1122 = 0.
+        D2222 = D[1,1]
+        D1133 = D[0,2]
+        D2233 = D[1,2]
+        D3333 = D[2,2]
+        D1212 = D[0,1]
+        D1313 = D[0,2]
+        msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' %(D1111,D1122,D2222,D1133,D2233,D3333,D1212,D1313)
+        
+        G23
+        temperature = self.TRef
+        msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' %(self.mid)
+        msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
+        msg += '** G23,TEMPERATURE\n'
+        msg += '%s,%s,%s,%s,%s,%s,%s,%s,%s\n' %(e1,e2,e3,nu12,nu13,nu23,g12,g13)
+        msg += '%s,%s\n' %(G23,temperature)
+        if self.rho > 0.:
+            msg += '*DENSITY\n'
+            msg += '%s\n' %(self.rho)
+        if self.a > 0:
+            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' %(self.TRef)
+            msg += '** ALPHA,ALPHA*TREF\n'
+            msg += '%s,%s\n\n' %(self.a,self.a*self.TRef)
+        return msg
 
     def rawFields(self):
         fields = ['MAT2',self.mid,self.G11,self.G12,self.G13,self.G22,self.G23,self.G33,self.rho,

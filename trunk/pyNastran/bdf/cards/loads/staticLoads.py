@@ -114,6 +114,12 @@ class LOAD(Load):
         #print "loadTypes = ",loadTypes
         return loadTypes
 
+
+    def writeCalculixGRAV(self,gx,gy,gz):
+        msg  = '*DLOAD\n'
+        msg += 'AllElements,GRAV,%s,%s,%s\n' %(gx,gy,gz)
+        return msg
+
     def writeCodeAsterLoad(self,model,gridWord='node'):
         loadIDs   = self.getLoadIDs()
         loadTypes = self.getLoadTypes()
@@ -337,7 +343,7 @@ class GRAV(BaseCard):
         """returns the gravity vector in absolute coordinates"""
         p,matrix = self.scale*self.cid.transformToGlobal(self.N)
         return p
-
+        
     def rawFields(self):
         fields = ['GRAV',self.lid,self.Cid(),self.scale,self.N[0],self.N[1],self.N[2],self.mb]
         return fields
