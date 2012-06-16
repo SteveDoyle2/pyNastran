@@ -298,6 +298,10 @@ class PSOLID(SolidProperty):
                 self.fctn = 'SMECH'
         ###
 
+    def writeCalculix(self,elementSet=999):
+        msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' %(self.mid,elementSet)
+        return msg
+
     def rawFields(self):
         fields = ['PSOLID',self.pid,self.Mid(),self.cordm,self.integ,self.stress,self.isop,self.fctn]
         return fields

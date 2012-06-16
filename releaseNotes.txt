@@ -38,17 +38,19 @@ BDF Bug Fixes:
    - PLOAD4 bug with g1 vs g3/g4
    - EIGB keeps method (INV/SINV) now (not clear if there's a default)
    - QBDY3 cross referencing fixed
-   - fixed possible issue (kStep default) with TSTEPNL caused by unlisted METHOD field
+   - TSTEPNL fixed possible issue (kStep default) caused by unlisted METHOD field
+   - SLOAD nodes were referencing loads instead of nodes
+   - PFAST kr3 was writing out as kr2
 
 Added BDF
    - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
    - DMIG, DMIJ, DMIJI, DMIK
    - TABRNDG
-   - TLOAD1
+   - TLOAD1,ACCEL1
    - SPLINE4, SPLINE5
    - CBUSH1D, PBUSH1D
-   - *** SET2
-   - *** TIC
+   - PRAC2D, PRAC3D
+   - *** SET2,PEALST,TIC
 
 Overall OP2
    - test_op2 now crashes if there isn't a .op2 in the filename

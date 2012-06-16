@@ -716,6 +716,12 @@ class PSHELL(ShellProperty):
         if self.mid4:
             self.mid4 = mesh.Material(self.mid4)
 
+    def writeCalculix(self,marker='markerDummyProp',elementSet='ELsetDummyProp'):
+        msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' %(marker,self.mid,elementSet,self.z1)
+        msg += '** THICKNESS\n'
+        msg += '%s\n\n' %(self.t)
+        return msg
+
     def writeCodeAster(self):
         """
         http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static

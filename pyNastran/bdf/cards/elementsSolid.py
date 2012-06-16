@@ -47,6 +47,7 @@ class CHEXA8(SolidElement):
     """
     type = 'CHEXA'
     asterType = 'HEXA8'
+    calculixType = 'C3D8'
     def __init__(self,card=None,data=None):
         SolidElement.__init__(self,card,data)
         if card:
@@ -100,6 +101,7 @@ class CHEXA20(CHEXA8):
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
+    calculixType = 'C3D20'
     def __init__(self,card=None,data=None):
         SolidElement.__init__(self,card,data)
 
@@ -142,7 +144,7 @@ class CPENTA6(SolidElement):
     """
     type = 'CPENTA'
     asterType = 'PENTA6'
-
+    calculixType = 'C3D6'
     def __init__(self,card=None,data=None):
         SolidElement.__init__(self,card,data)
 
@@ -238,6 +240,7 @@ class CPENTA15(CPENTA6):
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
+    calculixType = 'C3D15'
     def __init__(self,card=None,data=None):
         SolidElement.__init__(self,card,data)
 
@@ -278,6 +281,7 @@ class CTETRA4(SolidElement):
     """
     type = 'CTETRA'
     asterType = 'TETRA4'
+    calculixType = 'C3D4'
     def __init__(self,card=None,data=None):
         SolidElement.__init__(self,card,data)
         if card:
@@ -383,6 +387,7 @@ class CTETRA10(CTETRA4):
     """
     type = 'CTETRA'
     asterType = 'TETRA10'
+    calculixType = 'C3D10'
     def __init__(self,card=None,data=None):
         SolidElement.__init__(self,card,data)
         if card:
