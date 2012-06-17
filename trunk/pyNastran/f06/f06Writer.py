@@ -206,7 +206,9 @@ class F06Writer(object):
 
         if 1:
             iSubcases = self.iSubcaseNameMap.keys()
+            #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
             for iSubcase in sorted(iSubcases):
+                #print("***subcase = %s" %(iSubcase))
                 (subtitle,label) = self.iSubcaseNameMap[iSubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
@@ -215,6 +217,7 @@ class F06Writer(object):
                 header[1] = '0    %-72s                                SUBCASE %-15i\n' %(label,iSubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',iSubcase)
                 for resType in resTypes:
+                    #print "resType = ",resType
                     if iSubcase in resType:
                         header = copy.deepcopy(headerOld) # fixes bug in case
                         result = resType[iSubcase]
