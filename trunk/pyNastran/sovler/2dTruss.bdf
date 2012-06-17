@@ -1,0 +1,36 @@
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+TITLE = pyNastran Test
+SUBCASE 1
+    SUBTITLE = p.561 10.2.4
+    LOAD = 123
+    DISP(PLOT,PRINT)   = ALL
+    STRESS(PLOT,PRINT) = ALL
+    STRAIN(PLOT,PRINT) = ALL
+BEGIN BULK
+$
+$        ^ F=1000 lb
+$        |
+$ 1---A--2   E=10E6 psi
+$ | D  B |   Area A=C=E=F=1.0 in^2
+$ F   *  C   Area D=B=0.5 in^2
+$ | /  \ |
+$ 3---E--4   D goes from 1-4
+$            B goes from 3-2  (doesnt intersect with D)
+
+$NODES
+GRID,1,, 0.,20.,0.,,123456
+GRID,2,,40.,20.,0.,,  3456
+GRID,3,, 0., 0.,0.,,123456
+GRID,4,,40., 0.,0.,,  3456
+CONROD,1,1,2,99,1.
+CONROD,2,3,2,99,0.5
+CONROD,3,4,2,99,1.
+CONROD,4,1,4,99,0.5
+CONROD,5,3,4,99,1.
+CONROD,6,1,3,99,1.
+MAT1,99,10.E6,,0.3
+FORCE,123,2,,1000.,0.,1.,0.
+ENDDATA

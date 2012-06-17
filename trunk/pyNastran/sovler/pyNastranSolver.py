@@ -5,6 +5,10 @@ from numpy.linalg import solve
 
 from pyNastran.general.generalMath import printMatrix,annotatePrintMatrix
 from pyNastran.bdf.bdf import BDF,SPC,SPC1
+from pyNastran.f06.f06 import F06
+from pyNastran.op2.op2 import OP2
+
+from pyNastran.op2.tables.oug.oug_displacements import displacementObject
 
 def partitionSparse(Is,Js,Vs):
     I2=[]
@@ -19,10 +23,17 @@ def partitionSparse(Is,Js,Vs):
     ###
     return(I2,J2,V2)
 
+def getDOF_Set(nAll,dofs):
+    dofsAll = set([i for i in range(nAll)])
+    dofs = list(dofsAll.difference(set(dofs)))
+    return dofs
+    
 def partitionDenseSymmetric(A,dofs):
+    nAll = A.shape[0]
+    dofs = getDOF_Set(nAll,dofs)
     dofs.sort()
     n = len(dofs)
-    A2 = zeros((n,n))
+    A2 = zeros((n,n),'f')
     for (i,dofI) in enumerate(dofs):
         for (j,dofJ) in enumerate(dofs):
             v = A[dofI,dofJ]
@@ -32,6 +43,21 @@ def partitionDenseSymmetric(A,dofs):
         ###
     ###
     return(A2)
+
+def partitionDenseVector(F,dofs):
+    nAll = F.shape[0]
+    dofs = getDOF_Set(nAll,dofs)
+    dofs.sort()
+    n = len(dofs)
+    F2 = zeros(n,'f')
+    for (i,dofI) in enumerate(dofs):
+            v = F[dofI]
+            if abs(v)>=1e-8:
+                F2[i] = v
+            ###
+        ###
+    ###
+    return(F2)
 
 def partitionSparseVector(F,dofs):
     dofs.sort()
@@ -47,19 +73,6 @@ def partitionSparseVector(F,dofs):
         ###
     ###
     return(F2i,F2v)
-
-def partitionDenseVector(F,dofs):
-    dofs.sort()
-    n = len(dofs)
-    F2 = zeros(n)
-    for (i,dofI) in enumerate(dofs):
-            v = F[dofI]
-            if abs(v)>=1e-8:
-                F2[i] = v
-            ###
-        ###
-    ###
-    return(F2)
 
 def dePartitionDenseVector(n,IsVs):
     V = zeros(n)
@@ -77,17 +90,60 @@ def reverseDict(A):
         B[value] = key
     return B
 
-class solver(object):
+class solver(F06,OP2):
+    """
+    Solves SOL 101
+    
+    Progress:
+      - Solves a 2D problem using matrix partitioning.of the SPC set
+      - 3D works, but is disabled for testing
+    
+    TODO:
+      - Need to combine solved displacements with original known
+        displacements to create displacement set
+      - Calculate Stress/Strain
+      - Write the OP2
+    
+    Case Control
+      LOAD,SPC,TITLE,LABEL
+      
+    Bulk Data:
+      GRID,CORDx
+      CONROD,CROD,PROD
+      MAT1
+      LOAD,FORCE
+      SPC,SPC1
+    
+    Results:
+      @todo DISPLACEMENT solver results
+      @todo STRESS solver results
+      @todo STRAIN solver results
+    """
     def __init__(self):
-        self.Title = ''
-        self.Subtitle = ''
+        F06.__initAlt__(self)
+        OP2.__objectsInit__(self)
+        self.nU = 0
+        self.nUs = 0
+        self.nUm = 0
+
+        # displacments
+        self.U  = []
         self.Us = []
         self.Um = []
+
+        # indicies in U that correspond to Us/Um
         self.iUs = []
         self.iUm = []
 
-    def solve(K,F): # can be overwritten
-        """solves [K]{x} = {F} for {x}"""
+    def solve(self,K,F): # can be overwritten
+        """solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
+        print("--------------")
+        print("Kaa_norm = \n"+str(K/250000.))
+        print("--------------")
+        print("Fa = ",F)
+        print("--------------")
+        
+        #asdf
         return solve(K,F)
 
     def run(self,bdfName):
@@ -121,11 +177,18 @@ class solver(object):
     def runCase(self,model,case):
         sols = {101:self.runSOL101}
         
+        iSubcase = case.id
         if model.sol in sols:
             if case.hasParameter('TITLE'):
                 (self.Title,options) = case.getParameter('TITLE')
+            else:
+                self.Title = 'pyNastran Default Title'
             if case.hasParameter('SUBTITLE'):
                 (self.Subtitle,options) = case.getParameter('SUBTITLE')
+            else:
+                self.Subtitle = 'DEFAULT'
+            self.iSubcaseNameMap[iSubcase] = [self.Title,self.Subtitle]
+
             sols[model.sol](model,case)
         else:
             raise NotImplementedError('model.sol=%s not in %s' %(model.sol,sols.keys()))
@@ -135,11 +198,13 @@ class solver(object):
         i=0
         nidComponentToID = {}
         for nid,node in sorted(model.nodes.iteritems()):  # GRIDs
-            ps = node.ps
-            #print ps
-            for ips in ps:
-                self.iUs.append(i+int(ips)-1)
-                self.Us.append(0.0)
+            for ps in node.ps:
+                if self.is3D or ps in ['1','2']:
+                    self.iUs.append(i+int(ps)-1)
+                    self.Us.append(0.0)
+                elif ps=='5' and not(self.is3D):  # 4 or 5
+                    self.iUs.append(i+2)
+                    self.Us.append(0.0)
             ###
             if self.is3D:
                 nidComponentToID[(nid,1)] = i
@@ -148,14 +213,14 @@ class solver(object):
                 nidComponentToID[(nid,4)] = i+3
                 nidComponentToID[(nid,5)] = i+4
                 nidComponentToID[(nid,6)] = i+5
-                
                 i+=6
             else:
                 nidComponentToID[(nid,1)] = i
                 nidComponentToID[(nid,2)] = i+1
-                #nidComponentToID[(nid,4)] = i+2  # torsion???
-                #nidComponentToID[(nid,5)] = i+2  # bending???
-                i+=2
+               #nidComponentToID[(nid,4)] = i+2 # torsion
+                nidComponentToID[(nid,5)] = i+2 # bending - can pick one moment
+                i+=3
+            #print('iUs[%i] = %s' %(nid,self.iUs))
             ###
         ###
         if model.spoints:
@@ -166,13 +231,7 @@ class solver(object):
         ###
         return(nidComponentToID,i)
 
-    def runSOL101(self,model,case):
-        assert model.sol==101,'model.sol=%s is not 101' %(model.sol)
-
-        ## define IDs of grid point components in matrices
-
-        self.is3D = False
-        (nidComponentToID,i) = self.buildNidComponentToID(model) # the (GridID,componentID) -> internalID
+    def build_Kgg_Fg(self,model,case,nidComponentToID,i):
         (isSPC) = self.applySPCs(model,case,nidComponentToID)
         (isMPC) = self.applyMPCs(model,case,nidComponentToID)
 
@@ -180,30 +239,116 @@ class solver(object):
         #mpcDOFs = self.iUm
 
         Ug  = ones(i)
-        Fg  = zeros(i)
+        Fg  = zeros(i,'f')
 
-        Kgg = zeros((i,i))
+        Kgg = zeros((i,i),'f')
         #Mgg = zeros((i,i))
 
         Kgg = self.assembleGlobalStiffness(model,Kgg,nidComponentToID)
-        Fg  = self.assembleForces(model,Fg,nidComponentToID)
+        Fg  = self.assembleForces(model,case,Fg,nidComponentToID)
+        return(Kgg,Fg,isSPC,isMPC)
+
+    def runSOL101(self,model,case):
+        #print("case = ",case)
+        assert model.sol==101,'model.sol=%s is not 101' %(model.sol)
+
+        ## define IDs of grid point components in matrices
+
+        self.is3D = True
+        #self.is3D = False
         
-        (IDtoNidComponents) = reverseDict(nidComponentToID)
-        print("Kgg = \n",annotatePrintMatrix(Kgg,IDtoNidComponents))
+        (Ua,n) = self.setupSOL101(model,case)
+        print("------------------------\n")
+        print("Ua = ",Ua)
+        print("Us = ",self.Us)
+        
+        dofsA = getDOF_Set(n,self.iUs)
+        dofsA.sort()
+        U = zeros(n,'f')
+        print("U = ",U)
+        print("iUs   = ",self.iUs)
+        
+        ## @todo handle MPCs
+        for i,iu in enumerate(self.iUs):
+            U[iu] = self.Us[i]
+        for i,iu in enumerate(dofsA):
+            U[iu] = Ua[i]
+        print("*U = ",U)
+        print("dofsA = ",dofsA)
+
+        self.storeDisplacements(model,U,case)
+        self.writeDisplacements(case)
+        q = U
+        for eid,elem in model.elements.iteritems():
+            elem.displacementStress(model,q,self.nidComponentToID)
+
+    def storeDisplacements(self,model,U,case):
+        self.iSubcases = []
+        #self.log = None
+        analysisCode = 1
+        transient = False
+        iSubcase = case.id
+        isSort1 = False
+        dt = None
+
+        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':1,
+                    'sortCode':0,'sortBits':[0,0,0],'numWide':8,'tableName':'OUG','nonlinearFactor':None}
+        #print "headers = %s" %(headers)
+
+        disp = displacementObject(dataCode,isSort1,iSubcase,dt=False)
+        
+        data = []
+
+        i=0
+        #(nodeID,gridType,t1,t2,t3,r1,r2,r3) = line
+        for nid,node in sorted(model.nodes.iteritems()):
+            line = [nid]
+            if node.type=='GRID':
+                line.append('G')
+            else:
+                raise NotImplementedError('node.type=%s' %(node.type))
+            if self.is3D:
+                line += U[i:i+6] # 1,2,3,4,5,6
+                i+=6
+            else:
+                line += [U[i],U[i+1],0.,0.,U[i+2],0.] # 1,2,5
+                i+=3
+            #print("line = ",line)
+            data.append(line)
+        disp.addF06Data(data,dt)
+        self.displacements[iSubcase] = disp
+        self.iSubcases.append(iSubcase)
+
+    def writeDisplacements(self,case):
+        self.writeF06('2dTruss.f06')
+
+    def setupSOL101(self,model,case):
+        (self.nidComponentToID,i) = self.buildNidComponentToID(model) # the (GridID,componentID) -> internalID
+        (Kgg,Fg,isSPC,isMPC) = self.build_Kgg_Fg(model,case,self.nidComponentToID,i)
+
+        (self.IDtoNidComponents) = reverseDict(self.nidComponentToID)
+        print("IDtoNidComponents = ",self.IDtoNidComponents)
+        print("Kgg =\n"+annotatePrintMatrix(Kgg,self.IDtoNidComponents))
+        #print("Kgg = \n",Kgg)
         print("iSize = ",i)
-        sys.exit('verify Kgg')
 
+        #(Kaa,Fa) = self.Partition(Kgg)
+        #sys.exit('verify Kgg')
 
-        Kaa = partitionDenseSymmetric(Kgg,spcDOFs)
-        Fa  = partitionDenseVector(Fg,spcDOFs)
+        Kaa = partitionDenseSymmetric(Kgg,self.iUs)
         print("Kaa = \n%s" %(printMatrix(Kaa)))
+        print("Kaa.shape = ",Kaa.shape)
+
+        #sys.exit('verify Kaa')
+        Fa  = partitionDenseVector(Fg,self.iUs)
+        #print("Kaa = \n%s" %(printMatrix(Kaa)))
 
         print("Fg = ",Fg)
         print("Fa = ",Fa)
         print("Us = ",self.Us)
 
-        self.Us = array(self.Us)
-        self.Um = array(self.Um)
+        self.Us = array(self.Us,'f')
+        self.Um = array(self.Um,'f')
 
         zero = array([])
         MPCgg = zero
@@ -211,7 +356,7 @@ class solver(object):
         Kaa1 = Kaa2 = zero
         Fm = Fs = zero
 
-        Kaa = PartitionDenseMatrix(Kgg,iFree)
+        #Kaa = PartitionDenseMatrix(Kgg,iFree)
         Kaa0 = Kaa
         Fa0  = Fa
 
@@ -238,11 +383,13 @@ class solver(object):
                 Ksm = Kms.transpose()
             ###
         ###
-        Fa  = Fa0 + Cam*Fm
-        Kaa = Kaa0+Kaa1+Kaa2
+        Fa  = Fa0 #+ Cam*Fm
+        Kaa = Kaa0#+Kaa1+Kaa2
 
         Ua = self.solve(Kaa,Fa)
-        self.Um = Kma*Ua
+        #self.Um = Kma*Ua
+        
+        return(Ua,i)
 
     def assembleGlobalStiffness(self,model,Kgg,Dofs):
         for eid,elem in sorted(model.elements.iteritems()):  # CROD
@@ -254,7 +401,7 @@ class solver(object):
             for ij in nIJV:
                 nij2.append(Dofs[ij])
             print('nij2',nij2)
-
+            
             for i in range(Ki):
                 for j in range(Kj):
                     kij = K[i,j]
@@ -263,7 +410,7 @@ class solver(object):
                     ii = nij2[i]
                     jj = nij2[j]
                     #dof = Dofs[n]
-                    Kgg[ii,jj] = kij
+                    Kgg[ii,jj] += kij
 
                     #ij += 1
                 ###
@@ -284,6 +431,8 @@ class solver(object):
 
     def applySPCs(self,model,case,nidComponentToID):
         isSPC = False
+        print('*Us',self.Us)
+        print('*iUs',self.iUs)
         if case.hasParameter('SPC'):
             isSPC = True
             spcs = model.spcObject2.constraints
@@ -333,6 +482,8 @@ class solver(object):
             print("Us  = ",self.Us)
             sys.exit('stopping in applySPCs')
         ###
+        print("iUs = ",self.iUs)
+        print("Us  = ",self.Us)
         return (isSPC)
     
     def applyMPCs(self,model,case,nidComponentToID):
@@ -351,23 +502,47 @@ class solver(object):
             raise NotImplementedError('MPCs are not supported...stopping in applyMPCs')
         return (isMPC)
 
-    def assembleForces(self,model,Fg,Dofs):
-        print(model.loads)
-        for loadSet,loads in model.loads.iteritems():
-            ## @todo if loadset in required loadsets...
-            #print loads
-            for load in loads:
-                if load.type=='FORCE':
-                    loadDir = load.F()
-                    #nid = load.nodeID()
-                    for nid,F in loadDir.iteritems():
-                        #print(nid,load.lid)
-                        Fg[Dofs[(nid,1)]] = F[0]
-                        Fg[Dofs[(nid,2)]] = F[1]
-                        if self.is3D:
-                            Fg[Dofs[(nid,3)]] = F[2]
-                        #print("Fgi = ",Fg)
-                    ###
+    def assembleForces(self,model,case,Fg,Dofs):
+        """
+        very similar to writeCodeAster loads
+        """
+        #print(model.loads)
+        (loadID,junk) = model.caseControlDeck.getSubcaseParameter(case.id,'LOAD')
+        print("loadID = ",loadID)
+        LoadSet = model.Load(loadID)
+                
+        for loadSet in LoadSet:
+            (typesFound,forceLoads,momentLoads,
+                        forceConstraints,momentConstraints,
+                        gravityLoads) = loadSet.organizeLoads(model)
+
+            nids = []
+            for nid in forceLoads:
+                nids.append(nid)
+            for nid in momentLoads:
+                nids.append(nid)
+
+            for nid in sorted(nids): # ,load in sorted(forceLoads.iteritems())
+                #print("nid = ",nid)
+                #print "load = ",load
+
+                if nid in forceLoads:
+                    force = forceLoads[nid]
+                    if abs(force[0])>0.:
+                        Fg[Dofs[(nid,1)]] += force[0]
+                    if abs(force[1])>0.:
+                        Fg[Dofs[(nid,2)]] += force[1]
+                    if abs(force[2])>0. and self.is3D:
+                        Fg[Dofs[(nid,3)]] += force[2]
+
+                if nid in momentLoads:
+                    moment = momentLoads[nid]
+                    if abs(moment[0])>0. and self.is3D:
+                        Fg[Dofs[(nid,4)]] += moment[2]
+                    if abs(moment[1])>0.:
+                        Fg[Dofs[(nid,5)]] += moment[2]
+                    if abs(moment[2])>0. and self.is3D:
+                        Fg[Dofs[(nid,6)]] += moment[2]
                 ###
             ###
         print("Fg  = ",Fg)
@@ -504,7 +679,7 @@ def getCards():
         # loads
         'LOAD',
         'FORCE','FORCE1','FORCE2',
-        #'PLOAD','PLOAD1','PLOAD2','PLOAD4',
+        'PLOAD','PLOAD1','PLOAD2','PLOAD4',
         'MOMENT','MOMENT1','MOMENT2',
 
         # coords
