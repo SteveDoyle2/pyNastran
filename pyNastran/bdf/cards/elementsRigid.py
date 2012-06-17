@@ -223,6 +223,30 @@ class RBE2(RigidElement):
             print "eid=%s gn=%s cm=%s Gmi=%s alpha=%s" %(self.eid,self.gn,self.cm,self.Gmi,self.alpha)
             raise NotImplementedError('RBE2 data...')
         ###
+        assert self.gn != None
+        assert self.cm != None
+        self.gn = str(self.gn)
+        self.cm = str(self.cm)
+        
+    def convertToMPC(self,mpcID):
+        """
+        -Ai*ui + Aj*uj = 0
+        where ui are the base DOFs (max=6)
+        mpc sid   g1 c1 a1  g2 c2 a2
+        rbe2 eid  gn cm g1  g2 g3 g4
+        """
+        i = 0
+        nCM = len(self.cm)
+        Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
+        
+        card = ['MPC',mpcID]
+        for cm in self.cm:
+            card += [self.gn,cm,-Ai] # the minus sign is applied to the base node
+
+        for gm in self.Gmi:
+            for cm in self.cm:
+                card += [gn,cm,Ai]
+        return card
 
     def writeCodeAster(self):
         """
@@ -267,6 +291,15 @@ class RBE2(RigidElement):
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
     def __init__(self,card=None,data=None):
+        """
+        eid
+        refgrid
+        refc
+        WtCG_groups = [wt,ci,Gij]
+        Gmi
+        Cmi
+        alpha
+        """
         RigidElement.__init__(self,card,data)
         self.eid     = card.field(1)
         self.refgrid = card.field(3)
@@ -352,6 +385,27 @@ class RBE3(RigidElement):  # not done, needs testing badly
         ###
         #print self
         #sys.exit()
+
+    def convertToMPC(self,mpcID):
+        """
+        -Ai*ui + Aj*uj = 0
+        where ui are the base DOFs (max=6)
+        mpc sid   g1 c1 a1  g2 c2 a2
+        rbe2 eid  gn cm g1  g2 g3 g4    
+        """
+        raise NotImplementedError('this is the code for an RBE2...not RBE3')
+        i = 0
+        nCM = len(self.cm)
+        Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
+        
+        card = ['MPC',mpcID]
+        for cm in self.cm:
+            card += [self.gn,cm,-Ai] # the minus sign is applied to the base node
+
+        for gm in self.Gmi:
+            for cm in self.cm:
+                card += [gn,cm,Ai]
+        return card
 
     def rawFields(self):
         fields = ['RBE3',self.eid,None,self.refgrid,self.refc]

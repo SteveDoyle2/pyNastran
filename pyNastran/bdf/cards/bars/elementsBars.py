@@ -279,7 +279,7 @@ class CROD(LineElement):
             #          ]) # rod
         return R
         
-    def Lambda(self,model):
+    def Lambda(self,model,debug=True):
         """
         2d  [l,m,0,0]
             [0,0,l,m]
@@ -294,7 +294,8 @@ class CROD(LineElement):
         p1 = model.Node(n1).Position()
         p2 = model.Node(n2).Position()
         v1 = p2-p1
-        print(v1)
+        if debug:
+            print("v1=%s" %(v1))
         v1 = v1/norm(v1)
         (l,m,n) = v1
         if is3D:
@@ -308,7 +309,8 @@ class CROD(LineElement):
 
         if is3D:
             Lambda[0,2] = Lambda[1,5] = n # 3D
-        print("Lambda = \n",Lambda)
+        if debug:
+            print("Lambda = \n",Lambda)
         return Lambda
 
     def Stiffness1(self,model):
@@ -331,13 +333,18 @@ class CROD(LineElement):
 
         return K,nIJV
 
+    def displacementStressF06(self,model,q,dofs):
+        pass
+
     def displacementStress(self,model,q,dofs):
         (n1,n2) = self.nodeIDs()
-        Lambda = self.Lambda(model)
+        Lambda = self.Lambda(model,debug=False)
         n11 = dofs[(n1,1)]
         n12 = dofs[(n1,2)]
         n21 = dofs[(n2,1)]
         n22 = dofs[(n2,2)]
+        print("type=%s n1=%s n2=%s" %(self.type,n1,n2))
+        #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
         
         q2 = array( [q[n11],q[n12],q[n21],q[n22]] )
         print("q[%s] = %s" %(self.eid,q2))
@@ -349,8 +356,10 @@ class CROD(LineElement):
         #L = self.Length()
         EL = self.E()/self.Length()
         
-        stressX = -EL*u[0]+EL*u[1]
-        print("stressX = %s [psi]" %(stressX))
+        #stressX = -EL*u[0]+EL*u[1]
+        stressX = EL*(-u[0]+u[1])
+        print("stressX = %s [psi]\n" %(stressX))
+        return stressX
 
     def Stiffness1D(self,model):
         """
@@ -377,9 +386,11 @@ class CROD(LineElement):
         print("A = ",A)
         print("E = ",E)
         print("L = ",L)
-        f = A*E/L
-        #f = 250000.
-        K = 1*matrix([[1.,-1.],[-1.,1.]]) # rod
+        #ki = 1.
+        ki = A*E/L
+        #ki = 250000.
+        #knorm = 250000.
+        K = ki*matrix([[1.,-1.],[-1.,1.]]) # rod
         
         print("A=%g E=%g L=%g  AE/L=%g" %(A,E,L,A*E/L))
         #print "K = \n",K

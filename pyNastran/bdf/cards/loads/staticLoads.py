@@ -440,6 +440,23 @@ class Force(OneDeeLoad):
     def F(self):
         return self.xyz*self.mag
 
+    def getReducedLoads(self):
+        scaleFactors = [1.]
+        loads = self.F()
+        return(scaleFactors,loads)
+
+    def organizeLoads(self,model):
+        (scaleFactors,forceLoads) = self.getReducedLoads()
+
+        typesFound = [self.type]
+        momentLoads = {}
+        forceConstraints = {}
+        momentConstraints = {}
+        gravityLoads = {}
+        return (typesFound,forceLoads,momentLoads,
+                           forceConstraints,momentConstraints,
+                           gravityLoads)
+
 class Moment(OneDeeLoad):
     type = 'Moment'
     def __init__(self,card,data):
