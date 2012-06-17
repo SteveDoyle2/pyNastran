@@ -1,29 +1,30 @@
+from __future__ import absolute_import
 import sys
 import copy
 from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2Errors import *
-from real.elementsStressStrain import RealElementsStressStrain
-from real.oes_rods    import RodStressObject,   RodStrainObject
-from real.oes_shear   import ShearStressObject, ShearStrainObject
-from real.oes_bars    import BarStressObject,   BarStrainObject
-from real.oes_beams   import BeamStressObject,  BeamStrainObject
-from real.oes_solids  import SolidStressObject, SolidStrainObject
-from real.oes_plates  import PlateStressObject, PlateStrainObject
-from real.oes_springs import CelasStressObject, CelasStrainObject
-from real.oes_triax   import TriaxStressObject, TriaxStrainObject
-from real.oes_compositePlates import CompositePlateStressObject,CompositePlateStrainObject
+from .real.elementsStressStrain import RealElementsStressStrain
+from .real.oes_rods    import RodStressObject,   RodStrainObject
+from .real.oes_shear   import ShearStressObject, ShearStrainObject
+from .real.oes_bars    import BarStressObject,   BarStrainObject
+from .real.oes_beams   import BeamStressObject,  BeamStrainObject
+from .real.oes_solids  import SolidStressObject, SolidStrainObject
+from .real.oes_plates  import PlateStressObject, PlateStrainObject
+from .real.oes_springs import CelasStressObject, CelasStrainObject
+from .real.oes_triax   import TriaxStressObject, TriaxStrainObject
+from .real.oes_compositePlates import CompositePlateStressObject,CompositePlateStrainObject
 
 
-from complex.elementsStressStrain import ComplexElementsStressStrain
-from complex.oes_rods    import ComplexRodStressObject,   ComplexRodStrainObject
-from complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
-from complex.oes_bars    import ComplexBarStressObject,   ComplexBarStrainObject
-from complex.oes_plates  import ComplexPlateStressObject, ComplexPlateStrainObject
+from .complex.elementsStressStrain import ComplexElementsStressStrain
+from .complex.oes_rods    import ComplexRodStressObject,   ComplexRodStrainObject
+from .complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
+from .complex.oes_bars    import ComplexBarStressObject,   ComplexBarStrainObject
+from .complex.oes_plates  import ComplexPlateStressObject, ComplexPlateStrainObject
 
 
-from oes_nonlinear import NonlinearRodObject,NonlinearQuadObject,HyperelasticQuadObject
+from .oes_nonlinear import NonlinearRodObject,NonlinearQuadObject,HyperelasticQuadObject
 
 class OES(RealElementsStressStrain,ComplexElementsStressStrain):
     """Table of stresses/strains"""
@@ -750,8 +751,8 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
                                                  self.nonlinearPlateStrain,NonlinearQuadObject,'nonlinearPlateStrain')
                 self.handleResultsBuffer3(self.OES_CQUAD4NL_90,resultName)
             elif self.numWide==numWideImag: ## @todo switch to ComplexNonlinearPlateObject
-                resultName = self.makeOES_Object(self.nonlinearPlateStress,ComplexNonlinearQuadObject,'nonlinearPlateStress',
-                                                 self.nonlinearPlateStrain,ComplexNonlinearQuadObject,'nonlinearPlateStrain')
+                resultName = self.makeOES_Object(self.nonlinearPlateStress,NonlinearQuadObject,'nonlinearPlateStress',
+                                                 self.nonlinearPlateStrain,NonlinearQuadObject,'nonlinearPlateStrain')
                 self.handleResultsBuffer3(self.OES_CQUAD4NL_90_alt,resultName)
             else:
                 raise NotImplementedError(self.codeInformation())
