@@ -1,10 +1,10 @@
-from pyNastran.op2.tables.oes_stressStrain.oes_rods   import rodStressObject,rodStrainObject
-from pyNastran.op2.tables.oes_stressStrain.oes_bars   import barStressObject,barStrainObject
-#from pyNastran.op2.tables.oes_stressStrain.oes_beams   import beamStressObject
-#from pyNastran.op2.tables.oes_stressStrain.oes_shear   import shearStressObject
-from pyNastran.op2.tables.oes_stressStrain.oes_solids import solidStressObject,solidStrainObject
-from pyNastran.op2.tables.oes_stressStrain.oes_plates import plateStressObject,plateStrainObject
-from pyNastran.op2.tables.oes_stressStrain.oes_compositePlates import compositePlateStressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods   import RodStressObject,RodStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars   import BarStressObject,BarStrainObject
+#from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import beamStressObject
+#from pyNastran.op2.tables.oes_stressStrain.real.oes_shear   import shearStressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import SolidStressObject,SolidStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import PlateStressObject,PlateStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject
 
 #strain...
 

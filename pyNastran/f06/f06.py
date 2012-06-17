@@ -22,7 +22,9 @@ class F06(OES,OUG,OQG,F06Writer):
         @param log         a logging object to write debug messages to (@see import logging)
         """
         self.f06FileName = f06FileName
-        self.i = 0
+        self.infile = open(self.f06FileName,'r')
+        self.__initAlt__(debug,log)
+
         self.lineMarkerMap = {
           'R E A L   E I G E N V E C T O R   N O':self.getRealEigenvectors,
         }
@@ -89,8 +91,17 @@ class F06(OES,OUG,OQG,F06Writer):
           #'* * * END OF JOB * * *': self.end(),
          }
         self.markers = self.markerMap.keys()
-        self.infile = open(self.f06FileName,'r')
+
+    def __initAlt__(self,debug=False,log=None):
+        self.i = 0
         self.storedLines = []
+
+        self.displacementsPSD = {}        # random
+        self.displacementsATO = {}        # random
+        self.displacementsRMS = {}        # random
+        self.displacementsCRM = {}        # random
+        self.displacementsNO  = {}        # random
+        self.scaledDisplacements = {}     # tCode=1 thermal=8
 
         self.eigenvalues = {}
         self.eigenvectors = {}
