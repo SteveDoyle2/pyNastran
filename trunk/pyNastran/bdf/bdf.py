@@ -12,7 +12,8 @@ from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.fieldWriter     import printCard
 from pyNastran.bdf.bdf_Methods     import bdfMethods
 
-from pyNastran.bdf.bdfInterface.bdf_helper import getMethods,addMethods
+from pyNastran.bdf.bdfInterface.getCard import getMethods
+from pyNastran.bdf.bdfInterface.addCard import addMethods
 from pyNastran.bdf.bdfInterface.BDF_Card   import BDF_Card
 from pyNastran.bdf.bdfInterface.bdf_Reader import bdfReader
 from pyNastran.bdf.bdfInterface.bdf_writeMesh   import writeMesh
@@ -319,8 +320,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         # loads
         ## stores LOAD,FORCE,MOMENT
         self.loads = {}
-        ## stores GRAV
-        self.gravs = {}
 
         ## stores coordinate systems
         self.coords = {0: CORD2R() }

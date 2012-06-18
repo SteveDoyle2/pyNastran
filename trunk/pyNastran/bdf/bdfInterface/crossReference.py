@@ -35,6 +35,7 @@ class XrefMesh(object):
         
         #self.spcObject2 = constraintObject2()
         for key,spcadd in sorted(self.spcadds.iteritems()):
+            #print("adding SPCADD")
             self.spcObject2.Add(spcadd)
 
         for key,spcs in sorted(self.spcs.iteritems()):
