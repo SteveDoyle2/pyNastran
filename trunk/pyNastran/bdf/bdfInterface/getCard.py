@@ -229,7 +229,7 @@ class getMethods(object):
         return materials
 
     #--------------------
-    # LOADS/CONSTRAINTS
+    # LOADS
 
     def Load(self,lid):
         #print 'lid=%s self.loads=%s' %(lid,(self.loads.keys()))
@@ -244,6 +244,19 @@ class getMethods(object):
     def Grav(self,lid):
         raise DeprecatedWarning('use Load(lid) instead of Grav(lid)')
         return self.Load(lid)
+
+    #--------------------
+    # SPCs
+
+    def SPC(self,conid):
+        #print 'conid=%s self.spcs=%s' %(conid,(self.spcs.keys()))
+        assert isinstance(conid,int),'conid=%s is not an integer\n' %(conid)
+        if conid in self.spcs:
+            constraint = self.spcs[conid]
+        else:
+            raise KeyError('cannot find ConstraintID=|%s|.' %(conid))
+        #print "returning constraint..."
+        return constraint
 
     #--------------------
     # COORDINATES CARDS
