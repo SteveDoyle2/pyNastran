@@ -1,7 +1,7 @@
 from __future__ import print_function
 import sys
 
-from numpy import pi,matrix,zeros,ones,array,transpose,dot
+from numpy import pi,matrix,zeros,ones,array,transpose,dot,diag
 from numpy.linalg import norm
 from pyNastran.general.generalMath import printMatrix
 
@@ -313,10 +313,11 @@ class CROD(LineElement):
             print("Lambda = \n",Lambda)
         return Lambda
 
-    def Stiffness1(self,model):
-        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),]
+    #def Stiffness1(self,model):
+        #nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),]
 
-    def Stiffness(self,model):
+    def Stiffness(self,model,grav,is3D):
+        print("----------------")
         Lambda = self.Lambda(model)
         #print "Lambda = \n",Lambda
         
@@ -324,14 +325,28 @@ class CROD(LineElement):
         #print R
         #print(k)
         K = dot(dot(transpose(Lambda),k),Lambda)
+        #Fg = dot(dot(transpose(Lambda),grav),Lambda)
+        
+        #print('size(grav) =',grav.shape)
+        mass = self.Mass()
+        mg = -grav*mass
+        if is3D:
+            Fg = [mg[0],mg[1],mg[2],mg[0],mg[1],mg[2]]
+        else:
+            Fg = [mg[0],mg[1],mg[0],mg[1]]
+        #print("Fg = ",Fg)
+        print("mass = ",mass)
+        print("Fg   = ",Fg)
         #print(K)
         print("K[%s] = \n%s\n" %(self.eid,K))
+        #print("Fg[%s] = %s\n" %(self.eid,Fg))
         #sys.exit('stopping in ROD stiffness...elementsBars.py')
 
         nodes = self.nodeIDs()
-        nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),(nodes[1],2),]
+        nIJV  = [(nodes[0],1),(nodes[0],2),(nodes[1],1),(nodes[1],2),]
+        nGrav = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[1],1),(nodes[1],2),(nodes[1],3)]
 
-        return K,nIJV
+        return(K,nIJV,Fg,nGrav)
 
     def displacementStressF06(self,model,q,dofs):
         pass

@@ -586,6 +586,16 @@ class SPCADD(ConstraintADD):
         self.sets = self.expandThru(sets)
         self.sets.sort()
 
+    def organizeConstraints(self,model):
+        """
+        Figures out magnitudes of the loads to be applied to the various nodes.
+        This includes figuring out scale factors.
+        """
+        positionSPCs = []
+        typesFound = ['SPCADD']
+        (scaleFactors,loads) = self.getReducedConstraints()
+        return typesFound,positionSPCs
+
     def crossReference(self,i,node):
         dofCount = 0
         self.sets.sort()

@@ -319,6 +319,18 @@ class GRAV(BaseCard):
             self.mb  = data[6]
             assert len(data)==7
         ###
+        assert max(self.N)>min(self.N),'GRAV N is a zero vector, N=%s' %(str(self.N))
+
+    def organizeLoads(self,model):
+        typesFound = [self.type]
+        forceLoads = {}
+        momentLoads = {}
+        forceConstraints = {}
+        momentConstraints = {}
+        gravityLoad = self.transformLoad()
+        return (typesFound,forceLoads,momentLoads,
+                           forceConstraints,momentConstraints,
+                           gravityLoad)
 
     def transformLoad(self):
         g = self.GravityVector()
@@ -341,8 +353,8 @@ class GRAV(BaseCard):
 
     def GravityVector(self):
         """returns the gravity vector in absolute coordinates"""
-        p,matrix = self.scale*self.cid.transformToGlobal(self.N)
-        return p
+        p,matrix = self.cid.transformToGlobal(self.N)
+        return self.scale*p
         
     def rawFields(self):
         fields = ['GRAV',self.lid,self.Cid(),self.scale,self.N[0],self.N[1],self.N[2],self.mb]
@@ -452,7 +464,7 @@ class Force(OneDeeLoad):
         momentLoads = {}
         forceConstraints = {}
         momentConstraints = {}
-        gravityLoads = {}
+        gravityLoads = []
         return (typesFound,forceLoads,momentLoads,
                            forceConstraints,momentConstraints,
                            gravityLoads)
@@ -462,6 +474,22 @@ class Moment(OneDeeLoad):
     def __init__(self,card,data):
         OneDeeLoad.__init__(self,card,data)
 
+    def getReducedLoads(self):
+        scaleFactors = [1.]
+        loads = self.F()
+        return(scaleFactors,loads)
+
+    def organizeLoads(self,model):
+        (scaleFactors,momentLoads) = self.getReducedLoads()
+
+        typesFound = [self.type]
+        forceLoads = {}
+        forceConstraints = {}
+        momentConstraints = {}
+        gravityLoads = []
+        return (typesFound,forceLoads,momentLoads,
+                           forceConstraints,momentConstraints,
+                           gravityLoads)
     def M(self):
         return self.xyz*self.mag
 
