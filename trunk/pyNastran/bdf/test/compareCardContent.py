@@ -23,8 +23,7 @@ def compareCardContent(fem1,fem2):
     assert len(fem1.properties)     == len(fem2.properties)
     assert len(fem1.materials)      == len(fem2.materials)
     assert len(fem1.creepMaterials) == len(fem2.creepMaterials)
-    #assert len(fem1.loads)          == len(fem2.loads)
-    assert len(fem1.gravs)          == len(fem2.gravs)
+    assert len(fem1.loads)          == len(fem2.loads)
     assert len(fem1.coords)         == len(fem2.coords)
     assert len(fem1.spcs)           == len(fem2.spcs)
     assert len(fem1.spcadds)        == len(fem2.spcadds)
@@ -84,11 +83,6 @@ def compareCardContent(fem1,fem2):
         for card1,card2 in zip(loads1,loads2):
             assertFields(card1,card2)
 
-    for key in fem1.gravs:
-        card1 = fem1.gravs[key]
-        card2 = fem2.gravs[key]
-        assertFields(card1,card2)
-
     for key in fem1.coords:
         card1 = fem1.coords[key]
         card2 = fem2.coords[key]
@@ -128,12 +122,6 @@ def compareCardContent(fem1,fem2):
         card1 = fem1.tsteps[key]
         card2 = fem2.tsteps[key]
         assertFields(card1,card2)
-
-    for key in fem1.dmigs:
-        card1 = fem1.dmigs[key]
-        card2 = fem2.dmigs[key]
-        assert str(card1)==str(card2)
-        #assertFields(card1,card2)
 
     for key in fem1.dequations:
         card1 = fem1.dequations
@@ -175,9 +163,38 @@ def compareCardContent(fem1,fem2):
         card2 = fem2.cMethods[key]
         assertFields(card1,card2)
 
+    compareMatrices(fem1,fem2)
     compareOptimizationContent(fem1,fem2)
     compareAeroContent(fem1,fem2)
     compareThermalContent(fem1,fem2)
+
+def compareMatrices(fem1,fem2):
+    for key in fem1.dmigs:
+        card1 = fem1.dmigs[key]
+        card2 = fem2.dmigs[key]
+        assert str(card1)==str(card2)
+        #assertFields(card1,card2)
+
+    #for key in fem1.dmis:
+        #card1 = fem1.dmis[key]
+        #card2 = fem2.dmis[key]
+        #assert str(card1)==str(card2)
+
+    for key in fem1.dmijs:
+        card1 = fem1.dmijs[key]
+        card2 = fem2.dmijs[key]
+        assert str(card1)==str(card2)
+
+    for key in fem1.dmijis:
+        card1 = fem1.dmijis[key]
+        card2 = fem2.dmijis[key]
+        assert str(card1)==str(card2)
+
+    for key in fem1.dmiks:
+        card1 = fem1.dmiks[key]
+        card2 = fem2.dmiks[key]
+        assert str(card1)==str(card2)
+
 
 def compareThermalContent(fem1,fem2):
     assert len(fem1.bcs)                  == len(fem2.bcs)

@@ -408,6 +408,10 @@ class cardMethods(object):
             if debug:
                 print "STRING!"
             return valueIn
+        
+        #print "valueIn = |%s|" %(valueIn)
+        if ' ' in valueIn:
+            raise WhitespaceCardParseError('there are embedded blanks in the field.\nvalueRaw=|%s| valueIn=|%s| card=%s' %(valueRaw,valueIn,card))
 
         if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
             if debug:
@@ -457,7 +461,7 @@ class cardMethods(object):
             vFactor=1.
         else:
             msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s| card=%s' %(valueRaw,v0,card)
-            raise FloatScientificParseError(msg)
+            raise FloatScientificCardParseError(msg)
 
         vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
         vp = valueIn.find('+',1)
@@ -468,8 +472,8 @@ class cardMethods(object):
             sline = valueLeft.split('+')
             expFactor = 1.
         else:
-            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s\nYou also might have mixed tabs/spaces/commas.' %(valueRaw,valueLeft,card)
-            raise ScientificParseError(msg)
+            msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s\nYou also might have mixed tabs/spaces/commas or embedded blanks in the field.' %(valueRaw,valueLeft,card)
+            raise ScientificCardParseError(msg)
 
         sline0 = sline[0].rstrip('Dd')
         sline1 = sline[1]
@@ -478,7 +482,7 @@ class cardMethods(object):
             s1 = expFactor*int(sline1)
         except ValueError:
             msg = "vm=%s vp=%s valueRaw=|%s| sline0=%s sline1=%s\ncard=%s" %(vm,vp,valueRaw,sline0,sline1,card)
-            raise ScientificParseError('cannot parse sline0 into a float and sline1 into an integer\n%s\nYou might have mixed tabs/spaces/commas!  Fix it!' %(msg))
+            raise ScientificCardParseError('cannot parse sline0 into a float and sline1 into an integer\n%s\nYou might have mixed tabs/spaces/commas!  Fix it!' %(msg))
 
         value = s0*10**(s1)
         #print "valueOut = |%s|" %value
@@ -557,7 +561,7 @@ def getValue(valueRaw,debug=False):
         vFactor=1.
     else:
         msg = 'the only 2 cases for a float/scientific are +/- for v0...valueRaw=|%s| v0=|%s| card=%s' %(valueRaw,v0,card)
-        raise FloatScientificParseError(msg)
+        raise FloatScientificCardParseError(msg)
 
     vm = valueIn.find('-',1) # dont include the 1st character, find the exponent
     vp = valueIn.find('+',1)
@@ -569,14 +573,14 @@ def getValue(valueRaw,debug=False):
         expFactor = 1.
     else:
         msg = 'thought this was in scientific notation, but i cant find the exponent sign...valueRaw=|%s| valueLeft=|%s| card=%s\nYou also might have mixed tabs/spaces/commas.' %(valueRaw,valueLeft,card)
-        raise ScientificParseError(msg)
+        raise ScientificCardParseError(msg)
 
     try:
         s0 = vFactor*float(sline[0])
         s1 = expFactor*int(sline[1])
     except ValueError:
         msg = "vm=%s vp=%s valueRaw=|%s| sline=%s" %(vm,vp,valueRaw,sline)
-        raise ScientificParseError('cannot parse sline[0] into a float and sline[1] into an integer\n%s\nYou HAVE mixed tabs/spaces/commas!  Fix it!' %(msg))
+        raise ScientificCardParseError('cannot parse sline[0] into a float and sline[1] into an integer\n%s\nYou HAVE mixed tabs/spaces/commas!  Fix it!' %(msg))
 
     value = s0*10**(s1)
     #print "valueOut = |%s|" %value
@@ -598,7 +602,7 @@ def stringParser(stringIn):
         elif s.isalpha() or s in "()*/=]['\"": return 'string' # string character
         else:
             msg = "s=|%r|" %(s)
-            raise Exception(msg)
+            raise CardParseError(msg)
         ###
         
         #print "s=%s stringIn[i-1]=%s" %(state,typeCheck[i-1])
@@ -645,7 +649,7 @@ def stringParser(stringIn):
         return stringIn
     
     print "typeCheck = |%s|" %(typeCheck)
-    raise Exception('this should never happen...')
+    raise CardParseError('this should never happen...')
 
 if __name__=='__main__':
     print stringParser('123')

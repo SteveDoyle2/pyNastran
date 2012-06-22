@@ -185,6 +185,33 @@ class LineProperty(Property):
             raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
         return (A,Iyy,Izz,Iyz)
     
+    def I1(self):
+        return self.I1_I2()[0]
+    def I2(self):
+        return self.I1_I2()[1]
+
+    def I1_I2(self):
+        """
+        BAR
+            2
+            ^ 
+            |
+        *---|--*
+        |   |  |
+        |   |  |
+        |h  *-----------> 1
+        |      |
+        |   b  |
+        *------*
+        I1 = 1/12*b*h^3
+        I2 = 1/12*h*b^3
+        """
+        dim = self.dim
+        if self.Type=='BAR':
+            I1 = 1/12.*dim[0]*dim[1]**3
+            I2 = 1/12.*dim[1]*dim[0]**3
+        return(I1,I2)
+
     def areaL(self,dim):
         """
         Area method for the PBARL and PBEAML classes (pronounced Area-L)
@@ -270,7 +297,7 @@ class LineProperty(Property):
             h2 = dim[2]
             w2 = dim[1]
 
-            h1 = dim[4]-h2
+            h1 = dim[3]-h2
             w1 = dim[0]
             A = h1*w1+h2*w2
         elif self.Type=='CHAN2':
@@ -292,7 +319,7 @@ class LineProperty(Property):
             h1 = dim[2]  # top
             w1 = dim[0]
             
-            h2 = sefl.dim[3] # btm
+            h2 = dim[3] # btm
             A1 = (h1+h2)*w1
             
             h3 = dim[1]-h1-h2  # left
@@ -807,12 +834,14 @@ class PBARL(LineProperty):
     def rawFields(self):
         fields = ['PBARL',self.pid,self.Mid(),self.group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
+        #print "nsm=%s" %(self.nsm)
         return fields
 
     def reprFields(self):
         group = self.setBlankIfDefault(self.group,'MSCBMLO')
         fields = ['PBARL',self.pid,self.Mid(),group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
+        #print "nsm=%s" %(self.nsm)
         return fields
 
 class PBEAM(IntegratedLineProperty):
@@ -1060,6 +1089,7 @@ class PBEAML(IntegratedLineProperty):
     validTypes = {
         "ROD"   : 1, 
         "TUBE"  : 2,
+        "L"     : 4,
         "I"     : 6,
         "CHAN"  : 4,
         "T"     : 4,
@@ -1099,18 +1129,21 @@ class PBEAML(IntegratedLineProperty):
             self.so = ['YES']
             self.nsm = []
             
-            j = 0
-            n = 0
-            i = 0
-            #print "dimAll = ",dimAll,nDim
-            for i,dim in enumerate(dimAll):
-                if j<nDim:
+            j = 0 # the dimension counter
+            n = 0 # there is no SO or XXB for the first section (n=0)
+            i = 9 # the index in the card
+            print "dimAll = ",dimAll,nDim,i
+            for ii,dim in enumerate(dimAll): ## ii is the counter starting from 9
+                if j<nDim: # the first block, n=0 ???
                     #print "*1"
                     Dim.append(dim)
                     j+=1
-                else:
+                    i+=1
+                else: # other blocks, n>0 ???
                     #print "*2",
                     #print "dim = ",Dim
+                    if isinstance(dim,str):
+                        raise RuntimeError('nsm is a string...nsm=|%s|' %(dim))
                     self.nsm.append(dim)
                     if n>0:
                         so  = card.field(i+1,'YES')
@@ -1123,15 +1156,19 @@ class PBEAML(IntegratedLineProperty):
                     #print "Dim = ",Dim
                     self.dim.append(Dim)
                     Dim = []
+                    j=0
                 ###
-                #print "i=%s j=%s Dim=%s" %(i,j,Dim)
+                print "i=%s ii=%s j=%s Dim=%s" %(i,ii,j,Dim)
             ###
             if j<=nDim: # if the last field is blank
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
-                self.nsm.append(card.field(i,0.0))
+                self.nsm.append(0.0)
+                if isinstance(self.nsm[0],str):
+                    raise RuntimeError('nsm is a string...nsm=|%s|' %(self.nsm))
+                
             ###
-            #print "nsm = ",self.nsm
+            print "nsm = ",self.nsm
             #print self
             #sys.exit()
     
@@ -1144,7 +1181,10 @@ class PBEAML(IntegratedLineProperty):
         massPerLs = []
         for dim,nsm in zip(self.dim,self.nsm):
             a = self.areaL(dim)
-            massPerLs.append(a*rho+nsm)
+            try:
+                massPerLs.append(a*rho+nsm)
+            except:
+                raise RuntimeError("PBEAML a*rho+nsm a=%s rho=%s nsm=%s" %(a,rho,nsm))
         massPerL = integratePositiveLine(self.xxb,massPerLs)
         return massPerL
 
@@ -1379,24 +1419,3 @@ class PBEND(LineProperty):
             raise Exception('only beamType=1 and 2 supported')
         return fields
 
-class PVISC(Property):
-    type = 'PVISC'
-    def __init__(self,card=None,nPVISC=0,data=None):
-        if card:
-            self.pid = card.field(1+4*nPVISC)
-            self.ce = card.field(2+4*nPVISC)
-            self.cr = card.field(3+4*nPVISC,0.)
-        else:
-            self.pid = data[0]
-            self.ce = data[1]
-            self.cr = data[2]
-        ###
-    
-    def rawFields(self):
-        fields = ['PVISC',self.pid,self.ce,self.cr]
-        return fields
-    
-    def reprFields(self):
-        cr = self.setBlankIfDefault(self.cr,0.)
-        fields = ['PVISC',self.pid,self.ce,cr]
-        return fields

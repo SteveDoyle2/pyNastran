@@ -13,7 +13,7 @@ class XrefMesh(object):
         if xref:
             self.log.info("Cross Referencing...")
             #for key,e in self.elements.iteritems():
-            #    print(e)
+                #print(e)
 
             self.crossReference_Nodes()
             self.crossReference_Coordinates()
@@ -119,7 +119,7 @@ class XrefMesh(object):
             try:
                 p.crossReference(self)
             except:
-                sys.stderr.write("Couldn't cross reference Property.  Are all Materials supported?\n%s" %(str(p)))
+                self.log.error("Couldn't cross reference Property.  Are all Materials supported?\n%s" %(str(p)))
                 raise
         ###
 
@@ -139,7 +139,7 @@ class XrefMesh(object):
             try:
                 m.crossReference(self)
             except:
-                sys.stderr.write("Couldn't cross reference Material\n%s" %(str(m)))
+                self.log.error("Couldn't cross reference Material\n%s" %(str(m)))
                 raise
         ###
 
@@ -154,7 +154,7 @@ class XrefMesh(object):
                     load.crossReference(self)
                 except:
                     self.log.debug("lid=%s sid=%s" %(lid,sid))
-                    sys.stderr.write("Couldn't cross reference Load\n%s" %(str(load)))
+                    self.log.error("Couldn't cross reference Load\n%s" %(str(load)))
                     raise
         ###
 

@@ -696,7 +696,7 @@ class TEMP(ThermalLoad):
         
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.lid = card.field(1)
 
             fields = card.fields(2)
             nFields = len(fields)

@@ -47,6 +47,14 @@ class writeMesh(object):
         msg = ''
         for name,dmig in sorted(self.dmigs.iteritems()):
             msg += str(dmig)
+        for name,dmi in sorted(self.dmis.iteritems()):
+            msg += str(dmi)
+        for name,dmij in sorted(self.dmijs.iteritems()):
+            msg += str(dmij)
+        for name,dmiji in sorted(self.dmijis.iteritems()):
+            msg += str(dmiji)
+        for name,dmik in sorted(self.dmiks.iteritems()):
+            msg += str(dmik)
         return msg
 
     def writeCommon(self):
@@ -422,7 +430,7 @@ class writeMesh(object):
     def writeLoads(self):
         """writes the load cards sorted by ID"""
         msg = ''
-        if self.loads or self.gravs:
+        if self.loads:
             msg += '$LOADS\n'
             for key,loadcase in sorted(self.loads.iteritems()):
                 for load in loadcase:
@@ -432,8 +440,7 @@ class writeMesh(object):
                         print('failed printing load...type=%s key=%s' %(load.type,key))
                         raise
                     ###
-            for ID,grav in sorted(self.gravs.iteritems()):
-                msg += str(grav)
+                ###
             ###
         ###
         return msg

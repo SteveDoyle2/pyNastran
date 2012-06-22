@@ -86,7 +86,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'PELAS','PGAP','PFAST',
         'PBUSH','PBUSH1D',
         'PDAMP','PDAMP5','PDAMPT',
-        'PROD','PBAR','PBARL','PBEAM','PTUBE','PBEND',#'PBEAML','PBEAM3',
+        'PROD','PBAR','PBARL','PBEAM','PTUBE','PBEND','PBEAML',#'PBEAM3',
         'PSHELL','PCOMP','PCOMPG','PSHEAR',
         'PSOLID','PLSOLID','PVISC',
         
@@ -140,7 +140,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         'FREQ','FREQ1','FREQ2',
         
         # direct matrix input cards
-        'DMIG',
+        'DMIG','DMIJ','DMIJI','DMIK','DMI',
         #'DEQATN',
         
         # optimization cards
@@ -349,6 +349,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
         self.tsteps = {}
 
         ## direct matrix input - DMIG
+        self.dmis = {}
         self.dmigs = {}
         self.dmijs = {}
         self.dmijis = {}
@@ -924,7 +925,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
                     dmij = self.dmijs[name]
                     dmij.addColumn(cardObj)
                 ###
-            elif cardName=='DMIJ':
+            elif cardName=='DMIJI':
                 if cardObj.field(2)==0:
                     dmiji = DMIJI(cardObj)
                     self.addDMIJI(dmiji)
@@ -936,11 +937,20 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='DMIK':
                 if cardObj.field(2)==0:
                     dmik = DMIK(cardObj)
-                    self.addDMIK(dmij)
+                    self.addDMIK(dmik)
                 else:
                     name = cardObj.field(1)
                     dmik = self.dmiks[name]
                     dmik.addColumn(cardObj)
+                ###
+            elif cardName=='DMI':
+                if cardObj.field(2)==0:
+                    dmi = DMI(cardObj)
+                    self.addDMI(dmi)
+                else:
+                    name = cardObj.field(1)
+                    dmi = self.dmis[name]
+                    dmi.addColumn(cardObj)
                 ###
             elif cardName=='DEQATN':  # buggy for commas
                 #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
@@ -1153,9 +1163,9 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             #elif cardName=='PBEAM3':
             #    prop = PBEAM3(cardObj)
             #    self.addProperty(prop)
-            #elif cardName=='PBEAML':   # disabled
-            #    prop = PBEAML(cardObj)
-            #    self.addProperty(prop)
+            elif cardName=='PBEAML':   # disabled
+                prop = PBEAML(cardObj)
+                self.addProperty(prop)
             elif cardName=='PELAS':
                 prop = PELAS(cardObj)
                 self.addProperty(prop)
@@ -1328,7 +1338,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
             elif cardName=='LSEQ':
                 load = LSEQ(cardObj)
-                self.addLoad(load)
+                self.addLSeq(load)
 
             elif cardName=='DLOAD':
                 load = DLOAD(cardObj)
@@ -1414,7 +1424,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='MPCADD':
                 constraint = MPCADD(cardObj)
                 #assert not isinstance(constraint,SPCADD)
-                self.addConstraint_MPCADD(constraint)
+                self.addConstraint_MPC(constraint)
 
             # constraints
             elif cardName=='SPC':
@@ -1432,7 +1442,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='SPCADD':
                 constraint = SPCADD(cardObj)
                 #assert not isinstance(constraint,MPCADD)
-                self.addConstraint_SPCADD(constraint)
+                self.addConstraint_SPC(constraint)
             elif cardName=='SUPORT':  # pseudo-constraint
                 suport = SUPORT(cardObj)
                 self.addSuport(suport)
@@ -1578,7 +1588,7 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
             elif cardName=='BSET1':
                 setObj = BSET1(cardObj)
                 self.addSet(setObj)
-            elif cardName=='CSET1': # has a quirk
+            elif cardName=='CSET1':
                 setObj = CSET1(cardObj)
                 self.addSet(setObj)
             elif cardName=='QSET1':
