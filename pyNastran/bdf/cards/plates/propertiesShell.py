@@ -709,7 +709,7 @@ class PSHELL(ShellProperty):
     def crossReference(self,mesh):
         if self.mid1:
             self.mid1 = mesh.Material(self.mid1)
-        if self.mid2:
+        if self.mid2 and self.mid2 != -1:
             self.mid2 = mesh.Material(self.mid2)
         if self.mid3:
             self.mid3 = mesh.Material(self.mid3)

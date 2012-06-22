@@ -1,6 +1,6 @@
 from numpy import zeros,array
 
-from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.cards.baseCard import Element,BaseCard
 
 
 class PointElement(Element):
@@ -9,6 +9,10 @@ class PointElement(Element):
         
     def Mass(self):
         return self.mass
+
+class PointMass(BaseCard):
+    def __init__(self,card=None,data=None):
+        pass
 
 class CMASS1(PointElement):
     """
@@ -217,7 +221,7 @@ class CMASS4(PointElement):
         return fields
 
    
-class CONM1(PointElement):
+class CONM1(PointMass):
     type = 'CONM1'
     def __init__(self,card=None,data=None):
         """

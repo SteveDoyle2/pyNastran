@@ -17,7 +17,7 @@ testPath = r'C:\Users\steve\Desktop\pyNastran\pyNastran\bdf\test'
 
 def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
     #debug = True
-    print "folder = ",folder
+    print("folder = %s" %(folder))
     filenames  = os.listdir(folder)
     filenames2 = []
     diffCards = []
@@ -27,7 +27,7 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
         ###
     ###
     for filename in filenames2:
-        print "filename = ",os.path.abspath(os.path.join(folder,filename))
+        print("filename = %s" %(os.path.abspath(os.path.join(folder,filename))))
         try:
             (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,check=check,cid=cid,isFolder=True)
             diffCards += diffCards
@@ -51,19 +51,19 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
             traceback.print_exc(file=sys.stdout)
             #raise
         ###
-        print '-'*80
+        print('-'*80)
     ###
-    print '*'*80
+    print('*'*80)
     try:
-        print "diffCards1 = ",list(set(diffCards))
+        print("diffCards1 = %s" %(list(set(diffCards))))
     except TypeError:
         #print "type(diffCards) =",type(diffCards)
-        print "diffCards2 = ",diffCards
+        print("diffCards2 = %s" %(diffCards))
 ###
 
 def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm='combined',isFolder=False):
     bdfModel = str(bdfFilename)
-    print "bdfModel = ",bdfModel
+    print("bdfModel = %s" %(bdfModel))
     if isFolder:
         bdfModel = os.path.join(testPath,folder,bdfFilename)
     
@@ -82,7 +82,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
             else:
                 fem1.readBDF(bdfModel,xref=xref)
         except:
-            print "failed reading |%s|" %(bdfModel)
+            print("failed reading |%s|" %(bdfModel))
             raise
         #fem1.sumForces()
         #fem1.sumMoments()
@@ -103,7 +103,7 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
         try:
             fem2.readBDF(outModel,xref=xref)
         except:
-            print "failed reading |%s|" %(outModel)
+            print("failed reading |%s|" %(outModel))
             raise
         
         #fem2.sumForces()
@@ -135,10 +135,10 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
         #print "\n"
         traceback.print_exc(file=sys.stdout)
         #print msg
-        print "-"*80
+        print("-"*80)
         raise
     ###
-    print "-"*80
+    print("-"*80)
     return (fem1,fem2,diffCards)
 
 def divide(value1,value2):
@@ -168,7 +168,7 @@ def computeInts(cards1,cards2,fem1):
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
     msg = ' diffKeys1=%s diffKeys2=%s' %(diffKeys2,diffKeys2)
-    print msg
+    print(msg)
     for key in sorted(allKeys):
         msg = ''
         if key in listKeys1: value1 = cards1[key]
@@ -192,7 +192,7 @@ def computeInts(cards1,cards2,fem1):
 
         msg += '  %skey=%-7s value1=%-7s value2=%-7s' %(star,key,value1,value2)+factorMsg #+'\n'
         msg = msg.rstrip()
-        print msg
+        print(msg)
     ###
     return listKeys1+listKeys2
 
@@ -220,7 +220,7 @@ def compute(cards1,cards2):
         else:
             msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
         msg = msg.rstrip()
-        print msg
+        print(msg)
     ###
 
 def getElementStats(fem1,fem2):
@@ -257,7 +257,7 @@ def getElementStats(fem1,fem2):
                 mid = e.Mid()
                 pid = e.Pid()
                 if J is None:
-                    print "Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid)
+                    print("Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid))
             elif isinstance(e,RigidElement):
                 pass
             elif isinstance(e,DamperElement):
@@ -270,15 +270,15 @@ def getElementStats(fem1,fem2):
                 m = e.Mass()
                 c = e.Centroid()
             else:
-                print "statistics not available - e.type=%s e.eid=%s" %(e.type,e.eid)
+                print("statistics not available - e.type=%s e.eid=%s" %(e.type,e.eid))
                 #try:
-                #    print "e.type = ",e.type
+                #    print("e.type = ",e.type)
                 #except:
-                #    print str(e)
+                #    print(str(e))
                 ###
             ###
         except:
-            print "*stats - e.type=%s eid=%s  element=\n%s" %(e.type,e.eid,str(e))
+            print("*stats - e.type=%s eid=%s  element=\n%s" %(e.type,e.eid,str(e)))
             raise
         ###
     ###
@@ -289,9 +289,9 @@ def getMatrixStats(fem1,fem2):
             if isinstance(dmig,NastranMatrix):
                 dmig.getMatrix()
             else:
-                print "statistics not available - matrix.type=%s matrix.name=%s" %(dmig.type,dmig.name)
+                print("statistics not available - matrix.type=%s matrix.name=%s" %(dmig.type,dmig.name))
         except:
-            print "*stats - matrix.type=%s name=%s  matrix=\n%s" %(dmig.type,dmig.name,str(dmig))
+            print("*stats - matrix.type=%s name=%s  matrix=\n%s" %(dmig.type,dmig.name,str(dmig)))
             raise
         ###
 
@@ -311,11 +311,11 @@ def compareParams(fem1,fem2):
 
 def printPoints(fem1,fem2):
     for nid,n1 in sorted(fem1.nodes.iteritems()):
-        print "%s   xyz=%s  n1=%s  n2=%s" %(nid,n1.xyz,n1.Position(True),  fem2.Node(nid).Position())
+        print("%s   xyz=%s  n1=%s  n2=%s" %(nid,n1.xyz,n1.Position(True),  fem2.Node(nid).Position()))
         break
     ###
     coord = fem1.Coord(5)
-    print coord
+    print(coord)
     #print coord.Stats()
 
 def main():
@@ -337,10 +337,10 @@ def main():
         sys.exit()
     args = parser.parse_args()
 
-    print "bdfFile     = ",args.bdfFileName[0]
-    print "xref        = ",args.xref
-    print "check       = ",args.check
-    print "debug       = ",not(args.quiet)
+    print("bdfFile     = %s" %(args.bdfFileName[0]))
+    print("xref        = %s" %(args.xref))
+    print("check       = %s" %(args.check))
+    print("debug       = %s" %(not(args.quiet)))
 
     xref        = args.xref
     check       = args.check

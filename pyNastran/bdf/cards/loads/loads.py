@@ -71,12 +71,23 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
         ###
     
     def Lid(self):
-        if isinstance(self.lid,int):
-            return self.lid
         try:
-            return self.lid.lid
+            if isinstance(self.lid,int):
+                #sys.stderr.write('A')
+                return self.lid
+            elif isinstance(self.lid,list):
+                #sys.stderr.write('type(lid[0]) = %s' %(type(self.lid[0])))
+                #sys.stderr.write("the offending load...%s" %(self.lid[0]))
+                return self.lid[0].lid
+            #elif isinstance(self.lid,load)
+            else:
+                #sys.stderr.write('C')
+                #sys.stderr.write("the offending load...%s" %(self.lid))
+                return self.lid.lid
         except:
-            sys.stderr.write("self.lid=%s\n" %(str(self.lid)))
+            sys.stderr.write("error - line 88 in loads.py - self.lid=\n %s\n" %(str(self.lid)))
+            #x = raw_input('stopping...')
+            raise
         
     def Tid(self):
         if self.tid is None:
@@ -120,6 +131,9 @@ class SLOAD(Load):
             self.nids.append(fields[j  ])
             self.mags.append(fields[j+1])
         ###
+
+    def Lid(self):
+        return self.lid
 
     def crossReference(self,model):
         for (i,nid) in enumerate(self.nids):

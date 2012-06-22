@@ -37,6 +37,27 @@ class RBAR(RigidElement):
             self.alpha = data[7]
         ###
 
+    def convertToMPC(self,mpcID):
+        """
+        -Ai*ui + Aj*uj = 0
+        where ui are the base DOFs (max=6)
+        mpc sid   g1 c1 a1  g2 c2 a2
+        rbe2 eid  gn cm g1  g2 g3 g4
+        """
+        raise NotImplementedError()
+        i = 0
+        nCM = len(self.cm)
+        Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
+        
+        card = ['MPC',mpcID]
+        for cm in self.cm:
+            card += [self.gn,cm,-Ai] # the minus sign is applied to the base node
+
+        for gm in self.Gmi:
+            for cm in self.cm:
+                card += [gn,cm,Ai]
+        return card
+
     #def writeCodeAster(self):
         #msg = ''
         #msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBAR\n"

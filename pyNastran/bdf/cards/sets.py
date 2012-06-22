@@ -31,7 +31,7 @@ class SetSuper(Set):
         ## list of IDs in the SESETx
         self.IDs = None
 
-class ABSet(Set):
+class ABCQSet(Set):
     """
     Defines degrees-of-freedom in the analysis set (a-set)
     ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
@@ -39,9 +39,7 @@ class ABSet(Set):
     """
     def __init__(self,card=None,data=None): ## @todo doesnt support data
         Set.__init__(self,card,data)
-        ## Unique identification number. (Integer > 0)
-        self.sid = card.field(1)
-        
+
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
         self.components = []
@@ -63,7 +61,7 @@ class ABSet(Set):
         fields = self.rawFields()
         return self.printCard(fields)
 
-class ASET(ABSet):
+class ASET(ABCQSet):
     """
     Defines degrees-of-freedom in the analysis set (a-set)
     ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
@@ -71,9 +69,9 @@ class ASET(ABSet):
     """
     type = 'ASET'
     def __init__(self,card=None,data=None): ## @todo doesnt support data
-        ABSet.__init__(self,card,data)
+        ABCQSet.__init__(self,card,data)
 
-class BSET(ABSet):
+class BSET(ABCQSet):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during generalized
     dynamic reduction or component mode synthesis calculations.
@@ -82,9 +80,9 @@ class BSET(ABSet):
     """
     type = 'BSET'
     def __init__(self,card=None,data=None): ## @todo doesnt support data
-        ABSet.__init__(self,card,data)
+        ABCQSet.__init__(self,card,data)
 
-class CSET(ABSet):
+class CSET(ABCQSet):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during generalized
     dynamic reduction or component mode synthesis calculations.
@@ -93,9 +91,9 @@ class CSET(ABSet):
     """
     type = 'CSET'
     def __init__(self,card=None,data=None): ## @todo doesnt support data
-        ABSet.__init__(self,card,data)
+        ABCQSet.__init__(self,card,data)
 
-class QSET(ABSet):
+class QSET(ABCQSet):
     """
     Defines generalized degrees-of-freedom (q-set) to be used for dynamic reduction or
     component mode synthesis.
@@ -104,9 +102,9 @@ class QSET(ABSet):
     """
     type = 'QSET'
     def __init__(self,card=None,data=None): ## @todo doesnt support data
-        ABSet.__init__(self,card,data)
+        ABCQSet.__init__(self,card,data)
 
-class ABSet1(Set):
+class ABQSet1(Set):
     """
     Defines degrees-of-freedom in the analysis set (a-set)
     ASET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
@@ -115,22 +113,23 @@ class ABSet1(Set):
     """
     def __init__(self,card=None,data=None): ## @todo doesnt support data
         Set.__init__(self,card,data)
-        ## Unique identification number. (Integer > 0)
-        self.sid = card.field(1)
-        
-        self.components = card.field(1)
+        ## Component number. (Integer zero or blank for scalar points or any
+        ## unique combination of the Integers 1 through 6 for grid points with no
+        ## embedded blanks.)
+        self.components = str(card.field(1,0))
+
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = self.expandThru(card.fields(2))
 
     def rawFields(self):
-        fields = [self.type,self.component]+self.IDs
+        fields = [self.type,self.components]+self.IDs
         return fields
 
     def __repr__(self):
         fields = self.rawFields()
         return self.printCard(fields)
 
-class ASET1(ABSet1):
+class ASET1(ABQSet1):
     """
     Defines degrees-of-freedom in the analysis set (a-set)
     ASET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
@@ -139,14 +138,14 @@ class ASET1(ABSet1):
     """
     type = 'ASET1'
     def __init__(self,card=None,data=None):
-        ABSet1.__init__(self,card,data)
+        ABQSet1.__init__(self,card,data)
 
-class BSET1(ABSet1):
+class BSET1(ABQSet1):
     """
     """
     type = 'BSET1'
     def __init__(self,card=None,data=None):
-        ABSet1.__init__(self,card,data)
+        ABQSet1.__init__(self,card,data)
 
 class CSET1(Set):
     """
@@ -159,8 +158,6 @@ class CSET1(Set):
     """
     def __init__(self,card=None,data=None): ## @todo doesnt support data
         Set.__init__(self,card,data)
-        ## Unique identification number. (Integer > 0)
-        self.sid = card.field(1)
 
         ## Identifiers of grids points. (Integer > 0)
         self.IDs = []
@@ -172,21 +169,21 @@ class CSET1(Set):
         ###
 
     def rawFields(self):
-        fields = [self.type,self.component]+self.IDs
+        fields = [self.type,self.components]+self.IDs
         return fields
 
     def __repr__(self):
         fields = self.rawFields()
         return self.printCard(fields)
 
-class QSET1(ABSet1):
+class QSET1(ABQSet1):
     """
     Defines generalized degrees-of-freedom (q-set) to be used for dynamic reduction or
     component mode synthesis.
     """
     type = 'QSET1'
     def __init__(self,card=None,data=None):
-        ABSet1.__init__(self,card,data)
+        ABQSet1.__init__(self,card,data)
 
 class SET1(Set):
     """

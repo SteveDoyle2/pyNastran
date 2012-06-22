@@ -28,7 +28,14 @@ class SolidElement(Element):
         return self.pid.Mid()
 
     def Rho(self):
-        return self.pid.mid.rho
+        try:
+            return self.pid.mid.rho
+        except AttributeError:
+            print "self.pid = ",self.pid
+            print "self.pid.mid = ",str(self.pid.mid)
+            #print "self.pid = ",self.pid
+            #print "self.pid = ",self.pid
+            raise
 
     def isSameCard(self,elem):
         if self.type!=elem.type:  return False

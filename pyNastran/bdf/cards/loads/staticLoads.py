@@ -627,7 +627,7 @@ class FORCE2(Force):
 
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
-        self.node = mdodel.Node(self.node)
+        self.node = model.Node(self.node)
 
         v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         v34 = model.Node(self.g4).Position() - model.Node(self.g3).Position()
@@ -723,7 +723,7 @@ class MOMENT1(Moment):
 
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
-        self.node = mdodel.Node(self.node)
+        self.node = model.Node(self.node)
         self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.Normalize()
 

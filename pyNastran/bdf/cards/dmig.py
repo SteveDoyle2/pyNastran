@@ -44,10 +44,10 @@ class DEQATN(BaseCard):# needs work...
                 newCard += field
 
         #if len(card.card)>1:
-        #    print "card.card = ",card.card
-        #    line0 = ','.join(card.card)
+            #print "card.card = ",card.card
+            #line0 = ','.join(card.card)
         #else:
-        #    line0 = ''.join(card.card)
+            #line0 = ''.join(card.card)
         line0 = newCard
         self.eqID = line0[8:16]
         
@@ -81,9 +81,9 @@ class NastranMatrix(BaseCard):
     def __init__(self,card=None,data=None):
         self.name = card.field(1)
         #zero
-        self.ifo   = card.field(3)
-        self.tin   = card.field(4)
-        self.tout  = card.field(5,0)
+        self.ifo   = int(card.field(3))
+        self.tin   = int(card.field(4))
+        self.tout  = int(card.field(5,0))
         
         self.polar = card.field(6)
         self.ncol  = card.field(8)
@@ -91,7 +91,26 @@ class NastranMatrix(BaseCard):
         self.GCj = []
         self.GCi = []
         self.Real = []
-        self.Complex = []
+        if self.isComplex():
+            self.Complex = []
+    
+    def writeCodeAster(self):
+        """
+        assume set 1 = MAAX1,MAAX2, etc. and 100/n % on each
+        """
+        
+        # for real combination
+        comm =  'K_Mtx_AB=COMB_MATR_ASSE(COMB_R=(\n'
+        comm += '    _F(MATR_ASSE = K_Mtx_A,COEF_R = 1.),\n'
+        comm += '    _F(MATR_ASSE = K_Mtx_B,COEF_R = 1.)));\n'
+
+        # for complex combination
+
+        comm += "K_Mtx_AB=COMB_MATR_ASSE(COMB_C=(\n"
+        comm += "_F(MATR_ASSE=K_Mtx_A,COEF_C=('RI',0.7,0.3,),)\n"
+        comm += "_F(MATR_ASSE=K_Mtx_B,COEF_C=('RI',0.7,0.3,),),),);\n"
+        comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
+        return comm
 
     def addColumn(self,card=None,data=None):
         #print "hi column"
@@ -110,20 +129,27 @@ class NastranMatrix(BaseCard):
         for i in range(minLoops):
             self.GCj.append((Gj,Cj))
 
-        for i in range(minLoops):
-            n = 5+4*i
-            Gi = card.field(n)
-            Ci = card.field(n+1)
-            self.GCi.append((Gi,Ci))
-
-            self.Real.append(card.field(n+2))
-            self.Complex.append(card.field(n+3))
+        if self.isComplex():
+            for i in range(minLoops):
+                n = 5+4*i
+                Gi = card.field(n)
+                Ci = card.field(n+1)
+                self.GCi.append((Gi,Ci))
+                self.Real.append(card.field(n+2))
+                self.Complex.append(card.field(n+3))
+        else:
+            for i in range(minLoops):
+                n = 5+4*i
+                Gi = card.field(n)
+                Ci = card.field(n+1)
+                self.GCi.append((Gi,Ci))
+                self.Real.append(card.field(n+2))
         
         assert len(self.GCj)==len(self.GCi),'(len(GCj)=%s len(GCi)=%s' %(len(self.GCj),len(self.GCi))
         #if self.isComplex():
             #self.Complex(card.field(v)
 
-    def getMatrix(self,isSparse=True):
+    def getMatrix(self,isSparse=False):
         """
         builds the Matrix
         @param self the object pointer
@@ -131,6 +157,7 @@ class NastranMatrix(BaseCard):
         @retval M the matrix
         @retval rows dictionary of keys=rowID,    values=(Grid,Component) for the matrix
         @retval cols dictionary of keys=columnID, values=(Grid,Component) for the matrix
+        @warning isSparse WILL fail
         """
         i=0
         rows = {}
@@ -170,9 +197,6 @@ class NastranMatrix(BaseCard):
             data = []
             rows2 = []
             cols2 = []
-            for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
-                i = rows[GCi]
-                j = cols[GCj]
 
             if self.isComplex():
                 Format = 'complex'
@@ -194,7 +218,7 @@ class NastranMatrix(BaseCard):
             # ,dtype=Format
             print rows2
             M = ss.coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j))
-            print M.todense()
+            #print M.todense()
         else:
             if self.isComplex():
                 M = zeros((i,j),dtype='complex')
@@ -210,11 +234,14 @@ class NastranMatrix(BaseCard):
                     M[i,j] = reali
                 ###
             ###
-        print M
+        #print M
         return (M,rowsReversed,colsReversed)
 
     def rename(self,nameNew):
         self.name = newName
+
+    def isReal(self):
+        return not self.isComplex()
 
     def isComplex(self):
         if self.tin in [3,4]:
@@ -222,6 +249,9 @@ class NastranMatrix(BaseCard):
         return False
 
     def __repr__(self):
+        """
+        @todo support double precision
+        """
         msg = '\n$'+'-'*80
         msg += '\n$ %s Matrix %s\n' %(self.type,self.name)
         fields = [self.type,self.name,0,self.ifo,self.tin,self.tout,self.polar,None,self.ncol]
@@ -291,3 +321,143 @@ class DMIK(NastranMatrix):
     def __init__(self,card=None,data=None):
         NastranMatrix.__init__(self,card,data)
 
+class DMI(BaseCard):
+    type = 'DMI'
+    def __init__(self,card=None,data=None):
+        self.name = card.field(1)
+        #zero
+        
+        ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular; 3=Diagonal (m=nRows,n=1)
+        ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+        self.form  = int(card.field(3))
+        
+        ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
+        self.tin   = int(card.field(4))
+        
+        ## 0-Set by cell precision
+        self.tout  = int(card.field(5,0))
+        
+        self.nRows = int(card.field(7))
+        self.nCols = int(card.field(8))
+
+        self.GCj = []
+        self.GCi = []
+        self.Real = []
+        
+        if self.isComplex():
+            self.Complex = []
+
+    def addColumn(self,card=None,data=None):
+
+        if not self.isComplex(): # real
+            self.readReal(card)
+
+    def readReal(self,card):
+        ## column number
+        j = card.field(2)
+
+        # counter
+        i = 0
+        fields = card.fields(3)
+
+        # Real, starts at A(i1,j), goes to A(i2,j) in a column
+        while i<len(fields):
+            i1 = fields[i]
+            #print "i1 = ",i1
+            if isinstance(i1,int):
+                i+=1
+                isDoneReadingFloats = False
+                while not isDoneReadingFloats and i<len(fields):
+                    #print "i=%s len(fields)=%s" %(i,len(fields))
+                    realValue = fields[i]
+                    if isinstance(realValue,int):
+                        isDoneReadingFloats = True
+                    elif isinstance(realValue,float):
+                        self.GCj.append(j)
+                        self.GCi.append(i1)
+                        self.Real.append(realValue)
+                        #print "i=%s j=%s value=%s" %(i1,j,realValue)
+                        i+=1
+                    else:
+                        #print "*i=%s j=%s value=%s type=%s" %(i1,j,realValue,type(realValue))
+                        realValue = self.Real[-1]
+                        #print "*i=%s j=%s value=%s" %(i1,j,realValue)
+                        endI = fields[i+1]
+                        #print "*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue)
+                        for ii in range(i1,endI+1):
+                            self.GCj.append(j)
+                            self.GCi.append(ii)
+                            self.Real.append(realValue)
+                        ###
+                        #print "i = ",3+i
+                        #print 'field i=',fields[i]
+                        i+=1
+                        isDoneReadingFloats = True
+                    ###
+            ###
+    def readComplex(self,card):
+        raise NotImplementedError('complex matrices not supported in the DMI reader...')
+        ## column number
+        j = card.field(2)
+
+        # counter
+        i = 0
+        fields = card.fields(3)
+
+        # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+        while i<len(fields):
+            i1 = fields[i]
+            i+=1
+            isDoneReadingFloats = False
+            asdf
+            while not isDoneReadingFloats and i<len(fields):
+                print "i=%s len(fields)=%s" %(i,len(fields))
+                realValue = fields[i]
+                if isinstance(floatValue,int):
+                    isDoneReadingFloats = True
+                elif isinstance(realValue,float):
+                    complexValue = fields[i+1]
+                    self.GCj.append(j)
+                    self.GCi.append(i1)
+                    self.Real.append(realValue)
+                    self.Complex.append(complexValue)
+                    i+=2
+                else:
+                    asdf
+                ###
+            ### while floats
+        ### while fields
+
+    def rename(self,nameNew):
+        self.name = newName
+
+    def isReal(self):
+        return not self.isComplex()
+
+    def isComplex(self):
+        if self.tin in [3,4]:
+            return True
+        return False
+
+    def __repr__(self):
+        """
+        @todo support shortened output format.  There's a stupidly low 1000
+        DMI cap, I assume this is entries and not matrices.
+        @todo support double precision
+        """
+        msg = '\n$'+'-'*80
+        msg += '\n$ %s Matrix %s\n' %(self.type,self.name)
+        fields = [self.type,self.name,0,self.form,self.tin,self.tout,None,self.nRows,self.nCols]
+        msg += self.printCard(fields)
+        #msg += self.printCard(fields,size=16,isD=False)
+
+        if self.isComplex():
+            for (GCi,GCj,reali,imagi) in zip(self.GCi,self.GCj,self.Real,self.Complex):
+                fields = [self.type,self.name,GCj,GCi,reali,imagi]
+                msg += self.printCard(fields)
+        else:
+            for (GCi,GCj,reali) in zip(self.GCi,self.GCj,self.Real):
+                fields = [self.type,self.name,GCj,GCi,reali]
+                msg += self.printCard(fields)
+        return msg
+    

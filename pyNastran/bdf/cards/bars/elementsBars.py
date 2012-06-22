@@ -310,20 +310,21 @@ class CROD(LineElement):
         if is3D:
             Lambda[0,2] = Lambda[1,5] = n # 3D
         if debug:
-            print("Lambda = \n",Lambda)
+            print("Lambda = \n"+str(Lambda))
         return Lambda
 
     #def Stiffness1(self,model):
         #nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),]
 
-    def Stiffness(self,model,grav,is3D):
+    def Stiffness(self,model,grav,is3D): # CROD/CONROD
         print("----------------")
         Lambda = self.Lambda(model)
-        #print "Lambda = \n",Lambda
+        #print("Lambda = \n"+str(Lambda))
         
         k = self.Stiffness1D(model) #/250000.
         #print R
         #print(k)
+        #print("Lambda.shape = ",Lambda.shape)
         K = dot(dot(transpose(Lambda),k),Lambda)
         #Fg = dot(dot(transpose(Lambda),grav),Lambda)
         
@@ -363,7 +364,7 @@ class CROD(LineElement):
         
         q2 = array( [q[n11],q[n12],q[n21],q[n22]] )
         print("q[%s] = %s" %(self.eid,q2))
-        #print "Lambda = \n",Lambda
+        #print("Lambda = \n"+str(Lambda))
         
         #print "Lsize = ",Lambda.shape
         #print "qsize = ",q.shape
@@ -376,7 +377,7 @@ class CROD(LineElement):
         print("stressX = %s [psi]\n" %(stressX))
         return stressX
 
-    def Stiffness1D(self,model):
+    def Stiffness1D(self,model): # CROD/CONROD
         """
         @todo remove this method after making sure it still works
         """
@@ -417,30 +418,6 @@ class CROD(LineElement):
 
     def reprFields(self):
         return self.rawFields()
-
-class CVISC(CROD):
-    type = 'CVISC'
-    def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card,data)
-        if card:
-            self.eid = int(card.field(1))
-            self.pid = int(card.field(2,self.eid))
-            nids = card.fields(3,5)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:4]
-        ###
-        self.prepareNodeIDs(nids)
-        assert len(self.nodes)==2
-    ###
-    def rawFields(self):  # not done...
-        fields = ['CVISC',self.eid,self.Pid()]+self.nodeIDs()
-        return fields
-
-    def reprFields(self):
-        return self.rawFields()
-###
 
 class CTUBE(CROD):
     type = 'CTUBE'
@@ -666,6 +643,12 @@ class CBAR(LineElement):
         assert isinstance(nsm,float)
         return nsm
 
+    def I1(self):
+        return self.pid.I1()
+
+    def I2(self):
+        return self.pid.I2()
+
     def Centroid(self):
         return (self.ga.Position()+self.gb.Position())/2.
 
@@ -735,6 +718,157 @@ class CBAR(LineElement):
 
     def nodeIDs(self):
         return [self.Ga(),self.Gb()]
+
+    def Stiffness(self,model,grav,is3D): # CBAR
+        print("----------------")
+        Lambda = self.Lambda(model)
+        #print("Lambda = \n"+str(Lambda))
+        
+        k = self.Stiffness1D(model) #/250000.
+        #print R
+        #print(k)
+        print("Lambda.shape = ",Lambda.shape)
+        K = dot(dot(transpose(Lambda),k),Lambda)
+        #Fg = dot(dot(transpose(Lambda),grav),Lambda)
+        
+        #print('size(grav) =',grav.shape)
+        mass = self.Mass()
+        mg = -grav*mass
+        if is3D:
+            Fg = [mg[0],mg[1],mg[2],mg[0],mg[1],mg[2]]
+        else:
+            Fg = [mg[0],mg[1],mg[0],mg[1]]
+        #print("Fg = ",Fg)
+        print("mass = ",mass)
+        print("Fg   = ",Fg)
+        #print(K)
+        print("K[%s] = \n%s\n" %(self.eid,K))
+        #sys.exit('stopping in Stiffness-CBAR')
+        #print("Fg[%s] = %s\n" %(self.eid,Fg))
+        #sys.exit('stopping in ROD stiffness...elementsBars.py')
+
+        nodes = self.nodeIDs()
+                 # u1          v1          theta1         u2,v2,w2
+        nIJV  = [
+                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # X1
+                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # Y1
+                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # M1
+
+                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # X2
+                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # Y2
+                 (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # M2
+                ]
+        #print("nIJV = ",nIJV)
+        #sys.exit()
+        nGrav = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[1],1),(nodes[1],2),(nodes[1],3)]
+
+        return(K,nIJV,Fg,nGrav)
+
+    def Stiffness1D(self,model):  # CBAR
+        #L = norm(r)
+        (n1,n2) = self.nodeIDs()
+        node1 = model.Node(n1)
+        node2 = model.Node(n2)
+
+        p1 = model.Node(n1).xyz
+        p2 = model.Node(n2).xyz
+        #print "node1 = ",node1
+        #print "node2 = ",node2
+        L = norm(p1-p2)
+        
+        if L==0.0:
+            msg = 'invalid CBAR length=0.0\n%s' %(self.__repr__())
+            raise StiffnessMatrixError(msg)
+        
+        A = self.Area()
+        #mat = self.mid
+        E = self.E()
+        I1 = self.I1()
+        I2 = self.I2()
+        print("A  = ",A)
+        print("E  = ",E)
+        print("L  = ",L)
+        print("I1 = ",I1)
+        print("I2 = ",I2)
+        #ki = 1.
+        #ki = A*E/L
+        #ki = 250000.
+        #knorm = 250000.
+        #K = ki*matrix([[1.,-1.],[-1.,1.]]) # rod
+        #P = 10.416666667
+        P = 1.
+        k1 = A*E/L
+        k2 = P*L**3/(E*I1)
+        print("A=%g E=%g L=%g I1=%g I2=%G AE/L=%g L^3/E*Iz=%g" %(A,E,L,I1,I2,k1,k2))
+        #print "K = \n",K
+        #return K
+
+
+        L = self.Length()
+        E = self.E()
+        I = self.I1()
+
+        LL  = L*L
+        LLL = L*LL
+        kMag = E*I/LLL
+        sL = 6*L
+        tLL = 2*LL
+        fLL = 4*LL
+        
+        #K = zeros(4,4))
+        K = array([[0.,12.,  sL, 0.,-12,  sL],
+                   [0.,sL,  fLL, 0.,-sL, tLL],
+                   [0.,  0,   0, 0.,  0,   0],
+                   [0.,-12, -sL, 0.,12., -sL],
+                   [0.,sL,  tLL, 0.,-sL, fLL],
+                   [0.,  0,   0, 0.,  0,   0],
+                   ])
+        print("k =\n"+str(K))
+        return K
+
+    def Lambda(self,model,debug=True): # CBAR from CROD/CONROD
+        """
+        2d  [l,m,0,0,  l,m,0,0]
+            [0,0,l,m,  0,0,l,m] L*k = 2x4*W4x4
+        
+        3d  [l,m,n,0,0,0,  l,m,n,0,0,0]
+            [0,0,0,l,m,n,  0,0,0,l,m,n]
+        """
+        is3D = False
+        #R = self.Rmatrix(model,is3D)
+        
+        (n1,n2) = self.nodeIDs()
+        p1 = model.Node(n1).Position()
+        p2 = model.Node(n2).Position()
+        v1 = p2-p1
+        if debug:
+            print("v1=%s" %(v1))
+        v1 = v1/norm(v1)
+        #v2 = v2/norm(v2)
+        #v3 = v3/norm(v3)
+        (l,m,n) = v1
+        #(o,p,q) = v2
+        #(r,s,t) = v3
+        print("l=%s m=%s n=%s" %(l,m,n))
+        if is3D:
+            Lambda = matrix([[l,m,n,0,0,0,],
+                             [m,l,n,0,0,0,],
+                             [0,0,1,0,0,0,],
+                             [0,0,0,l,m,n,],
+                             [0,0,0,m,l,n,],
+                             [0,0,0,0,0,1,],
+                             ])
+        else:
+            Lambda = matrix([[l,m,n,0,0,0,],
+                             [m,l,n,0,0,0,],
+                             [0,0,1,0,0,0,],
+                             [0,0,0,l,m,n,],
+                             [0,0,0,m,l,n,],
+                             [0,0,0,0,0,1,],
+                             ])
+        if debug:
+            print("Lambda* = \n"+str(Lambda))
+        return Lambda
 
     def rawFields(self):
         """@todo not perfectly accurate"""
@@ -960,7 +1094,7 @@ class CBEAM(CBAR):
         self.gb  = model.Node(self.gb)
         self.pid = model.Property(self.pid)
 
-    def Stiffness(self,bdf,r,A,E,I):
+    def Stiffness(self,bdf,r,A,E,I): # CBEAM
         """
         from makeTruss???
         """

@@ -13,6 +13,7 @@ from dmig import *
 from methods import *
 from sets import *
 from bush import *
+from dampers import *
 
 from loads.loads import *
 from loads.staticLoads import *
