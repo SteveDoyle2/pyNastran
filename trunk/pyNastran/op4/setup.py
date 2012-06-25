@@ -16,7 +16,7 @@ def configuration(parent_package='', top_path=None):
     # The configuration object that hold information on all the files
     # to be built.
     config = Configuration('', parent_package, top_path)
-    config.add_extension('op4',
+    config.add_extension('cop4',
                          sources=['op4.pyx'],
                          # libraries=['m'],
                          depends=['op4.c'],

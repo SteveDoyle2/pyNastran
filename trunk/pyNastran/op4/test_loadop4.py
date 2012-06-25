@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from op4 import OP4
+from cop4 import OP4
 
 for in_file in [ 'test/mat_b_dn.op4' ,
                  'test/mat_b_s2.op4' ,
