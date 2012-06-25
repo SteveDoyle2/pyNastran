@@ -107,7 +107,7 @@ class OP4(object):
         if isSparse:
             rows=[]; cols=[]; data=[]
         else:
-            A = zeros((nrows,ncols),'f')       # Initialize a real matrix
+            A = zeros((nrows,ncols),'f') # Initialize a real matrix
 
         nLoops = 0
         wasBroken=False
