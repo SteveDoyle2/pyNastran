@@ -9,11 +9,11 @@ from pyNastran.general.generalMath import printMatrix
 class OP4(FortranFile):
     def __init__(self):
         FortranFile.__init__(self)
-        self.makeOp2Debug = False
+        self.makeOp2Debug = False # required to make FortranFile work
         self.n = 0
         self.endian = ''
 
-    def readOP4(self,op4Name,matrixNames=None,isAscii=True):
+    def readOP4(self,op4Name,matrixNames=None,isAscii=False,floatType='default'):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
         matrices as the output arguments of the function.  The number of matrices
@@ -27,8 +27,11 @@ class OP4(FortranFile):
         B = matrices['B']
 
         @param op4Name an OP4 filename.  Type=STRING.
-        @param isAscii the OP4 is an ASCII (human-readable file).  Type=BOOL.
         @param matrixNames list of matrix names (or None); Type=LIST OF STRINGS / NONE.
+        @param floatType specifies if the matrices are in single or double precsion
+               (default='default') which means the format will be whatever the file is in
+         
+        @param isAscii the OP4 is an ASCII (human-readable file).  Type=BOOL.
         @retval dictionary of matrices where the key is the name and the value is a matrix:
             Dense Type:  NUMPY.NDARRAY
             Sparse Type: SCIPY.SPARSE.COO_MATRIX
@@ -38,8 +41,9 @@ class OP4(FortranFile):
         format before performing math on them.  This is standard with sparse matrices.
         @warning isAscii=False is not supported.
         """
+        assert floatType in ['default','single','dobule']
         assert isinstance(isAscii,bool),'isAscii must be a boolean.  isAscii=%s type=%s' %(isAscii,type(isAscii))
-        assert isAscii==True,'Only isAscii=True supported; isAscii=%s' %(isAscii)
+        assert isAscii==False,'Only isAscii=False supported; isAscii=%s' %(isAscii)
         if isinstance(matrixNames,str):
             matrixNames = [matrixNames]
         self.op2 = open(op4Name,'rb')
@@ -61,14 +65,14 @@ class OP4(FortranFile):
             if len(data1)==0:
                 break
 
-            (name,matrix) = self.readMatrix(self.op2,matrixNames)
+            (name,matrix) = self.readMatrix(self.op2,floatType,matrixNames)
             if name is not None:
                 if matrixNames is None or name in matrixNames: # save the matrix
                     matrices[name] = matrix
             i+=1
         return matrices
 
-    def readMatrix(self,f,matrixNames=None):
+    def readMatrix(self,f,floatType,matrixNames=None):
         """reads a matrix"""
         print "***********starting**************"
         #print self.printSection(80)
@@ -77,26 +81,38 @@ class OP4(FortranFile):
         (recordLength,ncols,nrows,form,Type,name) = unpack(self.endian+'5i8s',data)
 
         print "*N=%s recordLength=%s nrows=%s ncols=%s form=%s Type=%s name=|%s|" %(
-               self.n,recordLength,ncols,nrows,form,Type,name)
+               self.n,recordLength,nrows,ncols,form,Type,name)
         assert Type in [1,2,3,4],'Invalid Type.  Type=%s.  1,2=Real; 3,4=Complex; 1,3=Single Precision; 2,4=Double Precision' %(Type)
-        assert 0<nrows<40
-        assert 0<ncols<40
-
+        if Type==1:
+            print "Type = Real, Single Precision"
+        elif Type==2:
+            print "Type = Real, Double Precision"
+        elif Type==3:
+            print "Type = Complex, Single Precision"
+        elif Type==4:
+            print "Type = Complex, Double Precision"
         if nrows<0: # if less than 0, big
             isBigMat = True
+            nrows = abs(nrows)
         elif nrows>0:
             isBigMat = False
         else:
             raise RuntimeError('unknown BIGMAT.  nRows=%s' %(nrows))
         #print "isBigMat=%s" %(isBigMat)
+        assert 0<nrows<40
+        assert 0<ncols<40
 
 
         name = name.strip()
         if not name.isalnum():
             sys.exit('matrix name is not an ASCII string...')
 
-        data = f.read(20); self.n+=20
-        (recordLength,b,icol,irow,nWords) = unpack(self.endian+'5i',data)
+        print self.printSection(60)
+        data = f.read(recordLength); self.n+=recordLength
+        if recordLength==20:
+            (recordLength,b,icol,irow,nWords) = unpack(self.endian+'5i',data)
+        else:
+            raise NotImplementedError('recordLength=%s' %(recordLength))
         print "N=%s recordLength=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,recordLength,b,irow,icol,nWords)
 
         isSparse = False
@@ -105,9 +121,9 @@ class OP4(FortranFile):
         print "isBigMat=%s isSparse=%s" %(isBigMat,isSparse)
 
         if Type in [1,2]: # real
-            (A) = self.readReal(f,name,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat)
+            (A) = self.readReal(f,name,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType)
         elif Type in [3,4]: # complex
-            (A) = self.readComplex(f,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat)
+            (A) = self.readComplex(f,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType)
         else:
             raise RuntimeError('invalid matrix type.  Type=%s' %(Type))
 
@@ -121,17 +137,26 @@ class OP4(FortranFile):
         return name,A
 
 
-    def readReal(self,f,name,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat):
+    def readReal(self,f,name,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType):
         """
         @todo possibly split this into readDenseReal and readSparseReal
         to get rid of all the extra isSparse checks.  This would cleanup the
         runLoop condition as well.
         """
         print "*********readReal************"
+        if floatType=='single':
+            dType = 'float32'
+        elif floatType=='double':
+            dType = 'float64'
+        elif Type==1: # default
+            dType = 'float32'
+        else:
+            dType = 'float64'
+
         if isSparse:
             rows=[]; cols=[]; entries=[]
         else:
-            A = zeros((nrows,ncols),'f') # Initialize a real matrix
+            A = zeros((nrows,ncols),dType) # Initialize a real matrix
 
         nLoops = 0
         wasBroken=False
@@ -149,6 +174,7 @@ class OP4(FortranFile):
                 print "N = ",self.n
                 data = f.read(20); self.n+=20
                 (recordLength,b,icol,irow,nWords) = unpack(self.endian+'5i',data)
+                print "reading recordLength=%s n=20 delta=%s" %(recordLength,recordLength-20)
                 print "N=%s iLoop=%s recordLength=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,nLoops,recordLength,b,irow,icol,nWords)
 
                 if icol==0: # rewind
@@ -158,9 +184,10 @@ class OP4(FortranFile):
                     icol=icolOld
                     irow=irowOld
                     
-                    print self.printSection(60)
+                    #print self.printSection(60)
                     #data = f.read(4); self.n+=4
                     data = f.read(16); self.n+=16
+                    print "reading recordLength=%s n=16 delta=%s" %(recordLength,n,recordLength-n)
                     (b,icol,irow,nWords) = unpack(self.endian+'4i',data)
                     print "****N=%s iLoop=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,nLoops,b,irow,icol,nWords)
                     sys.stdout.flush()
@@ -169,6 +196,8 @@ class OP4(FortranFile):
             ###
 
             #print "b=%s" %(b)
+            if nLoops>0 and isBigMat==True and icol>ncols:
+                break
 
             irow,isEndSparse = self.getIRow(f,irow,nWords,Type,isSparse,isBigMat)
             if isEndSparse and nWords//2!=0:
@@ -176,10 +205,10 @@ class OP4(FortranFile):
                 break
 
             if irow>nrows+1:
-                sys.exit('what happened irow is too large...nrow=%s irow=%s icol=%s' %(nrow,irow,icol))
+                sys.exit('what happened irow is too large...nrows=%s irow=%s icol=%s' %(nrows,irow,icol))
 
             nFloats = nWords//2
-            print "nWords=%s nFloats=%s" %(nWords,nFloats)
+            print "nWords=%s nFloats=%s nDoubles=%s" %(nWords,nWords,nWords//2)
             #if nWords>2:
                 #print self.printSection(40)
 
@@ -192,12 +221,13 @@ class OP4(FortranFile):
                     #    nFloats = nWords//2*2
                     #else:
                     nFloats = nWords
-                    print "***nFloats = %s" %(nFloats)
+                    #print "***nFloats = %s" %(nFloats)
                     data = f.read(nFloats*4); self.n+=nFloats*4
                     packStr = self.endian+'f'*nFloats
                 elif Type==2: # real double precision
                     nDoubles = nWords//2
-                    print "***nDoubles = %s" %(nDoubles)
+                    #print "***nDoubles = %s" %(nDoubles)
+                    #print self.printSection(60)
                     data = f.read(nDoubles*8); self.n+=nDoubles*8
                     packStr = self.endian+'d'*nDoubles
                 else:
@@ -243,19 +273,35 @@ class OP4(FortranFile):
         print '----------------------------------'
         if not isSparse:
             f.read(4); self.n+=4
-        #print self.printSection(100)
+        
+        if isSparse and isBigMat:  ## hack
+            print self.printSection(40)
+            print "?*A?"
+            n = 12
+            f.read(n); self.n+=n
+
         if isSparse:
-            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype='f') # Initialize a real matrix
+            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # Initialize a real matrix
             #print "type = %s %s" %(type(A),type(A.todense()))
-            #A = A.todense()
+            A = A.todense()
         return A
 
-    def readComplex(self,f,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat):
+    def readComplex(self,f,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType):
         print "*********readComplex************"
+
+        if floatType=='single':
+            dType = 'complex64'
+        elif floatType=='double':
+            dType = 'complex128'
+        elif Type==3: # default
+            dType = 'complex64'
+        else:
+            dType = 'complex128'
+
         if isSparse:
             rows=[]; cols=[]; entries=[]
         else:
-            A = zeros((nrows,ncols),'complex') # Initialize a complex matrix
+            A = zeros((nrows,ncols),dType)
 
         nLoops = 0
         wasBroken=False
@@ -295,10 +341,10 @@ class OP4(FortranFile):
                 break
 
             if irow>nrows+1:
-                sys.exit('what happened irow is too large...nrow=%s irow=%s icol=%s' %(nrow,irow,icol))
+                sys.exit('what happened irow is too large...nrows=%s irow=%s icol=%s' %(nrows,irow,icol))
 
             nFloats = nWords//2
-            print "nWords=%s nFloats=%s" %(nWords,nFloats)
+            print "nWords=%s nFloats=%s nDoubles=%s" %(nWords,nFloats,nWords//4)
             #if nWords>2:
                 #print self.printSection(40)
 
@@ -360,9 +406,9 @@ class OP4(FortranFile):
             f.read(4); self.n+=4
         #print self.printSection(100)
         if isSparse:
-            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype='complex') # Initialize a real matrix
+            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # Initialize a real matrix
             #print "type = %s %s" %(type(A),type(A.todense()))
-            #A = A.todense()
+            A = A.todense()
         return A
 
     def getIRow(self,f,irow,nWords,Type,isSparse,isBigMat):
@@ -371,15 +417,18 @@ class OP4(FortranFile):
             #nWords = (nWords-1)//2  ## @todo this cant be right...
             
             if isBigMat:
-                raise NotImplementedError('isBigMat=True')
+                #raise NotImplementedError('isBigMat=True')
             #if isBigMat:
                 #if len(sline)==2:
                 #    pass
                 #else:
                 #    sline = f.readline().strip().split()
                 #assert len(sline)==2,'sline=%s len(sline)=%s' %(sline,len(sline))
-                #(idummy,irow) = sline
-                #irow = int(irow)
+                print self.printSection(40)
+                print "***************************"
+                data = f.read(8); self.n+=8
+                (idummy,irow) = unpack('2i',data)
+                print "irow=%s idummy=%s" %(irow,idummy)
             else:
                 print "***************************"
                 #print self.printSection(100)
@@ -399,7 +448,7 @@ class OP4(FortranFile):
 
 if __name__=='__main__':
     filename = 'test/mat_b_dn.op4' # works
-    filename = 'test/mat_b_s1.op4'
+    #filename = 'test/mat_b_s1.op4' # works
     #filename = 'test/mat_b_s2.op4'
     #matrixNames = 'EYE5CD'
     matrixNames = None
