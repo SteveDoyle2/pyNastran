@@ -7,6 +7,11 @@ from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.general.generalMath import printMatrix
 
 class OP4(FortranFile):
+    """
+    @todo integrate with ASCII reader; get rid of isAscii
+    @todo add endian checking
+    @todo test on big matrices
+    """
     def __init__(self):
         FortranFile.__init__(self)
         self.makeOp2Debug = False # required to make FortranFile work
@@ -29,7 +34,7 @@ class OP4(FortranFile):
         @param op4Name an OP4 filename.  Type=STRING.
         @param matrixNames list of matrix names (or None); Type=LIST OF STRINGS / NONE.
         @param floatType specifies if the matrices are in single or double precsion
-               (default='default') which means the format will be whatever the file is in
+               (values='default','single','double') which means the format will be whatever the file is in
          
         @param isAscii the OP4 is an ASCII (human-readable file).  Type=BOOL.
         @retval dictionary of matrices where the key is the name and the value is a matrix:
@@ -41,17 +46,12 @@ class OP4(FortranFile):
         format before performing math on them.  This is standard with sparse matrices.
         @warning isAscii=False is not supported.
         """
-        assert floatType in ['default','single','dobule']
+        assert floatType in ['default','single','double']
         assert isinstance(isAscii,bool),'isAscii must be a boolean.  isAscii=%s type=%s' %(isAscii,type(isAscii))
         assert isAscii==False,'Only isAscii=False supported; isAscii=%s' %(isAscii)
         if isinstance(matrixNames,str):
             matrixNames = [matrixNames]
         self.op2 = open(op4Name,'rb')
-        #print self.printSection(80)
-        
-        print '------------------------'
-        #print self.printSection(20)
-        #self.op2.read(4); self.n+=4 # record length
 
         matrices = {}
         name = 'dummyName'
@@ -72,25 +72,53 @@ class OP4(FortranFile):
             i+=1
         return matrices
 
+    def readStartMarker(self,f):
+        data = f.read(4); self.n+=4
+        (recordLength,) = unpack(self.endian+'i',data)
+
+        recordLength = 16
+        data = f.read(recordLength); self.n+=recordLength
+
+        if recordLength==16: # b,icol,irow,nWords,
+            (a,icol,irow,nWords) = unpack(self.endian+'4i',data)
+        else:
+            raise NotImplementedError('recordLength=%s' %(recordLength))
+        return (a,icol,irow,nWords)
+
+    def getIRowSmall(self,f):
+        data = f.read(4); self.n+=4
+        IS, = unpack('i',data)
+        L = IS//65536 - 1
+        irow = IS - 65536*(L + 1)
+        return irow
+
+    def getIRowBig(self,f):
+        data = f.read(8); self.n+=8
+        (idummy,irow) = unpack('2i',data)
+        return irow
+
     def readMatrix(self,f,floatType,matrixNames=None):
         """reads a matrix"""
-        print "***********starting**************"
-        #print self.printSection(80)
-        data = f.read(28); self.n+=28
+        data = f.read(4); self.n+=4
+        (recordLength,) = unpack(self.endian+'i',data)
         
-        (recordLength,ncols,nrows,form,Type,name) = unpack(self.endian+'5i8s',data)
+        data = f.read(recordLength); self.n+=recordLength
+        if recordLength==24:
+            (ncols,nrows,form,Type,name) = unpack(self.endian+'4i8s',data)
+            #print "N=%s recordLength=%s ncols=%s nrows=%s form=%s Type=%s name=%s" %(self.n,recordLength,ncols,nrows,form,Type,name)
+        else:
+            raise NotImplementedError('recordLength=%s\n%s' %(recordLength,self.printSection(60)))
 
-        print "*N=%s recordLength=%s nrows=%s ncols=%s form=%s Type=%s name=|%s|" %(
-               self.n,recordLength,nrows,ncols,form,Type,name)
-        assert Type in [1,2,3,4],'Invalid Type.  Type=%s.  1,2=Real; 3,4=Complex; 1,3=Single Precision; 2,4=Double Precision' %(Type)
-        if Type==1:
-            print "Type = Real, Single Precision"
-        elif Type==2:
-            print "Type = Real, Double Precision"
-        elif Type==3:
-            print "Type = Complex, Single Precision"
-        elif Type==4:
-            print "Type = Complex, Double Precision"
+        if 0:
+            if Type==1:
+                print "Type = Real, Single Precision"
+            elif Type==2:
+                print "Type = Real, Double Precision"
+            elif Type==3:
+                print "Type = Complex, Single Precision"
+            elif Type==4:
+                print "Type = Complex, Double Precision"
+
         if nrows<0: # if less than 0, big
             isBigMat = True
             nrows = abs(nrows)
@@ -98,364 +126,182 @@ class OP4(FortranFile):
             isBigMat = False
         else:
             raise RuntimeError('unknown BIGMAT.  nRows=%s' %(nrows))
-        #print "isBigMat=%s" %(isBigMat)
-        assert 0<nrows<40
-        assert 0<ncols<40
-
-
-        name = name.strip()
-        if not name.isalnum():
-            sys.exit('matrix name is not an ASCII string...')
-
-        print self.printSection(60)
-        data = f.read(recordLength); self.n+=recordLength
-        if recordLength==20:
-            (recordLength,b,icol,irow,nWords) = unpack(self.endian+'5i',data)
+        
+        if Type==1:
+            NWV = 1 # number words per value
+            d = 'f'
+            dType = 'float32'
+        elif Type==2:
+            NWV = 2
+            d = 'd'
+            dType = 'float64'
+        elif Type==3:
+            NWV = 2
+            d = 'ff'
+            dType = 'complex64'
+        elif Type==4:
+            NWV = 4
+            d = 'dd'
+            dType = 'complex128'
         else:
-            raise NotImplementedError('recordLength=%s' %(recordLength))
-        print "N=%s recordLength=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,recordLength,b,irow,icol,nWords)
+            raise RuntimeError("Type=%s" %(Type))
+
+        # reset the type if 'default' not selected
+        if floatType=='single':
+            if Type==[1,2]:
+                dType='float32'
+            else:
+                dType='complex64'
+        elif floatType=='double':
+            if Type==[1,2]:
+                dType='float64'
+            else:
+                dType='complex128'
+
+        # jump forward to get if isSparse, then jump back
+        nSave = self.n
+        (_a,_icol,_irow,_nWords) = self.readStartMarker(f)
+        f.seek(nSave); self.n=nSave
 
         isSparse = False
-        if irow==0:
+        if _irow==0:
             isSparse = True
-        print "isBigMat=%s isSparse=%s" %(isBigMat,isSparse)
-
-        if Type in [1,2]: # real
-            (A) = self.readReal(f,name,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType)
-        elif Type in [3,4]: # complex
-            (A) = self.readComplex(f,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType)
-        else:
-            raise RuntimeError('invalid matrix type.  Type=%s' %(Type))
-
-        print "N=%s name=%s is finished\n" %(self.n,name)
-        #print dir(A)
-        #print A
-        print printMatrix(A)
-
-        if not(matrixNames is None or name in matrixNames): # kill the matrix
-            A = None
-        return name,A
-
-
-    def readReal(self,f,name,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType):
-        """
-        @todo possibly split this into readDenseReal and readSparseReal
-        to get rid of all the extra isSparse checks.  This would cleanup the
-        runLoop condition as well.
-        """
-        print "*********readReal************"
-        if floatType=='single':
-            dType = 'float32'
-        elif floatType=='double':
-            dType = 'float64'
-        elif Type==1: # default
-            dType = 'float32'
-        else:
-            dType = 'float64'
-
-        if isSparse:
-            rows=[]; cols=[]; entries=[]
-        else:
-            A = zeros((nrows,ncols),dType) # Initialize a real matrix
-
-        nLoops = 0
-        wasBroken=False
-        while 1:
-            #if nLoops>0 and not wasBroken:
-                #line = f.readline().rstrip()
-                #asf
-            isRewound = False
-
-            if nLoops>0:
-                #print self.printSection(120)
-                n = self.n
-                icolOld=icol
-                irowOld=irow
-                print "N = ",self.n
-                data = f.read(20); self.n+=20
-                (recordLength,b,icol,irow,nWords) = unpack(self.endian+'5i',data)
-                print "reading recordLength=%s n=20 delta=%s" %(recordLength,recordLength-20)
-                print "N=%s iLoop=%s recordLength=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,nLoops,recordLength,b,irow,icol,nWords)
-
-                if icol==0: # rewind
-                    self.n = n; f.seek(n)
-                    print "N = ",self.n
-                    isRewound = True
-                    icol=icolOld
-                    irow=irowOld
-                    
-                    #print self.printSection(60)
-                    #data = f.read(4); self.n+=4
-                    data = f.read(16); self.n+=16
-                    print "reading recordLength=%s n=16 delta=%s" %(recordLength,n,recordLength-n)
-                    (b,icol,irow,nWords) = unpack(self.endian+'4i',data)
-                    print "****N=%s iLoop=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,nLoops,b,irow,icol,nWords)
-                    sys.stdout.flush()
-                    #break
-                #print "b=%s" %(b)
-            ###
-
-            #print "b=%s" %(b)
-            if nLoops>0 and isBigMat==True and icol>ncols:
-                break
-
-            irow,isEndSparse = self.getIRow(f,irow,nWords,Type,isSparse,isBigMat)
-            if isEndSparse and nWords//2!=0:
-                print self.printSection(40)
-                break
-
-            if irow>nrows+1:
-                sys.exit('what happened irow is too large...nrows=%s irow=%s icol=%s' %(nrows,irow,icol))
-
-            nFloats = nWords//2
-            print "nWords=%s nFloats=%s nDoubles=%s" %(nWords,nWords,nWords//2)
-            #if nWords>2:
-                #print self.printSection(40)
-
-            assert nFloats<1000
-            assert nWords//4<nrows*ncols
-
-            if nFloats > 0 and not isEndSparse:
-                if   Type==1: # real single precision
-                    #if isSparse and name != 'STRINGS': ## @todo this is obviously wrong...
-                    #    nFloats = nWords//2*2
-                    #else:
-                    nFloats = nWords
-                    #print "***nFloats = %s" %(nFloats)
-                    data = f.read(nFloats*4); self.n+=nFloats*4
-                    packStr = self.endian+'f'*nFloats
-                elif Type==2: # real double precision
-                    nDoubles = nWords//2
-                    #print "***nDoubles = %s" %(nDoubles)
-                    #print self.printSection(60)
-                    data = f.read(nDoubles*8); self.n+=nDoubles*8
-                    packStr = self.endian+'d'*nDoubles
-                else:
-                    raise NotImplementedError('Type=%s 3=complex single; 4=complex double' %(Type))
-                print "N = %s" %(self.n)
-                #print "packStr = ",packStr,len(data)
-                valueList = unpack(packStr,data)
-                for value in valueList:
-                    #print "irow=%s icol=%s nWords=%s nFloats=%s" %(irow,icol,nWords,nFloats)
-                    if irow<=nrows:
-                        print " A[%s,%s] = %f" %(irow,icol,value)
-                        try:
-                            if isSparse:
-                                rows.append(irow-1)
-                                cols.append(icol-1)
-                                entries.append(value)
-                            else:
-                                A[irow-1,icol-1] = value
-                            #print "*A[%s,%s] = %s" %(irow,icol,A[irow-1,icol-1])
-                        except IndexError:
-                            print A.shape
-                            raise
-                    else:
-                        print "*A[%s,%s] = %f" %(irow,icol,value)
-                    irow += 1
-                #print self.printSection(80)
-            else:
-                if   Type==1: # real single precision
-                    data = f.read(4); self.n+=4
-                    dummy, = unpack(self.endian+'f',data)
-                    #f.read(4); self.n+=4
-                elif Type==2: # real double precision
-                    data = f.read(8); self.n+=8
-                    dummy, = unpack(self.endian+'d',data)
-                    #f.read(8); self.n+=8
-                else:
-                    raise NotImplementedError('Type=%s 1=real single; 2=real double' %(Type))
-                print "***end of matrix; dummy = %s" %(dummy)
-                break
-            ###
-            nLoops += 1
-        ###
-        print '----------------------------------'
-        if not isSparse:
-            f.read(4); self.n+=4
-        
-        if isSparse and isBigMat:  ## hack
-            print self.printSection(40)
-            print "?*A?"
-            n = 12
-            f.read(n); self.n+=n
-
-        if isSparse:
-            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # Initialize a real matrix
-            #print "type = %s %s" %(type(A),type(A.todense()))
-            A = A.todense()
-        return A
-
-    def readComplex(self,f,nrows,ncols,irow,icol,nWords,Type,isSparse,isBigMat,floatType):
-        print "*********readComplex************"
-
-        if floatType=='single':
-            dType = 'complex64'
-        elif floatType=='double':
-            dType = 'complex128'
-        elif Type==3: # default
-            dType = 'complex64'
-        else:
-            dType = 'complex128'
-
-        if isSparse:
-            rows=[]; cols=[]; entries=[]
+            rows = []
+            cols = []
+            entries = []
         else:
             A = zeros((nrows,ncols),dType)
 
-        nLoops = 0
-        wasBroken=False
-        while 1:
-            print "restarting loop..."
-            #if nLoops>0 and not wasBroken:
-                #line = f.readline().rstrip()
-                #asf
-            isRewound = False
 
-            if nLoops>0:
-                #print self.printSection(120)
-                n = self.n
-                icolOld=icol
-                irowOld=irow
-                
-                data = f.read(20); self.n+=20
-                (recordLength,b,icol,irow,nWords) = unpack(self.endian+'5i',data)
-                print "N=%s iLoop=%s recordLength=%s b=%s irow=%s icol=%s nWords=%s" %(self.n,nLoops,recordLength,b,irow,icol,nWords)
-                print "~~~~~~~~"
+        icol=-1 # dummy value so the loop starts
+        if Type in [1,2]: # real
+            while icol<ncols+1: # if isDense
+                (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
 
-                if icol==0: # rewind
-                    self.n = n
-                    isRewound = True
-                    asdf
+                if nWords==0 and isBigMat:
+                    self.n-=4; f.seek(self.n)
                     break
-                #print "b=%s" %(b)
-            ###
 
+                recordLength = 4*nWords
+                data = f.read(recordLength); self.n+=recordLength
 
-            #runLoop = True
-            #while (len(sline)==1 or len(sline)==2) and 'E' not in line or runLoop: # next sparse entry
-            (irow,isEndSparse) = self.getIRow(f,irow,nWords,Type,isSparse,isBigMat)
+                if icol==ncols+1:
+                    continue
 
-            if isEndSparse and nWords//2!=0:
-                print self.printSection(40)
-                break
+                nValues = nWords//NWV
+                if nValues==0:
+                    assert icol==ncols+1
+                    break
 
-            if irow>nrows+1:
-                sys.exit('what happened irow is too large...nrows=%s irow=%s icol=%s' %(nrows,irow,icol))
-
-            nFloats = nWords//2
-            print "nWords=%s nFloats=%s nDoubles=%s" %(nWords,nFloats,nWords//4)
-            #if nWords>2:
-                #print self.printSection(40)
-
-            assert nFloats<1000
-            assert nWords//4<nrows*ncols
-
-            if nFloats > 0 and not isEndSparse:
-                if   Type==3: # complex single precision
-                    #if nWords%2==1:  # @todo why is this needed???
-                        #f.read(4); self.n+=4
-                    nFloats = nWords//2*2
-                    data = f.read(nFloats*4); self.n+=nFloats*4
-                    packStr = self.endian+'f'*nFloats
-                elif Type==4: # complex double precision
-                    nDoubles = nWords//2
-                    data = f.read(nDoubles*8); self.n+=nDoubles*8
-                    packStr = self.endian+'d'*nDoubles
+                strValues = nValues*d
+                valueList = unpack(strValues,data)
+                
+                irow-=1
+                icol-=1
+                if isSparse:
+                    cols += [icol]*nValues
+                    rows += [i+irow for i in range(nValues)]
+                    for value in valueList:
+                        entries.append(value)
+                        irow+=1
                 else:
-                    raise NotImplementedError('Type=%s 3=complex single; 4=complex double' %(Type))
-                #print "packStr = ",packStr,len(data)
-                valueList = unpack(packStr,data)
-                assert len(valueList)%2==0
-                for i,value in enumerate(valueList):
-                    #print "irow=%s icol=%s nWords=%s nFloats=%s" %(irow,icol,nWords,nFloats)
-                    
-                    if i%2==0:
-                        #print "A[%s,%s] = %f" %(irow,icol,value)
-                        realValue = value
-                    else:
-                        print "A[%s,%s] = %s %fj" %(irow,icol,realValue,value)
-                        if isSparse:
-                            rows.append(irow-1)
-                            cols.append(icol-1)
-                            entries.append(complex(realValue,value))
+                    for value in valueList:
+                        A[irow,icol] = value
+                        irow+=1
+
+        elif Type in [3,4]: # complex
+            while icol<ncols+1: # if isDense
+                (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
+
+                if nWords==0 and isBigMat:
+                    self.n-=4; f.seek(self.n)
+                    break
+
+                recordLength = 4*nWords
+                data = f.read(recordLength); self.n+=recordLength
+
+                nValues = nWords//NWV
+                if nValues==0:
+                    assert icol==ncols+1
+                    break
+
+                strValues = nValues*d
+                valueList = unpack(strValues,data)
+
+                if icol==ncols+1:
+                    continue
+                
+                irow-=1
+                icol-=1
+
+                if isSparse:
+                    cols += [icol]*nValues
+                    rows += [i+irow for i in range(nValues)]
+                    for i,value in enumerate(valueList):
+                        if i%2==0:
+                            realValue = value
                         else:
-                            A[irow-1,icol-1] = complex(realValue,value)
-                        irow += 1
-
-                #print self.printSection(80)
-            else:
-                if   Type==3: # complex single precision
-                    data = f.read(4); self.n+=4
-                    dummy, = unpack(self.endian+'f',data)
-                    #f.read(4); self.n+=4
-                elif Type==4: # complex double precision
-                    data = f.read(8); self.n+=8
-                    dummy, = unpack(self.endian+'d',data)
-                    #f.read(8); self.n+=8
+                            #A[irow,icol] = complex(realValue,value)
+                            entries.append(complex(realValue,value))
+                            irow+=1
                 else:
-                    raise NotImplementedError('Type=%s 3=complex single; 4=complex double' %(Type))
-                print "***end of matrix; dummy = %s" %(dummy)
-                print "broken...."
-                break
-            ###
-            nLoops += 1
-        ###
-        print '----------------------------------'
-        if not isSparse:
+                    for i,value in enumerate(valueList):
+                        if i%2==0:
+                            realValue = value
+                        else:
+                            A[irow,icol] = complex(realValue,value)
+                            irow+=1
+        else:
+            raise RuntimeError("Type=%s" %(Type))
+        #print printMatrix(A)
+
+        if d in ['d','dd']:
+            f.read(8); self.n+=8
+        elif d in ['f','ff']:
             f.read(4); self.n+=4
-        #print self.printSection(100)
+        else:
+            raise NotImplementedError(d)
+        
         if isSparse:
+            #print "len(rows)=%s len(cols)=%s len(entries)=%s" %(len(rows),len(cols),len(entries))
             A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # Initialize a real matrix
             #print "type = %s %s" %(type(A),type(A.todense()))
-            A = A.todense()
-        return A
+            #A = A.todense()
+        return (name,A)
 
-    def getIRow(self,f,irow,nWords,Type,isSparse,isBigMat):
-        isEndSparse = False
+    def getMarkers(self,f,isSparse,isBigMat):
         if isSparse:
-            #nWords = (nWords-1)//2  ## @todo this cant be right...
-            
             if isBigMat:
-                #raise NotImplementedError('isBigMat=True')
-            #if isBigMat:
-                #if len(sline)==2:
-                #    pass
-                #else:
-                #    sline = f.readline().strip().split()
-                #assert len(sline)==2,'sline=%s len(sline)=%s' %(sline,len(sline))
-                print self.printSection(40)
-                print "***************************"
-                data = f.read(8); self.n+=8
-                (idummy,irow) = unpack('2i',data)
-                print "irow=%s idummy=%s" %(irow,idummy)
+                (a,icol,irow,nWords) = self.readStartMarker(f)
+                (irow) = self.getIRowBig(f)
+                if nWords>1:
+                    nWords -= 2
+                else:
+                    nWords = 0
             else:
-                print "***************************"
-                #print self.printSection(100)
-                data = f.read(4); self.n+=4
-                IS, = unpack('i',data)
-                #IS = int(f.readline().strip())
-                L = IS//65536 - 1
-                irow = IS - 65536*(L + 1)
-                print "IS=%s L=%s irow=%s" %(IS,L,irow)
-                if L==-1:
-                    isEndSparse = True
-                ###
+                (a,icol,irow,nWords) = self.readStartMarker(f)
+                if irow!=0:
+                    assert nWords==1,'nWords=%s' %(nWords)
+
+                (irow) = self.getIRowSmall(f)
+                nWords -= 1
             ###
-        ###
-        
-        return irow,isEndSparse
+        else:
+            (a,icol,irow,nWords) = self.readStartMarker(f)
+        return (icol,irow,nWords)
 
 if __name__=='__main__':
     filename = 'test/mat_b_dn.op4' # works
-    #filename = 'test/mat_b_s1.op4' # works
-    #filename = 'test/mat_b_s2.op4'
-    #matrixNames = 'EYE5CD'
+    filename = 'test/mat_b_s1.op4' # works
+    filename = 'test/mat_b_s2.op4'
+    #matrixNames = 'RND1RD'
     matrixNames = None
     op4 = OP4()
     matrices = op4.readOP4(filename,matrixNames=matrixNames)
     for name,matrix in sorted(matrices.items()):
         print "name = %s" %(name)
+        if isinstance(matrix,coo_matrix):
+            matrix = matrix.todense()
         
         print printMatrix(matrix)
     print "-----------------------------"

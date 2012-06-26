@@ -105,7 +105,7 @@ class OP4(object):
         runLoop condition as well.
         """
         if isSparse:
-            rows=[]; cols=[]; data=[]
+            rows=[]; cols=[]; entries=[]
         else:
             A = zeros((nrows,ncols),'f') # Initialize a real matrix
 
@@ -156,7 +156,7 @@ class OP4(object):
                         if isSparse:
                             rows.append(irow-1)
                             cols.append(icol-1)
-                            data.append(word)
+                            entries.append(word)
                         else:
                             A[irow-1,icol-1] = float(word)
                         n += lineSize
@@ -170,7 +170,7 @@ class OP4(object):
         f.readline()
 
         if isSparse:
-            A = coo_matrix( (data,(rows,cols)),shape=(nrows,ncols),dtype='f') # Initialize a real matrix
+            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype='f') # Initialize a real matrix
             #print "type = %s %s" %(type(A),type(A.todense()))
             #A = A.todense()
         return A
@@ -182,7 +182,7 @@ class OP4(object):
         runLoop condition as well.
         """
         if isSparse:
-            rows=[]; cols=[]; data=[]
+            rows=[]; cols=[]; entries=[]
         else:
             A = zeros((nrows,ncols),'complex') # Initialize a complex matrix
 
@@ -220,17 +220,17 @@ class OP4(object):
                         break
 
                     for i in range(nWordsInLine):
-                        word = float(line[n:n+lineSize])
+                        value = float(line[n:n+lineSize])
 
                         if iWord%2==0:
-                            realValue = word
+                            realValue = value
                         else:
                             if isSparse:
                                 rows.append(irow-1)
                                 cols.append(icol-1)
-                                data.append(realValue+word*1j)
+                                entries.append(complex(realValue,value))
                             else:
-                                A[irow-1,icol-1] = realValue+word*1j
+                                A[irow-1,icol-1] = complex(realValue,value)
                             irow +=1
                         iWord +=1
                         n += lineSize
@@ -240,7 +240,7 @@ class OP4(object):
             ###
         ###
         if isSparse:
-            A = coo_matrix( (data,(rows,cols)),shape=(nrows,ncols),dtype='complex') # Initialize a real matrix
+            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype='complex') # Initialize a real matrix
             #print "type = %s %s" %(type(A),type(A.todense()))
             #A = A.todense()
         f.readline()
@@ -278,10 +278,10 @@ class OP4(object):
         return n
 
 if __name__=='__main__':
-    filename = 'mat_t_dn.op4' # works
-    #filename = 'mat_t_s1.op4' # works
-    #filename = 'mat_t_s2.op4' # works
-    matrixNames = 'STRINGS'
+    filename = 'test/mat_t_dn.op4' # works
+    #filename = 'test/mat_t_s1.op4' # works
+    #filename = 'test/mat_t_s2.op4' # works
+    matrixNames = 'RND1RS'
     #matrixNames = None
     op4 = OP4()
     matrices = op4.readOP4(filename,matrixNames=matrixNames)
