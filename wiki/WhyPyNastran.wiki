@@ -31,7 +31,7 @@ So ask questions, post in the forum, make tickets.  It's not going to do what yo
 
 = Alternatives =
  * [http://www.ata-e.com/downloads/imat/ IMAT] is a very capable MATLAB toolbox developed by [http://www.ata-e.com/ ATA-E Engineering].
- * [http://www.ferespost.be/ FeResPost] a GPL Ruby-based extension (Windows/Linux) or a COM component or .NET assembly (Windows).  I think this works with VBA.  It's also in French.  I haven't used it, but it actually has real documentation, but at a glance seems pretty capable.
+ * [http://www.ferespost.be/ FeResPost] a GPL Ruby-based extension (Windows/Linux) or a COM component or .NET assembly (Windows).  I think this works with VBA.  It's also in French.  I haven't used it, but it actually has real documentation and at a glance seems pretty capable.
  * [http://translate.google.com/translate?hl=en&sl=de&u=http://mbi-wiki.uni-wuppertal.de/2010/07/&prev=/search%3Fq%3DPYNASTRAN%26start%3D40%26hl%3Den%26client%3Dfirefox-beta%26hs%3DOh8%26sa%3DN%26rls%3Dorg.mozilla:en-US:official%26biw%3D1079%26bih%3D588%26prmd%3Dimvns&sa=X&ei=abjqT6Vt8YDYBePu8bQB&ved=0CFQQ7gEwATgo PyNASTRAN.py] is the original pyNastran!  I accidentally stole the name :)  It's got a basic reader and viewer.  I was never able to get it to work.
 
 If you have any others, let me know and it will be added.
