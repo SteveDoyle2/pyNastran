@@ -22,7 +22,7 @@ So in summary:
  * you can make a [http://code.google.com/p/pynastran/issues/list ticket] and it will get fixed (unlike the tickets I make :)
  * it's really easy to add additional features (once you know your way around)
  * it hooks in well with other programs (e.g. the stress/deflection margin calculator)
- * it will work in much larger programs (e.g. [openmdao.org/ NASA's OpenMDAO]) and even supports the OpenMDAO [http://code.google.com/p/pynastran/wiki/Optimization optimization format] that's used in the their NastranWrapper
+ * it will work in much larger programs (e.g. [http://www.openmdao.org NASA's OpenMDAO]) and even supports the OpenMDAO [http://code.google.com/p/pynastran/wiki/Optimization optimization format] that's used in the their NastranWrapper
  * it supports large/small/CSV/tab formatted cards
  * it cards write out in small field format with minimal loss of precision
 
@@ -31,6 +31,7 @@ So ask questions, post in the forum, make tickets.  It's not going to do what yo
 
 = Alternatives =
  * [http://www.ata-e.com/downloads/imat/ IMAT] is a very capable MATLAB toolbox developed by [http://www.ata-e.com/ ATA-E Engineering].
+ * [https://github.com/OpenMDAO-Plugins/nastranwrapper NastranWrapper] developed by NASA as part of [openmdao.org OpenMDAO].  It's open-source, and meant to be used as part of OpenMDAO, which is also open-source.  My understanding is that it's meant as a quick find-replace tool to be be used as part of optimization, whereas pyNastran's goal is to read everything.  It's also very well done.
  * [http://www.ferespost.be/ FeResPost] a GPL Ruby-based extension (Windows/Linux) or a COM component or .NET assembly (Windows).  I think this works with VBA.  It's also in French.  I haven't used it, but it actually has real documentation and at a glance seems pretty capable.
  * [http://translate.google.com/translate?hl=en&sl=de&u=http://mbi-wiki.uni-wuppertal.de/2010/07/&prev=/search%3Fq%3DPYNASTRAN%26start%3D40%26hl%3Den%26client%3Dfirefox-beta%26hs%3DOh8%26sa%3DN%26rls%3Dorg.mozilla:en-US:official%26biw%3D1079%26bih%3D588%26prmd%3Dimvns&sa=X&ei=abjqT6Vt8YDYBePu8bQB&ved=0CFQQ7gEwATgo PyNASTRAN.py] is the original pyNastran!  I accidentally stole the name :)  It's got a basic reader and viewer.  I was never able to get it to work.
 
