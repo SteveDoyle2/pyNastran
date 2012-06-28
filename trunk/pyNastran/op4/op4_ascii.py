@@ -9,7 +9,7 @@ class OP4(object):
     def __init__(self):
         pass
 
-    def readOP4(self,op4Name,matrixNames=None,isAscii=True):
+    def readOP4(self,op4Name,matrixNames=None):
         """
         Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
         matrices as the output arguments of the function.  The number of matrices
@@ -34,11 +34,6 @@ class OP4(object):
         format before performing math on them.  This is standard with sparse matrices.
         @warning isAscii=False is not supported.
         """
-        assert isinstance(isAscii,bool),'isAscii must be a boolean.  isAscii=%s type=%s' %(isAscii,type(isAscii))
-        assert isAscii==True,'Only isAscii=True supported; isAscii=%s' %(isAscii)
-        if isinstance(matrixNames,str):
-            matrixNames = [matrixNames]
-
         f = open(op4Name,'r')
         matrices = {}
         name = 'dummyName'
@@ -53,7 +48,7 @@ class OP4(object):
             i+=1
         return matrices
 
-    def readMatrix(self,f,matrixNames=None):
+    def readMatrixAscii(self,f,matrixNames=None):
         """reads a matrix"""
         line = f.readline().rstrip()
         if line=='':
@@ -98,7 +93,7 @@ class OP4(object):
         return name,A
 
 
-    def readReal(self,f,nrows,ncols,lineSize,line,isSparse,isBigMat):
+    def readRealAscii(self,f,nrows,ncols,lineSize,line,isSparse,isBigMat):
         """
         @todo possibly split this into readDenseReal and readSparseReal
         to get rid of all the extra isSparse checks.  This would cleanup the
@@ -175,7 +170,7 @@ class OP4(object):
             #A = A.todense()
         return A
 
-    def readComplex(self,f,nrows,ncols,lineSize,line,isSparse,isBigMat):
+    def readComplexAscii(self,f,nrows,ncols,lineSize,line,isSparse,isBigMat):
         """
         @todo possibly split this into readDenseComplex and readSparseComplex
         to get rid of all the extra isSparse checks.  This would cleanup the
@@ -246,7 +241,7 @@ class OP4(object):
         f.readline()
         return A
 
-    def getIRow(self,f,line,sline,nWords,irow,isSparse,isBigMat):
+    def getIRowAscii(self,f,line,sline,nWords,irow,isSparse,isBigMat):
         if isSparse:
             #nWords = (nWords-1)//2  ## @todo this cant be right...
             sline = line.strip().split()
@@ -269,7 +264,7 @@ class OP4(object):
         ###
         return irow
 
-    def letterCount(self,word,letter):
+    def letterCountAscii(self,word,letter):
         """Counts the number of occurrences of a letter in a word/line."""
         n=0
         for L in word:
