@@ -1,10 +1,10 @@
 import os
 import sys
 from struct import pack,unpack
-from numpy import zeros,float32,float64,complex64,complex128
+from numpy import array,zeros,float32,float64,complex64,complex128,allclose
 from scipy.sparse import coo_matrix
 from pyNastran.general.general import is_binary
-from pyNastran.general.generalMath import printMatrix
+from pyNastran.general.generalMath import printMatrix,printAnnotatedMatrix
 from pyNastran.op2.fortranFile import FortranFile
 
 class OP4(FortranFile):
@@ -395,6 +395,7 @@ class OP4(FortranFile):
 
         recordLength = 16
         data = f.read(recordLength); self.n+=recordLength
+        assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
 
         if recordLength==16: # b,icol,irow,nWords,
             (a,icol,irow,nWords) = unpack(self.endian+'4i',data)
@@ -403,17 +404,26 @@ class OP4(FortranFile):
             raise NotImplementedError('recordLength=%s' %(recordLength))
         return (a,icol,irow,nWords)
 
-    def getIRowSmall(self,f):
-        data = f.read(4); self.n+=4
+    def getIRowSmall(self,f,data):
+        if len(data)==0:
+            data = f.read(4); self.n+=4
+
+        #print "$$$$$$$$ len(data) = ",len(data)
         IS, = unpack('i',data)
         L = IS//65536 - 1
         irow = IS - 65536*(L + 1)
-        return irow
+        print "IS=%s L=%s irow=%s" %(IS,L,irow)
+        #assert IS>0
+        #assert L>0
+        return irow,L
 
-    def getIRowBig(self,f):
-        data = f.read(8); self.n+=8
+    def getIRowBig(self,f,data):
+        if len(data)==0:
+            data = f.read(8); self.n+=8
         (idummy,irow) = unpack('2i',data)
-        return irow
+        print "idummy=%s irow=%s" %(idummy,irow)
+        #assert irow<100
+        return (irow,idummy-1)
 
     def readMatrixBinary(self,f,floatType,matrixNames=None):
         """reads a matrix"""
@@ -421,8 +431,10 @@ class OP4(FortranFile):
         print "*************************"
         data = f.read(4); self.n+=4
         (recordLength,) = unpack(self.endian+'i',data)
+        assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
         print "RL = %s" %(recordLength)
         
+        print self.printSection(60)
         if recordLength==24:
             data = f.read(recordLength); self.n+=recordLength
             (ncols,nrows,form,Type,name) = unpack(self.endian+'4i8s',data)
@@ -431,7 +443,7 @@ class OP4(FortranFile):
             raise NotImplementedError('recordLength=%s\n%s' %(recordLength,self.printBlock(data)))
         name = name.strip()
 
-        if 0:
+        if 1:
             if Type==1:
                 print "Type = Real, Single Precision"
             elif Type==2:
@@ -449,119 +461,37 @@ class OP4(FortranFile):
         else:
             raise RuntimeError('unknown BIGMAT.  nRows=%s' %(nrows))
         
-        if Type==1:
-            NWV = 1 # number words per value
-            d = 'f'
-        elif Type==2:
-            NWV = 2
-            d = 'd'
-        elif Type==3:
-            NWV = 2
-            d = 'ff'
-        elif Type==4:
-            NWV = 4
-            d = 'dd'
-        else:
-            raise RuntimeError("Type=%s" %(Type))
-        
-        dType = self.getDType(Type)
-
         # jump forward to get if isSparse, then jump back
         nSave = self.n
         (_a,_icol,_irow,_nWords) = self.readStartMarker(f)
         f.seek(nSave); self.n=nSave
 
+        (NWV,NBW,d,dType) = self.getMatrixInfo(Type)
+
         isSparse = False
         if _irow==0:
             isSparse = True
-            rows = []
-            cols = []
-            entries = []
-        else:
-            A = zeros((nrows,ncols),dType)
+        #    rows = []
+        #    cols = []
+        #    entries = []
+        #else:
+        #    A = zeros((nrows,ncols),dType)
+        #A = zeros((nrows,ncols),dType)
 
-
+        assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
         icol=-1 # dummy value so the loop starts
         if Type in [1,2]: # real
-            while icol<ncols+1: # if isDense
-                (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
-
-                if nWords==0 and isBigMat:
-                    self.n-=4; f.seek(self.n)
-                    break
-
-                recordLength = 4*nWords
-                data = f.read(recordLength); self.n+=recordLength
-                print "dataFormat=%s RL=%s NNext=%s" %(d,recordLength,self.n)
-                if icol==ncols+1:
-                    continue
-
-                nValues = nWords//NWV
-                if nValues==0:
-                    assert icol==ncols+1
-                    break
-
-                strValues = nValues*d
-                valueList = unpack(strValues,data)
-                
-                irow-=1
-                icol-=1
-                if isSparse:
-                    cols += [icol]*nValues
-                    rows += [i+irow for i in range(nValues)]
-                    for value in valueList:
-                        entries.append(value)
-                        irow+=1
-                else:
-                    for value in valueList:
-                        A[irow,icol] = value
-                        irow+=1
+            A = self.readRealBinary(f,nrows,ncols,Type,isSparse,isBigMat)
 
         elif Type in [3,4]: # complex
-            while icol<ncols+1: # if isDense
-                (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
-
-                if nWords==0 and isBigMat:
-                    self.n-=4; f.seek(self.n)
-                    break
-
-                recordLength = 4*nWords
-                data = f.read(recordLength); self.n+=recordLength
-
-                nValues = nWords//NWV
-                if nValues==0:
-                    assert icol==ncols+1
-                    break
-
-                strValues = nValues*d
-                valueList = unpack(strValues,data)
-
-                if icol==ncols+1:
-                    continue
-                
-                irow-=1
-                icol-=1
-
-                if isSparse:
-                    cols += [icol]*nValues
-                    rows += [i+irow for i in range(nValues)]
-                    for i,value in enumerate(valueList):
-                        if i%2==0:
-                            realValue = value
-                        else:
-                            #A[irow,icol] = complex(realValue,value)
-                            entries.append(complex(realValue,value))
-                            irow+=1
-                else:
-                    for i,value in enumerate(valueList):
-                        if i%2==0:
-                            realValue = value
-                        else:
-                            A[irow,icol] = complex(realValue,value)
-                            irow+=1
+            A = self.readComplexBinary(f,nrows,ncols,Type,isSparse,isBigMat)
         else:
             raise RuntimeError("Type=%s" %(Type))
-        #print printMatrix(A)
+        
+        try:
+            print printMatrix(A.todense())
+        except:
+            pass
 
         if d in ['d','dd']:
             f.read(8); self.n+=8
@@ -574,35 +504,326 @@ class OP4(FortranFile):
         #f.read(4); self.n+=4
         
         
-        if isSparse:  # Initialize a real matrix
-            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
+        #if isSparse:  # Initialize a real matrix
+        #    A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
 
         #print '------end1--------'
         #print self.printSection(60)
         #print '------end2--------'
         return (name,form,A)
 
+    def getMatrixInfo(self,Type):
+        if Type==1:
+            NWV = 1 # number words per value
+            NBW = 4
+            d = 'f'
+        elif Type==2:
+            NWV = 2
+            NBW = 8
+            d = 'd'
+        elif Type==3:
+            NWV = 2
+            NBW = 8
+            d = 'ff'
+        elif Type==4:
+            NWV = 4
+            NBW = 16
+            d = 'dd'
+        else:
+            raise RuntimeError("Type=%s" %(Type))
+        dType = self.getDType(Type)
+        return (NWV,NBW,d,dType)
+
+    def readRealBinary(self,f,nrows,ncols,Type,isSparse,isBigMat):
+        (NWV,NBW,d,dType) = self.getMatrixInfo(Type)
+        if isSparse:
+            rows = []
+            cols = []
+            entries = []
+        else:
+            A = zeros((nrows,ncols),dType)
+        A = zeros((nrows,ncols),dType)
+
+        data = ''
+        icol=-1 # dummy value so the loop starts
+        while icol<ncols+1: # if isDense
+            #if recordLength==0:
+            assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
+            (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
+            L = nWords
+            if 0:
+                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
+                print "-----------"
+
+            if icol==ncols+1:
+                print "breaking***"
+                break
+
+            if isSparse:
+                if isBigMat:
+                    (irow,L) = self.getIRowBig(f,data[:8])
+                    data = data[8:]
+                else:
+                    (irow,L) = self.getIRowSmall(f,data[:4])
+                    data = data[4:]
+
+            if L==-1:
+                break
+
+            if 0:
+                print "next icol"
+                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
+            
+            #if nWords==0 and isBigMat:
+                #self.n-=4; f.seek(self.n)
+                #break
+
+            recordLength = 4*nWords
+            data = f.read(recordLength); self.n+=recordLength
+            #print "dataFormat=%s RL=%s NNext=%s" %(d,recordLength,self.n)
+            #if icol==ncols+1:
+                #break
+
+            nValues = nWords//NWV
+            nRead = nWords//4
+            
+            #print "recordLength=%s NBW=%s" %(recordLength,NBW)
+            
+            nValues2 = L//NWV
+            nValues = nValues2
+            #nRead2 = (L-1)
+
+            if 0:
+                print "inner while real..."
+                print "nWords   = ",nWords
+                print "nValues  = ",nValues
+                print "nValues2 = ",nValues2
+                print "NWV      = ",NWV
+                assert nValues==nValues2
+
+            #if nValues==0:
+                #assert icol==ncols+1
+                #break
+
+            strValues = nValues*d
+            if 0:
+                print "strValues = ",strValues
+                print "nValues*NBW=%s len(data)=%s" %(nValues*NBW,len(data))
+
+            i=0
+            while len(data)>0:
+                if i==0:
+                    pass
+                else:
+                    if isSparse:
+                        if isBigMat:
+                            (irow,L) = self.getIRowBig(f,data[0:8])
+                            data = data[8:]
+                        else:
+                            (irow,L) = self.getIRowSmall(f,data[0:4])
+                            data = data[4:]
+                    assert irow>0
+                    nValues2 = L//NWV
+                    nValues = nValues2
+                
+
+                valueList = unpack(strValues,data[0:nValues*NBW])
+                assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
+                #print self.printSection(4)
+                if 0:
+                    print "valueList = ",valueList
+
+                #irow-=1
+                #icol-=1
+                #print "isSparse = ",isSparse
+                if isSparse:
+                    #cols += [icol]*nValues
+                    #rows += [i+irow for i in range(nValues)]
+                    for value in valueList:
+                        cols.append(icol-1)
+                        rows.append(irow-1)
+                        #if not allclose(value,1):
+                            #asdf
+                        #print "A[%s,%s] = %s" %(irow-1,icol-1,value)
+                        entries.append(value)
+                        A[irow-1,icol-1] = value
+                        irow+=1
+                else:
+                    for value in valueList:
+                        #print "A[%s,%s] = %s" %(irow-1,icol-1,value)
+                        A[irow-1,icol-1] = value
+                        irow+=1
+                recordLength -= nValues*NBW
+                data = data[nValues*NBW:]
+                if 0:
+                    print "recordLength=%s NBW=%s len(data)=%s" %(recordLength,NBW,len(data))
+                    #print A
+                    print "********"#,data
+                    print self.printBlock(data)
+                i+=1
+            #print "-------------------------------"
+
+        if isSparse:  # Initialize a real matrix
+            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
+
+            if isBigMat:
+                #f.read(4); self.n+=4
+                #raise NotImplementedError()
+                f.read(4); self.n+=4
+                #pass
+            else:
+                f.read(4); self.n+=4
+                #pass
+        else:
+            f.read(4); self.n+=4
+        
+        return A
+
+    def readComplexBinary(self,f,nrows,ncols,Type,isSparse,isBigMat):
+        (NWV,NBW,d,dType) = self.getMatrixInfo(Type)
+        if isSparse:
+            rows = []
+            cols = []
+            entries = []
+        else:
+            A = zeros((nrows,ncols),dType)
+        A = zeros((nrows,ncols),dType)
+
+        recordLength = 0
+        data = ''
+        icol=-1 # dummy value so the loop starts
+        while icol<ncols+1: # if isDense
+            #if recordLength==0:
+            assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
+            (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
+            if 0:
+                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
+                print "-----------"
+
+            L = nWords
+
+            if icol==ncols+1:
+                break
+
+            if isSparse:
+                if isBigMat:
+                    (irow,L) = self.getIRowBig(f,data[:8])
+                    data = data[8:]
+                else:
+                    (irow,L) = self.getIRowSmall(f,data[:4])
+                    data = data[4:]
+
+            if L==-1:
+                break
+
+            if 0:
+                print "next icol"
+                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
+
+            #if nWords==0 and isBigMat:
+                #self.n-=4; f.seek(self.n)
+                #break
+
+            recordLength = 4*nWords
+            data = f.read(recordLength); self.n+=recordLength
+            #print "dataFormat=%s RL=%s NNext=%s" %(d,recordLength,self.n)
+            if icol==ncols+1:
+                continue
+
+            nValues = nWords//NWV
+            nRead = nWords//4
+            while recordLength>=NBW:
+                if 0:
+                    print "inner while..."
+                    print "nWords  = ",nWords
+                    print "nValues = ",nValues
+                    print "NWV     = ",NWV
+
+
+                #if nValues==0:
+                    #assert icol==ncols+1
+                    #break
+
+                strValues = nValues*d
+                if 0:
+                    print "strValues = ",strValues
+                    print "nValues*NBW=%s len(data)=%s" %(nValues*NBW,len(data))
+                valueList = unpack(strValues,data[0:nValues*NBW])
+                assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
+                #print self.printSection(4)
+                #print self.printBlock(data)
+                if 0:
+                    print "valueList = ",valueList
+
+                #irow-=1
+                #icol-=1
+                #print "isSparse = ",isSparse
+                irow-=1
+                icol-=1
+
+                if isSparse:
+                    cols += [icol]*nValues
+                    rows += [i+irow for i in range(nValues)]
+                    for i,value in enumerate(valueList):
+                        if i%2==0:
+                            realValue = value
+                        else:
+                            #A[irow,icol] = complex(realValue,value)
+                            #print "A[%s,%s] = %s" %(irow,icol,complex(realValue,value))
+                            A[irow,icol] = complex(realValue,value)
+                            entries.append(complex(realValue,value))
+                            irow+=1
+                else:
+                    for i,value in enumerate(valueList):
+                        if i%2==0:
+                            realValue = value
+                        else:
+                            #print "A[%s,%s] = %s" %(irow,icol,complex(realValue,value))
+                            A[irow,icol] = complex(realValue,value)
+                            irow+=1
+
+                recordLength -= nValues*NBW
+                data = data[nValues*NBW:]
+                #print "recordLength=%s NBW=%s" %(recordLength,NBW)
+                #print printMatrix(A)
+                #print "********",data
+
+        if isSparse:  # Initialize a complex matrix
+            A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
+        
+            if isBigMat:
+                #f.read(4); self.n+=4
+                #raise NotImplementedError()
+                f.read(4); self.n+=4
+            else:
+                f.read(4); self.n+=4
+                #pass
+        else:
+            f.read(4); self.n+=4
+        return A
+
     def getMarkers(self,f,isSparse,isBigMat):
         if isSparse:
             if isBigMat:
                 (a,icol,irow,nWords) = self.readStartMarker(f)
-                (irow) = self.getIRowBig(f)
-                if nWords>1:
-                    nWords -= 2
-                else:
-                    print "nWords0 = ",nWords
-                    nWords = 0
+                #(irow) = self.getIRowBig(f)
+                nWords -=2
+                #if nWords>1:
+                #    nWords -= 2
+                #else:
+                #    print "nWords0 = ",nWords
+                #    nWords = 0
             else:
                 (a,icol,irow,nWords) = self.readStartMarker(f)
                 if irow!=0:
                     assert nWords==1,'nWords=%s' %(nWords)
 
-                (irow) = self.getIRowSmall(f)
+                #(irow) = self.getIRowSmall(f)
                 nWords -= 1
             ###
         else:
             (a,icol,irow,nWords) = self.readStartMarker(f)
-            print "N=%s a=%s icol=%s irow=%s nWords=%s"%(self.n,a,icol,irow,nWords)
+            #print "N=%s a=%s icol=%s irow=%s nWords=%s"%(self.n,a,icol,irow,nWords)
         return (icol,irow,nWords)
 
 #--------------------------------------------------------------------------
@@ -775,7 +996,7 @@ class OP4(FortranFile):
                 valueStr = ''
                 #i=0
                 if Type in [1,2]:
-                    print "iStart=%s iEnd=%s" %(iStart,iEnd)
+                    #print "iStart=%s iEnd=%s" %(iStart,iEnd)
                     for i,irow in enumerate(range(iStart,iEnd)):
                         if abs(A[irow,icol])>tol:
                             valueStr += '%23.16E' %(A[irow,icol])
@@ -783,11 +1004,11 @@ class OP4(FortranFile):
                             valueStr += ' 0.0000000000000000E+00'
                         if (i+1)%3==0:
                             msg += valueStr+'\n'
-                            print "adding", valueStr
+                            #print "adding", valueStr
                             valueStr = ''
                 else:
                     i=0
-                    print "iStart=%s iEnd=%s" %(iStart,iEnd)
+                    #print "iStart=%s iEnd=%s" %(iStart,iEnd)
                     for irow in range(iStart,iEnd):
                         if abs(A[irow,icol].real)>tol:
                             valueStr += '%23.16E' %(A[irow,icol].real)
@@ -813,36 +1034,36 @@ class OP4(FortranFile):
         return msg
 
 def matrices():
-    strings = array([ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ]
-                    [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ]
-                    [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ]
-                    [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ]
-                    [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ]
-                    [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]],'f')
+    strings = array([[ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ],
+                     [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ],
+                     [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ],
+                     [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ],
+                     [ 1   , 0   , 3   , 0   , 5   , 0   , 7   , 0   , 9   , 0   , 11  , 0   , 13  , 0   , 15  , 0   , 17  , 0   , 19  , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20   ],
+                     [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]],'f')
     return strings
 
 if __name__=='__main__':
@@ -850,10 +1071,10 @@ if __name__=='__main__':
                  #'test/mat_t_dn.op4',
                  #'test/mat_t_s1.op4',
                  #'test/mat_t_s2.op4',
-                 'test/mat_b_dn.op4',
-                 #'test/mat_b_s1.op4',  # messed up?
+                 #'test/mat_b_dn.op4',
+                 #'test/mat_b_s1.op4',
                  #'test/mat_b_s2.op4',
-                 #'test/b_sample.op4',
+                 'test/b_sample.op4',
                  #'binary.op4',
                 ]
     
@@ -863,9 +1084,10 @@ if __name__=='__main__':
     #matrixNames = 'RND1RD' # real,double
     #matrixNames = 'RND1CS' # complex,single
     #matrixNames = 'RND1CD' # complex,double
-    #matrixNames = 'STRINGS'
+    matrixNames = 'STRINGS'
     #matrixNames = 'EYE5CD' # complex identity
     matrixNames = None
+    strings = matrices()
 
     for fname in filenames:
         op4 = OP4()
@@ -884,7 +1106,7 @@ if __name__=='__main__':
             if isinstance(matrix,coo_matrix):
                 print "SPARSE"
                 matrix = matrix.todense()
-                print printMatrix(matrix)
+                print printAnnotatedMatrix(matrix)
             else:
                 print "DENSE"
                 print printMatrix(matrix)
@@ -893,7 +1115,7 @@ if __name__=='__main__':
             f.write(op4.writeDenseMatrixAscii(name,matrix,form,'default'))
             #else:
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
-        print matrices['STRINGS']-strings
+        print printAnnotatedMatrix(matrices['STRINGS'][1]-strings)
     print "-----------------------------"
     print "done"
     print "-----------------------------"
