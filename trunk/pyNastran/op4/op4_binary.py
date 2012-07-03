@@ -412,7 +412,7 @@ class OP4(FortranFile):
         IS, = unpack('i',data)
         L = IS//65536 - 1
         irow = IS - 65536*(L + 1)
-        print "IS=%s L=%s irow=%s" %(IS,L,irow)
+        #print "IS=%s L=%s irow=%s" %(IS,L,irow)
         #assert IS>0
         #assert L>0
         return irow,L
@@ -421,29 +421,29 @@ class OP4(FortranFile):
         if len(data)==0:
             data = f.read(8); self.n+=8
         (idummy,irow) = unpack('2i',data)
-        print "idummy=%s irow=%s" %(idummy,irow)
+        #print "idummy=%s irow=%s" %(idummy,irow)
         #assert irow<100
         return (irow,idummy-1)
 
     def readMatrixBinary(self,f,floatType,matrixNames=None):
         """reads a matrix"""
         #print self.printSection(60)
-        print "*************************"
+        #print "*************************"
         data = f.read(4); self.n+=4
         (recordLength,) = unpack(self.endian+'i',data)
         assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
-        print "RL = %s" %(recordLength)
+        #print "RL = %s" %(recordLength)
         
-        print self.printSection(60)
+        #print self.printSection(60)
         if recordLength==24:
             data = f.read(recordLength); self.n+=recordLength
             (ncols,nrows,form,Type,name) = unpack(self.endian+'4i8s',data)
-            print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
+            #print "nrows=%s ncols=%s form=%s Type=%s name=%s" %(nrows,ncols,form,Type,name)
         else:
             raise NotImplementedError('recordLength=%s\n%s' %(recordLength,self.printBlock(data)))
         name = name.strip()
 
-        if 1:
+        if 0:
             if Type==1:
                 print "Type = Real, Single Precision"
             elif Type==2:
@@ -556,7 +556,7 @@ class OP4(FortranFile):
                 print "-----------"
 
             if icol==ncols+1:
-                print "breaking***"
+                #print "breaking***"
                 break
 
             if isSparse:
@@ -834,7 +834,7 @@ class OP4(FortranFile):
         @retval Type matrix type 1=real,single; 2=real,double; 3=complex,single; 4=complex,double
         @retval NWV Number of Words per Value
         """
-        print A.dtype.type()
+        #print A.dtype.type()
         if isinstance(A.dtype.type(),float32):
             NWV = 1
             if precision!='double':
@@ -893,32 +893,126 @@ class OP4(FortranFile):
         assert isinstance(name,str),name
         assert isinstance(form,int),form
 
-    def writeSparseMatrixAscii(self,name,matrix,form=2,isBigMat=False,precision='default'):
+    def writeSparseMatrixAscii(self,f,name,matrix,form=2,isBigMat=False,precision='default',tol=1e-8):
         msg = ''
-        A = matrix.tolil() # list-of-lists sparse matrix
-        (Type,NWV) = self.getTypeNWV(A[0,0],precision)
+        assert isinstance(name,str),'name=%s' %(name)
+        #A = matrix.tolil() # list-of-lists sparse matrix
+        A = matrix
+        #print dir(matrix)
+        (Type,NWV) = self.getTypeNWV(A.data[0],precision)
+        if Type in [3,4]:
+            complexFactor = 2
+        else:
+            complexFactor = 1
         (nrows,ncols) = A.shape
 
         #if nrows==ncols and form==2:
         #    form = 1
         print "Type=%s" %(Type)
-        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' %(ncols,nrows,form,Type,name)
-
-        for icol in range(ncols):
-            for irow in range(nrows):
-                pass
-
         if isBigMat:
-            raise NotImplementedError()
+            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' %(ncols,-nrows,form,Type,name)
         else:
-            L = 8  # number of characters in name string
-            #IROW = IS - 65536(L + 1)
-            #L = INT(IS/65536) - 1
-            #L +1 = INT(IS/65536)
-            #IROW = IS - 65536*INT(IS/65536)
-            
-            IS = irow + 65536(L + 1)
-            raise NotImplementedError()
+            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' %(ncols,nrows,form,Type,name)
+
+        #print "A.row = ",A.row
+        #print "A.col = ",A.col
+        
+        cols = {}
+        for j in A.col:
+            cols[j] = []
+        for i,jcol in enumerate(A.col):
+            cols[jcol].append(i)
+        #print "cols = ",cols
+        
+        f.write(msg)
+        msg = ''
+        for j,col in cols.iteritems():
+            print "***********"
+            print "j=%s col=%s" %(j,col)
+            #col.sort()
+
+            irows = [A.row[jj] for jj in col]
+            #print "irows = ",irows
+            (packs) = compressColumn(irows)
+            print "packs = ",packs
+
+            nPacks = len(packs)
+            nRows = len(irows)
+            if isBigMat:
+                #L = complexFactor*(2*len(irows))+1
+                L = 2*nPacks*NWV+nRows
+                msg = '%8i%8i%8i\n' %(j+1,0,L)
+            else:
+                L = complexFactor*(2*len(irows))
+                msg = '%8i%8i%8i\n' %(j+1,0,L+1)
+            f.write(msg)
+
+            for (iPack,pack) in enumerate(packs):
+                msg = ''
+                #print "pack = ",pack
+
+                irow = A.row[col[pack[0]]]
+                if isBigMat:
+                    #L = complexFactor*(2*len(pack))+1
+                    #L = (nPacks+1) + nRows*complexFactor
+                    L = (len(pack)+1)*NWV
+                    #if iPack==0:
+                        #L+=1
+                    
+                    #L = complexFactor*(2+nPacks)+1
+                    #L = len(pack)+complexFactor*2
+                    #msg = '%8i%8i%8i\n' %(j+1,0,L+1)
+                    msg += '%8i%8i\n' %(L,irow+1 )
+                else:
+                    #L = complexFactor*(2*len(pack))
+                    #msg = '%8i%8i%8i\n' %(j+1,0,L+1)
+
+                    IS = irow + 65536*(L + 1)+1
+                    msg += '%8i\n' %(IS)
+                
+                i=0
+                valueStr = ''
+                print "pack=%s rowPack=%s" %(pack,[A.row[p] for p in pack])
+                for p in pack:
+                    irow = col[p]
+                    val = A.data[irow]
+                    irow = A.row[irow]
+
+
+                    if Type in [1,2]:
+                        if abs(val)>tol:
+                            valueStr += '%23.16E' %(val)
+                        else:
+                            valueStr += ' 0.0000000000000000E+00'
+                        if (i+1)%3==0:
+                            msg += valueStr+'\n'
+                            #print "adding", valueStr
+                            valueStr = ''
+                    else:
+                        if abs(val.real)>tol:
+                            valueStr += '%23.16E' %(val.real)
+                        else:
+                            valueStr += ' 0.0000000000000000E+00'
+                        if (i+1)%3==0:
+                            msg += valueStr+'\n'
+                            #print "adding", valueStr
+                            valueStr = ''
+                        i+=1
+                        if abs(val.imag)>tol:
+                            valueStr += '%23.16E' %(val.imag)
+                        else:
+                            valueStr += ' 0.0000000000000000E+00'
+                        if (i+1)%3==0:
+                            msg += valueStr+'\n'
+                            #print "adding", valueStr
+                            valueStr = ''
+                    i+=1
+                if valueStr:
+                    msg += valueStr + '\n'
+                f.write(msg)
+        f.write('%8i%8i%8i\n' %(ncols+1,1,1))
+        f.write(' 1.0000000000000000E+00\n')
+        ###
 
     def writeDenseMatrixBinary(self,name,matrix,form=2,precision='default',tol=1e-15):
         """
@@ -980,10 +1074,8 @@ class OP4(FortranFile):
         (nrows,ncols) = A.shape
         #if nrows==ncols and form==2:
         #    form = 1
-        if Type in [1,2]:
-            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' %(ncols,nrows,form,Type,name)
-        else:
-            msg += '%8i%8i%8i%8i%-8s1P,3E22.15\n' %(ncols,nrows,form,Type,name)
+
+        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' %(ncols,nrows,form,Type,name)
 
         for icol in range(ncols):
             valueStr = ''
@@ -1066,15 +1158,43 @@ def matrices():
                      [ 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0   , 0    ]],'f')
     return strings
 
+def compressColumn(col):
+    packs = []
+
+    n=0
+    i=0
+    pack = []
+    while i<len(col):
+        #print "i=%s n=%s col[i]=%s" %(i,n,col[i])
+        if col[i]==n+1:
+            #print "i=n=%s" %(i)
+            pack.append(i)
+            n+=1
+        else:
+            if pack:
+                packs.append(pack)
+                #print "pack = ",pack
+            pack = [i]
+            n=col[i]
+        #print "pack = ",pack
+        i+=1
+
+    if pack:
+        packs.append(pack)
+    #print "packs = ",packs
+    return (packs)
+
 if __name__=='__main__':
+    #compressColumn([14, 15, 16, 20, 21, 22, 26, 27, 28])
+    #sys.exit()
     filenames = [
                  #'test/mat_t_dn.op4',
-                 #'test/mat_t_s1.op4',
+                 'test/mat_t_s1.op4',
                  #'test/mat_t_s2.op4',
                  #'test/mat_b_dn.op4',
                  #'test/mat_b_s1.op4',
                  #'test/mat_b_s2.op4',
-                 'test/b_sample.op4',
+                 #'test/b_sample.op4',
                  #'binary.op4',
                 ]
     
@@ -1084,16 +1204,17 @@ if __name__=='__main__':
     #matrixNames = 'RND1RD' # real,double
     #matrixNames = 'RND1CS' # complex,single
     #matrixNames = 'RND1CD' # complex,double
-    matrixNames = 'STRINGS'
+    #matrixNames = 'STRINGS'
     #matrixNames = 'EYE5CD' # complex identity
     matrixNames = None
     strings = matrices()
 
+    isBigMat = True
+    f = open('ascii.op4','wb')
     for fname in filenames:
         op4 = OP4()
         op4.endian = '>'
         #if 't' in fname:            
-        f = open('ascii.op4','wb')
         #else:
             #f = open('binary.op4','wb')
 
@@ -1102,20 +1223,24 @@ if __name__=='__main__':
         #print "#####################################################"
         print "fname=%s" %(fname)
         for name,(form,matrix) in sorted(matrices.items()):
+            print "-----------------------------------"
             print "name = |%s|" %(name)
             if isinstance(matrix,coo_matrix):
                 print "SPARSE"
-                matrix = matrix.todense()
-                print printAnnotatedMatrix(matrix)
+                #matrix = matrix.todense()
+                #print printAnnotatedMatrix(matrix)
             else:
                 print "DENSE"
                 print printMatrix(matrix)
             
             #if 't' in fname:
-            f.write(op4.writeDenseMatrixAscii(name,matrix,form,'default'))
-            #else:
+            #f.write(op4.writeDenseMatrixAscii(name,matrix,form=form,precision='default'))
+            if isinstance(matrix,coo_matrix):
+                op4.writeSparseMatrixAscii(f,name,matrix,form=form,precision='default',isBigMat=isBigMat)
+            else:
+                f.write(op4.writeDenseMatrixAscii(name,matrix,1,'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
-        print printAnnotatedMatrix(matrices['STRINGS'][1]-strings)
+        #print printAnnotatedMatrix(matrices['STRINGS'][1]-strings)
     print "-----------------------------"
     print "done"
     print "-----------------------------"
