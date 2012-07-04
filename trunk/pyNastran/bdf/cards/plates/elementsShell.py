@@ -174,7 +174,7 @@ class CTRIA3(TriShell):
 
         S = array([tA1,tA2,tA3])*otA  # Ai/A
         u = S*un
-        return un
+        return u
 
     def Jacob(self):
         (n0,n1,n2) = self.nodePositions()
@@ -517,7 +517,7 @@ class QuadShell(ShellElement):
     ###
 
     def Centroid(self,debug=False):
-        nodes = self.nodePositions()
+        #nodes = self.nodePositions()
         (area,centroid) = self.AreaCentroid(debug)
         return centroid
 

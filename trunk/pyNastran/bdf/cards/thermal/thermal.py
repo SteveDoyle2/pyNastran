@@ -475,7 +475,7 @@ class RADBC(ThermalBC):
         self.eids = self.expandThruBy(eids)
         
     def crossReference(self,model):
-        for i,eid in enumerate(self,eids):
+        for i,eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
         ###
 
@@ -529,7 +529,7 @@ class QBDY1(ThermalLoad):
         ###
 
     def crossReference(self,model):
-        self.eid = model.Element(eid)
+        self.eids = model.Elements(self.eids)
 
     def Eid(self):
         if isinstance(self.eid,int):
@@ -571,7 +571,7 @@ class QBDY2(ThermalLoad): # not tested
         ###
 
     def crossReference(self,model):
-        self.eid = model.Element(eid)
+        self.eid = model.Element(self.eid)
 
     def Eid(self):
         if isinstance(self.eid,int):
@@ -616,13 +616,11 @@ class QBDY3(ThermalLoad):
     def crossReference(self,model):
         for i,eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid)
-        ###
 
     def Eids(self):
         eids = []
         for eid in self.eids:
             eids.append(self.Eid(eid))
-        ###
         return eids
 
     def Eid(self,eid):
@@ -766,7 +764,7 @@ class TEMPD(ThermalLoadDefault):
 
     def add(self,tempdObj):
         for sid,tempd in self.tempdObj.temperatures.iteritems():
-            self.temperatures[gid] = temp
+            self.temperatures[sid] = tempd
         ###
 
     def crossReference(self,model):

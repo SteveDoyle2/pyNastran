@@ -159,9 +159,9 @@ class GRDSET(Node):
         self.seid = card.field(8,0)
 
     def crossReference(self,model):
-        cp = model.Coord(self.cp)
-        cd = model.Coord(self.cd)
-        #seid = model.SuperElement(self.seid)
+        self.cp = model.Coord(self.cp)
+        self.cd = model.Coord(self.cd)
+        #self.seid = model.SuperElement(self.seid)
 
     def rawFields(self):
         fields = ['GRDSET',None,self.Cp(),None,None,None,self.Cd(),self.ps,self.Seid()]

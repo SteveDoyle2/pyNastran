@@ -1,9 +1,7 @@
-#import sys
 from math import sqrt,degrees,radians,atan2,acos,sin,cos
 from numpy import array,cross,dot,transpose
 from numpy.linalg import norm
 
-# my code
 from pyNastran.bdf.errors import *
 from baseCard import BaseCard
 from pyNastran.general.general import ListPrint
@@ -253,7 +251,7 @@ class SphericalCoord(object):
         x = R*cos(theta)*sin(phi)
         y = R*sin(theta)*sin(phi)
         z = R*cos(phi)
-        return array([x,y,p[2]])+self.e1
+        return array([x,y,z])+self.e1
 
     def XYZtoCoord(self,p):
         (x,y,z) = p
@@ -263,7 +261,7 @@ class SphericalCoord(object):
             phi = degrees(acos(z/r))
         else:
             phi = 0.
-        return array([R,theta,z])
+        return array([R,theta,phi])
 
 class Cord2x(Coord):
     def __init__(self,card,data):
@@ -586,16 +584,19 @@ class CORD3G(Coord):  # not done
         matrix = array([[ 1.,  0., 0.],
                         [ ct,  0.,-st],
                         [-st,  0., ct]])
+        return matrix
 
     def RotationY(self,ct,st):
         matrix = array([[ ct,  0., st],
                         [ 0.,  1., 0.],
                         [-st,  0., ct]])
+        return matrix
 
     def RotationZ(self,ct,st):
         matrix = array([[ ct, st,  0.],
                         [-st, ct,  0.],
                         [  0., 0., 1.]])
+        return matrix
 
     def rawFields(self):
         method = self.methodES+str(self.methodInt)

@@ -86,7 +86,6 @@ class FREQ2(FREQ):
         self.freqs = []
         for i in range(nf):
             self.freqs.append(f1*exp(i*d)) # 0 based index
-        ###
         self.cleanFreqs()
 
 #class FREQ3(FREQ):
@@ -103,10 +102,18 @@ class FREQ4(FREQ):
     type = 'FREQ4'
     def __init__(self,card=None,data=None):
         self.sid = card.field(1)
-        f1   = card.field(2,0.0)
-        f2   = card.field(3,1.e20)
-        fspd = card.field(4,0.1)
-        nfm  = card.field(5,3)
+        self.f1   = card.field(2,0.0)
+        self.f2   = card.field(3,1.e20)
+        self.fspd = card.field(4,0.1)
+        self.nfm  = card.field(5,3)
+
+    def rawFields(self):
+        fields = ['FREQ4',self.sid,self.f1,self.f2,self.fspd,self.nfm]
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
 
 #class FREQ5(FREQ):
 
@@ -231,7 +238,7 @@ class TSTEPNL(BaseCard):
         #else:
             #raise RuntimeError('invalid TSTEPNL Method.  method=|%s|' %(self.method))
 
-        maxIter = self.setBlankIfDefault(self.maxIter,10)
+        #maxIter = self.setBlankIfDefault(self.maxIter,10)
         conv    = self.setBlankIfDefault(self.conv,'PW')
 
         epsU    = self.setBlankIfDefault(self.epsU   ,1e-2)
@@ -242,7 +249,7 @@ class TSTEPNL(BaseCard):
         MaxLs   = self.setBlankIfDefault(self.MaxLs  ,2)
         fStress = self.setBlankIfDefault(self.fStress,0.2)
 
-        maxBisect  = self.setBlankIfDefault(self.maxBisect ,5)
+        maxBisect = self.setBlankIfDefault(self.maxBisect ,5)
         adjust  = self.setBlankIfDefault(self.adjust ,5)
         rb      = self.setBlankIfDefault(self.rb     ,0.6)
         maxR    = self.setBlankIfDefault(self.maxR   ,32.)

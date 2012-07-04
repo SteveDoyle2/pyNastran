@@ -1,5 +1,7 @@
 import sys
-from numpy import zeros,pi,transpose
+import copy
+from math import sin,cos
+from numpy import zeros,transpose #,pi
 
 # pyNastran
 from pyNastran.bdf.cards.baseCard import Property,Material
@@ -16,6 +18,7 @@ class ShellProperty(Property):
         \f[ \large [Q] = [S]^{-1}  \f]
         @todo finish...if necessary...
         """
+        raise NotImplementedError()
         return Q.inv()
 
     def ABDH(self):
@@ -63,6 +66,7 @@ class ShellProperty(Property):
         
         p. 138 of "Introduction to Composite Material Design"
         """
+        raise NotImplementedError()
         A = zeros(9,'d')
         B = copy.deepcopy(A)
         D = copy.deepcopy(A)
@@ -74,7 +78,7 @@ class ShellProperty(Property):
             #z1 = z0+t
             zbar = (2*z0+t)/2. # (z1+z0)/2. 
             Qraw   = layer.Q() # needs E11, E22, G12, G13, nu12, nu21
-            qlayer = Qall(Qout,layer.thetad)
+            qlayer = self.Qall(Qout,layer.thetad)
             A += qlayer*t
             B += qlayer*t*z
             
@@ -125,6 +129,9 @@ class ShellProperty(Property):
         @todo is this done?
         p. 114 "Introduction to Composite Material Design"
         """
+        nu12 = self.nu12
+        E1 = self.E1()
+        E2 = self.E2()
         delta = 1-nu12*nu21
         Q11 = E1/delta
         Q12 = nu12*E2/delta
@@ -194,7 +201,7 @@ class ShellProperty(Property):
         Tinv  = zeros((6,6),'d')
         mm = m*m
         nn = n*n
-        nm = n*m
+        mn = m*n
         Tinv[0][0] = Tinv[1][1] = mm
         Tinv[1][0] = Tinv[0][1] = nn
         Tinv[0][2] = -2*mn
@@ -326,7 +333,7 @@ class PCOMP(ShellProperty):
         return False
 
     def isSameCard(self,prop):
-        if self.type!=mat.type:  return False
+        if self.type!=self.prop.type:  return False
         fields2 = [prop.nsm,prop.sb,prop.ft,prop.TRef,prop.ge,prop.lam]
         fields1 = [self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam]
 
@@ -464,10 +471,10 @@ class PCOMP(ShellProperty):
 
     def D(self):
         D = zeros([3,3])
-        isSym = self.isSymmetrical()
+        #isSym = self.isSymmetrical()
         for (iply,ply) in enumerate(self.plies):
             theta = self.Theta(iply)
-            t     = self.Thickness(iply)
+            #t    = self.Thickness(iply)
             mat   = self.Material(iply)
             Di = mat.Dplate()
             transform = self.T(theta)
@@ -539,7 +546,7 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         return gPlyID
         
     def rawFields(self):
-        fields = ['PCOMPG',self.pid,self.z0,self.nsm,self.sb,self.ft,TRef,self.ge,self.lam,]
+        fields = ['PCOMPG',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
         for (iPly,ply) in enumerate(self.plies):
             (_mid,t,theta,sout,gPlyID) = ply
             mid = self.Mid(iPly)

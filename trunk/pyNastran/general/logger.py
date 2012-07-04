@@ -1,6 +1,7 @@
 import os
 import sys
 import inspect
+import logging
 
 def frame(n):
     return inspect.currentframe(n+4) # jump 4 levels down to get out of the logger code

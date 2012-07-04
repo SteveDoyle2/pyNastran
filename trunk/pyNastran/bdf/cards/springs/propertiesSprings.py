@@ -1,5 +1,5 @@
 import sys
-from numpy import zeros,pi
+#from numpy import zeros,pi
 
 # pyNastran
 from pyNastran.bdf.cards.baseCard import Property

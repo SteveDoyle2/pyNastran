@@ -1,4 +1,4 @@
-import sys
+#import sys
 
 from pyNastran.bdf.cards.baseCard import Element
 
@@ -256,7 +256,7 @@ class RBE2(RigidElement):
         mpc sid   g1 c1 a1  g2 c2 a2
         rbe2 eid  gn cm g1  g2 g3 g4
         """
-        i = 0
+        #i = 0
         nCM = len(self.cm)
         Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
         
@@ -266,7 +266,7 @@ class RBE2(RigidElement):
 
         for gm in self.Gmi:
             for cm in self.cm:
-                card += [gn,cm,Ai]
+                card += [gm,cm,Ai]
         return card
 
     def writeCodeAster(self):
@@ -415,7 +415,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         rbe2 eid  gn cm g1  g2 g3 g4    
         """
         raise NotImplementedError('this is the code for an RBE2...not RBE3')
-        i = 0
+        #i = 0
         nCM = len(self.cm)
         Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
         
@@ -425,7 +425,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
 
         for gm in self.Gmi:
             for cm in self.cm:
-                card += [gn,cm,Ai]
+                card += [gm,cm,Ai]
         return card
 
     def rawFields(self):

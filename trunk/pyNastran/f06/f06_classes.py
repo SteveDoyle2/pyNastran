@@ -1,6 +1,3 @@
-from numpy import array
-from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues,ComplexEigenvalues
-
 class MaxDisplacement(object):
     def __init__(self,data):
         self.translations = {}

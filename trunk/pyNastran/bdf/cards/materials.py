@@ -1,7 +1,4 @@
-#import sys
-#from numpy import array,cross,dot
-#from numpy import array
-#from numpy.linalg import norm
+from numpy import zeros,array
 
 # my code
 from pyNastran.bdf.cards.baseCard import BaseCard,Material
@@ -225,9 +222,8 @@ class MAT1(Material):
         if self.g==0.0 or self.nu==0.0:
             G = self.g
         else:
-            G_default = self.e/2./(1+self.nu)
+            #G_default = self.e/2./(1+self.nu)
             G = self.e/2./(1+self.nu)
-        ###
         #print "MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s" %(self.e,self.nu,self.g,G_default,G)
         return G
 
@@ -305,6 +301,10 @@ class MAT2(AnisotropicMaterial):
         Eq 9.4.7 in Finite Element Method using Matlab
         """
         D = zeros((6,6))
+        E    = self.E()
+        nu12 = self.nu12
+        nu   = nu12
+        
         mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
         Emu = E/mu
         D[0,0] = Emu # E/(1-nu^2)
@@ -319,8 +319,9 @@ class MAT2(AnisotropicMaterial):
         """
         Eq 9.1.6 in Finite Element Method using Matlab
         """
-        E  = self.E()
+        E    = self.E()
         nu12 = self.Nu()
+        nu   = nu12
         G12  = self.G()
 
         D = zeros((3,3))
@@ -337,6 +338,7 @@ class MAT2(AnisotropicMaterial):
         return D
 
     def writeCalculix(self):
+        raise NotImplementedError()
         msg  = '*ELASTIC,TYPE=ORTHO\n'
         temperature = 0. # default value - same properties for all values
         msg += '%s,%s,%s\n' %(self.e,self.nu,temperature)
@@ -534,9 +536,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         """
         thermal conductivity matrix
         """
-        k = array([[self.kxx,self.kxy,self,kxz],
-                   [self.kxy,self.kyy,self,kyz],
-                   [self.kxz,self.kyz,self,kzz]])
+        k = array([[self.kxx,self.kxy,self.kxz],
+                   [self.kxy,self.kyy,self.kyz],
+                   [self.kxz,self.kyz,self.kzz]])
         return k
 
     def rawFields(self):
@@ -822,7 +824,7 @@ class MAT10(Material):
     def reprFields(self):
         ge = self.setBlankIfDefault(self.ge,0.0)
         fields = ['MAT10',self.mid,self.bulk,self.rho,self.c,ge]
-        return self.rawFields()
+        return fields
        
 
 class MATHP(HyperelasticMaterial):
@@ -874,7 +876,7 @@ class MATHP(HyperelasticMaterial):
             self.tabd = card.field(56)
         else:
             main = data[0]
-            (mid,a10,a01,d1,rho,alpha,tref,ge,sf,na,nd,kp,
+            (mid,a10,a01,d1,rho,av,alpha,tref,ge,sf,na,nd,kp,
              a20,a11,a02,d2,
              a30,a21,a12,a03,d3,
              a40,a31,a22,a13,a04,d4,
@@ -938,6 +940,7 @@ class MATHP(HyperelasticMaterial):
                           self.a40,self.a31,self.a22,self.a13,self.a04,self.d4,    None,None,
                           self.a50,self.a41,self.a32,self.a23,self.a14,self.a05,self.d5,None,
                           self.tab1,self.tab2,self.tab4,None,None,None,self.tabd]
+        return fields
 
     def reprFields(self):
         av = self.setBlankIfDefault(self.av,0.0)
@@ -977,7 +980,7 @@ class MATHP(HyperelasticMaterial):
         TRef = self.setBlankIfDefault(self.TRef,0.0)
         ge   = self.setBlankIfDefault(self.ge,0.0)
         fields = ['MATHP',self.mid,a10,a01,d1,self.rho,av,TRef,ge,
-                          None,    self.na,self.nd,None,None,None,None,None,
+                          None,na,nd,None,None,None,None,None,
                           a20,a11,a02,d2, None,None,None,None,
                           a30,a21,a12,a03,d3,  None,None,None,
                           a40,a31,a22,a13,a04,d4,   None,None,

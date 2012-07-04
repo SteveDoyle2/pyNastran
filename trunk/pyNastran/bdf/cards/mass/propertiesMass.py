@@ -36,7 +36,7 @@ class NSM(PointProperty):
         ###
 
     def rawFields(self):
-        nodes = self.nodeIDs()
+        #nodes = self.nodeIDs()
         fields = ['NSM',self.sid,self.Type,self.id,self.value]
         return fields
 

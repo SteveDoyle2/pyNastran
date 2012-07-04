@@ -1,4 +1,3 @@
-from numpy import array,log,exp
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.fieldWriter import printIntCard
 
@@ -45,8 +44,6 @@ class ABCQSet(Set):
         self.components = []
 
         fields = card.fields(1)
-        nFields = len(fields)
-        
         for i in range(0,fields,2):
             self.IDs.append(fields[i])
             self.components.append(str(fields[i+1]))

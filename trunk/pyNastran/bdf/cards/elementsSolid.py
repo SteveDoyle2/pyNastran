@@ -1,4 +1,4 @@
-from numpy import dot,cross,matrix,sqrt
+from numpy import dot,cross,array,matrix #,sqrt
 from numpy.linalg import solve
 
 # pyNastran
@@ -193,8 +193,8 @@ class CPENTA6(SolidElement):
              }
         pack2 = mapper[pack]
         if len(pack2)==3:
-            faceNodeIDs = [n1,n2,n3]
             (n1,n2,n3) = pack2
+            faceNodeIDs = [n1,n2,n3]
             n1i = nids.index(n1-1)
             n2i = nids.index(n2-1)
             n3i = nids.index(n3-1)
@@ -314,7 +314,7 @@ class CTETRA4(SolidElement):
     def getFaceNodes(self,nid,nidOpposite):
         nids = self.nodeIDs()[:4]
         indx = nids.index(nidOpposite)
-        removeIndex = nids.pop(indx)
+        nids.pop(indx)
         return nids
 
     def Stiffness(self):
@@ -327,11 +327,11 @@ class CTETRA4(SolidElement):
                 for k in range(ng):
                     p = [ P[i],P[j],P[k] ]
                     w = W[i]*W[j]*W[k]
-                    pz = zeta(p)
+                    pz = self.zeta(p)
                     J = self.Jacobian(p)
                     #N = self.N()
                     #B = self.B()
-                    K += w*J*BtEB(pz)
+                    K += w*J*self.BtEB(pz)
                     #K += w*J*B.T*E*B
                 ###
             ###
@@ -357,6 +357,7 @@ class CTETRA4(SolidElement):
             
     def zeta(self,p):
         p2 = array([1,p[0],p[1],p[2]])
+        J = self.Jacobian()
         zeta = solve(J,p2)
         return zeta
 
@@ -378,6 +379,7 @@ class CTETRA4(SolidElement):
             this has got to be wrong
         """
         m = matrix((6,6),'d')
+        (n1,n2,n3,n4) = self.nodePositions()
         m[0][0] = m[0][1] = m[0][2] = m[0][2] = 1.
         m[1][0]=n1[0]; m[2][0]=n1[1]; m[3][0]=n1[2];
         m[1][1]=n2[0]; m[2][1]=n2[1]; m[3][1]=n2[2];
@@ -420,6 +422,7 @@ class CTETRA10(CTETRA4):
         N8 = 4*g1*g4
         N9 = 4*g2*g4
         N10 = 4*g3*g4
+        return (N1,N2,N3,N4,N5,N6,N7,N8,N9,N10)
 
     def Volume(self):
         (n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = self.nodePositions()
@@ -432,5 +435,5 @@ class CTETRA10(CTETRA4):
     def getFaceNodes(self,nid,nidOpposite):
         nids = self.nodeIDs()[:4]
         indx = nids.index(nidOpposite)
-        removeIndex = nids.pop(indx)
+        nids.pop(indx)
         return nids

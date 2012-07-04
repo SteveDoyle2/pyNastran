@@ -425,6 +425,7 @@ class CONM2(PointElement): ## @todo not done
         return self.cid.cid
 
     def writeCodeAster(self):
+        msg = ''
         msg += "    DISCRET=_F(\n"
         msg += "             'CARA='M_T_D_N'\n"
         msg += "              NOEUD=N%s\n" %(self.Nid())
