@@ -6,7 +6,7 @@ from pyNastran.bdf.errors import *
 class CaseControlDeck(object):
     def __init__(self,lines,log=None):
         """
-        @param self  the object pointer
+        @param self  the case control deck object
         @param lines list of lines that represent the case control deck ending with BEGIN BULK
         @param log   a logger object
         """
@@ -47,20 +47,20 @@ class CaseControlDeck(object):
         """
         @warning be careful you dont add data to the global subcase after running this...is this True???
         """
-        if not hasSubcase(iSubcase):
-            sys.stderr.write('subcase=%s already exists...skipping')
+        if self.hasSubcase(iSubcase):
+            sys.stderr.write('subcase=%s already exists...skipping\n' %(iSubcase))
         self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
         #self.subcases[iSubcase] = Subcase(id=iSubcase)
 
     def deleteSubcase(self,iSubcase):
-        if not hasSubcase(iSubcase):
-            sys.stderr.write('subcase doesnt exist...skipping')
+        if not self.hasSubcase(iSubcase):
+            sys.stderr.write('subcase %s doesnt exist...skipping\n' %(self.iSubcase))
         del self.subcases[iSubcase]
 
     def copySubcase(self,iFromSubcase,iToSubcase,overwriteSubcase=True):
         """
         overwrites the parameters from one subcase to another
-        @param self             the object pointer
+        @param self             the case control deck object
         @param iFromSubcase     the subcase to pull the data from
         @param iToSubcase       the subcase to map the data to
         @param overwriteSubcase NULLs iToSubcase before copying iFromSubcase
@@ -73,7 +73,7 @@ class CaseControlDeck(object):
             self.subcases[iToSubcase] = copy.deepcopy(self.subcases[iFromSubcase])
             self.subcases[iToSubcase].id = iToSubcase
         else:
-            if not hasSubcase(iToSubcase):
+            if not self.hasSubcase(iToSubcase):
                 raise RuntimeError('iToSubcase=|%s| does not exist' %(iToSubcase))
             for key,param in subcaseFrom.iteritems():
                 subcaseTo[key] = copy.deepcopy(param)
@@ -126,7 +126,7 @@ class CaseControlDeck(object):
             ###
         ###
         #for line in lines2:
-        #    print "L2 = ",line
+            #print "L2 = ",line
         return lines2
 
     def _read(self,lines):
@@ -201,12 +201,12 @@ class CaseControlDeck(object):
             they arent as clear, but the paramType lets the program know how to format it
             when writing it out.
 
-        @param self  the object pointer
+        @param self  the case control deck object
         @param lines list of lines
-        @retval paramName see below...
-        @retval value     see below...
-        @retval options   see below...
-        @retval paramType see below...
+        @retval paramName see brief
+        @retval value     see brief
+        @retval options   see brief
+        @retval paramType see brief
         """
         i = 0
         options   = []
@@ -250,7 +250,7 @@ class CaseControlDeck(object):
 
             key   = key.strip()
             value = value.strip()
-            if self.debug:  print "key=|%s| value=|%s|" %(key,value)
+            if self.debug:  self.log.debug("key=|%s| value=|%s|" %(key,value))
             paramType = 'STRESS-type'
 
             if '(' in key:  # comma may be in line - STRESS-type
@@ -267,6 +267,10 @@ class CaseControlDeck(object):
 
             elif ' ' in key and ',' in value: # SET-type
                 (key,ID) = key.split()
+                key = key+' '+ID
+
+                if self.debug:
+                    self.log.debug('SET-type key=%s ID=%s' %(key,ID))
                 fivalues = value.rstrip(' ,').split(',') # float/int values
 
                 ## @todo should be more efficient multiline reader...
@@ -348,7 +352,7 @@ class CaseControlDeck(object):
             b = 'value=|%s|'     %(value)
             c = 'options=|%s|'   %(options)
             d = 'paramType=|%s|' %(paramType)
-            print "_adding iSubcase=%s %-12s %-12s %-12s %-12s" %(iSubcase,a,b,c,d)
+            self.log.debug("_adding iSubcase=%s %-12s %-12s %-12s %-12s" %(iSubcase,a,b,c,d))
 
         if key=='SUBCASE':
             assert value not in self.subcases
@@ -357,10 +361,10 @@ class CaseControlDeck(object):
             #print "value=",value
             self.copySubcase(iFromSubcase=0,iToSubcase=iSubcase,overwriteSubcase=True)
             if self.debug:
-                print "copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase)    
+                self.log.debug("copied subcase iFromSubcase=%s to iToSubcase=%s" %(0,iSubcase))
         elif iSubcase not in self.subcases: # initialize new subcase
             #self.iSubcase += 1 # is handled in the read code
-            raise
+            raise RuntimeError('iSubcase=%s is not a valid subcase...' %(iSubcase))
 
         subcase = self.subcases[iSubcase]
         subcase._addData(key,value,options,paramType)
@@ -414,7 +418,7 @@ class CaseControlDeck(object):
     #    #param2 = [''.join(param)]
     #    #print 'param2 = ',param2
 
-if __name__=='__main__':
+def test1():
     lines = ['SPC=2',
              'MPC =3',
              'STRESS= ALL',
@@ -425,15 +429,55 @@ if __name__=='__main__':
     print "has junk False = ",deck.hasParameter(0,'JUNK')
     
     print "getSubcaseParameter(MPC) 3 = ",deck.getSubcaseParameter(0,'MPC')
-    deck.addParameterToGlobalSubcase('STRAIN = 7')
+    deck.addParameterToGlobalSubcase('GPFORCE = 7')
+    print ""
+    print deck
+    deck.createNewSubcase(1)
+    deck.createNewSubcase(2)
+    print deck
+    
     deck.addParameterToLocalSubcase(1,'STRAIN = 7')
-    print "-----added----"
+    #print "-----added----"
 
-    out = deck.getSubcaseParameter(0,'STRAIN')
+    out = deck.getSubcaseParameter(0,'GPFORCE')
     print "getSubcaseParameter(STRAIN) 7 = ",out
 
-    deck.addParameterToLocalSubcase(2,'SOL=200')
+    deck.addParameterToLocalSubcase(1,'ANALYSIS = SAERO')
+    deck.addParameterToLocalSubcase(2,'ANALYSIS = STATIC')
     print "-----added2----"
-    out = deck.getSubcaseParameter(2,'SOL')
-    print "getSubcaseParameter(SOL) 200 = ",out
+    out = deck.getSubcaseParameter(2,'ANALYSIS')
+    print "getSubcaseParameter(ANALYSIS) = ",out
     
+
+    deck.addParameterToLocalSubcase(1,'SET 1 = 100')
+    deck.addParameterToLocalSubcase(1,'SET 2 = 200')
+    print deck
+    
+if __name__=='__main__':
+    test1()
+    lines = [
+        'SUBCASE 1',
+        '    ACCELERATION(PLOT,PRINT,PHASE) = ALL',
+        '    DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
+        '    DLOAD = 32',
+        '    M2GG = 111',
+        '    SET 88  = 5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300',
+        '    SET 99  = 1 THRU 10',
+        '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
+        '    SET 111 = MAAX1,MAAX2',
+        '    SET 1001 = 101/T1, 501/T3, 991/R3',
+        '    SET = ALL',
+        '    SPC = 42',
+        '    TSTEPNL = 22',
+        '    VELOCITY(PLOT,PRINT,PHASE) = ALL',
+        'BEGIN BULK',
+        ]
+    deck = CaseControlDeck(lines)
+    deck.createNewSubcase(2)
+    deck.addParameterToLocalSubcase(1,'SET 2 = 11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,1000000000000000000000000000000000000000000000000000000,33')
+    print deck,'\n\n'
+
+    deck2 = CaseControlDeck(['ACCELERATION(PLOT,PRINT,PHASE) = ALL',
+                             'DISPLACEMENT(PLOT,PRINT,PHASE) = ALL',
+                             'BEGIN BULK'])
+    print '\n\n',deck2

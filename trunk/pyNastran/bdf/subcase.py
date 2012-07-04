@@ -303,7 +303,7 @@ class Subcase(object):
         takes an abbreviated name and expands it so the user can type DISP or 
         DISPLACEMENT and get the same answer
         @todo not a complete list
-        @warning not tested yet...
+        @warning fully tested yet...
         """
         #print 'paramName  = ',paramName
         if   paramName.startswith('ACCE'):  paramName = 'ACCELERATION'
@@ -315,7 +315,7 @@ class Subcase(object):
         elif paramName.startswith('FORC'):  paramName = 'FORCE'
         elif paramName.startswith('FREQ'):  paramName = 'FREQUENCY'
         elif paramName.startswith('GPFO'):  paramName = 'GPFORCE'
-        elif paramName== 'GPST':            raise Exception('invalid GPST stress/strain')
+        elif paramName=='GPST':             raise SyntaxError('invalid GPST stress/strain')
         elif paramName.startswith('METH'):  paramName = 'METHOD'
         elif paramName.startswith('MPCF'):  paramName = 'MPCFORCES'
         elif paramName.startswith('OLOA'):  paramName = 'OLOAD'
@@ -328,6 +328,7 @@ class Subcase(object):
         elif paramName.startswith('SUPO'):  paramName = 'SUPORT1'
         elif paramName.startswith('SVEC'):  paramName = 'SVECTOR'
         elif paramName.startswith('THER'):  paramName = 'THERMAL'
+        elif paramName.startswith('VECT'):  paramName = 'VECTOR'
         elif paramName.startswith('VELO'):  paramName = 'VELOCITY'
 
 
@@ -530,7 +531,8 @@ class Subcase(object):
             ###
         elif paramType=='SET-type':
             ## @todo collapse data...not written yet
-            msg2 = 'SET %s = ' %(options)
+            starter = 'SET %s = ' %(options)
+            msg2 = spaces + starter
             nChars = len(msg2)
             
             i = 0
@@ -540,7 +542,7 @@ class Subcase(object):
                 #print "newString[%i] = |%s|" %(i,newString)
                 if len(msg2+newString)>70:
                     msg += msg2+'\n'
-                    msg2 = '        '+newString
+                    msg2 = ' '*nChars+newString
                 else:
                     msg2 += newString
                 ###
@@ -554,6 +556,9 @@ class Subcase(object):
         return msg
 
     def crossReference(self,mesh):
+        """
+        @note this is not integrated and probably never will be as it's not really that necessary
+        """
         print "keys = ",sorted(self.params.keys())
         if 'LOAD' in self.params:
             loadID = self.params['LOAD'][0]
@@ -600,12 +605,17 @@ class Subcase(object):
         #print "self.params %s = %s" %(self.id,self.params)
 
     def writeSubcase(self,subcase0):
+        """
+        internal method to print a subcase
+        @param self the subcase object
+        @param subcase0 the global subcase
+        """
         if self.id==0:
             msg = str(self)
         else:
             msg = 'SUBCASE %s\n' %(self.id)
-            for (key,param) in sorted(self.params.iteritems()):
-                if key in subcase0.params and subcase0.params[key]==param:
+            for (key,param) in self.subcaseSorted(self.params.items()):
+                if key in subcase0.params and subcase0.params[key]==param: # dont write global subcase parameters
                     pass
                 else:
                     if 'key'=='BEGIN':
@@ -618,9 +628,57 @@ class Subcase(object):
                         #print ""
                     ###
                 ###
-        if self.id>0 and 'BEGIN' in self.params:
+        if self.id>0 and 'BEGIN' in self.params: # self.id>0 and 'BEGIN' in self.params... why was that there???
             msg += self.printParam('BEGIN',self.params['BEGIN'])
         return msg
+
+    def subcaseSorted(self,listA):
+        """
+        does a "smart" sort on the keys such that SET cards increment in
+        numerical order.
+        @param self the subcase object
+        @param listA the list of subcase list objects
+        @retval listB the sorted version of listA
+        """
+        # presort the list to put all the SET cards next to each other
+        listA.sort()
+        
+        i=0 # needed in case the loop doesnt execute
+        iSet=None # index of first SET card in the deck
+        setDict    = {} 
+        listBefore = []
+        listAfter  = []
+        setList    = []
+        setKeys    = []
+        for i,entry in enumerate(listA):
+            key = entry[0]
+            if 'SET' in key[0:3]:
+                if key=='SET': # handles "SET = ALL"
+                    key = 0
+                else: # handles "SET 100 = 1,2,3"
+                    sline = key.split(' ')
+                    key = int(sline[1])
+
+                # store the integer ID and the SET-type list
+                setDict[key] = entry
+                setKeys.append(key)
+            else:
+                # only store the entries before the SET cards
+                listBefore.append(entry)
+                if iSet:
+                    break
+        
+        # grab the other entries
+        listAfter = listA[i:]
+        
+        # write the SET cards in a sorted order
+        setList2 = []
+        for key in sorted(setKeys):
+            setList2.append(setDict[key])
+        
+        # combine all the cards
+        listB = listBefore+setList2+listAfter
+        return listB
 
     def __repr__(self):
         """
@@ -632,7 +690,7 @@ class Subcase(object):
             msg += 'SUBCASE %s\n' %(self.id)
         ###
 
-        for (key,param) in sorted(self.params.iteritems()):
+        for (key,param) in self.subcaseSorted(self.params.items()):
             if 'key'=='BEGIN':
                 continue
             else:
@@ -643,7 +701,7 @@ class Subcase(object):
                 #print ""
             ###
         ###
-        if self.id>0 and 'BEGIN' in self.params:
+        if self.id>0 and 'BEGIN' in self.params: # prevents 2 BEGIN BULKs
             msg += self.printParam('BEGIN',self.params['BEGIN'])
         return msg
 
