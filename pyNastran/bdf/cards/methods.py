@@ -1,4 +1,4 @@
-import sys
+#import sys
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Method(BaseCard):
@@ -113,9 +113,7 @@ class EIGC(Method): ## not done
         self.ksteps  = []
         self.NJIs    = []
         for iRow in range(nRows):
-            NDJ_default = None
-            if self.method=='INV':
-                NDJ_default = 3*NEj
+            #NDJ_default = None
 
             self.alphaAjs.append(card.field(9+8*iRow  ,0.0))
             self.omegaAjs.append(card.field(9+8*iRow+1,0.0))
@@ -155,7 +153,7 @@ class EIGC(Method): ## not done
             self.omegaBjs.append(card.field(9+8*iRow+3,alphaOmega_default))
             self.LJs.append(     card.field(9+8*iRow+4,LJ_default))
             self.NEJs.append(    card.field(9+8*iRow+5))
-            self.NDJs.append(    card.field(9+8*iRow+6))
+            self.NDJs.append(    card.field(9+8*iRow+6,NDJ_default))
         ###
 
     def crossReference(self,model):

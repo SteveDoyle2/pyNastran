@@ -1,9 +1,9 @@
 from __future__ import print_function
-import numpy
-from numpy import array,cross,allclose,zeros,matrix
+from numpy import float32,float64,complex64,complex128
+from numpy import array,cross,allclose,zeros,matrix,insert,diag
 
 #from numpy import 
-from numpy.linalg import norm, solve
+from numpy.linalg import norm #, solve
 
 from scipy.linalg      import solve_banded
 from scipy.interpolate import splrep,splev
@@ -105,32 +105,33 @@ def isFloatRanged(a,x,b):
     ###
     return True
 
-def annotatePrintMatrix(A,rowNames):
+def printAnnotatedMatrix(A,rowNames=None,tol=1e-8):
     """
     takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
     """
+    if rowNames==None: rowNames=[i for i in range(A.shape[0])]
     B = array(A)
     msg = ''
     (nr,nc) = B.shape
     for i in range(nr):
         rowName = str(rowNames[i])
-        msg += rowName +' '+ListPrint(B[i,:])+'\n'
+        msg += '%-2s' %(rowName) +' '+ListPrint(B[i,:],tol)+'\n'
     return msg
 
-def printMatrix(A):
+def printMatrix(A,tol=1e-8):
     B = array(A)
     msg = ''
     (nr,nc) = B.shape
     for i in range(nr):
-        msg += ListPrint(B[i,:])+'\n'
+        msg += ListPrint(B[i,:],tol)+'\n'
     #for row in A:
     #    msg += ListPrint(row)+'\n'
     ###
     return msg
 ###
 
-def ListPrint(listA):
+def ListPrint(listA,tol=1e-8):
     if len(listA)==0:
         return '[]'
     ###
@@ -139,12 +140,27 @@ def ListPrint(listA):
     for a in listA:
         if isinstance(a,str):
             msg += ' %s,' %(a)
-        elif isinstance(a,float):
-            msg += ' %-4.2g,' %(a)
+        elif isinstance(a,float) or isinstance(a,float32) or isinstance(a,float64):
+            if abs(a)<tol:
+                a = 0.
+            msg += ' %-3.2g,' %(a)
         elif isinstance(a,int):
-            msg += ' %g,' %(a)
+            if abs(a)<tol:
+                a = 0.
+            msg += ' %3i,' %(a)
+        elif isinstance(a,complex64) or isinstance(a,complex128):
+            r= '%.4g'%(a.real)
+            i= '%+.4gj'%(a.imag)
+
+            if abs(a.real)<tol:
+                r = '0'
+            if abs(a.imag)<tol:
+                i = ''
+            temp = '%4s%4s' %(r,i)
+            msg += ' %8s,' %(temp.strip())
         else:
             try:
+                print("type(a) is not supported...%s" %(type(a)))
                 msg += ' %g,' %(a)
             except TypeError:
                 print("a = |%s|" %(a))
@@ -173,16 +189,12 @@ def augmentedIdentity(A):
 
 def solveTridag(A, D):
      # Find the diagonals
-     ud = numpy.insert(numpy.diag(A,1), 0, 0) # upper diagonal
-     d  = numpy.diag(A) # main diagonal
-     ld = numpy.insert(numpy.diag(A,-1), len(d)-1, 0) # lower diagonal
+     ud = insert(diag(A,1), 0, 0) # upper diagonal
+     d  = diag(A) # main diagonal
+     ld = insert(diag(A,-1), len(d)-1, 0) # lower diagonal
    
      # simplified matrix
-     ab = numpy.matrix([
-         ud,
-         d,
-         ld,
-     ])
+     ab = matrix([ud,d,ld])
      #print "ab = ",ab
      return solve_banded((1, 1), ab, D,overwrite_ab=True,overwrite_b=True)
 
@@ -212,7 +224,7 @@ def AreaNormal(nodes):
         print("b = ",b)
         print("normal = ",normal)
         print("length = ",length)
-        sys.exit('check...')
+        raise RuntimeError('check...')
     return (area,normal)
 
 def Triangle_AreaCentroidNormal(nodes):

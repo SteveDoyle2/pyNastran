@@ -1,9 +1,9 @@
 from __future__ import print_function
-import sys
+#import sys
 
-from numpy import pi,matrix,zeros,ones,array,transpose,dot,diag
+from numpy import matrix,zeros,ones,array,transpose,dot #,diag,pi
 from numpy.linalg import norm
-from pyNastran.general.generalMath import printMatrix
+#from pyNastran.general.generalMath import printMatrix
 
 from pyNastran.bdf.errors import *
 from pyNastran.bdf.cards.baseCard import Element,Mid
@@ -129,13 +129,14 @@ class LineElement(Element):
           \end{array} \right]
         \f]
         """
+        raise NotImplementedError()
         L = self.Length()
         E = self.E()
         A = self.Area()
         kMag = A*E/(2*L)
-        M = Matrix(ones(1,1))
-        M[0,1] = M[1,0] = -1
-        return M
+        K = Matrix(ones(1,1))
+        K[0,1] = K[1,0] = -1
+        return kMag*K
 
     def k_Torsion(self):  # not done
         """
@@ -150,15 +151,16 @@ class LineElement(Element):
         \f]
         @warning formula not verified
         """
+        raise NotImplementedError()
         L = self.Length()
         G = self.G()
         J = self.J()
         #A = self.Area()
         #kMag = A*E/(2*L)
         kMag = L/(G*J)
-        M = Matrix(ones(1,1))
-        M[0,1] = M[1,0] = -1
-        return M
+        K = Matrix(ones(1,1))
+        K[0,1] = K[1,0] = -1
+        return kMag*K
 
     def k_Bending(self):
         """
@@ -174,21 +176,22 @@ class LineElement(Element):
           \end{array} \right]
         \f] 
         """
+        raise NotImplementedError()
         L = self.Length()
         E = self.E()
         I = self.I()
-        kMag = E*I/LLL
         LL  = L*L
         LLL = L*LL
         sL = 6*L
         tLL = 2*LL
         fLL = 4*LL
+        kMag = E*I/LLL
         
-        M = Matrix(zeros(4,4))
-        matrix([[12.,  sL, -12,  sL],
-                [sL,  fLL, -sL, tLL],
-                [-12, -sL, 12., -sL],
-                [sL,  tLL, -sL, fLL]])
+        #K = Matrix(zeros(4,4))
+        K = matrix([[12.,  sL, -12,  sL],
+                    [sL,  fLL, -sL, tLL],
+                    [-12, -sL, 12., -sL],
+                    [sL,  tLL, -sL, fLL]])
         #M[1,0] = sL
         #M[2,0] = -12.
         #M[3,0] = sL
@@ -196,7 +199,7 @@ class LineElement(Element):
         #M[2,4] =  -sL
         #M[1,1] = M[3,3] = fLL
         
-        return M
+        return kMag*K
 
 class CROD(LineElement):
     type = 'CROD'
@@ -229,6 +232,7 @@ class CROD(LineElement):
     def MassPerLength(self):
         #print "self.type = ",self.type
         massPerLength = self.pid.mid.rho*self.pid.A + self.pid.nsm
+        return massPerLength
 
     def Rmatrix(self,model,is3D):
         """
@@ -383,8 +387,8 @@ class CROD(LineElement):
         """
         #L = norm(r)
         (n1,n2) = self.nodeIDs()
-        node1 = model.Node(n1)
-        node2 = model.Node(n2)
+        #node1 = model.Node(n1)
+        #node2 = model.Node(n2)
 
         p1 = model.Node(n1).xyz
         p2 = model.Node(n2).xyz
@@ -471,6 +475,7 @@ class CONROD(CROD):
 
     def MassPerLength(self):
         massPerLength = self.mid.rho*self.A + self.nsm
+        return massPerLength
 
     def C(self):
         """torsional constant"""
@@ -497,24 +502,27 @@ class CONROD(CROD):
 
     def I12(self):
         """the I12 for a rod is 0"""
-        return 0.
+        raise RuntimeError('CONROD does not have an I12')
+        #return 0.
 
     def I22(self):
-        return self.I11()
+        raise RuntimeError('CONROD does not have an I22')
+        #return self.I11()
 
     def I11(self):
         """returns the Moment of Inertia.   \f$ I \f$"""
-        r = self.Radius()
+        raise RuntimeError('CONROD does not have an I11')
+        #r = self.Radius()
         #A=piD2/4
         #I = piR^4/4 = pi*D^4/16*4 = pi*D^4/64 = A*D^2/16 = A^2/pi
         #  = A*R^2/4 = A^2/pi/4
-        I = self.A**2/(4*pi)
-        return I
+        #I = self.A**2/(4*pi)
+        #return I
 
-    def Radius(self):
-        """returns the Radius of the Rod.   \f$ R \f$"""
-        R = (self.A/pi)**0.5
-        return R
+    #def Radius(self):
+        #"""returns the Radius of the Rod.   \f$ R \f$"""
+        #R = (self.A/pi)**0.5
+        #return R
 
     def Nu(self):
         """returns Poisson's Ratio  \f$ \nu \f$"""
@@ -544,9 +552,6 @@ class CONROD(CROD):
         j   = self.setBlankIfDefault(self.j,  0.0)
         c   = self.setBlankIfDefault(self.c,  0.0)
         nsm = self.setBlankIfDefault(self.nsm,0.0)
-        #print "nodes = ",self.nodeIDs()
-        #print "mid   = ",self.Mid()
-        #print "eid   = ",self.eid
         fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,j,c,nsm]
         return fields
 
@@ -767,8 +772,8 @@ class CBAR(LineElement):
     def Stiffness1D(self,model):  # CBAR
         #L = norm(r)
         (n1,n2) = self.nodeIDs()
-        node1 = model.Node(n1)
-        node2 = model.Node(n2)
+        #node1 = model.Node(n1)
+        #node2 = model.Node(n2)
 
         p1 = model.Node(n1).xyz
         p2 = model.Node(n2).xyz
@@ -806,11 +811,11 @@ class CBAR(LineElement):
 
         L = self.Length()
         E = self.E()
-        I = self.I1()
+        #I = self.I1()
 
         LL  = L*L
-        LLL = L*LL
-        kMag = E*I/LLL
+        #LLL = L*LL
+        #kMag = E*I/LLL
         sL = 6*L
         tLL = 2*LL
         fLL = 4*LL

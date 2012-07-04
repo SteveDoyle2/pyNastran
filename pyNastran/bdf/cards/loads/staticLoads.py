@@ -21,7 +21,7 @@ class LOAD(Load):
 
             loads = card.fields(3) # temp list
             nLoadFields = len(loads)
-            nLoads  = nLoadFields/2
+            #nLoads  = nLoadFields/2
             assert nLoadFields%2==0
 
             ## individual scale factors (corresponds to loadIDs)
@@ -439,7 +439,7 @@ class OneDeeLoad(Load): # FORCE/MOMENT
         """
         if self.mag != 0.0:  # enforced displacement
             normXYZ = norm(self.xyz)
-            mag = self.mag*normXYZ
+            #mag = self.mag*normXYZ
             self.mag *= normXYZ
             self.xyz = self.xyz/normXYZ
 
@@ -771,8 +771,8 @@ class MOMENT2(Moment):
     def crossReference(self,model):
         """@todo cross reference and fix repr function"""
         (self.g1,self.g2,self.g3,self.g4) = model.Nodes(self.g1,self.g2,self.g3,self.g4)
-        v12 = g2.Position()-g1.Position()
-        v34 = g4.Position()-g3.Position()
+        v12 = self.g2.Position()-self.g1.Position()
+        v34 = self.g4.Position()-self.g3.Position()
         v12 = v12/norm(v12)
         v34 = v34/norm(v34)
         self.xyz = cross(v12,v34)

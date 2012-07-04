@@ -1,4 +1,4 @@
-from pyNastran.bdf.cards.baseCard import Element,BaseCard
+from pyNastran.bdf.cards.baseCard import Element
 
 class DamperElement(Element):
     def __init__(self,card,data):

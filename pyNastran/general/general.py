@@ -102,7 +102,7 @@ def is_binary(filename):
                 return True
             if len(chunk) < CHUNKSIZE:
                 break # done
-    finally: # no need for 
+    finally: # no need for ???
         fin.close()
 
     return False

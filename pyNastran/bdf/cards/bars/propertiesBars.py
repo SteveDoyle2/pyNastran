@@ -2,8 +2,6 @@ import sys
 from numpy import zeros,pi
 
 from pyNastran.general.generalMath import integrateLine,integratePositiveLine
-
-# pyNastran code
 from pyNastran.bdf.cards.baseCard import Property
 
 
@@ -155,11 +153,11 @@ class LineProperty(Property):
             Iyz = 0.
 
         elif self.Type=='I':
+            sections = []
             h1 = dim[5]                      #        d2
             w1 = dim[2]                      # |  ------------
             y1 = dim[0]/2.-h1                # |  |    A     | d5
             sections.append([w1,h1,0.,y1])   # |  ------------
-                                             # |      | |
                                              # |     >| |<--d3
             h3 = dim[4]                      # |      |B|
             w3 = dim[1]                      # | d1   | |
@@ -177,9 +175,9 @@ class LineProperty(Property):
             h1 = dim[1]           #  |       |
             w1 = dim[0]           #  |       |h1
             A = h1*w1             #  |       |
-            i11 = 1/12.*w1*h1**3  #  *-------*          I_{xx}=\frac{bh^3}{12}
-            i22 = 1/12.*h1*w1**3  #      w1             I_{yy}=\frac{hb^3}{12}
-            i12 = 0. ## @todo is the Ixy of a bar 0 ???
+            Iyy = 1/12.*w1*h1**3  #  *-------*          I_{xx}=\frac{bh^3}{12}
+            Izz = 1/12.*h1*w1**3  #      w1             I_{yy}=\frac{hb^3}{12}
+            Iyz = 0. ## @todo is the Ixy of a bar 0 ???
             
         else:
             raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
@@ -372,8 +370,8 @@ class LineProperty(Property):
             #  |--4--|---7---|
             #
             
-            0,1,2,6,11
-            1,2,3,7,12
+            #0,1,2,6,11
+            #1,2,3,7,12
             
             hTotal = dim[11]
             wTotal = dim[0]
@@ -398,7 +396,8 @@ class LineProperty(Property):
 
             h3 = (h1+h6)/2.
             w3 = dim[4]
-            A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7 +h8*w8
+            
+            A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7
         else:
             raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
             
@@ -534,23 +533,23 @@ class PTUBE(LineProperty):
         #A = pi*t*(D1/2 + D2/2 - t)
         #A = pi*t*( (D1+D2)/2.-t )
         
-        A2 = pi*t*( (D1+D2)/2.-t )
+        #A2 = pi*t*( (D1+D2)/2.-t )
         
-        assert A == A2,'AREA method has problem in PTUBE Aold=%s Anew=%s' %(A,A2)
-        return A2
+        #assert A == A2,'AREA method has problem in PTUBE Aold=%s Anew=%s' %(A,A2)
+        return A
         
     def area1(self):
         """@todo remove after verifying formula..."""
         Dout = self.OD
         Din  = Dout-2*self.t
-        A = pi()/4.*(Dout*Dout-Din*Din)
+        A1 = pi()/4.*(Dout*Dout-Din*Din)
         return A1
 
     def area2(self):
         """@todo remove after verifying formula..."""
         Dout = self.OD2
         Din  = Dout-2*self.t
-        A = pi()/4.*(Dout*Dout-Din*Din)
+        A2 = pi()/4.*(Dout*Dout-Din*Din)
         return A2
 
     def massMatrix(self):
@@ -689,7 +688,7 @@ class PBAR(LineProperty):
         return fields
 
     def reprFields(self):
-        A   = self.setBlankIfDefault(self.A,0.0)
+        #A  = self.setBlankIfDefault(self.A,0.0)
         i1  = self.setBlankIfDefault(self.i1,0.0)
         i2  = self.setBlankIfDefault(self.i2,0.0)
         i12 = self.setBlankIfDefault(self.i12,0.0)
@@ -834,14 +833,12 @@ class PBARL(LineProperty):
     def rawFields(self):
         fields = ['PBARL',self.pid,self.Mid(),self.group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
-        #print "nsm=%s" %(self.nsm)
         return fields
 
     def reprFields(self):
         group = self.setBlankIfDefault(self.group,'MSCBMLO')
         fields = ['PBARL',self.pid,self.Mid(),group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
-        #print "nsm=%s" %(self.nsm)
         return fields
 
 class PBEAM(IntegratedLineProperty):
@@ -857,8 +854,6 @@ class PBEAM(IntegratedLineProperty):
             #print "pid = ",self.pid
 
             nFields = card.nFields()-1 # -1 for PBEAM field
-            fields = card.fields()
-            #print "  fields = ",fields
 
             self.so  = ['YES'] ## @todo what are these values (so[0],xxb[0])???
             self.xxb = [0.]
@@ -1118,7 +1113,7 @@ class PBEAML(IntegratedLineProperty):
             self.Type  = card.field(4)
 
             nDim = self.validTypes[self.Type]
-            nAll = nDim+1
+            #nAll = nDim+1
 
             #nDim = len(self.dim)-1
             dimAll = card.fields(9)
@@ -1250,7 +1245,7 @@ class PBEAML(IntegratedLineProperty):
         for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
             (msg) += self.CA_Section(iFace,iStart,self.dim)
             msg2 += 'Face_%i, ' %(iFace+1)
-            nFace += 1
+            iFace += 1
             iStart += len(self.dim)
         
         msg2 = msg2[-2:]
@@ -1258,7 +1253,7 @@ class PBEAML(IntegratedLineProperty):
         
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n"  %(iCut+1,iCut+1)
         iCut += 1
-        return (msg+msg2,iCut,nFace,iStart)
+        return (msg+msg2,iCut,iFace,iStart)
 
     def rawFields(self):
         fields = ['PBEAML',self.pid,self.Mid(),self.group,self.Type,None,None,None,None]
@@ -1410,7 +1405,7 @@ class PBEND(LineProperty):
         fields = ['PBEND',self.pid,self.Mid(),] # other
         if self.beamType ==1:
             fields += [self.A,self.i1,self.i2,self.j,self.rb,self.thetab,
-                       self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,eslf.f2,
+                       self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2,
                        self.k1,self.k2,self.nsm,self.rc,self.zc,self.deltaN]
         elif self.beamType==2:
             fields += [self.fsi,self.rm,self.t,self.p,self.rb,self.thetab,

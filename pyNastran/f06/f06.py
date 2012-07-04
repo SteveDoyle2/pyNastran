@@ -1,6 +1,5 @@
-import os
+from pyNastran.general.general import printBadPath
 import sys
-from numpy import array
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
 from pyNastran.f06.tables.oes import *  # OES
@@ -22,6 +21,8 @@ class F06(OES,OUG,OQG,F06Writer):
         @param log         a logging object to write debug messages to (@see import logging)
         """
         self.f06FileName = f06FileName
+        if not os.path.exists(self.f06FileName):
+            raise RuntimeError('cant find F06FileName=|%s|\n%s' %(self.f06FileName,printBadPath(self.f06FileName)))
         self.infile = open(self.f06FileName,'r')
         self.__initAlt__(debug,log)
 

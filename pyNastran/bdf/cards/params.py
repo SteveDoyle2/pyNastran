@@ -1,4 +1,3 @@
-# my code
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class PARAM(BaseCard):

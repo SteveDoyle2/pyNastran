@@ -108,7 +108,7 @@ class PDAMPT(DamperProperty):
         ###
 
     def crossReference(self,model):
-        self.tbid = Table(self.tbid)
+        self.tbid = model.Table(self.tbid)
     
     def Tbid(self):
         if self.tbid==0:

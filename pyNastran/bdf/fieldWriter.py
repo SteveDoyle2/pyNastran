@@ -21,6 +21,8 @@ def isSame(value1,value2):
 def setBlankIfDefault(value,default):
     """
     used when setting the output data of a card to clear default values
+    @param value the field value the may be set to None (blank) if value=default
+    @param default the default value for the field
     @note this method is used by almost every card when printing
     """
     if isSame(value,default):
@@ -62,7 +64,7 @@ def printScientific8(value):
     lenSExp  = len(sExp2)+1 # the plus 1 is for the sign
     leftover = 8-lenSExp
     
-    svalue2 = svalue.strip('0')
+    #svalue2 = svalue.strip('0')
     
     if value<0:
         #print "sExp2 = ",sExp2

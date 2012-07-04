@@ -1,6 +1,5 @@
 #import sys
 
-# my code
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
@@ -30,7 +29,6 @@ class TableObj(object):
             if nFields%nRepeated!=0:
                 self.crashFields(fields,nRepeated,nFields)
             assert nFields%nRepeated==0,'invalid table length nRepeat=%s fields=%s' %(nRepeated,ListPrint(fields))
-            assert nFields%nRepeated==0,msg
         
         i=0
         while i<nFields:
@@ -167,7 +165,7 @@ class TABLED3(Table):
 class TABLEM1(Table):
     type = 'TABLEM1'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -175,7 +173,7 @@ class TABLEM1(Table):
         else:
             self.tid = data[0]
             fields   = data[1:]
-            isDadta = True
+            isData = True
         self.parseFields(fields,nRepeated=2,isData=isData)
 
     def rawFields(self):
@@ -196,7 +194,7 @@ class TABLEM2(Table):
             self.x1  = data[1]
             fields   = data[2:]
             isData = True
-        self.parseFields(fields,nRepeated=2)
+        self.parseFields(fields,nRepeated=2,isData=isData)
 
     def rawFields(self):
         fields = ['TABLEM2',self.tid,self.x1,None,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -234,7 +232,7 @@ class TABLEM3(Table):
 class TABLEM4(Table):
     type = 'TABLEM4'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -284,7 +282,7 @@ class TABLES1(Table):
 class TABLEST(Table):
     type = 'TABLEST'
     def __init__(self,card=None,data=None):
-        (footer) = Table.__init__(self,card,data)
+        Table.__init__(self,card,data)
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)

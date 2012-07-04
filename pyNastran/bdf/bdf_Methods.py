@@ -3,8 +3,6 @@ from pyNastran.bdf.cards.loads import *
 from pyNastran.bdf.errors import *
 
 from pyNastran.bdf.cards.plates.elementsShell import ShellElement
-from pyNastran.general.generalMath import buildSpline
-from scipy.interpolate import splev
 
 # 3rd party
 #import numpy
@@ -74,6 +72,7 @@ class bdfMethods(object):
         @todo finish method...think i need to build a edge list...
               that'd be a lot easier to loop through stuff...
         """
+        raise NotImplementedErrror()
         normals   = {}
         validNids = set([])
         isCorrectNormal = set([])

@@ -1,4 +1,4 @@
-import sys
+#import sys
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class OptConstraint(BaseCard):
@@ -239,7 +239,6 @@ class DRESP2(OptConstraint):
         return fields
 
     def rawFields(self):
-        method = self.setBlankIfDefault(self.method,'MIN')
         fields = ['DRESP2',self.oid,self.label,self.eqidFunc,self.region,self.method,self.c1,self.c2,self.c3]
         fields += self.packParams()
         return fields
@@ -345,7 +344,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print "dvids = ",self.dvids
             print "coeffs = ",self.coeffs
             print str(self)
-            raise Exception('invalid DVPREL1...')
+            raise RuntimeError('invalid DVPREL1...')
 
     def crossReference(self,model):
         self.pid = model.Property(self.pid)

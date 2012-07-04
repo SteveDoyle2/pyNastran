@@ -1,5 +1,3 @@
-# my code
-import sys
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 
@@ -82,7 +80,7 @@ class constraintObject2(object):
             #for constraint in constraints:
                 #conID = constraint.ConID()
                 #constraints2[conID] 
-        constraints3 = remapSPCs(constraints2)
+        constraints3 = self.remapSPCs(constraints2)
 
     def remapSPCs(self,constraints):    
         """not really done yet"""
@@ -110,7 +108,7 @@ class constraintObject2(object):
     def getConstraintIDs(self):
         IDs = []
         for key,constraints in sorted(self.addConstraints.iteritems()):
-            conID = constraint.ConID()
+            conID = constraints.ConID()
             IDs.append(conID)
         ###
 
@@ -428,9 +426,9 @@ class SPC(Constraint):
             self.enforced = [data[3]]
         ###
 
-    def getNodeDOFs(self,mesh):
+    def getNodeDOFs(self,model):
         pass
-        return conid,dofs
+        #return conid,dofs
 
     def crossReference(self,i,node):
         dofCount = 0
@@ -597,7 +595,7 @@ class SPCADD(ConstraintADD):
         return typesFound,positionSPCs
 
     def crossReference(self,i,node):
-        dofCount = 0
+        #dofCount = 0
         self.sets.sort()
         self.sets[i] = node
 
@@ -624,7 +622,7 @@ class MPCADD(ConstraintADD):
         self.sets.sort()
 
     def crossReference(self,i,node):
-        dofCount = 0
+        #dofCount = 0
         self.sets.sort()
         self.sets[i] = node
 

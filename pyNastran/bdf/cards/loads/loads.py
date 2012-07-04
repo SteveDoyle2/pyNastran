@@ -1,5 +1,4 @@
 import sys
-
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Load(BaseCard):

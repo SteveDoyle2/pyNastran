@@ -1,5 +1,6 @@
 from __future__ import print_function
 import sys
+from numpy import matrix,zeros,dot,transpose
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.baseCard import Element
@@ -219,7 +220,7 @@ class CELAS2(SpringElement):
         fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,self.ge,self.s]
         return fields
 
-    def rawFields(self):
+    def reprFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True,msg=str(['CELAS2',self.eid]))
         ge = self.setBlankIfDefault(self.ge,0.)
         s  = self.setBlankIfDefault(self.s,0.)

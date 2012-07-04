@@ -47,7 +47,8 @@ class PFAST(Property):
     def rawFields(self):
         fields = ['PFAST',self.pid,self.d,self.Mcid(),self.mflag,self.kt1,self.kt2,self.kt3,self.kr1,
                           self.kr2,self.kr3,self.mass,self.ge]
-    
+        return fields
+
     def reprFields(self):
         mcid = self.setBlankIfDefault(self.mcid,-1)
         mflag = self.setBlankIfDefault(self.mflag,0)
@@ -57,9 +58,9 @@ class PFAST(Property):
 
         mass = self.setBlankIfDefault(self.mass,0.0)
         ge = self.setBlankIfDefault(self.ge,0.0)
-        fields = ['PFAST',self.pid,self.d,self.Mcid(),self.mflag,self.kt1,self.kt2,self.kt3,self.kr1,
-                          self.kr2,self.kr3,mass,ge]
-        return self.rawFields()
+        fields = ['PFAST',self.pid,self.d,mcid,mflag,self.kt1,self.kt2,self.kt3,kr1,
+                          kr2,kr3,mass,ge]
+        return fields
 
 class PGAP(Property):
     type = 'PGAP'
@@ -305,6 +306,7 @@ class PRAC3D(CrackProperty):
         gamma = self.setBlankIfDefault(self.nsm,0.5)
         phi   = self.setBlankIfDefault(self.nsm,180.)
         fields = ['PRAC3D',self.pid,self.Mid(),gamma,phi]
+        return fields
 
 class PCONEAX(Property): #not done
     type = 'PCONEAX'

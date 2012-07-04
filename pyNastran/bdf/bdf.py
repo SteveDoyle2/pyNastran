@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import sys
-import copy
+#import copy
 
 # pyNastran
 from pyNastran.general.general import ListPrint
@@ -9,7 +9,6 @@ from pyNastran.bdf.errors import *
 
 from pyNastran.bdf.cards import * # reads all the card types - GRID, CQUAD4, FORCE, PSHELL, etc.
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
-from pyNastran.bdf.fieldWriter     import printCard
 from pyNastran.bdf.bdf_Methods     import bdfMethods
 
 from pyNastran.bdf.bdfInterface.getCard import getMethods
@@ -760,9 +759,6 @@ class BDF(bdfReader,bdfMethods,getMethods,addMethods,writeMesh,cardMethods,XrefM
 
     def readBulkDataDeck(self):
         """parses the Bulk Data Deck"""
-        debug = self.debug
-        #debug = False
-        
         if self.debug:
             self.log.debug("*readBulkDataDeck")
         self.openFile(self.bdfFileName)

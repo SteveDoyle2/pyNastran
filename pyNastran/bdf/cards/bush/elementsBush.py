@@ -1,6 +1,6 @@
-#from __future__ import print_function
-import sys
-from numpy.linalg import norm
+from __future__ import print_function
+#import sys
+#from numpy.linalg import norm
 
 from pyNastran.bdf.cards.baseCard import Element
 
@@ -34,8 +34,6 @@ class CBUSH(BushElement):
         BushElement.__init__(self,card,data)
         
         if card:
-            fields = card.fields()
-            #print "fields = ",fields
             self.eid = card.field(1)
             self.pid = card.field(2)
             self.ga = card.field(3)
@@ -156,7 +154,7 @@ class CBUSH2D(BushElement):
             self.cid = int(card.field(5))
             self.plane = card.field(6,'XY')
             self.sptid = card.field(7)
-            assert self.plane in ['XY','YZ','ZX'],'plane not in required list, plane=|%s|' %(sefl.plane)
+            assert self.plane in ['XY','YZ','ZX'],'plane not in required list, plane=|%s|' %(self.plane)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -164,7 +162,7 @@ class CBUSH2D(BushElement):
         ###
         self.prepareNodeIDs(nids)
         assert len(self.nodes)==2
-    ###
+
     def rawFields(self):
         nodeIDs = self.nodeIDs()
         fields = ['CBUSH1D',self.eid,self.Pid(),nodeIDs[0],nodeIDs[0],self.Cid(),self.plane,self.sptid]

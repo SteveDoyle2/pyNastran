@@ -2,7 +2,6 @@
 
 # pyNastran
 from pyNastran.bdf.cards.baseCard import Element
-
 from pyNastran.bdf.cards.elementsRigid import *
 from pyNastran.bdf.cards.elementsSolid import *
 from pyNastran.bdf.cards.bars.elementsBars import *
@@ -13,7 +12,7 @@ from pyNastran.bdf.cards.bush.elementsBush import *
 from pyNastran.bdf.cards.dampers.elementsDamper import *
 
 #------------------------------------------------------------------------------
-class CFAST(Element):  ## @todo xref
+class CFAST(Element):
     type = 'CFAST'
     def __init__(self,card=None,data=None):
         Element.__init__(self,card,data)
@@ -31,7 +30,7 @@ class CFAST(Element):  ## @todo xref
         
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
 
-    def crossReference(self,model):
+    def crossReference(self,model):  ## @todo xref
         self.pid = model.Property(self.pid)
         #self.gs = model.Node(self.gs)
         #self.ga = model.Node(self.ga)

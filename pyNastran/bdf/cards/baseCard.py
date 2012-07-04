@@ -1,9 +1,6 @@
 from __future__ import print_function
 import sys
 
-import pyNastran
-import pyNastran.bdf
-
 from pyNastran.bdf.errors                import *
 from pyNastran.bdf.fieldWriter           import printCard,setBlankIfDefault,setDefaultIfBlank,isSame
 from pyNastran.bdf.bdfInterface.BDF_Card import BDF_Card
@@ -471,9 +468,6 @@ class Element(BaseCard):
                 self.nodes.append(int(nid))
                 #raise Exception('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
             ###
-
-    def Centroid(self,nodes,debug=False):
-        return None
 
     #def Normal(self,a,b):
     #    """finds the unit normal vector of 2 vectors"""
