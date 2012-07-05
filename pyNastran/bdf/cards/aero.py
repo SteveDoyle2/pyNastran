@@ -1,4 +1,4 @@
-# pylint: disable=R0904,R0902
+# pylint: disable=C0103,R0902,R0904,R0914
 #import sys
 from numpy import array, pi
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -306,7 +306,8 @@ class AERO(Aero):
             self.symXY    = data[5]
             assert len(data)==6, 'data = %s' %(data)
         ###
-        #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular function
+        # T is the tabular function
+        #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
     def rawFields(self):
         fields = ['AERO', self.acsid, self.velocity, self.cRef, self.rhoRef, self.symXZ, self.symXY]
@@ -1014,7 +1015,7 @@ class SPLINE2(Spline):
             self.thx   = card.field(9)
             self.thy   = card.field(10)
             
-            self.usage = card.field(12,'BOTH')
+            self.usage = card.field(12, 'BOTH')
             #print self
             #raise Exception(str(self))
         else:
@@ -1026,30 +1027,30 @@ class SPLINE2(Spline):
         self.setg  = model.Set(self.setg)
 
     def Cid(self):
-        if isinstance(self.cid,int):
+        if isinstance(self.cid, int):
             return self.cid
         return self.cid.cid
 
     def CAero(self):
-        if isinstance(self.caero,int):
+        if isinstance(self.caero, int):
             return self.caero
         return self.caero.eid
 
     def Set(self):
-        if isinstance(self.setg,int):
+        if isinstance(self.setg, int):
             return self.setg
         return self.setg.sid
 
     def rawFields(self):
-        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),self.dz,self.dtor,self.Cid(),
-                            self.thx,self.thy,None,self.usage]
+        fields = ['SPLINE2',self.eid, self.CAero(), self.id1, self.id2, self.Set(), self.dz, self.dtor, self.Cid(),
+                            self.thx, self.thy, None, self.usage]
         return fields
 
     def reprFields(self):
-        dz    = self.setBlankIfDefault(self.dz,0.)
-        usage = self.setBlankIfDefault(self.usage,'BOTH')
-        fields = ['SPLINE2',self.eid,self.CAero(),self.id1,self.id2,self.Set(),dz,self.dtor,self.Cid(),
-                            self.thx,self.thy,None,usage]
+        dz    = self.setBlankIfDefault(self.dz, 0.)
+        usage = self.setBlankIfDefault(self.usage, 'BOTH')
+        fields = ['SPLINE2',self.eid, self.CAero(), self.id1, self.id2, self.Set(), dz, self.dtor, self.Cid(),
+                            self.thx, self.thy, None, usage]
         return fields
 
 class SPLINE4(Spline):
@@ -1114,8 +1115,8 @@ class SPLINE4(Spline):
         self.aelist = model.AEList(self.aelist)
 
     def rawFields(self):
-        fields = ['SPLINE4',self.eid,self.CAero(),self.AEList(),None,self.Set(),self.dz,self.method,self.usage,
-                            self.nelements,self.melements]
+        fields = ['SPLINE4',self.eid, self.CAero(), self.AEList(), None, self.Set(), self.dz, self.method, self.usage,
+                            self.nelements, self.melements]
         return fields
 
     def reprFields(self):
@@ -1210,11 +1211,14 @@ class TRIM(BaseCard):
             self.mach = card.field(2)
             ## Dynamic pressure. (Real > 0.0)
             self.q    = card.field(3)
-            ## The label identifying aerodynamic trim variables defined on an AESTAT or AESURF entry.
+            ## The label identifying aerodynamic trim variables defined on an
+            ## AESTAT or AESURF entry.
             self.labels = []
-            ## The magnitude of the aerodynamic extra point degree-of-freedom. (Real)
+            ## The magnitude of the aerodynamic extra point degree-of-freedom.
+            ## (Real)
             self.uxs    = []
-            ## Flag to request a rigid trim analysis (Real > 0.0 and < 1.0, Default =1.0. A value of 0.0 provides a rigid trim analysis,
+            ## Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
+            ## Default =1.0. A value of 0.0 provides a rigid trim analysis,
             ## not supported
             self.aeqr = 1.0
             fields = card.fields(4)

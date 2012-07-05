@@ -2,7 +2,6 @@
 from __future__ import print_function
 import sys
 
-from pyNastran.bdf.errors                import NotImplementedMethodError
 from pyNastran.bdf.fieldWriter           import (printCard, setBlankIfDefault,
                                                  setDefaultIfBlank, isSame)
 from pyNastran.bdf.bdfInterface.BDF_Card import BDF_Card

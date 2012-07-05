@@ -1,10 +1,11 @@
+# pylint: disable=C0103,R0902,R0904,R0914
 import os
 import sys
 
-from pyNastran.bdf.errors import *
+from pyNastran.bdf.errors import MissingFileError,ClosedBDFError
 
 class bdfReader(object):
-    def __init__(self,debug,log):
+    def __init__(self, debug, log):
         self.relpath = True
         if sys.version_info < (2,6):
             version = sys.version_info

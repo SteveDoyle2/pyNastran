@@ -1,17 +1,18 @@
+# pylint: disable=C0103,R0902,R0904,R0914
 from numpy import zeros,array
 
-from pyNastran.bdf.cards.baseCard import Element,BaseCard
+from pyNastran.bdf.cards.baseCard import Element, BaseCard
 
 
 class PointElement(Element):
-    def __init__(self,card=None,data=None):
-        Element.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Element.__init__(self, card, data)
         
     def Mass(self):
         return self.mass
 
 class PointMass(BaseCard):
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         pass
 
 class CMASS1(PointElement):

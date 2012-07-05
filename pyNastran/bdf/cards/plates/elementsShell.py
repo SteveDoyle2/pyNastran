@@ -1,15 +1,19 @@
+# pylint: disable=C0103,R0902,R0904,R0914
+
 import sys
 
-#from numpy import zeros,dot
-#from numpy.linalg import inv
+from numpy import array,eye,cross #zeros,dot
+from numpy.linalg import det # inv
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.general.generalMath import Area,Triangle_AreaCentroidNormal,Normal
-from pyNastran.bdf.errors import *
+from pyNastran.general.generalMath import (Area, Triangle_AreaCentroidNormal,
+                                           Normal)
+from pyNastran.bdf.errors import InvalidRequestError
 
 class ShellElement(Element):
-    def __init__(self,card,data):
-        Element.__init__(self,card,data)
+    type = 'ShellElement'
+    def __init__(self, card, data):
+        Element.__init__(self, card, data)
 
     def Area(self):
         raise NotImplementedError('Area undefined for %s' %(self.type))
@@ -91,14 +95,14 @@ class TriShell(ShellElement):
         centroid = self.CentroidTriangle(n0,n1,n2,debug)
         return centroid
 
-    def MassMatrix(self):
+    def MassMatrix(self, isLumped=True):
         """
         6x6 mass matrix triangle
         http://www.colorado.edu/engineering/cas/courses.d/IFEM.d/IFEM.Ch32.d/IFEM.Ch32.pdf
         """
         mass = self.Mass() # rho*A*t
         if isLumped:  # lumped mass matrix
-            Mass = mass/3*eye(6);
+            Mass = mass/3*eye(6)
         else: # consistent mass
             M = eye(6)*2.
             M[2,0] = M[4,0] = M[0,2] = M[0,4] = 1.
@@ -177,31 +181,31 @@ class CTRIA3(TriShell):
         return u
 
     def Jacob(self):
-        (n0,n1,n2) = self.nodePositions()
-        (nx0,ny0,nz0) = n0
-        (nx1,ny1,nz1) = n1
-        (nx2,ny2,nz2) = n2
+        (n0, n1, n2) = self.nodePositions()
+        (nx0, ny0, nz0) = n0
+        (nx1, ny1, nz1) = n1
+        (nx2, ny2, nz2) = n2
         #J = matrix([n0,n1-n0,n2-n0])
         
-        J = matrix([ [nx0,nx1-nx0,nx2-nx0],
-                     [ny0,ny1-ny0,ny2-ny0],
-                     [nz0,nz1-nz0,nz2-nz0], ])
+        J = array([ [nx0, nx1-nx0, nx2-nx0],
+                    [ny0, ny1-ny0, ny2-ny0],
+                    [nz0, nz1-nz0, nz2-nz0], ])
         detJ = J.det()
         return J
 
     def getReprDefaults(self):
-        zOffset   = self.setBlankIfDefault(self.zOffset,0.0)
-        TFlag     = self.setBlankIfDefault(self.TFlag,0)
-        thetaMcid = self.setBlankIfDefault(self.thetaMcid,0.0)
+        zOffset   = self.setBlankIfDefault(self.zOffset, 0.0)
+        TFlag     = self.setBlankIfDefault(self.TFlag, 0)
+        thetaMcid = self.setBlankIfDefault(self.thetaMcid, 0.0)
 
-        T1 = self.setBlankIfDefault(self.T1,1.0)
-        T2 = self.setBlankIfDefault(self.T2,1.0)
-        T3 = self.setBlankIfDefault(self.T3,1.0)
-        return (thetaMcid,zOffset,TFlag,T1,T2,T3)
+        T1 = self.setBlankIfDefault(self.T1, 1.0)
+        T2 = self.setBlankIfDefault(self.T2, 1.0)
+        T3 = self.setBlankIfDefault(self.T3, 1.0)
+        return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
-        fields = ['CTRIA3',self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,None]+[
-            None,self.TFlag,self.T1,self.T2,self.T3]
+        fields = ['CTRIA3', self.eid, self.Pid()]+self.nodeIDs()+[self.thetaMcid, self.zOffset, None]+[
+            None, self.TFlag, self.T1, self.T2, self.T3]
         return fields
 
     def reprFields(self):
@@ -255,18 +259,18 @@ class CTRIA6(TriShell):
         """
         returns area,centroid, normal as it's more efficient to do them together
         """
-        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
-        return Triangle_AreaCentroidNormal([n1,n2,n3])
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
+        return Triangle_AreaCentroidNormal([n1, n2, n3])
 
     def Area(self):
         """
         returns the normal vector
         \f[ \large A = \frac{1}{2} (n_0-n_1) \cross (n_0-n_2)  \f]
         """
-        (n1,n2,n3,n4,n5,n6) = self.nodePositions()
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         a = n1-n2
         b = n1-n3
-        area = Area(a,b)
+        area = Area(a, b)
         return area
 
     def Normal(self):
@@ -533,16 +537,16 @@ class QuadShell(ShellElement):
         return area
     ###
 
-    def MassMatrix(self):
+    def MassMatrix(self, isLumped=True, gauss=1):
         """
         6x6 mass matrix triangle
         http://www.colorado.edu/engineering/cas/courses.d/IFEM.d/IFEM.Ch32.d/IFEM.Ch32.pdf
         """
         mass = self.Mass() # rho*A*t
         if isLumped:  # lumped mass matrix
-            Mass = mass/3*eye(6);
+            Mass = mass/3*eye(6)
         else: # consistent mass
-            if G==1:
+            if gauss==1:
                 M = eye(8)*1. # 1x1 Gauss Rule
                 M[2,0] = M[3,1] = M[4,2] = M[5,3] = M[6,4] = M[7,5] = 1.
                 M[4,0] = M[5,1] = M[6,2] = M[7,3] = 1.
@@ -552,7 +556,7 @@ class QuadShell(ShellElement):
                 M[0,4] = M[1,5] = M[2,6] = M[3,7] = 1.
                 M[0,6] = M[1,7] = 1.
                 Mass = mass/32*M
-            if G==2:
+            if gauss==2:
                 M = eye(8)*4. # 2x2 Gauss Rule
                 M[2,0] = M[3,1] = M[4,2] = M[5,3] = M[6,4] = M[7,5] = 2.
                 M[4,0] = M[5,1] = M[6,2] = M[7,3] = 1.
@@ -563,18 +567,6 @@ class QuadShell(ShellElement):
                 M[0,6] = M[1,7] = 2.
                 Mass = mass/72*M
         return Mass
-
-    def writeAsCTRIA3(self,newID):
-        """
-        triangle - 012
-        triangle - 023
-        """
-        zOffset = self.setBlankIfDefault(self.zOffset,0.0)
-        nodes1 = [self.nodes[0],self.nodes[1],self.nodes[2]]
-        nodes2 = [self.nodes[0],self.nodes[2],self.nodes[3]]
-        fields1 = ['CTRIA3',self.eid,self.mid1]+nodes1+[self.thetaMcid,zOffset]
-        fields2 = ['CTRIA3',newID,   self.mid1]+nodes2+[self.thetaMcid,zOffset]
-        return self.printCard(fields1)+printCard(fields2)
 
     def flipNormal(self):
         """
@@ -775,6 +767,18 @@ class CQUAD4(QuadShell):
         """
         (n1,n2,n3,n4) = self.nodes
         self.nodes = [n1,n4,n3,n2]
+
+    def writeAsCTRIA3(self, newID):
+        """
+        triangle - 012
+        triangle - 023
+        """
+        zOffset = self.setBlankIfDefault(self.zOffset, 0.0)
+        nodes1 = [self.nodes[0], self.nodes[1], self.nodes[2]]
+        nodes2 = [self.nodes[0], self.nodes[2], self.nodes[3]]
+        fields1 = ['CTRIA3', self.eid, self.Pid()]+nodes1+[self.thetaMcid, zOffset]
+        fields2 = ['CTRIA3', newID,    self.Pid()]+nodes2+[self.thetaMcid, zOffset]
+        return self.printCard(fields1)+self.printCard(fields2)
 
     def rawFields(self):
         fields = [self.type,self.eid,self.Pid()]+self.nodeIDs()+[self.thetaMcid,self.zOffset,self.TFlag,self.T1,self.T2,self.T3,self.T4]

@@ -1,4 +1,4 @@
-# pylint: disable=R0904,R0902
+# pylint: disable=C0103,R0902,R0904,R0914
 from pyNastran.bdf.cards.baseCard import BaseCard
 from math import log,exp
 
