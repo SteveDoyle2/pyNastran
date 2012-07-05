@@ -4,19 +4,19 @@ from pyNastran.bdf.cards.baseCard import Element
 
 class RigidElement(Element):
     #def __repr__(self):
-        #fields = [self.type,self.eid]
+        #fields = [self.type, self.eid]
         #return self.printCard(fields)
-    def crossReference(self,model):
+    def crossReference(self, model):
         pass
 
 class RBAR(RigidElement):
     type = 'RBAR'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         RBAR EID GA GB CNA    CNB CMA CMB ALPHA
         RBAR 5   1   2 123456             6.5-6
         """
-        RigidElement.__init__(self,card,data)
+        RigidElement.__init__(self, card, data)
         if card:
             self.eid   = card.field(1)
             self.ga    = card.field(2)
@@ -25,7 +25,7 @@ class RBAR(RigidElement):
             self.cnb   = card.field(5)
             self.cma   = card.field(6)
             self.cmb   = card.field(7)
-            self.alpha = card.field(8,0.0)
+            self.alpha = card.field(8, 0.0)
         else:
             self.eid   = data[0]
             self.ga    = data[1]
@@ -37,7 +37,7 @@ class RBAR(RigidElement):
             self.alpha = data[7]
         ###
 
-    def convertToMPC(self,mpcID):
+    def convertToMPC(self, mpcID):
         """
         -Ai*ui + Aj*uj = 0
         where ui are the base DOFs (max=6)
@@ -49,13 +49,13 @@ class RBAR(RigidElement):
         nCM = len(self.cm)
         Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
         
-        card = ['MPC',mpcID]
-        for cm in self.cm:
-            card += [self.gn,cm,-Ai] # the minus sign is applied to the base node
+        card = ['MPC', mpcID]
+        for cm in self.cm: # the minus sign is applied to the base node
+            card += [self.gn, cm, -Ai]
 
         for gm in self.Gmi:
             for cm in self.cm:
-                card += [gn,cm,Ai]
+                card += [gm, cm, Ai]
         return card
 
     #def writeCodeAster(self):
@@ -66,22 +66,22 @@ class RBAR(RigidElement):
         #return msg
         
     def rawFields(self):
-        fields = ['RBAR',self.eid,self.ga,self.gb,self.cna,self.cnb,self.cma,self.cmb,self.alpha]
+        fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb, self.cma, self.cmb, self.alpha]
         return fields
 
     def reprFields(self):
-        alpha = self.setBlankIfDefault(self.alpha,0.0)
-        fields = ['RBAR',self.eid,self.ga,self.gb,self.cna,self.cnb,self.cma,self.cmb,alpha]
+        alpha = self.setBlankIfDefault(self.alpha, 0.0)
+        fields = ['RBAR', self.eid, self.ga,self.gb, self.cna, self.cnb, self.cma, self.cmb, alpha]
         return fields
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         RBAR1 EID GA GB CB  ALPHA
         RBAR1 5    1  2 123 6.5-6
         """
-        RigidElement.__init__(self,card,data)
+        RigidElement.__init__(self, card, data)
         if card:
             self.eid   = card.field(1)
             self.ga    = card.field(2)
@@ -97,18 +97,18 @@ class RBAR1(RigidElement):
         ###
 
     def rawFields(self):
-        fields = ['RBAR1',self.eid,self.ga,self.gb,self.cb,self.alpha]
+        fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
         return fields
 
     def reprFields(self):
-        alpha = self.setBlankIfDefault(self.alpha,0.0)
-        fields = ['RBAR1',self.eid,self.ga,self.gb,self.cb,alpha]
+        alpha = self.setBlankIfDefault(self.alpha, 0.0)
+        fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return fields
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
-    def __init__(self,card=None,data=None):
-        RigidElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        RigidElement.__init__(self, card, data)
         self.eid = card.field(1)
         self.Gni = []
         self.Cni = []
@@ -126,7 +126,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         i=2
         #print "iUm = %s" %(iUm)
         while i<iUm:
-            gni = card.field(i  )
+            gni = card.field(i)
             #if gni:
             cni = card.field(i+1)
             self.Gni.append(gni)
@@ -143,7 +143,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #print "i=%s iUm=%s card.field(iUm)=%s" %(i,iUm,card.field(iUm))
         # loop till alpha, no field9,field10
         while i < nFields: # dont grab alpha
-            gmi = card.field(i  )
+            gmi = card.field(i)
             cmi = card.field(i+1)
             if gmi:
                 #print "gmi=%s cmi=%s" %(gmi,cmi)
@@ -159,16 +159,16 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #sys.exit()
         
     def rawFields(self):
-        fields = [self.type,self.eid]
+        fields = [self.type, self.eid]
 
         if 0:
             fields2 = [self.eid]
-            for i,(gn,cn) in enumerate(zip(self.Gni,self.Cni)):
+            for i,(gn,cn) in enumerate(zip(self.Gni, self.Cni)):
                 fields+=[gn,cn]
-            fields += self.buildTableLines(fields2,i=1,j=1)
+            fields += self.buildTableLines(fields2, i=1, j=1)
 
-        for i,(gn,cn) in enumerate(zip(self.Gni,self.Cni)):
-            fields+=[gn,cn]
+        for i,(gn,cn) in enumerate(zip(self.Gni, self.Cni)):
+            fields+=[gn, cn]
             if i%6==0:
                 fields += [None]
             ###
@@ -179,18 +179,18 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         if 0:
             fields2 = ['UM']
-            for i,(gm,cm) in enumerate(zip(self.Gmi,self.Cmi)):
+            for i,(gm,cm) in enumerate(zip(self.Gmi, self.Cmi)):
                 #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
-                fields2 += [gm,cm]
-            fields += self.buildTableLines(fields2,i=1,j=1)
+                fields2 += [gm, cm]
+            fields += self.buildTableLines(fields2, i=1, j=1)
             fields = self.wipeFields(fields)
             
         ## overly complicated loop to print the UM section
         fields += ['UM']
         j=1
-        for i,(gm,cm) in enumerate(zip(self.Gmi,self.Cmi)):
+        for i,(gm,cm) in enumerate(zip(self.Gmi, self.Cmi)):
             #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
-            fields+=[gm,cm]
+            fields+=[gm, cm]
             if i>0 and j%3==0:
                 fields += [None,None]
                 #print "---"
@@ -200,7 +200,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         ###
         nSpaces = 8-(len(fields)-1)%8  # puts ALPHA onto next line
         if nSpaces==1:
-            fields += [None,None]
+            fields += [None, None]
         if self.alpha>0.: # handles default alpha value
             fields += [self.alpha]
         return fields
@@ -210,28 +210,29 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     type = 'RBE2'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         RBE2 EID GN CM GM1 GM2 GM3 GM4 GM5
         GM6 GM7 GM8 -etc.- ALPHA
         """
-        RigidElement.__init__(self,card,data)
+        RigidElement.__init__(self, card, data)
         if card:
             ## Element identification number
             self.eid = card.field(1)
             ## Identification number of grid point to which all six independent
             ## degrees-of-freedom for the element are assigned. (Integer > 0)
             self.gn  = card.field(2)
-            ## Component numbers of the dependent degrees-of-freedom in the global
-            ## coordinate system at grid points GMi. (Integers 1 through 6 with no
-            ## embedded blanks.)
+            ## Component numbers of the dependent degrees-of-freedom in the
+            ## global coordinate system at grid points GMi. (Integers 1 through
+            ## 6 with no embedded blanks.)
             self.cm  = card.field(3)  # 123456 constraint or other
-            ## Grid point identification numbers at which dependent degrees-offreedom
-            ## are assigned. (Integer > 0)
+            ## Grid point identification numbers at which dependent
+            ## degrees-of-freedom are assigned. (Integer > 0)
             self.Gmi = card.fields(4) # get the rest of the fields
-            if len(self.Gmi)>0 and isinstance(self.Gmi[-1],float):
-                ## Thermal expansion coefficient. See Remark 11. (Real > 0.0 or blank)
-                self.alpha = self.Gmi.pop() # the last field is not part of self.Gmi
+            if len(self.Gmi)>0 and isinstance(self.Gmi[-1], float):
+                ## Thermal expansion coefficient. See Remark 11.
+                ## (Real > 0.0 or blank)
+                self.alpha = self.Gmi.pop() # the last field is not part of Gmi
             else:
                 self.alpha = 0.0
             ###
@@ -241,7 +242,7 @@ class RBE2(RigidElement):
             self.cm  = data[2]
             self.Gmi = data[3]
             self.alpha = data[4]
-            print "eid=%s gn=%s cm=%s Gmi=%s alpha=%s" %(self.eid,self.gn,self.cm,self.Gmi,self.alpha)
+            print "eid=%s gn=%s cm=%s Gmi=%s alpha=%s" %(self.eid, self.gn, self.cm, self.Gmi, self.alpha)
             raise NotImplementedError('RBE2 data...')
         ###
         assert self.gn != None
@@ -261,12 +262,12 @@ class RBE2(RigidElement):
         Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
         
         card = ['MPC',mpcID]
-        for cm in self.cm:
-            card += [self.gn,cm,-Ai] # the minus sign is applied to the base node
+        for cm in self.cm: # the minus sign is applied to the base node
+            card += [self.gn, cm, -Ai]
 
         for gm in self.Gmi:
             for cm in self.cm:
-                card += [gm,cm,Ai]
+                card += [gm, cm, Ai]
         return card
 
     def writeCodeAster(self):
@@ -301,17 +302,17 @@ class RBE2(RigidElement):
         return msg
         
     def rawFields(self):
-        fields = ['RBE2',self.eid,self.gn,self.cm]+self.Gmi+[self.alpha]
+        fields = ['RBE2', self.eid, self.gn, self.cm]+self.Gmi+[self.alpha]
         return fields
 
     def reprFields(self):
-        alpha = self.setBlankIfDefault(self.alpha,0.)
-        fields = ['RBE2',self.eid,self.gn,self.cm]+self.Gmi+[alpha]
+        alpha = self.setBlankIfDefault(self.alpha, 0.)
+        fields = ['RBE2', self.eid, self.gn, self.cm]+self.Gmi+[alpha]
         return fields
 
 class RBE3(RigidElement):  # not done, needs testing badly
     type = 'RBE3'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         eid
         refgrid
@@ -321,7 +322,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         Cmi
         alpha
         """
-        RigidElement.__init__(self,card,data)
+        RigidElement.__init__(self, card, data)
         self.eid     = card.field(1)
         self.refgrid = card.field(3)
         self.refc    = card.field(4)
@@ -347,7 +348,6 @@ class RBE3(RigidElement):  # not done, needs testing badly
             iUm = None
         #print "iAlpha=%s iUm=%s" %(iAlpha,iUm)
         #print "iAlpha=%s iWtMax=%s" %(iAlpha,iWtMax)
-        #sys.stdout.flush()
 
         #print "iUM = ",iUM
         self.WtCG_groups = []
@@ -361,17 +361,11 @@ class RBE3(RigidElement):  # not done, needs testing badly
                 #print "wt=%s ci=%s" %(wt,ci)
                 i+=2
                 gij = 0
-                while isinstance(gij,int) and i<iWtMax:  # does this get extra fields???
+                while isinstance(gij, int) and i<iWtMax:
                     gij = card.field(i)
                     if gij is not None:
                         Gij.append(gij)
                     i+=1
-                #print "Gij = ",Gij
-                #print "gij_stop? = ",gij
-                #if gij=='UM':
-                    #print "breaking A..."
-                    #raise Exception('error in RBE3...found UM in Weight Loop...bug...')
-                    #break
                 ###
                 self.WtCG_groups.append([wt,ci,Gij])
             else:
@@ -383,11 +377,9 @@ class RBE3(RigidElement):  # not done, needs testing badly
         self.Cmi = []
         #print ""
         if iUm:
-            #i+=1
-            #raise NotImplementedError('parse the UM')
             i = iUm+1
             #print "i=%s iUmStop=%s" %(i,iUmStop)
-            for j in range(i,iUmStop,2):  # does this get extra fields???
+            for j in range(i, iUmStop, 2):
                 gmi = card.field(j)
                 if gmi is not None:
                     cmi = card.field(j+1)
@@ -399,7 +391,6 @@ class RBE3(RigidElement):  # not done, needs testing badly
         ###
         if iAlpha:
             self.alpha = card.field(iAlpha+1)
-            #print "self.alpha = ",self.alpha
         else:
             ## thermal expansion coefficient
             self.alpha = 0.0
@@ -407,7 +398,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         #print self
         #sys.exit()
 
-    def convertToMPC(self,mpcID):
+    def convertToMPC(self, mpcID):
         """
         -Ai*ui + Aj*uj = 0
         where ui are the base DOFs (max=6)
@@ -419,20 +410,20 @@ class RBE3(RigidElement):  # not done, needs testing badly
         nCM = len(self.cm)
         Ai = nCM*len(self.Gmi)/len(self.gn) # where nGN=1
         
-        card = ['MPC',mpcID]
-        for cm in self.cm:
-            card += [self.gn,cm,-Ai] # the minus sign is applied to the base node
+        card = ['MPC', mpcID]
+        for cm in self.cm: # the minus sign is applied to the base node
+            card += [self.gn, cm, -Ai]
 
         for gm in self.Gmi:
             for cm in self.cm:
-                card += [gm,cm,Ai]
+                card += [gm, cm, Ai]
         return card
 
     def rawFields(self):
-        fields = ['RBE3',self.eid,None,self.refgrid,self.refc]
+        fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
         for (wt,ci,Gij) in self.WtCG_groups:
             #print 'wt=%s ci=%s Gij=%s' %(wt,ci,Gij)
-            fields+=[wt,ci]+Gij
+            fields+=[wt, ci]+Gij
         nSpaces = 8-(len(fields)-1)%8  # puts UM onto next line
         #print "nSpaces = ",nSpaces
         if nSpaces<8:
@@ -440,18 +431,18 @@ class RBE3(RigidElement):  # not done, needs testing badly
         
         if self.Gmi and 0:
             fields2 = ['UM']
-            for (gmi,cmi) in zip(self.Gmi,self.Cmi):
-                fields2 += [gmi,cmi]
+            for (gmi,cmi) in zip(self.Gmi, self.Cmi):
+                fields2 += [gmi, cmi]
             ###
-            fields += self.buildTableLines(fields2,i=1,j=1)
+            fields += self.buildTableLines(fields2, i=1, j=1)
             
         if self.Gmi:
             fields += ['UM']
         if self.Gmi:
             #print "Gmi = ",self.Gmi
             #print "Cmi = ",self.Cmi
-            for (gmi,cmi) in zip(self.Gmi,self.Cmi):
-                fields+=[gmi,cmi]
+            for (gmi,cmi) in zip(self.Gmi, self.Cmi):
+                fields+=[gmi, cmi]
             ###
         ###
         nSpaces = 8-(len(fields)-1)%8  # puts ALPHA onto next line
@@ -459,7 +450,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
             fields += [None]*nSpaces
         #print "nSpaces = ",nSpaces
         if self.alpha>0.: # handles the default value
-            fields += ['ALPHA',self.alpha]
+            fields += ['ALPHA', self.alpha]
         return fields
 
     def reprFields(self):

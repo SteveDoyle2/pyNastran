@@ -32,7 +32,7 @@ class CVISC(LineDamper):
     def B(self):
         return self.pid.ce
 
-    def rawFields(self):  # not done...
+    def rawFields(self):
         fields = ['CVISC',self.eid,self.Pid()]+self.nodeIDs()
         return fields
 
@@ -43,7 +43,7 @@ class CVISC(LineDamper):
 class CDAMP1(LineDamper):
     type = 'CDAMP1'
     def __init__(self,card=None,data=None):
-        DamperElement.__init__(self,card,data)
+        LineDamper.__init__(self,card,data)
         
         if card:
             self.eid = card.field(1)
@@ -87,7 +87,7 @@ class CDAMP1(LineDamper):
 class CDAMP2(LineDamper):
     type = 'CDAMP2'
     def __init__(self,card=None,data=None):
-        DamperElement.__init__(self,card,data)
+        LineDamper.__init__(self,card,data)
         
         if card:
             self.eid = card.field(1)
@@ -126,7 +126,7 @@ class CDAMP2(LineDamper):
 class CDAMP3(LineDamper):
     type = 'CDAMP3'
     def __init__(self,card=None,data=None):
-        DamperElement.__init__(self,card,data)
+        LineDamper.__init__(self,card,data)
         
         if card:
             self.eid = card.field(1)
@@ -155,7 +155,7 @@ class CDAMP3(LineDamper):
 class CDAMP4(LineDamper):
     type = 'CDAMP4'
     def __init__(self,card=None,data=None):
-        DamperElement.__init__(self,card,data)
+        LineDamper.__init__(self,card,data)
         
         if card:
             self.eid = card.field(1)
@@ -184,7 +184,7 @@ class CDAMP4(LineDamper):
 class CDAMP5(LineDamper):
     type = 'CDAMP5'
     def __init__(self,card=None,data=None):
-        DamperElement.__init__(self,card,data)
+        LineDamper.__init__(self,card,data)
         
         if card:
             self.eid = card.field(1)

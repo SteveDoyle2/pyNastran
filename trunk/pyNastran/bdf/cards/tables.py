@@ -28,14 +28,15 @@ class TableObj(object):
         if not isData:
             if nFields%nRepeated!=0:
                 self.crashFields(fields,nRepeated,nFields)
-            assert nFields%nRepeated==0,'invalid table length nRepeat=%s fields=%s' %(nRepeated,ListPrint(fields))
+            if nFields%nRepeated!=0:
+                msg = 'invalid table length nRepeat=%s fields=%s' %(nRepeated,ListPrint(fields))
+                raise RuntimeError(msg)
         
         i=0
         while i<nFields:
             pack = []
             for j in range(nRepeated):
                 pack.append(fields[i+j])
-            ###
             i+=nRepeated
             self.table.append(pack)
         ###
@@ -43,7 +44,7 @@ class TableObj(object):
     def crashFields(self,fields,nRepeated,nFields):
         try:
             msg = ''
-            k = 0
+            #k = 0
             for i in range(nFields):
                 for j in range(nRepeated):
                     try:
@@ -52,7 +53,7 @@ class TableObj(object):
                         msg += '*%-8s ' %(fields[i*nRepeated+j])
                     except IndexError:
                         msg += 'IndexError'
-                    k+=1
+                    #k+=1
                 ###
                 msg += '\n'
             ###
@@ -72,8 +73,7 @@ class TableObj(object):
                 foundENDT = True
             else:
                 fields2.append(field)
-            ###
-        ###
+
         if not isData:
             assert foundENDT==True,fields
         return fields2
@@ -305,7 +305,7 @@ class RandomTable(BaseCard):
     def __init__(self,card,data):
         pass
 
-class TABRND1(RandomTable):  # randomTable
+class TABRND1(RandomTable):
     type = 'TABRND1'
     def __init__(self,card=None,data=None):
         RandomTable.__init__(self,card,data)
@@ -345,7 +345,7 @@ class TABRND1(RandomTable):  # randomTable
         fields = ['TABRND1',self.tid,xaxis,yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 
-class TABRNDG(RandomTable): # randomTable
+class TABRNDG(RandomTable):
     """
     Gust Power Spectral Density
     Defines the power spectral density (PSD) of a gust for aeroelastic response analysis.
@@ -373,13 +373,15 @@ class TABRNDG(RandomTable): # randomTable
     def reprFields(self):
         return self.rawFields()
 
-class TIC(Table): # Transient Initial Condition
+class TIC(Table):
+    """Transient Initial Condition"""
     type = 'TIC'
     def __init__(self,card=None,data=None):
         """
-        Defines values for the initial conditions of variables used in structural transient
-        analysis. Both displacement and velocity values may be specified at independent
-        degrees-of-freedom. This entry may not be used for heat transfer analysis.
+        Defines values for the initial conditions of variables used in
+        structural transient analysis. Both displacement and velocity values may
+        be specified at independent degrees-of-freedom. This entry may not be
+        used for heat transfer analysis.
         """
         Table.__init__(self,card,data)
         if card:

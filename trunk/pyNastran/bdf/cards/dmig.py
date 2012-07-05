@@ -1,8 +1,10 @@
 #import os
 #import sys
-from math import sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,log #,acosh,acos,asin,asinh,atanh #,atanh2
-from numpy import zeros,#average
-import scipy.sparse as ss
+from math import log
+#from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
+#                  asinh,atanh) #,atanh2   # going to be used by DEQATN
+from numpy import zeros #average
+from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard
 
@@ -76,7 +78,7 @@ class DEQATN(BaseCard):# needs work...
         (self.name,self.eq) = eq.split('=')
         print "EQ = ",self.eq
         
-    def evaluate(args):
+    def evaluate(self,args):
         #eqLow = self.eq.lower()
         #eval(self.eq)
         pass
@@ -224,16 +226,16 @@ class NastranMatrix(BaseCard):
             nrows = 0
             ncols = 0
             if self.isComplex():
-                for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
+                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
-                    nrows = max(i,nrows)
-                    ncols = max(j,ncols)
+                    nrows = max(i, nrows)
+                    ncols = max(j, ncols)
                     rows2.append(i)
                     cols2.append(j)
-                    data.append(complex(reali,complexi))
+                    data.append(complex(reali, complexi))
             else:
-                for (GCj,GCi) in zip(self.GCj,self.GCi):
+                for (GCj, GCi) in zip(self.GCj, self.GCi):
                     i = rows[GCi]
                     j = cols[GCj]
                     nrows = max(i,nrows)
@@ -241,33 +243,33 @@ class NastranMatrix(BaseCard):
                     rows2.append(i)
                     cols2.append(j)
                 data = self.Real
-            print "i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s" %(i,j,len(self.GCi),len(self.GCj),len(data))
+            print "i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s" %(i, j, len(self.GCi), len(self.GCj), len(data))
             # ,dtype=Format
             print rows2
 
-            print "nrows=%s ncols=%s" %(nrows,ncols)
+            print "nrows=%s ncols=%s" %(nrows, ncols)
             if self.ifo in [1,6]:
                 nrows = max(nrows,ncols)
                 ncols = nrows
-            print "nrows=%s ncols=%s" %(nrows,ncols)
+            print "nrows=%s ncols=%s" %(nrows, ncols)
             
             dType = self.getDType(self.tin)
             #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # test
-            M = ss.coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols),dtype=dType)
-            #M = ss.coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
-            #M = ss.coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
+            M = coo_matrix( (data, (self.GCi, self.GCj)), shape=(nrows,ncols), dtype=dType)
+            #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
+            #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
             #print M.todense()
             #print M
         else:
             if self.isComplex():
-                M = zeros((i,j),dtype='complex')
-                for (GCj,GCi,reali,complexi) in zip(self.GCj,self.GCi,self.Real,self.Complex):
+                M = zeros((i,j), dtype='complex128')
+                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i,j] = complex(reali,complexi)
             else:
-                M = zeros((i,j),dtype='d')
-                for (GCj,GCi,reali) in zip(self.GCj,self.GCi,self.Real):
+                M = zeros((i,j), dtype='float64')
+                for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i,j] = reali
@@ -310,41 +312,42 @@ class NastranMatrix(BaseCard):
         @todo support double precision
         """
         msg = '\n$'+'-'*80
-        msg += '\n$ %s Matrix %s\n' %(self.type,self.name)
-        fields = [self.type,self.name,0,self.ifo,self.tin,self.tout,self.polar,None,self.ncol]
+        msg += '\n$ %s Matrix %s\n' %(self.type, self.name)
+        fields = [self.type, self.name, 0, self.ifo, self.tin, self.tout, self.polar, None, self.ncol]
         msg += self.printCard(fields)
 
         if self.isComplex():
-            for (GCi,GCj,reali,imagi) in zip(self.GCi,self.GCj,self.Real,self.Complex):
-                fields = [self.type,self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,imagi]
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
+                fields = [self.type, self.name, GCj[0], GCj[1], None, GCi[0], GCi[1], reali, imagi]
                 msg += self.printCard(fields)
         else:
-            for (GCi,GCj,reali) in zip(self.GCi,self.GCj,self.Real):
-                fields = [self.type,self.name,GCj[0],GCj[1],None,GCi[0],GCi[1],reali,None]
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
+                fields = [self.type, self.name, GCj[0], GCj[1], None, GCi[0], GCi[1], reali, None]
                 msg += self.printCard(fields)
         return msg
 
 
 class DMIG(NastranMatrix):
     """
-    Defines direct input matrices related to grid, extra, and/or scalar points. The matrix
-    is defined by a single header entry and one or more column entries. A column entry
-    is required for each column with nonzero elements.
+    Defines direct input matrices related to grid, extra, and/or scalar points.
+    The matrix is defined by a single header entry and one or more column
+    entries. A column entry is required for each column with nonzero elements.
     """
     type = 'DMIG'
-    def __init__(self,card=None,data=None):
-        NastranMatrix.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        NastranMatrix.__init__(self, card, data)
 
 class DMIJ(NastranMatrix):
     """
     Direct Matrix Input at js-Set of the Aerodynamic Mesh
-    Defines direct input matrices related to collation degrees-of-freedom (js-set) of
-    aerodynamic mesh points for CAERO1, CAERO3, CAERO4 and CAERO5 and for the
-    slender body elements of CAERO2. These include W2GJ, FA2J and input pressures
-    and downwashes associated with AEPRESS and AEDW entries. The matrix is
-    described by a single header entry and one or more column entries. A column entry is
-    required for each column with nonzero elements. For entering data for the
-    interference elements of a CAERO2, use DMIJI or DMI.
+    Defines direct input matrices related to collation degrees-of-freedom
+    (js-set) of aerodynamic mesh points for CAERO1, CAERO3, CAERO4 and CAERO5
+    and for the slender body elements of CAERO2. These include W2GJ, FA2J and
+    input pressures and downwashes associated with AEPRESS and AEDW entries.
+    The matrix is described by a single header entry and one or more column
+    entries. A column entry is required for each column with nonzero elements.
+    For entering data for the interference elements of a CAERO2, use DMIJI
+    or DMI.
     """
     type = 'DMIJ'
     def __init__(self,card=None,data=None):
@@ -353,26 +356,26 @@ class DMIJ(NastranMatrix):
 class DMIJI(NastranMatrix):
     """
     Direct Matrix Input at js-Set of the Interference Body
-    Defines direct input matrices related to collation degrees-of-freedom (js-set) of
-    aerodynamic mesh points for the interference elements of CAERO2. These include
-    W2GJ, FA2J and input pressures and downwashes associated with AEPRESS and
-    AEDW entries. The matrix is described by a single header entry and one or more
-    column entries. A column entry is required for each column with nonzero elements.
-    For entering data for the slender elements of a CAERO2, or a CAERO1, 3, 4 or 5 use
-    DMIJ or DMI.
+    Defines direct input matrices related to collation degrees-of-freedom
+    (js-set) of aerodynamic mesh points for the interference elements of CAERO2.
+    These include W2GJ, FA2J and input pressures and downwashes associated with
+    AEPRESS and AEDW entries. The matrix is described by a single header entry
+    and one or more column entries. A column entry is required for each column
+    with nonzero elements.  For entering data for the slender elements of a
+    CAERO2, or a CAERO1, 3, 4 or 5 use DMIJ or DMI.
     """
     type = 'DMIJI'
-    def __init__(self,card=None,data=None):
-        NastranMatrix.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        NastranMatrix.__init__(self, card, data)
 
 class DMIK(NastranMatrix):
     """
     Direct Matrix Input at ks-Set of the Aerodynamic Mesh
-    Defines direct input matrices related to physical (displacement) degrees-of-freedom
-    (ks-set) of aerodynamic grid points. These include WKK, WTFACT and input forces
-    associated with AEFORCE entries. The matrix is described by a single header entry
-    and one or more column entries. A column entry is required for each column with
-    nonzero elements.
+    Defines direct input matrices related to physical (displacement)
+    degrees-of-freedom (ks-set) of aerodynamic grid points. These include WKK,
+    WTFACT and input forces associated with AEFORCE entries. The matrix is
+    described by a single header entry and one or more column entries. A column
+    entry is required for each column with nonzero elements.
     """
     type = 'DMIK'
     def __init__(self,card=None,data=None):
@@ -384,15 +387,17 @@ class DMI(BaseCard):
         self.name = card.field(1)
         #zero
         
-        ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular; 3=Diagonal (m=nRows,n=1)
-        ## 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+        ## Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
+        ## 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
+        ## 6=Symmetric; 8=Identity (m=nRows, n=m)
         self.form  = int(card.field(3))
         
-        ## 1-Real, Single Precision; 2=Real,Double Precision; 3=Complex, Single; 4=Complex, Double
+        ## 1-Real, Single Precision; 2=Real,Double Precision;
+        ## 3=Complex, Single; 4=Complex, Double
         self.tin   = int(card.field(4))
         
         ## 0-Set by cell precision
-        self.tout  = int(card.field(5,0))
+        self.tout  = int(card.field(5, 0))
         
         self.nRows = int(card.field(7))
         self.nCols = int(card.field(8))
@@ -404,12 +409,12 @@ class DMI(BaseCard):
         if self.isComplex():
             self.Complex = []
 
-    def addColumn(self,card=None,data=None):
+    def addColumn(self, card=None, data=None):
 
         if not self.isComplex(): # real
             self.readReal(card)
 
-    def readReal(self,card):
+    def readReal(self, card):
         ## column number
         j = card.field(2)
 
@@ -427,9 +432,9 @@ class DMI(BaseCard):
                 while not isDoneReadingFloats and i<len(fields):
                     #print "i=%s len(fields)=%s" %(i,len(fields))
                     realValue = fields[i]
-                    if isinstance(realValue,int):
+                    if isinstance(realValue, int):
                         isDoneReadingFloats = True
-                    elif isinstance(realValue,float):
+                    elif isinstance(realValue, float):
                         self.GCj.append(j)
                         self.GCi.append(i1)
                         self.Real.append(realValue)
@@ -441,7 +446,7 @@ class DMI(BaseCard):
                         #print "*i=%s j=%s value=%s" %(i1,j,realValue)
                         endI = fields[i+1]
                         #print "*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue)
-                        for ii in range(i1,endI+1):
+                        for ii in range(i1, endI+1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)
@@ -454,7 +459,8 @@ class DMI(BaseCard):
             ###
 
     def readComplex(self,card):
-        raise NotImplementedError('complex matrices not supported in the DMI reader...')
+        msg = 'complex matrices not supported in the DMI reader...'
+        raise NotImplementedError(msg)
         ## column number
         j = card.field(2)
 
@@ -469,11 +475,11 @@ class DMI(BaseCard):
             isDoneReadingFloats = False
             asdf
             while not isDoneReadingFloats and i<len(fields):
-                print "i=%s len(fields)=%s" %(i,len(fields))
+                print "i=%s len(fields)=%s" %(i, len(fields))
                 realValue = fields[i]
-                if isinstance(floatValue,int):
+                if isinstance(floatValue, int):
                     isDoneReadingFloats = True
-                elif isinstance(realValue,float):
+                elif isinstance(realValue, float):
                     complexValue = fields[i+1]
                     self.GCj.append(j)
                     self.GCi.append(i1)
@@ -505,17 +511,17 @@ class DMI(BaseCard):
         """
         msg = '\n$'+'-'*80
         msg += '\n$ %s Matrix %s\n' %(self.type,self.name)
-        fields = [self.type,self.name,0,self.form,self.tin,self.tout,None,self.nRows,self.nCols]
+        fields = [self.type, self.name, 0, self.form, self.tin, self.tout, None, self.nRows, self.nCols]
         msg += self.printCard(fields)
         #msg += self.printCard(fields,size=16,isD=False)
 
         if self.isComplex():
-            for (GCi,GCj,reali,imagi) in zip(self.GCi,self.GCj,self.Real,self.Complex):
-                fields = [self.type,self.name,GCj,GCi,reali,imagi]
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
+                fields = [self.type, self.name, GCj, GCi, reali, imagi]
                 msg += self.printCard(fields)
         else:
-            for (GCi,GCj,reali) in zip(self.GCi,self.GCj,self.Real):
-                fields = [self.type,self.name,GCj,GCi,reali]
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
+                fields = [self.type, self.name, GCj, GCi, reali]
                 msg += self.printCard(fields)
         return msg
     

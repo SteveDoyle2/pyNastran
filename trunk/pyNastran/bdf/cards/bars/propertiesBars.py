@@ -1,14 +1,26 @@
-import sys
+"""
+All beam properties are defined in this file.  This includes:
+    PBEAM
+    PBEAML
+    PBAR
+    PBARL
+    PROD
+    PTUBE
+
+All beams are LineProperty objects.
+Multi-segment beams are IntegratedLineProperty objects.
+"""
+#import sys
 from numpy import zeros,pi
 
 from pyNastran.general.generalMath import integrateLine,integratePositiveLine
 from pyNastran.bdf.cards.baseCard import Property
 
 
-def IyyBeam(b,h):
+def IyyBeam(b, h):
     return 1/12.*b*h**3
 
-def IBeam(b,h):
+def IBeam(b, h):
     f = 1/12.*b*h
     
     Iyy = f*h*h # 1/12.*b*h**3
@@ -16,7 +28,7 @@ def IBeam(b,h):
     Iyz = 0.
     return (Iyy,Izz,Iyz)
 
-def IBeamOffset(b,h,y,z):
+def IBeamOffset(b, h, y, z):
     A = b*h
     f = 1./12.*A
     
@@ -33,9 +45,12 @@ def IBeamOffset(b,h,y,z):
 def getInertiaRectangular(sections):
     """
     calculates the moment of inertia for a section about the CG
-    @param sections [[b,h,y,z]_1,...] y,z is the centroid (x in the direction of the beam, y right, z up)
-    @retval Area,Iyy,Izz,Iyz
-    @ see http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
+    @param sections
+      [[b,h,y,z]_1,...] y,z is the centroid (x in the direction of the beam,
+      y right, z up)
+    @retval interiaParameters
+        list of [Area,Iyy,Izz,Iyz]
+    @see http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
     """
     As = []
     Ax=0.; Ay=0.
@@ -66,9 +81,10 @@ def getInertiaRectangular(sections):
 
 class LineProperty(Property):
     type = 'LineProperty'
-    def __init__(self,card,data):
-        Property.__init__(self,card,data)
-        pass
+    def __init__(self, card, data):
+        self.Type = None
+        self.dim = []
+        Property.__init__(self, card, data)
     def D_bending(self):
         pass
     def D_axial(self):
@@ -180,7 +196,9 @@ class LineProperty(Property):
             Iyz = 0. ## @todo is the Ixy of a bar 0 ???
             
         else:
-            raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
+            msg = 'Type=%s is not supported for %s class...' %(self.Type,
+                                                               self.type)
+            raise NotImplementedError(msg)
         return (A,Iyy,Izz,Iyz)
     
     def I1(self):
@@ -399,13 +417,16 @@ class LineProperty(Property):
             
             A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7
         else:
-            raise NotImplementedError('Type=%s is not supported for %s class...' %(self.Type,self.type))
+            msg = 'Type=%s is not supported for %s class...' %(self.Type,
+                                                               self.type)
+            raise NotImplementedError(msg)
             
         return A
 
 class IntegratedLineProperty(LineProperty):
     type = 'IntegratedLineProperty'
     def __init__(self,card,data):
+        self.xxb = []
         LineProperty.__init__(self,card,data)
 
     def Area(self):
@@ -535,21 +556,23 @@ class PTUBE(LineProperty):
         
         #A2 = pi*t*( (D1+D2)/2.-t )
         
-        #assert A == A2,'AREA method has problem in PTUBE Aold=%s Anew=%s' %(A,A2)
+        #if A != A2:
+            #msg = 'AREA method has problem in PTUBE Aold=%s != Anew=%s' %(A,A2)
+            #raise RuntimeError(msg)
         return A
         
     def area1(self):
         """@todo remove after verifying formula..."""
-        Dout = self.OD
+        Dout = self.OD1
         Din  = Dout-2*self.t
-        A1 = pi()/4.*(Dout*Dout-Din*Din)
+        A1 = pi/4.*(Dout*Dout-Din*Din)
         return A1
 
     def area2(self):
         """@todo remove after verifying formula..."""
         Dout = self.OD2
         Din  = Dout-2*self.t
-        A2 = pi()/4.*(Dout*Dout-Din*Din)
+        A2 = pi/4.*(Dout*Dout-Din*Din)
         return A2
 
     def massMatrix(self):
@@ -591,7 +614,8 @@ class PBAR(LineProperty):
             ## Iyy -> use Iyy()
             self.i2  = card.field(5,0.0)
             ## Polar Moment of Inertia J -> use J()
-            self.j   = card.field(6,0.0) # default=1/2(I1+I2) for SOL=600, otherwise 0.0
+            # default=1/2(I1+I2) for SOL=600,otherwise 0.0
+            self.j   = card.field(6,0.0)
             ## nonstructral mass -> use Nsm()
             self.nsm = card.field(7,0.0)
 
@@ -705,7 +729,7 @@ class PBAR(LineProperty):
         E2  = self.setBlankIfDefault(self.E2,0.0)
 
         F1  = self.setBlankIfDefault(self.F1,0.0)
-        F2  = self.setBlankIfDefault(self.F2,0.0) # must have 1 on line, if line3 is not empty
+        F2  = self.setBlankIfDefault(self.F2,0.0)
         
         K1  = self.setBlankIfDefault(self.K1,1e8)
         K2  = self.setBlankIfDefault(self.K2,1e8)
@@ -784,7 +808,9 @@ class PBARL(LineProperty):
             #print str(self)
             #print "*PBARL = ",data
             #raise NotImplementedError('not finished...')
-        assert self.Type in self.validTypes,'Invalid PBARL Type, Type=%s validTypes=%s' %(self.Type,self.validTypes.keys())
+        if self.Type not in self.validTypes:
+            msg = 'Invalid PBARL Type, Type=%s validTypes=%s' %(self.Type,self.validTypes.keys())
+            raise RuntimeError(msg)
         assert len(self.dim)==self.validTypes[self.Type],'dim=%s len(dim)=%s Type=%s len(dimType)=%s' %(self.dim,len(self.dim),self.Type,self.validTypes[self.Type])
         assert None not in self.dim
             
@@ -818,7 +844,7 @@ class PBARL(LineProperty):
     
     def writeCodeAster(self,iCut=0,iFace=0,iStart=0):  # PBARL
         msg = '# BAR Type=%s pid=%s\n' %(self.type,self.pid)
-        msg1=''; msg2=''
+        msg2 = ''
         (msg) += self.CA_Section(iFace,iStart,self.dim)
         iFace += 1
         iStart += len(self.dim)
@@ -1003,8 +1029,7 @@ class PBEAM(IntegratedLineProperty):
         for (so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.j,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
-                fields += [so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
-            ###
+            fields += [so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
         ###
         footer = [self.k1,self.k2,self.s1,self.s2,self.nsia,self.nsib,self.cwa,self.cwb,
                   self.m1a,self.m2a,self.m1b,self.m2b,self.n1a,self.n2a,self.n1b,self.n2b]
@@ -1013,11 +1038,8 @@ class PBEAM(IntegratedLineProperty):
 
     def reprFields(self):
         fields = ['PBEAM',self.pid,self.Mid()]
-        #print "fieldsA = ",fields
-        
-        #print len(self.so)
+
         i = 0
-        #print "pid=%s" %(self.pid)
         for (so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) in zip(
             self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.j,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
@@ -1039,8 +1061,8 @@ class PBEAM(IntegratedLineProperty):
             f2 = self.setBlankIfDefault(f2,0.0)
 
             #print "  i = ",i
-            if i==0:
-                fields +=        [A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2] # the 1st 2 fields aren't written
+            if i==0: # the 1st 2 fields aren't written
+                fields +=        [A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
             else:
                 fields += [so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
             i+=1
@@ -1218,8 +1240,8 @@ class PBEAML(IntegratedLineProperty):
 
     def J(self):
         Js = self._J()
-        #j = integratePositiveLine(self.xxb,Js)
-        j = None
+        j = integratePositiveLine(self.xxb,Js)
+        #j = None
         return j
 
     def I11(self):
@@ -1238,12 +1260,11 @@ class PBEAML(IntegratedLineProperty):
         return i12
 
     def writeCodeAster(self,iCut=0,iFace=0,iStart=0): # PBEAML
-        msg1=''; msg2=''
         msg = ''
         
         msg2 = 'Cut_%s = geompy.MakeCut(' %(iCut+1)
-        for i,(xxb,so,dim,nsm) in enumerate(zip(self.xxb,self.so,self.dim,self.nsm)):
-            (msg) += self.CA_Section(iFace,iStart,self.dim)
+        for (xxb,so,dim,nsm) in zip(self.xxb,self.so,self.dim,self.nsm):
+            msg  += self.CA_Section(iFace,iStart,self.dim)
             msg2 += 'Face_%i, ' %(iFace+1)
             iFace += 1
             iStart += len(self.dim)
@@ -1340,7 +1361,8 @@ class PBEND(LineProperty):
                 self.j = card.field(6)
 
                 # line2
-                ## The r,z locations from the geometric centroid for stress data recovery.
+                ## The r,z locations from the geometric centroid for stress
+                ## data recovery.
                 self.c1 = card.field(9) 
                 self.c2 = card.field(10)
                 self.d1 = card.field(11)
@@ -1354,14 +1376,14 @@ class PBEND(LineProperty):
                 ## Shear stiffness factor K in K*A*G for plane 1 and plane 2.
                 self.k1 = card.field(17)
                 self.k2 = card.field(18)
-                ## Radial offset of the neutral axis from the geometric centroid,
-                ## positive is toward the center of curvature
+                ## Radial offset of the neutral axis from the geometric
+                ## centroid, positive is toward the center of curvature
                 self.deltaN = card.field(22)
 
             elif isinstance(value3,int):
                 self.beamType = 2
-                ## Flag selecting the flexibility and stress intensification factors. See
-                ## Remark 3. (Integer = 1, 2, or 3)
+                ## Flag selecting the flexibility and stress intensification
+                ## factors. See Remark 3. (Integer = 1, 2, or 3)
                 self.fsi = card.field(3)
                 ## Mean cross-sectional radius of the curved pipe
                 self.rm = card.field(4)
