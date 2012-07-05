@@ -4,7 +4,7 @@ class BushingProperty(Property):
     type = 'BushingProperty'
     def __init__(self,card,data):
         Property.__init__(self,card,data)
-        pass
+
     def crossReference(self,model):
         pass
 
@@ -12,6 +12,22 @@ class PBUSH(BushingProperty):
     type = 'PBUSH'
     def __init__(self,card=None,data=None):
         BushingProperty.__init__(self,card,data)
+
+        # K parameter
+        self.Ki = []
+
+        # B parameter
+        self.Bi = []
+
+        # GE parameter
+        self.GEi = []
+        
+        # RCV parameters
+        self.sa = None
+        self.st = None
+        self.ea = None
+        self.et = None
+
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -38,24 +54,28 @@ class PBUSH(BushingProperty):
         #sys.exit()
 
     def getK(self,card,iStart):
-        ## Flag indicating that the next 1 to 6 fields are stiffness values in the element coordinate system.
+        ## Flag indicating that the next 1 to 6 fields are stiffness values in
+        ## the element coordinate system.
         #self.k = card.field(iStart)
-        ## Nominal stiffness values in directions 1 through 6. See Remarks 2. and 3. (Real; Default = 0.0)
+        ## Nominal stiffness values in directions 1 through 6.
+        ## See Remarks 2 and 3. (Real; Default = 0.0)
         self.Ki = card.fields(i=iStart+1,j=iStart+6)
         #print "Ki = ",self.Ki
         self.vars.append('K')
 
     def getB(self,card,iStart):
-        ## Flag indicating that the next 1 to 6 fields are force-per-velocity damping.
+        ## Flag indicating that the next 1 to 6 fields are force-per-velocity
+        ## damping.
         #self.b = card.field(iStart)
         ## Force per unit velocity (Real)
-        ## Nominal damping coefficients in direction 1 through 6 in units of force per
-        ## unit velocity. See Remarks 2., 3., and 9. (Real; Default = 0.0)
+        ## Nominal damping coefficients in direction 1 through 6 in units of
+        ## force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
         self.Bi = card.fields(i=iStart+1,j=iStart+6)
         self.vars.append('B')
 
     def getGE(self,card,iStart):
-        ## Flag indicating that the next fields, 1 through 6 are structural damping constants. See Remark 7. (Character)
+        ## Flag indicating that the next fields, 1 through 6 are structural
+        ## damping constants. See Remark 7. (Character)
         #self.ge = card.field(iStart)
         ## Nominal structural damping constant in directions 1 through 6. See
         ## Remarks 2. and 3. (Real; Default = 0.0)
@@ -63,7 +83,8 @@ class PBUSH(BushingProperty):
         self.vars.append('GE')
 
     def getRCV(self,card,iStart):
-        ## Flag indicating that the next 1 to 4 fields are stress or strain coefficients. (Character)
+        ## Flag indicating that the next 1 to 4 fields are stress or strain
+        ## coefficients. (Character)
         #self.ge = card.field(iStart)
         self.sa = card.field(iStart+1,1.)
         self.st = card.field(iStart+2,1.)
@@ -99,6 +120,42 @@ class PBUSH1D(BushingProperty):
     type = 'PBUSH1D'
     def __init__(self,card=None,data=None):
         BushingProperty.__init__(self,card,data)
+
+        # SPRING parameters
+        self.springType  = None
+        self.springIDT   = None
+        self.springIDC   = None
+        self.springIDTDU = None
+        self.springIDCDU = None
+        
+        # DAMPER parameters
+        self.damperType  = None
+        self.damperIDT   = None
+        self.damperIDC   = None
+        self.damperIDTDV = None
+        self.damperIDCDV = None
+
+        # GENER parameters
+        self.generIDT   = None
+        self.generIDC   = None
+        self.generIDTDU = None
+        self.generIDCDU = None
+        self.generIDTDV = None
+        self.generIDCDV = None
+        
+        # SHOCK parameters
+        self.shockType  = None
+        self.shockCVT    = None
+        self.shockCVC    = None
+        self.shockExpVT  = None
+        self.shockExpVC  = None
+        self.shockIDTS   = None
+        
+        self.shockIDETS  = None
+        self.shockIDECS  = None
+        self.shockIDETSD = None
+        self.shockIDECSD = None
+
         if card:
             ## Property ID
             self.pid = card.field(1)

@@ -34,17 +34,15 @@ class WhitespaceCardParseError(CardParseError):
 
 #-----------------------------------------------------
 
+class InvalidUnitVectorError(RuntimeError):
+    pass
+
 class CardInstantiationError(RuntimeError):
     pass
 
-
-
-class NotImplementedMethodError(NotImplementedError):
-    pass
-
+#-----------------------------------------------------
 class StiffnessMatrixError(RuntimeError):
     pass
-
 
 class InvalidRequestError(RuntimeError):
     pass

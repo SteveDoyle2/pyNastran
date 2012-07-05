@@ -7,14 +7,14 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         if card:
             self.oid    = card.field(1)
             self.rid    = card.field(2)
-            self.lid    = card.field(3,-1e20)
-            self.uid    = card.field(4, 1e20)
-            self.lowfq  = card.field(5,0.0)
-            self.highfq = card.field(6,1e20)
+            self.lid    = card.field(3, -1e20)
+            self.uid    = card.field(4,  1e20)
+            self.lowfq  = card.field(5, 0.0)
+            self.highfq = card.field(6, 1e20)
         else:
             self.oid    = data[0]
             self.rid    = data[1]
@@ -29,11 +29,11 @@ class DCONSTR(OptConstraint):
         return fields
 
     def reprFields(self):
-        lid    = self.setBlankIfDefault(self.lid,-1e20)
-        uid    = self.setBlankIfDefault(self.uid, 1e20)
-        lowfq  = self.setBlankIfDefault(self.lowfq,0.0)
-        highfq = self.setBlankIfDefault(self.highfq,1e20)
-        fields = ['DCONSTR',self.oid,self.rid,lid,uid,lowfq,highfq]
+        lid    = self.setBlankIfDefault(self.lid, -1e20)
+        uid    = self.setBlankIfDefault(self.uid,  1e20)
+        lowfq  = self.setBlankIfDefault(self.lowfq, 0.0)
+        highfq = self.setBlankIfDefault(self.highfq, 1e20)
+        fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
         return fields
 
 class DESVAR(OptConstraint):
@@ -42,22 +42,22 @@ class DESVAR(OptConstraint):
         self.oid = card.field(1)
         self.label = card.field(2)
         self.xinit = card.field(3)
-        self.xlb   = card.field(4,-1e20)
-        self.xub   = card.field(5, 1e20)
-        self.delx  = card.field(6, 1e20)
+        self.xlb   = card.field(4, -1e20)
+        self.xub   = card.field(5,  1e20)
+        self.delx  = card.field(6,  1e20)
         self.ddval = card.field(7)
     
     def rawFields(self):
-        fields = ['DESVAR',self.oid,self.label,self.xinit,self.xlb,self.xub,
-        self.delx,self.ddval]
+        fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb, self.xub,
+        self.delx, self.ddval]
         return fields
 
     def reprFields(self):
         xlb  = self.setBlankIfDefault(self.xlb, -1e20)
         xub  = self.setBlankIfDefault(self.xub,  1e20)
         delx = self.setBlankIfDefault(self.delx, 1e20)
-        fields = ['DESVAR',self.oid,self.label,self.xinit,xlb,xub,
-        delx,self.ddval]
+        fields = ['DESVAR', self.oid, self.label, self.xinit, xlb, xub,
+                            delx, self.ddval]
         return fields
 
 class DDVAL(OptConstraint):
@@ -73,8 +73,8 @@ class DDVAL(OptConstraint):
         self.dval7 = card.field(8)
     
     def rawFields(self):
-        fields = ['DDVAL',self.oid,self.dval1,self.dval2,self.dval3,
-                  self.dval4,self.dval5,self.dval6,self.dval7]
+        fields = ['DDVAL', self.oid,   self.dval1, self.dval2, self.dval3,
+                           self.dval4, self.dval5, self.dval6, self.dval7]
         return self.printCard(fields)
 
 class DOPTPRM(OptConstraint):
@@ -90,7 +90,7 @@ class DOPTPRM(OptConstraint):
         nFields = len(fields)
         
         self.params = {}
-        for i in range(0,nFields,2):
+        for i in range(0,nFields, 2):
             param = fields[i]
             val   = fields[i+1]
             self.params[param] = val
@@ -99,12 +99,12 @@ class DOPTPRM(OptConstraint):
     def rawFields(self):
         fields = ['DOPTPRM']
         for param,val in sorted(self.params.iteritems()):
-            fields += [param,val]
+            fields += [param, val]
         return fields
 
 class DLINK(OptConstraint):
     type = 'DLINK'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables
@@ -113,37 +113,37 @@ class DLINK(OptConstraint):
         """
         self.oid   = card.field(1)
         self.ddvid = card.field(2)
-        self.c0    = card.field(3,0.)
-        self.cmult = card.field(4,1.)
+        self.c0    = card.field(3, 0.)
+        self.cmult = card.field(4, 1.)
         
         fields = card.fields(5)
         nFields = len(fields)
         self.IDv = []
         self.Ci  = []
         
-        for i in range(0,nFields,2):
+        for i in range(0, nFields, 2):
             self.IDv.append(fields[i])
             self.Ci.append(fields[i+1])
         ###
 
     def rawFields(self):
-        fields = ['DLINK',self.oid,self.ddvid,self.c0,self.cmult]
-        for idv,ci in zip(self.IDv,self.Ci):
-            fields += [idv,ci]
+        fields = ['DLINK',self.oid, self.ddvid, self.c0, self.cmult]
+        for (idv, ci) in zip(self.IDv, self.Ci):
+            fields += [idv, ci]
         return fields
 
     def reprFields(self):
-        c0    = self.setBlankIfDefault(self.c0,0.)
-        cmult = self.setBlankIfDefault(self.cmult,1.)
-        fields = ['DLINK',self.oid,self.ddvid,c0,cmult]
-        for idv,ci in zip(self.IDv,self.Ci):
-            fields += [idv,ci]
+        c0    = self.setBlankIfDefault(self.c0, 0.)
+        cmult = self.setBlankIfDefault(self.cmult, 1.)
+        fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
+        for (idv, ci) in zip(self.IDv, self.Ci):
+            fields += [idv, ci]
         return fields
 
 
 class DRESP1(OptConstraint):
     type = 'DRESP1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         DRESP1         1S1      CSTRAIN PCOMP                  1       1   10000
         """
@@ -168,7 +168,7 @@ class DRESP1(OptConstraint):
 
 class DRESP2(OptConstraint):
     type = 'DRESP2'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         Design Sensitivity Equation Response Quantities
         Defines equation responses that are used in the design, either as constraints or as an
@@ -178,17 +178,17 @@ class DRESP2(OptConstraint):
         self.label    = card.field(2)
         self.eqidFunc = card.field(3)
         self.region   = card.field(4)
-        self.method   = card.field(5,'MIN')
-        self.c1       = card.field(6,100.)
-        self.c2       = card.field(7,0.005)
-        self.c3       = card.field(8)
+        self.method   = card.field(5, 'MIN')
+        self.c1 = card.field(6, 100.)
+        self.c2 = card.field(7, 0.005)
+        self.c3 = card.field(8)
 
         i=0
         fields = card.fields(9)
         key = '$NULL$' # dummy key
         self.params = { key:[] }
         valueList = []
-        for (i,field) in enumerate(fields):
+        for (i, field) in enumerate(fields):
             if i%8==0 and field is not None:
                 self.params[key] = valueList
                 key = field
@@ -202,8 +202,8 @@ class DRESP2(OptConstraint):
         del self.params['$NULL$']
 
         #print "--Params--"
-        #for key,valueList in sorted(self.params.iteritems()):
-        #    print "  key=%s params=%s" %(key,valueList)
+        #for (key, valueList) in sorted(self.params.iteritems()):
+        #    print "  key=%s params=%s" %(key, valueList)
         
         #print self
         #sys.exit()
@@ -227,10 +227,10 @@ class DRESP2(OptConstraint):
                         'DESVAR' : [1,0],
                      }
         fields = []
-        for key,valueList in sorted(self.params.iteritems()):
+        for (key, valueList) in sorted(self.params.iteritems()):
             fields2 = [key]+valueList
             try:
-                (i,j) = packLength[key]
+                (i, j) = packLength[key]
             except KeyError:
                 msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' %(key,valueList,self.oid)
                 raise KeyError(msg)
@@ -244,9 +244,9 @@ class DRESP2(OptConstraint):
         return fields
 
     def reprFields(self):
-        method = self.setBlankIfDefault(self.method,'MIN')
-        c1 = self.setBlankIfDefault(self.c2,0.005)
-        c2 = self.setBlankIfDefault(self.c2,100.)
+        method = self.setBlankIfDefault(self.method, 'MIN')
+        c1 = self.setBlankIfDefault(self.c1, 100.)
+        c2 = self.setBlankIfDefault(self.c2, 0.005)
 
         fields = ['DRESP2',self.oid,self.label,self.eqidFunc,self.region,method,c1,c2,self.c3]
         fields += self.packParams()
@@ -266,8 +266,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.mid    = card.field(3)
         self.mpName = card.field(4)
         self.mpMin  = card.field(5) ## @todo bad default
-        self.mpMax  = card.field(6,1e20)
-        self.c0     = card.field(7,0.0)
+        self.mpMax  = card.field(6, 1e20)
+        self.c0     = card.field(7, 0.0)
         
         self.dvids  = []
         self.coeffs = []
@@ -298,23 +298,23 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def rawFields(self):
         fields = ['DVMREL1',self.oid,self.Type,self.Mid(),self.mpName,self.mpMin,self.mpMax,self.c0,None]
-        for dvid,coeff in zip(self.dvids,self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
 
     def reprFields(self):
-        mpMax = self.setBlankIfDefault(self.mpMax,1e20)
-        c0    = self.setBlankIfDefault(self.c0,0.)
+        mpMax = self.setBlankIfDefault(self.mpMax, 1e20)
+        c0    = self.setBlankIfDefault(self.c0, 0.)
         fields = ['DVMREL1',self.oid,self.Type,self.Mid(),self.mpName,self.mpMin,mpMax,c0,None]
-        for dvid,coeff in zip(self.dvids,self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         DVPREL1   200000   PCOMP    2000      T2
                   200000     1.0
@@ -324,8 +324,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.pid    = card.field(3)
         self.pNameFid = card.field(4)
         self.pMin   = card.field(5) ## @todo bad default
-        self.pMax   = card.field(6,1e20)
-        self.c0     = card.field(7,0.0)
+        self.pMax   = card.field(6, 1e20)
+        self.c0     = card.field(7, 0.0)
             
         self.dvids  = []
         self.coeffs = []
@@ -336,7 +336,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             endFields.append(None)
             nFields+=1
         i = 0
-        for i in range(0,nFields,2):
+        for i in range(0, nFields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
@@ -346,26 +346,26 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print str(self)
             raise RuntimeError('invalid DVPREL1...')
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         self.pid = model.Property(self.pid)
     
     def Pid(self):
-        if isinstance(self.pid,int):
+        if isinstance(self.pid, int):
             return self.pid
         return self.pid.pid
 
     def rawFields(self):
         fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,self.pMax,self.c0,None]
-        for dvid,coeff in zip(self.dvids,self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
 
     def reprFields(self):
-        pMax = self.setBlankIfDefault(self.pMax,1e20)
-        c0   = self.setBlankIfDefault(self.c0,0.)
+        pMax = self.setBlankIfDefault(self.pMax, 1e20)
+        c0   = self.setBlankIfDefault(self.c0, 0.)
         fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0,None]
-        for dvid,coeff in zip(self.dvids,self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
         return fields
@@ -396,9 +396,9 @@ class DVPREL2(OptConstraint):
         ## PMIN must be explicitly set to a negative number for properties that
         ## may be less than zero (for example, field ZO on the PCOMP entry).
         ## (Real; Default = 1.E-15)
-        self.pmin = card.field(5,1e-15)
+        self.pmin = card.field(5, 1e-15)
         ## Maximum value allowed for this property. (Real; Default = 1.0E20)
-        self.pmax = card.field(6,1e20)
+        self.pmax = card.field(6, 1e20)
         ## DEQATN entry identification number. (Integer > 0)
         self.eqID = card.field(7)
         
@@ -423,7 +423,7 @@ class DVPREL2(OptConstraint):
         self.dvids = []
         self.dtables = []
         if iDesvar:
-            for i in range(10,iDesStop):
+            for i in range(10, iDesStop):
                 dvid = card.field(i)
                 if dvid:
                     self.dvids.append(dvid)
@@ -431,7 +431,7 @@ class DVPREL2(OptConstraint):
             ###
         ###
         if iDTable:
-            for i in range(iDTable+1,iEnd):
+            for i in range(iDTable+1, iEnd):
                 dtable = card.field(i)
                 if dtable:
                     assert dtable is not 'DTABLE'
@@ -441,13 +441,13 @@ class DVPREL2(OptConstraint):
         ###
 
     def Pid(self):
-        if isinstance(self.pid,int):
+        if isinstance(self.pid, int):
             return self.pid
         return self.pid.pid
 
     #def EqID(self):
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         """@todo add support for DEQATN cards to finish DVPREL2 xref"""
         self.pid = model.Property(self.pid)
         #self.eqID = model.DEquation(self.eqID)
@@ -460,11 +460,11 @@ class DVPREL2(OptConstraint):
 
         if self.dvids:
             fields2 = ['DESVAR']+self.dvids
-            fields += self.buildTableLines(fields2,nStart=1,nEnd=0)
+            fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
 
         if self.dtables:
             fields2 = ['DTABLE']+self.dtables
-            fields += self.buildTableLines(fields2,nStart=1,nEnd=0)
+            fields += self.buildTableLines(fields2, nStart=1, nEnd=0)
         return fields
 
     def reprFields(self):

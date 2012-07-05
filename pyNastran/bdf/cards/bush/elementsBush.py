@@ -6,6 +6,7 @@ from pyNastran.bdf.cards.baseCard import Element
 
 class BushElement(Element):
     def __init__(self,card,data):
+        self.cid = None
         Element.__init__(self,card,data)
 
     def Cid(self):
@@ -54,16 +55,17 @@ class CBUSH(BushElement):
                 self.x  = [None,None,None]
             ###
             ## Element coordinate system identification. A 0 means the basic
-            ## coordinate system. If CID is blank, then the element coordinate system
-            ## is determined from GO or Xi.
+            ## coordinate system. If CID is blank, then the element coordinate
+            ## system is determined from GO or Xi.
             self.cid  = card.field(8,0)
             ## Location of spring damper (0 <= s <= 1.0)
             self.s    = card.field(9,0.5)
             ## Coordinate system identification of spring-damper offset. See
-            ## Remark 9. (Integer > -1; Default = -1, which means the offset point lies
-            ## on the line between GA and GB
+            ## Remark 9. (Integer > -1; Default = -1, which means the offset
+            ## point lies on the line between GA and GB
             self.ocid = card.field(10,-1)
-            ## Components of spring-damper offset in the OCID coordinate system if OCID > 0.
+            ## Components of spring-damper offset in the OCID coordinate system
+            ## if OCID > 0.
             self.si   = card.fields(i=11,j=13)
         else:
             self.eid = data[0]
@@ -154,7 +156,10 @@ class CBUSH2D(BushElement):
             self.cid = int(card.field(5))
             self.plane = card.field(6,'XY')
             self.sptid = card.field(7)
-            assert self.plane in ['XY','YZ','ZX'],'plane not in required list, plane=|%s|' %(self.plane)
+            if self.plane not in ['XY','YZ','ZX']:
+                msg = 'plane not in required list, plane=|%s|\n' %(self.plane)
+                msg += "expected planes = ['XY','YZ','ZX']"
+                raise RuntimeError(msg)
         else:
             self.eid = data[0]
             self.pid = data[1]

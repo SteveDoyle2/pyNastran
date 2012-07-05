@@ -1,8 +1,10 @@
+# pylint: disable=R0904,R0902
 from __future__ import print_function
 import sys
 
-from pyNastran.bdf.errors                import *
-from pyNastran.bdf.fieldWriter           import printCard,setBlankIfDefault,setDefaultIfBlank,isSame
+from pyNastran.bdf.errors                import NotImplementedMethodError
+from pyNastran.bdf.fieldWriter           import (printCard, setBlankIfDefault,
+                                                 setDefaultIfBlank, isSame)
 from pyNastran.bdf.bdfInterface.BDF_Card import BDF_Card
 
 class BaseCard(BDF_Card):
@@ -14,8 +16,8 @@ class BaseCard(BDF_Card):
     def writeCodeAster(self):
         return '# skipping %s  because writeCodeAster is not implemented\n' %(self.type)
 
-    def writeCodeAsterLoad(self,model,gridWord='node'):
-        return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' %(self.type,self.lid)
+    def writeCodeAsterLoad(self, model, gridWord='node'):
+        return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' %(self.type, self.lid)
 
     def verify(self,model,iSubcase):
         """
@@ -24,9 +26,9 @@ class BaseCard(BDF_Card):
         """
         pass
 
-    def isSameFields(self,fields1,fields2):
-        for (field1,field2) in zip(fields1,fields2):
-            if not isSame(field1,field2):
+    def isSameFields(self, fields1, fields2):
+        for (field1, field2) in zip(fields1, fields2):
+            if not isSame(field1, field2):
                 return False
             ###
         ###
@@ -38,29 +40,30 @@ class BaseCard(BDF_Card):
             return True
         return False
 
-    def removeTrailingNones(self,fields):
+    def removeTrailingNones(self, fields):
         """removes blank fields at the end of a card object"""
         self.wipeEmptyFields(fields)
 
-    def printCard(self,fields,tol=0.):
+    def printCard(self, fields, tol=0.):
         """prints a card object"""
         #print "fields = ",fields
-        return printCard(fields,tol)
+        return printCard(fields, tol)
 
-    def setDefaultIfBlank(self,value,default):
+    def setDefaultIfBlank(self, value, default):
         """used to initialize default values"""
         #raise Exception('time to upgrade...')
-        return setDefaultIfBlank(value,default)
+        return setDefaultIfBlank(value, default)
 
-    def setBlankIfDefault(self,value,default):
+    def setBlankIfDefault(self,value, default):
         """used to set default values for object repr functions"""
-        return setBlankIfDefault(value,default)
+        return setBlankIfDefault(value, default)
 
-    def crossReference(self,model):
+    def crossReference(self,model ):
         #self.mid = model.Material(self.mid)
-        raise NotImplementedError("%s needs to implement the 'crossReference' method" %(self.type))
+        msg = "%s needs to implement the 'crossReference' method" %(self.type)
+        raise NotImplementedError(msg)
 
-   # def off_expandThru(self,fields):
+   # def off_expandThru(self, fields):
    #     """
    #     not used...
    #     expands a list of values of the form [1,5,THRU,10,13]
@@ -70,7 +73,7 @@ class BaseCard(BDF_Card):
    #     fieldsOut = []
    #     for i in range(nFields):
    #         if fields[i]=='THRU':
-   #             for j in range(fields[i-1],fields[i+1]):                    
+   #             for j in range(fields[i-1], fields[i+1]):                    
    #                 fieldsOut.append(fields[j])
    #             ###
    #         else:
@@ -79,12 +82,13 @@ class BaseCard(BDF_Card):
    #     ###
    #     return fieldsOut
 
-    def expandThru(self,fields):
+    def expandThru(self, fields):
         """
         expands a list of values of the form [1,5,THRU,9,13]
         to be [1,5,6,7,8,9,13]
         """
-        if len(fields)==1: return fields
+        if len(fields)==1:
+            return fields
         #print "expandThru"
         #print "fields = ",fields
         out = []
@@ -92,7 +96,7 @@ class BaseCard(BDF_Card):
         i=0
         while(i<nFields):
             if fields[i]=='THRU':
-                for j in range(fields[i-1],fields[i+1]+1):
+                for j in range(fields[i-1], fields[i+1]+1):
                     out.append(j)
                 ###
                 i+=2
@@ -104,14 +108,15 @@ class BaseCard(BDF_Card):
         #print "out = ",out,'\n'
         return list(set(out))
     
-    def expandThruBy(self,fields):
+    def expandThruBy(self, fields):
         """
         expands a list of values of the form [1,5,THRU,9,BY,2,13]
         to be [1,5,7,9,13]
         @todo not tested
         @note used for QBDY3, ???
         """
-        if len(fields)==1: return fields
+        if len(fields)==1:
+            return fields
         #print "expandThruBy"
         #print "fields = ",fields
         out = []
@@ -150,23 +155,24 @@ class BaseCard(BDF_Card):
         #sys.exit()
         return list(set(out))
 
-    def expandThruExclude(self,fields):
+    def expandThruExclude(self, fields):
         """
         expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
         to be [1,5,6,9,10,11,13]
         @todo not tested
         """
+        fieldsOut = []
         nFields = len(fields)
         for i in range(nFields):
             if fields[i]=='THRU':
                 storedList = []
-                for j in range(fields[i-1],fields[i+1]):
+                for j in range(fields[i-1], fields[i+1]):
                     storedList.append(fields[j])
                 ###
-            elif field[i]=='EXCLUDE':
+            elif fields[i]=='EXCLUDE':
                 storedSet = set(storedList)
                 while fields[i]<max(storedList):
-                    storedSet.remove(field[i])
+                    storedSet.remove(fields[i])
                 storedList = list(storedSet)
             else:
                 if storedList:
@@ -175,13 +181,13 @@ class BaseCard(BDF_Card):
             ###
         ###
 
-    def collapseThru(self,fields):
+    def collapseThru(self, fields):
         return fields
 
-    def collapseThruBy(self,fields):
+    def collapseThruBy(self, fields):
         return fields
 
-    def _collapseThru(self,fields):
+    def _collapseThru(self, fields):
         """
         1,THRU,10
         1,3,THRU,19,15
@@ -191,11 +197,11 @@ class BaseCard(BDF_Card):
         
         #assumes sorted...
 
-        pre,i = self._preCollapse(fields,dnMax=dnMax)
-        mid = self._midCollapse(pre,dnMax=dnMax)
+        dnMax = 1
+        (pre, i) = self._preCollapse(fields, dnMax=dnMax)
+        mid = self._midCollapse(pre, dnMax=dnMax)
         #out = self._postCollapse(mid)
         #sys.exit()
-        dnMax = 1
 
         out = []
         print("running post...")
@@ -206,14 +212,14 @@ class BaseCard(BDF_Card):
                 out.append(data[0]) # 1 field only
             else:
                 assert data[2]==1 # dn
-                out += [data[0],'THRU',data[1]]
+                out += [data[0], 'THRU', data[1]]
             ###
         ###
         print("dataOut = ",out)
         return out
         ###
 
-    def _midCollapse(self,preCollapse,dnMax=10000000):
+    def _midCollapse(self, preCollapse, dnMax=10000000):
         """
         input is lists of [[1,3,5,7],2]  dn=2
         dNmax = 2
@@ -222,13 +228,13 @@ class BaseCard(BDF_Card):
         out = []
         print(preCollapse)
         for collapse in preCollapse:
-            print("collapse = ",collapse)
+            print("collapse = ", collapse)
             (data,dn) = collapse
             print("data = ",data)
             print("dn = ",dn)
             if len(data)>1:
                 if dn<=dnMax: # 1:11:2 - patran syntax
-                    fields = [data[0],data[-1],dn]
+                    fields = [data[0], data[-1], dn]
                     out.append(fields)
                 ###
                 else: # bigger than dn
@@ -241,16 +247,16 @@ class BaseCard(BDF_Card):
             ###
         return out
     
-    def _preCollapse(self,fields,dnMax=10000000): # assumes sorted
+    def _preCollapse(self, fields, dnMax=10000000): # assumes sorted
         out = []
         nFields = len(fields)-1
         i=0
         while(i<nFields):
             dn = fields[i+1]-fields[i]
-            print("preFields = ",fields[i:])
-            (outFields,j) = self._subCollapse(fields[i:],dn,dnMax)
-            print("outFields = ",outFields)
-            out.append([outFields,dn])
+            print("preFields = %s" %(fields[i:]))
+            (outFields,j) = self._subCollapse(fields[i:], dn, dnMax)
+            print("outFields = %s" %(outFields))
+            out.append([outFields, dn])
             i+=j
             ###
             #if i==nFields+1:
@@ -259,23 +265,23 @@ class BaseCard(BDF_Card):
             ###
         ###
         
-        print("out = ",out,i)
+        print("i=%s out=%s" %(i,out))
         print("--end of preCollapse")
-        return (out,i)
+        return (out, i)
 
-    def _subCollapse(self,fields,dn,dnMax=10000000):
+    def _subCollapse(self, fields, dn, dnMax=10000000):
         """
         in  = [1,2,3,  7]
         out = [1,2,3]
         """
         # dn=1
-        print("subIn = ",fields)
+        print("subIn = %s" %(fields))
         out = [fields[0]]
         nFields = len(fields)
 
-        for i in range(1,nFields):
+        for i in range(1, nFields):
             dn = fields[i]-fields[i-1]
-            print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" %(i,i,fields[i],i-1,fields[i-1],dn,dnMax))
+            print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" %(i, i, fields[i], i-1, fields[i-1], dn, dnMax))
             if dn!=dnMax:
                 #i+=1
                 #out.append(fields[i])
@@ -284,14 +290,14 @@ class BaseCard(BDF_Card):
             #if i==3:
             #    sys.exit()
         #i-=1
-        print("subOut = ",out)
+        print("subOut = %s" %(out))
         #i+=1
         print("iSubEnd = %s\n" %(i))
         #sys.exit()
         return (out,i)
     ###
         
-    def buildTableLines(self,fields,nStart=1,nEnd=0):
+    def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
         builds a table of the form:
         'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
@@ -330,10 +336,10 @@ class BaseCard(BDF_Card):
         #print ""
         return fieldsOut
 
-    def isSameCard(self,card):
+    def isSameCard(self, card):
         fields1 = self.rawFields()
         fields2 = card.rawFields()
-        return self.isSameFields(fields1,fields2)
+        return self.isSameFields(fields1, fields2)
 
     def printRawFields(self):
         """A card's raw fields include all defaults for all fields"""
@@ -368,35 +374,35 @@ def Mid(self):
     ###
 
 class Property(BaseCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         assert card is None or data is None
         pass
 
     def Mid(self):
         return Mid(self)
 
-    def isSameCard(self,prop):
+    def isSameCard(self, prop):
         if self.type!=prop.type:  return False
         fields1 = self.rawFields()
         fields2 = prop.rawFields()
-        return self.isSameFields(fields1,fields2)
+        return self.isSameFields(fields1, fields2)
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         self.mid = model.Material(self.mid)
 
 class Material(BaseCard):
     """Base Material Class"""
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
         #self.type = card[0]
 
-    def isSameCard(self,mat):
+    def isSameCard(self, mat):
         if self.type!=mat.type:  return False
         fields1 = self.rawFields()
         fields2 = mat.rawFields()
-        return self.isSameFields(fields1,fields2)
+        return self.isSameFields(fields1, fields2)
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         pass
 
     def Mid(self):
@@ -404,31 +410,31 @@ class Material(BaseCard):
 
 class Element(BaseCard):
     pid = 0 # CONM2, rigid
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         assert card is None or data is None
         ## the list of node IDs for an element (default=None)
         self.nodes = None
         #self.nids = []
         pass
 
-    def isSameCard(self,element):
+    def isSameCard(self, element):
         return False
 
     def Pid(self):
         """returns the property ID of an element"""
-        if isinstance(self.pid,int):
+        if isinstance(self.pid, int):
             return self.pid
         else:
             return self.pid.pid
         ###
 
-    def nodePositions(self,nodes=None):
+    def nodePositions(self, nodes=None):
         """returns the positions of multiple node objects"""
         if not nodes:
            nodes = self.nodes
         return [node.Position() for node in nodes]
 
-    def nodeIDs(self,nodes=None,allowEmptyNodes=False,msg=''):
+    def nodeIDs(self,nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
         try:
             if not nodes:
@@ -439,68 +445,78 @@ class Element(BaseCard):
                 for i,node in enumerate(nodes):
                     if node==0 or node is None:
                         nodes2.append(None)
-                    elif isinstance(node,int):
+                    elif isinstance(node, int):
                         nodes2.append(node)
                     else:
                         nodes2.append(node.nid)
                 return nodes2
             else:
-                if isinstance(nodes[0],int):
+                if isinstance(nodes[0], int):
                     nodeIDs = [node     for node in nodes]
                 else:
                     nodeIDs = [node.nid for node in nodes]
                 ###
-                assert 0 not in nodeIDs,'nodeIDs = %s' %(nodeIDs)
+                assert 0 not in nodeIDs, 'nodeIDs = %s' %(nodeIDs)
                 return nodeIDs
         except:
-            print("nodes=%s allowEmptyNodes=%s\nmsg=%s" %(nodes,allowEmptyNodes,msg))
+            print("nodes=%s allowEmptyNodes=%s\nmsg=%s" %(nodes, allowEmptyNodes, msg))
             raise
 
-    def prepareNodeIDs(self,nids,allowEmptyNodes=False):
+    def prepareNodeIDs(self, nids, allowEmptyNodes=False):
         """verifies all node IDs exist and that they're integers"""
         self.nodes = []
         for nid in nids:
-            if isinstance(nid,int):
+            if isinstance(nid, int):
                 self.nodes.append(int(nid))
             elif nid==None and allowEmptyNodes:
                 self.nodes.append(nid)
             else: # string???
                 self.nodes.append(int(nid))
-                #raise Exception('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
+                #raise RuntimeError('this element may not have missing nodes...nids=%s allowEmptyNodes=False' %(nids))
             ###
 
     #def Normal(self,a,b):
     #    """finds the unit normal vector of 2 vectors"""
     #    return Normal(a,b)
 
-    def CentroidTriangle(self,n1,n2,n3,debug=False):
+    def CentroidTriangle(self, n1, n2, n3, debug=False):
         if debug:
-            print("n1=%s \nn2=%s \nn3=%s" %(n1,n2,n3))
+            print("n1=%s \nn2=%s \nn3=%s" %(n1, n2, n3))
         centroid = (n1+n2+n3)/3.
         return centroid
 
     def Centroid(self):
-        raise NotImplementedMethodError('Centroid not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'Centroid not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def Length(self):
-        raise NotImplementedMethodError('Length not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'Length not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def Area(self):
-        raise NotImplementedMethodError('Area not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'Area not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def Volume(self):
-        raise NotImplementedMethodError('Volume not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'Volume not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def Mass(self):
-        raise NotImplementedMethodError('Mass not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'Mass not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
 
     def B(self):
-        raise NotImplementedMethodError('B matrix not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'B matrix not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def D(self):
-        raise NotImplementedMethodError('D matrix not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'D matrix not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def Jacobian(self):
-        raise NotImplementedMethodError('Jacobian not implemented for %s' %(self.self.__class__.__name__))
+        msg = 'Jacobian not implemented for %s' %(self.self.__class__.__name__)
+        raise NotImplementedError(msg)
 
     def stiffnessMatrix(self):
-        raise NotImplementedMethodError('stiffnessMatrix not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'stiffnessMatrix not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
     def massMatrix(self):
-        raise NotImplementedMethodError('massMatrix not implemented in the %s class' %(self.__class__.__name__))
+        msg = 'massMatrix not implemented in the %s class' %(self.__class__.__name__)
+        raise NotImplementedError(msg)
 
 
 #dnMax = 2
