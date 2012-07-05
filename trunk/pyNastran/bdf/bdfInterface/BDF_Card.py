@@ -1,9 +1,11 @@
+# pylint: disable=C0103,R0902,R0904,R0914
+
 import sys
-import copy #???
+import copy
 
 def collapse(card):
     """doesnt work for fields==0"""
-    raise Exception('broken')
+    raise NotImplementedError('broken')
     #print "cardStart = ",card
     card2 = []
     for imax,field in enumerate(reversed(card)):
@@ -47,7 +49,7 @@ class BDF_Card(object):
         @param cardName the cardName to compare against
         @retval IsACardName True/False
         """
-        if card.field(0)==cardName.upper():
+        if self.card.field(0)==cardName.upper():
             return True
         return False
 
@@ -110,7 +112,6 @@ class BDF_Card(object):
             if self.nfields==None:
                 return [None]
             j = self.nfields
-            #print "jfield = ",j
         
         if defaults==[]:
             defaults=[None]*(j-i+1)
@@ -119,15 +120,13 @@ class BDF_Card(object):
         d = 0
         for n in range(i,j):
             if debug:
-                print "  default = ",defaults[d]
+                print("  default = %s" %(defaults[d]))
             value = self.field(n,defaults[d])
             if debug:
-                print "  n = ",n
-                print "  self.field(n) = ",self.field(n)
+                print("  self.field(%s) = %s" %(n,self.field(n)))
             out.append(value)
             d+=1
         ###
-        #print "card.fields out = %s" %(out)
         return out
 
     def field(self,i,default=None):
@@ -139,7 +138,6 @@ class BDF_Card(object):
         @retval the value on the ith field
         """
         if i<self.nfields and self.card[i] is not None and self.card[i] is not '':
-            #print "self.card[%s] = %s"%(i,str(self.card[i]))
             return self.card[i]
         else:
             return default
@@ -163,7 +161,7 @@ class BDF_Card(object):
             return True
         return False
 
-    def applyOldFields(self,cardCount=0):
+    def applyOldFields(self, cardCount=0):
         """used for nastran = format"""
         if not self.isSameName():
            return
@@ -176,15 +174,14 @@ class BDF_Card(object):
             #self.applyOldFields(self,cardCount=1)
             cardCount = self.oldCard.cardCount+cardCount
             if self.debug:
-                print "newCount = ",cardCount
+                print("newCount = %s" %(cardCount))
             self.card = copy.deepcopy(self.oldCard.cardTextOld)
             self.nfields = len(self.card)
             self.oldCard.nfields = len(self.oldCard.card)
             
             if self.debug:
-                print "oldCard = ",self.oldCard
-                print "selfCard = ",self.card
-                print "asfdasdfasdfasdfasfasdf"
+                print("oldCard = %s" %(self.oldCard))
+                print("selfCard = %s" %(self.card))
             #stop = True
 
         fieldsNew = self.fields()
@@ -222,12 +219,12 @@ class BDF_Card(object):
             else:
                 b = "|%s|" %(fieldNew)
                 c = "|%s|" %(fieldOld)
-                print "i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c)
-                raise Exception('unhandled case...')
+                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c))
+                raise RuntimeError('unhandled case...')
             b = "|%s|" %(fieldNew)
             c = "|%s|" %(fieldOld)
             if self.debug:
-                print "i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c)
+                print("i=%s fieldStart %-10s fieldNew %-10s fieldOld %-10s" %(i,a,b,c))
             cardBuilt.append(fieldNew)
             i+=1
         ###
@@ -242,42 +239,39 @@ class BDF_Card(object):
             pass
         
         if self.debug:
-            print "cardBuilt = ",cardBuilt
+            print("cardBuilt = %s" %(cardBuilt))
         self.card = cardBuilt
         self.nfields = len(self.card)
         
         if stop:
             sys.exit("asdfasdf")
 
-    def getOldField(i):
+    def getOldField(self,i):
         """used for nastran = format"""
         return self.oldCard.field(i)
 
 def wipeEmptyFields(card):
     """
-    Removes an trailing Nones from the card.  Also converts empty strings to None.
-    @param self the object pointer
-    @param card the fields on the card as a list
-    @retval shortCard the card with no trailing blank fields
+    Removes an trailing Nones from the card.
+    Also converts empty strings to None.
+
+    @param self
+      the object pointer
+    @param card
+      the fields on the card as a list
+    @retval shortCard
+      the card with no trailing blank fields
     """
-    #print "cardA = ",card
     cardB = []
     for field in card:
-        if isinstance(field,str) and field.strip()=='':
+        if isinstance(field, str) and field.strip()=='':
             field = None
-        ###
         cardB.append(field)
-    ###
-    #print "cardB = ",cardB
+
     i = 0
     iMax = 0
     while i<len(card):
         if cardB[i] is not None:
             iMax = i
-        ###
         i+=1
-    ###
-    #print "i=%s iMax=%s"%(i,iMax)
-    #print "cardC = ",cardB[:iMax+1],'\n'
-
     return cardB[:iMax+1]

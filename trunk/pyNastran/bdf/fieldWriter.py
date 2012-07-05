@@ -1,35 +1,37 @@
+# pylint: disable=C0103,R0902,R0904,R0914
 import sys
 from types import NoneType
 from numpy import allclose,isinf
 
-def isSame(value1,value2):
+def isSame(value1, value2):
     """
     checks to see if 2 values are the same
     @note this method is used by almost every card when printing
     """
     #print "value=%s default=%s" %(value1,value2)
-    if isinstance(value1,str) or isinstance(value1,NoneType):
+    if isinstance(value1, str) or isinstance(value1, NoneType):
         if value1==value2:
             return True
         return False
-    elif value1==value2 or type(value1)==type(value2) and not isinf(value1) and allclose(value1,value2):
-        #print "value=%s value2=%s same=%s" %(value1,value2,True)
+    elif (value1==value2 or type(value1)==type(value2) and not isinf(value1) and
+         allclose(value1,value2)):
+        #print "value=%s value2=%s same=%s" %(value1, value2, True)
         return True
-    #print "value1=%s value2=%s same=%s" %(value1,value2,False)
+    #print "value1=%s value2=%s same=%s" %(value1, value2, False)
     return False
 
-def setBlankIfDefault(value,default):
+def setBlankIfDefault(value, default):
     """
     used when setting the output data of a card to clear default values
     @param value the field value the may be set to None (blank) if value=default
     @param default the default value for the field
     @note this method is used by almost every card when printing
     """
-    if isSame(value,default):
+    if isSame(value, default):
         return None
     return value
 
-def setDefaultIfBlank(value,default):
+def setDefaultIfBlank(value, default):
     """
     used when initializing a card and the default value isnt set
     used on PBARL
@@ -88,7 +90,7 @@ def printScientific8(value):
     #print "scientific...value=%s field=%s" %(value, field)
     return field
 
-def printFloat8(value,tol=0.):
+def printFloat8(value, tol=0.):
     """
     Prints a float in nastran 8-character width syntax
     using the highest precision possbile.
@@ -118,7 +120,7 @@ def printFloat8(value,tol=0.):
                 #if 'e' not in field:
                 field1 = field.replace('-','e-')
 
-                #print "value=|%s| field1=|%s| field2=|%s|" %(value,field,field2)
+                #print "value=|%s| field1=|%s| field2=|%s|" %(value, field, field2)
                 #print "same - ",float(field1)==float(field2)
                 if field2=='.':
                     return "%8s" %(field)
@@ -153,7 +155,7 @@ def printFloat8(value,tol=0.):
                     field = '%8.1f' %(round(value))
                     field = field[0:8]
                     #field = '%7s.' %(int(field))
-                    assert '.' != field[0],field
+                    assert '.' != field[0], field
                 else:
                     field = printScientific8(value)
                 ###
@@ -175,7 +177,7 @@ def printFloat8(value,tol=0.):
                 #if 'e' not in field:
                 field1 = '-'+field.strip(' 0-').replace('-','e-') # get rid of the first minus sign, add it on afterwards
 
-                #print "value=%s field=%s field1=%s field2=%s" %(value,field[1:],field1,field2)
+                #print "value=%s field=%s field1=%s field2=%s" %(value, field[1:], field1,field2)
                 #print "same - ",float(field1)==float(field2)
                 if len(field2)<=8 and float(field1)==float(field2):
                     field = field2.rstrip(' 0')
@@ -220,7 +222,7 @@ def printFloat8(value,tol=0.):
     ###
     #print len(field)
     #print "value=|%s| field=|%s|\n" %(value,field)
-    assert len(field)==8,'value=|%s| field=|%s| is not 8 characters long, its %s' %(value,field,len(field))
+    assert len(field)==8,'value=|%s| field=|%s| is not 8 characters long, its %s' %(value, field, len(field))
     return field
 
 def printField(value,tol=0.):
@@ -233,13 +235,14 @@ def printField(value,tol=0.):
     if isinstance(value,int):
         field = "%8s" %(value)
     elif isinstance(value,float):
-        #print "float..."
         field = printFloat8(value)
     elif isinstance(value,NoneType):
         field = "        "
     else:
         field = "%8s" %(value)
-    assert len(field)==8,'field=|%s| is not 8 characters long...rawValue=|%s|' %(field,value)
+    if len(field)!=8:
+        msg = 'field=|%s| is not 8 characters long...rawValue=|%s|' %(field, value)
+        raise RuntimeError(msg)
     return field
 
 #def printCard(fields,size=8,tol=0.):
@@ -256,7 +259,7 @@ def printField(value,tol=0.):
     #    return self.printCard_16(fields)
     ###
 
-def printCard(fields,tol=0.):
+def printCard(fields, tol=0.):
     """
     Prints a nastran-style card with 8-character width fields.
     @param fields all the fields in the BDF card (no blanks)
@@ -275,12 +278,12 @@ def printCard(fields,tol=0.):
         sys.stdout.flush()
         raise
     
-    for i in range(1,len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
-            out += printField(field,tol=tol)
+            out += printField(field, tol=tol)
             #print "|%r|" %(printField(field))
-        except AssertionError:
+        except:
             print "bad fields = ",fields
             raise
         if i%8==0: # allow 1+8 fields per line
@@ -298,7 +301,7 @@ def printCard(fields,tol=0.):
     out = out.rstrip(' \n+')+'\n'  # removes blank lines at the end of cards
     return out
 
-def printIntCard(fields,tol=0.):
+def printIntCard(fields, tol=0.):
     """
     All fields (other than the first field must be integers.
     This is used to speed up SET cards.
@@ -312,11 +315,11 @@ def printIntCard(fields,tol=0.):
         sys.stdout.flush()
         raise
     
-    for i in range(1,len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
             out += "%8i" %(field) # balks if you have None or string fields
-        except AssertionError:
+        except:
             print "bad fields = ",fields
             raise
         if i%8==0: # allow 1+8 fields per line
@@ -334,7 +337,7 @@ def displayCard(fields):
     @note this method has been made obsolete by the maturation
     of card printing methods, but it's still useful.
     """
-    for i,field in enumerate(fields):
+    for (i, field) in enumerate(fields):
         print "field[%s] = %s" %(i,field)
     ###
 

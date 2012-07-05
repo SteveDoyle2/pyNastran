@@ -1,9 +1,10 @@
-# pylint: disable=R0904,R0902
+# pylint: disable=C0103,R0902,R0904,R0914
+
 from math import sqrt,degrees,radians,atan2,acos,sin,cos
 from numpy import array,cross,dot,transpose,zeros
 from numpy.linalg import norm
 
-from pyNastran.bdf.errors import InvalidUnitVectorError,BDF_Card
+from pyNastran.bdf.errors import InvalidUnitVectorError, BDF_Card
 from pyNastran.cards.baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 

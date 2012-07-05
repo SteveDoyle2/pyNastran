@@ -1,3 +1,4 @@
+# pylint: disable=C0103,R0902,R0904,R0914
 #import sys
 
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -15,21 +16,21 @@ class Table(BaseCard):
             raise Exception('axis=|%s|' %(axis))
         return axisType
 
-    def parseFields(self,fields,nRepeated,isData=False):
-        self.table = TableObj(fields,nRepeated,isData)
+    def parseFields(self, fields, nRepeated, isData=False):
+        self.table = TableObj(fields, nRepeated, isData)
 
 class TableObj(object):
-    def __init__(self,fields,nRepeated,isData=False):
+    def __init__(self, fields, nRepeated, isData=False):
         self.table = []
-        fields = self.cleanupFields(fields,isData)
+        fields = self.cleanupFields(fields, isData)
         
         nFields = len(fields)
 
         if not isData:
             if nFields%nRepeated!=0:
-                self.crashFields(fields,nRepeated,nFields)
+                self.crashFields(fields, nRepeated, nFields)
             if nFields%nRepeated!=0:
-                msg = 'invalid table length nRepeat=%s fields=%s' %(nRepeated,ListPrint(fields))
+                msg = 'invalid table length nRepeat=%s fields=%s' %(nRepeated, ListPrint(fields))
                 raise RuntimeError(msg)
         
         i=0
@@ -41,7 +42,7 @@ class TableObj(object):
             self.table.append(pack)
         ###
 
-    def crashFields(self,fields,nRepeated,nFields):
+    def crashFields(self,fields, nRepeated, nFields):
         try:
             msg = ''
             #k = 0
@@ -65,17 +66,17 @@ class TableObj(object):
         ###
     ###
 
-    def cleanupFields(self,fields,isData=False):
+    def cleanupFields(self, fields, isData=False):
         fields2 = [] # remove extra ENDTs
         foundENDT = False
         for field in fields:
-            if isinstance(field,str) and 'ENDT' in field.upper():
+            if isinstance(field, str) and 'ENDT' in field.upper():
                 foundENDT = True
             else:
                 fields2.append(field)
 
         if not isData:
-            assert foundENDT==True,fields
+            assert foundENDT==True, fields
         return fields2
 
     def fields(self):
@@ -86,12 +87,12 @@ class TableObj(object):
 
 class TABLED1(Table):
     type = 'TABLED1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         Table.__init__(self,card,data)
         if card:
             self.tid   = card.field(1)
-            self.xaxis = card.field(2,'LINEAR')
-            self.yaxis = card.field(3,'LINEAR')
+            self.xaxis = card.field(2, 'LINEAR')
+            self.yaxis = card.field(3, 'LINEAR')
             fields = card.fields(9)
             isData = False
         else:
@@ -100,24 +101,25 @@ class TABLED1(Table):
             self.yaxis = self.mapAxis(data[2])
             fields = data[3:]
             isData = True
-        assert self.xaxis in ['LINEAR','LOG'],'xaxis=|%s|' %(self.xaxis)
-        assert self.yaxis in ['LINEAR','LOG'],'yaxis=|%s|' %(self.yaxis)
+        assert self.xaxis in ['LINEAR','LOG'], 'xaxis=|%s|' %(self.xaxis)
+        assert self.yaxis in ['LINEAR','LOG'], 'yaxis=|%s|' %(self.yaxis)
         self.parseFields(fields,nRepeated=2,isData=isData)
 
     def rawFields(self):
-        fields = ['TABLED1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
+        fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, None, None, None, None, None]+self.table.fields()+['ENDT']
         return fields
 
     def reprFields(self):
         #xaxis = self.setBlankIfDefault(self.xaxis,'LINEAR')
         #yaxis = self.setBlankIfDefault(self.yaxis,'LINEAR')
-        fields = ['TABLED1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
-        return fields
+        return self.rawFields()
+        #fields = ['TABLED1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
+        #return fields
 
 class TABLED2(Table):
     type = 'TABLED2'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -128,7 +130,7 @@ class TABLED2(Table):
             self.x1  = data[1]
             fields   = data[2:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLED2',self.tid,self.x1,None,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -139,8 +141,8 @@ class TABLED2(Table):
 
 class TABLED3(Table):
     type = 'TABLED3'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -153,7 +155,7 @@ class TABLED3(Table):
             self.x2  = data[2]
             fields   = data[3:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLED3',self.tid,self.x1,self.x2,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -164,8 +166,8 @@ class TABLED3(Table):
 
 class TABLEM1(Table):
     type = 'TABLEM1'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -174,7 +176,7 @@ class TABLEM1(Table):
             self.tid = data[0]
             fields   = data[1:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLEM1',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -182,8 +184,8 @@ class TABLEM1(Table):
 
 class TABLEM2(Table):
     type = 'TABLEM2'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -194,7 +196,7 @@ class TABLEM2(Table):
             self.x1  = data[1]
             fields   = data[2:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLEM2',self.tid,self.x1,None,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -206,8 +208,8 @@ class TABLEM2(Table):
 
 class TABLEM3(Table):
     type = 'TABLEM3'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -220,7 +222,7 @@ class TABLEM3(Table):
             self.x2  = data[2]
             fields   = data[3:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLEM3',self.tid,self.x1,self.x2,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -231,8 +233,8 @@ class TABLEM3(Table):
 
 class TABLEM4(Table):
     type = 'TABLEM4'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             self.x1  = card.field(2)
@@ -249,7 +251,7 @@ class TABLEM4(Table):
             self.x4  = data[4]
             fields   = data[3:]
             isData = True
-        self.parseFields(fields,nRepeated=1,isData=isData)
+        self.parseFields(fields, nRepeated=1, isData=isData)
 
     def rawFields(self):
         fields = ['TABLEM4',self.tid,self.x1,self.x2,self.x3,self.x4,None,None,None]+self.table.fields()+['ENDT']
@@ -260,8 +262,8 @@ class TABLEM4(Table):
 
 class TABLES1(Table):
     type = 'TABLES1'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -270,7 +272,7 @@ class TABLES1(Table):
             self.tid = data[0]
             fields   = data[1:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLES1',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -281,8 +283,8 @@ class TABLES1(Table):
 
 class TABLEST(Table):
     type = 'TABLEST'
-    def __init__(self,card=None,data=None):
-        Table.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Table.__init__(self, card, data)
         if card:
             self.tid = card.field(1)
             fields = card.fields(9)
@@ -291,7 +293,7 @@ class TABLEST(Table):
             self.tid = data[0]
             fields   = data[1:]
             isData = True
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
     def rawFields(self):
         fields = ['TABLEST',self.tid,None,None,None,None,None,None,None]+self.table.fields()+['ENDT']
@@ -307,8 +309,8 @@ class RandomTable(BaseCard):
 
 class TABRND1(RandomTable):
     type = 'TABRND1'
-    def __init__(self,card=None,data=None):
-        RandomTable.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        RandomTable.__init__(self, card, data)
         if card:
             self.tid   = card.field(1)
             self.xaxis = card.field(2,'LINEAR')
@@ -351,8 +353,8 @@ class TABRNDG(RandomTable):
     Defines the power spectral density (PSD) of a gust for aeroelastic response analysis.
     """
     type = 'TABRNDG'
-    def __init__(self,card=None,data=None):
-        RandomTable.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        RandomTable.__init__(self, card, data)
         if card:
             ## Table identification number. (Integer >0)
             self.tid  = card.field(1)
@@ -367,7 +369,7 @@ class TABRNDG(RandomTable):
             raise NotImplementedError()
 
     def rawFields(self):
-        fields = ['TABRNDG',self.tid,self.Type,self.LU,self.WG]
+        fields = ['TABRNDG', self.tid, self.Type, self.LU, self.WG]
         return fields
 
     def reprFields(self):
@@ -376,14 +378,14 @@ class TABRNDG(RandomTable):
 class TIC(Table):
     """Transient Initial Condition"""
     type = 'TIC'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         Defines values for the initial conditions of variables used in
         structural transient analysis. Both displacement and velocity values may
         be specified at independent degrees-of-freedom. This entry may not be
         used for heat transfer analysis.
         """
-        Table.__init__(self,card,data)
+        Table.__init__(self, card, data)
         if card:
             self.sid = card.field(1)
             self.G   = card.field(2)
@@ -399,7 +401,7 @@ class TIC(Table):
         ###
 
     def rawFields(self):
-        fields = ['TIC',self.sid,self.G,self.C,self.U0,self.V0]
+        fields = ['TIC', self.sid, self.G, self.C, self.U0, self.V0]
         return fields
 
     def reprFields(self):

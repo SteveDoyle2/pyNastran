@@ -1,6 +1,7 @@
+# pylint: disable=R0904,R0902
 from numpy import array
 from pyNastran.bdf.cards.loads import *
-from pyNastran.bdf.errors import *
+#from pyNastran.bdf.errors import *
 
 from pyNastran.bdf.cards.plates.elementsShell import ShellElement
 

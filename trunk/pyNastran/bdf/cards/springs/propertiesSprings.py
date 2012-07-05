@@ -1,3 +1,5 @@
+# pylint: disable=C0103,R0902,R0904,R0914
+
 import sys
 #from numpy import zeros,pi
 

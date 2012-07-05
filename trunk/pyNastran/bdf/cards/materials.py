@@ -1,6 +1,6 @@
+# pylint: disable=C0103,R0902,R0904,R0914
 from numpy import zeros,array
 
-# my code
 from pyNastran.bdf.cards.baseCard import BaseCard,Material
 from pyNastran.bdf.cards.tables import Table
 #from thermal.materials import *

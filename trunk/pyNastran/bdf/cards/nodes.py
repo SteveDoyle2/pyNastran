@@ -1,9 +1,8 @@
-#import sys
-#from numpy import array,cross,dot
-from numpy import array
-#from numpy.linalg import norm
+# pylint: disable=C0103,R0902,R0904,R0914
 
-# my code
+#import sys
+from numpy import array
+
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Ring(BaseCard):

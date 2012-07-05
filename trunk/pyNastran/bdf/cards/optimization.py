@@ -1,3 +1,5 @@
+# pylint: disable=C0103,R0902,R0904,R0914
+
 #import sys
 from pyNastran.bdf.cards.baseCard import BaseCard
 
@@ -25,7 +27,7 @@ class DCONSTR(OptConstraint):
         ###
 
     def rawFields(self):
-        fields = ['DCONSTR',self.oid,self.rid,self.lid,self.uid,self.lowfq,self.highfq]
+        fields = ['DCONSTR', self.oid, self.rid, self.lid, self.uid, self.lowfq, self.highfq]
         return fields
 
     def reprFields(self):
@@ -56,8 +58,7 @@ class DESVAR(OptConstraint):
         xlb  = self.setBlankIfDefault(self.xlb, -1e20)
         xub  = self.setBlankIfDefault(self.xub,  1e20)
         delx = self.setBlankIfDefault(self.delx, 1e20)
-        fields = ['DESVAR', self.oid, self.label, self.xinit, xlb, xub,
-                            delx, self.ddval]
+        fields = ['DESVAR', self.oid, self.label, self.xinit, xlb, xub, delx, self.ddval]
         return fields
 
 class DDVAL(OptConstraint):
@@ -162,7 +163,7 @@ class DRESP1(OptConstraint):
         #assert len(self.others)==0
     
     def rawFields(self):
-        fields = ['DRESP1',self.oid,self.label,self.rtype,self.ptype,self.region,self.atta,self.attb,self.atti
+        fields = ['DRESP1',self.oid, self.label, self.rtype, self.ptype, self.region,self.atta, self.attb, self.atti
                            ]+self.others
         return fields
 
@@ -171,8 +172,8 @@ class DRESP2(OptConstraint):
     def __init__(self, card=None, data=None):
         """
         Design Sensitivity Equation Response Quantities
-        Defines equation responses that are used in the design, either as constraints or as an
-        objective.
+        Defines equation responses that are used in the design, either as
+        constraints or as an objective.
         """
         self.oid      = card.field(1)
         self.label    = card.field(2)
@@ -232,14 +233,14 @@ class DRESP2(OptConstraint):
             try:
                 (i, j) = packLength[key]
             except KeyError:
-                msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' %(key,valueList,self.oid)
+                msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' %(key, valueList, self.oid)
                 raise KeyError(msg)
             fields += self.buildTableLines(fields2,nStart=i,nEnd=j)
         ###
         return fields
 
     def rawFields(self):
-        fields = ['DRESP2',self.oid,self.label,self.eqidFunc,self.region,self.method,self.c1,self.c2,self.c3]
+        fields = ['DRESP2', self.oid, self.label, self.eqidFunc, self.region, self.method, self.c1, self.c2, self.c3]
         fields += self.packParams()
         return fields
 
@@ -248,13 +249,13 @@ class DRESP2(OptConstraint):
         c1 = self.setBlankIfDefault(self.c1, 100.)
         c2 = self.setBlankIfDefault(self.c2, 0.005)
 
-        fields = ['DRESP2',self.oid,self.label,self.eqidFunc,self.region,method,c1,c2,self.c3]
+        fields = ['DRESP2', self.oid, self.label, self.eqidFunc, self.region, method, c1, c2, self.c3]
         fields += self.packParams()
         return fields
 
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         Design Variable to Material Relation
         Defines the relation between a material property and design variables
@@ -297,7 +298,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         return self.mid.mid
 
     def rawFields(self):
-        fields = ['DVMREL1',self.oid,self.Type,self.Mid(),self.mpName,self.mpMin,self.mpMax,self.c0,None]
+        fields = ['DVMREL1', self.oid, self.Type, self.Mid(), self.mpName, self.mpMin, self.mpMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)
@@ -306,7 +307,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
     def reprFields(self):
         mpMax = self.setBlankIfDefault(self.mpMax, 1e20)
         c0    = self.setBlankIfDefault(self.c0, 0.)
-        fields = ['DVMREL1',self.oid,self.Type,self.Mid(),self.mpName,self.mpMin,mpMax,c0,None]
+        fields = ['DVMREL1', self.oid, self.Type, self.Mid(), self.mpName, self.mpMin, mpMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
             fields.append(coeff)

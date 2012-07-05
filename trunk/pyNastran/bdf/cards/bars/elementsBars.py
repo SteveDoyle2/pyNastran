@@ -1,3 +1,4 @@
+# pylint: disable=R0904,R0902
 from __future__ import print_function
 #import sys
 
@@ -5,7 +6,7 @@ from numpy import matrix,zeros,ones,array,transpose,dot #,diag,pi
 from numpy.linalg import norm
 #from pyNastran.general.generalMath import printMatrix
 
-from pyNastran.bdf.errors import *
+from pyNastran.bdf.errors import StiffnessMatrixError, CardInstantiationError
 from pyNastran.bdf.cards.baseCard import Element,Mid
 
 
@@ -19,7 +20,7 @@ class LineElement(Element):
 
     def Area(self):
         """returns the area of the element face"""
-        raise NotImplementedMethodError('implement self.Area() for %s' %(self.type))
+        raise NotImplementedError('implement self.Area() for %s' %(self.type))
     
     def E(self):
         """returns the Young's Modulus  \f$ E \f$"""
@@ -57,15 +58,11 @@ class LineElement(Element):
 
     def Nsm(self):
         """Placeholder method for the non-structural mass"""
-        raise NotImplementedMethodError('implement self.Area() for %s' %(self.type))
+        raise NotImplementedError('implement self.Area() for %s' %(self.type))
 
     def MassPerLength(self):
         """Returns the mass per unit length"""
         return self.pid.MassPerLength()
-
-    #def MassPerLength(self):
-        """Returns the mass per unit length"""
-        #massPerLength = self.Rho()*self.Area() + self.Nsm()
 
     def Mass(self):
         """
@@ -89,11 +86,11 @@ class LineElement(Element):
         #print "---"
         return mass
 
-    def crossReference(self,mesh):
-        self.nodes = mesh.Nodes(self.nodes)
-        self.pid   = mesh.Property(self.pid)
+    def crossReference(self, model):
+        self.nodes = model.Nodes(self.nodes)
+        self.pid   = model.Property(self.pid)
 
-    def Length_noXref(self,n1=None,n2=None):
+    def Length_noXref(self, n1=None, n2=None):
         """
         Returns the length of a bar/rod/beam element
         \f[ \large \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  } \f]
@@ -115,7 +112,7 @@ class LineElement(Element):
         @param self the object pointer
         """
         #print self.type
-        return self.Length_noXref(self.nodes[1],self.nodes[0])
+        return self.Length_noXref(self.nodes[1], self.nodes[0])
 
     def k_Axial(self):
         """
@@ -134,7 +131,7 @@ class LineElement(Element):
         E = self.E()
         A = self.Area()
         kMag = A*E/(2*L)
-        K = Matrix(ones(1,1))
+        K = ones(1,1)
         K[0,1] = K[1,0] = -1
         return kMag*K
 
@@ -158,7 +155,7 @@ class LineElement(Element):
         #A = self.Area()
         #kMag = A*E/(2*L)
         kMag = L/(G*J)
-        K = Matrix(ones(1,1))
+        K = ones(1,1)
         K[0,1] = K[1,0] = -1
         return kMag*K
 
@@ -203,12 +200,12 @@ class LineElement(Element):
 
 class CROD(LineElement):
     type = 'CROD'
-    def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        LineElement.__init__(self, card, data)
         if card:
             self.eid = int(card.field(1))
-            self.pid = int(card.field(2,self.eid))
-            nids = card.fields(3,5)
+            self.pid = int(card.field(2, self.eid))
+            nids = card.fields(3, 5)
         else:
             self.eid = data[0]
             self.pid = data[1]
@@ -234,7 +231,7 @@ class CROD(LineElement):
         massPerLength = self.pid.mid.rho*self.pid.A + self.pid.nsm
         return massPerLength
 
-    def Rmatrix(self,model,is3D):
+    def Rmatrix(self, model, is3D):
         """
         where   \f$ [R]_{ij} \f$ is the tranformation matrix
         \f[ \large  [R]_{ij} \left[ 
@@ -245,26 +242,26 @@ class CROD(LineElement):
           \end{array} \right]
         \f] 
         """
-        (n1,n2) = self.nodeIDs()
+        (n1, n2) = self.nodeIDs()
         p1 = model.Node(n1).xyz
         p2 = model.Node(n2).xyz
         v1 = p2-p1
         v1 = v1/norm(v1)
         (l,m,n) = v1
         
-        v1x = array([v1[0],0.,0.])
-        v1y = array([0.,v1[1],0.])
-        v1z = array([0.,0.,v1[2]])
+        v1x = array([v1[0],    0.,    0.])
+        v1y = array([   0., v1[1],    0.])
+        v1z = array([   0.,    0., v1[2]])
         
-        g1x = array([1.,0.,0.])
-        g1y = array([0.,1.,0.])
-        g1z = array([0.,0.,1.])
+        g1x = array([1., 0., 0.])
+        g1y = array([0., 1., 0.])
+        g1z = array([0., 0., 1.])
 
         if is3D:
             R = matrix([  #global rod
-                        [dot(v1x,g1x),dot(v1y,g1x),dot(v1z,g1x)],
-                        [dot(v1x,g1y),dot(v1y,g1y),dot(v1z,g1y)],
-                        [dot(v1x,g1z),dot(v1y,g1z),dot(v1z,g1z)],
+                        [dot(v1x,g1x), dot(v1y,g1x), dot(v1z,g1x)],
+                        [dot(v1x,g1y), dot(v1y,g1y), dot(v1z,g1y)],
+                        [dot(v1x,g1z), dot(v1y,g1z), dot(v1z,g1z)],
                       ]) # rod
             #R = matrix([
             #            [],
@@ -274,8 +271,8 @@ class CROD(LineElement):
                       
         else:
             R = matrix([ # there can be no z component
-                        [dot(v1x,g1x),dot(v1y,g1x)],
-                        [dot(v1x,g1y),dot(v1y,g1y)],
+                        [dot(v1x,g1x), dot(v1y,g1x)],
+                        [dot(v1x,g1y), dot(v1y,g1y)],
                       ]) # rod
             #R = matrix([ # there can be no z component
             #            [dot(v1x,g1x),dot(v1y,g1x)],
@@ -283,7 +280,7 @@ class CROD(LineElement):
             #          ]) # rod
         return R
         
-    def Lambda(self,model,debug=True):
+    def Lambda(self, model, debug=True):
         """
         2d  [l,m,0,0]
             [0,0,l,m]
@@ -294,14 +291,14 @@ class CROD(LineElement):
         is3D = False
         #R = self.Rmatrix(model,is3D)
         
-        (n1,n2) = self.nodeIDs()
+        (n1, n2) = self.nodeIDs()
         p1 = model.Node(n1).Position()
         p2 = model.Node(n2).Position()
         v1 = p2-p1
         if debug:
             print("v1=%s" %(v1))
         v1 = v1/norm(v1)
-        (l,m,n) = v1
+        (l, m, n) = v1
         if is3D:
             Lambda = matrix(zeros((2,6),'d')) # 3D
         else:
@@ -320,7 +317,7 @@ class CROD(LineElement):
     #def Stiffness1(self,model):
         #nIJV = [(nodes[0],1),(nodes[0],2),(nodes[1],1),]
 
-    def Stiffness(self,model,grav,is3D): # CROD/CONROD
+    def Stiffness(self, model, grav, is3D): # CROD/CONROD
         print("----------------")
         Lambda = self.Lambda(model)
         #print("Lambda = \n"+str(Lambda))
@@ -329,7 +326,7 @@ class CROD(LineElement):
         #print R
         #print(k)
         #print("Lambda.shape = ",Lambda.shape)
-        K = dot(dot(transpose(Lambda),k),Lambda)
+        K = dot(dot(transpose(Lambda), k), Lambda)
         #Fg = dot(dot(transpose(Lambda),grav),Lambda)
         
         #print('size(grav) =',grav.shape)
@@ -351,28 +348,28 @@ class CROD(LineElement):
         nIJV  = [(nodes[0],1),(nodes[0],2),(nodes[1],1),(nodes[1],2),]
         nGrav = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[1],1),(nodes[1],2),(nodes[1],3)]
 
-        return(K,nIJV,Fg,nGrav)
+        return(K, nIJV, Fg, nGrav)
 
-    def displacementStressF06(self,model,q,dofs):
+    def displacementStressF06(self, model, q, dofs):
         pass
 
-    def displacementStress(self,model,q,dofs):
-        (n1,n2) = self.nodeIDs()
-        Lambda = self.Lambda(model,debug=False)
+    def displacementStress(self, model, q, dofs):
+        (n1, n2) = self.nodeIDs()
+        Lambda = self.Lambda(model, debug=False)
         n11 = dofs[(n1,1)]
         n12 = dofs[(n1,2)]
         n21 = dofs[(n2,1)]
         n22 = dofs[(n2,2)]
-        print("type=%s n1=%s n2=%s" %(self.type,n1,n2))
+        print("type=%s n1=%s n2=%s" %(self.type, n1, n2))
         #print("n11=%s n12=%s n21=%s n22=%s" %(n11,n12,n21,n22))
         
-        q2 = array( [q[n11],q[n12],q[n21],q[n22]] )
+        q2 = array( [q[n11], q[n12], q[n21], q[n22]] )
         print("q[%s] = %s" %(self.eid,q2))
         #print("Lambda = \n"+str(Lambda))
         
         #print "Lsize = ",Lambda.shape
         #print "qsize = ",q.shape
-        u = dot(array(Lambda),q2)
+        u = dot(array(Lambda), q2)
         #L = self.Length()
         EL = self.E()/self.Length()
         
@@ -381,7 +378,7 @@ class CROD(LineElement):
         print("stressX = %s [psi]\n" %(stressX))
         return stressX
 
-    def Stiffness1D(self,model): # CROD/CONROD
+    def Stiffness1D(self, model): # CROD/CONROD
         """
         @todo remove this method after making sure it still works
         """
@@ -533,9 +530,10 @@ class CONROD(CROD):
         return self.mid.rho
 
     def writeCodeAster(self):
+        msg = ''
         msg += "    POUTRE=_F(GROUP_MA='CONROD_%s',\n" %(self.eid)
         msg += "              SECTION='CERCLE',  # circular section\n"
-        if thickness:
+        if self.Thickness():
             msg += "              CARA=('R','EP'),   # radius, thickness\n"
             msg += "              VALE=(%g,%g),\n"  %(self.Radius(),self.Thickness())
         else:
@@ -545,14 +543,14 @@ class CONROD(CROD):
         return msg
 
     def rawFields(self):
-        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,self.j,self.c,self.nsm]
+        fields = ['CONROD', self.eid]+self.nodeIDs()+[self.Mid(), self.A, self.j, self.c, self.nsm]
         return fields
 
     def reprFields(self):
-        j   = self.setBlankIfDefault(self.j,  0.0)
-        c   = self.setBlankIfDefault(self.c,  0.0)
-        nsm = self.setBlankIfDefault(self.nsm,0.0)
-        fields = ['CONROD',self.eid]+self.nodeIDs()+[self.Mid(),self.A,j,c,nsm]
+        j   = self.setBlankIfDefault(self.j,   0.0)
+        c   = self.setBlankIfDefault(self.c,   0.0)
+        nsm = self.setBlankIfDefault(self.nsm, 0.0)
+        fields = ['CONROD', self.eid]+self.nodeIDs()+[self.Mid(), self.A, j, c, nsm]
         return fields
 
 class CBAR(LineElement):
@@ -568,28 +566,28 @@ class CBAR(LineElement):
     """
     type = 'CBAR'
     asterType = 'CBAR'
-    def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        LineElement.__init__(self, card, data)
         if card:
             self.eid = int(card.field(1))
-            self.pid = int(card.field(2,self.eid))
+            self.pid = int(card.field(2, self.eid))
             self.ga  = int(card.field(3))
             self.gb  = int(card.field(4))
             self.initX_G0(card)
 
-            self.offt = card.field(8,'GGG')
+            self.offt = card.field(8, 'GGG')
             #print 'self.offt = |%s|' %(self.offt)
 
-            self.pa = card.field(9,0)
-            self.pb = card.field(10,0)
+            self.pa = card.field(9,  0)
+            self.pb = card.field(10, 0)
 
-            self.w1a = float(card.field(11,0.0))
-            self.w2a = float(card.field(12,0.0))
-            self.w3a = float(card.field(13,0.0))
+            self.w1a = float(card.field(11, 0.0))
+            self.w2a = float(card.field(12, 0.0))
+            self.w3a = float(card.field(13, 0.0))
 
-            self.w1b = float(card.field(14,0.0))
-            self.w2b = float(card.field(15,0.0))
-            self.w3b = float(card.field(16,0.0))
+            self.w1b = float(card.field(14, 0.0))
+            self.w2b = float(card.field(15, 0.0))
+            self.w3b = float(card.field(16, 0.0))
         else: ## @todo verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
@@ -626,26 +624,27 @@ class CBAR(LineElement):
             self.w3b = main[11]
         ###
         assert isinstance(self.offt,str),'invalid offt expected a string of length 3 offt=|%s|' %(self.offt)
-        assert self.offt[0] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
-        assert self.offt[1] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
-        assert self.offt[2] in ['G','B','O'],'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
+        msg = 'invalid offt parameter of %s...offt=%s' %(self.type,self.offt)
+        assert self.offt[0] in ['G','B','O'], msg
+        assert self.offt[1] in ['G','B','O'], msg
+        assert self.offt[2] in ['G','B','O'], msg
 
     def Mid(self):
         return self.pid.Mid()
 
     def Area(self):
         A = self.pid.Area()
-        assert isinstance(A,float)
+        assert isinstance(A, float)
         return A
 
     def Length(self):
-        L = self.Length_noXref(self.ga,self.gb)
-        assert isinstance(L,float)
+        L = self.Length_noXref(self.ga, self.gb)
+        assert isinstance(L, float)
         return L
 
     def Nsm(self):
         nsm = self.pid.Nsm()
-        assert isinstance(nsm,float)
+        assert isinstance(nsm, float)
         return nsm
 
     def I1(self):
@@ -657,18 +656,18 @@ class CBAR(LineElement):
     def Centroid(self):
         return (self.ga.Position()+self.gb.Position())/2.
 
-    def initX_G0(self,card):
+    def initX_G0(self, card):
         field5 = card.field(5)
-        if isinstance(field5,int):
+        if isinstance(field5, int):
             self.g0 = field5
             self.x1 = None
             self.x2 = None
             self.x3 = None
-        elif isinstance(field5,float):
+        elif isinstance(field5, float):
             self.g0 = None
-            self.x1 = float(card.field(5,0.0))
-            self.x2 = float(card.field(6,0.0))
-            self.x3 = float(card.field(7,0.0))
+            self.x1 = float(card.field(5, 0.0))
+            self.x2 = float(card.field(6, 0.0))
+            self.x3 = float(card.field(7, 0.0))
         else:
             #msg = 'field5 on %s is the wrong type...id=%s field5=%s type=%s' %(self.type,self.eid,field5,type(field5))
             #raise InvalidFieldError(msg)
@@ -956,23 +955,23 @@ class CBEAM3(CBAR):
         return fields
 
     def reprFields(self):
-        w1a = self.setBlankIfDefault(self.w1a,0.0)
-        w2a = self.setBlankIfDefault(self.w2a,0.0)
-        w3a = self.setBlankIfDefault(self.w3a,0.0)
-        w1b = self.setBlankIfDefault(self.w1b,0.0)
-        w2b = self.setBlankIfDefault(self.w2b,0.0)
-        w3b = self.setBlankIfDefault(self.w3b,0.0)
-        w1c = self.setBlankIfDefault(self.w1c,0.0)
-        w2c = self.setBlankIfDefault(self.w2c,0.0)
-        w3c = self.setBlankIfDefault(self.w3c,0.0)
+        w1a = self.setBlankIfDefault(self.w1a, 0.0)
+        w2a = self.setBlankIfDefault(self.w2a, 0.0)
+        w3a = self.setBlankIfDefault(self.w3a, 0.0)
+        w1b = self.setBlankIfDefault(self.w1b, 0.0)
+        w2b = self.setBlankIfDefault(self.w2b, 0.0)
+        w3b = self.setBlankIfDefault(self.w3b, 0.0)
+        w1c = self.setBlankIfDefault(self.w1c, 0.0)
+        w2c = self.setBlankIfDefault(self.w2c, 0.0)
+        w3c = self.setBlankIfDefault(self.w3c, 0.0)
 
-        twa = self.setBlankIfDefault(self.twa,0.0)
-        twb = self.setBlankIfDefault(self.twb,0.0)
-        twc = self.setBlankIfDefault(self.twc,0.0)
+        twa = self.setBlankIfDefault(self.twa, 0.0)
+        twb = self.setBlankIfDefault(self.twb, 0.0)
+        twc = self.setBlankIfDefault(self.twc, 0.0)
 
-        (x1,x2,x3) = self.getX_G0_defaults()
-        (ga,gb,gc) = self.nodeIDs()
-        fields = ['CBEAM',self.eid,self.Pid(),ga,gb,x1,x2,x3,offt,
+        (x1, x2, x3) = self.getX_G0_defaults()
+        (ga, gb, gc) = self.nodeIDs()
+        fields = ['CBEAM3',self.eid,self.Pid(),ga,gb,x1,x2,x3,
                   w1a,w2a,w3a, w1b,w2b,w3b, w1c,w2c,w3c,
                   twa,twb,twc,self.sa,self.sb,self.sc]
         return fields
@@ -989,11 +988,11 @@ class CBEAM(CBAR):
     SA SB
     """
     type = 'CBEAM'
-    def __init__(self,card=None,data=None):
-        LineElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        LineElement.__init__(self, card, data)
         if card:
             self.eid = int(card.field(1))
-            self.pid = int(card.field(2,self.eid))
+            self.pid = int(card.field(2, self.eid))
             self.ga  = int(card.field(3))
             self.gb  = int(card.field(4))
 
@@ -1002,13 +1001,13 @@ class CBEAM(CBAR):
             self.pa = card.field(9)
             self.pb = card.field(10)
 
-            self.w1a = float(card.field(11,0.0))
-            self.w2a = float(card.field(12,0.0))
-            self.w3a = float(card.field(13,0.0))
+            self.w1a = float(card.field(11, 0.0))
+            self.w2a = float(card.field(12, 0.0))
+            self.w3a = float(card.field(13, 0.0))
 
-            self.w1b = float(card.field(14,0.0))
-            self.w2b = float(card.field(15,0.0))
-            self.w3b = float(card.field(16,0.0))
+            self.w1b = float(card.field(14, 0.0))
+            self.w2b = float(card.field(15, 0.0))
+            self.w3b = float(card.field(16, 0.0))
 
             self.sa = card.field(17)
             self.sb = card.field(18)
@@ -1099,11 +1098,11 @@ class CBEAM(CBAR):
         self.gb  = model.Node(self.gb)
         self.pid = model.Property(self.pid)
 
-    def Stiffness(self,bdf,r,A,E,I): # CBEAM
+    def Stiffness(self,model, r, A, E, I): # CBEAM
         """
         from makeTruss???
         """
-        Ke = matrix( zeros((6,6),'d'))
+        Ke = zeros((6,6),'d')
         L = r
         AE = A*E
         EI = E*I

@@ -1,3 +1,4 @@
+# pylint: disable=C0103,R0902,R0904,R0914
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.fieldWriter import printIntCard
 

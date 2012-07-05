@@ -1,5 +1,5 @@
 import sys
-from pyNastran.bdf.errors import *
+from pyNastran.bdf.errors import InvalidResultCode
 
 class Subcase(object):
     solCodeMap = {
@@ -17,13 +17,13 @@ class Subcase(object):
                 187:  101,
              }
 
-    def __init__(self,id=0):
+    def __init__(self, id=0):
         self.id = id
         self.params = {}
         self.sol = None
         #print "\n***adding subcase %s***" %(self.id)
 
-    def getStressCode(self,key,options,value):
+    def getStressCode(self, key, options, value):
         """@note the individual element must take
         the stressCode and reduce it to what the element can
         return.  For example, for an isotropic CQUAD4
@@ -41,33 +41,33 @@ class Subcase(object):
         #if 'MATERIAL' in options:  stressCode += 16  material coord (1) vs element (0)
         return stressCode
 
-    def getFormatCode(self,options,value):
+    def getFormatCode(self, options, value):
         """@todo not done..."""
         formatCode = 0
         if 'REAL'  in options:  formatCode += 1
         if 'IMAG'  in options:  formatCode += 2
         if 'PHASE' in options:  formatCode += 4
-        formatCode = max(formatCode,1)
+        formatCode = max(formatCode, 1)
         return formatCode
 
-    def getSortCode(self,options,value):
+    def getSortCode(self, options, value):
         sortCode = 0
         if 'COMPLEX' in options:  sortCode += 1
         if 'SORT2'   in options:  sortCode += 2
         if 'RANDOM'  in options:  sortCode += 4
         return sortCode
 
-    def getDeviceCode(self,options,value):
+    def getDeviceCode(self, options, value):
         deviceCode = 0
         if 'PRINT' in options:  deviceCode += 1
-        if 'PLOT' in options:   deviceCode += 2
+        if 'PLOT'  in options:  deviceCode += 2
         if 'PUNCH' in options:  deviceCode += 4
         deviceCode = max(deviceCode,1)
         #if deviceCode==0:
         #    deviceCode=1  # PRINT
         return deviceCode
         
-    def getAnalysisCode(self,sol):
+    def getAnalysisCode(self, sol):
         """
         8 - post-buckling (maybe 7 depending on NLPARM???)
 
@@ -102,8 +102,8 @@ class Subcase(object):
         #print 'approachCode = ',approachCode
         return approachCode
         
-    def getTableCode(self,sol,tableName,options):
-        if tableName in ['VECTOR','PRESSURE']:
+    def getTableCode(self, sol, tableName, options):
+        if tableName in ['VECTOR', 'PRESSURE']:
             tableName = 'DISPLACEMENT' # equivalent tables...
 
         key = (sol,tableName)
@@ -287,18 +287,18 @@ class Subcase(object):
         tableCode = tables[key]
         return tableCode
         
-    def hasParameter(self,paramName):
+    def hasParameter(self, paramName):
         if paramName in self.params:
             return True
         return False
 
-    def getParameter(self,paramName):
+    def getParameter(self, paramName):
         paramName = self.updateParamName(paramName)
         if paramName not in self.params:
             raise KeyError('%s doesnt exist in subcase=%s in the case control deck.' %(paramName,self.id))
         return self.params[paramName][0:2]
 
-    def updateParamName(self,paramName):
+    def updateParamName(self, paramName):
         """
         takes an abbreviated name and expands it so the user can type DISP or 
         DISPLACEMENT and get the same answer
@@ -339,18 +339,18 @@ class Subcase(object):
         #print '*paramName = ',paramName
         return  paramName
 
-    def _addData(self,key,value,options,paramType):
+    def _addData(self, key, value, options, paramType):
         key = self.updateParamName(key)
-        #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+        #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
         if isinstance(value,str) and value.isdigit():
             value = int(value)
 
-        (key,value,options) = self._simplifyData(key,value,options,paramType)
-        self.params[key] = [value,options,paramType]
+        (key, value, options) = self._simplifyData(key, value, options, paramType)
+        self.params[key] = [value, options, paramType]
 
-    def _simplifyData(self,key,value,options,paramType):
+    def _simplifyData(self,key, value, options, paramType):
         if paramType=='SET-type':
-            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
             values2 =[]
             for i,ivalue in enumerate(value):
                 ivalue = ivalue.strip()
@@ -369,20 +369,20 @@ class Subcase(object):
             
             #print "values2 = ",values2
             options = int(options)
-            return (key,values2,options)
+            return (key, values2, options)
 
         elif paramType=='CSV-type':
-            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id,key,value,options,paramType)
+            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
             ###
         else:
-            a = 'key=|%s|'       %(key)
-            b = 'value=|%s|'     %(value)
-            c = 'options=|%s|'   %(options)
-            d = 'paramType=|%s|' %(paramType)
-            #print "_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id,a,b,c,d)
-            if isinstance(value,int) or value is None:
+            #a = 'key=|%s|'       %(key)
+            #b = 'value=|%s|'     %(value)
+            #c = 'options=|%s|'   %(options)
+            #d = 'paramType=|%s|' %(paramType)
+            #print("_adding iSubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
+            if isinstance(value, int) or value is None:
                 pass
             elif value.isdigit():  # STRESS = ALL
                 value = value
@@ -392,25 +392,27 @@ class Subcase(object):
     def getOp2Data(self,sol,solmap_toValue):
         self.sol = sol
         label = 'SUBCASE %s' %(self.id)
-        op2Params = {'iSubcase':None,'tables':[],'analysisCodes':[],'deviceCodes':[],
-                     'sortCodes':[],'tableCodes':[],'label':label,'subtitle':None,
-                     'title':None,'formatCodes':[],
-                     
-                     'stressCodes':[],'thermal':None}
+        op2Params = {'iSubcase':None, 'tables':[], 'analysisCodes':[], 
+                     'deviceCodes':[], 'sortCodes':[], 'tableCodes':[],
+                     'label':label,'subtitle':None, 'title':None,
+                     'formatCodes':[], 'stressCodes':[], 'thermal':None}
         
-        results = ['DISPLACEMENT','EKE','EDE','ELSDCON','ENTHALPY','EQUILIBRIUM','ESE',
-                  'FLUX','FORCE','GPFORCE','GPKE','GPSDCON','GPSTRAIN','GPSTRESS',
-                   'HOUTPUT','MODALKE','MODALSE','MPCFORCES','NLSTRESS','NOUTPUT',
-                   'OLOAD','PFGRID','PFMODE','PFPANEL','RCROSS','RESVEC','SACCELERATION',
-                   'SDISPACEMENT','SPCFORCES','STRAIN','STRESS','SVECTOR','SVELOCITY',
-                   'THERMAL','VECTOR','VELOCITY','VUGRID','WEIGHTCHECK']
-                   
-        if self.sol==200 or 'ANALYSIS' in self.params: # converts from solution 200 to solution 144
+        results = ['DISPLACEMENT', 'EKE', 'EDE', 'ELSDCON', 'ENTHALPY',
+                   'EQUILIBRIUM', 'ESE', 'FLUX', 'FORCE', 'GPFORCE', 'GPKE',
+                   'GPSDCON', 'GPSTRAIN', 'GPSTRESS', 'HOUTPUT', 'MODALKE',
+                   'MODALSE', 'MPCFORCES', 'NLSTRESS', 'NOUTPUT', 'OLOAD',
+                   'PFGRID', 'PFMODE', 'PFPANEL', 'RCROSS', 'RESVEC',
+                   'SACCELERATION', 'SDISPACEMENT', 'SPCFORCES', 'STRAIN',
+                   'STRESS', 'SVECTOR', 'SVELOCITY', 'THERMAL', 'VECTOR',
+                   'VELOCITY', 'VUGRID', 'WEIGHTCHECK']
+
+        # converts from solution 200 to solution 144
+        if self.sol==200 or 'ANALYSIS' in self.params:
             param = self.params['ANALYSIS']
-            (value,options,paramType) = param
+            (value, options, paramType) = param
             
             sol = solmap_toValue[value.upper()]
-            print "***value=%s sol=%s" %(value,sol)
+            print "***value=%s sol=%s" %(value, sol)
         else:  # leaves SOL the same
             sol  = self.sol
         ###
@@ -419,14 +421,14 @@ class Subcase(object):
 
         for key,param in self.params.iteritems():
             key = key.upper()
-            (value,options,paramType) = param
-            msg = "  -key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
+            (value, options, paramType) = param
+            msg = "  -key=|%s| value=|%s| options=%s paramType=|%s|" %(key, value, options, paramType)
 
         thermal = 0
         for key,param in self.params.iteritems():
             key = key.upper()
-            (value,options,paramType) = param
-            msg = "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
+            (value, options, paramType) = param
+            msg = "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key, value, options, paramType)
             print msg
             #msg += self.printParam(key,param,printBeginBulk=False)
             if paramType=='SUBCASE-type':
@@ -436,11 +438,11 @@ class Subcase(object):
             elif key=='TEMPERATURE':
                 thermal = 1
             elif key in results:
-                sortCode   = self.getSortCode(options,value)
-                deviceCode = self.getDeviceCode(options,value)
+                sortCode   = self.getSortCode(options, value)
+                deviceCode = self.getDeviceCode(options, value)
                 
                 if key in ['STRESS','STRAIN']:
-                    stressCode = self.getStressCode(key,options,value)
+                    stressCode = self.getStressCode(key, options, value)
                     op2Params['stressCodes'].append(stressCode)
                 else:
                     op2Params['stressCodes'].append(0)
@@ -450,7 +452,7 @@ class Subcase(object):
                 tableCode    = self.getTableCode(sol,key,options)
                 analysisCode = self.getAnalysisCode(sol)
                 
-                approachCode = analysisCode*10    + deviceCode
+                approachCode = analysisCode*10 + deviceCode
                 tCode        = tableCode*1000 + sortCode
                 op2Params['tables'].append(key)
                                 
@@ -477,20 +479,20 @@ class Subcase(object):
         op2Params['thermal'] = thermal
         
         print "\nThe estimated results..."
-        for key,value in sorted(op2Params.iteritems()):
+        for (key, value) in sorted(op2Params.iteritems()):
             if value is not None:
-                print "   key=|%s| value=|%s|" %(key,value)
+                print "   key=|%s| value=|%s|" %(key, value)
         #sys.exit('exit subcase.py in bdf/subcase.py')
         
 
-    def printParam(self,key,param,printBeginBulk=True):
+    def printParam(self, key, param, printBeginBulk=True):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
         """
         msg = ''
         #msg += 'id=%s   ' %(self.id)
-        (value,options,paramType) = param
+        (value, options, paramType) = param
         
         spaces = ''
         if self.id>0:
@@ -504,24 +506,24 @@ class Subcase(object):
             #    pass
         elif paramType=='KEY-type':
             #print "KEY-TYPE:  |%s|" %(value)
-            assert value is not None,param
+            assert value is not None, param
             msg += spaces + '%s\n' %(value)
         elif paramType=='STRING-type':
-            msg += spaces+'%s = %s\n' %(key,value)
+            msg += spaces+'%s = %s\n' %(key, value)
         elif paramType=='CSV-type':
-            msg += spaces+'%s,%s,%s\n' %(key,value,options)
+            msg += spaces+'%s,%s,%s\n' %(key, value, options)
         elif paramType=='STRESS-type':
             sOptions = ','.join(options)
             #print "sOptions = |%s|" %(sOptions)
             #print "STRESSTYPE key=%s value=%s options=%s" %(key,value,options)
             if len(sOptions)>0:
-                msg += '%s(%s) = %s\n' %(key,sOptions,value)
+                msg += '%s(%s) = %s\n' %(key, sOptions, value)
             else:
-                msg += '%s = %s\n' %(key,value)
+                msg += '%s = %s\n' %(key, value)
             msg = spaces + msg
 
         elif paramType=='BEGIN_BULK-type':
-            msg += '%s %s\n' %(key,value)
+            msg += '%s %s\n' %(key, value)
             if 'BEGIN BULK' not in msg:
                 msg = spaces + msg
             elif printBeginBulk:
@@ -624,12 +626,12 @@ class Subcase(object):
                         #print "key=%s param=%s" %(key,param)
                         (value,options,paramType) = param
                         #print "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
-                        msg += self.printParam(key,param,printBeginBulk=False)
+                        msg += self.printParam(key, param, printBeginBulk=False)
                         #print ""
                     ###
                 ###
         if self.id>0 and 'BEGIN' in self.params: # self.id>0 and 'BEGIN' in self.params... why was that there???
-            msg += self.printParam('BEGIN',self.params['BEGIN'])
+            msg += self.printParam('BEGIN', self.params['BEGIN'])
         return msg
 
     def subcaseSorted(self,listA):
@@ -648,9 +650,8 @@ class Subcase(object):
         setDict    = {} 
         listBefore = []
         listAfter  = []
-        setList    = []
         setKeys    = []
-        for i,entry in enumerate(listA):
+        for (i, entry) in enumerate(listA):
             key = entry[0]
             if 'SET' in key[0:3]:
                 if key=='SET': # handles "SET = ALL"
@@ -672,12 +673,12 @@ class Subcase(object):
         listAfter = listA[i:]
         
         # write the SET cards in a sorted order
-        setList2 = []
+        setList = []
         for key in sorted(setKeys):
-            setList2.append(setDict[key])
+            setList.append(setDict[key])
         
         # combine all the cards
-        listB = listBefore+setList2+listAfter
+        listB = listBefore+setList+listAfter
         return listB
 
     def __repr__(self):
@@ -697,11 +698,11 @@ class Subcase(object):
                 #print "key=%s param=%s" %(key,param)
                 (value,options,paramType) = param
                 #print "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
-                msg += self.printParam(key,param,printBeginBulk=False)
+                msg += self.printParam(key, param, printBeginBulk=False)
                 #print ""
             ###
         ###
         if self.id>0 and 'BEGIN' in self.params: # prevents 2 BEGIN BULKs
-            msg += self.printParam('BEGIN',self.params['BEGIN'])
+            msg += self.printParam('BEGIN', self.params['BEGIN'])
         return msg
 

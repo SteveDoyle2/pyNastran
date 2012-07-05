@@ -1,9 +1,14 @@
+# pylint: disable=C0103,R0902,R0904,R0914
+
 import sys
 #from BDF_Card import collapse
-from pyNastran.bdf.errors import *
+from pyNastran.bdf.errors import (TabCommaCharacterError,
+                                  WhitespaceCardParseError,
+                                  ScientificCardParseError,
+                                  FloatScientificCardParseError,CardParseError)
 
 class cardMethods(object):
-    def __init__(self,nCardLinesMax=1000):
+    def __init__(self, nCardLinesMax=1000):
         self.nCardLinesMax = nCardLinesMax
 
     def makeLinesPack(self,debug=False):
@@ -492,12 +497,12 @@ class cardMethods(object):
         return value
     
 
-def getValue(valueRaw,debug=False):
+def getValue(valueRaw,card='',debug=False):
     """converts a value from nastran format into python format."""
     #debug = True
     if debug:
         print "v1 = |%s|" %(valueRaw)
-    lvalue = valueRaw.lstrip()
+    #lvalue = valueRaw.lstrip()
     valueIn = valueRaw.lstrip().rstrip(' *').upper()
 
     if debug:

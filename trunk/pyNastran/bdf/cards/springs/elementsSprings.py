@@ -1,3 +1,5 @@
+# pylint: disable=C0103,R0902,R0904,R0914
+
 from __future__ import print_function
 import sys
 from numpy import matrix,zeros,dot,transpose
