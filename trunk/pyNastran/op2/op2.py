@@ -314,9 +314,9 @@ class OP2(BDF,  # BDF methods
     def readTapeCode2(self):
         data =self.op2.read(28)
         (f1,two,f2,f3,tableName,f4) = unpack('4i8si',data)
-        print("tableName = ",tableName)
+        #print("tableName = ",tableName)
         #data = self.op2.read(16)
-        print(self.printSection(200))
+        #print(self.printSection(200))
         
         sys.exit('')
 
