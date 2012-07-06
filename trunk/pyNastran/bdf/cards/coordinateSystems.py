@@ -67,31 +67,31 @@ class Coord(BaseCard):
             ## i = j cross k
             self.i = cross(self.j, self.k)
         except InvalidUnitVectorError:
-            print "---InvalidUnitVectorError---"
-            print "Cp = ",self.Cid()
-            print "e1 = ",self.e1
-            print "e2 = ",self.e2
-            print "e3 = ",self.e3
-            print "e13 = ",e13
-            print "e12 = ",e12
-            print "k = norm(e12)"
-            print "k   = ",self.k,'\n'
-            print "j = norm(cross(k,e13))"
-            print "j   = ",self.j
+            print("---InvalidUnitVectorError---")
+            print("Cp = ",self.Cid())
+            print("e1 = ",self.e1)
+            print("e2 = ",self.e2)
+            print("e3 = ",self.e3)
+            print("e13 = ",e13)
+            print("e12 = ",e12)
+            print("k = norm(e12)")
+            print("k   = ",self.k,'\n')
+            print("j = norm(cross(k,e13))")
+            print("j   = ",self.j)
             raise
         
         if debug:
-            print "Cp = ",self.Cid()
-            print "e1 = ",self.e1
-            print "e2 = ",self.e2
-            print "e3 = ",self.e3
+            print("Cp = ",self.Cid())
+            print("e1 = ",self.e1)
+            print("e2 = ",self.e2)
+            print("e3 = ",self.e3)
             print '-----'
-            print "e13 = ",e13
-            print "e12 = ",e12
+            print("e13 = ",e13)
+            print("e12 = ",e12)
             print '-----'
-            print "i   = ",self.i
-            print "j   = ",self.j
-            print "k   = ",self.k,'\n'
+            print("i   = ",self.i)
+            print("j   = ",self.j)
+            print("k   = ",self.k,'\n')
             print '-----'
         
 
@@ -432,16 +432,16 @@ class Cord2x(Coord):
         p3 = p2+self.e1
         
         if debug:
-            print "Cp = ",self.Cid()
-            print "gx = ",gx
-            print "gy = ",gy
-            print "gz = ",gz
-            print "p = ",ListPrint(p)
-            print "matrix = \n",matrix
-            print "e1 = ",ListPrint(self.e1)
-            print "p2 = ",ListPrint(p2)
-            print '------------------------'
-            print "p3 = %s\n" %(ListPrint(p3))
+            print("Cp = ",self.Cid())
+            print("gx = ",gx)
+            print("gy = ",gy)
+            print("gz = ",gz)
+            print("p = ",ListPrint(p))
+            print("matrix = \n",matrix)
+            print("e1 = ",ListPrint(self.e1))
+            print("p2 = ",ListPrint(p2))
+            print('------------------------')
+            print("p3 = %s\n" %(ListPrint(p3)))
         
         #print str(self)
         if isinstance(self.rid, int):
