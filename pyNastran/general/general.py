@@ -3,6 +3,17 @@ import os
 from numpy import matrix
 from types import NoneType
 
+def printBadPath(path):
+    msg = ''
+    fullpath = os.path.abspath(path)
+    while fullpath:
+        if os.path.exists(fullpath):
+            msg += 'passed:  %s\n' %(fullpath)
+        else:
+            msg += 'failed:  %s\n' %(fullpath)
+        fullpath = os.path.dirname(fullpath)
+    return msg
+
 def getFilesOfType(dirname,extension='.txt',maxSize=100.):
     """
     gets all the files in the specified directory with a given extension

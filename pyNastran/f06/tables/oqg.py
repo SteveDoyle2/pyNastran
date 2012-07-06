@@ -14,13 +14,16 @@ class OQG(object):
 
         data = self.readTable([int,str,float,float,float,float,float,float])
 
-        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':3,
-                    'sortCode':0,'sortBits':[0,0,0],'numWide':8,'tableName':'OQG',}
+        dataCode = {'log':self.log, 'analysisCode':analysisCode,
+                    'deviceCode':1, 'tableCode':3, 'sortCode':0,
+                    'sortBits':[0,0,0], 'numWide':8, 'tableName':'OQG',
+                    'nonlinearFactor':dt, }
 
         if iSubcase in self.spcForces:
             self.spcForces[iSubcase].addF06Data(data,transient)
         else:
-            spc = spcForcesObject(dataCode,iSubcase)
+            isSort1 = True
+            spc = spcForcesObject(dataCode,isSort1,iSubcase)
             spc.addF06Data(data,transient)
             self.spcForces[iSubcase] = spc
         self.iSubcases.append(iSubcase)
@@ -32,13 +35,16 @@ class OQG(object):
 
         data = self.readTable([int,str,float,float,float,float,float,float])
 
-        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':39,
-                    'sortCode':0,'sortBits':[0,0,0],'numWide':8,'tableName':'OQG',}
+        dataCode = {'log':self.log, 'analysisCode':analysisCode,
+                    'deviceCode':1,'tableCode':39,
+                    'sortCode':0, 'sortBits':[0,0,0], 'numWide':8,
+                    'tableName':'OQG', 'nonlinearFactor':dt, }
 
         if iSubcase in self.mpcForces:
             self.mpcForces[iSubcase].addF06Data(data,transient)
         else:
-            mpc = mpcForcesObject(dataCode,iSubcase)
+            isSort1 = True
+            mpc = mpcForcesObject(dataCode,isSort1,iSubcase)
             mpc.addF06Data(data,transient)
             self.mpcForces[iSubcase] = mpc
         self.iSubcases.append(iSubcase)

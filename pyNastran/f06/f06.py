@@ -1,29 +1,37 @@
-from pyNastran.general.general import printBadPath
+import os
 import sys
 
+from pyNastran.general.general import printBadPath
+
+#RealEigenvalues,ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
 from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
-from pyNastran.f06.tables.oes import *  # OES
-from pyNastran.f06.tables.oug import *  # OUG
-from pyNastran.f06.tables.oqg import *  # OUG
-from pyNastran.f06.f06_classes import * # classes not in op2
+from pyNastran.f06.tables.oes import OES  # OES
+from pyNastran.f06.tables.oug import OUG  # OUG
+from pyNastran.f06.tables.oqg import OQG  # OUG
+from pyNastran.f06.f06_classes import MaxDisplacement # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
 class EndOfFileError(Exception):
     pass
 
 class F06(OES,OUG,OQG,F06Writer):
-    def __init__(self,f06FileName,debug=False,log=None):
+    def __init__(self, f06FileName, debug=False, log=None):
         """
         Initializes the F06 object
-        @param f06FileName the file to be parsed
-        @param makeGeom    reads the BDF tables (default=False)
-        @param debug       prints data about how the F06 was parsed (default=False)
-        @param log         a logging object to write debug messages to (@see import logging)
+        @param f06FileName
+          the file to be parsed
+        @param makeGeom
+          reads the BDF tables (default=False)
+        @param debug
+          prints data about how the F06 was parsed (default=False)
+        @param log
+          a logging object to write debug messages to (@see import logging)
         """
         self.f06FileName = f06FileName
         if not os.path.exists(self.f06FileName):
-            raise RuntimeError('cant find F06FileName=|%s|\n%s' %(self.f06FileName,printBadPath(self.f06FileName)))
-        self.infile = open(self.f06FileName,'r')
+            msg = 'cant find F06FileName=|%s|\n%s' %(self.f06FileName,printBadPath(self.f06FileName))
+            raise RuntimeError(msg)
+        self.infile = open(self.f06FileName, 'r')
         self.__initAlt__(debug,log)
 
         self.lineMarkerMap = {
@@ -104,8 +112,53 @@ class F06(OES,OUG,OQG,F06Writer):
         self.displacementsNO  = {}        # random
         self.scaledDisplacements = {}     # tCode=1 thermal=8
 
+        #-----------------------------------
+        self.velocities = {}
+        self.accelerations = {}
         self.eigenvalues = {}
         self.eigenvectors = {}
+        
+        self.thermalLoadVectors = {}
+        self.forceVectors = {}
+        self.barForces = {}
+
+        self.beamForces = {}
+        self.springForces = {}
+        self.damperForces = {}
+        self.solidPressureForces = {}
+        
+        self.rodStrain = {}
+        self.nonlinearRodStress = {}
+        self.barStrain = {}
+        self.plateStrain = {}
+        self.nonlinearPlateStrain = {}
+        self.compositePlateStrain = {}
+        self.solidStrain = {}
+        self.beamStrain = {}
+        self.ctriaxStrain = {}
+        self.hyperelasticPlateStress = {}
+
+        self.rodStress = {}
+        self.nonlinearRodStrain = {}
+        self.barStress = {}
+        self.plateStress = {}
+        self.nonlinearPlateStress = {}
+        self.compositePlateStress = {}
+        self.solidStress = {}
+        self.beamStress = {}
+        self.ctriaxStress = {}
+        self.hyperelasticPlateStrain = {}
+        
+        
+        # beam, shear...not done
+        self.shearStrain = {}
+        self.shearStress = {}
+        
+        
+        self.gridPointStresses = {}
+        self.gridPointVolumeStresses = {}
+        self.gridPointForces = {}
+        #-----------------------------------
 
         self.iSubcases = []
         self.temperatureGrad = {}
