@@ -1,24 +1,26 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+
 from pyNastran.bdf.cards.baseCard import Property
 
 class PointProperty(Property):
     type = 'PointProperty'
-    def __init__(self,card,data):
-        Property.__init__(self,card,data)
-        pass
-    def crossReference(self,MODEL):
+    def __init__(self, card, data):
+        Property.__init__(self, card, data)
+
+    def crossReference(self, model):
         pass
 
 class NSM(PointProperty):
     """
     Defines a set of non structural mass.
     """
-    ## Set points to either Property entries or Element entries. Properties are:
+    ## Set points to either Property entries or Element entries.
+    ## Properties are:
     validProperties = [
-        'PSHELL', 'PCOMP', 'PBAR',  'PBARL', 'PBEAM',  'PBEAML', 'PBCOMP', 'PROD',
-        'CONROD', 'PBEND', 'PSHEAR','PTUBE', 'PCONEAX','PRAC2D']
-    def __init__(self,card=None,nOffset=0,data=None):
-        PointProperty.__init__(self,card,data)
+        'PSHELL', 'PCOMP', 'PBAR',  'PBARL', 'PBEAM',  'PBEAML', 'PBCOMP',
+        'PROD', 'CONROD', 'PBEND', 'PSHEAR','PTUBE', 'PCONEAX','PRAC2D']
+    def __init__(self, card=None, nOffset=0, data=None):
+        PointProperty.__init__(self, card, data)
         if card:
             nOffset *= 2
             self.sid   = card.field(1)
@@ -37,20 +39,20 @@ class NSM(PointProperty):
 
     def rawFields(self):
         #nodes = self.nodeIDs()
-        fields = ['NSM',self.sid,self.Type,self.id,self.value]
+        fields = ['NSM', self.sid, self.Type, self.id, self.value]
         return fields
 
     def reprFields(self):
         return self.rawFields()
 
 class PMASS(PointProperty):
-    def __init__(self,card=None,nOffset=0,data=None):
-        PointProperty.__init__(self,card,data)
+    def __init__(self, card=None, nOffset=0, data=None):
+        PointProperty.__init__(self, card, data)
         if card:
             nOffset *= 2
             ## Property ID
             self.pid  = card.field(1+nOffset)
-            self.mass = card.field(2+nOffset,0.)
+            self.mass = card.field(2+nOffset, 0.)
         else:
             self.pid = data[0]
             self.mass = data[1]
@@ -60,7 +62,7 @@ class PMASS(PointProperty):
         return self.mass
 
     def rawFields(self):
-        fields = ['PMASS',self.pid,self.mass]
+        fields = ['PMASS', self.pid, self.mass]
         return fields
 
     def reprFields(self):

@@ -491,9 +491,18 @@ class writeMesh(object):
 
     def writeSets(self):
         msg = ''
-        if self.sets or self.setsSuper:
+        if (self.sets or self.setsSuper or self.asets or self.bsets or
+            self.csets or self.qsets):
             msg += '$SETS\n'
             for (ID, setObj) in sorted(self.sets.iteritems()):
+                msg += str(setObj)
+            for (setObj) in sorted(self.asets):
+                msg += str(setObj)
+            for (setObj) in sorted(self.bsets):
+                msg += str(setObj)
+            for (setObj) in sorted(self.csets):
+                msg += str(setObj)
+            for (setObj) in sorted(self.qsets):
                 msg += str(setObj)
             for (ID, setObj) in sorted(self.setsSuper.iteritems()):
                 msg += str(setObj)

@@ -243,192 +243,198 @@ class LineProperty(Property):
         @param dim a list of the dimensions associated with self.Type
         @retval Area of the given cross section
         """
-        if   self.Type=='ROD':  A=pi*dim[0]**2
-        elif self.Type=='TUBE': A=pi*(dim[0]**2-dim[1]**2)
-        elif self.Type=='I':
-            h1 = dim[5]
-            w1 = dim[2]
-
-            h3 = dim[4]
-            w3 = dim[1]
-
-            h2 = dim[0]-h1-h3
-            w2 = dim[3]
-            A = h1*w1+h2*w2+h3*w3
-        elif self.Type=='CHAN':
-            h1 = dim[3]
-            w1 = dim[0]
-
-            h3 = h1
-            w3 = w1
-            h2 = dim[1]-h1-h3
-            w2 = dim[2]
-            A = h1*w1+h2*w2+h3*w3
-        elif self.Type=='T':
-            h1 = dim[2]
-            w1 = dim[0]
-
-            h2 = dim[1]-h1
-            w2 = dim[3]
-            A = h1*w1+h2*w2
-        elif self.Type=='BOX':
-            h1 = dim[2]
-            w1 = dim[0]
-
-            h2 = dim[1]-2*h1
-            w2 = dim[3]
-            A = 2*(h1*w1+h2*w2)
-        elif self.Type=='BAR':
-            h1 = dim[1]
-            w1 = dim[0]
-            A = h1*w1
-        elif self.Type=='CROSS':
-            h1 = dim[2]
-            w1 = dim[1]
-
-            h2 = dim[3]
-            w2 = dim[0]
-            A = h1*w1+h2*w2
-        elif self.Type=='H':
-            h1 = dim[2]
-            w1 = dim[1]
-
-            h2 = dim[3]
-            w2 = dim[0]
-            A = h1*w1+h2*w2
-        elif self.Type=='T1':
-            h1 = dim[0]
-            w1 = dim[2]
-
-            h2 = dim[3]
-            w2 = dim[1]
-            A = h1*w1+h2*w2
-        elif self.Type=='I1':
-            h2 = dim[2]
-            w2 = dim[1]
-
-            h1 = dim[3]-h2
-            w1 = dim[0]+w2
-            A = h1*w1+h2*w2
-        elif self.Type=='CHAN1':
-            h2 = dim[2]
-            w2 = dim[1]
-
-            h1 = dim[3]-h2
-            w1 = dim[0]+w2
-            A = h1*w1+h2*w2
-        elif self.Type=='Z':
-            h2 = dim[2]
-            w2 = dim[1]
-
-            h1 = dim[3]-h2
-            w1 = dim[0]
-            A = h1*w1+h2*w2
-        elif self.Type=='CHAN2':
-            h2 = dim[1]
-            w2 = dim[3]
-
-            h1 = dim[2]-h2
-            w1 = dim[0]*2
-            A = h1*w1+h2*w2
-
-        elif self.Type=='T2':
-            h1 = dim[3]
-            w1 = dim[1]
-
-            h2 = h1-dim[2]
-            w2 = dim[0]
-            A = h1*w1+h2*w2
-        elif self.Type=='BOX1':
-            h1 = dim[2]  # top
-            w1 = dim[0]
-            
-            h2 = dim[3] # btm
-            A1 = (h1+h2)*w1
-            
-            h3 = dim[1]-h1-h2  # left
-            w3 = dim[5]
-            
-            w4 = dim[4] # right
-            A2 = h3*(w3+w4)
-            A  = A1+A2
-        elif self.Type=='HEXA':
-            hBox = dim[2]
-            wBox = dim[1]
-
-            wTri = dim[0]
-            A = hBox*wBox - wTri*hBox
-        elif self.Type=='HAT':
-            w  = dim[1]      # constant width (note h is sometimes w)
-            h1 = w           # horizontal lower bar
-            w1 = dim[3]
-            
-            h2 = dim[0]-2*w  # vertical bar
-            w2 = w
-            
-            h3 = w           # half of top bar
-            w3 = dim[2]/2.
-            
-            A = 2*(h1*w1+h2*w2+h3*w3)  # symmetrical box
-        elif self.Type=='HAT1':
-            w = dim[3]
-            
-            h0 = dim[4]         # btm bar
-            w0 = dim[0]/2.
-
-            h2 = dim[1]-h0-2*w  # vertical bar
-            w2 = w
-
-            h3 = w              # top bar
-            w3 = dim[2]/2.
-
-            h1 = w              # upper, horizontal lower bar (see HAT)
-            w1 = w0-w3
-            
-            A = 2*(h0*w0+h1*w1+h2*w2+h3*w3)
-            
-        elif self.Type=='DBOX':
-            #
-            #  |--2------5----
-            #  |     |       |
-            #  1     3       6
-            #  |     |       |
-            #  |--4--|---7---|
-            #
-            
-            #0,1,2,6,11
-            #1,2,3,7,12
-            
-            hTotal = dim[11]
-            wTotal = dim[0]
-
-            h2 = dim[6]
-            w2 = dim[3]
-
-            h4 = dim[7]
-            w4 = w2
-
-            h1 = hTotal-h2-h4
-            w1 = dim[3]
-            
-            h5 = dim[8]
-            w5 = wTotal-w2
-
-            h7 = dim[9]
-            w7 = w5
-
-            h6 = hTotal-h5-h7
-            w6 = dim[5]
-
-            h3 = (h1+h6)/2.
-            w3 = dim[4]
-            
-            A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7
-        else:
-            msg = 'Type=%s is not supported for %s class...' %(self.Type,
-                                                               self.type)
-            raise NotImplementedError(msg)
-            
+        try:
+            if   self.Type=='ROD':  A=pi*dim[0]**2
+            elif self.Type=='TUBE': A=pi*(dim[0]**2-dim[1]**2)
+            elif self.Type=='I':
+                h1 = dim[5]
+                w1 = dim[2]
+    
+                h3 = dim[4]
+                w3 = dim[1]
+    
+                h2 = dim[0]-h1-h3
+                w2 = dim[3]
+                A = h1*w1+h2*w2+h3*w3
+            elif self.Type=='CHAN':
+                h1 = dim[3]
+                w1 = dim[0]
+    
+                h3 = h1
+                w3 = w1
+                h2 = dim[1]-h1-h3
+                w2 = dim[2]
+                A = h1*w1+h2*w2+h3*w3
+            elif self.Type=='T':
+                h1 = dim[2]
+                w1 = dim[0]
+    
+                h2 = dim[1]-h1
+                w2 = dim[3]
+                A = h1*w1+h2*w2
+            elif self.Type=='BOX':
+                h1 = dim[2]
+                w1 = dim[0]
+    
+                h2 = dim[1]-2*h1
+                w2 = dim[3]
+                A = 2*(h1*w1+h2*w2)
+            elif self.Type=='BAR':
+                h1 = dim[1]
+                w1 = dim[0]
+                A = h1*w1
+            elif self.Type=='CROSS':
+                h1 = dim[2]
+                w1 = dim[1]
+    
+                h2 = dim[3]
+                w2 = dim[0]
+                A = h1*w1+h2*w2
+            elif self.Type=='H':
+                h1 = dim[2]
+                w1 = dim[1]
+    
+                h2 = dim[3]
+                w2 = dim[0]
+                A = h1*w1+h2*w2
+            elif self.Type=='T1':
+                h1 = dim[0]
+                w1 = dim[2]
+    
+                h2 = dim[3]
+                w2 = dim[1]
+                A = h1*w1+h2*w2
+            elif self.Type=='I1':
+                h2 = dim[2]
+                w2 = dim[1]
+    
+                h1 = dim[3]-h2
+                w1 = dim[0]+w2
+                A = h1*w1+h2*w2
+            elif self.Type=='CHAN1':
+                h2 = dim[2]
+                w2 = dim[1]
+    
+                h1 = dim[3]-h2
+                w1 = dim[0]+w2
+                A = h1*w1+h2*w2
+            elif self.Type=='Z':
+                h2 = dim[2]
+                w2 = dim[1]
+    
+                h1 = dim[3]-h2
+                w1 = dim[0]
+                A = h1*w1+h2*w2
+            elif self.Type=='CHAN2':
+                h2 = dim[1]
+                w2 = dim[3]
+    
+                h1 = dim[2]-h2
+                w1 = dim[0]*2
+                A = h1*w1+h2*w2
+    
+            elif self.Type=='T2':
+                h1 = dim[3]
+                w1 = dim[1]
+    
+                h2 = h1-dim[2]
+                w2 = dim[0]
+                A = h1*w1+h2*w2
+            elif self.Type=='BOX1':
+                h1 = dim[2]  # top
+                w1 = dim[0]
+                
+                h2 = dim[3] # btm
+                A1 = (h1+h2)*w1
+                
+                h3 = dim[1]-h1-h2  # left
+                w3 = dim[5]
+                
+                w4 = dim[4] # right
+                A2 = h3*(w3+w4)
+                A  = A1+A2
+            elif self.Type=='HEXA':
+                hBox = dim[2]
+                wBox = dim[1]
+    
+                wTri = dim[0]
+                A = hBox*wBox - wTri*hBox
+            elif self.Type=='HAT':
+                w  = dim[1]      # constant width (note h is sometimes w)
+                h1 = w           # horizontal lower bar
+                w1 = dim[3]
+                
+                h2 = dim[0]-2*w  # vertical bar
+                w2 = w
+                
+                h3 = w           # half of top bar
+                w3 = dim[2]/2.
+                
+                A = 2*(h1*w1+h2*w2+h3*w3)  # symmetrical box
+            elif self.Type=='HAT1':
+                w = dim[3]
+                
+                h0 = dim[4]         # btm bar
+                w0 = dim[0]/2.
+    
+                h2 = dim[1]-h0-2*w  # vertical bar
+                w2 = w
+    
+                h3 = w              # top bar
+                w3 = dim[2]/2.
+    
+                h1 = w              # upper, horizontal lower bar (see HAT)
+                w1 = w0-w3
+                
+                A = 2*(h0*w0+h1*w1+h2*w2+h3*w3)
+                
+            elif self.Type=='DBOX':
+                #
+                #  |--2------5----
+                #  |     |       |
+                #  1     3       6
+                #  |     |       |
+                #  |--4--|---7---|
+                #
+                
+                #0,1,2,6,11
+                #1,2,3,7,12
+                
+                hTotal = dim[11]
+                wTotal = dim[0]
+    
+                h2 = dim[6]
+                w2 = dim[3]
+    
+                h4 = dim[7]
+                w4 = w2
+    
+                h1 = hTotal-h2-h4
+                w1 = dim[3]
+                
+                h5 = dim[8]
+                w5 = wTotal-w2
+    
+                h7 = dim[9]
+                w7 = w5
+    
+                h6 = hTotal-h5-h7
+                w6 = dim[5]
+    
+                h3 = (h1+h6)/2.
+                w3 = dim[4]
+                
+                A = h1*w1 +h2*w2 +h3*w3 +h4*w4 +h5*w5 +h6*w6 +h7*w7
+            else:
+                msg = 'Type=%s is not supported for %s class...' %(self.Type,
+                                                                   self.type)
+                raise NotImplementedError(msg)
+        except IndexError as e:
+            msg = 'There was an error extracting fields'
+            msg += ' from a %s dim=%s for a %s' %(self.Type,dim,self.type)
+            msg += '-'*80+'\n'
+            msg += 'Traceback:\n%s' %(e.message)
+            raise IndexError(msg)
         return A
 
 class IntegratedLineProperty(LineProperty):
@@ -1155,7 +1161,7 @@ class PBEAML(IntegratedLineProperty):
             j = 0 # the dimension counter
             n = 0 # there is no SO or XXB for the first section (n=0)
             i = 9 # the index in the card
-            print "dimAll = ",dimAll,nDim,i
+            #print "dimAll = ",dimAll,nDim,i
             for ii,dim in enumerate(dimAll): ## ii is the counter starting from 9
                 if j<nDim: # the first block, n=0 ???
                     #print "*1"
@@ -1181,7 +1187,7 @@ class PBEAML(IntegratedLineProperty):
                     Dim = []
                     j=0
                 ###
-                print("i=%s ii=%s j=%s Dim=%s" %(i, ii, j, Dim))
+                #print("i=%s ii=%s j=%s Dim=%s" %(i, ii, j, Dim))
             ###
             if j<=nDim: # if the last field is blank
                 #print "DimB = ",Dim
@@ -1191,7 +1197,7 @@ class PBEAML(IntegratedLineProperty):
                     raise RuntimeError('nsm is a string...nsm=|%s|' %(self.nsm))
                 
             ###
-            print("nsm = %s" %(self.nsm))
+            #print("nsm = %s" %(self.nsm))
             #print self
             #sys.exit()
     

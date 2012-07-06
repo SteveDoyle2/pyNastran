@@ -1,26 +1,39 @@
-class BDF_SyntaxError(SyntaxError):
+class BDFSyntaxError(SyntaxError):
     pass
 
-class TabCharacterError(SyntaxError):
+class BDFRuntimeError(RuntimeError):
     pass
 
-class TabCommaCharacterError(SyntaxError):
+class BDFIOError(IOError):
     pass
 
-class ClosedBDFError(RuntimeError):
+
+#-------------------------------------------------------
+class BDF_SyntaxError(BDFSyntaxError):
     pass
 
-class MissingFileError(RuntimeError):
+class TabCharacterError(BDFSyntaxError):
     pass
 
-class ParamParseError(SyntaxError):
-    pass
-
-class InvalidSubcaseParseError(SyntaxError):
+class TabCommaCharacterError(BDFSyntaxError):
     pass
 
 #-------------------------------------------------------
-class CardParseError(SyntaxError):
+class ClosedBDFError(BDFIOError):
+    pass
+
+class MissingFileError(BDFIOError):
+    pass
+
+#-------------------------------------------------------
+class InvalidSubcaseParseError(BDFSyntaxError):
+    pass
+
+class CardParseError(BDFSyntaxError):
+    pass
+
+#-------------------------------------------------------
+class ParamParseError(CardParseError):
     pass
 
 class FloatScientificCardParseError(CardParseError):
@@ -34,22 +47,23 @@ class WhitespaceCardParseError(CardParseError):
 
 #-----------------------------------------------------
 
-class InvalidUnitVectorError(RuntimeError):
+class InvalidUnitVectorError(BDFRuntimeError):
     pass
 
-class CardInstantiationError(RuntimeError):
+class CardInstantiationError(BDFRuntimeError):
     pass
 
 #-----------------------------------------------------
-class StiffnessMatrixError(RuntimeError):
+class StiffnessMatrixError(BDFRuntimeError):
     pass
 
-class InvalidRequestError(RuntimeError):
+class InvalidRequestError(BDFRuntimeError):
     pass
 
-class InvalidFieldError(RuntimeError):
+class InvalidFieldError(BDFRuntimeError):
     pass
 
+#-------------------------------------------------------
 class InvalidResultCode(NotImplementedError):
     pass
 

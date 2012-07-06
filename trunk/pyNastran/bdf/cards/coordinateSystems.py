@@ -4,8 +4,8 @@ from math import sqrt,degrees,radians,atan2,acos,sin,cos
 from numpy import array,cross,dot,transpose,zeros
 from numpy.linalg import norm
 
-from pyNastran.bdf.errors import InvalidUnitVectorError, BDF_Card
-from pyNastran.cards.baseCard import BaseCard
+from pyNastran.bdf.errors import InvalidUnitVectorError
+from pyNastran.bdf.cards.baseCard import BaseCard, BDF_Card
 from pyNastran.general.general import ListPrint
 
 class Coord(BaseCard):

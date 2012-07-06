@@ -4,23 +4,25 @@ import time
 from traceback import print_exc
 
 import pyNastran
-from pyNastran.op2.op2    import OP2,EndOfFileError
-from pyNastran.bdf.errors import *
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2    import OP2 #, EndOfFileError
+from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError, 
+                                 InvalidSubcaseParseError, InvalidFieldError,
+                                 MissingFileError)
+from pyNastran.op2.op2Errors import TapeCodeError
 
 def parseTableNamesFromF06(f06Name):
-   """gets the op2 names from the f06"""
-   infile = open(f06Name,'r')
-   marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
-   names = []
-   for line in infile:
-       if marker in line:
-           word = line.replace(marker,'').strip().strip('.')
-           names.append(word)
-       ###
-   ###
-   infile.close()
-   return names
+    """gets the op2 names from the f06"""
+    infile = open(f06Name,'r')
+    marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
+    names = []
+    for line in infile:
+        if marker in line:
+            word = line.replace(marker,'').strip().strip('.')
+            names.append(word)
+        ###
+    ###
+    infile.close()
+    return names
 
 def getFailedFiles(filename):
     infile = open(filename,'r')
@@ -105,7 +107,6 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=T
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
-        pass
         #op2.caseControlDeck.sol = op2.sol
         #print op2.caseControlDeck.getOp2Data()
         #print op2.printResults()
@@ -164,16 +165,14 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=T
     except MissingFileError: # missing bdf file
         isPassed = False
         raise
-    #except InvalidSubcaseParseError:
-    #    isPassed = True
-    #except ScientificParseError:  # bad value parsing
-    #    isPassed = True
-    #except ParamParseError:
-    #    isPassed = True
-    #except NotImplementedMethodError:
-    #    isPassed = True
-    #except InvalidFieldError: # bad bdf field
-    #    isPassed = True
+    except InvalidSubcaseParseError:
+        isPassed = True
+    except ScientificCardParseError:  # bad value parsing
+        isPassed = True
+    except ParamParseError:
+        isPassed = True
+    except InvalidFieldError: # bad bdf field
+        isPassed = True
     except:
         #print e
         print_exc(file=sys.stdout)
