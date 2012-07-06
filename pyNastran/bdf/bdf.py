@@ -63,7 +63,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh, cardMethods,
         'GRID','GRDSET','SPOINT', #'RINGAX',
 
         # elements
-        'CONM1','CONM2','CMASS1','CMASS2','CMASS3','CMASS4',
+        'CONM2','CMASS1','CMASS2','CMASS3','CMASS4', # 'CONM1',
         'CELAS1','CELAS2','CELAS3','CELAS4',#'CELAS5',
         'CBUSH','CBUSH1D','CBUSH2D',
         
@@ -147,8 +147,8 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh, cardMethods,
         'DVMREL1','DLINK','DRESP3',
         
         # sets
-        'ASET', 'BSET', 'CSET', 'QSET', 
-        'ASET1','BSET1','CSET1','QSET1',
+        'ASET', 'BSET', 'CSET', 'QSET', #'USET',
+        'ASET1','BSET1','CSET1','QSET1', #'USET1',
         'SET1','SET3',
         
         # super-element sets
@@ -371,6 +371,10 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh, cardMethods,
         
         ## SETx
         self.sets = {}
+        self.asets = []
+        self.bsets = []
+        self.csets = []
+        self.qsets = []
         ## SESETx
         self.setsSuper = {}
         ## tables
@@ -677,7 +681,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh, cardMethods,
                 #print "^&*2",nextLine
 
             #print "include lines = |%s|" %(includeLines)
-            filename = self.getIncludeFileName(includeLines,'INCLUDE')
+            filename = self.getIncludeFileName(includeLines)
 
             self.addIncludeFile(filename)
             #self.openFile(filename)
@@ -1214,7 +1218,6 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh, cardMethods,
             #    prop = PBUSHT(cardObj)
             #    self.addProperty(prop)
             elif cardName=='PBUSH':
-                print("***",cardObj.field(0))
                 prop = PBUSH(cardObj)
                 self.addProperty(prop)
             elif cardName=='PFAST':
@@ -1576,29 +1579,35 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh, cardMethods,
             # SETx
             elif cardName=='ASET':
                 setObj = ASET(cardObj)
-                self.addSet(setObj)
+                self.addASet(setObj)
             elif cardName=='BSET':
                 setObj = BSET(cardObj)
-                self.addSet(setObj)
+                self.addBSet(setObj)
             elif cardName=='CSET':
                 setObj = CSET(cardObj)
-                self.addSet(setObj)
+                self.addCSet(setObj)
             elif cardName=='QSET':
                 setObj = QSET(cardObj)
-                self.addSet(setObj)
+                self.addQSet(setObj)
             elif cardName=='ASET1':
                 setObj = ASET1(cardObj)
-                self.addSet(setObj)
+                self.addASet(setObj)
             elif cardName=='BSET1':
                 setObj = BSET1(cardObj)
-                self.addSet(setObj)
+                self.addBSet(setObj)
             elif cardName=='CSET1':
                 setObj = CSET1(cardObj)
-                self.addSet(setObj)
+                self.addCSet(setObj)
             elif cardName=='QSET1':
                 setObj = QSET1(cardObj)
-                self.addSet(setObj)
+                self.addQSet(setObj)
 
+            #elif cardName=='USET':
+            #    setObj = USET(cardObj)
+            #    self.addSet(setObj)
+            #elif cardName=='USET1':
+            #    setObj = USET1(cardObj)
+            #    self.addSet(setObj)
             elif cardName=='SET1':
                 setObj = SET1(cardObj)
                 self.addSet(setObj)

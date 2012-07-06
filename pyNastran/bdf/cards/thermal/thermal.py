@@ -513,11 +513,11 @@ class QBDY1(ThermalLoad):
     """
     type = 'QBDY1'
     def __init__(self,card=None,data=None):
-        ThermalLoad.__init__(self,card,data)  # self.sid
+        ThermalLoad.__init__(self,card,data)
         
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.lid = card.field(1)
 
             ## Heat flux into element (FLOAT)
             self.qFlux = card.field(2)
@@ -542,12 +542,12 @@ class QBDY1(ThermalLoad):
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = ['QBDY1',self.qFlux,self.sid]+list(self.eids)+[self.qFlux]
+        fields = ['QBDY1', self.qFlux, self.lid]+list(self.eids)+[self.qFlux]
         return fields
 
     def reprFields(self):
         eids = self.collapseThruBy(self.eids)
-        fields = ['QBDY1',self.qFlux,self.sid]+list(eids)+[self.qFlux]
+        fields = ['QBDY1', self.qFlux, self.lid]+list(eids)+[self.qFlux]
         #print "FIELDS = ",fields
         return fields
 
@@ -561,13 +561,13 @@ class QBDY2(ThermalLoad): # not tested
 
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid   = card.field(1)
+            self.lid   = card.field(1)
             ## Identification number of an CHBDYj element. (Integer > 0)
             self.eid   = card.field(2)
             ## Heat flux at the i-th grid point on the referenced CHBDYj element. (Real or blank)
             self.qFlux = self.removeTrailingNones(card.fields(3))
         else:
-            self.sid = data[0]
+            self.lid = data[0]
             self.eid = data[1]
             self.qFlux = data[2]
         ###
@@ -584,7 +584,7 @@ class QBDY2(ThermalLoad): # not tested
         return len(self.qFlux)
 
     def rawFields(self):
-        fields = ['QBDY2',self.sid,self.Eid(),self.qFlux]
+        fields = ['QBDY2', self.lid, self.Eid(), self.qFlux]
         return fields
 
     def reprFields(self):
@@ -600,7 +600,7 @@ class QBDY3(ThermalLoad):
 
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.lid = card.field(1)
             ## Heat flux into element
             self.Q0      = card.field(2)
             ## Control point for thermal flux load. (Integer > 0; Default = 0)
@@ -609,7 +609,7 @@ class QBDY3(ThermalLoad):
             ## CHBDYj element identification numbers
             self.eids = self.expandThruBy(eids)
         else:
-            self.sid     = data[0]
+            self.lid     = data[0]
             self.Q0      = data[1]
             self.cntrlnd = data[2]
             self.eids    = list(data[3:])
@@ -633,14 +633,14 @@ class QBDY3(ThermalLoad):
     def rawFields(self):
         eids = self.Eids()
         eids.sort()
-        fields = ['QBDY3',self.sid,self.Q0,self.cntrlnd]+eids
+        fields = ['QBDY3', self.lid, self.Q0, self.cntrlnd]+eids
         return fields
 
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
         eids = self.collapseThruBy(self.Eids())
         eids.sort()
-        fields = ['QBDY3',self.sid,self.Q0,cntrlnd]+eids
+        fields = ['QBDY3',self.lid, self.Q0, cntrlnd]+eids
         return fields
 
 class QHBDY(ThermalLoad):
@@ -653,7 +653,7 @@ class QHBDY(ThermalLoad):
         
         if card:
             ## Load set identification number. (Integer > 0)
-            self.sid = card.field(1)
+            self.lid = card.field(1)
 
             self.flag = card.field(2)
             assert self.flag in ['POINT','LINE','REV','AREA3','AREA4','AREA6','AREA8']
@@ -668,7 +668,7 @@ class QHBDY(ThermalLoad):
             ## Grid point identification of connected grid points. (Integer > 0 or blank)
             self.grids = self.expandThruBy(self.grids)
         else:
-            self.sid   = data[0]
+            self.lid   = data[0]
             self.flag  = data[1]
             self.Q0    = data[2]
             self.af    = data[3]
@@ -679,7 +679,7 @@ class QHBDY(ThermalLoad):
     #    pass
 
     def rawFields(self):
-        fields = ['QHBDY',self.sid,self.flag,self.Q0,self.af]+self.grids
+        fields = ['QHBDY', self.lid, self.flag, self.Q0, self.af]+self.grids
         return fields
 
     def reprFields(self):

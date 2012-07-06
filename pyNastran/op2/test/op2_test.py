@@ -51,7 +51,7 @@ def getAllFiles(foldersFile,fileType):
     for line in lines:
         moveDir = os.path.join('r"'+line.strip()+'"')
         moveDir = line.strip()
-        if moveDir:
+        if moveDir and moveDir[0] != '#':
             print("moveDir = %s" %(moveDir))
             assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
             files2 += getFilesOfType(moveDir,fileType,maxSize=100.)
@@ -78,8 +78,8 @@ if __name__=='__main__':
     printResults = False
 
     deleteF06 = True
-    saveCases = False
-    regenerate = False
+    saveCases = True
+    regenerate = True
     stopOnFailure = False
     getSkipCards = False
 
@@ -111,8 +111,10 @@ if __name__=='__main__':
     except:
         pass
 
-    print("nFiles = %s" %(len(files))
-    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,printResults,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
+    print("nFiles = %s" %(len(files)))
+    runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,
+                   printResults,debug,saveCases,skipFiles,stopOnFailure,
+                   nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
     

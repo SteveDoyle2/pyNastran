@@ -143,6 +143,8 @@ TABLED1      310  LINEAR  LINEAR
               0.      1. 200000.      1.    ENDT
 $SETS
 SESET   0       1       THRU    10
+ASET1   3        1      THRU     8
+ASET1   3       10      THRU    16
 $REJECT_LINES
 PBEAML       100     200             BOX
       , 40., 50., 5., 5.
@@ -152,4 +154,10 @@ DEQATN  2       F(A,B)=B*A*A*A/12.0
 DSCREEN STRESS  -100.   100
 DSCREEN LAMA    -100.0
 INCLUDE 'testC.bdf'
+$BROKEN CARDS
+$pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
+$+pb1, spring, table, 205, , , , , , +pb2
+$+pb2, damper, table, 206
+$pbeaml	101	2		box
+$	6.0	1.0	0.1	0.1
 ENDDATA
