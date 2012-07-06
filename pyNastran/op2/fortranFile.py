@@ -5,7 +5,8 @@ import sys
 from struct import unpack,pack
 
 #pyNastran
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import (InvalidMarkerError, InvalidMarkersError,
+                                     ZeroBufferError, EndOfFileError)
 
 class FortranFile(object):
     def __init__(self):
@@ -37,7 +38,7 @@ class FortranFile(object):
         #print(self.printSection(60))
         #data = self.op2.read(12)
         ints = self.readFullIntBlock()
-        #print "header ints = %s" %(repr(ints))
+        #print("header ints = %s" %(repr(ints)))
         #self.n += 12*4
         
         if len(ints)==5:
@@ -57,6 +58,15 @@ class FortranFile(object):
             msg += "header ints=(%s) expected=%s\n" %(str(ints[0:5]),expected)
             msg += 'tableName=|%s|' %(self.tableName)
             raise InvalidMarkerError(msg)
+        
+        
+        #if ints[1]==2:  # buffer???
+        #    ints = self.readFullIntBlock()
+        #    print("bufferInts1=%s" %(ints))
+        #    ints = self.readFullIntBlock()
+        #    print("bufferInts2=%s" %(ints))
+        #print("marker=%s" %(ints[1]))
+            
         if debug and self.makeOp2Debug:
             self.op2Debug.write('[4,%s,4]\n' %(ints[1]))
         return ints[1]
@@ -212,23 +222,30 @@ class FortranFile(object):
         ints = unpack(dFormat,data[:nDoubles*8])
         return ints
     
-    def printBlock(self,data):
+    def printBlock(self,data,nMax=200):
         """
         prints a data set in int/float/double/string format to
         determine table info.  doesn't move cursor.
         @note this is a great function for debugging
         """
+        data2 = data
+        nData = len(data)
+        #if nData>nMax:
+            #print("oops!  too much data...limiting to %s bytes.  nData=%s" %(nMax,nData))
+            #data2 = data[:nMax]
+        
         msg = ''
         #raise Exception('disabled...')
-        ints    = self.getInts(data)
-        #longs   = self.getLongs(data)
-        floats  = self.getFloats(data)
-        #doubles = self.getDoubles(data)
-        strings = self.getStrings(data)
+        ints    = self.getInts(data2)
+        #longs   = self.getLongs(data2)
+        floats  = self.getFloats(data2)
+        #doubles = self.getDoubles(data2)
+        strings = self.getStrings(data2)
+        msg += "n       = %s\n" %(self.n)
         msg += "ints    = %s\n" %(str(ints))
         #msg += "longs  = %s\n" %(longs)
         msg += "floats  = %s\n" %(str(floats))
-        #msg += "doubles = %s\n" %(doubles)
+        #msg += "doubles = %s\n" %(str(doubles))
         msg += "strings = |%r|\n" %(strings)
         msg += "nWords  = %s\n" %(len(data)//4)
         #msg += "tell    = %s\n" %(self.op2.tell())
@@ -331,7 +348,7 @@ class FortranFile(object):
         #self.printSection(4)
         if self.makeOp2Debug:
             self.op2Debug.write('skipped\n')
-        data = self.op2.read(n)
+        self.op2.read(n)
         self.n+=n
 
     def getTableCode(self,expected=None,debug=True):
@@ -363,9 +380,14 @@ class FortranFile(object):
         marker [-3,1,0], (e.g. [4,2^16,4] <- the default BUFFSIZE), which make
         reading the marker more difficult.
         """
+        #print("markers = ",markers)
         foundMarkers = []
         for marker in markers:
             tableCode = self.readHeader(marker,debug)
+            #if tableCode==2:
+            #    tableCode = self.readHeader(marker,debug)
+
+            #print("tableCode=",tableCode)
             if tableCode==None:
                 return
             if marker!=tableCode:
@@ -475,8 +497,9 @@ class FortranFile(object):
 
         #nInts = len(data)//4
         nInts = len(data)//4
-        #print "**nInts = ",nInts
-        ints = unpack('i'*nInts,data)
+        #print("**nInts = ",nInts)
+        iFormat = str(nInts)+'i'
+        ints = unpack(iFormat,data)
         return [nValues]+list(ints)+[nValues]
 
     def readStringBlock(self,debug=True):
@@ -492,7 +515,7 @@ class FortranFile(object):
         #print "nLetters=%s word=|%s|" %(nLetters,word)
         if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' %(str(word)))
-        return word.decode()
+        return word#.decode()
 
     def readIntBlock(self):
         """
@@ -578,7 +601,7 @@ class FortranFile(object):
         self.log.debug("skippingTable |%s|" %(tableName))
         self.log.debug("self.n = %s" %(self.n))
 
-        self.readMarkers([-1,7],tableName)
+        self.readMarkers([-1, 7], tableName)
         
         dataPack = (4,1,4,  4,0,4,  4,0,4)  # marks the end of the table
         binaryData = pack('iiiiiiiii',*dataPack)

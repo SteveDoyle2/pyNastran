@@ -1,7 +1,7 @@
 from struct import pack
 from numpy import array,abs,angle
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
 
 class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0

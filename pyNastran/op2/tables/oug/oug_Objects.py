@@ -1,6 +1,6 @@
 import sys
 from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 #---------------------------------------------------------------------------------
 #class staticFluxObj(scalarObject): # approachCode=1, tableCode=3 - whatever the static version of this is...

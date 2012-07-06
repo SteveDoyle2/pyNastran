@@ -134,8 +134,8 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=T
     #    isPassed = True
     #except InvalidAnalysisCodeError:
     #    isPassed = True
-    except InvalidMarkerError:
-        isPassed = True
+    #except InvalidMarkerError:
+        #isPassed = True
 
     #except TabCharacterError:
     #    isPassed = True

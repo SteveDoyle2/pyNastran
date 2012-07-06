@@ -52,7 +52,7 @@ def getAllFiles(foldersFile,fileType):
         moveDir = os.path.join('r"'+line.strip()+'"')
         moveDir = line.strip()
         if moveDir:
-            print "moveDir = ",moveDir
+            print("moveDir = %s" %(moveDir))
             assert os.path.exists(moveDir),'%s doesnt exist' %(moveDir)
             files2 += getFilesOfType(moveDir,fileType,maxSize=100.)
         ###
@@ -111,7 +111,7 @@ if __name__=='__main__':
     except:
         pass
 
-    print "nFiles = ",len(files)
+    print("nFiles = %s" %(len(files))
     runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,printResults,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
