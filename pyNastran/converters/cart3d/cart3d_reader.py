@@ -2,7 +2,7 @@ import os
 import sys
 from math import ceil,sqrt
 from numpy import array
-from pyNastran.general.general import ListPrint
+#from pyNastran.general.general import ListPrint
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.general.general import is_binary
@@ -168,7 +168,7 @@ class Cart3DAsciiReader(object):
         return (nodes,elements,regions,Cp)
 
     def makeMirrorModel(self,nodes,elements,regions,loads):
-        nNodesStart = len(nodes)
+        #nNodesStart = len(nodes)
 
         self.log.info('---starting makeMirrorModel---')
         for (iNode,node) in sorted(nodes.items()):
@@ -202,7 +202,7 @@ class Cart3DAsciiReader(object):
         iElementCounter = 1
         
         NodeOldToNew    = {}
-        ElementOldToNew = {}
+        #ElementOldToNew = {}
         nodes2    = {}
         elements2 = {}
         regions2  = {}
@@ -228,10 +228,10 @@ class Cart3DAsciiReader(object):
         self.log.info("---writing cart3d file...|%s|---" %(outfilename))
         f = open(outfilename,'wb')
 
-        msg = self.writeHeader(f,points,elements)
-        msg = self.writePoints(f,points)
-        msg = self.writeElements(f,points,elements)
-        msg = self.writeRegions(f,regions)
+        self.writeHeader(f,points,elements)
+        self.writePoints(f,points)
+        self.writeElements(f,points,elements)
+        self.writeRegions(f,regions)
         f.close()
 
     def writeRegions(self,f,regions):
@@ -393,7 +393,7 @@ class Cart3DAsciiReader(object):
         return regions
     
     def getLoads(self,outputs):   ## TODO:  outputs isnt used...
-        loads = readResults(self,i,self.infile)
+        loads = self.readResults(self,i,self.infile)
         #Cp = [0.1]*self.nElements ## TODO:  Cp is hardcoded to 0.1
         loads = {'Cp':Cp,'rho':[],'U':[],'V':[],'W':[],'pressure':[]}
         raise Exception('DEPRECIATED...')
@@ -592,7 +592,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
                 node = [x,y,z]
-                assert n not in nodes,'nid=%s in nodes' %(nid)
+                assert n not in nodes,'nid=%s in nodes' %(n)
                 nodes[n] = node
                 n-=1
                 np+=1
@@ -665,7 +665,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         #print "size = ",size
         #while size>0: # 4k is 1000 elements
         if size>0:
-            leftover = size-(nElements-ne)*12
+            #leftover = size-(nElements-ne)*12
             data = self.op2.read(size)
             #print "leftover=%s size//4=%s" %(leftover,size//4)
             Format = '>'+'i'*(size//4)
@@ -698,7 +698,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         
     def readRegions(self,nElements):
         #print "starting Regions"
-        isBuffered = True
+        #isBuffered = True
         size = nElements*4 # 12=3*4 all the elements
         Format = '>'+'i'*3000
 
@@ -723,7 +723,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         #print "size = ",size
 
         if size>0:
-            leftover = size-(nElements-nr)*4
+            #leftover = size-(nElements-nr)*4
             data = self.op2.read(size)
             #print "leftover=%s size//4=%s" %(leftover,size//4)
             Format = '>'+'i'*(size//4)
