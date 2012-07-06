@@ -68,8 +68,8 @@ class LaWGS_Panel(object):
             points2 = []
             for j in range(self.nCols):
                 points2.append(points[n])
-                jj = n%self.nCols
-                ii = n/self.nCols
+                #jj = n%self.nCols
+                #ii = n/self.nCols
                 #print "n=%-2s i=%-2s j=%-2s ii=%-2s jj=%-2s" %(n,i,j,ii,jj)
                 n+=1
             ###
@@ -122,7 +122,7 @@ class LaWGS_Panel(object):
         Points2 = copy.deepcopy(points)
         print "size(points) = (%s,%s)\n" %(len(points),len(points[0]))
         for i in range(self.nRows):
-            points2 = []
+            #points2 = []
             for j in range(self.nCols):
                 Points2[i][j] = scale*(dot(rot,points[i][j]) + translate)
             ###
@@ -132,7 +132,7 @@ class LaWGS_Panel(object):
     def getPoints(self):
         Points = []
         for i in range(self.nRows):
-            points2 = []
+            #points2 = []
             for j in range(self.nCols):
                 Points.append( self.Points[i][j] )
             ###
@@ -162,7 +162,7 @@ class LaWGS_Panel(object):
         Y = []
         Z = []
         for i in range(self.nRows):
-            points2 = []
+            #points2 = []
             for j in range(self.nCols):
                 (x,y,z) = self.Points[i][j]
                 X.append(x)

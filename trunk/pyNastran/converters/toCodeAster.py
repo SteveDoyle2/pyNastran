@@ -1,5 +1,5 @@
 
-from pyNastran.bdf.bdf import BDF,PBAR,PBARL,PBEAM,PBEAML
+from pyNastran.bdf.bdf import BDF,PBARL,PBEAML #PBAR,PBEAM,
 
 class CodeAsterConverter(BDF):
     """
@@ -103,6 +103,24 @@ class CodeAsterConverter(BDF):
             comm += '      ),\n',
 
             comm += "TITRE='My Title'\n"
+
+        if self.sol==101: #[K][U] = [F] #Kx=F
+            pass
+        elif self.sol==103: #[F] = [M][\ddot U] + [K][U] => U(s^2*M+K)=0  phi=det(M-lambda*K)
+            pass
+        elif self.sol==129: #[M][\ddot U] + [C][\dot U] + [K] [U] = [F] 
+            pass
+        
+        
+        k  = "#Calculate data for the stiffness Matrix\n"
+        k += "StiffMtx=CALC_MATR_ELEM( OPTION='RIGI_MECA',MODELE=ModelDef,CHAM_MATER=MtrlFld,);\n\n"
+        m  = "#Calculate data for the Mass Matrix\n"
+        m += "MassMtx=CALC_MATR_ELEM( OPTION='MASS_MECA',MODELE=ModelDef,CHAM_MATER=MtrlFld,);\n\n"
+
+        K  = "#Assign the Stiffness Matrix to the DOFs to be solved\n"
+        K += "K=ASSE_MATRICE(MATR_ELEM=StiffMtx,NUME_DDL=NDOFs,);\n\n"
+        M  = "#Assign the Mass Matrix to the DOFs to be solved\n"
+        M += "M=ASSE_MATRICE(MATR_ELEM=MassMtx,NUME_DDL=NDOFs,);\n"
         return comm
 
     def CA_Nodes(self,gridWord='grid'):
@@ -259,27 +277,27 @@ class CodeAsterConverter(BDF):
         #skippedLids = {}
         if self.loads:
             comm += '# LOADS\n'
-            loadKeys = self.loads.keys()
-            if 1:
-                key = self.caseControlDeck.getSubcaseParameter(iSubcase,paramName)[0]
-                loadcase = self.loads[key]
-                #print loadcase
-                for i,load in enumerate(loadcase):
-                    comm += '# main LOAD lid=%s type=%s\n' %(loadcase[i].lid,loadcase[i].__class__.__name__)
+            #loadKeys = self.loads.keys()
 
-                    #try:
-                    if 1: # LOAD card
-                        out = load.writeCodeAsterLoad(self,gridWord='N')
-                        if len(out)==3: # LOAD card
-                            (commi,loadIDs,loadTypes) = out
-                            comm += commi
-                        else: # FORCEx, MOMENTx, GRAV
-                            #skippedLids[(load.lid,load.type)] = out
-                            comm += out
-                    #except:
-                        #print 'failed printing load...type=%s key=%s' %(load.type,key)
-                        #raise
-                    ###
+            key = self.caseControlDeck.getSubcaseParameter(iSubcase,paramName)[0]
+            loadcase = self.loads[key]
+            #print loadcase
+            for i,load in enumerate(loadcase):
+                comm += '# main LOAD lid=%s type=%s\n' %(loadcase[i].lid,loadcase[i].__class__.__name__)
+
+                #try:
+                if 1: # LOAD card
+                    out = load.writeCodeAsterLoad(self,gridWord='N')
+                    if len(out)==3: # LOAD card
+                        (commi,loadIDs,loadTypes) = out
+                        comm += commi
+                    else: # FORCEx, MOMENTx, GRAV
+                        #skippedLids[(load.lid,load.type)] = out
+                        comm += out
+                #except:
+                    #print 'failed printing load...type=%s key=%s' %(load.type,key)
+                    #raise
+                ###
             #loadcase.
             #for ID,grav in sorted(self.gravs.iteritems()):
             #    comm += grav.writeCodeAster(mag)

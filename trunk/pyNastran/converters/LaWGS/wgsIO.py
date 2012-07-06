@@ -41,9 +41,9 @@ class LaWGS_IO(object):
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
-            fraction = 1./nNodes # so you can color the nodes by ID
+            fraction = 1./self.nNodes # so you can color the nodes by ID
             for nid,node in sorted(nodes.iteritems()):
-                points.InsertPoint(nid-1, *point)
+                points.InsertPoint(nid-1, *node)
                 self.gridResult.InsertNextValue(nid*fraction)
                 #print str(element)
 
