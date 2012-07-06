@@ -1,10 +1,10 @@
 import sys
 from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
-    def __init__(self,dataCode,isSort1,iSubcase,dt=None):
-        scalarObject.__init__(self,dataCode,iSubcase)
+    def __init__(self, dataCode, isSort1, iSubcase,dt=None):
+        scalarObject.__init__(self, dataCode, iSubcase)
         self.gridTypes    = {}
         self.temperatures = {}
         
@@ -18,7 +18,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.add = self.addSort2
         ###
 
-    def addF06Data(self,data,transient):
+    def addF06Data(self, data, transient):
         if transient is None:
             for line in data:
                 (gridID,gridType) = line[0:2]
@@ -88,7 +88,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.addNewTransient(dt)
         ###
 
-    def deleteTransient(self,dt):
+    def deleteTransient(self, dt):
         del self.temperatures[dt]
 
     def getTransients(self):
@@ -96,11 +96,11 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self, dt):
         """initializes the transient variables"""
         self.temperatures[dt] = {}
 
-    def add(self,dt,out):
+    def add(self, dt, out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out  # v2-v6 are 0
         assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         #assert nodeID not in self.temperatures

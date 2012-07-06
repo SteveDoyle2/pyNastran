@@ -6,7 +6,9 @@ from struct import unpack
 
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.op2.op2Codes import Op2Codes
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import (EndOfFileError, InvalidMarkersError,
+                                     InvalidKeywordError)
+
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 
@@ -76,6 +78,7 @@ class OP2(BDF,  # BDF methods
         bdfExtension = '.bdf'
         f06Extension = '.f06'
         (fname,extension) = os.path.splitext(op2FileName)
+        self.tableName = 'temp'
         
         #print "fname=%s ext=%s" %(fname,extension)
         
@@ -177,7 +180,10 @@ class OP2(BDF,  # BDF methods
         ## list of OP2 tables that were read
         ## mainly for debugging
         self.tableNames = []
+        
+        self.__objectsInit__()
 
+    def __objectsInit__(self):
         ## ESE
         self.eigenvalues = {}
 
@@ -305,6 +311,15 @@ class OP2(BDF,  # BDF methods
         ## OEE - strain energy density
         self.strainEnergy = {} # tCode=18
 
+    def readTapeCode2(self):
+        data =self.op2.read(28)
+        (f1,two,f2,f3,tableName,f4) = unpack('4i8si',data)
+        print("tableName = ",tableName)
+        #data = self.op2.read(16)
+        print(self.printSection(200))
+        
+        sys.exit('')
+
     def readTapeCode(self):
         """
         reads the OP2 header
@@ -313,7 +328,7 @@ class OP2(BDF,  # BDF methods
         #self.printSection(500)
         #sys.exit('op2-readTapeCode')
 
-        if 0:
+        if 0:  # param post 0
             marker = 0
             #print self.printSection(200)
             sys.exit('stopping in readTapeCode in op2.py')
@@ -416,152 +431,158 @@ class OP2(BDF,  # BDF methods
             except:
                 raise
             self.log.debug("tableName = |%r|" %(tableName))
-            #print "tableName = |%r|" %(tableName)
+            #print("tableName = |%r|" %(tableName))
+            
             if tableName==None:
                 break
-            elif tableName in self.tablesToRead:
-                self.tableName = tableName
-                self.isRegular = True
-                try:
-                    #print "startTell = ",self.op2.tell()
-                    if tableName=='GEOM1': # nodes,coords,etc.
-                        self.readTable_Geom1()
-                    elif tableName=='GEOM1S': # superelements - nodes,coords,etc.
-                        self.readTable_Geom1S()
-                    elif tableName=='GEOM2S': # superelements - elements
-                        self.readTable_Geom2S()
-                    elif tableName=='GEOM3S': # superelements - static/thermal loads
-                        self.readTable_Geom3S()
-                    elif tableName=='GEOM4S': # superelements - constraints
-                        self.readTable_Geom4S()
-
-                    #elif tableName=='GEOM1N':
-                    #    self.readTable_Geom1N()
-                    elif tableName=='GEOM2': # elements
-                        self.readTable_Geom2()
-                    elif tableName=='GEOM3': # static/thermal loads
-                        self.readTable_Geom3()
-                    elif tableName=='GEOM4': # constraints
-                        self.readTable_Geom4()
-
-                    elif tableName in ['EPT','EPTS']:  # element properties
-                        self.readTable_EPT()
-                    elif tableName in ['MPT','MPTS']:  # material properties
-                        self.readTable_MPTS()
-                    elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
-                        self.readTable_DYNAMICS()
-                    elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
-                        self.readTable_DIT()
-                    elif tableName in ['LAMA','BLAMA']: # eigenvalue
-                        self.readTable_LAMA()
-
-                    elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OGPWG',]:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OMM2']:
-                        self.readTable_OMM2()
-                    elif tableName in ['DESTAB']:  # design variable table
-                        self.readTable_DesTab()
-                    elif tableName in ['R1TABRG']: # not done - response table
-                        self.readTable_R1TAB()
-                        self.isOptimization = True
-                    elif tableName in ['HISADD']: # not done
-                        self.readTable_R1TAB()
-                        self.isOptimization = True
-                    elif tableName in ['ERRORN']: # not done
-                        self.readTable_R1TAB()
-
-                    elif tableName in ['OPG1','OPNL1','OGS1','OPGV1']: # table of applied loads
-                        self.readTable_OPG()
-                    elif tableName in ['OGPFB1',]:
-                        self.readTable_OGF()
-                    elif tableName in ['OCRUG','OCRPG']:  # totally guessing...
-                        self.readTable_OUG()
-
-
-                    elif tableName in ['OEF1X','DOEF1',  'OEFPSD2','OEFATO2','OEFRMS2','OEFNO2','OEFCRM2',]:  # applied loads
-                        self.readTable_OEF()
-                    elif tableName in ['OQG1','OQGV1','OQP1',]:  # spc forces
-                        self.readTable_OQG()
-                    elif tableName in ['OQMG1','OQMPSD2','OQMATO2','OQMRMS2','OQMNO2','OQMCRM2',]: # mpc forces
-                        #self.readTable_OQG()
-                        self.readTable_DUMMY_GEOM(tableName)
- 
-                    elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
-                        self.readTable_OUG()
-                    elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
-                        self.readTable_OUG()
-
-                    elif tableName in ['OES1','OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
-                        self.readTable_OES()  # 
-                    elif tableName in ['OSTR1X','OSTR1C',]: # strain
-                        self.readTable_OES()
-                    elif tableName in ['OESTRCP','OESNLXD','OESNLXR',]: # ??? stress/strain
-                        self.readTable_OES()
-                    elif tableName in ['OSTRATO2','OSTRPSD2','OESRMS2','OESNO2','OESCRM2','OSTRRMS2','OESRMS2','OSTRNO2','OESCRM2','OSTRCRM2',]: # unhandled
-                        self.readTable_OES()
-
-                    #elif tableName in ['OESNLXD',]: # dont use this, testing only
-                        #self.readTable_OES() # NLXD
-                    #elif tableName in ['OESNLXR',]: # dont use this
-                        #self.readTable_OES()  # NLXR
-                    
-                    elif tableName in ['ONRGY1']: # energy
-                        self.readTable_OEE()
-                    elif tableName in ['ONRGY2']:
-                        self.readTable_OEE()
-
-                    elif tableName in ['PCOMPTS']:
-                        self.readTable_PCOMPTS()
-                    elif tableName in ['SDF']: # ???
-                        self.readTable_SDF()
-                    #elif tableName in ['CASECC']:
-                        #self.readTable_CASECC()
-
-                    # not done
-                    elif tableName in []:
-                        self.readTableB_DUMMY()
-                    elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
-                        self.readTableB_DUMMY()
-                    #elif tableName in []:
-                    #    self.readTableB_DUMMY()
-
-                    elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OVGPSD2']:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OVGATO2','OVGRMS2','OVGNO2']:
-                        self.readTable_DUMMY_GEOM(tableName)
-
-                    elif tableName in ['OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2',]:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OVGCRM2','OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2','OPGPSD2','OPGPSD2','OPGPSD2','OPGATO2']:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','EDOM',]:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    elif tableName in ['BGPDT','BGPDTS','EDTS',]:
-                        self.readTable_DUMMY_GEOM(tableName)
-                    else:
-                        raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))
-                    #print "endTell   = ",self.op2.tell()
-                    #print "---isAnotherTable---"
-                    (isAnotherTable) = self.hasMoreTables()
-                    #isAnotherTable = True
-                except EndOfFileError:
-                    isAnotherTable = False
-                ###
             else:
-                if tableName not in [None]:
-                    assert 1==0,'%s is not supported' %(tableName)
-                (isAnotherTable) = self.skipNextTable()
-                continue
-            #print self.printSection(140)
-            self.log.debug("*** finished tableName = |%r|" %(tableName))
+                isAnotherTable = self.readTable(tableName)
             ###
-        ###
 
         self.log.debug("---end of all tables---")
         self.skippedCardsFile.close()
         
+    def readTable(self, tableName):
+        if tableName in self.tablesToRead:
+            self.tableName = tableName
+            self.isRegular = True
+            try:
+                #print("startTell = ",self.op2.tell())
+                if tableName=='GEOM1': # nodes,coords,etc.
+                    self.readTable_Geom1()
+                elif tableName=='GEOM1S': # superelements - nodes,coords,etc.
+                    self.readTable_Geom1S()
+                elif tableName=='GEOM2S': # superelements - elements
+                    self.readTable_Geom2S()
+                elif tableName=='GEOM3S': # superelements - static/thermal loads
+                    self.readTable_Geom3S()
+                elif tableName=='GEOM4S': # superelements - constraints
+                    self.readTable_Geom4S()
+
+                #elif tableName=='GEOM1N':
+                #    self.readTable_Geom1N()
+                elif tableName=='GEOM2': # elements
+                    self.readTable_Geom2()
+                elif tableName=='GEOM3': # static/thermal loads
+                    self.readTable_Geom3()
+                elif tableName=='GEOM4': # constraints
+                    self.readTable_Geom4()
+
+                elif tableName in ['EPT','EPTS']:  # element properties
+                    self.readTable_EPT()
+                elif tableName in ['MPT','MPTS']:  # material properties
+                    self.readTable_MPTS()
+                elif tableName in ['DYNAMIC','DYNAMICS']:  # dyanmic info
+                    self.readTable_DYNAMICS()
+                elif  tableName in ['DIT']:  # tables...TABLED1/TABLEM1/TABLES1/GUST
+                    self.readTable_DIT()
+                elif tableName in ['LAMA','BLAMA']: # eigenvalue
+                    self.readTable_LAMA()
+
+                elif tableName in ['VIEWTB','EQEXIN','EQEXINS','OEFIT','GEOM1N','OGPWG',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OMM2']:
+                    self.readTable_OMM2()
+                elif tableName in ['DESTAB']:  # design variable table
+                    self.readTable_DesTab()
+                elif tableName in ['R1TABRG']: # not done - response table
+                    self.readTable_R1TAB()
+                    self.isOptimization = True
+                elif tableName in ['HISADD']: # not done
+                    self.readTable_R1TAB()
+                    self.isOptimization = True
+                elif tableName in ['ERRORN']: # not done
+                    self.readTable_R1TAB()
+
+                elif tableName in ['OPG1','OPNL1','OGS1','OPGV1']: # table of applied loads
+                    self.readTable_OPG()
+                elif tableName in ['OGPFB1',]:
+                    self.readTable_OGF()
+                elif tableName in ['OCRUG','OCRPG']:  # totally guessing...
+                    self.readTable_OUG()
+
+
+                elif tableName in ['OEF1X','DOEF1',  'OEFPSD2','OEFATO2','OEFRMS2','OEFNO2','OEFCRM2',]:  # applied loads
+                    self.readTable_OEF()
+                elif tableName in ['OQG1','OQGV1','OQP1',]:  # spc forces
+                    self.readTable_OQG()
+                elif tableName in ['OQMG1','OQMPSD2','OQMATO2','OQMRMS2','OQMNO2','OQMCRM2',]: # mpc forces
+                    #self.readTable_OQG()
+                    self.readTable_DUMMY_GEOM(tableName)
+ 
+                elif tableName in ['OUGV1','OUPV1']: # displacements/velocity/acceleration
+                    self.readTable_OUG()
+                elif tableName in ['OUGPSD2','OUGATO2','OUGRMS2','OUGNO2','OUGCRM2']: # OUG tables???
+                    self.readTable_OUG()
+
+                elif tableName in ['OES1','OES1X','OES1X1','OSTR1X','OES1C','OESCP','OESRT','OESNLXR','OESNL1X']: # stress
+                    self.readTable_OES()  # 
+                elif tableName in ['OSTR1X','OSTR1C',]: # strain
+                    self.readTable_OES()
+                elif tableName in ['OESTRCP','OESNLXD','OESNLXR',]: # ??? stress/strain
+                    self.readTable_OES()
+                elif tableName in ['OSTRATO2','OSTRPSD2','OESRMS2','OESNO2','OESCRM2','OSTRRMS2','OESRMS2','OSTRNO2','OESCRM2','OSTRCRM2',]: # unhandled
+                    self.readTable_OES()
+
+                #elif tableName in ['OESNLXD',]: # dont use this, testing only
+                    #self.readTable_OES() # NLXD
+                #elif tableName in ['OESNLXR',]: # dont use this
+                    #self.readTable_OES()  # NLXR
+                
+                elif tableName in ['ONRGY1']: # energy
+                    self.readTable_OEE()
+                elif tableName in ['ONRGY2']:
+                    self.readTable_OEE()
+
+                elif tableName in ['PCOMPTS']:
+                    self.readTable_PCOMPTS()
+                elif tableName in ['SDF']: # ???
+                    self.readTable_SDF()
+                #elif tableName in ['CASECC']:
+                    #self.readTable_CASECC()
+
+                # not done
+                elif tableName in []:
+                    self.readTableB_DUMMY()
+                elif tableName in ['MONITOR','PMRF','PERF','PFRF','AEMONPT','FOL','AFRF','AGRF',]:
+                    self.readTableB_DUMMY()
+                #elif tableName in []:
+                #    self.readTableB_DUMMY()
+
+                elif tableName in ['STDISP','FOL','OFMPF2M','OSMPF2M','OPMPF2M','OGPMPF2M','OLMPF2M','OVGPSD2']:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OVGATO2','OVGRMS2','OVGNO2']:
+                    self.readTable_DUMMY_GEOM(tableName)
+
+                elif tableName in ['OESNLXR','OESNL1X','OESPSD2','OESNLBR','OESATO2',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OVGCRM2','OAGPSD2','OAGATO2','OAGRMS2','OAGNO2','OAGCRM2','OPGPSD2','OPGPSD2','OPGPSD2','OPGATO2']:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OPGRMS2','OPGNO2','OPGCRM2','OQGPSD2',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['OQGPSD2','OQGATO2','OQGRMS2','OQGNO2','OQGCRM2','PVT0','CASECC','EDOM',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                elif tableName in ['BGPDT','BGPDTS','EDTS',]:
+                    self.readTable_DUMMY_GEOM(tableName)
+                else:
+                    raise InvalidKeywordError('unhandled tableName=|%s|' %(tableName))
+                #print("endTell   = ",self.op2.tell())
+                #print("---isAnotherTable---")
+                (isAnotherTable) = self.hasMoreTables()
+                #isAnotherTable = True
+            except EndOfFileError:
+                isAnotherTable = False
+            ###
+        else:
+            if tableName not in [None]:
+                assert 1==0,'%s is not supported' %(tableName)
+            (isAnotherTable) = self.skipNextTable()
+            #return isAnotherTable
+        #print(self.printSection(140))
+        self.log.debug("*** finished tableName = |%r|" %(tableName))
+        ###
+        return isAnotherTable
+
     def parseSortCode(self):
         """
         sortCode = 0 -> sortBits = [0,0,0]
@@ -579,15 +600,15 @@ class OP2(BDF,  # BDF methods
         
         sortCode = self.sortCode
         i=2
-        #print "***sortCode = ",self.sortCode
+        #print("***sortCode = ",self.sortCode)
         while sortCode>0:
             value = sortCode%2
             sortCode = (sortCode - value)//2
             bits[i] = value
-            #print "    *bit = ",value
-            #print "    sortCode = ",sortCode
+            #print("    *bit = ",value)
+            #print("    sortCode = ",sortCode)
             i-=1
-        #print "sortBits = ",bits
+        #print("sortBits = ",bits)
         ## the bytes describe the SORT information
         self.sortBits = bits
         
@@ -601,7 +622,7 @@ class OP2(BDF,  # BDF methods
         (aCode,tCode,int3,iSubcase) = unpack('iiii',data[:16])
         ## the local subcase ID
         self.iSubcase = iSubcase
-        #print "iSubcase = ",iSubcase
+        #print("iSubcase = ",iSubcase)
         self.subcases.add(self.iSubcase) # set notation
 
         ## the type of result being processed
@@ -632,10 +653,10 @@ class OP2(BDF,  # BDF methods
                          'dt'          : None,
                          'log'         : self.log,
                          }
-        #print "iSubcase = ",self.iSubcase
+        #print("iSubcase = ",self.iSubcase)
         self.parseSortCode()
 
-        #print "aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase)
+        #print("aCode(1)=%s analysisCode=%s deviceCode=%s tCode(2)=%s tableCode=%s sortCode=%s iSubcase(4)=%s" %(aCode,self.analysisCode,self.deviceCode,tCode,self.tableCode,self.sortCode,self.iSubcase))
         #self.log.debug(self.printTableCode(self.tableCode))
         return (int3)
 
@@ -652,10 +673,10 @@ class OP2(BDF,  # BDF methods
             this makes it work with what's documented in the DMAP manual
         """
         if iWordStop==None:
-            #print "iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4)
+            #print("iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4))
             ds = data[(iWordStart-1)*4:iWordStart*4]
             return unpack(sFormat,ds)[0]
-        #print "type(data) = ",type(data)
+        #print("type(data) = ",type(data))
         ds = data[(iWordStart-1)*4:(iWordStop-1)*4]
         return unpack(sFormat,ds)
         
@@ -668,13 +689,13 @@ class OP2(BDF,  # BDF methods
                    'data','numWide','nonlinearFactor','obj','subtitle','label']
         for param in params:
             if hasattr(self,param):
-                #print '%s = %s' %(param,getattr(self,param))
+                #print('%s = %s' %(param,getattr(self,param)))
                 delattr(self,param)
 
     def getBufferWords(self):
         bufferWords = self.getMarker()
-        #print "buffMarker = |%s|" %(bufferWords)
-        #print "bufferWords = ",bufferWords,bufferWords*4
+        #print("buffMarker = |%s|" %(bufferWords))
+        #print("bufferWords = ",bufferWords,bufferWords*4)
         if bufferWords <=0:
             raise BufferError('An invalid buffersize was found...bufferWords=%s tableName=%s section=\n%s' %(bufferWords,self.tableName,self.printSection(200)))
         return bufferWords
@@ -703,7 +724,7 @@ class OP2(BDF,  # BDF methods
         if self.iSubcase not in self.iSubcaseNameMap:
             self.iSubcaseNameMap[self.iSubcase] = [self.subtitle,self.label]
 
-    def tableInit(self,word):
+    def tableInit(self, word):
         """
         starts a new table
         """
@@ -712,6 +733,7 @@ class OP2(BDF,  # BDF methods
         ## the names of all the tables
         self.tableNames.append(word)
         msg = '*'*20+word+'*'*20+'\n'
+        #print(msg)
         if self.makeOp2Debug:
             self.op2Debug.write(msg)
 

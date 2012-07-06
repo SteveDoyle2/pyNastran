@@ -1,6 +1,6 @@
 import sys
 from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
+from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class gridPointForcesObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):

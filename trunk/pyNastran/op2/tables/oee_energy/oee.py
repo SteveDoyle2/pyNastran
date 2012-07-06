@@ -30,11 +30,13 @@ class OEE(object):
         data = self.getData(4*50)
         #print self.printBlock(data)
 
-        aCode = self.getBlockIntEntry(data,1)
+        aCode = self.getBlockIntEntry(data, 1)
         self.eTotal = self.parseApproachCode(data) # total energy of all elements in iSubcase/mode
-
+        print(self.printSection(100))
         elementName, = unpack('8s',data[24:32])
-        elementName = elementName.decode().strip() ## element name
+        print("elementName = " %(elementName))
+        elementName = elementName.decode()#.strip() ## element name
+        print("elementName = " %(elementName))
         if elementName.isalpha():
             self.dataCode['elementName'] = elementName
 
@@ -108,7 +110,7 @@ class OEE(object):
             self.readStrainEnergy_table18()
         else:
             #self.skipOES_Element()
-            print self.codeInformation()
+            print(self.codeInformation())
             raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OEE table' %(self.atfsCode,self.tableName))
         ###
         #print str(self.obj)
@@ -121,7 +123,7 @@ class OEE(object):
         elif self.numWide==5:
             self.OEE_Strain5()
         else:   
-            print self.codeInformation()
+            print(self.codeInformation())
             raise NotImplementedError()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 

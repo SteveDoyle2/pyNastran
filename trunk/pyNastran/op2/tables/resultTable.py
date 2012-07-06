@@ -97,8 +97,8 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         @note dt can also be loadStep depending on the class
         """
         if debug:
-            print "create Transient Object"
-            print "***NF = ",self.nonlinearFactor
+            print("create Transient Object")
+            print("***NF = %s" %(self.nonlinearFactor))
             #print "DC = ",self.dataCode
         
         if self.iSubcase in storageObj:

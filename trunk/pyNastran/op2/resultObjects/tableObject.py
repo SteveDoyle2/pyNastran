@@ -1,17 +1,20 @@
 import sys
 from struct import pack
-from numpy import array,sqrt,dot,abs,angle
+from numpy import array, sqrt, abs, angle # dot,
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
-#try:
-#    from pylab import xlabel,ylabel,show,grid,legend,plot,title
-#    import matplotlib.pyplot as plt
-#except ImportError:
-#    pass
+try:
+    from pylab import xlabel, ylabel, show, grid, legend, plot, title
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 class TableObject(scalarObject):  # displacement style table
     def __init__(self,dataCode,isSort1,iSubcase,dt):
+        self.nonlinearFactor = None
+        self.tableName = None
+        self.analysisCode = None
         scalarObject.__init__(self,dataCode,iSubcase)
         self.gridTypes    = {}
         self.translations = {}
@@ -86,7 +89,7 @@ class TableObject(scalarObject):  # displacement style table
         #self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
     ###
 
-    def add(self,dt,out):
+    def add(self, dt, out):
         (nodeID,gridType,v1,v2,v3,v4,v5,v6) = out
         msg = "nodeID=%s gridType=%s v1=%s v2=%s v3=%s" %(nodeID,gridType,v1,v2,v3)
         #print msg
@@ -267,14 +270,14 @@ class TableObject(scalarObject):  # displacement style table
         """
         name = displacements
         """
-        print "transient!!!!"
-        msg = []
+        print("transient!!!!")
+        #msg = []
 
         times = self.translations.keys()
         nodes = self.translations[times[0]].keys()
         times.sort()
         nodes.sort()
-        nNodes = len(nodes)
+        #nNodes = len(nodes)
         self.writeMatlabArgs(name,iSubcase,f)
         dtName = '%s' %(self.dataCode['name'])
         f.write('fem.%s(%i).nodes = %s;\n' %(name,iSubcase,nodes))
@@ -307,7 +310,7 @@ class TableObject(scalarObject):  # displacement style table
 
                 (dx,dy,dz) = translation
                 (rx,ry,rz) = rotation
-                vals = [dx,dy,dz,rx,ry,rz]
+                #vals = [dx,dy,dz,rx,ry,rz]
                 msgT += '[%s,%s,%s];' %(dx,dy,dz)
                 msgR += '[%s,%s,%s];' %(rx,ry,rz)
                 i+=1
@@ -510,6 +513,9 @@ class TableObject(scalarObject):  # displacement style table
         
 class complexTableObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt):
+        self.nonlinearFactor = None
+        self.tableName = None
+        self.analysisCode = None
         scalarObject.__init__(self,dataCode,iSubcase)
         self.gridTypes    = {}
         self.translations = {}
@@ -629,13 +635,12 @@ class complexTableObject(scalarObject):
         """
         name = displacements
         """
-        msg = []
-
+        #msg = []
         times = self.translations.keys()
         nodes = self.translations[times[0]].keys()
         times.sort()
         nodes.sort()
-        nNodes = len(nodes)
+        #nNodes = len(nodes)
         self.writeMatlabArgs(name,iSubcase,f)
         dtName = '%s' %(self.dataCode['name'])
         f.write('fem.%s(%i).nodes = %s;\n' %(name,iSubcase,nodes))

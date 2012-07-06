@@ -1,5 +1,5 @@
-from numpy import sin,cos,radians,abs,angle
-from math import radians
+from numpy import radians,abs,angle #,sin,cos
+#from math import radians
 from cmath import rect #polar
 
 def polarToRealImag(mag,phase):

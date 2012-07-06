@@ -1,8 +1,9 @@
 import sys
-import copy
+#import copy
 
 # pyNastran
-from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
+from pyNastran.op2.resultObjects.tableObject import (TableObject,
+                                                     complexTableObject)
 
 class displacementObject(TableObject): # approachCode=1, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):

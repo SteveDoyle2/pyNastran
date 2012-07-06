@@ -1,5 +1,5 @@
 from __future__ import print_function
-from numpy import array
+#from numpy import array
 from pyNastran.op2.op2Errors import *
 from pyNastran.op2.op2Codes import Op2Codes
 
@@ -201,14 +201,15 @@ class scalarObject(baseScalarObject):
     def printDataMembers(self):
         """
         Prints out the "unique" vals of the case.
-        Uses a provided list of dataCode['dataNames'] to set the values for each
-        subcase.  Then populates a list of self.name+'s' (by using setattr)
-        with the current value.  For example, if the variable name is 'mode', 
-        we make self.modes.  Then to extract the values, we build a list of of the
-        variables that were set like this and then loop over then to print their values.
+        Uses a provided list of dataCode['dataNames'] to set the values for
+        each subcase.  Then populates a list of self.name+'s' (by using 
+        setattr) with the current value.  For example, if the variable name is
+        'mode', we make self.modes.  Then to extract the values, we build a
+        list of of the variables that were set like this and then loop over
+        then to print their values.
         
-        This way there is no dependency on one result type having ['mode'] and another 
-        result type having ['mode','eigr','eigi'].
+        This way there is no dependency on one result type having ['mode'] and
+        another result type having ['mode','eigr','eigi'].
         """
         keyVals = []
         for name in self.dataCode['dataNames']:
