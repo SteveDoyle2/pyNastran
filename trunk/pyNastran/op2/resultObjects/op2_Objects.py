@@ -107,7 +107,8 @@ class baseScalarObject(Op2Codes):
 
 
 class scalarObject(baseScalarObject):
-    def __init__(self,dataCode,iSubcase):
+    def __init__(self, dataCode, iSubcase):
+        assert 'nonlinearFactor' in dataCode, dataCode
         baseScalarObject.__init__(self)
         self.iSubcase = iSubcase
         self.isTransient = False

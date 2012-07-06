@@ -24,15 +24,18 @@ class OUG(object):
         """
         (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
-        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':1,
-                    'sortCode':0,'sortBits':[0,0,0],'numWide':8,'tableName':'OUG',}
+        dataCode = {'log':self.log, 'analysisCode':analysisCode, 
+                    'deviceCode':1, 'tableCode':1,
+                    'sortCode':0, 'sortBits':[0,0,0], 'numWide':8,
+                    'tableName':'OUG', 'nonlinearFactor': dt}
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
 
         if iSubcase in self.displacements:
             self.displacements[iSubcase].addF06Data(data,transient)
         else:
-            disp = displacementObject(dataCode,iSubcase)
+            isSort1 = True
+            disp = displacementObject(dataCode,isSort1,iSubcase)
             disp.addF06Data(data,transient)
             self.displacements[iSubcase] = disp
         self.iSubcases.append(iSubcase)
@@ -59,10 +62,10 @@ class OUG(object):
         headers = self.skip(3)
         data = []
 
-        dataCode = {'log':self.log,'analysisCode':5,'deviceCode':1,'tableCode':1,'sortCode':2,
-                    'sortBits':[0,1,1],'numWide':14,
-                    'formatCode':3,
-                    'tableName':'OUGV1',
+        dataCode = {'log':self.log, 'analysisCode':5, 'deviceCode':1,
+                    'tableCode':1, 'sortCode':2, 'sortBits':[0,1,1],
+                    'numWide':14, 'formatCode':3, 'tableName':'OUGV1',
+                    'nonlinearFactor': dt, 
                     #'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
                     #'dataNames':['mode','eigr','modeCycle'],
                     #'name':'mode',
@@ -90,7 +93,8 @@ class OUG(object):
         if iSubcase in self.displacements:
             self.displacements[iSubcase].addF06Data(data,transient)
         else:
-            disp = complexDisplacementObject(dataCode,iSubcase)
+            isSort1 = True
+            disp = complexDisplacementObject(dataCode,isSort1,iSubcase)
             disp.addF06Data(data,transient)
             self.displacements[iSubcase] = disp
         self.iSubcases.append(iSubcase)
@@ -118,8 +122,9 @@ class OUG(object):
         #print "headers = %s" %(headers)
         data = self.readTemperatureTable()
         
-        dataCode = {'log':self.log,'analysisCode':1,'deviceCode':1,'tableCode':1,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,'tableName':'OUG',
+        dataCode = {'log':self.log, 'analysisCode':1, 'deviceCode':1,
+                    'tableCode':1, 'sortCode':0, 'sortBits':[0,0,0],
+                    'numWide':8, 'tableName':'OUG', 'nonlinearFactor': dt,
                     #'thermalCode':1,
                     #'formatCode':1,
                     #'elementName':eType,'sCode':0,'stressBits':stressBits
@@ -128,7 +133,8 @@ class OUG(object):
         if iSubcase in self.temperatures:
             self.temperatures[iSubcase].addF06Data(data,transient)
         else:
-            temp = temperatureObject(dataCode,iSubcase)
+            isSort1 = True
+            temp = temperatureObject(dataCode,isSort1,iSubcase)
             temp.addF06Data(data,transient)
             self.temperatures[iSubcase] = temp
         self.iSubcases.append(iSubcase)
