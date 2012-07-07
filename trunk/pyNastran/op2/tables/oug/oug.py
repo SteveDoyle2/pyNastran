@@ -1,7 +1,7 @@
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
 import sys
-import copy
-from numpy import array
+#import copy
+#from numpy import array
 from struct import unpack
 
 # pyNastran
@@ -11,31 +11,32 @@ from struct import unpack
 #     )
 
 from oug_displacements import (
-     displacementObject,                    # tableCode=1, formatCode=1 sortCode=0
-     complexDisplacementObject,             # analysisCode=5  formatCode=3 sortCode=1
+     DisplacementObject,                    # tableCode=1, formatCode=1 sortCode=0
+     ComplexDisplacementObject,             # analysisCode=5  formatCode=3 sortCode=1
      )
 
 from oug_velocities import (                # tableCode=10,formatCode=1 sortCode=0
-     velocityObject,
-     complexVelocityObject
+     VelocityObject,
+     ComplexVelocityObject
      )
 
 from oug_accelerations import (             # tableCode=11,formatCode=1 sortCode=0
-     accelerationObject,
-     complexAccelerationObject
+     AccelerationObject,
+     ComplexAccelerationObject
      )
 
 from oug_temperatures import (              # tableCode=1, formatCode=1 sortCode=0
-     temperatureObject,
+     TemperatureObject,
      )
 
 from oug_eigenvectors import (
-     eigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
-     complexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
-    #realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
+     EigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
+     ComplexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
+    #RealEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
      )
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import thermalVelocityVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
 from pyNastran.op2.op2_helper import polarToRealImag
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 
 class OUG(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
@@ -195,7 +196,7 @@ class OUG(object):
 
     def readOUG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         #self.skipOES_Element()
         #return
 
@@ -264,27 +265,27 @@ class OUG(object):
                 #print self.dataCode
                 if self.tableName in ['OUGV1']:
                     resultName = 'displacements'
-                    self.createTransientObject(self.displacements,displacementObject) # real
+                    self.createTransientObject(self.displacements,DisplacementObject) # real
                 elif self.tableName in ['OUGATO2']:
                     resultName = 'displacementsATO'
-                    self.createTransientObject(self.displacementsATO,displacementObject) # random
+                    self.createTransientObject(self.displacementsATO,DisplacementObject) # random
                 elif self.tableName in ['OUGCRM2']:
                     resultName = 'displacementsCRM'
-                    self.createTransientObject(self.displacementsCRM,displacementObject) # random
+                    self.createTransientObject(self.displacementsCRM,DisplacementObject) # random
                 elif self.tableName in ['OUGPSD2']:
                     resultName = 'displacementsPSD'
-                    self.createTransientObject(self.displacementsPSD,displacementObject) # random
+                    self.createTransientObject(self.displacementsPSD,DisplacementObject) # random
                 elif self.tableName in ['OUGRMS2']:
                     resultName = 'displacementsRMS'
-                    self.createTransientObject(self.displacementsRMS,displacementObject) # random
+                    self.createTransientObject(self.displacementsRMS,DisplacementObject) # random
                 elif self.tableName in ['OUGNO2']:
                     resultName = 'displacementsNO'
-                    self.createTransientObject(self.displacementsNO,displacementObject) # random
+                    self.createTransientObject(self.displacementsNO,DisplacementObject) # random
                 else:
                     raise NotImplementedError('***table=%s***\n%s' %(self.tableName,self.codeInformation()))
             elif self.thermal==1:
                 resultName = 'temperatures'
-                self.createTransientObject(self.temperatures,temperatureObject)
+                self.createTransientObject(self.temperatures,TemperatureObject)
             #elif self.thermal==8:
                 #resultName = 'scaledDisplacements'
                 #self.createTransientObject(self.scaledDisplacements,displacementObject)
@@ -294,7 +295,7 @@ class OUG(object):
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'displacements'
-                self.createTransientObject(self.displacements,complexDisplacementObject) # complex
+                self.createTransientObject(self.displacements,ComplexDisplacementObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
@@ -307,14 +308,14 @@ class OUG(object):
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'eigenvectors'
-                self.createTransientObject(self.eigenvectors,eigenVectorObject) # real
+                self.createTransientObject(self.eigenvectors,EigenVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'eigenvectors'
-                self.createTransientObject(self.eigenvectors,complexEigenVectorObject) # complex
+                self.createTransientObject(self.eigenvectors,ComplexEigenVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
@@ -327,17 +328,17 @@ class OUG(object):
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'velocities'
-                self.createTransientObject(self.velocities,velocityObject) # real
+                self.createTransientObject(self.velocities,VelocityObject) # real
             elif self.thermal==1:
                 resultName = 'velocities'
-                self.createTransientObject(self.velocities,thermalVelocityVectorObject) # real
+                self.createTransientObject(self.velocities,ThermalVelocityVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'velocities'
-                self.createTransientObject(self.velocities,complexVelocityObject) # complex
+                self.createTransientObject(self.velocities,ComplexVelocityObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
@@ -350,14 +351,14 @@ class OUG(object):
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'accelerations'
-                self.createTransientObject(self.accelerations,accelerationObject) # real
+                self.createTransientObject(self.accelerations,AccelerationObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'accelerations'
-                self.createTransientObject(self.accelerations,complexAccelerationObject) # complex
+                self.createTransientObject(self.accelerations,ComplexAccelerationObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)

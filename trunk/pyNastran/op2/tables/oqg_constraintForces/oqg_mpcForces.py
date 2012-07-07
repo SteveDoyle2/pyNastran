@@ -1,7 +1,7 @@
-from numpy import array
-from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
+#from numpy import array
+from pyNastran.op2.resultObjects.tableObject import TableObject,ComplexTableObject
 
-class mpcForcesObject(TableObject):
+class MPCForcesObject(TableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -125,9 +125,9 @@ class mpcForcesObject(TableObject):
             msg += '\n'
         return msg
 
-class complexMpcForcesObject(complexTableObject):
+class ComplexMPCForcesObject(ComplexTableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ComplexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
         name = 'mpcForces'

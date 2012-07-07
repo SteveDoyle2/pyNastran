@@ -1,13 +1,9 @@
 # pylint: disable=R0904,R0902
-from numpy import array
-from pyNastran.bdf.cards.loads import *
+from numpy import array,cross
+
 #from pyNastran.bdf.errors import *
-
+from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
 from pyNastran.bdf.cards.plates.elementsShell import ShellElement
-
-# 3rd party
-#import numpy
-#from numpy import any,cross
 
 
 class bdfMethods(object):
@@ -18,7 +14,7 @@ class bdfMethods(object):
 
     def MassProperties(self):
         """
-        Caclulates mass properties in the global system about 0,0,0
+        Caclulates mass properties in the global system about <0,0,0>
         I   = mass*centroid*centroid
         Ixx =  mass*(y^2+z^2)
         Iyz = -mass*y*z
@@ -30,8 +26,8 @@ class bdfMethods(object):
         mass = 0.
         for eid,element in self.elements.iteritems():
             try:
-                p = e.Centroid()  # not really coded across the board
-                m = e.Mass()
+                p = element.Centroid()  # not really coded across the board
+                m = element.Mass()
                 (x,y,z) = p
                 x2 = x*x
                 y2 = y*y
@@ -45,7 +41,8 @@ class bdfMethods(object):
                 mass += m
                 cg += m*p
             except:
-                self.log().warning("could not get inertia for element...\n%s" %(element))
+                self.log().warning("could not get inertia for element"
+                                   "...\n%s" %(element))
             ###
         ###
         cg = cg/mass
@@ -54,8 +51,8 @@ class bdfMethods(object):
     def Mass(self):
         """Caclulates mass in the global coordinate system"""
         mass = 0.
-        for element in self.elements:
-            m = e.Mass()
+        for eid,element in self.elements:
+            m = element.Mass()
             mass += m
         return (mass)
 
@@ -73,7 +70,7 @@ class bdfMethods(object):
         @todo finish method...think i need to build a edge list...
               that'd be a lot easier to loop through stuff...
         """
-        raise NotImplementedErrror()
+        raise NotImplementedError()
         normals   = {}
         validNids = set([])
         isCorrectNormal = set([])
@@ -133,6 +130,7 @@ class bdfMethods(object):
         """
         @todo doesnt work...
         """
+        raise NotImplementedError()
         normals = {}
         #for nid in 
 
@@ -154,16 +152,20 @@ class bdfMethods(object):
 
     def unresolveGrids(self,femOld):
         """
-        puts all nodes back to original coordinate system
-        @param self the object pointer
-        @param femOld the old model that hasnt lost it's connection to the node cids
-        @warning hasnt been tested well...
+        Puts all nodes back to original coordinate system.
+        @param self
+          the object pointer
+        @param femOld
+          the old model that hasnt lost it's connection to the node cids
+        @warning
+          hasnt been tested well...
         """
+        debug = False
         for nid,nodeOld in femOld.nodes.iteritems():
             coord = femOld.node.cp
             p,matrix  = coord.transformToGlobal(self.xyz,debug=debug)
             p2 = coord.transformToLocal(p,matrix,debug=debug)
-            node.UpdatePosition(self,p2,cid)
+            self.nodes[nid].UpdatePosition(self,p2,coord.cid)
         ###
 
     def sumForces(self):

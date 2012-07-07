@@ -1,7 +1,7 @@
 import sys
-from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject,ComplexTableObject
 
-class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
+class LoadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -121,7 +121,7 @@ class loadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
     def __reprTransient__(self):
         return self.writeF06Transient(['',''],'PAGE ',1)[0]
 
-class complexLoadVectorObject(complexTableObject): # tableCode=11, approachCode=???
+class ComplexLoadVectorObject(ComplexTableObject): # tableCode=11, approachCode=???
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -249,7 +249,7 @@ class complexLoadVectorObject(complexTableObject): # tableCode=11, approachCode=
             ###
         return msg
 
-class thermalVector(TableObject):
+class ThermalVector(TableObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -362,10 +362,10 @@ class thermalVector(TableObject):
     def __reprTransient__(self):
         return self.writeF06Transient(['',''],'PAGE ',1)[0]
 
-class thermalLoadVectorObject(thermalVector):     # tableCode=2, thermal=1
+class ThermalLoadVectorObject(ThermalVector):     # tableCode=2, thermal=1
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
-        thermalVector.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ThermalVector.__init__(self,dataCode,isSort1,iSubcase,dt)
 
-class thermalVelocityVectorObject(thermalVector): # tableCode=10, thermal=1
+class ThermalVelocityVectorObject(ThermalVector): # tableCode=10, thermal=1
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
-        thermalVector.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ThermalVector.__init__(self,dataCode,isSort1,iSubcase,dt)

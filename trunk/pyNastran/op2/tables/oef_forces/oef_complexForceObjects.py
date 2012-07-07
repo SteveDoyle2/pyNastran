@@ -299,7 +299,7 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
                       '                                                          (REAL/IMAGINARY)\n',
                       ' \n',
                       '            FREQUENCY                    FORCE                        FREQUENCY                    FORCE\n']
-        packs = []
+        #packs = []
         forces = []
         elements = []
         line = '   '
@@ -333,7 +333,7 @@ class ComplexSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELA
         for dt,Force in sorted(self.force.items()):
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
-            packs = []
+            #packs = []
             forces = []
             elements = []
             line = ''

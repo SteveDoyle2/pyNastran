@@ -1,11 +1,10 @@
-import os
 import sys
-import struct
 from struct import unpack
 
-from pyNastran.op2.op2Errors import *
+#from pyNastran.op2.op2Errors import *
 from pyNastran.bdf.cards.aero   import GUST
-from pyNastran.bdf.cards.tables import TABLED1,TABLED2,TABLED3,TABLEM1,TABLEM2,TABLEM3
+from pyNastran.bdf.cards.tables import (TABLED1, TABLED2, TABLED3, TABLEM1,
+                                        TABLEM2, TABLEM3, TABLEM4)
 
 class DIT(object):
     def readTable_DIT(self):
@@ -37,7 +36,7 @@ class DIT(object):
             eData = data[n:n+20]
             out = unpack('iifff',eData)
             (sid,dload,wg,x0,V) = out
-            guest = GUST(None,out)
+            gust = GUST(None,out)
             self.addGUST(gust)
             n+=20
         ###

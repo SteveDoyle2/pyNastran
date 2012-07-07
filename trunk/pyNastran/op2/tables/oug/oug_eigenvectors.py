@@ -1,10 +1,10 @@
-from struct import pack
-from numpy import array,abs,angle
+#from struct import pack
+from numpy import array #,abs,angle
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
-from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject,ComplexTableObject
 
-class eigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
+class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
     """
     EIGENVALUE =  6.158494E+07
         CYCLES =  1.248985E+03         R E A L   E I G E N V E C T O R   N O .          1
@@ -314,9 +314,9 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
             msg += '\n'
         return msg
 
-class complexEigenVectorObject(complexTableObject): # approachCode=2, sortCode=0, thermal=0
+class ComplexEigenVectorObject(ComplexTableObject): # approachCode=2, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,iMode):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,iMode)
+        ComplexTableObject.__init__(self,dataCode,isSort1,iSubcase,iMode)
         self.caseVal = iMode
         self.updateDt = self.updateMode
         self.setDataMembers()

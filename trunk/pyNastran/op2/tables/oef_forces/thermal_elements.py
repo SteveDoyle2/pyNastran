@@ -1,7 +1,9 @@
 from __future__ import division
 import sys
 from struct import unpack
-from oef_thermalObjects import *
+from oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
+                                HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
+                                HeatFlux_CONV)
 
 class ThermalElements(object):
 
@@ -46,7 +48,7 @@ class ThermalElements(object):
     def OEF_CHBDYx(self): # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
         if self.makeOp2Debug:
             self.op2Debug.write('---OEF_CHBDYx---\n')
-        deviceCode = self.deviceCode
+        #deviceCode = self.deviceCode
         
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()
@@ -86,7 +88,7 @@ class ThermalElements(object):
     def OEF_CONV(self): # [110]  CONV
         if self.makeOp2Debug:
             self.op2Debug.write('---OEF_CONV---\n')
-        deviceCode = self.deviceCode
+        #deviceCode = self.deviceCode
         
         dt = self.nonlinearFactor
         isSort1 = self.isSort1()

@@ -1,9 +1,12 @@
-import os
 import sys
 from struct import unpack
 
-#from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.properties import *
+from pyNastran.bdf.cards.properties import (NSM,PBAR,PBARL,PBEAM,
+                                            PROD,PSHELL,PSHEAR,
+                                            PCOMP,PSOLID,
+                                            PVISC,PELAS,PMASS,
+                                            PTUBE,PGAP)
+# PCOMPG,PBUSH1D,PBEAML,PBEAM3,PBUSH,
 
 class EPT(object):
 
@@ -171,9 +174,9 @@ class EPT(object):
             data  = data[44:]
 
             dataIn = list(unpack('fffffffffff',eData))
-            (k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
+            #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
             
-            prop = PBEAM(None,out)
+            prop = PBEAM(None,dataIn)
             self.addOp2Property(prop)
             #sys.exit('ept-PBEAM')
         ###

@@ -1,9 +1,9 @@
 import sys
-import copy
-from numpy import array
 from struct import unpack
 
 # pyNastran
+from pyNastran.op2.op2_helper import polarToRealImag
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import gridPointForcesObject,complexGridPointForcesObject
 
 class OGF(object):
@@ -117,7 +117,7 @@ class OGF(object):
 
     def readOGF_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         #print self.dataCode
         #if self.thermal==2:
         #    self.skipOES_Element()

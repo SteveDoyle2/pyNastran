@@ -1,8 +1,6 @@
-import os
 import sys
 from struct import unpack
 
-#from pyNastran.op2.op2Errors import *
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elementsRigid import RBE2
 from pyNastran.bdf.cards.constraints import SUPORT, SPCD, SPC
@@ -111,8 +109,8 @@ class Geometry4(object):
         """RBE2(6901,69,295) - Record 24"""
         self.skippedCardsFile.write('skipping RBE2 in GEOM4\n')
         return
-        n=0
-        nData = len(data)  # 5*4
+        #n=0
+        #nData = len(data)  # 5*4
         if 1:
             eData = data[:12]
             (eid,gn,cm,gm) = unpack('iiii',eData)

@@ -1,5 +1,5 @@
 import sys
-from struct import pack
+#from struct import pack
 from numpy import array, sqrt, abs, angle # dot,
 
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
@@ -222,7 +222,7 @@ class TableObject(scalarObject):  # displacement style table
         if self.nonlinearFactor is not None:
             self.writeMatlabTransient(name,iSubcase,f,isMagPhase)
         #print "static!!!!"
-        msg = []
+        #msg = []
         #magPhase = 0
         #if isMagPhase:
         #    magPhase = 1
@@ -231,7 +231,7 @@ class TableObject(scalarObject):  # displacement style table
         nodes = self.translations.keys()
         
         nodes.sort()
-        nNodes = len(nodes)
+        #nNodes = len(nodes)
         self.writeMatlabArgs(name,iSubcase,f)
         f.write('fem.%s(%i).nodes = %s;\n' %(name,iSubcase,nodes))
 
@@ -511,7 +511,7 @@ class TableObject(scalarObject):  # displacement style table
         show()
         
         
-class complexTableObject(scalarObject):
+class ComplexTableObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt):
         self.nonlinearFactor = None
         self.tableName = None

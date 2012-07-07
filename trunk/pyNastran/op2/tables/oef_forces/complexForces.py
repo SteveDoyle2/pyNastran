@@ -7,7 +7,7 @@ from pyNastran.op2.op2_helper import polarToRealImag
 class ComplexForces(object):
 
     def OEF_Rod_alt(self): # 1-CROD, 3-CTUBE, 10-CONROD
-        deviceCode = self.deviceCode
+        #deviceCode = self.deviceCode
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffff'

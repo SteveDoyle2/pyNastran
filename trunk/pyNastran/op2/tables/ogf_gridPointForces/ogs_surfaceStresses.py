@@ -1,6 +1,6 @@
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
-class gridPointStressesObject(scalarObject):
+class GridPointStressesObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.nx = {}
@@ -191,7 +191,7 @@ class gridPointStressesObject(scalarObject):
         return self.writeF06([],'PAGE ',1)[0]
         #return '---gridPointStressesObject---'
 
-class gridPointStressesVolumeObject(scalarObject):
+class GridPointStressesVolumeObject(scalarObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         scalarObject.__init__(self,dataCode,iSubcase)
         self.nx = {}

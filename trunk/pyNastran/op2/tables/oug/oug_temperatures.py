@@ -1,8 +1,10 @@
+# pylint: disable=E1101
+#asdf pylint: disable=C0103,R0902,R0904,R0914
 import sys
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
-class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
+class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     def __init__(self, dataCode, isSort1, iSubcase,dt=None):
         scalarObject.__init__(self, dataCode, iSubcase)
         self.gridTypes    = {}
@@ -209,7 +211,7 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
     
     def printTempLines(self,temperatures):
         msg = []
-        pack = []
+        ipack = []
         oldNodeID = -1
         oldGridType = None
         for nodeID,T in sorted(temperatures.iteritems()):
@@ -217,13 +219,13 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
 
             if oldNodeID+1==nodeID and gridType==oldGridType:
                 oldNodeID = nodeID
-                pack.append(T)
+                ipack.append(T)
             else:
                 if oldNodeID>0:
                     msg += self.printPack(pack)
                 oldGridType = gridType
                 oldNodeID = nodeID
-                pack = [nodeID,gridType,T]
+                ipack = [nodeID,gridType,T]
             ###
         ###
         if pack:
@@ -231,19 +233,19 @@ class temperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         ###
         return msg
 
-    def printPack(self,pack):
+    def printPack(self,ipack):
         msg = []
-        nID   = pack[0]
-        gType = pack[1]
-        while len(pack)>8:
-            nID = pack[0]
-            packOut = pack[:8]
-            pack = [nID+6,gType]+pack[8:]
+        nID   = ipack[0]
+        gType = ipack[1]
+        while len(ipack)>8:
+            nID = ipack[0]
+            packOut = ipack[:8]
+            ipack = [nID+6,gType]+ipack[8:]
             msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E\n' %(tuple(packOut)))
         ###
-        if pack:
-            fmt = '      %8i   %4s   '+'   %10.6E'*(len(pack)-2)+'\n'
-            out = fmt %(tuple(pack))
+        if ipack:
+            fmt = '      %8i   %4s   '+'   %10.6E'*(len(ipack)-2)+'\n'
+            out = fmt %(tuple(ipack))
             msg.append(out)
         ###
         return msg

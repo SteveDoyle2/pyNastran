@@ -1,9 +1,7 @@
 import sys
-import copy
 from struct import unpack
 
-# pyNastran
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError, InvalidATFSCodeError
 from elementsStressStrain import ElementsStressStrain
 
 class OESNLXR(ElementsStressStrain):

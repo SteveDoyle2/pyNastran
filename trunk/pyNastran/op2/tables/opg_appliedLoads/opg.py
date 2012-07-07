@@ -1,5 +1,4 @@
 import sys
-import copy
 from struct import unpack
 
 # pyNastran
@@ -7,12 +6,13 @@ from struct import unpack
 #    temperatureObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import appliedLoadsObject
-from opg_loadVector   import loadVectorObject,complexLoadVectorObject,thermalLoadVectorObject
-from opnl_forceVector import forceVectorObject,complexForceVectorObject
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject
+from opg_loadVector   import LoadVectorObject,ComplexLoadVectorObject,ThermalLoadVectorObject
+from opnl_forceVector import ForceVectorObject,ComplexForceVectorObject
 
 # OGS table ## @todo move this...
-from pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses import gridPointStressesObject,gridPointStressesVolumeObject
+from pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses import GridPointStressesObject,GridPointStressesVolumeObject
 
 class OPG(object):
     """Table of element forces"""
@@ -110,7 +110,7 @@ class OPG(object):
 
     def readOPG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
-        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
 
         
@@ -171,17 +171,17 @@ class OPG(object):
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'loadVectors'
-                self.createTransientObject(self.loadVectors,loadVectorObject) # real
+                self.createTransientObject(self.loadVectors,LoadVectorObject) # real
             elif self.thermal==1:
                 resultName = 'thermalLoadVectors'
-                self.createTransientObject(self.thermalLoadVectors,thermalLoadVectorObject) # real
+                self.createTransientObject(self.thermalLoadVectors,ThermalLoadVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'loadVectors'
-                self.createTransientObject(self.loadVectors,complexLoadVectorObject) # complex
+                self.createTransientObject(self.loadVectors,ComplexLoadVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
@@ -194,14 +194,14 @@ class OPG(object):
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'forceVectors'
-                self.createTransientObject(self.forceVectors,forceVectorObject) # real
+                self.createTransientObject(self.forceVectors,ForceVectorObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'forceVectors'
-                self.createTransientObject(self.forceVectors,complexForceVectorObject) # complex
+                self.createTransientObject(self.forceVectors,ComplexForceVectorObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
@@ -214,13 +214,13 @@ class OPG(object):
         if self.numWide==8:  # real/random
             resultName = 'appliedLoads'
             if self.thermal==0:
-                self.createTransientObject(self.appliedLoads,appliedLoadsObject) # real
+                self.createTransientObject(self.appliedLoads,AppliedLoadsObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.readOPGForces,resultName)
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
-                self.createTransientObject(self.appliedLoads,complexAppliedLoadsObject) # complex
+                self.createTransientObject(self.appliedLoads,ComplexAppliedLoadsObject) # complex
                 raise NotImplementedError('can this use a OUG_Complex table???')
             else:
                 raise NotImplementedError(self.codeInformation())
@@ -234,7 +234,7 @@ class OPG(object):
         isSort1 = self.isSort1()
         resultName = 'gridPointStresses'
         if self.numWide==11:  # real/random
-            self.createTransientObject(self.gridPointStresses,gridPointStressesObject) # real
+            self.createTransientObject(self.gridPointStresses,GridPointStressesObject) # real
             self.handleResultsBuffer3(self.readOGS1_table26_numWide11,resultName)
         else:
             raise NotImplementedError('only numWide=11 is allowed  numWide=%s' %(self.numWide))
@@ -262,7 +262,7 @@ class OPG(object):
         #print self.codeInformation()
         if self.numWide==9:  # real/random
             resultName = 'gridPointVolumeStresses'
-            self.createTransientObject(self.gridPointVolumeStresses,gridPointStressesVolumeObject) # real
+            self.createTransientObject(self.gridPointVolumeStresses,GridPointStressesVolumeObject) # real
             self.handleResultsBuffer3(self.readOGS1_table27_numWide9,resultName)
 
         else:

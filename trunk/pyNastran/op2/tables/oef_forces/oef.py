@@ -1,7 +1,7 @@
 from __future__ import division
 import sys
 from struct import unpack
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 
 # pyNastran
 #from pyNastran.op2.tables.oug.oug_displacements import displacementObject
@@ -16,12 +16,28 @@ from pyNastran.op2.op2Errors import *
 #    eigenVectorObject)
 #from oef_Objects import (nonlinearFluxObject)
 
-from thermal_elements import ThermalElements
+#from thermal_elements import ThermalElements
 from realForces    import RealForces
 from complexForces import ComplexForces
 
-from oef_forceObjects import *
-from oef_complexForceObjects import *
+
+from oef_forceObjects import (RealRodForce,RealCBeamForce,RealCShearForce,
+                              RealSpringForce,RealDamperForce,RealViscForce,
+                              RealPlateForce,RealConeAxForce,RealPLATE2Force,
+                              RealCBAR100Force,RealCGAPForce,RealBendForce,
+                              RealPentaPressureForce,RealCBUSHForce,
+                              RealForce_VU_2D,RealCBARForce,RealForce_VU)
+from oef_complexForceObjects import (ComplexRodForce,ComplexCBeamForce,
+                                     ComplexCShearForce,ComplexSpringForce,
+                                     ComplexDamperForce,ComplexViscForce,
+                                     ComplexPlateForce,ComplexPLATE2Force,
+                                     ComplexBendForce,
+                                     ComplexPentaPressureForce,
+                                     ComplexCBUSHForce,ComplexForce_VU_2D,
+                                     ComplexCBARForce,ComplexForce_VU)
+from thermal_elements import ThermalElements
+#from oef_forceObjects import *
+#from oef_complexForceObjects import *
 
 class OEF(ThermalElements,RealForces,ComplexForces):
     """Table of element forces"""
@@ -480,4 +496,3 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         else:
             raise NotImplementedError('New Element'+self.codeInformation())
         ###
-

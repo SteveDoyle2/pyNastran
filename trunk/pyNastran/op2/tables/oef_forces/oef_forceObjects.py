@@ -363,7 +363,7 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
 
-            packs = []
+            #packs = []
             forces = []
             elements = []
             line = '   '
@@ -395,7 +395,7 @@ class RealSpringForce(scalarObject): # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                       ' \n',
                       '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
-        packs = []
+        #packs = []
         forces = []
         elements = []
         line = '   '
@@ -473,7 +473,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
             header[1] = ' %s = %10.4E\n' %(self.dataCode['name'],dt)
             msg += header+words
 
-            packs = []
+            #packs = []
             forces = []
             elements = []
             line = '   '
@@ -505,7 +505,7 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         msg = header+['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                       ' \n',
                       '        TIME          FORCE              TIME          FORCE              TIME          FORCE              TIME          FORCE\n']
-        packs = []
+        #packs = []
         forces = []
         elements = []
         line = '   '

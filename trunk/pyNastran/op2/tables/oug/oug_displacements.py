@@ -3,9 +3,9 @@ import sys
 
 # pyNastran
 from pyNastran.op2.resultObjects.tableObject import (TableObject,
-                                                     complexTableObject)
+                                                     ComplexTableObject)
 
-class displacementObject(TableObject): # approachCode=1, thermal=0
+class DisplacementObject(TableObject): # approachCode=1, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -84,9 +84,9 @@ class displacementObject(TableObject): # approachCode=1, thermal=0
             ###
         return ''.join(msg)
 
-class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=0, thermal=0
+class ComplexDisplacementObject(ComplexTableObject): # approachCode=1, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ComplexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
         name = 'displacements'
@@ -119,7 +119,7 @@ class complexDisplacementObject(complexTableObject): # approachCode=1, sortCode=
         msg += '\n'
 
         for freq,translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],freq)
 
             for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]

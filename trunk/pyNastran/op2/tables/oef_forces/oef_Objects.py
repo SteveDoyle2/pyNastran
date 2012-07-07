@@ -1,4 +1,4 @@
-from struct import pack,unpack
+#from struct import pack,unpack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
