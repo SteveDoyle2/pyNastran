@@ -1,6 +1,7 @@
 from __future__ import print_function
 #from numpy import array
-from pyNastran.op2.op2Errors import *
+#from pyNastran.op2.op2Errors import *
+from numpy import angle
 from pyNastran.op2.op2Codes import Op2Codes
 
 class baseScalarObject(Op2Codes):

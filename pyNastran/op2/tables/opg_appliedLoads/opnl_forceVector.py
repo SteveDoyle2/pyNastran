@@ -1,8 +1,8 @@
 import sys
-from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject,ComplexTableObject
 
 
-class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
+class ForceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -122,9 +122,9 @@ class forceVectorObject(TableObject): # tableCode=12, sortCode=0, thermal=0
     def __reprTransient__(self):
         return self.writeF06Transient(['',''],'PAGE ',1)[0]
 
-class complexForceVectorObject(complexTableObject): # tableCode=12, approachCode=???
+class ComplexForceVectorObject(ComplexTableObject): # tableCode=12, approachCode=???
     def __init__(self,dataCode,isSort1,iSubcase,dt):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ComplexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
         name = 'forceVector'

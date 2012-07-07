@@ -4,7 +4,7 @@ import unittest
 #from numpy import allclose
 
 from pyNastran.bdf.fieldWriter import printField
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import getValue
+from pyNastran.bdf.bdfInterface.bdf_cardMethods import interpretValue as getValue
 
 
 class TestFieldWriter(unittest.TestCase):

@@ -2,7 +2,7 @@
 import os
 import sys
 
-from pyNastran.bdf.errors import MissingFileError,ClosedBDFError
+from pyNastran.bdf.errors import MissingFileError, ClosedBDFError
 
 class bdfReader(object):
     def __init__(self, debug, log):

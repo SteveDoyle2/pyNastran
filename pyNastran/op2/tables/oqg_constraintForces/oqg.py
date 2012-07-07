@@ -1,22 +1,21 @@
 import sys
-import copy
 from struct import unpack
 
-# pyNastran
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import spcForcesObject,complexSpcForcesObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import mpcForcesObject,complexMpcForcesObject
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject,ComplexSPCForcesObject
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject,ComplexMPCForcesObject
 
-from pyNastran.op2.tables.oug.oug_Objects import (
+#from pyNastran.op2.tables.oug.oug_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
-     fluxObject,                            # analysisCode=1, sortCode=3
+     #fluxObject,                            # analysisCode=1, sortCode=3
      #nonlinearTemperatureObject,            # analysisCode=10,sortCode=0
-     )
+     #)
 
-from pyNastran.op2.tables.oug.oug_eigenvectors import (
-     eigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
-     complexEigenVectorObject,              # analysis    =5, sortCode=1 formatCode=1 tableCode=7
-     realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
-     )
+#from pyNastran.op2.tables.oug.oug_eigenvectors import (
+     #eigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
+     #complexEigenVectorObject,              # analysis    =5, sortCode=1 formatCode=1 tableCode=7
+     #realEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
+     #)
 
 class OQG(object):
     """Table of spc/mpc forces/momenets"""
@@ -113,7 +112,7 @@ class OQG(object):
 
 
     def readOQG_Data(self):
-        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.skipOES_Element() # skipping entire table
         return
 
@@ -147,7 +146,7 @@ class OQG(object):
         elif self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'spcForces'
-                self.createTransientObject(self.spcForces,spcForcesObject) # real
+                self.createTransientObject(self.spcForces,SPCForcesObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)
@@ -171,7 +170,7 @@ class OQG(object):
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'mpcForces'
-                self.createTransientObject(self.mpcForces,complexMpcForcesObject) # complex
+                self.createTransientObject(self.mpcForces,ComplexMPCForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)

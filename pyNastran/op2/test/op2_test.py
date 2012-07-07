@@ -79,7 +79,7 @@ if __name__=='__main__':
 
     deleteF06 = True
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
     getSkipCards = False
 

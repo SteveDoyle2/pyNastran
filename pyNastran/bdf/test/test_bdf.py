@@ -1,11 +1,12 @@
+# pylint: disable=W0612
 import os
 import sys
 import numpy
 numpy.seterr(all='raise')
 import traceback
 
-import pyNastran
-from pyNastran.bdf.errors import *
+#import pyNastran
+from pyNastran.bdf.errors import BDF_SyntaxError,TabCharacterError,ClosedBDFError,ScientificCardParseError,TabCommaCharacterError,MissingFileError
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement,NastranMatrix
 from compareCardContent import compareCardContent
@@ -15,7 +16,7 @@ testPath = pyNastran.bdf.test.__path__[0]
 testPath = r'C:\Users\steve\Desktop\pyNastran\pyNastran\bdf\test'
 #print "testPath = ",testPath
 
-def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
+def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
     #debug = True
     print("folder = %s" %(folder))
     filenames  = os.listdir(folder)
@@ -27,9 +28,10 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
         ###
     ###
     for filename in filenames2:
-        print("filename = %s" %(os.path.abspath(os.path.join(folder,filename))))
+        absFilename = os.path.abspath(os.path.join(folder,filename))
+        print("filename = %s" %(absFilename))
         try:
-            (fem1,fem2,diffCards2) = runBDF(folder,filename,debug=debug,xref=xref,check=check,cid=cid,isFolder=True)
+            (fem1,fem2,diffCards2) = runBDF(folder, filename, debug=debug, xref=xref, check=check, cid=cid, isFolder=True)
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
@@ -61,71 +63,39 @@ def runAllFilesInFolder(folder,debug=False,xref=True,check=True,cid=None):
         print("diffCards2 = %s" %(diffCards))
 ###
 
-def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm='combined',isFolder=False):
+def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
+           meshForm='combined', isFolder=False):
     bdfModel = str(bdfFilename)
     print("bdfModel = %s" %(bdfModel))
     if isFolder:
-        bdfModel = os.path.join(testPath,folder,bdfFilename)
+        bdfModel = os.path.join(testPath, folder, bdfFilename)
     
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
-    fem1 = BDF(debug=debug,log=None)
+    fem1 = BDF(debug=debug, log=None)
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
     diffCards = []
     try:
         #print "xref = ",xref
-        try:
-            if '.pch' in bdfModel:
-                fem1.readBDF_Punch(bdfModel,xref=False)
-            else:
-                fem1.readBDF(bdfModel,xref=xref)
-        except:
-            print("failed reading |%s|" %(bdfModel))
-            raise
-        #fem1.sumForces()
-        #fem1.sumMoments()
-        outModel = bdfModel+'_out'
-        if cid is not None and xref:
-            fem1.resolveGrids(cid=cid)
-        if meshForm=='combined':
-            fem1.writeBDFAsPatran(outModel)
-        elif meshForm=='separate':
-            fem1.writeBDF(outModel)
-        else:
-            raise NotImplementedError("meshForm=|%r| allowedForms=['combined','separate']" %(meshForm))
-        #fem1.writeAsCTRIA3(outModel)
+        (outModel) = runFem1(fem1,bdfModel,meshForm,xref,cid)
 
-        fem2 = BDF(debug=debug,log=None)
-        fem2.log.info('starting fem2')
-        sys.stdout.flush()
-        try:
-            fem2.readBDF(outModel,xref=xref)
-        except:
-            print("failed reading |%s|" %(outModel))
-            raise
-        
-        #fem2.sumForces()
-        #fem2.sumMoments()
-        outModel2 = bdfModel+'_out2'
-        fem2.writeBDFAsPatran(outModel2)
-        #fem2.writeAsCTRIA3(outModel2)
-        diffCards = compare(fem1,fem2,xref=xref,check=check)
-        os.remove(outModel2)
+        (fem2) = runFem2(bdfModel, outModel, xref, debug=debug, log=None)
+        (diffCards) = compare(fem1, fem2, xref=xref, check=check)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    #except MissingFileError:
-    #    pass
-    #except TabCharacterError:
-    #    pass
-    #except TabCommaCharacterError:
-    #    pass
-    #except ScientificParseError:
-    #    pass
-    #except ClosedBDFError:
-    #    pass
+    except MissingFileError:
+        pass
+    except TabCharacterError:
+        pass
+    except TabCommaCharacterError:
+        pass
+    except ScientificCardParseError:
+        pass
+    except ClosedBDFError:
+        pass
     except BDF_SyntaxError:
         pass
     except SystemExit:
@@ -139,9 +109,53 @@ def runBDF(folder,bdfFilename,debug=False,xref=True,check=True,cid=None,meshForm
         raise
     ###
     print("-"*80)
-    return (fem1,fem2,diffCards)
+    return (fem1, fem2, diffCards)
 
-def divide(value1,value2):
+def runFem1(fem1, bdfModel, meshForm, xref, cid):
+    assert os.path.exists(bdfModel),bdfModel
+    try:
+        if '.pch' in bdfModel:
+            fem1.readBDF_Punch(bdfModel, xref=False)
+        else:
+            fem1.readBDF(bdfModel, xref=xref)
+    except:
+        print("failed reading |%s|" %(bdfModel))
+        raise
+    #fem1.sumForces()
+    #fem1.sumMoments()
+    outModel = bdfModel+'_out'
+    if cid is not None and xref:
+        fem1.resolveGrids(cid=cid)
+    if meshForm=='combined':
+        fem1.writeBDFAsPatran(outModel)
+    elif meshForm=='separate':
+        fem1.writeBDF(outModel)
+    else:
+        raise NotImplementedError("meshForm=|%r| allowedForms=['combined','separate']" %(meshForm))
+    #fem1.writeAsCTRIA3(outModel)
+    return (outModel)
+
+def runFem2(bdfModel, outModel, xref, debug=False, log=None):
+    assert os.path.exists(bdfModel), bdfModel
+    assert os.path.exists(outModel), outModel
+    fem2 = BDF(debug=debug, log=log)
+    fem2.log.info('starting fem2')
+    sys.stdout.flush()
+    try:
+        fem2.readBDF(outModel, xref=xref)
+    except:
+        print("failed reading |%s|" %(outModel))
+        raise
+    
+    #fem2.sumForces()
+    #fem2.sumMoments()
+    outModel2 = bdfModel+'_out2'
+    fem2.writeBDFAsPatran(outModel2)
+    #fem2.writeAsCTRIA3(outModel2)
+    os.remove(outModel2)
+    return (fem2)
+
+def divide(value1, value2):
     if value1==value2:  # good for 0/0
         return 1.0
     else:
@@ -153,12 +167,12 @@ def divide(value1,value2):
     ###
     return v
 
-def compareCardCount(fem1,fem2):
+def compareCardCount(fem1, fem2):
     cards1 = fem1.cardCount
     cards2 = fem2.cardCount
-    return computeInts(cards1,cards2,fem1)
+    return computeInts(cards1, cards2, fem1)
 
-def computeInts(cards1,cards2,fem1):
+def computeInts(cards1, cards2, fem1):
     cardKeys1 = set(cards1.keys())
     cardKeys2 = set(cards2.keys())
     allKeys  = cardKeys1.union(cardKeys2)
@@ -167,7 +181,7 @@ def computeInts(cards1,cards2,fem1):
     
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
-    msg = ' diffKeys1=%s diffKeys2=%s' %(diffKeys2,diffKeys2)
+    msg = ' diffKeys1=%s diffKeys2=%s' %(diffKeys1,diffKeys2)
     print(msg)
     for key in sorted(allKeys):
         msg = ''
@@ -188,9 +202,9 @@ def computeInts(cards1,cards2,fem1):
         factor2 = divide(value2,value1)
         factorMsg = ''
         if factor1 != factor2:
-            factorMsg = 'diff=%s factor1=%g factor2=%g' %(diff,factor1,factor2)
+            factorMsg = 'diff=%s factor1=%g factor2=%g' %(diff, factor1, factor2)
 
-        msg += '  %skey=%-7s value1=%-7s value2=%-7s' %(star,key,value1,value2)+factorMsg #+'\n'
+        msg += '  %skey=%-7s value1=%-7s value2=%-7s' %(star, key, value1, value2)+factorMsg #+'\n'
         msg = msg.rstrip()
         print(msg)
     ###
@@ -205,7 +219,7 @@ def compute(cards1,cards2):
     
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
-    msg = 'diffKeys1=%s diffKeys2=%s' %(diffKeys2,diffKeys2)
+    msg = 'diffKeys1=%s diffKeys2=%s' %(diffKeys1,diffKeys2)
     #print msg
     for key in sorted(allKeys):
         msg = ''

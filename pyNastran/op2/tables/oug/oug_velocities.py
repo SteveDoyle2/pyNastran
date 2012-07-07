@@ -1,10 +1,9 @@
 import sys
-import copy
 
 # pyNastran
-from pyNastran.op2.resultObjects.tableObject import TableObject,complexTableObject
+from pyNastran.op2.resultObjects.tableObject import TableObject,ComplexTableObject
 
-class velocityObject(TableObject): # approachCode=10, thermal=0
+class VelocityObject(TableObject): # approachCode=10, thermal=0
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
         TableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
@@ -80,9 +79,9 @@ class velocityObject(TableObject): # approachCode=10, thermal=0
             ###
         return msg
 
-class complexVelocityObject(complexTableObject): # tableCode=10, approachCode=???
+class ComplexVelocityObject(ComplexTableObject): # tableCode=10, approachCode=???
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ComplexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
         name = 'velocities'
@@ -115,7 +114,7 @@ class complexVelocityObject(complexTableObject): # tableCode=10, approachCode=??
         msg += '\n'
 
         for freq,translations in sorted(self.translations.iteritems()):
-            msg += '%s = %g\n' %(self.dataCode['name'],dt)
+            msg += '%s = %g\n' %(self.dataCode['name'],freq)
 
             for nodeID,translation in sorted(translations.iteritems()):
                 rotation = self.rotations[freq][nodeID]

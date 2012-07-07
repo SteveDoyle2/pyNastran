@@ -1,8 +1,9 @@
 import sys
 import copy
+from numpy import array
 from struct import unpack
 
-from pyNastran.op2.op2Errors     import *
+#from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.oug  import OUG
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 #from pyNastran.op2.tables.oes_stressStrain.oesnlxr import OESNLXR

@@ -1,6 +1,7 @@
 from __future__ import division
 import sys
 from struct import unpack
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 
 class RealForces(object):
 

@@ -497,7 +497,7 @@ class cardMethods(object):
         return value
     
 
-def getValue(valueRaw,card='',debug=False):
+def interpretValue(valueRaw,card='',debug=False):
     """converts a value from nastran format into python format."""
     #debug = True
     if debug:
@@ -516,6 +516,7 @@ def getValue(valueRaw,card='',debug=False):
     if valueIn[0].isalpha():
         if debug:
             print "STRING!"
+            print "valueStr = ",valueIn
         return valueIn
 
     if '=' in valueIn or '(' in valueIn or '*' in valueRaw:

@@ -1,10 +1,9 @@
 from __future__ import absolute_import
 import sys
-import copy
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_rods    import RodStressObject,   RodStrainObject
 from .real.oes_shear   import ShearStressObject, ShearStrainObject
@@ -212,7 +211,7 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #print self.printBlock(self.data)
 
         #msg = 'elementType=%s -> %s' %(self.elementType,self.ElementType(self.elementType))
-        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.parseStressCode()
 
         if not self.isValidSubcase():# lets the user skip a certain subcase

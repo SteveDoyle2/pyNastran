@@ -1,9 +1,8 @@
-import os
 import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.materials import CREEP,MAT1,MAT2,MAT3,MAT4,MAT5,MAT8,MAT9,MAT10,MATS1
+from pyNastran.bdf.cards.materials import CREEP,MAT1,MAT2,MAT3,MAT4,MAT5,MAT8,MAT9,MAT10,MATS1,MATHP
 from pyNastran.bdf.cards.dynamic import NLPARM,TSTEP,TSTEPNL
 
 class MPT(object):

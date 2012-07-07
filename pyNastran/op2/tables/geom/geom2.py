@@ -1,14 +1,21 @@
-import os
 import sys
 from struct import unpack
 
 #from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements             import CELAS1,CELAS2,CELAS3,CELAS4,CDAMP1,CDAMP2,CDAMP3,CDAMP4,CDAMP5,CSHEAR,CONM2,CGAP,CVISC
-from pyNastran.bdf.cards.plates.elementsShell import CTRIA3,CQUAD4,CTRIA6,CQUADR,CQUAD8,CQUAD
-from pyNastran.bdf.cards.bars.elementsBars import CROD,CBAR,CTUBE,CONROD,CBEAM
-from pyNastran.bdf.cards.mass.elementsMass import CONM1,CONM2,CMASS1,CMASS2,CMASS3,CMASS4
-from pyNastran.bdf.cards.elementsSolid     import CTETRA4,CTETRA10,CPENTA6,CPENTA15,CHEXA8,CHEXA20
-from pyNastran.bdf.cards.thermal.thermal   import CHBDYG,CHBDYP
+from pyNastran.bdf.cards.elements import CGAP, CVISC
+from pyNastran.bdf.cards.dampers.elementsDamper import (CDAMP1, CDAMP2, CDAMP3, CDAMP4,CDAMP5)
+from pyNastran.bdf.cards.springs.elementsSprings import (CELAS1, CELAS2,
+                                                         CELAS3, CELAS4)
+from pyNastran.bdf.cards.plates.elementsShell import (CTRIA3, CQUAD4, CTRIA6,
+                                                      CQUADR, CQUAD8, CQUAD,
+                                                      CQUADX, CSHEAR)
+from pyNastran.bdf.cards.bars.elementsBars import (CROD, CBAR, CTUBE, CONROD,
+                                                   CBEAM)
+from pyNastran.bdf.cards.mass.elementsMass import (CONM1, CONM2, CMASS1,
+                                                   CMASS2, CMASS3, CMASS4)
+from pyNastran.bdf.cards.elementsSolid     import (CTETRA4, CTETRA10, CPENTA6,
+                                                   CPENTA15, CHEXA8, CHEXA20)
+from pyNastran.bdf.cards.thermal.thermal   import CHBDYG, CONV #, CONVM, CHBDYP
 from pyNastran.bdf.cards.nodes             import SPOINTs
 
 class Geometry2(object):
@@ -641,7 +648,8 @@ class Geometry2(object):
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9) = unpack('iiiiiiiiiii',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
-            elem = Element(None,out)
+            data = [eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9]
+            elem = Element(None,data)
             self.addOp2Element(elem)
             n+=44
         ###
