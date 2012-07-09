@@ -3,7 +3,6 @@ from struct import unpack
 
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
                                            RealEigenvalues,ComplexEigenvalues)
-#from pyNastran.op2.op2Errors import *
 #from pyNastran.bdf.cards.nodes import GRID
 #from pyNastran.bdf.cards.coordinateSystems import CORD1R,CORD2R,CORD2C,CORD3G #CORD1C,CORD1S,CORD2S
 

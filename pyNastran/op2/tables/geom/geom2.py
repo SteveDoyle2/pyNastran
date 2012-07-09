@@ -1,9 +1,10 @@
+# pylint: disable=E1101,C0103,R0902,R0904,R0914
 import sys
 from struct import unpack
 
-#from pyNastran.op2.op2Errors import *
-from pyNastran.bdf.cards.elements import CGAP, CVISC
-from pyNastran.bdf.cards.dampers.elementsDamper import (CDAMP1, CDAMP2, CDAMP3, CDAMP4,CDAMP5)
+from pyNastran.bdf.cards.elements import CGAP
+from pyNastran.bdf.cards.dampers.elementsDamper import (CDAMP1, CDAMP2, CDAMP3,
+                                                        CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.springs.elementsSprings import (CELAS1, CELAS2,
                                                          CELAS3, CELAS4)
 from pyNastran.bdf.cards.plates.elementsShell import (CTRIA3, CQUAD4, CTRIA6,
@@ -21,63 +22,63 @@ from pyNastran.bdf.cards.nodes             import SPOINTs
 class Geometry2(object):
     def readTable_Geom2(self):
         self.iTableMap = {
-                           (2408,24,180):    self.readCBAR,    # record 8
-                           (4001,40,275):    self.readCBARAO,  # record 9  - not done
-                           (5408,54,261):    self.readCBEAM,   # record 10
-                           (11401,114,9016): self.readCBEAMP,  # record 11 - not done
-                           (4601,46,298):    self.readCBEND,   # record 12 - not done
-                           (5608,56,218):    self.readCBUSH1D, # record 14 - not done
-                           (2315,23,146):    self.readCCONE,   # record 15 - not done
-                           (201,2,69):       self.readCDAMP1,  # record 16
-                           (301,3,70):       self.readCDAMP2,  # record 17
-                           (401,4,71):       self.readCDAMP3,  # record 18
-                           (501,5,72):       self.readCDAMP4,  # record 19
-                           (10608,106,404):  self.readCDAMP5,  # record 20
-                           (601,6,73):       self.readCELAS1,  # record 29
-                           (701,7,74):       self.readCELAS2,  # record 30
-                           (801,8,75):       self.readCELAS3,  # record 31
-                           (901,9,76):       self.readCELAS4,  # record 32
-                          #(8515,85,209):    self.readCFLUID2, # record 35 - not done
-                          #(8615,86,210):    self.readCFLUID3, # record 36 - not done
-                          #(8715,87,211):    self.readCFLUID4, # record 37 - not done
-                           (1908,19,104):    self.readCGAP,    # record 39 - buggy
+           (2408,24,180):    self.readCBAR,    # record 8
+           (4001,40,275):    self.readCBARAO,  # record 9  - not done
+           (5408,54,261):    self.readCBEAM,   # record 10
+           (11401,114,9016): self.readCBEAMP,  # record 11 - not done
+           (4601,46,298):    self.readCBEND,   # record 12 - not done
+           (5608,56,218):    self.readCBUSH1D, # record 14 - not done
+           (2315,23,146):    self.readCCONE,   # record 15 - not done
+           (201,2,69):       self.readCDAMP1,  # record 16
+           (301,3,70):       self.readCDAMP2,  # record 17
+           (401,4,71):       self.readCDAMP3,  # record 18
+           (501,5,72):       self.readCDAMP4,  # record 19
+           (10608,106,404):  self.readCDAMP5,  # record 20
+           (601,6,73):       self.readCELAS1,  # record 29
+           (701,7,74):       self.readCELAS2,  # record 30
+           (801,8,75):       self.readCELAS3,  # record 31
+           (901,9,76):       self.readCELAS4,  # record 32
+          #(8515,85,209):    self.readCFLUID2, # record 35 - not done
+          #(8615,86,210):    self.readCFLUID3, # record 36 - not done
+          #(8715,87,211):    self.readCFLUID4, # record 37 - not done
+           (1908,19,104):    self.readCGAP,    # record 39 - buggy
 
-                           (10808,108,406):  self.readCHBDYG,   # record 43
-                           (10908,109,407):  self.readCHBDYP,   # record 44 - not done
-                           (7308,73,253):    self.readCHEXA,    # record 45
-                           (1001,10,65):     self.readCMASS1,   # record 51
-                           (1101,11,66):     self.readCMASS2,   # record 52
-                           (1201,12,67):     self.readCMASS3,   # record 53
-                           (1301,13,68):     self.readCMASS4,   # record 54
-                           (2508,25,0):      self.readCMFREE,   # record 55 - not done
-                           (1401,14,63):     self.readCONM1,    # record 56 - not done
-                           (1501,15,64):     self.readCONM2,    # record 57
-                           (1601,16,47):     self.readCONROD,   # record 58
-                           (12701,127,408):  self.readCONV,     # record 59 - not tested
-                           (8908,89,422):    self.readCONVM,    # record 60 - not tested
-                           (4108,41,280):    self.readCPENTA,   # record 62
+           (10808,108,406):  self.readCHBDYG,   # record 43
+           (10908,109,407):  self.readCHBDYP,   # record 44 - not done
+           (7308,73,253):    self.readCHEXA,    # record 45
+           (1001,10,65):     self.readCMASS1,   # record 51
+           (1101,11,66):     self.readCMASS2,   # record 52
+           (1201,12,67):     self.readCMASS3,   # record 53
+           (1301,13,68):     self.readCMASS4,   # record 54
+           (2508,25,0):      self.readCMFREE,   # record 55 - not done
+           (1401,14,63):     self.readCONM1,    # record 56 - not done
+           (1501,15,64):     self.readCONM2,    # record 57
+           (1601,16,47):     self.readCONROD,   # record 58
+           (12701,127,408):  self.readCONV,     # record 59 - not tested
+           (8908,89,422):    self.readCONVM,    # record 60 - not tested
+           (4108,41,280):    self.readCPENTA,   # record 62
 
-                           (9108,91,507):    self.readCQUAD,    # record 68 - not tested
-                           (2958,51,177):    self.readCQUAD4,   # record 69 - maybe buggy on theta/Mcsid field
-                           (13900,139,9989): self.readCQUAD4,   # record 70 - maybe buggy on theta/Mcsid field
-                           (4701,47,326):    self.readCQUAD8,   # record 71 - maybe buggy on theta/Mcsid field
-                           (8009,80,367):    self.readCQUADR,   # record 74 - not tested
-                           (9008,90,508):    self.readCQUADX,   # record 75 - not tested
-        
-                           (3001,30,48):     self.readCROD,     # record 80
-                          #(12201,122,9013): self.readCTETP,    # record 86 - not done
-                           (5508,55,217):    self.readCTETRA,   # record 87
-                           (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
-                           (4801,48,327):    self.readCTRIA6,   # record 95 - buggy
-                           (9200,92,385):    self.readCTRIAR,   # record 98  - not done
-                           (6108,61,107):    self.readCTRIAX6,  # record 100 - not done
-                           (3701,37,49):     self.readCTUBE,    # record 103
-                           (3901,39, 50):     self.readCVISC,   # record 104 - not done
-                          #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
-                           (5551,49,105):    self.readSPOINT,   # record 118
-                          #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
-                          #(2608, 26, 60)
-                         }
+           (9108,91,507):    self.readCQUAD,    # record 68 - not tested
+           (2958,51,177):    self.readCQUAD4,   # record 69 - maybe buggy on theta/Mcsid field
+           (13900,139,9989): self.readCQUAD4,   # record 70 - maybe buggy on theta/Mcsid field
+           (4701,47,326):    self.readCQUAD8,   # record 71 - maybe buggy on theta/Mcsid field
+           (8009,80,367):    self.readCQUADR,   # record 74 - not tested
+           (9008,90,508):    self.readCQUADX,   # record 75 - not tested
+
+           (3001,30,48):     self.readCROD,     # record 80
+          #(12201,122,9013): self.readCTETP,    # record 86 - not done
+           (5508,55,217):    self.readCTETRA,   # record 87
+           (5959,59,282):    self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
+           (4801,48,327):    self.readCTRIA6,   # record 95 - buggy
+           (9200,92,385):    self.readCTRIAR,   # record 98  - not done
+           (6108,61,107):    self.readCTRIAX6,  # record 100 - not done
+           (3701,37,49):     self.readCTUBE,    # record 103
+           (3901,39, 50):     self.readCVISC,   # record 104 - not done
+          #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
+           (5551,49,105):    self.readSPOINT,   # record 118
+          #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
+          #(2608, 26, 60)
+        }
         self.readRecordTable('GEOM2')
 
     def readTable_Geom2S(self):
@@ -113,12 +114,14 @@ class Geometry2(object):
             #print "len(eData) = %s" %(len(eData))
             if   f==0:
                 out = unpack('iiiifffiiiffffff',eData)
-                (eid,pid,ga,gb,x1,x2,  x3,  f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+                (eid,pid,ga,gb,x1,x2,x3, f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+                          [f,x1,x2,x3]]
             elif f==1:
                 out = unpack('iiiifffiiiffffff',eData)
-                (eid,pid,ga,gb,x1,x2,  x3,  f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+                (eid,pid,ga,gb,x1,x2,x3,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+                          [f,x1,x2,x3]]
             elif f==2:
                 out = unpack('iiiiiiifiiffffff',eData)
                 (eid,pid,ga,gb,g0,junk,junk,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
@@ -152,16 +155,19 @@ class Geometry2(object):
             #print "len(eData) = %s" %(len(eData))
             if   f==0: # basic cid
                 out = unpack('iiiiiifffiiiffffff',eData)
-                (eid,pid,ga,gb,sa,sb, x1,x2,x3,f, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+                (eid,pid,ga,gb,sa,sb,x1,x2,x3,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+                          [f,x1,x2,x3]]
             elif f==1: # global cid
                 out = unpack('iiiiiifffiiiffffff',eData)
-                (eid,pid,ga,gb,sa,sb, x1,x2,x3,f, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+                (eid,pid,ga,gb,sa,sb,x1,x2,x3,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+                          [f,x1,x2,x3]]
             elif f==2: # grid option
                 out = unpack('iiiiiiiiiiiiffffff',eData)
-                (eid,pid,ga,gb,sa,sb, g0,xx,xx,f, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
-                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+                (eid,pid,ga,gb,sa,sb,g0,xx,xx,f,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b) = out
+                dataIn = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+                          [f,g0]]
             else:
                 raise Exception('invalid f value...f=%s' %(f))
             ###

@@ -1,11 +1,7 @@
 import os
 import sys
-import time
-from traceback import print_exc
-from pyNastran.op2.op2    import OP2,EndOfFileError
-from pyNastran.bdf.errors import *
-from pyNastran.op2.op2Errors import *
-from pyNastran.op2.test.test_op2 import getFailedFiles,runOP2,runLotsOfFiles
+#import time
+from pyNastran.op2.test.test_op2 import getFailedFiles,runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
 def parseSkippedCards(fname):

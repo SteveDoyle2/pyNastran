@@ -1,6 +1,5 @@
 import sys
 from ..real.oes_objects import stressObject,strainObject
-from pyNastran.op2.op2Errors import *
 
 
 class ComplexPlateStressObject(stressObject):

@@ -1,7 +1,7 @@
 import sys
 from struct import unpack
 
-from pyNastran.bdf.cards.properties import (NSM,PBAR,PBARL,PBEAM,
+from pyNastran.bdf.bdf import (NSM,PBAR,PBARL,PBEAM,
                                             PROD,PSHELL,PSHEAR,
                                             PCOMP,PSOLID,
                                             PVISC,PELAS,PMASS,

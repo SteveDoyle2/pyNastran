@@ -2,7 +2,7 @@ import sys
 from struct import unpack
 
 from pyNastran.op2.op2_helper import polarToRealImag
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import AddNewElementError
 
 #91  -> PENTANL
 #2   -> BEAM

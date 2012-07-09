@@ -1,10 +1,9 @@
 import sys
-import copy
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.op2Errors import *
-from oee_objects import *
+from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
+from oee_objects import StrainEnergyObject
 
 class OEE(object):
     """Table of energy"""
@@ -103,7 +102,7 @@ class OEE(object):
 
     def readOEE_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s" %(self.analysisCode,self.tableCode)
-        tfsCode = [self.tableCode,self.formatCode,self.sortCode]
+        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         
         if self.tableCode==18:
             assert self.tableName in ['ONRGY1','ONRGY2'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
@@ -128,7 +127,7 @@ class OEE(object):
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 
     def OEE_Strain4(self):
-        deviceCode = self.deviceCode
+        #deviceCode = self.deviceCode
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE

@@ -41,7 +41,7 @@ from .cards.bars.propertiesBars import (PROD, PTUBE, PBAR, PBARL,
 from .cards.mass.elementsMass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3,
                                       CMASS4, PointElement, PointMassElement,
                                       ) # CMASS5
-from .cards.mass.propertiesMass import (PMASS) # NSM
+from .cards.mass.propertiesMass import (PMASS, NSM)
 
 #--------------------------------
 from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
