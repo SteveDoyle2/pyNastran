@@ -3,7 +3,6 @@ from numpy import zeros,array
 
 from pyNastran.bdf.cards.baseCard import BaseCard,Material
 from pyNastran.bdf.cards.tables import Table
-#from thermal.materials import *
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
