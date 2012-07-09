@@ -1,6 +1,6 @@
 import sys
-from ..real.oes_objects import stressObject,strainObject #,array
-from pyNastran.op2.op2Errors import *
+from ..real.oes_objects import stressObject, strainObject
+
 
 class ComplexBarStressObject(stressObject):
     """

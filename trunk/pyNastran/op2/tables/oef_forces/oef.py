@@ -36,8 +36,6 @@ from oef_complexForceObjects import (ComplexRodForce,ComplexCBeamForce,
                                      ComplexCBUSHForce,ComplexForce_VU_2D,
                                      ComplexCBARForce,ComplexForce_VU)
 from thermal_elements import ThermalElements
-#from oef_forceObjects import *
-#from oef_complexForceObjects import *
 
 class OEF(ThermalElements,RealForces,ComplexForces):
     """Table of element forces"""
