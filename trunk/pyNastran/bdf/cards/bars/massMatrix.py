@@ -1,4 +1,4 @@
-from sympy import *
+from sympy import Symbol, Matrix, integrate
 
 z = Symbol('z')
 n = Symbol('n')

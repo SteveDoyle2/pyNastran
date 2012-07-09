@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from pyNastran.bdf.cards.baseCard import Element
 
+
 class DamperElement(Element):
     def __init__(self,card,data):
         Element.__init__(self,card,data)

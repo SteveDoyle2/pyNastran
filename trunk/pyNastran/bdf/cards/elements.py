@@ -2,14 +2,6 @@
 #import sys
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.cards.elementsRigid import *
-from pyNastran.bdf.cards.elementsSolid import *
-from pyNastran.bdf.cards.bars.elementsBars import *
-from pyNastran.bdf.cards.plates.elementsShell import *
-from pyNastran.bdf.cards.springs.elementsSprings import *
-from pyNastran.bdf.cards.mass.elementsMass import *
-from pyNastran.bdf.cards.bush.elementsBush import *
-from pyNastran.bdf.cards.dampers.elementsDamper import *
 
 #------------------------------------------------------------------------------
 class CFAST(Element):

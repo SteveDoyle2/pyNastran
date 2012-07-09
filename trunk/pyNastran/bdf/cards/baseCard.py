@@ -18,7 +18,7 @@ class BaseCard(BDF_Card):
     def writeCodeAsterLoad(self, model, gridWord='node'):
         return '# skipping %s (lid=%s) because writeCodeAsterLoad is not implemented\n' %(self.type, self.lid)
 
-    def verify(self,model,iSubcase):
+    def verify(self, model, iSubcase):
         """
         this method checks performs checks on the cards such as
         that the PBEAML has a proper material type
@@ -53,11 +53,11 @@ class BaseCard(BDF_Card):
         #raise Exception('time to upgrade...')
         return setDefaultIfBlank(value, default)
 
-    def setBlankIfDefault(self,value, default):
+    def setBlankIfDefault(self, value, default):
         """used to set default values for object repr functions"""
         return setBlankIfDefault(value, default)
 
-    def crossReference(self,model ):
+    def crossReference(self, model):
         #self.mid = model.Material(self.mid)
         msg = "%s needs to implement the 'crossReference' method" %(self.type)
         raise NotImplementedError(msg)
@@ -86,15 +86,15 @@ class BaseCard(BDF_Card):
         expands a list of values of the form [1,5,THRU,9,13]
         to be [1,5,6,7,8,9,13]
         """
-        if len(fields)==1:
+        if len(fields) == 1:
             return fields
-        #print "expandThru"
-        #print "fields = ",fields
+        #print("expandThru")
+        #print("fields = ", fields)
         out = []
         nFields = len(fields)
         i=0
         while(i<nFields):
-            if fields[i]=='THRU':
+            if fields[i] == 'THRU':
                 for j in range(fields[i-1], fields[i+1]+1):
                     out.append(j)
                 ###
@@ -114,7 +114,7 @@ class BaseCard(BDF_Card):
         @todo not tested
         @note used for QBDY3, ???
         """
-        if len(fields)==1:
+        if len(fields) == 1:
             return fields
         #print "expandThruBy"
         #print "fields = ",fields
@@ -123,9 +123,9 @@ class BaseCard(BDF_Card):
         i=0
         by = 1
         while(i<nFields):
-            if fields[i]=='THRU':
+            if fields[i] == 'THRU':
                 by = 1
-                if i+2<nFields and fields[i+2]=='BY':
+                if i+2<nFields and fields[i+2] == 'BY':
                     by = fields[i+3]
                     #sys.stderr.write("BY was found...untested...")
                     #raise NotImplementedError('implement BY support\nfields=%s' %(fields))
@@ -163,14 +163,14 @@ class BaseCard(BDF_Card):
         fieldsOut = []
         nFields = len(fields)
         for i in range(nFields):
-            if fields[i]=='THRU':
+            if fields[i] == 'THRU':
                 storedList = []
                 for j in range(fields[i-1], fields[i+1]):
                     storedList.append(fields[j])
                 ###
-            elif fields[i]=='EXCLUDE':
+            elif fields[i] == 'EXCLUDE':
                 storedSet = set(storedList)
-                while fields[i]<max(storedList):
+                while fields[i] < max(storedList):
                     storedSet.remove(fields[i])
                 storedList = list(storedSet)
             else:
@@ -205,12 +205,12 @@ class BaseCard(BDF_Card):
         out = []
         print("running post...")
         for data in mid:
-            print("data = ",data)
+            print("data = %s" %(data))
             nData = len(data)
             if nData == 1:
                 out.append(data[0]) # 1 field only
             else:
-                assert data[2]==1 # dn
+                assert data[2] == 1 # dn
                 out += [data[0], 'THRU', data[1]]
             ###
         ###
@@ -324,7 +324,7 @@ class BaseCard(BDF_Card):
             ###
         ###
         # make sure they're aren't any trailing None's (from a new line)
-        fieldsOut = self.wipeEmptyFields(fieldsOut)
+        fieldsOut = self._wipeEmptyFields(fieldsOut)
         #print "fieldsOut = ",fieldsOut,len(fieldsOut)
 
         # push the next key (aka next fields[0]) onto the next line

@@ -2,13 +2,7 @@
 #import sys
 
 # pyNastran
-#from baseCard import Property
-from pyNastran.bdf.cards.bars.propertiesBars import *
-from pyNastran.bdf.cards.plates.propertiesShell import *
-from pyNastran.bdf.cards.springs.propertiesSprings import *
-from pyNastran.bdf.cards.mass.propertiesMass import *
-from pyNastran.bdf.cards.bush.propertiesBush import *
-from pyNastran.bdf.cards.dampers.propertiesDamper import *
+from baseCard import Property
 
 class PFAST(Property):
     type = 'PFAST'
