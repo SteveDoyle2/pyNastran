@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import sys
 from struct import pack,unpack
