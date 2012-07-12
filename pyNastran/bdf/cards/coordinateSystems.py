@@ -64,20 +64,33 @@ class Coord(BaseCard):
             self.k = self.normalize(e12)
             ## j = (k cross e13) normalized
             self.j = self.normalize(cross(self.k, e13))
+        except InvalidUnitVectorError:
+            print("---InvalidUnitVectorError---")
+            print("Cp = %s" %(self.Cid()))
+            print("e1 = %s" %(self.e1))
+            print("e2 = %s" %(self.e2))
+            print("e3 = %s" %(self.e3))
+            print("e13 = %s" %(e13))
+            print("e12 = %s" %(e12))
+            print("k = norm(e12)")
+            print("k   = %s\n" %(self.k))
+            print("j = norm(cross(k,e13))")
+            raise
+        try:
             ## i = j cross k
             self.i = cross(self.j, self.k)
         except InvalidUnitVectorError:
             print("---InvalidUnitVectorError---")
-            print("Cp = ",self.Cid())
-            print("e1 = ",self.e1)
-            print("e2 = ",self.e2)
-            print("e3 = ",self.e3)
-            print("e13 = ",e13)
-            print("e12 = ",e12)
+            print("Cp = %s" %(self.Cid()))
+            print("e1 = %s" %(self.e1))
+            print("e2 = %s" %(self.e2))
+            print("e3 = %s" %(self.e3))
+            print("e13 = %s" %(e13))
+            print("e12 = %s" %(e12))
             print("k = norm(e12)")
-            print("k   = ",self.k,'\n')
+            print("k   = %s\n" %(self.k))
             print("j = norm(cross(k,e13))")
-            print("j   = ",self.j)
+            print("j   = %s" %(self.j))
             raise
         
         if debug:

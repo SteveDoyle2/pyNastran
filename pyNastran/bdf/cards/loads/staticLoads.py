@@ -1,5 +1,5 @@
 # pylint: disable=C0103,R0902,R0904,R0914
-from numpy import array, cross
+from numpy import array, cross, allclose
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import BaseCard, Load
@@ -328,8 +328,9 @@ class GRAV(BaseCard):
             self.N   = data[3:6]
             self.mb  = data[6]
             assert len(data)==7
-        ###
-        assert max(self.N)>min(self.N), 'GRAV N is a zero vector, N=%s' %(str(self.N))
+
+        assert (max(self.N)>min(self.N) and not allclose(max(abs(self.N)),0.), 
+              'GRAV N is a zero vector, N=%s' %(str(self.N)))
 
     def organizeLoads(self, model):
         typesFound = [self.type]
@@ -815,7 +816,7 @@ class PLOAD(Load):
             self.lid   = card.field(1)
             self.p     = card.field(2)
             nodes      = card.fields(3, 7)
-            self.nodes = self.wipeEmptyFields(nodes)
+            self.nodes = self._wipeEmptyFields(nodes)
         else:
             self.lid   = data[0]
             self.p     = data[1]

@@ -5,7 +5,8 @@ from math import log,exp
 
 class FREQ(BaseCard):
     """
-    Defines a set of frequencies to be used in the solution of frequency response problems.
+    Defines a set of frequencies to be used in the solution of frequency
+    response problems.
     FREQ SID F1 F2 F3 F4 F5 F6 F7
     F8 F9 F10
     """
@@ -25,8 +26,8 @@ class FREQ(BaseCard):
     def addFrequencies(self, freqs):
         """
         Combines the frequencies from 1 FREQx object with another.
-        All FREQi entries with the same frequency set identification numbers will be used. Duplicate
-        frequencies will be ignored.
+        All FREQi entries with the same frequency set identification numbers
+        will be used. Duplicate frequencies will be ignored.
         @param self the object pointer
         @param freqs the frequencies for a FREQx object
         """
@@ -71,8 +72,8 @@ class FREQ1(FREQ):
 class FREQ2(FREQ):
     """
     Defines a set of frequencies to be used in the solution of frequency
-    response problems by specification of a starting frequency, final frequency,
-    and the number of logarithmic increments desired.
+    response problems by specification of a starting frequency, final
+    frequency, and the number of logarithmic increments desired.
     FREQ2 SID F1 F2 NDF
     @note this card rewrites as a FREQ card
     """
@@ -122,8 +123,8 @@ class FREQ4(FREQ):
 class TSTEP(BaseCard):
     """
     Transient Time Step
-    Defines time step intervals at which a solution will be generated and output
-    in transient analysis.
+    Defines time step intervals at which a solution will be generated and
+    output in transient analysis.
     """
     type = 'TSTEP'
     def __init__(self,card=None,data=None):
@@ -162,11 +163,13 @@ class TSTEPNL(BaseCard):
             self.dt  = card.field(3)
             self.no  = card.field(4, 1)
             ## @note not listed in all QRGs
-            self.method  = card.field(5, 'ADAPT')
-            if self.method=='ADAPT':
+            self.method = card.field(5, 'ADAPT')
+            if self.method == 'ADAPT':
                 self.kStep = card.field(6, 2)
-            elif self.method=='ITER':
+            elif self.method == 'ITER':
                 self.kStep = card.field(6, 10)
+            elif self.method == 'AUTO':
+                self.kStep = card.field(6)
             else:
                 msg = 'invalid TSTEPNL Method.  method=|%s|' %(self.method)
                 raise RuntimeError(msg)
@@ -269,7 +272,8 @@ class TSTEPNL(BaseCard):
 
 class NLPARM(BaseCard):
     """
-    Defines a set of parameters for nonlinear static analysis iteration strategy
+    Defines a set of parameters for nonlinear static analysis iteration
+    strategy.
     NLPARM ID NINC DT KMETHOD KSTEP MAXITER CONV INTOUT
     EPSU EPSP EPSW MAXDIV MAXQN MAXLS FSTRESS LSTOL
     MAXBIS MAXR RTOLB

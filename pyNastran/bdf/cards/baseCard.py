@@ -333,9 +333,11 @@ class BaseCard(BDF_Card):
         #print ""
         return fieldsOut
 
-    def isSameCard(self, card):
+    def isSameCard(self, card, debug=False):
         fields1 = self.rawFields()
         fields2 = card.rawFields()
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
     def printRawFields(self):
@@ -377,10 +379,12 @@ class Property(BaseCard):
     def Mid(self):
         return Mid(self)
 
-    def isSameCard(self, prop):
+    def isSameCard(self, prop, debug=False):
         if self.type!=prop.type:  return False
         fields1 = self.rawFields()
         fields2 = prop.rawFields()
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
     def crossReference(self, model):
@@ -392,10 +396,12 @@ class Material(BaseCard):
         pass
         #self.type = card[0]
 
-    def isSameCard(self, mat):
+    def isSameCard(self, mat, debug=False):
         if self.type!=mat.type:  return False
         fields1 = self.rawFields()
         fields2 = mat.rawFields()
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
     def crossReference(self, model):
@@ -413,8 +419,13 @@ class Element(BaseCard):
         #self.nids = []
         pass
 
-    def isSameCard(self, element):
-        return False
+    def isSameCard(self, element, debug=False):
+        if self.type!=element.type:  return False
+        fields1 = self.rawFields()
+        fields2 = element.rawFields()
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
+        return self.isSameFields(fields1, fields2)
 
     def Pid(self):
         """returns the property ID of an element"""

@@ -88,6 +88,8 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
         pass
     except IOError:
         pass
+    except SyntaxError:
+        pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:

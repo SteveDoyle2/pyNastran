@@ -68,10 +68,12 @@ class CDAMP1(LineDamper):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid,self.Pid()]+self.nodeIDs()+[self.c1,self.c2]
         fields2 = [elem.eid,elem.Pid()]+elem.nodeIDs()+[elem.c1,elem.c2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def B(self):

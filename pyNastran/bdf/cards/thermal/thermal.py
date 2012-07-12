@@ -6,8 +6,9 @@ class ThermalCard(BaseCard):
     def __init__(self,card,data):
         pass
     def crossReference(self,model):
-        raise Exception('%s has not defined the crossReference method' %(self.type))
-    def isSameCard(self,obj):
+        raise NotImplementedError('%s has not defined the crossReference method' %(self.type))
+
+    def isSameCard(self, obj, debug=False):
         return False
 
 class ThermalBC(ThermalCard):
