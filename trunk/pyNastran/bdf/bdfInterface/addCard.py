@@ -103,6 +103,7 @@ class addMethods(object):
 
         if key in self.elements and not allowOverwrites:
             if not elem.isSameCard(self.elements[key]):
+                elem.isSameCard(self.elements[key], debug=True)
                 #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
                 assert elem.eid not in self.elements, 'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid, self.elements[elem.eid], elem)
         else:

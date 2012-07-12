@@ -7,7 +7,7 @@ class PARAM(BaseCard):
         self.key   = card.field(1)
         self.value = card.field(2)
 
-    #def isSameCard(self, param):
+    #def isSameCard(self, param, debug=False):
         #fields1 = [self.key, self.value ]
         #fields2 = [param.key, param.value]
         #for (field1, field2) in zip(fields1, fields2):

@@ -177,8 +177,6 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
         isPassed = True
     except ParamParseError:
         isPassed = True
-    except InvalidFieldError: # bad bdf field
-        isPassed = True
     except:
         #print e
         print_exc(file=sys.stdout)

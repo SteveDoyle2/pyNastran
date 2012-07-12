@@ -123,10 +123,12 @@ class CELAS1(SpringElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid]+self.nodes+[self.pid,self.c1,self.c2]
         fields2 = [elem.eid]+self.nodes+[elem.pid,elem.c1,elem.c2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def K(self):
@@ -178,10 +180,12 @@ class CELAS2(SpringElement):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(self.nodes)==2
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid]+self.nodes+[self.k,self.c1,self.c2]
         fields2 = [elem.eid]+self.nodes+[elem.k,elem.c1,elem.c2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def K(self):
@@ -254,10 +258,12 @@ class CELAS3(SpringElement):
             self.s2  = data[3]
         ###
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid,self.pid,self.s1,self.s2]
         fields2 = [elem.eid,elem.pid,elem.s1,elem.s2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def K(self):
@@ -303,10 +309,12 @@ class CELAS4(SpringElement):
             self.s2  = data[3]
         ###
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid,self.k,self.s1,self.s2]
         fields2 = [elem.eid,elem.k,elem.s1,elem.s2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def K(self):

@@ -332,7 +332,7 @@ class PCOMP(ShellProperty):
             return True
         return False
 
-    def isSameCard(self,prop):
+    def isSameCard(self, prop, debug=False):
         if self.type!=self.prop.type:  return False
         fields2 = [prop.nsm,prop.sb,prop.ft,prop.TRef,prop.ge,prop.lam]
         fields1 = [self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam]
@@ -341,6 +341,9 @@ class PCOMP(ShellProperty):
             fields1 += ply
         for ply in prop.plies:
             fields2 += ply
+
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
 
         for (field1,field2) in zip(fields1,fields2):
             if not self.isSame(field1,field2):
@@ -597,10 +600,12 @@ class PSHEAR(ShellProperty):
             self.f2  = data[5]
         ###
 
-    def isSameCard(self,prop):
+    def isSameCard(self, prop, debug=False):
         if self.type!=prop.type:  return False
         fields1 = self.rawFields()
         fields2 = prop.rawFields()
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def rawFields(self):

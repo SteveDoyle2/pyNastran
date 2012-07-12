@@ -176,10 +176,12 @@ class CMASS3(PointMassElement):
     def Mass(self):
         return self.pid.mass
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid,self.Pid(),self.s1,self.s2]
         fields2 = [elem.eid,elem.Pid(),elem.s1,elem.s2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def crossReference(self,mesh):
@@ -218,10 +220,12 @@ class CMASS4(PointMassElement):
     def Mass(self):
         return self.mass
 
-    def isSameCard(self,elem):
+    def isSameCard(self, elem, debug=False):
         if self.type!=elem.type:  return False
         fields1 = [self.eid,self.Pid(),self.s1,self.s2]
         fields2 = [elem.eid,elem.Pid(),elem.s1,elem.s2]
+        if debug:
+            print("fields1=%s fields2=%s" %(fields1, fields2))
         return self.isSameFields(fields1,fields2)
 
     def crossReference(self,mesh):
