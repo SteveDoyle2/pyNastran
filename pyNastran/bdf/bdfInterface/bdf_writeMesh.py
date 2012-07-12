@@ -1,7 +1,6 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
 
 from pyNastran.bdf.fieldWriter import printCard
-from pyNastran.bdf.errors import BDF_SyntaxError
 
 class writeMesh(object):
     def __init__(self):
@@ -639,7 +638,7 @@ class writeMesh(object):
                     for field in rejectCard:
                         if field is not None and '=' in field:
                             msg = 'cannot reject equal signed cards\ncard=%s\n' %(rejectCard)
-                            raise BDF_SyntaxError(msg)
+                            raise SyntaxError(msg)
                     raise
 
         if self.rejects:

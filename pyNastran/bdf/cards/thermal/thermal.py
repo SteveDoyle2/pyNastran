@@ -691,8 +691,8 @@ class TEMP(ThermalLoad):
     temperature-dependent material properties, or stress recovery.
     """
     type = 'TEMP'
-    def __init__(self,card=None,data=None):
-        ThermalLoad.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalLoad.__init__(self, card, data)
         
         if card:
             ## Load set identification number. (Integer > 0)
@@ -713,24 +713,24 @@ class TEMP(ThermalLoad):
             self.temperatures = {data[1]: data[2]}
         ###
 
-    def add(self,tempObj):
+    def add(self, tempObj):
         assert self.sid==tempObj.sid
-        for gid,temp in self.tempObj.temperatures.iteritems():
+        for (gid, temp) in self.tempObj.temperatures.iteritems():
             self.temperatures[gid] = temp
         ###
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         pass
 
     def rawFields(self):
         """Writes the TEMP card"""
-        fields = ['TEMP',self.sid]
+        fields = ['TEMP',self.lid]
 
         nTemps = len(self.temperatures)-1
-        for i,(gid,temp) in enumerate(sorted(self.temperatures.iteritems())):
-            fields += [gid,temp]
-            if i%3==2 and nTemps>i: # start a new TEMP card
-                fields += [None,'TEMP',self.sid]
+        for i,(gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
+            fields += [gid, temp]
+            if i%3 == 2 and nTemps > i: # start a new TEMP card
+                fields += [None, 'TEMP', self.lid]
         return fields
 
     def reprFields(self):
@@ -747,17 +747,17 @@ class TEMPD(ThermalLoadDefault):
     been given a temperature on a TEMP entry
     """
     type = 'TEMPD'
-    def __init__(self,card=None,data=None):
-        ThermalLoadDefault.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalLoadDefault.__init__(self, card, data)
         if card:
 
             fields = card.fields(1)
             nFields = len(fields)
-            assert nFields%2==0
+            assert nFields%2 == 0
 
             ## dictionary of temperatures where the key is the set ID (SIDi) and the value is the temperature (Ti)
-            self.temperatures={}
-            for i in range(0,nFields,2):
+            self.temperatures = {}
+            for i in range(0, nFields, 2):
                 self.temperatures[fields[i]] = fields[i+1]
             ###
         else:
@@ -765,11 +765,11 @@ class TEMPD(ThermalLoadDefault):
         ###
 
     def add(self,tempdObj):
-        for sid,tempd in self.tempdObj.temperatures.iteritems():
-            self.temperatures[sid] = tempd
+        for (lid, tempd) in self.tempdObj.temperatures.iteritems():
+            self.temperatures[lid] = tempd
         ###
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         pass
 
     def reprFields(self):
@@ -779,9 +779,9 @@ class TEMPD(ThermalLoadDefault):
         nTemps = len(self.temperatures)-1
         #print "self.temperatures = ",self.temperatures
         #print "nTemps = ",nTemps
-        for i,(gid,temp) in enumerate(sorted(self.temperatures.iteritems())):
-            fields += [gid,temp]
-            if i%4==3 and nTemps>i: # start a new TEMP card
+        for i,(gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
+            fields += [gid, temp]
+            if i%4 == 3 and nTemps > i: # start a new TEMP card
                 fields += ['TEMPD']
         return fields
 

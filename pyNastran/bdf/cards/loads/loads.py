@@ -439,21 +439,21 @@ class RANDPS(RandomLoad):
         if card:
             ## Random analysis set identification number. (Integer > 0)
             ## Defined by RANDOM in the Case Control Deck.
-            self.lid = card.field(2)
+            self.lid = card.field(1)
             
             ## Subcase identification number of the excited load set.
             ## (Integer > 0)
-            self.j   = card.field(3)
+            self.j   = card.field(2)
             
             ## Subcase identification number of the applied load set.
             ## (Integer >= 0; K >= J)
-            self.k   = card.field(4)
+            self.k   = card.field(3)
             
             ## Components of the complex number. (Real)
-            self.x   = card.field(5)
-            self.y   = card.field(6)
+            self.x   = card.field(4)
+            self.y   = card.field(5)
             ## Identification number of a TABRNDi entry that defines G(F).
-            self.tid = card.field(7, 0)
+            self.tid = card.field(6, 0)
 
     def crossReference(self, model):
         if self.tid:
@@ -467,6 +467,9 @@ class RANDPS(RandomLoad):
         return self.tid.tid
 
     def rawFields(self):
-        fields = [self.lid, self.j, self.k, self.x, self.y, self.Tid()]
+        fields = ['RANDPS',self.lid, self.j, self.k, self.x, self.y, self.Tid()]
         return fields
+
+    def reprFields(self):
+        return self.rawFields()
 

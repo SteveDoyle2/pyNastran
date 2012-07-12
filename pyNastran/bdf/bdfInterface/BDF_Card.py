@@ -236,7 +236,7 @@ def wipeEmptyFields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, str) and field.strip()=='':
+        if isinstance(field, str) and field.strip() == '':
             field = None
         cardB.append(field)
 

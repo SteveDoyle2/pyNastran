@@ -8,7 +8,6 @@ from numpy.linalg import det # inv
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.general.generalMath import (Area, Triangle_AreaCentroidNormal,
                                            Normal)
-from pyNastran.bdf.errors import InvalidRequestError
 
 class ShellElement(Element):
     type = 'ShellElement'
@@ -433,7 +432,7 @@ class CTRIAX6(TriShell):
         return area
 
     def Thickness(self):
-        raise InvalidRequestError('CTRIAX6 does not have a thickness')
+        raise AttributeError('CTRIAX6 does not have a thickness')
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)

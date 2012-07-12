@@ -1,7 +1,10 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+
 #import sys
 from numpy import array, pi
+
 from pyNastran.bdf.cards.baseCard import BaseCard
+
 
 class AEFACT(BaseCard):
     """
@@ -986,7 +989,7 @@ class SPLINE1(Spline):
         
         fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2, self.Set(), dz, method, usage,
                             nelements, melements]
-        fields = self.wipeEmptyFields(fields)
+        fields = self._wipeEmptyFields(fields)
         return fields
 
 class SPLINE2(Spline):
@@ -1128,7 +1131,7 @@ class SPLINE4(Spline):
         
         fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None, self.Set(), dz, method, usage,
                             nelements, melements]
-        fields = self.wipeEmptyFields(fields)
+        fields = self._wipeEmptyFields(fields)
         return fields
 
 class SPLINE5(Spline):

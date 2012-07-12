@@ -1,6 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914,W0201
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import os
 import sys
 #import copy
@@ -83,13 +83,13 @@ from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods     import bdfMethods
 
-from pyNastran.bdf.bdfInterface.getCard import getMethods
-from pyNastran.bdf.bdfInterface.addCard import addMethods
-from pyNastran.bdf.bdfInterface.BDF_Card   import BDF_Card
-from pyNastran.bdf.bdfInterface.bdf_Reader import bdfReader
-from pyNastran.bdf.bdfInterface.bdf_writeMesh   import writeMesh
-from pyNastran.bdf.bdfInterface.bdf_cardMethods import cardMethods
-from pyNastran.bdf.bdfInterface.crossReference  import XrefMesh
+from .bdfInterface.getCard import getMethods
+from .bdfInterface.addCard import addMethods
+from .bdfInterface.BDF_Card   import BDF_Card
+from .bdfInterface.bdf_Reader import bdfReader
+from .bdfInterface.bdf_writeMesh   import writeMesh
+from .bdfInterface.bdf_cardMethods import cardMethods
+from .bdfInterface.crossReference  import XrefMesh
 
 
 class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
@@ -410,8 +410,10 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         self.creepMaterials = {}
 
         # loads
-        ## stores LOAD,FORCE,MOMENT
+        ## stores LOAD, FORCE, MOMENT, etc.
         self.loads = {}
+        #self.gusts  = {} # Case Control GUST = 100
+        #self.random = {} # Case Control RANDOM = 100
 
         ## stores coordinate systems
         self.coords = {0: CORD2R() }
@@ -509,7 +511,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         self.aestats  = {}
 
         ## stores GUST cards
-        self.gusts    = {}  # can this be simplified ???
+        self.gusts    = {}
         ## stores FLFACT
         self.flfacts  = {}  # can this be simplified ???
         ## stores FLUTTER

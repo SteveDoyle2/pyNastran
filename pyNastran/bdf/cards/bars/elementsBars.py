@@ -6,7 +6,7 @@ from numpy import matrix,zeros,ones,array,transpose,dot #,diag,pi
 from numpy.linalg import norm
 #from pyNastran.general.generalMath import printMatrix
 
-from pyNastran.bdf.errors import StiffnessMatrixError, CardInstantiationError
+from pyNastran.bdf.errors import CardInstantiationError
 from pyNastran.bdf.cards.baseCard import Element,Mid
 
 
@@ -395,7 +395,7 @@ class CROD(LineElement):
         
         if L==0.0:
             msg = 'invalid CROD length=0.0\n%s' %(self.__repr__())
-            raise StiffnessMatrixError(msg)
+            raise ZeroDivisionError(msg)
         
         A = self.Area()
         #mat = self.mid
@@ -782,7 +782,7 @@ class CBAR(LineElement):
         
         if L==0.0:
             msg = 'invalid CBAR length=0.0\n%s' %(self.__repr__())
-            raise StiffnessMatrixError(msg)
+            raise ZeroDivisionError(msg)
         
         A = self.Area()
         #mat = self.mid

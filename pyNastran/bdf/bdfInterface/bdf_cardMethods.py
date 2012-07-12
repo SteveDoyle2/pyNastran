@@ -2,8 +2,7 @@
 
 import sys
 #from BDF_Card import collapse
-from pyNastran.bdf.errors import (TabCommaCharacterError,
-                                  WhitespaceCardParseError,
+from pyNastran.bdf.errors import (WhitespaceCardParseError,
                                   ScientificCardParseError,
                                   FloatScientificCardParseError,CardParseError)
 
@@ -35,10 +34,10 @@ class cardMethods(object):
         lines2 = []
         for line in lines:
             if '\t' in line:
-                #raise TabCharacterError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
+                #raise SyntaxError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
                 if ',' in line:
                     #expandTabCommas(line2)
-                    raise TabCommaCharacterError('tabs and commas in the same line are not supported...line=|%r|' %(line))
+                    raise SyntaxError('tabs and commas in the same line are not supported...line=|%r|' %(line))
                 line = line.expandtabs()
             ###
             lines2.append(line)
@@ -337,7 +336,6 @@ class cardMethods(object):
         #fields.append(field)
         sline = [field]+line[i:72].split(',')
         print "expandTabCommas = |%r|" %(sline)
-        #print field
         return fields
 
     def parseCSV(self,sline):
