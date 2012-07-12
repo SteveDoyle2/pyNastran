@@ -329,8 +329,8 @@ class GRAV(BaseCard):
             self.mb  = data[6]
             assert len(data)==7
 
-        assert (max(self.N)>min(self.N) and not allclose(max(abs(self.N)),0.), 
-              'GRAV N is a zero vector, N=%s' %(str(self.N)))
+        assert not allclose(max(abs(self.N)),0.),(
+          'GRAV N is a zero vector, N=%s' %(str(self.N)))
 
     def organizeLoads(self, model):
         typesFound = [self.type]
