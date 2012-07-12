@@ -6,9 +6,11 @@ numpy.seterr(all='raise')
 import traceback
 
 #import pyNastran
-from pyNastran.bdf.errors import BDF_SyntaxError,TabCharacterError,ClosedBDFError,ScientificCardParseError,TabCommaCharacterError,MissingFileError
+from pyNastran.bdf.errors import ScientificCardParseError
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdf import ShellElement,SolidElement,LineElement,RigidElement,SpringElement,PointElement,DamperElement,NastranMatrix
+from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
+                               RigidElement, SpringElement, PointElement,
+                               DamperElement, NastranMatrix)
 from compareCardContent import compareCardContent
 
 import pyNastran.bdf.test
@@ -35,17 +37,13 @@ def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
-        #except MissingFileError:
-        #    pass
-        #except TabCharacterError:
-        #    pass
-        #except TabCommaCharacterError:
+        #except SyntaxError:
         #    pass
         #except ScientificParseError:
         #    pass
-        #except ClosedBDFError:
+        #except IOError:
         #    pass
-        #except BDF_SyntaxError:
+        #except BDFSyntaxError:
         #    pass
         except SystemExit:
             sys.exit('sys.exit...')
@@ -86,17 +84,9 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except MissingFileError:
-        pass
-    except TabCharacterError:
-        pass
-    except TabCommaCharacterError:
-        pass
     except ScientificCardParseError:
         pass
-    except ClosedBDFError:
-        pass
-    except BDF_SyntaxError:
+    except IOError:
         pass
     except SystemExit:
         sys.exit('sys.exit...')
@@ -181,8 +171,9 @@ def computeInts(cards1, cards2, fem1):
     
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
-    msg = ' diffKeys1=%s diffKeys2=%s' %(diffKeys1,diffKeys2)
-    print(msg)
+    if diffKeys1 or diffKeys2:
+        print(' diffKeys1=%s diffKeys2=%s' %(diffKeys1, diffKeys2))
+
     for key in sorted(allKeys):
         msg = ''
         if key in listKeys1: value1 = cards1[key]
@@ -219,8 +210,10 @@ def compute(cards1,cards2):
     
     listKeys1 = list(cardKeys1)
     listKeys2 = list(cardKeys2)
-    msg = 'diffKeys1=%s diffKeys2=%s' %(diffKeys1,diffKeys2)
-    #print msg
+    msg = ''
+    if diffKeys1 or diffKeys2:
+        msg = 'diffKeys1=%s diffKeys2=%s' %(diffKeys1, diffKeys2)
+
     for key in sorted(allKeys):
         msg = ''
         if key in listKeys1: value1 = cards1[key]

@@ -19,7 +19,7 @@ class XrefMesh(object):
         Links up all the cards to the cards they reference
         """
         if xref:
-            self.log.info("Cross Referencing...")
+            self.log.debug("Cross Referencing...")
             #for key,e in self.elements.iteritems():
                 #print(e)
 

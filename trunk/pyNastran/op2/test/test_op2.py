@@ -6,8 +6,7 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.op2.op2    import OP2 #, EndOfFileError
 from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError, 
-                                 InvalidSubcaseParseError, InvalidFieldError,
-                                 MissingFileError)
+                                 InvalidSubcaseParseError)
 from pyNastran.op2.op2Errors import TapeCodeError
 
 def parseTableNamesFromF06(f06Name):
@@ -34,7 +33,10 @@ def getFailedFiles(filename):
         files.append(line.strip())
     return files
 
-def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,writeMatlab=True,deleteF06=True,printResults=True,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
+def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
+                   writeMatlab=True, deleteF06=True, printResults=True,
+                   debug=True, saveCases=True, skipFiles=[],
+                   stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -42,16 +44,20 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,writeMatlab=
     nTotal  = 0
     nPassed = 0
     t0 = time.time()
-    for i,op2file in enumerate(files[nStart:nStop],nStart):  # 149
+    for (i, op2file) in enumerate(files[nStart:nStop], nStart):  # 149
         baseName = os.path.basename(op2file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles:
             print "%"*80
             print 'file=%s\n' %(op2file)
             n = '%s ' %(i)
-            sys.stderr.write('%sfile=%s\n' %(n,op2file))
+            sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
-            isPassed = runOP2(op2file,makeGeom=makeGeom,writeBDF=writeBDF,writeF06=writeF06,writeMatlab=writeMatlab,deleteF06=deleteF06,printResults=printResults,iSubcases=iSubcases,debug=debug,stopOnFailure=stopOnFailure) # True/False
+            isPassed = runOP2(op2file, makeGeom=makeGeom, writeBDF=writeBDF,
+                              writeF06=writeF06, writeMatlab=writeMatlab,
+                              deleteF06=deleteF06, printResults=printResults,
+                              iSubcases=iSubcases, debug=debug,
+                              stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
                 sys.stderr.write('**file=%s\n' %(op2file))
                 failedCases.append(op2file)
@@ -75,13 +81,15 @@ def runLotsOfFiles(files,makeGeom=True,writeBDF=False,writeF06=True,writeMatlab=
     print msg
     sys.exit(msg)
 
-def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=True,isMagPhase=False,deleteF06=False,printResults=True,iSubcases=[],debug=False,stopOnFailure=True):
-    assert '.op2' in op2FileName.lower(),'op2FileName=%s is not an OP2' %(op2FileName)
+def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
+           writeMatlab=True, isMagPhase=False, deleteF06=False,
+           printResults=True, iSubcases=[], debug=False, stopOnFailure=True):
+    assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' %(op2FileName)
     isPassed = False
     stopOnFailure = False
     #debug = True
     try:
-        op2 = OP2(op2FileName,makeGeom=makeGeom,debug=debug)
+        op2 = OP2(op2FileName, makeGeom=makeGeom, debug=debug)
         op2.setSubcases(iSubcases)
 
         #op2.readBDF(op2.bdfFileName,includeDir=None,xref=False)
@@ -93,13 +101,13 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=T
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if writeF06:
             (model,ext) = os.path.splitext(op2FileName)
-            op2.writeF06(model+'.f06.out',isMagPhase=isMagPhase)
+            op2.writeF06(model+'.f06.out', isMagPhase=isMagPhase)
             if deleteF06:
                 os.remove(model+'.f06.out')
 
         if writeMatlab:
             (model,ext) = os.path.splitext(op2FileName)
-            op2.writeMatlab(model+'.m',isMagPhase=isMagPhase)
+            op2.writeMatlab(model+'.m', isMagPhase=isMagPhase)
 
         #print op2.printResults()
         if printResults:
@@ -138,8 +146,6 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=T
     #except InvalidMarkerError:
         #isPassed = True
 
-    #except TabCharacterError:
-    #    isPassed = True
     #except EndOfFileError:
     #    isPassed = True
     except SystemExit:
@@ -162,7 +168,7 @@ def runOP2(op2FileName,makeGeom=False,writeBDF=False,writeF06=True,writeMatlab=T
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except MissingFileError: # missing bdf file
+    except IOError: # missing file
         isPassed = False
         raise
     except InvalidSubcaseParseError:

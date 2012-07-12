@@ -1,5 +1,5 @@
 from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
-from pyNastran.bdf.fieldWriter import printField,printCard
+from pyNastran.bdf.fieldWriter import printField, printCard
 
 def assertFields(card1,card2):
         try:
@@ -9,10 +9,10 @@ def assertFields(card1,card2):
             print "card1 = \n%s" %(card1)
             print "card2 = \n%s" %(card2)
             raise
-        assert len(fields1)==len(fields2),'len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s' %(len(fields1),len(fields2),fields1,fields2,printCard(fields1),printCard(fields2))
-        for i,(f1,f2) in enumerate(zip(fields1,fields2)):
-            v1=printField(f1)
-            v2=printField(f2)
+        assert len(fields1) == len(fields2),'len(fields1)=%s len(fields2)=%s\n%r\n%r\n%s\n%s' %(len(fields1),len(fields2),fields1,fields2,printCard(fields1),printCard(fields2))
+        for i,(f1, f2) in enumerate(zip(fields1, fields2)):
+            v1 = printField(f1)
+            v2 = printField(f2)
             assert v1==v2,'cardName=%s ID=%s i=%s f1=%r f2=%r v1=%r v2=%r\n%r\n%r' %(fields1[0],fields1[1],i,f1,f2,v1,v2,fields1,fields2)
             
 def compareCardContent(fem1,fem2):
@@ -45,155 +45,155 @@ def compareCardContent(fem1,fem2):
     for key in fem1.params:
         card1 = fem1.params[key]
         card2 = fem2.params[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.nodes:
         card1 = fem1.nodes[key]
         card2 = fem2.nodes[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.elements:
         card1 = fem1.elements[key]
         card2 = fem2.elements[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.rigidElements:
         card1 = fem1.rigidElements[key]
         card2 = fem2.rigidElements[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.properties:
         card1 = fem1.properties[key]
         card2 = fem2.properties[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.materials:
         card1 = fem1.materials[key]
         card2 = fem2.materials[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.creepMaterials:
         card1 = fem1.creepMaterials[key]
         card2 = fem2.creepMaterials[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.loads:
         loads1 = fem1.loads[key]
         loads2 = fem2.loads[key]
         for card1,card2 in zip(loads1,loads2):
-            assertFields(card1,card2)
+            assertFields(card1, card2)
 
     for key in fem1.coords:
         card1 = fem1.coords[key]
         card2 = fem2.coords[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     #for key in fem1.spcs:
         #card1 = fem1.spcs[key]
         #card2 = fem2.spcs[key]
-        #assertFields(card1,card2)
+        #assertFields(card1, card2)
 
     #for key in fem1.spcadds:
         #card1 = fem1.spcadds[key]
         #card2 = fem2.spcadds[key]
-        #assertFields(card1,card2)
+        #assertFields(card1, card2)
 
     #for key in fem1.mpcs:
         #card1 = fem1.mpcs[key]
         #card2 = fem2.mpcs[key]
-        #assertFields(card1,card2)
+        #assertFields(card1, card2)
 
     #for key in fem1.mpcadds:
         #card1 = fem1.mpcadds[key]
         #card2 = fem2.mpcadds[key]
-        #assertFields(card1,card2)
+        #assertFields(card1, card2)
 
     for key in fem1.dareas:
         card1 = fem1.dareas[key]
         card2 = fem2.dareas[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.nlparms:
         card1 = fem1.nlparms[key]
         card2 = fem2.nlparms[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.tsteps:
         card1 = fem1.tsteps[key]
         card2 = fem2.tsteps[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.dequations:
         card1 = fem1.dequations
         card2 = fem2.dequations
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.frequencies:
         card1 = fem1.frequencies[key]
         card2 = fem2.frequencies[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.sets:
         card1 = fem1.sets[key]
         card2 = fem2.sets[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.setsSuper:
         card1 = fem1.setsSuper[key]
         card2 = fem2.setsSuper[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.tables:
         card1 = fem1.tables[key]
         card2 = fem2.tables[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.randomTables:
         card1 = fem1.randomTables[key]
         card2 = fem2.randomTables[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.methods:
         card1 = fem1.methods[key]
         card2 = fem2.methods[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.cMethods:
         card1 = fem1.cMethods[key]
         card2 = fem2.cMethods[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
-    compareMatrices(fem1,fem2)
-    compareOptimizationContent(fem1,fem2)
-    compareAeroContent(fem1,fem2)
-    compareThermalContent(fem1,fem2)
+    compareMatrices(fem1, fem2)
+    compareOptimizationContent(fem1, fem2)
+    compareAeroContent(fem1, fem2)
+    compareThermalContent(fem1, fem2)
 
 def compareMatrices(fem1,fem2):
     for key in fem1.dmigs:
         card1 = fem1.dmigs[key]
         card2 = fem2.dmigs[key]
-        assert str(card1)==str(card2)
-        #assertFields(card1,card2)
+        assert str(card1) == str(card2)
+        #assertFields(card1, card2)
 
     #for key in fem1.dmis:
         #card1 = fem1.dmis[key]
         #card2 = fem2.dmis[key]
-        #assert str(card1)==str(card2)
+        #assert str(card1) == str(card2)
 
     for key in fem1.dmijs:
         card1 = fem1.dmijs[key]
         card2 = fem2.dmijs[key]
-        assert str(card1)==str(card2)
+        assert str(card1) == str(card2)
 
     for key in fem1.dmijis:
         card1 = fem1.dmijis[key]
         card2 = fem2.dmijis[key]
-        assert str(card1)==str(card2)
+        assert str(card1) == str(card2)
 
     for key in fem1.dmiks:
         card1 = fem1.dmiks[key]
         card2 = fem2.dmiks[key]
-        assert str(card1)==str(card2)
+        assert str(card1) == str(card2)
 
 
 def compareThermalContent(fem1,fem2):
@@ -206,18 +206,17 @@ def compareThermalContent(fem1,fem2):
         BCs1 = fem1.bcs[key]
         BCs2 = fem2.bcs[key]
         for card1,card2 in zip(BCs1,BCs2):
-            assertFields(card1,card2)
-        ###
+            assertFields(card1, card2)
 
     for key in fem1.thermalMaterials:
         card1 = fem1.thermalMaterials[key]
         card2 = fem2.thermalMaterials[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.phbdys:
         card1 = fem1.phbdys[key]
         card2 = fem2.phbdys[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.convectionProperties:
         card1 = fem1.convectionProperties[key]
@@ -234,27 +233,27 @@ def compareOptimizationContent(fem1,fem2):
     for key in fem1.dconstrs:
         card1 = fem1.dconstrs[key]
         card2 = fem2.dconstrs[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.desvars:
         card1 = fem1.desvars[key]
         card2 = fem2.desvars[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.ddvals:
         card1 = fem1.ddvals[key]
         card2 = fem2.ddvals[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.dresps:
         card1 = fem1.dresps[key]
         card2 = fem2.dresps[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.dvprels:
         card1 = fem1.dvprels[key]
         card2 = fem2.dvprels[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
 def compareAeroContent(fem1,fem2):
     assert len(fem1.caeros)   == len(fem2.caeros)
@@ -276,78 +275,77 @@ def compareAeroContent(fem1,fem2):
     for key in fem1.caeros:
         card1 = fem1.caeros[key]
         card2 = fem2.caeros[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.paeros:
         card1 = fem1.paeros[key]
         card2 = fem2.paeros[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.aero:
         card1 = fem1.aero[key]
         card2 = fem2.aero[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.aeros:
         card1 = fem1.aeros[key]
         card2 = fem2.aeros[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.aeparams:
         card1 = fem1.aeparams[key]
         card2 = fem2.aeparams[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.aelinks:
         aelinks1 = fem1.aelinks[key]
         aelinks2 = fem2.aelinks[key]
-        for (card1,card2) in zip(aelinks1,aelinks2):
-            assertFields(card1,card2)
-        ###
+        for (card1, card2) in zip(aelinks1, aelinks2):
+            assertFields(card1, card2)
 
     for key in fem1.aelists:
         card1 = fem1.aelists[key]
         card2 = fem2.aelists[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.aesurfs:
         card1 = fem1.aesurfs[key]
         card2 = fem2.aesurfs[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.aestats:
         card1 = fem1.aestats[key]
         card2 = fem2.aestats[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.gusts:
         card1 = fem1.gusts[key]
         card2 = fem2.gusts[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.flfacts:
         card1 = fem1.flfacts[key]
         card2 = fem2.flfacts[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.flutters:
         card1 = fem1.flutters[key]
         card2 = fem2.flutters[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for i in range(len(fem1.mkaeros)):
         card1 = fem1.mkaeros[i]
         card2 = fem2.mkaeros[i]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.splines:
         card1 = fem1.splines[key]
         card2 = fem2.splines[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
     for key in fem1.trims:
         card1 = fem1.trims[key]
         card2 = fem2.trims[key]
-        assertFields(card1,card2)
+        assertFields(card1, card2)
 
 

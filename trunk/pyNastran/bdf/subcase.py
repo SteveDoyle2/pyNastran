@@ -1,5 +1,4 @@
 import sys
-from pyNastran.bdf.errors import InvalidResultCode
 
 class Subcase(object):
     solCodeMap = {
@@ -283,7 +282,7 @@ class Subcase(object):
                  }
         print "key=%s" %(str(key))
         if key not in tables:
-            raise InvalidResultCode(key)
+            raise KeyError(key)
         tableCode = tables[key]
         return tableCode
         

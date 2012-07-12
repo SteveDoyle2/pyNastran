@@ -2,13 +2,11 @@
 import os
 import sys
 
-from pyNastran.bdf.errors import MissingFileError, ClosedBDFError
-
 class bdfReader(object):
     def __init__(self, debug, log):
         self.relpath = True
         if sys.version_info < (2,6):
-            version = sys.version_info
+            #version = sys.version_info
             self.relpath = False
             #raise Exception("must use python 2.6 or greater...version=%s" %(str(version)))
 
@@ -22,7 +20,7 @@ class bdfReader(object):
             log = loggerObj.startLog(word) # or info
         self.log = log
 
-    def printFileName(self,filename):
+    def printFileName(self, filename):
         """
         Takes a path such as C:/work/fem.bdf and locates the file using relative paths
         If it's on another drive, the path is not modified.
@@ -31,27 +29,28 @@ class bdfReader(object):
         @retval filenameString a shortened representation of the filename
         """
         driveLetter = os.path.splitdrive(filename)[0]
-        if driveLetter==os.path.splitdrive(os.curdir)[0] and self.relpath:
+        if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
             return os.path.relpath(filename)
         else:
             return filename
         ###
 
-    def openFile(self,infileName):
+    def openFile(self, infileName):
         """
         Takes a filename and opens the file.  
         This method is used in order to support INCLUDE files.
         """
         #print self.isOpened
-        if self.isOpened[infileName]==False:
+        if self.isOpened[infileName] == False:
             self.activeFileNames.append(infileName)
-            #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,os.getcwd()))
+            #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName, os.getcwd()))
             if not os.path.exists(infileName):
-                raise MissingFileError("infileName=|%s| does not exist..." %(infileName))
+                msg = "infileName=|%s| does not exist..." %(infileName)
+                raise IOError(msg)
             infile = open(infileName,'r')
             self.infilesPack.append(infile)
             self.lineNumbers.append(0)
-            self.isOpened[infileName]=True
+            self.isOpened[infileName] = True
             self.linesPack.append([])
         ###
         else:
@@ -84,13 +83,13 @@ class bdfReader(object):
         @param debug developer debug
         @retval line the next line in the BDF or None if it's the end of a the current file
         """
-        self.lineNumbers[-1]+=1
+        self.lineNumbers[-1] += 1
         linesPack = self.makeLinesPack(debug=False)
-        #print "len(linesPack) = ",len(linesPack)
+        #print "len(linesPack) = ", len(linesPack)
         #for line in linesPack:
             #print("$  |%r|" %(line))
 
-        if len(linesPack)==0:
+        if len(linesPack) == 0:
             self.closeFile()
             return None
             #linesPack = self.makeLinesPack(debug=debug)
@@ -103,12 +102,12 @@ class bdfReader(object):
     #    return self.infilesPack[-1].readline()
 
     #    infile = self.infilesPack[-1]
-    #    #print "infile = |%s|" %(infile),type(infile)
+    #    #print "infile = |%s|" %(infile), type(infile)
     #    line = infile.readline()
     #    print "line = |%r|" %(line)
     #    return line
 
-    def closeFile(self,debug=False):
+    def closeFile(self, debug=False):
         """
         Closes the active file object.
         If no files are open, the function is skipped.
@@ -116,7 +115,7 @@ class bdfReader(object):
         @param self the object pointer
         @param debug developer debug
         """
-        if len(self.infilesPack)==0:
+        if len(self.infilesPack) == 0:
             return
         if debug:
             self.log.debug("*closing")
@@ -130,8 +129,10 @@ class bdfReader(object):
         linesPack = self.linesPack.pop()
         self.isOpened[activeFileName] = False
         
-        if len(self.linesPack)==0:
-            raise ClosedBDFError('\nThe bdf closed unexpectedly...\n  an Executive and Case Control Decks are required...put a CEND and BEGIN BULK in the BDF')
+        if len(self.linesPack) == 0:
+            raise IOError('\nThe bdf closed unexpectedly...\n  an Executive '
+                          'and Case Control Decks are required...'
+                          'put a CEND and BEGIN BULK in the BDF')
         nlines = len(self.linesPack[-1])
         ## determines if self.activefilename should be closed at the next opportunity
         self.doneReading = False
@@ -143,7 +144,7 @@ class bdfReader(object):
         ###
         #print "\n\n"
 
-    def _setInfile(self,bdfFileName,includeDir=None):
+    def _setInfile(self, bdfFileName, includeDir=None):
         """
         sets up the basic file/lines/cardCounting operations
         @param self the object pointer

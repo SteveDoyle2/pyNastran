@@ -10,8 +10,6 @@ class BaseCard(BDF_Card):
     #def __init__(self,card):
     #    pass
 
-    #def wipeEmptyFields(self,card): # BaseCard
-
     def writeCodeAster(self):
         return '# skipping %s  because writeCodeAster is not implemented\n' %(self.type)
 
@@ -41,7 +39,7 @@ class BaseCard(BDF_Card):
 
     def removeTrailingNones(self, fields):
         """removes blank fields at the end of a card object"""
-        self.wipeEmptyFields(fields)
+        self._wipeEmptyFields(fields)
 
     def printCard(self, fields, tol=0.):
         """prints a card object"""
@@ -362,7 +360,6 @@ class BaseCard(BDF_Card):
             print('problem printing %s card' %(self.type))
             print("fields = ",fields)
             raise
-###
 
 def Mid(self):
     #print str(self)
