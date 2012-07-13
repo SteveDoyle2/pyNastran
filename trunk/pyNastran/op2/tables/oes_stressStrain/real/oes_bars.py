@@ -66,7 +66,7 @@ class BarStressObject(stressObject):
         #print "dt = ",dt
         #print "dtName = ",dtName
         if dt not in self.s1:
-            self.updateDt(self.dataCode,dt)
+            self.updateDt(self.dataCode, dt)
             self.isTransient = True
 
         for line in data:
@@ -86,9 +86,9 @@ class BarStressObject(stressObject):
         ###
 
     def getLength(self):
-        return (68,'iffffffffffffffff')
+        return (68, 'iffffffffffffffff')
 
-    def deleteTransient(self,dt):
+    def deleteTransient(self, dt):
         del self.s1[dt]
         del self.s2[dt]
         del self.s3[dt]
@@ -102,7 +102,7 @@ class BarStressObject(stressObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self, dt):
         """
         initializes the transient variables
         """
@@ -464,7 +464,7 @@ class BarStrainObject(strainObject):
         k.sort()
         return k
 
-    def addNewTransient(self,dt):
+    def addNewTransient(self, dt):
         """
         initializes the transient variables
         """

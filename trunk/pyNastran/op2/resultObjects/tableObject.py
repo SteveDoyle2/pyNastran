@@ -55,16 +55,16 @@ class TableObject(scalarObject):  # displacement style table
             self.rotations[dt][nodeID]    = array([r1,r2,r3])
         ###
 
-    def updateDt(self,dataCode,dt):
+    def updateDt(self, dataCode, dt):
         self.dataCode = dataCode
         self.applyDataCode()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
+            self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'], dt, self.iSubcase))
             self.dt = dt
-            self.addNewTransient()
+            self.addNewTransient(dt)
         ###
 
-    def deleteTransient(self,dt):
+    def deleteTransient(self, dt):
         del self.translations[dt]
         del self.rotations[dt]
 
@@ -270,7 +270,7 @@ class TableObject(scalarObject):  # displacement style table
         """
         name = displacements
         """
-        print("transient!!!!")
+        #print("transient!!!!")
         #msg = []
 
         times = self.translations.keys()
@@ -561,7 +561,7 @@ class ComplexTableObject(scalarObject):
         self.applyDataCode()
         if dt is not None:
             self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
-            self.addNewTransient()
+            self.addNewTransient(dt)
         ###
 
     def deleteTransient(self,dt):

@@ -3,8 +3,10 @@ import sys
 
 from pyNastran.general.general import printBadPath
 
-#RealEigenvalues,ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
-from pyNastran.op2.tables.oug.oug_eigenvectors import eigenVectorObject
+#ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
+from pyNastran.op2.tables.oug.oug_eigenvectors import EigenVectorObject #,ComplexEigenVectorObject
+from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues,ComplexEigenvalues
+
 from pyNastran.f06.tables.oes import OES  # OES
 from pyNastran.f06.tables.oug import OUG  # OUG
 from pyNastran.f06.tables.oqg import OQG  # OUG
@@ -296,7 +298,7 @@ class F06(OES,OUG,OQG,F06Writer):
         (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         
         headers = self.skip(2)
-        data = self.readTable([int,int,float,float,float,float,float])
+        data = self.readTable([int, int, float, float, float, float, float])
         
         if iSubcase in self.eigenvalues:
             self.eigenvalues[iSubcase].addF06Data(data)
@@ -322,6 +324,7 @@ class F06(OES,OUG,OQG,F06Writer):
         if iSubcase in self.eigenvalues:
             self.eigenvalues[iSubcase].addF06Data(data)
         else:
+            isSort1 = True
             self.eigenvalues[iSubcase] = ComplexEigenvalues(iSubcase)
             self.eigenvalues[iSubcase].addF06Data(data)
         self.iSubcases.append(iSubcase)
@@ -362,13 +365,13 @@ class F06(OES,OUG,OQG,F06Writer):
         (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         
-        dataCode = {'log':self.log,'analysisCode':analysisCode,'deviceCode':1,'tableCode':7,'sortCode':0,
-                    'sortBits':[0,0,0],'numWide':8,
-                    'formatCode':1,
-                    'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
-                    'dataNames':['mode','eigr','modeCycle'],
-                    'name':'mode',
-                    'tableName':'OUGV1',
+        dataCode = {'log':self.log, 'analysisCode':analysisCode,
+                    'deviceCode':1, 'tableCode':7, 'sortCode':0,
+                    'sortBits':[0, 0, 0],'numWide':8, 'formatCode':1,
+                    'mode':iMode, 'eigr':transient[1], 'modeCycle':cycle,
+                    'dataNames':['mode', 'eigr', 'modeCycle'],
+                    'name':'mode', 'tableName':'OUGV1',
+                    'nonlinearFactor':iMode,
                     #'sCode':0,
                     #'elementName':'CBAR','elementType':34,'stressBits':stressBits,
                     }
@@ -378,7 +381,9 @@ class F06(OES,OUG,OQG,F06Writer):
         if iSubcase in self.eigenvectors:
             self.eigenvectors[iSubcase].readF06Data(dataCode,data)
         else:
-            self.eigenvectors[iSubcase] = eigenVectorObject(dataCode,iSubcase,iMode)
+            isSort1 = True
+            self.eigenvectors[iSubcase] = EigenVectorObject(dataCode, isSort1,
+                                                            iSubcase,iMode)
             self.eigenvectors[iSubcase].readF06Data(dataCode,data)
         ###
     

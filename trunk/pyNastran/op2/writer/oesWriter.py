@@ -20,10 +20,10 @@ class Oes1Writer(object):
         # approachCode=1, tableCode=1
         for data in stress:
             for iSubcase in data:
-                msg += writeMarkers([self.iTable,1,0])
+                msg += self.writeMarkers([self.iTable,1,0])
                 msg += self.writeOES(iSubcase,data)
                 self.iTable-=1
-        msg += writeMarkers([self.iTable,1,0])
+        msg += self.writeMarkers([self.iTable,1,0])
         
         # ----------------
         msg += self.printHeader('OSTR1X',8)
@@ -38,19 +38,19 @@ class Oes1Writer(object):
         ]
         for data in strain:
             for iSubcase in data:
-                msg += writeMarkers([self.iTable,1,0])
+                msg += self.writeMarkers([self.iTable,1,0])
                 msg += self.writeOES(iSubcase,data)
                 self.iTable-=1
-        msg += writeMarkers([self.iTable,1,0])
+        msg += self.writeMarkers([self.iTable,1,0])
 
         # ----------------
         msg = self.printHeader('OSTRIC',8)
         cstrain = [self.compositePlateStrain,] # OSTR1C
         for data in cstrain:
             for iSubcase in data:
-                msg += writeMarkers([self.iTable,1,0])
+                msg += self.writeMarkers([self.iTable,1,0])
                 msg += self.writeOES(iSubcase,data)
                 self.iTable-=1
-        msg += writeMarkers([self.iTable,1,0])
+        msg += self.writeMarkers([self.iTable,1,0])
 
 

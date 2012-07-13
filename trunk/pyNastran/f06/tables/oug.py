@@ -1,5 +1,7 @@
-from pyNastran.op2.tables.oug.oug_displacements import displacementObject,complexDisplacementObject
-from pyNastran.op2.tables.oug.oug_temperatures  import temperatureObject
+#pylint: disable=E1101,W0612,R0201
+
+from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject, ComplexDisplacementObject
+from pyNastran.op2.tables.oug.oug_temperatures  import TemperatureObject
 
 
 class OUG(object):
@@ -22,11 +24,11 @@ class OUG(object):
         sortCode     = 0 (Sort2,Real,Sorted Results) => sortBits = [0,0,0]
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName, iSubcase, transient, dt, analysisCode, isSort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         dataCode = {'log':self.log, 'analysisCode':analysisCode, 
                     'deviceCode':1, 'tableCode':1,
-                    'sortCode':0, 'sortBits':[0,0,0], 'numWide':8,
+                    'sortCode':0, 'sortBits':[0, 0, 0], 'numWide':8,
                     'tableName':'OUG', 'nonlinearFactor': dt}
         #print "headers = %s" %(headers)
         data = self.readTable([int,str,float,float,float,float,float,float])
@@ -35,7 +37,7 @@ class OUG(object):
             self.displacements[iSubcase].addF06Data(data,transient)
         else:
             isSort1 = True
-            disp = displacementObject(dataCode,isSort1,iSubcase)
+            disp = DisplacementObject(dataCode,isSort1,iSubcase)
             disp.addF06Data(data,transient)
             self.displacements[iSubcase] = disp
         self.iSubcases.append(iSubcase)
@@ -58,44 +60,44 @@ class OUG(object):
         analysisCode = 5 (Frequency)
         sortCode = 2 (Random Response)
         """
-        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName, iSubcase, transient, dt, analysisCode, isSort1) = self.readSubcaseNameID()
         headers = self.skip(3)
         data = []
 
         dataCode = {'log':self.log, 'analysisCode':5, 'deviceCode':1,
-                    'tableCode':1, 'sortCode':2, 'sortBits':[0,1,1],
+                    'tableCode':1, 'sortCode':2, 'sortBits':[0, 1, 1],
                     'numWide':14, 'formatCode':3, 'tableName':'OUGV1',
                     'nonlinearFactor': dt, 
-                    #'mode':iMode,'eigr':transient[1],'modeCycle':cycle,
-                    #'dataNames':['mode','eigr','modeCycle'],
+                    #'mode':iMode,'eigr':transient[1], 'modeCycle':cycle,
+                    #'dataNames':['mode', 'eigr', 'modeCycle'],
                     #'name':'mode',
                     #'sCode':0,
-                    #'elementName':'CBAR','elementType':34,'stressBits':stressBits,
+                    #'elementName':'CBAR', 'elementType':34, 'stressBits':stressBits,
                     }
         while 1:
-            line  = self.infile.readline()[1:].rstrip('\r\n ')
+            line = self.infile.readline()[1:].rstrip('\r\n ')
             if 'PAGE' in line:
                 break
             sline = line.strip().split()
             line2 = self.infile.readline()[1:].rstrip('\r\n ')
             sline += line2.strip().split()
-            out = [float(sline[0]),sline[1].strip(),float(sline[2]),float(sline[3]),float(sline[4]),
-                                                    float(sline[5]),float(sline[6]),float(sline[7]),
-                                                    float(sline[8]),float(sline[9]),float(sline[10]),
-                                                    float(sline[11]),float(sline[12]),float(sline[13]), ]
+            out = [float(sline[0]),sline[1].strip(),float(sline[2]), float(sline[3]), float(sline[4]),
+                                                    float(sline[5]), float(sline[6]), float(sline[7]),
+                                                    float(sline[8]), float(sline[9]), float(sline[10]),
+                                                    float(sline[11]), float(sline[12]), float(sline[13]), ]
             #print sline
             #print out
             data.append(out)
-            self.i+=2
+            self.i += 2
         ###
-        self.i+=1
+        self.i += 1
 
         if iSubcase in self.displacements:
-            self.displacements[iSubcase].addF06Data(data,transient)
+            self.displacements[iSubcase].addF06Data(data, transient)
         else:
             isSort1 = True
-            disp = complexDisplacementObject(dataCode,isSort1,iSubcase)
-            disp.addF06Data(data,transient)
+            disp = ComplexDisplacementObject(dataCode, isSort1, iSubcase)
+            disp.addF06Data(data, transient)
             self.displacements[iSubcase] = disp
         self.iSubcases.append(iSubcase)
     
@@ -115,7 +117,7 @@ class OUG(object):
         sCode        = 0 (Stress)
         numWide      = 8 (???)
         """
-        (subcaseName,iSubcase,transient,dt,analysisCode,isSort1) = self.readSubcaseNameID()
+        (subcaseName, iSubcase, transient, dt, analysisCode, isSort1) = self.readSubcaseNameID()
         #print transient
         
         headers = self.skip(2)
@@ -131,29 +133,29 @@ class OUG(object):
                     }
 
         if iSubcase in self.temperatures:
-            self.temperatures[iSubcase].addF06Data(data,transient)
+            self.temperatures[iSubcase].addF06Data(data, transient)
         else:
             isSort1 = True
-            temp = temperatureObject(dataCode,isSort1,iSubcase)
-            temp.addF06Data(data,transient)
+            temp = TemperatureObject(dataCode, isSort1, iSubcase)
+            temp.addF06Data(data, transient)
             self.temperatures[iSubcase] = temp
         self.iSubcases.append(iSubcase)
 
     def readTemperatureTable(self):
         data = []
-        Format = [int,str,float,float,float,float,float,float]
+        Format = [int, str, float, float, float, float, float, float]
         while 1:
             line = self.infile.readline()[1:].rstrip('\r\n ')
             if 'PAGE' in line:
                 return data
-            sline = [line[0:15],line[15:22].strip(),line[22:40],line[40:55],line[55:70],line[70:85],line[85:100],line[100:115]]
-            sline = self.parseLineTemperature(sline,Format)
+            sline = [line[0:15], line[15:22].strip(), line[22:40], line[40:55], line[55:70], line[70:85], line[85:100], line[100:115]]
+            sline = self.parseLineTemperature(sline, Format)
             data.append(sline)
         return data
 
-    def parseLineTemperature(self,sline,Format):
+    def parseLineTemperature(self, sline, Format):
         out = []
-        for entry,iFormat in zip(sline,Format):
+        for (entry, iFormat) in zip(sline, Format):
             if entry is '':
                 return out
             #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)

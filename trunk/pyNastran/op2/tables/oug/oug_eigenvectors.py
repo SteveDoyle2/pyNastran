@@ -27,10 +27,10 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         #self.translations = {iMode: {}}
         #self.rotations    = {iMode: {}}
     
-    def readF06Data(self,dataCode,data):
+    def readF06Data(self,dataCode, data):
         iMode = dataCode['mode']
         if iMode not in self.translations:
-            self.updateMode(dataCode,iMode)
+            self.updateMode(dataCode, iMode)
         
         for line in data:
             (nid,gridType,t1,t2,t3,r1,r2,r3) = line
@@ -39,7 +39,7 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
             self.rotations[iMode][nid]    = array([r1,r2,r3])
         ###
 
-    def updateMode(self,dataCode,iMode):
+    def updateMode(self, dataCode, iMode):
         """
         this method is called if the object
         already exits and a new time step is found
@@ -49,7 +49,7 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         self.applyDataCode()
         #self.caseVal = iMode
         #print "mode = %s" %(str(mode))
-        self.addNewMode()
+        self.addNewMode(iMode)
         self.setDataMembers()
 
     def addNewMode(self,iMode):
