@@ -1,5 +1,5 @@
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import spcForcesObject #,complexSpcForcesObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import mpcForcesObject #,complexMpcForcesObject
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject #,ComplexSPCForcesObject
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject #,ComplexMPCForcesObject
 
 
 class OQG(object):
@@ -23,7 +23,7 @@ class OQG(object):
             self.spcForces[iSubcase].addF06Data(data,transient)
         else:
             isSort1 = True
-            spc = spcForcesObject(dataCode,isSort1,iSubcase)
+            spc = SPCForcesObject(dataCode,isSort1,iSubcase)
             spc.addF06Data(data,transient)
             self.spcForces[iSubcase] = spc
         self.iSubcases.append(iSubcase)
@@ -44,7 +44,7 @@ class OQG(object):
             self.mpcForces[iSubcase].addF06Data(data,transient)
         else:
             isSort1 = True
-            mpc = mpcForcesObject(dataCode,isSort1,iSubcase)
+            mpc = MPCForcesObject(dataCode,isSort1,iSubcase)
             mpc.addF06Data(data,transient)
             self.mpcForces[iSubcase] = mpc
         self.iSubcases.append(iSubcase)

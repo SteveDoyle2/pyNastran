@@ -217,19 +217,19 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         for nodeID,T in sorted(temperatures.iteritems()):
             gridType = self.gridTypes[nodeID]
 
-            if oldNodeID+1==nodeID and gridType==oldGridType:
+            if oldNodeID+1 == nodeID and gridType == oldGridType:
                 oldNodeID = nodeID
                 ipack.append(T)
             else:
                 if oldNodeID>0:
-                    msg += self.printPack(pack)
+                    msg += self.printPack(ipack)
                 oldGridType = gridType
                 oldNodeID = nodeID
-                ipack = [nodeID,gridType,T]
+                ipack = [nodeID, gridType, T]
             ###
         ###
-        if pack:
-            msg += self.printPack(pack)
+        if ipack:
+            msg += self.printPack(ipack)
         ###
         return msg
 

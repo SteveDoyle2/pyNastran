@@ -1,11 +1,8 @@
 import os
 import sys
-import time
-from traceback import print_exc
-from pyNastran.f06.f06    import F06
-from pyNastran.bdf.errors import *
-#from pyNastran.f06.f06Errors import *
-from pyNastran.f06.test.test_f06 import getFailedFiles,runF06,runLotsOfFiles
+#import time
+from pyNastran.op2.test.test_op2 import getFailedFiles
+from pyNastran.f06.test.test_f06 import runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
 def parseSkippedCards(fname):
@@ -44,7 +41,7 @@ def parseSkippedCards(fname):
     f.close()
     return filesToAnalyze
 
-if __name__=='__main__':
+def main():
     # works
     files = getFilesOfType('tests','.f06')
     
@@ -93,3 +90,5 @@ if __name__=='__main__':
     #runLotsOfFiles(files,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
 
+if __name__ == '__main__':
+    main()

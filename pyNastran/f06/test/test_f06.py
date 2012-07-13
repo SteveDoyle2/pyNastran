@@ -4,13 +4,12 @@ import time
 from traceback import print_exc
 
 import pyNastran
-from pyNastran.f06.f06    import F06,EndOfFileError
-from pyNastran.bdf.errors import *
-#from pyNastran.f06.f06Errors import *
-from pyNastran.op2.test.test_op2 import parseTableNamesFromF06, getFailedFiles
+from pyNastran.f06.f06    import F06 #,EndOfFileError
+#from pyNastran.op2.test.test_op2 import parseTableNamesFromF06, getFailedFiles
 
 
-def runLotsOfFiles(files,debug=True,saveCases=True,skipFiles=[],stopOnFailure=False,nStart=0,nStop=1000000000):
+def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
+                   stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -54,7 +53,7 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
     stopOnFailure = False
     #debug = True
     try:
-        f06 = F06(f06file,debug=debug)
+        f06 = F06(f06file, debug=debug)
         #f06.setSubcases(iSubcases)  ## @todo not supported
 
         #f06.readBDF(f06.bdfFileName,includeDir=None,xref=False)
@@ -93,9 +92,6 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
     #    isPassed = True
     #except InvalidMarkersError:
     #    isPassed = True
-
-    #except TabCharacterError:
-    #    isPassed = True
     #except EndOfFileError:
     #    isPassed = True
     except SystemExit:
@@ -118,17 +114,17 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except MissingFileError: # missing bdf file
+    except IOError: # missing bdf file
         isPassed = False
         raise
     #except InvalidSubcaseParseError:
     #    isPassed = True
-    #except ScientificParseError:  # bad value parsing
+    #except ScientificCardParseError:  # bad value parsing
     #    isPassed = True
     #except ParamParseError:
     #    isPassed = True
-    #except NotImplementedMethodError:
-    #    isPassed = True
+    except NotImplementedError:
+        isPassed = True
     #except InvalidFieldError: # bad bdf field
     #    isPassed = True
     except:
