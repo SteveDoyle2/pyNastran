@@ -193,7 +193,7 @@ class TableObject(scalarObject):  # displacement style table
         translations2 = {}
         rotations2 = {}
         if self.dt is not None:
-            return self.__reprTransient__()
+            #return self.__reprTransient__()
 
             for dt,translations in sorted(self.translations.iteritems()):
                 nodeIDs = translations.keys()
@@ -201,19 +201,21 @@ class TableObject(scalarObject):  # displacement style table
                     translations2[nodeID] = {}
                     rotations2[nodeID] = {}
 
+            for dt,translations in sorted(self.translations.iteritems()):
                 for nodeID,translation in sorted(translations.iteritems()):
                     rotation = self.rotations[dt][nodeID]
                     translations2[nodeID][dt] = translation
                     rotations2[nodeID][dt]    = rotation
                 ###
         else:
-            for nodeID,translation in sorted(self.translations.iteritems()):
-                rotation = self.rotations[nodeID]
-                translations2[nodeID] = translation
-                rotations2[nodeID]    = rotation
+            return (self.translations,self.rotations)
+            #for nodeID,translation in sorted(self.translations.iteritems()):
+            #    rotation = self.rotations[nodeID]
+            #    translations2[nodeID] = translation
+            #    rotations2[nodeID]    = rotation
             ###
         ###
-        return translations2,rotations2
+        return (translations2,rotations2)
         
     def _writeMatlab(self,name,iSubcase,f=None,isMagPhase=False):
         """
@@ -473,7 +475,7 @@ class TableObject(scalarObject):  # displacement style table
         Labels = []
         #print "nodeList = ",nodeList
         node0 = nodeList[0]
-        Xs = results[node0].keys()
+        Xs = sorted(results[node0].keys())
 
         (fig,ax) = plt.subplots(1)
         #leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
@@ -777,7 +779,7 @@ class ComplexTableObject(scalarObject):
         i = 0
         Labels = []
         node0 = nodeList[0]
-        Xs = results[node0].keys()
+        Xs = sorted(results[node0].keys())
 
         (fig,ax) = plt.subplots(1)
         leg = plt.legend(loc='best', fancybox=True,alpha=0.5)
