@@ -243,7 +243,8 @@ class RBE2(RigidElement):
             self.cm  = data[2]
             self.Gmi = data[3]
             self.alpha = data[4]
-            print "eid=%s gn=%s cm=%s Gmi=%s alpha=%s" %(self.eid, self.gn, self.cm, self.Gmi, self.alpha)
+            print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
+                %(self.eid, self.gn, self.cm, self.Gmi, self.alpha))
             raise NotImplementedError('RBE2 data...')
         ###
         assert self.gn != None

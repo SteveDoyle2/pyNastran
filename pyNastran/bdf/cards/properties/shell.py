@@ -711,7 +711,7 @@ class PSHELL(ShellProperty):
         try:
             massPerArea = self.nsm + self.Rho()*self.t
         except:
-            print "nsm=%s rho=%s t=%s" %(self.nsm,self.Rho(),self.t)
+            print("nsm=%s rho=%s t=%s" %(self.nsm,self.Rho(),self.t))
             raise
         return massPerArea
 

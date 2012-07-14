@@ -481,8 +481,8 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         ###
         if self.makeOp2Debug:
-            print "done with OEF_Force_VU"
-        #print self.force_VU
+            print("done with OEF_Force_VU")
+        #print(self.force_VU)
 
     def OEF_Force_VUTRIA(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
@@ -530,6 +530,6 @@ class RealForces(object):
             #print "len(data) = ",len(self.data)
         ###
         if self.makeOp2Debug:
-            print "done with OEF_Force_VUTRIA"
-        #print self.force_VU_2D
+            print("done with OEF_Force_VUTRIA")
+        #print(self.force_VU_2D)
 

@@ -1,9 +1,9 @@
 from __future__ import division
 import sys
 from struct import unpack
-from oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
-                                HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
-                                HeatFlux_CONV)
+from .oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
+                                 HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
+                                 HeatFlux_CONV)
 
 class ThermalElements(object):
 
@@ -82,8 +82,8 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_CHBDYx)
         if self.makeOp2Debug:
-            print "done with OEF_CHBDYx"
-        #print self.thermalLoad_CHBDY
+            print("done with OEF_CHBDYx")
+        #print(self.thermalLoad_CHBDY)
 
     def OEF_CONV(self): # [110]  CONV
         if self.makeOp2Debug:
@@ -119,8 +119,8 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_CONV)
         if self.makeOp2Debug:
-            print "done with OEF_CONV"        
-        #print self.thermalLoad_CHBDY
+            print("done with OEF_CONV")
+        #print(self.thermalLoad_CHBDY)
 
     def OEF_VU_Element(self): # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         dt = self.nonlinearFactor
@@ -181,7 +181,7 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_VU_Element)
         if self.makeOp2Debug:
-            print "done with OEF_1D"
+            print("done with OEF_1D")
         #sys.exit('thermalLoad_VU')
         #print self.thermalLoad_VU
 
@@ -240,7 +240,7 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_VUBeam_Element)
         if self.makeOp2Debug:
-            print "done with OEF_1D"
+            print("done with OEF_1D")
         #sys.exit('thermalLoad_VUBeam')
         #print self.thermalLoad_VUBeam
 
@@ -298,7 +298,7 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_VU_3D_Element)
         if self.makeOp2Debug:
-            print "done with OEF_VU_3D_Element"
+            print("done with OEF_VU_3D_Element")
         #print self.thermalLoad_VU_3D
 
     def OEF_1D(self): # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
@@ -338,7 +338,7 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_1D)
         if self.makeOp2Debug:
-            print "done with OEF_1D"
+            print("done with OEF_1D")
         #print self.thermalLoad_1D
 
     def OEF_2D_3D(self): # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
@@ -395,7 +395,7 @@ class ThermalElements(object):
         ###
         self.handleResultsBuffer(self.OEF_2D_3D)
         if self.makeOp2Debug:
-            print "done with OEF_2D_3D"
+            print("done with OEF_2D_3D")
         
         #print self.thermalLoad_2D_3D
 

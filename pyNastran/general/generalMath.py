@@ -1,14 +1,17 @@
 from __future__ import print_function
-from numpy import float32,float64,complex64,complex128
-from numpy import array,cross,allclose,zeros,matrix,insert,diag
+import sys
 
-#from numpy import 
+from numpy import (float32, float64, complex64, complex128,
+                   array, cross, allclose, zeros, matrix, insert, diag)
 from numpy.linalg import norm #, solve
 
 from scipy.linalg      import solve_banded
 from scipy.interpolate import splrep,splev
 from scipy.integrate   import quad
-import scipy.weave  # "fixes" bug where scipy screws up return code handling
+
+if sys.version_info < (3,0):
+    # "fixes" bug where scipy screws up return code handling
+    import scipy.weave
 
 def integrateLine(x,y):
     """

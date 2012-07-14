@@ -17,17 +17,17 @@ from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 #from oef_Objects import (nonlinearFluxObject)
 
 #from thermal_elements import ThermalElements
-from realForces    import RealForces
-from complexForces import ComplexForces
+from .realForces    import RealForces
+from .complexForces import ComplexForces
 
 
-from oef_forceObjects import (RealRodForce,RealCBeamForce,RealCShearForce,
+from .oef_forceObjects import (RealRodForce,RealCBeamForce,RealCShearForce,
                               RealSpringForce,RealDamperForce,RealViscForce,
                               RealPlateForce,RealConeAxForce,RealPLATE2Force,
                               RealCBAR100Force,RealCGAPForce,RealBendForce,
                               RealPentaPressureForce,RealCBUSHForce,
                               RealForce_VU_2D,RealCBARForce,RealForce_VU)
-from oef_complexForceObjects import (ComplexRodForce,ComplexCBeamForce,
+from .oef_complexForceObjects import (ComplexRodForce,ComplexCBeamForce,
                                      ComplexCShearForce,ComplexSpringForce,
                                      ComplexDamperForce,ComplexViscForce,
                                      ComplexPlateForce,ComplexPLATE2Force,
@@ -35,7 +35,7 @@ from oef_complexForceObjects import (ComplexRodForce,ComplexCBeamForce,
                                      ComplexPentaPressureForce,
                                      ComplexCBUSHForce,ComplexForce_VU_2D,
                                      ComplexCBARForce,ComplexForce_VU)
-from thermal_elements import ThermalElements
+from .thermal_elements import ThermalElements
 
 class OEF(ThermalElements,RealForces,ComplexForces):
     """Table of element forces"""

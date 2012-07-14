@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, NastranMatrix)
-from compareCardContent import compare_card_content
+from pyNastran.bdf.test.compareCardContent import compare_card_content
 
 import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]

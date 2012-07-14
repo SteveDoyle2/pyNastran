@@ -46,7 +46,7 @@ class RealElementsStressStrain(object):
         ###
         #print self.rodStress[self.iSubcase]
         if self.makeOp2Debug:
-            print "done with OES_Thermal"
+            print("done with OES_Thermal")
         ###
 
     def OES_basicElement(self):
@@ -196,7 +196,7 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
         if self.makeOp2Debug:
-            print "done with CBAR-34"
+            print("done with CBAR-34")
 
     def OES_CSOLID_67(self):
         """
@@ -648,7 +648,7 @@ class RealElementsStressStrain(object):
             #sys.exit('stoping in CBEAM_94')
 
         if self.makeOp2Debug:
-            print "done with CBEAM-94"
+            print("done with CBEAM-94")
         #raise Exception('add CBEAM-94...')
 
     def OES_CQUAD4_95(self): # works (doesnt handle all stress/strain cases tho)
@@ -657,7 +657,7 @@ class RealElementsStressStrain(object):
         """
         if self.makeOp2Debug:
             self.op2Debug.write('---CQUAD4_95---\n')
-            print "getting a composite element..."
+            print("getting a composite element...")
         eType = self.ElementType(self.elementType)
 
         #self.printSection(20)

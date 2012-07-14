@@ -47,8 +47,8 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
         baseName = os.path.basename(op2file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles:
-            print "%"*80
-            print 'file=%s\n' %(op2file)
+            print("%"*80)
+            print('file=%s\n' %(op2file))
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
@@ -71,13 +71,13 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
         for op2file in failedCases:
             f.write('%s\n' %(op2file))
         f.close()
-    print "dt = %s seconds" %(time.time()-t0)
+    print("dt = %s seconds" %(time.time()-t0))
     
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.readOP2()
     
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
-    print msg
+    print(msg)
     sys.exit(msg)
 
 def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
@@ -170,8 +170,6 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
     except IOError: # missing file
         isPassed = False
         raise
-    except InvalidSubcaseParseError:
-        isPassed = True
     except ScientificCardParseError:  # bad value parsing
         isPassed = True
     except ParamParseError:
@@ -211,8 +209,8 @@ def runArgParse():
         parser.print_help()
         sys.exit()
     args = parser.parse_args()
-    print "op2FileName = ",args.op2FileName[0]
-    print "debug       = ",not(args.quiet)
+    print("op2FileName = %s" %(args.op2FileName[0]))
+    print("debug       = %s" %(not(args.quiet)))
 
     debug        = not(args.quiet)
     makeGeom     = args.geometry

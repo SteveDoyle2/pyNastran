@@ -21,8 +21,8 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
         baseName = os.path.basename(f06file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles:
-            print "%"*80
-            print 'file=%s\n' %(f06file)
+            print("%"*80)
+            print('file=%s\n' %(f06file))
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n,f06file))
             nTotal += 1
@@ -41,7 +41,7 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
         for f06file in failedCases:
             f.write('%s\n' %(f06file))
         f.close()
-    print "dt = %s seconds" %(time.time()-t0)
+    print("dt = %s seconds" %(time.time()-t0))
     
     #f06 = F06('test_tet10_subcase_1.f06')
     #f06.readF06()
@@ -155,8 +155,8 @@ def runArgParse():
         parser.print_help()
         sys.exit()
     args = parser.parse_args()
-    print "f06FileName = ",args.f06FileName[0]
-    print "debug       = ",not(args.quiet)
+    print("f06FileName = %s" %(args.f06FileName[0]))
+    print("debug       = %s" %(not(args.quiet)))
 
     debug       = not(args.quiet)
     writeF06    = args.writeF06

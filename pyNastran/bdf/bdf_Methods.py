@@ -226,7 +226,7 @@ class bdfMethods(object):
                     m = load.mag*load.xyz
                     M += m
                 ###
-            print "case=%s F=%s M=%s\n\n" %(key, F, M)
+            print("case=%s F=%s M=%s\n\n" %(key, F, M))
         ###
         return (M, F)
 
