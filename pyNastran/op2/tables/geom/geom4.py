@@ -2,7 +2,7 @@ import sys
 from struct import unpack
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
-from pyNastran.bdf.cards.elementsRigid import RBE2
+from pyNastran.bdf.cards.elements.elementsRigid import RBE2
 from pyNastran.bdf.cards.constraints import SUPORT, SPCD, SPC
 
 class Geometry4(object):

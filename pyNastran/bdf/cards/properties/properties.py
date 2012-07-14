@@ -2,7 +2,7 @@
 #import sys
 
 # pyNastran
-from baseCard import Property
+from pyNastran.bdf.cards.baseCard import Property
 
 class PFAST(Property):
     type = 'PFAST'

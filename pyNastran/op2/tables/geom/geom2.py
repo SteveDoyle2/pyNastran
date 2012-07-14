@@ -2,19 +2,19 @@
 import sys
 from struct import unpack
 
-from pyNastran.bdf.cards.elements import CGAP
-from pyNastran.bdf.cards.dampers.elementsDamper import (CDAMP1, CDAMP2, CDAMP3,
+from pyNastran.bdf.cards.elements.elements import CGAP
+from pyNastran.bdf.cards.elements.elementsDamper import (CDAMP1, CDAMP2, CDAMP3,
                                                         CDAMP4, CDAMP5, CVISC)
-from pyNastran.bdf.cards.springs.elementsSprings import (CELAS1, CELAS2,
+from pyNastran.bdf.cards.elements.elementsSprings import (CELAS1, CELAS2,
                                                          CELAS3, CELAS4)
-from pyNastran.bdf.cards.plates.elementsShell import (CTRIA3, CQUAD4, CTRIA6,
+from pyNastran.bdf.cards.elements.elementsShell import (CTRIA3, CQUAD4, CTRIA6,
                                                       CQUADR, CQUAD8, CQUAD,
                                                       CQUADX, CSHEAR)
-from pyNastran.bdf.cards.bars.elementsBars import (CROD, CBAR, CTUBE, CONROD,
+from pyNastran.bdf.cards.elements.elementsBars import (CROD, CBAR, CTUBE, CONROD,
                                                    CBEAM)
-from pyNastran.bdf.cards.mass.elementsMass import (CONM1, CONM2, CMASS1,
+from pyNastran.bdf.cards.elements.elementsMass import (CONM1, CONM2, CMASS1,
                                                    CMASS2, CMASS3, CMASS4)
-from pyNastran.bdf.cards.elementsSolid     import (CTETRA4, CTETRA10, CPENTA6,
+from pyNastran.bdf.cards.elements.elementsSolid import (CTETRA4, CTETRA10, CPENTA6,
                                                    CPENTA15, CHEXA8, CHEXA20)
 from pyNastran.bdf.cards.thermal.thermal   import CHBDYG, CONV #, CONVM, CHBDYP
 from pyNastran.bdf.cards.nodes             import SPOINTs

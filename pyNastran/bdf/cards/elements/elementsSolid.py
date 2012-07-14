@@ -2,7 +2,7 @@
 from numpy import dot,cross,array,matrix,zeros
 from numpy.linalg import solve
 
-from pyNastran.bdf.cards.elements import Element
+from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.general.generalMath import Area
 
 def Volume4(n1, n2, n3, n4):
