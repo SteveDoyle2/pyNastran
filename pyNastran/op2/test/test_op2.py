@@ -8,7 +8,7 @@ from pyNastran.op2.op2    import OP2
 from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError)
 from pyNastran.op2.op2Errors import TapeCodeError
 
-def parseTableNamesFromF06(f06Name):
+def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
     infile = open(f06Name,'r')
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
@@ -22,7 +22,7 @@ def parseTableNamesFromF06(f06Name):
     infile.close()
     return names
 
-def getFailedFiles(filename):
+def get_failed_files(filename):
     infile = open(filename,'r')
     lines = infile.readlines()
     infile.close()
@@ -96,7 +96,7 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
         op2.readOP2()
         if writeBDF:
             op2.writeBDFAsPatran()
-        #tableNamesF06 = parseTableNamesFromF06(op2.f06FileName)
+        #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if writeF06:
             (model,ext) = os.path.splitext(op2FileName)
@@ -115,9 +115,9 @@ def runOP2(op2FileName, makeGeom=False, writeBDF=False, writeF06=True,
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
-        #print op2.caseControlDeck.getOp2Data()
+        #print op2.caseControlDeck.get_op2_data()
         #print op2.printResults()
-        #print op2.caseControlDeck.getOp2Data()
+        #print op2.caseControlDeck.get_op2_data()
         isPassed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
