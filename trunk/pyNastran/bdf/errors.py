@@ -1,14 +1,4 @@
-class BDFSyntaxError(SyntaxError):
-    pass
-
-class BDFRuntimeError(RuntimeError):
-    pass
-
-#-------------------------------------------------------
-class InvalidSubcaseParseError(BDFSyntaxError):
-    pass
-
-class CardParseError(BDFSyntaxError):
+class CardParseError(SyntaxError):
     pass
 
 #-------------------------------------------------------
@@ -26,9 +16,6 @@ class WhitespaceCardParseError(CardParseError):
 
 #-----------------------------------------------------
 
-class InvalidUnitVectorError(BDFRuntimeError):
-    pass
-
-class CardInstantiationError(BDFRuntimeError):
+class CardInstantiationError(RuntimeError):
     pass
 

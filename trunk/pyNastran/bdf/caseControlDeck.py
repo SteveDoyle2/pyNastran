@@ -2,7 +2,7 @@
 import copy
 import sys
 from subcase import Subcase
-from pyNastran.bdf.errors import InvalidSubcaseParseError, ParamParseError
+from pyNastran.bdf.errors import ParamParseError
 
 class CaseControlDeck(object):
     def __init__(self, lines, log=None):
@@ -236,7 +236,7 @@ class CaseControlDeck(object):
             sline = line2.split()
             if len(sline)!=2:
                 msg = "trying to parse |%s|..." %(line)
-                raise InvalidSubcaseParseError(msg)
+                raise RuntimeError(msg)
             (key, iSubcase) = sline
             #print "key=|%s| iSubcase=|%s|" %(key,iSubcase)
             value = int(iSubcase)

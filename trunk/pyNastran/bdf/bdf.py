@@ -45,9 +45,10 @@ from .cards.mass.propertiesMass import (PMASS, NSM)
 
 #--------------------------------
 from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
-                         AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, FLFACT,
-                         FLUTTER, GUST, MKAERO1, MKAERO2, PAERO1, PAERO2,
-                         SPLINE1, SPLINE2, SPLINE4, SPLINE5, TRIM)
+                         AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, CAERO3,
+                         CAERO4, CAERO5, FLFACT, FLUTTER, GUST, MKAERO1,
+                         MKAERO2, PAERO1, PAERO2, SPLINE1, SPLINE2, SPLINE4,
+                         SPLINE5, TRIM)
 from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                 MPC, MPCADD, SUPORT1, SUPORT,
                                 constraintObject2)
@@ -67,6 +68,8 @@ from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                           MATHP, CREEP, MATS1)
 from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 from .cards.nodes import GRID, GRDSET, SPOINTs
+from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+                                 DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from .cards.params import PARAM
 from .cards.sets import (ASET, BSET, CSET, QSET,
                          ASET1, BSET1, CSET1, QSET1,
@@ -78,8 +81,7 @@ from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
-from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
-                                 DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
+
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods     import bdfMethods
 

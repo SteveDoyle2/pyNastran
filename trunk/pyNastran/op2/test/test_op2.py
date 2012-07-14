@@ -4,9 +4,8 @@ import time
 from traceback import print_exc
 
 import pyNastran
-from pyNastran.op2.op2    import OP2 #, EndOfFileError
-from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError, 
-                                 InvalidSubcaseParseError)
+from pyNastran.op2.op2    import OP2
+from pyNastran.bdf.errors import (ScientificCardParseError, ParamParseError)
 from pyNastran.op2.op2Errors import TapeCodeError
 
 def parseTableNamesFromF06(f06Name):
