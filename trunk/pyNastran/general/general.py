@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 from numpy import matrix
-from types import NoneType
 
 def printBadPath(path):
     msg = ''
@@ -148,7 +147,7 @@ def ListPrint(listA):
             #print "a = ",a,type(a)
             if isinstance(a,str):
                 msg += ' %s,' %(a)
-            elif isinstance(a,NoneType):
+            elif a is None:
                 msg += ' None,'
             elif isinstance(a,float):
                 msg += ' %-4.2f,' %(a)

@@ -1,6 +1,5 @@
 import sys
-from oes_objects import stressObject,strainObject
-from pyNastran.op2.op2Errors import *
+from .oes_objects import stressObject, strainObject
 
 
 class PlateStressObject(stressObject):
@@ -308,7 +307,7 @@ class PlateStressObject(stressObject):
                                 try:
                                     msg += '%10i ' %(int(val))
                                 except:
-                                    print "bad val = ",val
+                                    print("bad val = %s" %(val))
                                     raise
                             ###
                         msg += '\n'
@@ -838,7 +837,7 @@ class PlateStressObject(stressObject):
                             try:
                                 msg += '%10i ' %(val)
                             except:
-                                print "bad val = ",val
+                                print("bad val = %s" %(val))
                                 raise
                         ###
                     msg += '\n'

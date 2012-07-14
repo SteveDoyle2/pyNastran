@@ -7,9 +7,9 @@ from struct import unpack
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
 from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject
-from opg_loadVector   import LoadVectorObject,ComplexLoadVectorObject,ThermalLoadVectorObject
-from opnl_forceVector import ForceVectorObject,ComplexForceVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject #ComplexAppliedLoadsObject
+from .opg_loadVector   import LoadVectorObject,ComplexLoadVectorObject,ThermalLoadVectorObject
+from .opnl_forceVector import ForceVectorObject,ComplexForceVectorObject
 
 # OGS table ## @todo move this...
 from pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses import GridPointStressesObject,GridPointStressesVolumeObject
@@ -158,15 +158,15 @@ class OPG(object):
         #elif tfsCode==[55,3,3]:
         #    self.readOPG_Data_format3_sort3()
         else:
-            print self.codeInformation()
-            raise Exception('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName))
+            print(self.codeInformation())
+            raise RuntimeError('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName))
             #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
             #self.skipOES_Element()
         ###
         #print self.obj
 
     def readOPG_Data_table2(self): # Load Vector
-        isSort1 = self.isSort1()
+        #isSort1 = self.isSort1()
         #print "********\n",self.codeInformation()
         if self.numWide==8:  # real/random
             if self.thermal==0:
@@ -190,7 +190,7 @@ class OPG(object):
         ###
 
     def readOPG_Data_table12(self): # Nonlinear Force Vector (in progress)
-        isSort1 = self.isSort1()
+        #isSort1 = self.isSort1()
         if self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'forceVectors'
@@ -210,16 +210,16 @@ class OPG(object):
         ###
 
     def readOPG_Data_table19(self): # Applied Loads
-        isSort1 = self.isSort1()
-        if self.numWide==8:  # real/random
+        #isSort1 = self.isSort1()
+        if self.numWide == 8:  # real/random
             resultName = 'appliedLoads'
-            if self.thermal==0:
+            if self.thermal == 0:
                 self.createTransientObject(self.appliedLoads,AppliedLoadsObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.readOPGForces,resultName)
-        elif self.numWide==14:  # real/imaginary or mag/phase
-            if self.thermal==0:
+        elif self.numWide == 14:  # real/imaginary or mag/phase
+            if self.thermal == 0:
                 self.createTransientObject(self.appliedLoads,ComplexAppliedLoadsObject) # complex
                 raise NotImplementedError('can this use a OUG_Complex table???')
             else:
@@ -231,7 +231,7 @@ class OPG(object):
         ###
 
     def readOGS1_Data_table26(self): # OGS1 - grid point stresses - surface
-        isSort1 = self.isSort1()
+        #isSort1 = self.isSort1()
         resultName = 'gridPointStresses'
         if self.numWide==11:  # real/random
             self.createTransientObject(self.gridPointStresses,GridPointStressesObject) # real
@@ -258,9 +258,9 @@ class OPG(object):
         #print len(self.data)
 
     def readOGS1_Data_table27(self): # OGS1 - grid point stresses - volume direct
-        isSort1 = self.isSort1()
-        #print self.codeInformation()
-        if self.numWide==9:  # real/random
+        #isSort1 = self.isSort1()
+        #print(self.codeInformation())
+        if self.numWide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
             self.createTransientObject(self.gridPointVolumeStresses,GridPointStressesVolumeObject) # real
             self.handleResultsBuffer3(self.readOGS1_table27_numWide9,resultName)

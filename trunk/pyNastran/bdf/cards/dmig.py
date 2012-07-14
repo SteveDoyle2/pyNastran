@@ -77,7 +77,7 @@ class DEQATN(BaseCard):# needs work...
         eq = line0[16:]
         eq = eq.replace(' ','').lower()
         (self.name,self.eq) = eq.split('=')
-        print "EQ = ",self.eq
+        print("EQ = %s" %(self.eq))
         
     def evaluate(self,args):
         #eqLow = self.eq.lower()
@@ -88,7 +88,7 @@ class DEQATN(BaseCard):# needs work...
         eq = self.name+'='+self.eq
         eqLine = eq[0:56]
         eq = eq[56:]
-        fields = ['DEQATN  ','%8s'%(self.eqID),eqLine]
+        fields = ['DEQATN  ','%8s'%(self.eqID), eqLine]
 
         if len(eq):
             eqLine = eq[0:72]
@@ -100,7 +100,7 @@ class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         self.name = card.field(1)
         #zero
 
@@ -244,15 +244,16 @@ class NastranMatrix(BaseCard):
                     rows2.append(i)
                     cols2.append(j)
                 data = self.Real
-            print "i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s" %(i, j, len(self.GCi), len(self.GCj), len(data))
+            print("i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s"
+                %(i, j, len(self.GCi), len(self.GCj), len(data)))
             # ,dtype=Format
-            print rows2
+            print(rows2)
 
-            print "nrows=%s ncols=%s" %(nrows, ncols)
+            print("nrows=%s ncols=%s" %(nrows, ncols))
             if self.ifo in [1,6]:
                 nrows = max(nrows,ncols)
                 ncols = nrows
-            print "nrows=%s ncols=%s" %(nrows, ncols)
+            print("nrows=%s ncols=%s" %(nrows, ncols))
             
             dType = self.getDType(self.tin)
             #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # test
@@ -276,7 +277,7 @@ class NastranMatrix(BaseCard):
                     M[i,j] = reali
                 ###
             ###
-        print M
+        print(M)
         return (M,rowsReversed,colsReversed)
 
     def rename(self,newName):
@@ -476,7 +477,7 @@ class DMI(BaseCard):
             isDoneReadingFloats = False
             asdf
             while not isDoneReadingFloats and i<len(fields):
-                print "i=%s len(fields)=%s" %(i, len(fields))
+                print("i=%s len(fields)=%s" %(i, len(fields)))
                 realValue = fields[i]
                 if isinstance(floatValue, int):
                     isDoneReadingFloats = True

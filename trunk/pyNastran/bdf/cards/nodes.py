@@ -189,7 +189,7 @@ class GRIDB(Node):
         if card:
             raise Exception('not implemented...')
         else:
-            print data
+            print(data)
             self.nid = data[0]
             self.phi = data[1]
             self.cd  = data[2]

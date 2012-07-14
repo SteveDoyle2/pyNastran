@@ -1,6 +1,6 @@
 import sys
-from oes_objects import stressObject,strainObject #,array
-from pyNastran.op2.op2Errors import *
+from .oes_objects import stressObject, strainObject
+#from pyNastran.op2.op2Errors import *
 
 class CelasStressObject(stressObject):
     """

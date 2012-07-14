@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902
 import copy
 import sys
-from subcase import Subcase
+from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.errors import ParamParseError
 
 class CaseControlDeck(object):
@@ -441,7 +441,7 @@ def test1():
     print("has sPC  True  = %s" %(deck.hasParameter(0, 'sPC')))
     print("has junk False = %s" %(deck.hasParameter(0, 'JUNK')))
     
-    print "getSubcaseParameter(MPC) 3 = ",deck.getSubcaseParameter(0, 'MPC')
+    print("getSubcaseParameter(MPC) 3 = ",deck.getSubcaseParameter(0, 'MPC'))
     deck.addParameterToGlobalSubcase('GPFORCE = 7')
     print("")
     print(deck)

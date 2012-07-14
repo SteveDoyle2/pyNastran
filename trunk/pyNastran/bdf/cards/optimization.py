@@ -160,8 +160,8 @@ class DRESP1(OptConstraint):
         self.atti   = card.field(8)
         self.others = card.fields(9)
         #if self.others:
-        #    print "self.others = ",self.others
-        #    print str(self)
+        #    print("self.others = %s" %(self.others))
+        #    print(str(self))
         #assert len(self.others)==0
     
     def rawFields(self):
@@ -206,7 +206,7 @@ class DRESP2(OptConstraint):
 
         #print "--Params--"
         #for (key, valueList) in sorted(self.params.iteritems()):
-        #    print "  key=%s params=%s" %(key, valueList)
+        #    print("  key=%s params=%s" %(key, valueList))
         
         #print self
         #sys.exit()
@@ -285,13 +285,13 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
-            print card
-            print "dvids = ",self.dvids
-            print "coeffs = ",self.coeffs
-            print str(self)
-            raise Exception('invalid DVMREL1...')
+            print(card)
+            print("dvids = %s" %(self.dvids))
+            print("coeffs = %s" %(self.coeffs))
+            print(str(self))
+            raise RuntimeError('invalid DVMREL1...')
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         self.mid = model.Material(self.mid)
     
     def Mid(self):
@@ -343,10 +343,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
-            print card
-            print "dvids = ",self.dvids
-            print "coeffs = ",self.coeffs
-            print str(self)
+            print(card)
+            print("dvids = %s" %(self.dvids))
+            print("coeffs = %s" %(self.coeffs))
+            print(str(self))
             raise RuntimeError('invalid DVPREL1...')
 
     def crossReference(self, model):

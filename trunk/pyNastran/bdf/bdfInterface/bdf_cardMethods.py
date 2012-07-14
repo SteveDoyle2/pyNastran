@@ -20,7 +20,7 @@ class cardMethods(object):
             line = line.split('$')[0].rstrip('\n\r\t ')
             if('$' not in line and len(line) > 0):
                 if debug:
-                    print "line = |%r|" %(line)
+                    print("line = |%r|" %(line))
                 self.linesPack[-1].append(line)
             else:
                 emptyLines += 1
@@ -70,8 +70,8 @@ class cardMethods(object):
             #try:
             #    tempcard = self.getMultiLineCard(i, tempcard, debug=True)
             #except IndexError:
-            #    print "workscard = ",tempcard
-            #    print ""
+            #    print("workscard = %s" %(tempcard))
+            #    print("")
             #    #raise
             #    pass
             pass
@@ -146,7 +146,7 @@ class cardMethods(object):
             tempcard.append(iline)
             i += 1
             #if debug:
-            #    print card
+            #    print(card)
             if 'ENDDATA' in iline:
                 #print "********"
                 self.log.debug('found ENDDATA')
@@ -186,8 +186,8 @@ class cardMethods(object):
         #self.log.debug("tempcard2 = |%s|" %(tempcard))
             #print ""
         if debug:
-            print "done...i=%s" %(i)
-            print ""
+            print("done...i=%s" %(i))
+            print("")
         return (i, tempcard)
     
     def nastranSplit(self, line, isLargeField, debug=False):
@@ -202,7 +202,7 @@ class cardMethods(object):
         @note tabs are handled prior to running this
         """
         if debug:
-            print "isLargeField = %s" %(isLargeField)
+            print("isLargeField = %s" %(isLargeField))
         if isLargeField:
             #print "large"
             #print "line = |%s|" %(line)
@@ -216,7 +216,7 @@ class cardMethods(object):
                       line[32:40], line[40:48], line[48:56], line[56:64],
                       line[64:72]]
         #if debug:
-        #    print "  fields = ",collapse(fields)
+        #    print("  fields = ",collapse(fields))
         
         fields2 = []
         for (i, rawField) in enumerate(fields):
@@ -267,7 +267,7 @@ class cardMethods(object):
                 try:
                     sline = self.parseCSV(sline)
                 except:
-                    print "cant parse sline=%s" %(sline)
+                    print("cant parse sline=%s" %(sline))
                     raise
                 #print "sline  = ",sline
                 #self.log.debug("sline = %s" %(sline))
@@ -335,7 +335,7 @@ class cardMethods(object):
         ###
         #fields.append(field)
         sline = [field]+line[i:72].split(',')
-        print "expandTabCommas = |%r|" %(sline)
+        print("expandTabCommas = |%r|" %(sline))
         return fields
 
     def parseCSV(self,sline):
@@ -393,7 +393,7 @@ class cardMethods(object):
     def getValue(self, valueRaw, card, debug=False):
         """converts a value from nastran format into python format."""
         if debug:
-            print "v1 = |%s|" %(valueRaw)
+            print("v1 = |%s|" %(valueRaw))
         lvalue = valueRaw.lstrip()
         if self.isDynamicSyntax and '%' in lvalue[0:1]:
             return self.parseDynamicSyntax(valueRaw)
@@ -404,12 +404,12 @@ class cardMethods(object):
             #print "v2 = |%s|" %(valueIn)
         if len(valueIn) == 0:
             if debug:
-                print "BLANK!"
+                print("BLANK!")
             return None
 
         if valueIn[0].isalpha():
             if debug:
-                print "STRING!"
+                print("STRING!")
             return valueIn
         
         #print "valueIn = |%s|" %(valueIn)
@@ -441,7 +441,7 @@ class cardMethods(object):
              pass
 
         #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
-        #    print "=()!"
+        #    print("=()!")
         #    return valueIn
 
         noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
@@ -495,7 +495,7 @@ class cardMethods(object):
         #print "valueOut = |%s|" %value
 
         if debug:
-            print "SCIENTIFIC!"
+            print("SCIENTIFIC!")
         return value
     
 
@@ -503,7 +503,7 @@ def interpretValue(valueRaw, card='', debug=False):
     """converts a value from nastran format into python format."""
     #debug = True
     if debug:
-        print "v1 = |%s|" %(valueRaw)
+        print("v1 = |%s|" %(valueRaw))
     #lvalue = valueRaw.lstrip()
     valueIn = valueRaw.lstrip().rstrip(' *').upper()
 
@@ -543,7 +543,7 @@ def interpretValue(valueRaw, card='', debug=False):
          pass
 
     #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
-    #    print "=()!"
+    #    print("=()!")
     #    return valueIn
 
     noED = list(set(valueIn)-set('ED 1234567890+-')) # if there are non-floats/scientific notation -> string
@@ -594,7 +594,7 @@ def interpretValue(valueRaw, card='', debug=False):
     #print "valueOut = |%s|" %value
 
     if debug:
-        print "SCIENTIFIC!"
+        print("SCIENTIFIC!")
     return value
 
 def stringParser(stringIn):
@@ -660,14 +660,14 @@ def stringParser(stringIn):
     raise CardParseError('this should never happen...')
 
 if __name__ == '__main__':
-    print stringParser('123')
-    print stringParser('+123')
-    print stringParser('.234')
-    print stringParser('+.234')
-    print stringParser('-.234')
-    print stringParser('1+5')
-    print "abc = |%s|" %(stringParser('abc'))
-    print "eeg = |%s|" %(stringParser('eeg'))
-    #print "e1 = |%s|" %(stringParser('\T'))
-    print stringParser('.e1')
+    print(stringParser('123'))
+    print(stringParser('+123'))
+    print(stringParser('.234'))
+    print(stringParser('+.234'))
+    print(stringParser('-.234'))
+    print(stringParser('1+5'))
+    print("abc = |%s|" %(stringParser('abc')))
+    print("eeg = |%s|" %(stringParser('eeg')))
+    #print("e1 = |%s|" %(stringParser('\T')))
+    print(stringParser('.e1'))
  

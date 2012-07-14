@@ -4,7 +4,7 @@ from struct import unpack
 # pyNastran
 from pyNastran.op2.op2_helper import polarToRealImag
 from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
-from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import gridPointForcesObject,complexGridPointForcesObject
+from .ogf_Objects import gridPointForcesObject,complexGridPointForcesObject
 
 class OGF(object):
     """Table of Grid Point Forces"""
@@ -128,7 +128,7 @@ class OGF(object):
             self.readOGF_Data_table19()
         else:
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
-            print self.codeInformation()
+            print(self.codeInformation())
             #self.skipOES_Element()
             raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName))
         ###
@@ -136,7 +136,7 @@ class OGF(object):
 
 
     def readOGF_Data_table19(self): # grid point forces
-        isSort1 = self.isSort1()
+        #isSort1 = self.isSort1()
         if self.numWide==10:  # real/random
             #if self.thermal==0:
             self.createTransientObject(self.gridPointForces,gridPointForcesObject) # real
@@ -210,7 +210,7 @@ class OGF(object):
         nEntries = len(self.data)//32
         for i in range(nEntries):
             eData = self.data[n:n+32]
-            out = unpack('iiffffff',eData)
+            out = unpack('iiffffff', eData)
             #nid = (out[0]-self.deviceCode)//10  ## @todo update...
 
             #print out

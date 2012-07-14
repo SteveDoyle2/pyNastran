@@ -1,6 +1,5 @@
 import sys
-from oes_objects import stressObject,strainObject #,array
-from pyNastran.op2.op2Errors import *
+from .oes_objects import stressObject, strainObject
 
 class RodDamperObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):

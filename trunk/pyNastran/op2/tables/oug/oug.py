@@ -8,26 +8,23 @@ from struct import unpack
     #nonlinearTemperatureObject,            # analysisCode=10,formatCode=1 sortCode=0 ???
 #     )
 
-from oug_displacements import (
-     DisplacementObject,                    # tableCode=1, formatCode=1 sortCode=0
-     ComplexDisplacementObject,             # analysisCode=5  formatCode=3 sortCode=1
-     )
+from pyNastran.op2.tables.oug.oug_displacements import (
+     DisplacementObject,              # tableCode=1     formatCode=1 sortCode=0
+     ComplexDisplacementObject)       # analysisCode=5  formatCode=3 sortCode=1
 
-from oug_velocities import (                # tableCode=10,formatCode=1 sortCode=0
-     VelocityObject,
-     ComplexVelocityObject
-     )
+# tableCode=10 formatCode=1 sortCode=0
+from pyNastran.op2.tables.oug.oug_velocities import (
+     VelocityObject, ComplexVelocityObject)
 
-from oug_accelerations import (             # tableCode=11,formatCode=1 sortCode=0
-     AccelerationObject,
-     ComplexAccelerationObject
-     )
+# tableCode=11 formatCode=1 sortCode=0
+from pyNastran.op2.tables.oug.oug_accelerations import (
+     AccelerationObject, ComplexAccelerationObject)
 
-from oug_temperatures import (              # tableCode=1, formatCode=1 sortCode=0
-     TemperatureObject,
-     )
+# tableCode=1 formatCode=1 sortCode=0
+from pyNastran.op2.tables.oug.oug_temperatures import (
+     TemperatureObject)
 
-from oug_eigenvectors import (
+from pyNastran.op2.tables.oug.oug_eigenvectors import (
      EigenVectorObject,                     # analysisCode=2, sortCode=0 formatCode   tableCode=7
      ComplexEigenVectorObject,              # analysisCode=5, sortCode=1 formatCode=1 tableCode=7
     #RealEigenVectorObject,                 # analysisCode=9, sortCode=1 formatCode=1 tableCode=7
@@ -125,8 +122,8 @@ class OUG(object):
             eidDevice = self.getValues(data,'i',5)
             floatVal  = self.getValues(data,'f',5)
             #eid = (eidDevice-self.deviceCode)//10
-            print "EID = %s" %(eidDevice)
-            print "floatVal = %s" %(floatVal)
+            print("EID = %s" %(eidDevice))
+            print("floatVal = %s" %(floatVal))
 
             if self.tableName=='OUGRMS2' and self.analysisCode==1:
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency
@@ -136,7 +133,7 @@ class OUG(object):
             elif self.analysisCode in [1,5]: # 5 # freq
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency
                 self.applyDataCodeValue('dataNames',['nodeID'])
-                print "nodeID = ",self.nodeID
+                print("nodeID = %s" %(self.nodeID))
                 #sys.exit(self.nodeID)
             elif self.analysisCode==6: # transient dt
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## time step
@@ -232,7 +229,7 @@ class OUG(object):
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
             #self.skipOES_Element()
             #print "***end skipping***"
-            print self.codeInformation()
+            print(self.codeInformation())
             #raise NotImplementedError(self.codeInformation())
             raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         ###

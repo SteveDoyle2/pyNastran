@@ -1,7 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 import sys
-from types import NoneType
-from numpy import allclose,isinf
+from numpy import allclose, isinf
 
 def isSame(value1, value2):
     """
@@ -9,12 +8,12 @@ def isSame(value1, value2):
     @note this method is used by almost every card when printing
     """
     #print "value=%s default=%s" %(value1,value2)
-    if isinstance(value1, str) or isinstance(value1, NoneType):
+    if isinstance(value1, str) or value1 is None:
         if value1==value2:
             return True
         return False
-    elif (value1==value2 or type(value1)==type(value2) and not isinf(value1) and
-         allclose(value1,value2)):
+    elif (value1 == value2 or type(value1) == type(value2) and
+         not isinf(value1) and allclose(value1, value2)):
         #print "value=%s value2=%s same=%s" %(value1, value2, True)
         return True
     #print "value1=%s value2=%s same=%s" %(value1, value2, False)
@@ -22,10 +21,13 @@ def isSame(value1, value2):
 
 def setBlankIfDefault(value, default):
     """
-    used when setting the output data of a card to clear default values
-    @param value the field value the may be set to None (blank) if value=default
-    @param default the default value for the field
-    @note this method is used by almost every card when printing
+    Used when setting the output data of a card to clear default values
+    @param value
+      the field value the may be set to None (blank) if value=default
+    @param default
+      the default value for the field
+    @note
+      this method is used by almost every card when printing
     """
     if isSame(value, default):
         return None
@@ -92,8 +94,8 @@ def printScientific8(value):
 
 def printFloat8(value, tol=0.):
     """
-    Prints a float in nastran 8-character width syntax
-    using the highest precision possbile.
+    Prints a float in nastran 8-character width syntax using the 
+    highest precision possbile.
     @todo bad for small values...positive or negative...
     @warning hasnt really be tested for tolerancing
     """
@@ -120,13 +122,13 @@ def printFloat8(value, tol=0.):
                 #if 'e' not in field:
                 field1 = field.replace('-','e-')
 
-                #print "value=|%s| field1=|%s| field2=|%s|" %(value, field, field2)
-                #print "same - ",float(field1)==float(field2)
+                #print("value=|%s| field1=|%s| field2=|%s|" %(value, field, field2))
+                #print("same - ", float(field1)==float(field2))
                 if field2=='.':
                     return "%8s" %(field)
-                if len(field2)<=8 and float(field1)==float(field2):
+                if len(field2) <= 8 and float(field1) == float(field2):
                     field = field2
-                    #print "*field = ",field
+                    #print("*field = ",field)
                     field = field.strip(' 0')
 
                     #print "AA"
@@ -236,7 +238,7 @@ def printField(value,tol=0.):
         field = "%8s" %(value)
     elif isinstance(value,float):
         field = printFloat8(value)
-    elif isinstance(value,NoneType):
+    elif value is None:
         field = "        "
     else:
         field = "%8s" %(value)
@@ -274,7 +276,7 @@ def printCard(fields, tol=0.):
     try:
         out = '%-8s' %(fields[0])
     except:
-        print "ERROR!  fields=%s" %(fields)
+        print("ERROR!  fields=%s" %(fields))
         sys.stdout.flush()
         raise
     
@@ -284,7 +286,7 @@ def printCard(fields, tol=0.):
             out += printField(field, tol=tol)
             #print "|%r|" %(printField(field))
         except:
-            print "bad fields = ",fields
+            print("bad fields = %s" %(fields))
             raise
         if i%8==0: # allow 1+8 fields per line
             #print "-------------------------"
@@ -311,7 +313,7 @@ def printIntCard(fields, tol=0.):
     try:
         out = '%-8s' %(fields[0])
     except:
-        print "ERROR!  fields=%s" %(fields)
+        print("ERROR!  fields=%s" %(fields))
         sys.stdout.flush()
         raise
     
@@ -320,7 +322,7 @@ def printIntCard(fields, tol=0.):
         try:
             out += "%8i" %(field) # balks if you have None or string fields
         except:
-            print "bad fields = ",fields
+            print("bad fields = %s" %(fields))
             raise
         if i%8==0: # allow 1+8 fields per line
             out = out.rstrip(' ')
@@ -338,7 +340,7 @@ def displayCard(fields):
     of card printing methods, but it's still useful.
     """
     for (i, field) in enumerate(fields):
-        print "field[%s] = %s" %(i,field)
+        print("field[%s] = %s" %(i, field))
     ###
 
 if __name__=='__main__':
@@ -364,13 +366,14 @@ if __name__=='__main__':
         field = printField(-999999.);   assert '-999999.' == field,'|%s|' %(field)
     field = printField(7.4851e-4);  assert '7.4851-4' == field,'|%s|' %(field)
 
-    #print printField(12500000. )
-    #print printField(47.77267)
-    #print printField(.0000001)
-    #print printField(-5.007e-3)
+    #print(printField(12500000.))
+    #print(printField(47.77267))
+    #print(printField(.0000001))
+    #print(printField(-5.007e-3))
     
 
-    #print printField(1.60665017692e-09)
-    #print printField(3.22614998029e-08)
-    #print printField(1.33564999731e-09)
-    print printField(-0.00082999792)
+    #print(printField(1.60665017692e-09))
+    #print(printField(3.22614998029e-08))
+    #print(printField(1.33564999731e-09))
+    print(printField(-0.00082999792))
+    

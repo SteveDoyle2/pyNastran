@@ -351,7 +351,7 @@ class OP4(FortranFile):
            #     if len(data)==0:
            #         break
            #     (recordLength,) = unpack(self.endian+'i',data)
-           #     print "RL = %s" %(recordLength)
+           #     print("RL = %s" %(recordLength))
            #     if recordLength==24:
            #         self.n-=4; self.op4.seek(self.n)
            #     else:
@@ -445,14 +445,14 @@ class OP4(FortranFile):
         name = name.strip()
 
         if 0:
-            if Type==1:
-                print "Type = Real, Single Precision"
-            elif Type==2:
-                print "Type = Real, Double Precision"
-            elif Type==3:
-                print "Type = Complex, Single Precision"
-            elif Type==4:
-                print "Type = Complex, Double Precision"
+            if Type == 1:
+                print("Type = Real, Single Precision")
+            elif Type == 2:
+                print("Type = Real, Double Precision")
+            elif Type == 3:
+                print("Type = Complex, Single Precision")
+            elif Type == 4:
+                print("Type = Complex, Double Precision")
 
         if nrows<0: # if less than 0, big
             isBigMat = True
@@ -489,7 +489,7 @@ class OP4(FortranFile):
             raise RuntimeError("Type=%s" %(Type))
         
         try:
-            print printMatrix(A.todense())
+            print(printMatrix(A.todense()))
         except:
             pass
 
@@ -552,8 +552,8 @@ class OP4(FortranFile):
             (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
             L = nWords
             if 0:
-                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
-                print "-----------"
+                print("N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords))
+                print("-----------")
 
             if icol==ncols+1:
                 #print "breaking***"
@@ -571,8 +571,8 @@ class OP4(FortranFile):
                 break
 
             if 0:
-                print "next icol"
-                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
+                print("next icol")
+                print("N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords))
             
             #if nWords==0 and isBigMat:
                 #self.n-=4; f.seek(self.n)
@@ -594,12 +594,12 @@ class OP4(FortranFile):
             #nRead2 = (L-1)
 
             if 0:
-                print "inner while real..."
-                print "nWords   = ",nWords
-                print "nValues  = ",nValues
-                print "nValues2 = ",nValues2
-                print "NWV      = ",NWV
-                assert nValues==nValues2
+                print("inner while real...")
+                print("nWords   = %s" %(nWords))
+                print("nValues  = %s" %(nValues))
+                print("nValues2 = %s" %(nValues2))
+                print("NWV      = %s" %(NWV))
+                assert nValues == nValues2
 
             #if nValues==0:
                 #assert icol==ncols+1
@@ -607,8 +607,8 @@ class OP4(FortranFile):
 
             strValues = nValues*d
             if 0:
-                print "strValues = ",strValues
-                print "nValues*NBW=%s len(data)=%s" %(nValues*NBW,len(data))
+                print("strValues = %s" %(strValues))
+                print("nValues*NBW=%s len(data)=%s" %(nValues*NBW,len(data)))
 
             i=0
             while len(data)>0:
@@ -631,7 +631,7 @@ class OP4(FortranFile):
                 assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
                 #print self.printSection(4)
                 if 0:
-                    print "valueList = ",valueList
+                    print("valueList = %s" %(valueList))
 
                 #irow-=1
                 #icol-=1
@@ -656,10 +656,10 @@ class OP4(FortranFile):
                 recordLength -= nValues*NBW
                 data = data[nValues*NBW:]
                 if 0:
-                    print "recordLength=%s NBW=%s len(data)=%s" %(recordLength,NBW,len(data))
-                    #print A
-                    print "********"#,data
-                    print self.printBlock(data)
+                    print("recordLength=%s NBW=%s len(data)=%s" %(recordLength,NBW,len(data)))
+                    #print(A)
+                    print("********")#,data
+                    print(self.printBlock(data))
                 i+=1
             #print "-------------------------------"
 
@@ -697,8 +697,8 @@ class OP4(FortranFile):
             assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
             (icol,irow,nWords) = self.getMarkers(f,isSparse,isBigMat)
             if 0:
-                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
-                print "-----------"
+                print("N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords))
+                print("-----------")
 
             L = nWords
 
@@ -717,8 +717,8 @@ class OP4(FortranFile):
                 break
 
             if 0:
-                print "next icol"
-                print "N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords)
+                print("next icol")
+                print("N=%s icol=%s irow=%s nWords=%s"%(self.n,icol,irow,nWords))
 
             #if nWords==0 and isBigMat:
                 #self.n-=4; f.seek(self.n)
@@ -734,10 +734,10 @@ class OP4(FortranFile):
             #nRead = nWords//4
             while recordLength>=NBW:
                 if 0:
-                    print "inner while..."
-                    print "nWords  = ",nWords
-                    print "nValues = ",nValues
-                    print "NWV     = ",NWV
+                    print("inner while...")
+                    print("nWords  = %s" %(nWords))
+                    print("nValues = %s" %(nValues))
+                    print("NWV     = %s" %(NWV))
 
 
                 #if nValues==0:
@@ -746,14 +746,14 @@ class OP4(FortranFile):
 
                 strValues = nValues*d
                 if 0:
-                    print "strValues = ",strValues
-                    print "nValues*NBW=%s len(data)=%s" %(nValues*NBW,len(data))
+                    print("strValues = %s" %(strValues))
+                    print("nValues*NBW=%s len(data)=%s" %(nValues*NBW,len(data)))
                 valueList = unpack(strValues,data[0:nValues*NBW])
                 assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
                 #print self.printSection(4)
                 #print self.printBlock(data)
                 if 0:
-                    print "valueList = ",valueList
+                    print("valueList = %s" %(valueList))
 
                 #irow-=1
                 #icol-=1
@@ -811,7 +811,7 @@ class OP4(FortranFile):
                 #if nWords>1:
                 #    nWords -= 2
                 #else:
-                #    print "nWords0 = ",nWords
+                #    print("nWords0 = %s" %(nWords))
                 #    nWords = 0
             else:
                 (a,icol,irow,nWords) = self.readStartMarker(f)
@@ -908,7 +908,7 @@ class OP4(FortranFile):
 
         #if nrows==ncols and form==2:
         #    form = 1
-        print "Type=%s" %(Type)
+        print("Type=%s" %(Type))
         if isBigMat:
             msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' %(ncols,-nrows,form,Type,name)
         else:
@@ -927,14 +927,14 @@ class OP4(FortranFile):
         f.write(msg)
         msg = ''
         for j,col in cols.iteritems():
-            print "***********"
-            print "j=%s col=%s" %(j,col)
+            print("***********")
+            print("j=%s col=%s" %(j,col))
             #col.sort()
 
             irows = [A.row[jj] for jj in col]
             #print "irows = ",irows
             (packs) = compressColumn(irows)
-            print "packs = ",packs
+            print("packs = %s" %(packs))
 
             nPacks = len(packs)
             nRows = len(irows)
@@ -972,7 +972,7 @@ class OP4(FortranFile):
                 
                 i=0
                 valueStr = ''
-                print "ipack=%s rowPack=%s" %(ipack,[A.row[p] for p in pack])
+                print("ipack=%s rowPack=%s" %(ipack,[A.row[p] for p in pack]))
                 for p in pack:
                     irow = col[p]
                     val = A.data[irow]
@@ -1219,19 +1219,19 @@ if __name__=='__main__':
             #f = open('binary.op4','wb')
 
         matrices = op4.readOP4(fname,matrixNames=matrixNames,precision='default')
-        print "keys =",matrices.keys()
+        print("keys = %s" %(matrices.keys()))
         #print "#####################################################"
-        print "fname=%s" %(fname)
+        print("fname=%s" %(fname))
         for name,(form,matrix) in sorted(matrices.items()):
-            print "-----------------------------------"
-            print "name = |%s|" %(name)
+            print("-----------------------------------")
+            print("name = |%s|" %(name))
             if isinstance(matrix,coo_matrix):
-                print "SPARSE"
+                print("SPARSE")
                 #matrix = matrix.todense()
                 #print printAnnotatedMatrix(matrix)
             else:
-                print "DENSE"
-                print printMatrix(matrix)
+                print("DENSE")
+                print(printMatrix(matrix))
             
             #if 't' in fname:
             #f.write(op4.writeDenseMatrixAscii(name,matrix,form=form,precision='default'))
@@ -1241,6 +1241,6 @@ if __name__=='__main__':
                 f.write(op4.writeDenseMatrixAscii(name,matrix,1,'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
         #print printAnnotatedMatrix(matrices['STRINGS'][1]-strings)
-    print "-----------------------------"
-    print "done"
-    print "-----------------------------"
+    print("-----------------------------")
+    print("done")
+    print("-----------------------------")

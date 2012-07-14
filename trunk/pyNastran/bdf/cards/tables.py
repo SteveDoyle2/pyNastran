@@ -59,8 +59,8 @@ class TableObj(object):
                 msg += '\n'
             ###
         except:
-            print fields
-            print msg
+            print(fields)
+            print(msg)
             #assert nFields%nRepeated==0,msg
             raise
         ###

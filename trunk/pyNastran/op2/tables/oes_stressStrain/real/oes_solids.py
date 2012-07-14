@@ -1,8 +1,9 @@
 import sys
+from numpy import array
 from numpy.linalg import eigh
 
-from oes_objects import stressObject,strainObject #,array
-from pyNastran.op2.op2Errors import *
+from .oes_objects import stressObject,strainObject
+#from pyNastran.op2.op2Errors import *
 
 class SolidStressObject(stressObject):
     """
@@ -79,7 +80,7 @@ class SolidStressObject(stressObject):
         """
         eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
         if self.nonlinearFactor is None:
-            pack = []
+            ipack = []
             i=0
             n=0
             while n<len(self.data):
@@ -852,7 +853,7 @@ class SolidStrainObject(strainObject):
 
     def ovm(self,o11,o22,o33,o12,o13,o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        ovm = 0.5 * ( (o11-o22)**2+(o22-o33)**2+(o11-o33)**2+6*(o23**2+o31**2+o12**2))
+        ovm = 0.5 * ( (o11-o22)**2+(o22-o33)**2+(o11-o33)**2+6*(o23**2+o13**2+o12**2))
         return ovm
 
     #def ovmPlane(self,o11,o22,o12):

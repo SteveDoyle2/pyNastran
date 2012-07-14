@@ -1,6 +1,6 @@
 import sys
 from math import isnan
-from real.oes_objects import stressObject,strainObject #,array
+from .real.oes_objects import stressObject,strainObject #,array
 
 class NonlinearQuadObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):

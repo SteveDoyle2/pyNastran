@@ -2,8 +2,10 @@ import sys
 from struct import unpack
 
 from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject,ComplexSPCForcesObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject,ComplexMPCForcesObject
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import(
+                                        SPCForcesObject,ComplexSPCForcesObject)
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import(
+                                        MPCForcesObject,ComplexMPCForcesObject)
 
 #from pyNastran.op2.tables.oug.oug_Objects import (
     #temperatureObject,displacementObject,  # analysisCode=1, sortCode=0
@@ -127,19 +129,19 @@ class OQG(object):
             self.readOQG_Data_table3()
         else:
             #self.skipOES_Element()
-            print self.codeInformation()
+            print(self.codeInformation())
             raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
     def readOQG_Data_table3(self): # SPC Forces
-        isSort1 = self.isSort1()
-        #print self.codeInformation()
+        #isSort1 = self.isSort1()
+        #print(self.codeInformation())
         magPhase = self.isMagnitudePhase()
         if magPhase or self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'spcForces'
-                self.createTransientObject(self.spcForces,complexSpcForcesObject) # complex
+                self.createTransientObject(self.spcForces, ComplexSPCForcesObject) # complex
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
@@ -159,11 +161,11 @@ class OQG(object):
             #raise RuntimeError('check the printout for thermal...')
 
     def readOQG_Data_table39(self): # MPC Forces
-        isSort1 = self.isSort1()
-        if self.numWide==8:  # real/random
-            if self.thermal==0:
+        #isSort1 = self.isSort1()
+        if self.numWide == 8:  # real/random
+            if self.thermal == 0:
                 resultName = 'mpcForces'
-                self.createTransientObject(self.mpcForces,mpcForcesObject) # real
+                self.createTransientObject(self.mpcForces,MPCForcesObject) # real
             else:
                 raise NotImplementedError(self.codeInformation())
             self.handleResultsBuffer3(self.OUG_RealTable,resultName)

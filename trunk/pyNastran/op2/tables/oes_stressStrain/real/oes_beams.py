@@ -1,7 +1,7 @@
 import sys
-from struct import unpack
-from oes_objects import stressObject,strainObject #,array
-from pyNastran.op2.op2Errors import *
+#from struct import unpack
+from .oes_objects import stressObject, strainObject
+from pyNastran.op2.op2Errors import InvalidCodeError
 
 class BeamStressObject(stressObject):
     """

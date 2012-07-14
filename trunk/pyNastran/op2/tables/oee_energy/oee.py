@@ -3,7 +3,7 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
-from oee_objects import StrainEnergyObject
+from .oee_objects import StrainEnergyObject
 
 class OEE(object):
     """Table of energy"""
@@ -153,7 +153,7 @@ class OEE(object):
         #print self.strainEnergy
 
     def OEE_Strain5(self):
-        deviceCode = self.deviceCode
+        #deviceCode = self.deviceCode
         dt = self.nonlinearFactor
 
         #(format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE

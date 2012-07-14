@@ -85,7 +85,7 @@ def main():
     except:
         pass
 
-    print "nFiles = ",len(files)
+    print("nFiles = %s" %(len(files)))
     runLotsOfFiles(files,debug,saveCases,skipFiles,stopOnFailure,nStart,nStop)
     #runLotsOfFiles(files,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')

@@ -3,8 +3,8 @@ import sys
 import unittest
 import pyNastran
 testPath = pyNastran.__path__[0]
-#print "testPath = ",testPath
-from test_bdf import runBDF,runAllFilesInFolder
+#print("testPath = %s" %(testPath))
+from pyNastran.bdf.test.test_bdf import runBDF, runAllFilesInFolder
 
 class Tester(unittest.TestCase):
 
@@ -13,16 +13,16 @@ class Tester(unittest.TestCase):
         #xref = False
         runBDF(folder,bdfFilename,xref=xref,cid=cid,isFolder=True,meshForm=meshForm,debug=debug)
 
-    def runAllFilesInFolder(self,folder,xref=False,cid=None,debug=False):
-        runAllFilesInFolder(folder,xref=xref,cid=cid,debug=debug)
+    def runAllFilesInFolder(self, folder, xref=False, cid=None, debug=False):
+        runAllFilesInFolder(folder, xref=xref, cid=cid, debug=debug)
 
 
 class BDF_Test(Tester):
     def test_bdf_01(self):
         bdfFilename = 'solidBending.bdf'
-        folder = os.path.abspath(os.path.join(testPath,'..','models'))
-        self.runBDF(folder,bdfFilename)
-        self.runBDF(folder,bdfFilename,xref=True)
+        folder = os.path.abspath(os.path.join(testPath, '..', 'models'))
+        self.runBDF(folder, bdfFilename)
+        self.runBDF(folder, bdfFilename, xref=True)
 
     def test_bdf_02(self):
         bdfFilename = 'plate_py.dat'

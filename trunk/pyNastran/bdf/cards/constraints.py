@@ -11,7 +11,7 @@ class constraintObject2(object):
         """bad name, but adds an SPCADD or MPCADD"""
         key = ADD_Constraint.conid
         if key in self.addConstraints:
-            print "already has key...key=%s\n%s" %(key, str(ADD_Constraint))
+            print("already has key...key=%s\n%s" %(key, str(ADD_Constraint)))
         else:
             self.addConstraints[key] = ADD_Constraint
         ###
