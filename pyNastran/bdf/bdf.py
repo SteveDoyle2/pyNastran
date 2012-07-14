@@ -8,40 +8,38 @@ import sys
 from pyNastran.general.general import ListPrint
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
-
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                           PRAC2D, PRAC3D, PCONEAX)
 
-from .cards.elements.elementsSprings import (CELAS1, CELAS2, CELAS3, CELAS4,
-                                            SpringElement)
-from .cards.properties.propertiesSprings import PELAS, PELAST
+from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
+                                     SpringElement)
+from .cards.properties.springs import PELAS, PELAST
 #------
-from .cards.elements.elementsSolid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-                                           CHEXA8, CHEXA20, SolidElement)
-from .cards.elements.elementsRigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
+from .cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
+                                   CHEXA8, CHEXA20, SolidElement)
+from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 #------
-from .cards.elements.elementsShell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
-                                         CSHEAR, CTRIA3, CTRIA6, CTRIAX,
-                                         CTRIAX6, CTRIAR, ShellElement)
-from .cards.properties.propertiesShell import (PSHELL, PCOMP, PCOMPG, PSHEAR)
+from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
+                                   CSHEAR, CTRIA3, CTRIA6, CTRIAX,
+                                   CTRIAX6, CTRIAR, ShellElement)
+from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR
 #------
-from .cards.elements.elementsBush import (CBUSH, CBUSH1D, CBUSH2D)
-from .cards.properties.propertiesBush import (PBUSH, PBUSH1D) 
+from .cards.elements.bush import   CBUSH, CBUSH1D, CBUSH2D
+from .cards.properties.bush import PBUSH, PBUSH1D
 #------
-from .cards.elements.elementsDamper import (CVISC, CDAMP1, CDAMP2, CDAMP3,
-                                           CDAMP4, CDAMP5, DamperElement)
-from .cards.properties.propertiesDamper import (PVISC, PDAMP, PDAMP5, PDAMPT)
+from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
+                                    CDAMP5, DamperElement)
+from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 #------
-from .cards.elements.elementsBars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
-                                      CBEND,LineElement)
-from .cards.properties.propertiesBars import (PROD, PTUBE, PBAR, PBARL,
+from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
+                                      CBEND, LineElement)
+from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
                                         PBEAM, PBEAML) # PBEND
 #------
 
-from .cards.elements.elementsMass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3,
-                                      CMASS4, PointElement, PointMassElement,
-                                      ) # CMASS5
-from .cards.properties.propertiesMass import (PMASS, NSM)
+from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
+                                  PointElement, PointMassElement) # CMASS5
+from .cards.properties.mass import (PMASS, NSM)
 
 #--------------------------------
 from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,

@@ -13,7 +13,10 @@ from vtk import (vtkTriangle,vtkQuad,vtkTetra,vtkWedge,vtkHexahedron,
 
 import sys
 import pyNastran
-from pyNastran.bdf.bdf import *
+from pyNastran.bdf.bdf import (BDF, CAERO1, CQUAD4, CQUAD8, CTRIA3, CTRIA6,
+                               CTETRA4, CTETRA10, CPENTA6, CPENTA15,
+                               CHEXA8, CHEXA20, CONM2, LineElement,
+                               SpringElement)
 from mouseStyle import MouseStyle
 
 
