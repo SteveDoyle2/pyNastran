@@ -35,6 +35,11 @@ PBARL   (done)
 PBEAM   (done)
 PBEAML  (disabled)
 PBEAM3
+
+PBCOMP
+PBRSECT
+PBMSECT
+
 PBEND   (done)
 PTUBE   (done)
 
@@ -88,7 +93,7 @@ CVISC   (done) # viscous damper
 PVISC   (done)
 
 ----Masses (Elements/Properties)----:
-CONM1   (done)
+CONM1   (disabled)
 CONM2   (cid!=0)
 
 CMASS1  (done)
@@ -96,6 +101,8 @@ CMASS2  (done)
 CMASS3  (done)
 CMASS4  (done)
 PMASS   (done)
+NSM
+NSM1
 
 ----Solids (Elements/Properties)----:
 CTETRA  (done)
@@ -174,6 +181,7 @@ FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
 
+ACCEL1  (done)
 GRAV    (done)
 
 PLOAD   (done)
@@ -186,8 +194,8 @@ MOMENT  (done)
 MOMENT1 (done)
 MOMENT2 (done)
 
-DLOAD  (done)
-SLOAD  (done)
+DLOAD   (done)
+SLOAD   (done)
 
 TLOAD1  (done)
 TLOAD2
@@ -398,8 +406,6 @@ MBOLTUS
 BAROR
 BEAMOR
 CBARAO
-NSM
-NSM1
 
 ---- Rigid Elements----:
 RROD

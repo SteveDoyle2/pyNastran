@@ -50,6 +50,11 @@ PBARL   (done)
 PBEAM   (done)
 PBEAML  (done)
 PBEAM3
+
+PBCOMP
+PBRSECT
+PBMSECT
+
 PBEND   (done)
 PTUBE   (done)
 
@@ -100,17 +105,19 @@ PDAMP5  (???)
 PDAMPT  (???)
 
 CVISC   (???)
-PVISC   (???)
+PVISC   (NA)
 
 ----Masses (Elements/Properties)----:
-CONM1   (done, does this card need cross-referencing???)
-CONM2   (cid!=0, cid=0 requires CG location...is this still true???)
+CONM1   (does this card need cross-referencing???)
+CONM2   (cid!=0, cid=0 requires CG location...is this true???)
 
 CMASS1  (no)
 CMASS2  (no)
 CMASS3  (no)
 CMASS4  (no)
 PMASS   (NA)
+NSM
+NSM1
 
 ----Solids (Elements/Properties)----:
 CTETRA  (done)
@@ -131,9 +138,9 @@ CFAST   (no)
 PFAST   (no)
 
 CGAP    (done)
-PGAP    (???)
+PGAP    (NA)
 
-PBCOMP
+PBCOMP  (not added)
 
 ----Rigid Elements----:
 RROD
@@ -172,17 +179,17 @@ MATT9
 SPC     (done)
 SPC1    (done)
 SPCD    (done)
-SPCADD  (???)
+SPCADD  (done)
 
 MPC     (done)
-MPCADD  (???)
+MPCADD  (done)
 
 SUPORT  (???)
 SUPORT1 (???)
 
 ----Loads----:
 LOAD    (done)
-LSEQ    (???)
+LSEQ    (done)
 
 RFORCE
 FORCE   (done)
@@ -212,7 +219,7 @@ RLOAD2  (no delay)
 
 ----Thermal Loads----:
 TEMP   (???)
-TEMPD
+TEMPD  (not integrated)
 TEMPD1
 
 QHBDY  (???)
@@ -229,7 +236,7 @@ CONVM
 ----Thermal BCs----:
 CONV   (???)
 RADBC  (???)
-RADM
+RADM   (not integrated)
 TEMPBC
 RADCAV
 RADSET
@@ -353,8 +360,8 @@ EIGC    (???)
 EIGP    (???)
 EIGR    (???)
 EIGRL   (???)
-MKAERO1  (NA)
-MKAERO2  (NA)
+MKAERO1 (NA)
+MKAERO2 (NA)
 
 ----MATRICES----:
 DMIG        (NA)
@@ -370,7 +377,7 @@ PARAM   (???)
 -----------------------------------------------
 
 ----Axial Nodes----:
-RINGAX
+RINGAX (not integrated)
 POINTAX
 
 ----Axial Elements----:
