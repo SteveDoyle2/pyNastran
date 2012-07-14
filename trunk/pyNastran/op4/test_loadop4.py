@@ -2,13 +2,16 @@
 
 import numpy as np
 from cop4 import OP4
+from pyNastran.general.generalMath import printMatrix
 
-for in_file in [ 'test/mat_b_dn.op4' ,
-                 'test/mat_b_s2.op4' ,
-                 'test/mat_b_s1.op4' ,
-                 'test/mat_t_dn.op4' ,
-                 'test/mat_t_s1.op4' ,
-                 'test/mat_t_s2.op4' , ]:
+for in_file in [ #'test/mat_b_dn.op4' ,
+                 #'test/mat_b_s1.op4' ,
+                 #'test/mat_b_s2.op4' ,
+                 #'test/mat_t_dn.op4' ,
+                 #'test/mat_t_s1.op4' ,
+                 #'test/mat_t_s2.op4' , 
+                 'test/b_sample.op4',
+                 ]:
     try:
         op4fh = OP4(in_file, 'r')
     except:
@@ -24,7 +27,7 @@ for in_file in [ 'test/mat_b_dn.op4' ,
             print('Failed to get %d-th matrix' % i)
         else:
             print('%s:' % op4fh.name[i])
-            print(a)
+            print printMatrix(a)
 
 # print 'It carries a reference to our deallocator: %s ' % a.base
 # np.testing.assert_allclose(a, np.arange(10))

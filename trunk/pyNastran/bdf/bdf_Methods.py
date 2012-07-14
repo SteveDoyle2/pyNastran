@@ -2,7 +2,7 @@
 from numpy import array, cross
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
-from pyNastran.bdf.cards.elements.elementsShell import ShellElement
+from pyNastran.bdf.cards.elements.shell import ShellElement
 
 
 class bdfMethods(object):

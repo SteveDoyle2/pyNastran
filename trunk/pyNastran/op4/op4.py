@@ -317,7 +317,7 @@ class OP4(FortranFile):
         data = self.op4.read(4)
         (recordLengthBig,) = unpack('>'+'i',data)
         (recordLengthLittle,) = unpack('<'+'i',data)
-        print 
+        #print 
         if recordLengthBig==24:
             self.endian = '>'
         elif recordLengthLittle==24:
@@ -480,7 +480,6 @@ class OP4(FortranFile):
         #A = zeros((nrows,ncols),dType)
 
         assert self.n==f.tell(),'n=%s tell=%s' %(self.n,f.tell())
-        icol=-1 # dummy value so the loop starts
         if Type in [1,2]: # real
             A = self.readRealBinary(f,nrows,ncols,Type,isSparse,isBigMat)
 
@@ -586,7 +585,7 @@ class OP4(FortranFile):
                 #break
 
             nValues = nWords//NWV
-            nRead = nWords//4
+            #nRead = nWords//4
             
             #print "recordLength=%s NBW=%s" %(recordLength,NBW)
             
@@ -732,7 +731,7 @@ class OP4(FortranFile):
                 continue
 
             nValues = nWords//NWV
-            nRead = nWords//4
+            #nRead = nWords//4
             while recordLength>=NBW:
                 if 0:
                     print "inner while..."
@@ -948,7 +947,7 @@ class OP4(FortranFile):
                 msg = '%8i%8i%8i\n' %(j+1,0,L+1)
             f.write(msg)
 
-            for (iPack,pack) in enumerate(packs):
+            for (iPack,ipack) in enumerate(packs):
                 msg = ''
                 #print "pack = ",pack
 
@@ -956,7 +955,7 @@ class OP4(FortranFile):
                 if isBigMat:
                     #L = complexFactor*(2*len(pack))+1
                     #L = (nPacks+1) + nRows*complexFactor
-                    L = (len(pack)+1)*NWV
+                    L = (len(ipack)+1)*NWV
                     #if iPack==0:
                         #L+=1
                     
@@ -973,7 +972,7 @@ class OP4(FortranFile):
                 
                 i=0
                 valueStr = ''
-                print "pack=%s rowPack=%s" %(pack,[A.row[p] for p in pack])
+                print "ipack=%s rowPack=%s" %(ipack,[A.row[p] for p in pack])
                 for p in pack:
                     irow = col[p]
                     val = A.data[irow]
@@ -1164,24 +1163,24 @@ def compressColumn(col):
 
     n=0
     i=0
-    pack = []
+    packi = []
     while i<len(col):
         #print "i=%s n=%s col[i]=%s" %(i,n,col[i])
         if col[i]==n+1:
             #print "i=n=%s" %(i)
-            pack.append(i)
+            packi.append(i)
             n+=1
         else:
-            if pack:
-                packs.append(pack)
+            if packi:
+                packs.append(packi)
                 #print "pack = ",pack
-            pack = [i]
+            packi = [i]
             n=col[i]
         #print "pack = ",pack
         i+=1
 
-    if pack:
-        packs.append(pack)
+    if packi:
+        packs.append(packi)
     #print "packs = ",packs
     return (packs)
 

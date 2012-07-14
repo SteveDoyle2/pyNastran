@@ -115,7 +115,7 @@ class pyWidget(wxVTKRenderWindow):
         renderLarge.SetMagnification(4)
 
         wildcard = "PNG (*.png)|*.png|" \
-         "JPEG (*.jpeg; *.jpeg; *.jpg; *.jfif)|*.jpg;*.jpeg;*.jpe;*.jfif|" \
+         "JPEG (*.jpeg; *.jpeg; *.jpg; *.jfif)|*.jpg;*.jpeg;*.jpg;*.jfif|" \
          "TIFF (*.tif; *.tiff)|*.tif;*.tiff|" \
          "BMP (*.bmp)|*.bmp|" \
          "PostScript (*.ps)|*.ps|" \

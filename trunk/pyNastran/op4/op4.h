@@ -2,20 +2,20 @@
 
 Copyright (C) 2001-2012  <al.danial@gmail.com>
 
-This program is free software; you can redistribute it and/or   
-modify it under the terms of the GNU Lesser General Public      
-License as published by the Free Software Foundation;           
-version 3 of the License.                                       
-                                                                
-This program is distributed in the hope that it will be useful, 
-but WITHOUT ANY WARRANTY; without even the implied warranty of  
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the    
-GNU Lesser General Public License for more details.             
-                                                                
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation;
+version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
 You should have received a copy of the GNU Lesser General Public
-License along with this program; if not, write to the           
-Free Software Foundation, Inc.,                                 
-675 Mass Ave, Cambridge, MA 02139, USA.                         
+License along with this program; if not, write to the
+Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
 1}}} */
 
 #define OP4_TXT_LINE_SIZE    82  /* have to include the \n */
@@ -62,7 +62,7 @@ int op4_scan(  const char *filename  ,  /* in                          */
                int        *digits    ,  /* out size of mantissa        */
                long       *offset       /* out byte offset to matrix   */
               );
-int op4_scan_t(const char *filename  ,  /* in                          */
+int op4_scan_text(const char *filename  ,  /* in                          */
                int        *n_mat     ,  /* out number of matrices      */
                char        name[][9] ,  /* out matrix names            */
                int        *storage   ,  /* out 0=dn; 1=sp1; 2=sp2      */
@@ -75,7 +75,7 @@ int op4_scan_t(const char *filename  ,  /* in                          */
                int        *digits    ,  /* out size of mantissa        */
                long       *offset       /* out byte offset to matrix   */
               );
-int op4_scan_b(const char *filename  ,  /* in                          */
+int op4_scan_binary(const char *filename  ,  /* in                          */
                int         endian    ,  /* in  0=native   1=flipped    */
                int        *n_mat     ,  /* out number of matrices      */
                char        name[][9] ,  /* out matrix names            */
@@ -88,7 +88,7 @@ int op4_scan_b(const char *filename  ,  /* in                          */
                int        *form      ,  /* out matrix form 6=symm, etc */
                long       *offset       /* out byte offset to matrix   */
               );
-void op4_is_mat_header_b(FILE *fp        ,
+void op4_is_mat_header_binary(FILE *fp        ,
                          int   endian    ,     /* in  0=native   1=flipped  */
                          int  *record_length,  /* out */
                          int  *is_header ,  /* out 1=is matrix hdr; 0=isn't */
@@ -101,7 +101,7 @@ void op4_is_mat_header_b(FILE *fp        ,
                          int  *Type      ,  /* out 1=RS; 2=RD; 3=CS; 4=CD   */
                          int  *Form      ,  /* out matrix form 6=symm, etc  */
                          long *offset);     /* out byte offset to matrix    */
-int op4_count_str_b(FILE *fp     ,  /* in  */
+int op4_count_str_binary(FILE *fp     ,  /* in  */
                     int   endian ,  /* in  */
                     int   nType  ,  /* in  */
                     int   storage,  /* in  */
@@ -111,7 +111,7 @@ int op4_count_str_b(FILE *fp     ,  /* in  */
                     int  *nNnz);    /* out */
 int op4_line_type(const char *line);
 FILE* op4_open_r(const char *filename, long offset);
-int op4_read_col_t(FILE   *fp         ,
+int op4_read_col_text(FILE   *fp         ,
                    int     c_in       ,  /* in  requested column to read   */
                    int     nRow       ,  /* in  # rows    in matrix        */
                    int     nCol       ,  /* in  # columns in matrix        */
@@ -124,7 +124,7 @@ int op4_read_col_t(FILE   *fp         ,
                    int    *N_index    ,  /* in/out          (s_o) = 1,2    */
                    double *N             /* out numeric data               */
                   );
-int  op4_read_col_b(FILE   *fp         ,
+int  op4_read_col_binary(FILE   *fp         ,
                     int     endian     ,  /* in  0=native   1=flipped    */
                     int     c_in       ,  /* in  requested column to read   */
                     int     nRow       ,  /* in  # rows    in matrix        */

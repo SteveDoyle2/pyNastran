@@ -257,8 +257,8 @@ class solver(F06,OP2):
 
         ## define IDs of grid point components in matrices
 
-        #self.is3D = True
-        self.is3D = False
+        self.is3D = True
+        #self.is3D = False
         
         (Ua,n) = self.setupSOL101(model,case)
         print("------------------------\n")

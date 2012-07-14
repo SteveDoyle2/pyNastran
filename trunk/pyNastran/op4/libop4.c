@@ -2,20 +2,20 @@
 
 Copyright (C) 1999-2012  <al.danial@gmail.com>
 
-This program is free software; you can redistribute it and/or   
-modify it under the terms of the GNU Lesser General Public      
-License as published by the Free Software Foundation;           
-version 3 of the License.                                       
-                                                                
-This program is distributed in the hope that it will be useful, 
-but WITHOUT ANY WARRANTY; without even the implied warranty of  
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the    
-GNU Lesser General Public License for more details.             
-                                                                
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation;
+version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
 You should have received a copy of the GNU Lesser General Public
-License along with this program; if not, write to the           
-Free Software Foundation, Inc.,                                 
-675 Mass Ave, Cambridge, MA 02139, USA.                         
+License along with this program; if not, write to the
+Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
 1}}} */
 #ifndef __STRICT_ANSI__
    #define __STRICT_ANSI__
@@ -32,25 +32,27 @@ Free Software Foundation, Inc.,
 #define  MAX(a,b)              ((a) >  (b)) ? (a)  : (b)
 void get_file_suffix(char *file, char *ext);
 
-/* constants {{{1 
+//-----------------------------------------------------------------------
+/* constants {{{1
    would like to have the constant arrays below defined in op4.h
-   but they cause 'multiple definition' errors 
+   but they cause 'multiple definition' errors
  */
 
-const char op4_store_str[3][3] = { {'d',  'n',  0}, 
-                                   {'s',  '1',  0}, 
-                                   {'s',  '2',  0}  
+const char op4_store_str[3][3] = { {'d',  'n',  0},
+                                   {'s',  '1',  0},
+                                   {'s',  '2',  0}
                            };
 const int op4_words_per_term[5] = {-1, 1, 2, 2, 4};
 const int Nm_per_term[2]  = {1,  /* numbers per term[real data type]    = 1  */
                              2}; /* numbers per term[complex data type] = 2  */
-const char op4_type_str[4][3] = { {'R',  'S',  0}, 
-                                  {'R',  'D',  0}, 
-                                  {'C',  'S',  0}, 
-                                  {'C',  'D',  0}  
+const char op4_type_str[4][3] = { {'R',  'S',  0},
+                                  {'R',  'D',  0},
+                                  {'C',  'S',  0},
+                                  {'C',  'D',  0}
                            };
  /* 1}}} */
 
+//-----------------------------------------------------------------------
 float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                    int     filetype   ,  /* in  1=text, other is binary    */
                    int     nRow       ,  /* in  # rows    in matrix        */
@@ -71,7 +73,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
 
     int     endian = 0;      /* FIX THIS */
 
-    if (DEBUG) { printf("-> op4_load_S\n"); fflush(stdout); }
+    if (DEBUG) { printf("74 -> op4_load_S\n"); fflush(stdout); }
     i     = 0;
     nnz   = 0;
     size  = nRow*nCol;  /* only used for dense */
@@ -81,7 +83,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
         NPT   *= 2;
         nType += 2;
     }
-    /* op4_read_col_t() only populates arrays of type double.
+    /* op4_read_col_text() only populates arrays of type double.
      * To minimize memory use, only allocate memory for a single
      * column of type double and copy it to the float array each
      * pass through the columns.
@@ -94,9 +96,9 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
         column   = malloc(sizeof(double)*n_Nnz*NPT);
         str_data = malloc(sizeof(str_t)*(nRow+1)/2);  /* max # strings in a row is nR/2 + 1*/
     }
-    if (DEBUG) { printf("-> op4_load_S after malloc\n"); fflush(stdout); }
+    if (DEBUG) { printf(" 97 -> op4_load_S after malloc\n"); fflush(stdout); }
     for (c = 0; c < nCol; c++) {
-        if (DEBUG) { printf("op4_load_S column %d\n", c); fflush(stdout); }
+        if (DEBUG) { printf(" 99 - op4_load_S column %d\n", c); fflush(stdout); }
         if (storage) { /* sparse */
             s_ptr                 = 0;
             n_ptr                 = 0;
@@ -105,7 +107,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
             str_data[0].N_idx     = 0;
         }
         if (filetype == 1) {
-            nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+            nnz = op4_read_col_text(fp, c+1, nRow, nCol, fmt_str, col_width,
                                    storage   ,  /* in 0=dn  1,2=sp1,2  3=ccr  */
                                    complx    ,  /* in  0=real   1=complex     */
                                   &s_ptr     ,  /* in/out index m.S (if sp1,2)*/
@@ -113,7 +115,7 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                                   &n_ptr     ,  /* in/out index m.N (sp 1,2)  */
                                    column    ); /* out numeric data */
         } else {
-            nnz = op4_read_col_b(  fp        ,
+            nnz = op4_read_col_binary(  fp        ,
                                    endian    ,  /* in  0=native   1=flipped    */
                                    c+1       ,  /* in  requested column to read   */
                                    nRow      ,  /* in  # rows    in matrix        */
@@ -125,15 +127,15 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                                   &n_ptr     ,  /* in/out idx N[]    (s_o)=1,2    */
                                    column    ); /* out numeric data               */
         }
-        if (DEBUG) { printf("op4_load_S column %d populating array\n", c); fflush(stdout); }
+        if (DEBUG) { printf("128 - op4_load_S column %d populating array\n", c); fflush(stdout); }
         if (storage) { /* sparse */
              for (s = 0; s < s_ptr; s++) {
-                if (DEBUG) { printf("op4_load_S    str_data[%d].len=%d  .start_row=%d  .N_idx=%d\n", 
+                if (DEBUG) { printf("131 - op4_load_S    str_data[%d].len=%d  .start_row=%d  .N_idx=%d\n",
                         s, str_data[s].len, str_data[s].start_row, str_data[s].N_idx); fflush(stdout); }
                 for (j = 0; j < str_data[s].len; j++) {
                      I_coo[i] = str_data[s].start_row + j;
                      J_coo[i] = c;
-                     if (DEBUG) { printf("op4_load_S    I,J[%d]=%d,%d\n", 
+                     if (DEBUG) { printf("136 - op4_load_S    I,J[%d]=%d,%d\n",
                             i, (int) I_coo[i], (int) J_coo[i]); fflush(stdout); }
                      array[i*NPT] = column[str_data[s].N_idx + j*NPT];
                      if (NPT > 1) {
@@ -154,9 +156,12 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
         free(str_data);
     }
     free(column);
-    if (DEBUG) { printf("<- op4_load_S\n"); fflush(stdout); }
+    if (DEBUG) { printf("157 <- op4_load_S\n"); fflush(stdout); }
     return array;
 } /* 1}}} */
+
+
+//-----------------------------------------------------------------------
 double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                    int     filetype   ,  /* in  1=text, other is binary    */
                    int     nRow       ,  /* in  # rows    in matrix        */
@@ -176,7 +181,7 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
 
     int     endian = 0;      /* FIX THIS */
 
-    if (DEBUG) { printf("-> op4_load_D:  %d x %d\n", nRow, nCol); fflush(stdout); }
+    if (DEBUG) { printf("179 -> op4_load_D:  %d x %d\n", nRow, nCol); fflush(stdout); }
     i     = 0;
     nnz   = 0;
     size  = nRow*nCol;  /* only used for dense */
@@ -205,17 +210,17 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
             str_data[0].N_idx     = 0;
         }
         if (filetype == 1) {
-            nnz = op4_read_col_t(fp, c+1, nRow, nCol, fmt_str, col_width,
+            nnz = op4_read_col_text(fp, c+1, nRow, nCol, fmt_str, col_width,
                                    storage   , /* in 0=dn  1,2=sp1,2  3=ccr  */
                                    complx    , /* in  0=real   1=complex     */
                                   &s_ptr     , /* in/out index m.S (if sp1,2)*/
                                    str_data  , /* out string data (if sp1,2) */
                                   &n_ptr     , /* in/out index m.N (sp 1,2)  */
 //                                &array[c*nRow*NPT]
-                                   column     
+                                   column
                                   ); /* out numeric data */
         } else {
-            nnz = op4_read_col_b(fp        ,  
+            nnz = op4_read_col_binary(fp        ,
                                    endian    ,  /* in  0=native   1=flipped    */
                                    c+1       ,  /* in  requested column to read   */
                                    nRow      ,  /* in  # rows    in matrix        */
@@ -226,18 +231,18 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                                    str_data  ,  /* out string data   (s_o)=1,2    */
                                   &n_ptr     ,  /* in/out idx N[]    (s_o)=1,2    */
 //                                &array[c*nRow*NPT]     /* out numeric data               */
-                                   column     
+                                   column
                                   );
         }
         if (DEBUG) { printf("op4_load_D column %d populating array\n", c); fflush(stdout); }
         if (storage) { /* sparse */
              for (s = 0; s < s_ptr; s++) {
-                if (DEBUG) { printf("op4_load_D    str_data[%d].len=%d  .start_row=%d  .N_idx=%d\n", 
+                if (DEBUG) { printf("op4_load_D    str_data[%d].len=%d  .start_row=%d  .N_idx=%d\n",
                         s, str_data[s].len, str_data[s].start_row, str_data[s].N_idx); fflush(stdout); }
                 for (j = 0; j < str_data[s].len; j++) {
                      I_coo[i] = str_data[s].start_row + j;
                      J_coo[i] = c;
-                     if (DEBUG) { printf("op4_load_D    I,J[%d]=%d,%d\n", 
+                     if (DEBUG) { printf("op4_load_D    I,J[%d]=%d,%d\n",
                             i, (int) I_coo[i], (int) J_coo[i]); fflush(stdout); }
                      array[i*NPT] = column[str_data[s].N_idx + j*NPT];
                      if (NPT > 1) {
@@ -257,9 +262,12 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
         free(str_data);
     }
     free(column);
-    if (DEBUG) { printf("<- op4_load_D\n"); fflush(stdout); }
+    if (DEBUG) { printf("260 <- op4_load_D\n"); fflush(stdout); }
     return array;
 } /* 1}}} */
+
+
+//-----------------------------------------------------------------------
 int  op4_filetype(const char *filename)    /* {{{1 */
 {
     /* Returns
@@ -268,7 +276,7 @@ int  op4_filetype(const char *filename)    /* {{{1 */
            3 if a binary file flipped endian
            0 if none of the above or file read error
      */
-int DEBUG = 0;
+	int DEBUG = 0;
     FILE *fp;
     int   word, type, nRead;
     char *w;
@@ -280,7 +288,7 @@ int DEBUG = 0;
     }
     nRead = fread(&word, BYTES_PER_WORD, 1, fp);
 if (DEBUG)
-printf("op4_filetype first word is %d  chars:[%c][%c][%c][%c]\n", 
+printf("283 - op4_filetype first word is %d  chars:[%c][%c][%c][%c]\n",
 word, w[0], w[1], w[2], w[3]);
     if (nRead == 1) { /* in units of words */
         if (word >= 538976288) {
@@ -318,6 +326,9 @@ word, w[0], w[1], w[2], w[3]);
     fclose(fp);
     return type;
 } /* 1}}} */
+
+
+//-----------------------------------------------------------------------
 int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
                 int        *n_mat     ,  /* out number of matrices      */
                 char        name[][9] ,  /* out matrix names            */
@@ -330,7 +341,7 @@ int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
                 int        *form      ,  /* out matrix form 6=symm, etc */
                 int        *digits    ,  /* out size of mantissa        */
                 long       *offset       /* out byte offset to matrix   */
-                ) 
+                )
 {
     /* Count the number and determine storage type of matrices
        in the text op4 file by scanning for matrix, column & string headers.
@@ -346,8 +357,8 @@ int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
                                         */
     switch ( filetype ) {
         case 1  :
-            result = 
-            op4_scan_t(filename  ,  /* in                          */
+            result =
+            op4_scan_text(filename  ,  /* in                          */
                        n_mat     ,  /* out number of matrices      */
                        name      ,  /* out matrix names            */
                        storage   ,  /* out 0=dn; 1=sp1; 2=sp2      */
@@ -363,8 +374,8 @@ int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
         case 2:
         case 3:
             endian = filetype - 2;
-            result = 
-            op4_scan_b(filename  ,  /* in                          */
+            result =
+            op4_scan_binary(filename  ,  /* in                          */
                        endian    ,  /* in  0=native   1=flipped    */
                        n_mat     ,  /* out number of matrices      */
                        name      ,  /* out matrix names            */
@@ -377,10 +388,10 @@ int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
                        form      ,  /* out matrix form 6=symm, etc */
                        offset);     /* out byte offset to matrix   */
             if (endian)
-                for (i = 0; i < *n_mat; i++) 
+                for (i = 0; i < *n_mat; i++)
                     digits[i] = -1;
             else
-                for (i = 0; i < *n_mat; i++) 
+                for (i = 0; i < *n_mat; i++)
                     digits[i] =  0;
             break;
         case 0  :
@@ -392,7 +403,10 @@ int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
     }
     return result;
 } /* 1}}} */
-int  op4_scan_t(const char *filename  ,  /* in  {{{1                    */
+
+
+//-----------------------------------------------------------------------
+int  op4_scan_text(const char *filename  ,  /* in  {{{1                    */
                 int        *n_mat     ,  /* out number of matrices      */
                 char        name[][9] ,  /* out matrix names            */
                 int        *storage   ,  /* out 0=dn; 1=sp1; 2=sp2      */
@@ -404,7 +418,7 @@ int  op4_scan_t(const char *filename  ,  /* in  {{{1                    */
                 int        *form      ,  /* out matrix form 6=symm, etc */
                 int        *digits    ,  /* out size of mantissa        */
                 long       *offset       /* out byte offset to matrix   */
-               ) 
+               )
 {
     /* Count the number and determine storage type of matrices
        in the text op4 file by scanning for matrix, column & string headers.
@@ -423,22 +437,22 @@ int  op4_scan_t(const char *filename  ,  /* in  {{{1                    */
        all text based numeric data has, as in
 -3.937729118E+02-4.689545312E+07 3.766712501E+07-6.581960491E+06 0.000000000E+00
      */
-int DEBUG = 0;
+	int DEBUG = 0;
     FILE *fp;
     char  line[OP4_TXT_LINE_SIZE + 1];
     int   n_text_cols, text_col_width, mixed, nwords, start_row, nRead;
     long  location;
     char  junk1[12], junk2[12], junk3[12];
-    
+
 if (DEBUG)
-printf("op4_scan_t file=[%s]\n", filename);
+printf("434 - op4_scan_text file=[%s]\n", filename);
     *n_mat = 0;
     fp    = fopen(filename, "r");
     if (fp == NULL) {
         return 0;
     }
 if (DEBUG)
-printf("op4_scan_t opened ok\n");
+printf("441 - op4_scan_text opened ok\n");
     while (!feof(fp)) {
         location = ftell(fp);
         fgets(line, OP4_TXT_LINE_SIZE, fp);
@@ -448,7 +462,7 @@ printf("op4_scan_t opened ok\n");
                 case OP4_TEXT_NUMERIC   : /* {{{2 */
                     break; /* 2}}} */
                 case OP4_TEXT_HEADER    : /* {{{2 */
-                    if (*n_mat && !storage[*n_mat-1]) { 
+                    if (*n_mat && !storage[*n_mat-1]) {
                         /* previous matrix stored in dense scheme */
                         nNnz[*n_mat-1] = nRow[*n_mat-1]*nCol[*n_mat-1];
                     }
@@ -456,17 +470,17 @@ printf("op4_scan_t opened ok\n");
                     nStr[*n_mat]    = 0;
                     nNnz[*n_mat]    = 0;
                     if (line[41] == 'P') {
-                        nRead = sscanf(line, 
+                        nRead = sscanf(line,
                                       "%8d%8d%8d%8d%8s%[ 1P,]%1d%1[E]%d%1[.]%d",
-                                      &nCol[*n_mat], 
-                                      &nRow[*n_mat], 
-                                      &form[*n_mat], 
-                                      &type[*n_mat], 
-                                       name[*n_mat], 
+                                      &nCol[*n_mat],
+                                      &nRow[*n_mat],
+                                      &form[*n_mat],
+                                      &type[*n_mat],
+                                       name[*n_mat],
                                        junk1,           /*   1P,  */
-                                      &n_text_cols, 
+                                      &n_text_cols,
                                        junk2,           /*   E    */
-                                      &text_col_width, 
+                                      &text_col_width,
                                        junk3,           /*   .    */
                                       &digits[*n_mat]);
                         if (nRead != 11) {
@@ -478,10 +492,10 @@ printf("op4_scan_t opened ok\n");
                         text_col_width  = 15;
                         digits[*n_mat]  =  9;
                         nRead = sscanf(line, "%8d%8d%8d%8d%8s",
-                                      &nCol[*n_mat], 
-                                      &nRow[*n_mat], 
-                                      &form[*n_mat], 
-                                      &type[*n_mat], 
+                                      &nCol[*n_mat],
+                                      &nRow[*n_mat],
+                                      &form[*n_mat],
+                                      &type[*n_mat],
                                        name[*n_mat]);
                         if (nRead != 5) {
                             fclose(fp);
@@ -494,20 +508,20 @@ printf("op4_scan_t opened ok\n");
                     break; /* 2}}} */
                 case OP4_TEXT_NEW_COLUMN: /* {{{2 */
 if (DEBUG)
-printf("new col: %s", line);
+printf("497 - new col: %s", line);
                     break; /* 2}}} */
                 case OP4_TEXT_STRING_2  : /* {{{2 */
                     sscanf(line, "%8d%8d", &nwords, &start_row);
                     --nwords;
                     nNnz[   *n_mat-1] += nwords/op4_words_per_term[type[*n_mat-1]];
 if (DEBUG)
-printf("s2:  nwords=%d  nNnz=%d\n", nwords, nNnz[   *n_mat-1]);
+printf("504 - s2:  nwords=%d  nNnz=%d\n", nwords, nNnz[   *n_mat-1]);
                     storage[*n_mat-1] = 2;
                     ++nStr[ *n_mat-1];
                     break; /* 2}}} */
                 case OP4_TEXT_STRING_1  : /* {{{2 */
 if (DEBUG)
-printf("s1:  %s", line);
+printf("510 - s1:  %s", line);
                     sscanf(line, "%8d", &mixed);
                     nwords    = (mixed/65536) - 1;
                     start_row = mixed - 65536 * (nwords + 1);
@@ -530,7 +544,10 @@ printf("s1:  %s", line);
     }
     return 1;
 } /* 1}}} */
-int  op4_scan_b(const char *filename  ,  /* in  {{{1                    */
+
+
+//-----------------------------------------------------------------------
+int  op4_scan_binary(const char *filename  ,  /* in  {{{1                    */
                 int         endian    ,  /* in  0=native   1=flipped    */
                 int        *n_mat     ,  /* out number of matrices      */
                 char        name[][9] ,  /* out matrix names            */
@@ -542,30 +559,30 @@ int  op4_scan_b(const char *filename  ,  /* in  {{{1                    */
                 int        *type      ,  /* out 1=RS; 2=RD; 3=CS; 4=CD  */
                 int        *form      ,  /* out matrix form 6=symm, etc */
                 long       *offset       /* out byte offset to matrix   */
-               ) 
+               )
 {
     /* Count the number and determine storage type of matrices
        in the text op4 file by scanning for matrix, column & string headers.
        Binary version.
      */
-int DEBUG = 0;
+	int DEBUG = 0;
     FILE *fp;
     int   record_length, is_header, result /* = 0  causes segfault */;
     char  my_name[9], next_byte;
     long  location;
-    
+
 if (DEBUG)
-printf("op4_scan_b file=[%s]\n", filename);
+printf("558 - op4_scan_binary file=[%s]\n", filename);
     *n_mat = 0;
     fp = fopen(filename, "rb");
     if (fp == NULL) {
         return 0;
     }
 if (DEBUG)
-printf("op4_scan_b opened ok\n");
+printf("565 - op4_scan_binary opened ok\n");
     while (!feof(fp)) {
         location  = ftell(fp);
-if (DEBUG) printf("op4_scan_b location A =%ld\n", location);
+if (DEBUG) printf("568 - op4_scan_binary location A =%ld\n", location);
         /* Determining EOF is tricky because positioning the file pointer
            via Fortran record lengths ends up putting the FP at the very
            last byte in the file... without triggering EOF.  Have to
@@ -577,10 +594,10 @@ if (DEBUG) printf("op4_scan_b location A =%ld\n", location);
         else          /* oops, am not at EOF, put the byte back */
             ungetc(next_byte, fp);
 
-        op4_is_mat_header_b(fp              , 
+        op4_is_mat_header_binary(fp              ,
                             endian          ,
-                           &record_length   , 
-                           &is_header       , 
+                           &record_length   ,
+                           &is_header       ,
                             my_name         ,
                            &storage[*n_mat] ,
                            &nRow[*n_mat]    ,
@@ -590,14 +607,14 @@ if (DEBUG) printf("op4_scan_b location A =%ld\n", location);
                            &type[*n_mat]    ,
                            &form[*n_mat]    ,
                            &offset[*n_mat]);
-if (DEBUG) printf("op4_scan_b got RL=%d\n", record_length);
+if (DEBUG) printf("593 - op4_scan_binary got RL=%d\n", record_length);
         fseek(fp, record_length + 2*BYTES_PER_WORD, SEEK_CUR); /* skip header */
-if (DEBUG) printf("op4_scan_b loc=%ld is_header=%d\n", ftell(fp), is_header);
-        if (is_header) {  
+if (DEBUG) printf("595 - op4_scan_binary loc=%ld is_header=%d\n", ftell(fp), is_header);
+        if (is_header) {
             strncpy(name[*n_mat], my_name, 9);
             if (storage[*n_mat]) { /* sparse 1 or 2; need to count strings */
-                result = op4_count_str_b(fp, endian, type[*n_mat], 
-                                         storage[*n_mat],  
+                result = op4_count_str_binary(fp, endian, type[*n_mat],
+                                         storage[*n_mat],
                                          nRow[*n_mat], nCol[*n_mat],
                                         &nStr[*n_mat], &nNnz[*n_mat]);
                 if (!result) {
@@ -610,14 +627,14 @@ if (DEBUG) printf("op4_scan_b loc=%ld is_header=%d\n", ftell(fp), is_header);
         }
 if (DEBUG) {
 location  = ftell(fp);
-printf("op4_scan_b location B =%ld nStr=%d\n", location, nStr[*n_mat-1]);
+printf("613 - op4_scan_binary location B =%ld nStr=%d\n", location, nStr[*n_mat-1]);
 }
     }
 
     fseek(fp, 0, SEEK_END);      /* Set the file pointer to the end of file. */
     offset[*n_mat] = ftell(fp);  /* If this isn't done ftell() returns bogus.*/
 if (DEBUG)
-printf("op4_scan_b end byte position=%ld\n", offset[*n_mat]);
+printf("620 - op4_scan_binary end byte position=%ld\n", offset[*n_mat]);
     fclose(fp);
     if (!storage[*n_mat-1]) {
         /* last matrix stored in dense scheme */
@@ -626,7 +643,10 @@ printf("op4_scan_b end byte position=%ld\n", offset[*n_mat]);
 
     return 1;
 } /* 1}}} */
-void op4_is_mat_header_b(FILE *fp,        /* {{{1 */
+
+
+//-----------------------------------------------------------------------
+void op4_is_mat_header_binary(FILE *fp,        /* {{{1 */
                          int   endian    ,     /* in  0=native   1=flipped  */
                          int  *record_length,  /* out */
                          int  *is_header ,  /* out 1=is matrix hdr; 0=isn't */
@@ -639,16 +659,16 @@ void op4_is_mat_header_b(FILE *fp,        /* {{{1 */
                          int  *Type      ,  /* out 1=RS; 2=RD; 3=CS; 4=CD   */
                          int  *Form      ,  /* out matrix form 6=symm, etc  */
                          long *offset)      /* out byte offset to matrix    */
-/* 
+/*
    If this Fortran record contains a matrix header, reads the appropriate
    entries.  The file pointer is rewound to where it was when
    this routine was called.
  */
-{  
-int DEBUG = 0;
+{
+	int DEBUG = 0;
     int   is_ascii, nCol_, nRow_, Form_, Type_, rec_len,
           column_id, start_row, n_words, header[7];
-            
+
     long  location;
     char *name_ptr;
 
@@ -656,12 +676,12 @@ int DEBUG = 0;
 
     location   = ftell(fp);
     fread(record_length, BYTES_PER_WORD, 1, fp);
-if (DEBUG)
-printf("op4_is_mat_header_b RL=%d location=%ld\n", *record_length, location);
+	if (DEBUG)
+		printf("660 - op4_is_mat_header_binary BYTES_PER_WORD=%d endian=%s RL=%d location=%ld\n", BYTES_PER_WORD,endian,*record_length, location);
     if (endian)
         *record_length = flip_bytes_int(*record_length);
-if (DEBUG)
-printf("op4_is_mat_header_b RL=%d location=%ld\n", *record_length, location);
+	if (DEBUG)
+		printf("664 - op4_is_mat_header_binary RL=%d location=%ld\n", *record_length, location);
 
     if (*record_length == 24) {
         /* candidate for a matrix header */
@@ -685,11 +705,11 @@ printf("op4_is_mat_header_b RL=%d location=%ld\n", *record_length, location);
             Form_ = flip_bytes_int(Form_);
             Type_ = flip_bytes_int(Type_);
         }
-if (DEBUG) {
-printf("op4_scan_b name=[%s] ", my_name);
-printf(" is_ascii=%d nCols=%d nRows=%d Form=%d Type=%d\n",
-is_ascii,nCol_,nRow_,Form_,Type_);
-}
+		if (DEBUG) {
+			printf("689 - op4_scan_binary name=[%s] ", my_name);
+			printf("690 is_ascii=%d nCols=%d nRows=%d Form=%d Type=%d\n",
+			is_ascii,nCol_,nRow_,Form_,Type_);
+		}
         if (is_ascii && nCol_ > 0 && nRow_ && Form_ < 50 && Type_ < 10) {
             /* we have a winner; this is a matrix header */
             *is_header = 1;
@@ -712,7 +732,7 @@ is_ascii,nCol_,nRow_,Form_,Type_);
                 n_words   = flip_bytes_int(n_words);
             }
 if (DEBUG)
-printf("op4_scan_b rl=%2d c=%2d r=%2d nw=%2d\n",
+printf("715 - op4_scan_binary rl=%2d c=%2d r=%2d nw=%2d\n",
 rec_len, column_id, start_row, n_words);
             if (nRow_ < 0) {
                 *storage = 2;   /* sparse 2 */
@@ -720,13 +740,16 @@ rec_len, column_id, start_row, n_words);
                        ((start_row == 1) && (n_words == 1))) { /* null */
                 *storage = 1;   /* sparse 1 */
             } else {                   /* dense    */
-                *storage = 0;  
+                *storage = 0;
             }
-        } 
+        }
     }
     fseek(fp, location, SEEK_SET);
 } /* 1}}} */
-int  op4_count_str_b(FILE *fp     ,  /* in  {{{1 */
+
+
+//-----------------------------------------------------------------------
+int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
                      int   endian ,  /* in  */
                      int   nType  ,  /* in  */
                      int   storage,  /* in  */
@@ -735,10 +758,10 @@ int  op4_count_str_b(FILE *fp     ,  /* in  {{{1 */
                      int  *nStr   ,  /* out */
                      int  *nNnz)     /* out */
 {
-int DEBUG = 0;
-    int col, row, n_words, length_in_words, record_length, encoded, 
+	int DEBUG = 0;
+    int col, row, n_words, length_in_words, record_length, encoded,
         word_count, end_of_data;
-    
+
 #define ErrStrSize 200
     char error_msg[ErrStrSize - 1];
     *nStr = 0;
@@ -746,8 +769,8 @@ int DEBUG = 0;
 
     while (col <= nCols) {
 
-if (DEBUG)
-printf("op4_count_str_b top of loop loc=%ld\n", ftell(fp));
+		if (DEBUG)
+		printf("750 - op4_count_str_binary top of loop loc=%ld\n", ftell(fp));
         fread(&record_length, BYTES_PER_WORD, 1, fp);
         fread(&col,           BYTES_PER_WORD, 1, fp);
         fread(&end_of_data,   BYTES_PER_WORD, 1, fp);
@@ -758,12 +781,12 @@ printf("op4_count_str_b top of loop loc=%ld\n", ftell(fp));
             end_of_data   = flip_bytes_int(end_of_data);
             n_words       = flip_bytes_int(n_words);
         }
-if (DEBUG) {
-printf("record_length  =%d\n", record_length);
-printf("col            =%d\n", col          );
-printf("end_of_data    =%d\n", end_of_data  );
-printf("n_words        =%d\n", n_words      );
-}
+		if (DEBUG) {
+		printf("762 - op4_count_str_binary record_length  =%d\n", record_length);
+		printf("763 - op4_count_str_binary col            =%d\n", col          );
+		printf("764 - op4_count_str_binary end_of_data    =%d\n", end_of_data  );
+		printf("765 - op4_count_str_binary n_words        =%d\n", n_words      );
+		}
         /* make sure values aren't bogus {{{2 */
         if ((end_of_data != 0) && (end_of_data != 1)) {
             *nNnz = 0;
@@ -783,7 +806,7 @@ printf("n_words        =%d\n", n_words      );
             /* propagate(error_msg); */
             return 0;
         }
-        if ((record_length < 4*BYTES_PER_WORD) || 
+        if ((record_length < 4*BYTES_PER_WORD) ||
             (record_length > BYTES_PER_WORD *
                                 (5 + op4_words_per_term[nType]*nRows))) {
                               /* 5 = 3 column header ints +
@@ -791,7 +814,7 @@ printf("n_words        =%d\n", n_words      );
             *nNnz = 0;
             snprintf(error_msg, ErrStrSize,
                     "RL=%d out of range (should be < %d), byte offset %ld\n",
-                     record_length, 
+                     record_length,
                      BYTES_PER_WORD*(5 + op4_words_per_term[nType]*nRows),
                      ftell(fp));
 
@@ -799,9 +822,9 @@ printf("n_words        =%d\n", n_words      );
             return 0;
         }
         /* 2}}} */
-if (DEBUG)
-printf("op4_count_str_b A RL=%d col=%d enddata=%d n_words=%d  loc=%ld\n",
-record_length, col, end_of_data, n_words, ftell(fp));
+		if (DEBUG)
+			printf("803 - op4_count_str_binary A RL=%d col=%d enddata=%d n_words=%d  loc=%ld\n",
+			record_length, col, end_of_data, n_words, ftell(fp));
 
         if (end_of_data) {
             fseek(fp, record_length - 2*BYTES_PER_WORD, SEEK_CUR);
@@ -816,9 +839,9 @@ record_length, col, end_of_data, n_words, ftell(fp));
                     encoded = flip_bytes_int(encoded);
                 }
                 length_in_words = (encoded/65536) -1;
-if (DEBUG)
-printf("op4_count_str_b B sp1 length_words=%d encoded=%d loc=%ld\n", 
-length_in_words, encoded, ftell(fp));
+				if (DEBUG)
+					printf("820 - op4_count_str_binary B sp1 length_words=%d encoded=%d loc=%ld\n",
+					length_in_words, encoded, ftell(fp));
             } else {  /* storage == 2 */
                 fread(&length_in_words, BYTES_PER_WORD, 1, fp);
                 fread(&row,             BYTES_PER_WORD, 1, fp); /* unused */
@@ -827,9 +850,9 @@ length_in_words, encoded, ftell(fp));
                     length_in_words = flip_bytes_int(length_in_words);
                 }
                 --length_in_words;
-if (DEBUG)
-printf("op4_count_str_b C sp2 length_words=%d row=%d  loc=%ld\n", 
-length_in_words, row, ftell(fp));
+				if (DEBUG)
+					printf("831 - op4_count_str_binary C sp2 length_words=%d row=%d  loc=%ld\n",
+					length_in_words, row, ftell(fp));
             }
             if (length_in_words < 0) {
                 snprintf(error_msg, ErrStrSize,
@@ -845,24 +868,26 @@ length_in_words, row, ftell(fp));
             /* skip numeric data */
             fseek(fp, length_in_words*BYTES_PER_WORD, SEEK_CUR);
             word_count += length_in_words;
-if (DEBUG)
-printf("op4_count_str_b D word_count=%d  loc=%ld\n", word_count, ftell(fp));
+			if (DEBUG)
+				printf("849 - op4_count_str_binary D word_count=%d  loc=%ld\n", word_count, ftell(fp));
         }
         fread(&record_length, BYTES_PER_WORD, 1, fp);
         if (endian) {
             record_length = flip_bytes_int(record_length);
         }
-if (DEBUG)
-printf("op4_count_str_b E end RL=%d  loc=%ld\n", record_length, ftell(fp));
+		if (DEBUG)
+			printf("856 - op4_count_str_binary E end RL=%d  loc=%ld\n", record_length, ftell(fp));
     }
     *nNnz /= op4_words_per_term[nType];
     return 1;
 }
 /* 1}}} */
+
+//-----------------------------------------------------------------------
 int  op4_line_type(const char *line) {  /* in {{{1 */
     int length, type;
 
-int DEBUG = 0;
+	int DEBUG = 0;
     length = strlen(line);
     if (length > 2 && line[2] == '.') {  /* most common case:  numeric data */
         type = OP4_TEXT_NUMERIC;
@@ -876,14 +901,17 @@ int DEBUG = 0;
         type = OP4_TEXT_STRING_1;
     } else {
 if (DEBUG)
-printf("op4_line_type Error on [%s]\n", line);
+printf("879 - op4_line_type Error on [%s]\n", line);
         type = OP4_TEXT_ERROR;
     }
 if (DEBUG)
-printf("T=%d:[%s]\n", type, line);
+printf("883 - T=%d:[%s]\n", type, line);
     return type;
 } /* 1}}} */
-int  op4_read_col_t(FILE   *fp         ,  /* {{{1 */
+
+
+//-----------------------------------------------------------------------
+int  op4_read_col_text(FILE   *fp         ,  /* {{{1 */
                     int     c_in       ,  /* in  requested column to read   */
                     int     nRow       ,  /* in  # rows    in matrix        */
                     int     nCol       ,  /* in  # columns in matrix        */
@@ -897,9 +925,9 @@ int  op4_read_col_t(FILE   *fp         ,  /* {{{1 */
                     double *N             /* out numeric data               */
                    )
 {
-int DEBUG = 0;
+	int DEBUG = 0;
     double      x[OP4_MAX_TEXT_COLS];
-    int         nRead, j, nNum_cols, still_reading, location, col, row, 
+    int         nRead, j, nNum_cols, still_reading, location, col, row,
                 nNum, got_this_col, n_nnz, mixed, nwords, start_row,
                 line_type, NPT,
                 n_read_this_str = 0;
@@ -919,7 +947,7 @@ int DEBUG = 0;
         fgets(line, OP4_TXT_LINE_SIZE, fp);
         line_type = op4_line_type(line);
 if (DEBUG) {
-printf("op4_read_col_t line_type=%d\n", line_type); fflush(stdout); }
+printf("922 - op4_read_col_text line_type=%d\n", line_type); fflush(stdout); }
         if (strlen(line) >= 8) {
             switch (line_type) {
                 case OP4_TEXT_NUMERIC   : /* {{{2 */
@@ -929,34 +957,34 @@ printf("op4_read_col_t line_type=%d\n", line_type); fflush(stdout); }
                                                   &x[6], &x[7], &x[8]);
                     if (storage) { /* sparse  */
 if (DEBUG) {
-printf("op4_read_col_t inserting %d terms at row=%d\n", 
+printf("932 - op4_read_col_text inserting %d terms at row=%d\n",
 nRead, S[*n_str-1].start_row); fflush(stdout); }
                         n_read_this_str += nRead;
                         S[*n_str-1].len = n_read_this_str/NPT;
                         for (j = 0; j < nRead; j++) {
                             N[(*N_index)++] = x[j]; }
                     } else {       /* dense  */
-if (DEBUG) { printf("op4_read_col_t inserting %d terms at row=%d\n", nRead, row); fflush(stdout); }
+if (DEBUG) { printf("939 - op4_read_col_text inserting %d terms at row=%d\n", nRead, row); fflush(stdout); }
                         for (j = 0; j < nRead; j++) {
 if (DEBUG) {
-printf(" N[row=%d + *N_index=%d]=%e\n", row, (*N_index), x[j]); fflush(stdout); }
+printf("942 - N[row=%d + *N_index=%d]=%e\n", row, (*N_index), x[j]); fflush(stdout); }
                             N[row + j] = x[j];
                         }
                         row += nRead;
                     }
                     n_nnz += nRead;
 if (DEBUG) {
-printf("op4_read_col_t nR=%d n_nnz now=%d\n", nRead, n_nnz); fflush(stdout); }
+printf("949 - op4_read_col_text nR=%d n_nnz now=%d\n", nRead, n_nnz); fflush(stdout); }
                     break; /* 2}}} */
                 case OP4_TEXT_HEADER    : /* {{{2 */
 
 
-                /* propagate("op4_read_col_t new matrix header while reading column"); */
+                /* propagate("op4_read_col_text new matrix header while reading column"); */
 
                     break; /* 2}}} */
                 case OP4_TEXT_NEW_COLUMN: /* {{{2 */
-if (DEBUG) 
-printf("op4_read_col_t start new column (got_this_col=%d) loc=%ld\n", 
+if (DEBUG)
+printf("959 - op4_read_col_text start new column (got_this_col=%d) loc=%ld\n",
 got_this_col, ftell(fp));
                     if (got_this_col) {
                         /* have read next column's header; back up & exit */
@@ -964,8 +992,8 @@ got_this_col, ftell(fp));
                         still_reading = 0;
                     } else {
                         nRead = sscanf(line, "%8d%8d%8d", &col, &row, &nNum);
-if (DEBUG) 
-printf(" requested col=%d  this col=%d  this row=%d\n", c_in, col, row);
+if (DEBUG)
+printf("968 - requested col=%d  this col=%d  this row=%d\n", c_in, col, row);
                         if (c_in != col) {
                             /* this is not the column of interest            */
                             fseek(fp, location, SEEK_SET);
@@ -974,8 +1002,8 @@ printf(" requested col=%d  this col=%d  this row=%d\n", c_in, col, row);
                         --col; --row; /* internal indexing is 0 based */
                         if (!storage) /* dense  */
                             row *= NPT;
-if (DEBUG) 
-printf("\n new column %2d row %2d complx=%d\n", col, row, complx);
+if (DEBUG)
+printf("\n978 - new column %2d row %2d complx=%d\n", col, row, complx);
                         got_this_col = 1;
                         if ((col > nCol) || (nRead != 3)) {
                             /* have reached the spurious end of matrix entry */
@@ -1003,7 +1031,7 @@ printf("\n new column %2d row %2d complx=%d\n", col, row, complx);
                 case OP4_TEXT_ERROR     : /* {{{2 */
 
 
-                    /* propagate("op4_read_col_t error reading a column "); */
+                    /* propagate("op4_read_col_text error reading a column "); */
 
                     break; /* 2}}} */
             }
@@ -1011,7 +1039,10 @@ printf("\n new column %2d row %2d complx=%d\n", col, row, complx);
     }
     return n_nnz;
 } /* 1}}} */
-int  op4_read_col_b(FILE   *fp         ,  /* {{{1 */
+
+
+//-----------------------------------------------------------------------
+int  op4_read_col_binary(FILE   *fp         ,  /* {{{1 */
                     int     endian     ,  /* in  0=native   1=flipped    */
                     int     c_in       ,  /* in  requested column to read   */
                     int     nRow       ,  /* in  # rows    in matrix        */
@@ -1024,7 +1055,7 @@ int  op4_read_col_b(FILE   *fp         ,  /* {{{1 */
                     double *N             /* out numeric data               */
                    )
 {
-int DEBUG = 0;
+	int DEBUG = 0;
     int    complx, NPT, WPN, BPN, i, record_length, col, start_row,
            n_numbers, got_this_col, n_nnz, is_header, unused, mixed,
            n_w_this_col, n_w_this_str;
@@ -1032,9 +1063,9 @@ int DEBUG = 0;
     char   unused_name[9];
     float  xs;
 
-if (DEBUG)
-printf("\nop4_read_col_b 1 location=%ld  endian=%d want col %d\n", 
-ftell(fp), endian, c_in);
+	if (DEBUG)
+		printf("\n1036 - op4_read_col_binary 1 location=%ld  endian=%d want col %d\n",
+		ftell(fp), endian, c_in);
 
     complx        = nType > 2 ? 1 : 0;
     NPT           = Nm_per_term[complx]; /* numbers per term; real=1 complex=2*/
@@ -1042,7 +1073,7 @@ ftell(fp), endian, c_in);
     BPN           = BYTES_PER_WORD * WPN;/* bytes per number */
     got_this_col  = 0;
     n_nnz         = 0;  /* count of numeric values loaded */
-    op4_is_mat_header_b(fp              , /* in  */
+    op4_is_mat_header_binary(fp              , /* in  */
                         endian          , /* in  */
                        &record_length   , /* out */
                        &is_header       , /* out */
@@ -1055,12 +1086,12 @@ ftell(fp), endian, c_in);
                        &unused          , /* out */
                        &unused          , /* out */
                        &l_unused);        /* out */
-if (DEBUG)
-printf("op4_read_col_b 2 RL=%d location=%ld\n", record_length, ftell(fp));
+	if (DEBUG)
+		printf("1059 - op4_read_col_binary 2 complex=%d NPT=%d WPN=%d BPN=%d RL=%d location=%ld\n", complx,NPT,WPN,BPN,record_length, ftell(fp));
     if (is_header) /* yes?  skip it */
         fseek(fp, record_length+2*BYTES_PER_WORD, SEEK_CUR);
-if (DEBUG)
-printf("op4_read_col_b 3 RL=%d location=%ld\n", record_length, ftell(fp));
+	if (DEBUG)
+		printf("1063 - op4_read_col_binary 3 RL=%d location=%ld\n", record_length, ftell(fp));
 
     if (!storage) {
         /* zero out dense column */
@@ -1078,48 +1109,47 @@ printf("op4_read_col_b 3 RL=%d location=%ld\n", record_length, ftell(fp));
         start_row     = flip_bytes_int(start_row);
         n_w_this_col  = flip_bytes_int(n_w_this_col);
     }
-if (DEBUG)
-printf("op4_read_col_b: requested col=%d  RL=%d got col=%d row=%d nW=%d\n",
-c_in, record_length, col, start_row, n_w_this_col);
+	if (DEBUG)
+			printf("1082 - op4_read_col_binary: requested col=%d  RL=%d got col=%d row=%d nW=%d\n",
+			c_in, record_length, col, start_row, n_w_this_col);
     n_numbers = n_w_this_col/WPN;
     if        (c_in > col) { /* requested column ahead of me; skip record */
         fseek(fp, record_length-2*BYTES_PER_WORD, SEEK_CUR);
-if (DEBUG) {
-printf("op4_read_col_b: column mismatch, advance to location %ld & exit\n",
-ftell(fp));
-}
+		if (DEBUG) {
+			printf("1088 - op4_read_col_binary: column mismatch, advance to location %ld & exit\n",
+			ftell(fp));
+		}
         return 0;
     } else if (c_in < col) { /* requested column behind me; back up */
         fseek(fp,              -4*BYTES_PER_WORD, SEEK_CUR);
-if (DEBUG) {
-printf("op4_read_col_b: column mismatch, back up to location %ld & exit\n",
-ftell(fp));
-}
+		if (DEBUG) {
+			printf("1095 - op4_read_col_binary: column mismatch, back up to location %ld & exit\n",ftell(fp));
+		}
         return 0;
     }
 
 if (DEBUG)
-printf("op4_read_col_b: going to read col=%d\n", col);
+printf("1102 - op4_read_col_binary: going to read col=%d\n", col);
     if (!storage) {             /* dense; read entire column */
-        if (WPN == 2) { 
+        if (WPN == 2) {
             /* double precision:  can do bulk read */
-if (DEBUG) printf("op4_read_col_b: double prec\n");
+if (DEBUG) printf("1106 - op4_read_col_binary: double prec\n");
             fread(&N[NPT*(start_row-1)], BPN, n_numbers, fp);
             if (endian) { /* opposite endian, need to flip terms */
                 for (i = 0; i < n_numbers; i++)
-                    N[NPT*(start_row-1) + i] = 
+                    N[NPT*(start_row-1) + i] =
                         flip_bytes_double(N[NPT*(start_row-1) + i]);
             }
-        } else if (!endian) { 
+        } else if (!endian) {
             /* single precision native endian */
-if (DEBUG) printf("op4_read_col_b: single prec native endian\n");
+if (DEBUG) printf("1115 - op4_read_col_binary: single prec native endian\n");
             for (i = 0; i < n_numbers; i++) {
                 fread(&xs, BPN, 1, fp);
                 N[NPT*(start_row-1) + i] = xs;
             }
-        } else { 
+        } else {
             /* single precision opposite endian */
-if (DEBUG) printf("op4_read_col_b: single prec opposite endian\n");
+if (DEBUG) printf("1122 - op4_read_col_binary: single prec opposite endian\n");
             for (i = 0; i < n_numbers; i++) {
                 fread(&xs, BPN, 1, fp);
                 N[NPT*(start_row-1) + i] = flip_bytes_float(xs);
@@ -1127,12 +1157,12 @@ if (DEBUG) printf("op4_read_col_b: single prec opposite endian\n");
         }
 if (DEBUG) {
 for (i = 0; i < n_numbers; i++)
-printf("op4_read_col_b: N[%d]=%le\n", 
+printf("1130 - op4_read_col_binary: N[%d]=%le\n",
 NPT*(start_row-1) + i,N[NPT*(start_row-1) + i]);
 }
         fseek(fp, BYTES_PER_WORD, SEEK_CUR);  /* skip trailing RL */
 if (DEBUG)
-printf("op4_read_col_b: finished numeric data location=%ld\n", ftell(fp));
+printf("1135 - op4_read_col_binary: finished numeric data location=%ld\n", ftell(fp));
 
     } else {  /* sparse; loop over all strings */
         record_length -= 2*BYTES_PER_WORD; /* don't count start, end rec mark */
@@ -1156,31 +1186,31 @@ printf("op4_read_col_b: finished numeric data location=%ld\n", ftell(fp));
                 --n_w_this_str;
             }
             n_numbers = n_w_this_str/WPN;
-if (DEBUG) printf("\nop4_read_col_b top of str: start_row=%d n_w_this_str=%d n_numbers=%d N_index=%d\n", 
+if (DEBUG) printf("\n1159 - op4_read_col_binary top of str: start_row=%d n_w_this_str=%d n_numbers=%d N_index=%d\n",
 start_row, n_w_this_str, n_numbers, *N_index);
 
             S[*n_str].start_row = start_row - 1;
             S[*n_str].len       = n_numbers/(complx + 1);
             S[*n_str].N_idx     = *N_index;
             ++(*n_str);
-            if (WPN == 2) { 
+            if (WPN == 2) {
                 /* double precision:  can do bulk read */
-if (DEBUG) printf("op4_read_col_b sp: double prec\n");
+if (DEBUG) printf("1168 - op4_read_col_binary sp: double prec\n");
                 fread(&N[*N_index], BPN, n_numbers, fp);
                 if (endian) { /* opposite endian, need to flip terms */
                     for (i = 0; i < n_numbers; i++)
                         N[*N_index + i] = flip_bytes_double(N[*N_index + i]);
                 }
-            } else if (!endian) { 
+            } else if (!endian) {
                 /* single precision native endian */
-if (DEBUG) printf("op4_read_col_b sp: single prec native endian\n");
+if (DEBUG) printf("1176 - op4_read_col_binary sp: single prec native endian\n");
                 for (i = 0; i < n_numbers; i++) {
                     fread(&xs, BPN, 1, fp);
                     N[*N_index + i] = xs;
                 }
-            } else { 
+            } else {
                 /* single precision opposite endian */
-if (DEBUG) printf("op4_read_col_b sp: single prec opposite endian\n");
+if (DEBUG) printf("1183 - op4_read_col_binary sp: single prec opposite endian\n");
                 for (i = 0; i < n_numbers; i++) {
                     fread(&xs, BPN, 1, fp);
                     N[*N_index + i] = flip_bytes_float(xs);
@@ -1188,10 +1218,10 @@ if (DEBUG) printf("op4_read_col_b sp: single prec opposite endian\n");
             }
             record_length -= BYTES_PER_WORD*n_w_this_str;
 if (DEBUG) {
-printf("op4_read_col_b sp end string  RL=%d loc=%ld\n", 
+printf("1191 - op4_read_col_binary sp end string  RL=%d loc=%ld\n",
 record_length, ftell(fp));
 for (i = 0; i < n_numbers; i++) {
-printf("op4_read_col_b N[%3d] = %e\n", *N_index+i, N[*N_index + i]);
+printf("1194 - op4_read_col_binary N[%3d] = %e\n", *N_index+i, N[*N_index + i]);
 }
 }
             *N_index += n_numbers;
@@ -1201,10 +1231,13 @@ printf("op4_read_col_b N[%3d] = %e\n", *N_index+i, N[*N_index + i]);
     }
     return n_nnz;
 } /* 1}}} */
+
+
+//-----------------------------------------------------------------------
 FILE* op4_open_r(const char *filename, long offset) {  /* in {{{1 */
     FILE *fp;
     /* Open an op4 file for reading, optionally positioning the file
-     * handle to a location past the start of the file. 
+     * handle to a location past the start of the file.
      */
 
     fp = fopen(filename, "r");
@@ -1215,6 +1248,7 @@ FILE* op4_open_r(const char *filename, long offset) {  /* in {{{1 */
     return fp;
 } /* 1}}} */
 
+//-----------------------------------------------------------------------
 int    flip_bytes_int(int x) {  /* {{{1 */
     int   y;
     char *c_x, *c_y;
@@ -1229,9 +1263,12 @@ int    flip_bytes_int(int x) {  /* {{{1 */
 
     return y;
 } /* 1}}} */
+
+
+//-----------------------------------------------------------------------
 float  flip_bytes_float(float x) {  /* {{{1 */
     /* Looks identical to flip_bytes_int() and it practice it might
-       be possible to use this function and flip_bytes_int() 
+       be possible to use this function and flip_bytes_int()
        interchangably.  The combination of gcc and x86 hardware may
        cause problems though since floats might be assigned extra
        bytes internally.
@@ -1249,6 +1286,9 @@ float  flip_bytes_float(float x) {  /* {{{1 */
 
     return y;
 } /* 1}}} */
+
+
+//-----------------------------------------------------------------------
 double flip_bytes_double(double x) {  /* {{{1 */
     double   y;
     char    *c_x, *c_y;
@@ -1268,6 +1308,9 @@ double flip_bytes_double(double x) {  /* {{{1 */
     return y;
 } /* 1}}} */
 
+
+
+//-----------------------------------------------------------------------
 int  op4_valid_name(char   *name)         /* {{{1 */
 {
      /* Returns:
@@ -1275,10 +1318,11 @@ int  op4_valid_name(char   *name)         /* {{{1 */
       *   -1 if the name is null
       *    0 if the name is not valid
       */
-int DEBUG = 0;
+	int DEBUG = 0;
 
     int i, len, fixed_len;
-if (DEBUG) printf("op4_valid_name with [%s]\n", name);
+	if (DEBUG) printf("------------------------------------------------------\n");
+	if (DEBUG) printf("1281 - op4_valid_name with [%s]\n", name);
 
     len = strlen(name);
 
