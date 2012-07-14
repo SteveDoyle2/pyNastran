@@ -601,6 +601,15 @@ class CAERO2(BaseCard):
                          ]+list(self.p1)+[self.x12]
         return fields
 
+class CAERO3(BaseCard):
+    pass
+
+class CAERO4(BaseCard):
+    pass
+
+class CAERO5(BaseCard):
+    pass
+
 class FLFACT(BaseCard):
     """
     FLFACT SID F1 F2 F3 F4 F5 F6 F7

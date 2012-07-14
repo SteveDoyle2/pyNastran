@@ -1,22 +1,21 @@
-# pylint: disable=W0612
+# pylint: disable=W0612,C0103
 import os
 import sys
 import numpy
 numpy.seterr(all='raise')
 import traceback
 
-#import pyNastran
+from pyNastran.general.general import printBadPath
 from pyNastran.bdf.errors import ScientificCardParseError
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, NastranMatrix)
-from compareCardContent import compareCardContent
+from compareCardContent import compare_card_content
 
 import pyNastran.bdf.test
-testPath = pyNastran.bdf.test.__path__[0]
-testPath = r'C:\Users\steve\Desktop\pyNastran\pyNastran\bdf\test'
-#print "testPath = ",testPath
+test_path = pyNastran.bdf.test.__path__[0]
+#print "test_path = ",test_path
 
 def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
     #debug = True
@@ -25,15 +24,18 @@ def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
     filenames2 = []
     diffCards = []
     for filename in filenames:
-        if filename.endswith('.bdf') or filename.endswith('.dat') or filename.endswith('.nas') or filename.endswith('.nas'):
+        if (filename.endswith('.bdf') or filename.endswith('.dat') or
+            filename.endswith('.nas') or filename.endswith('.nas')):
             filenames2.append(filename)
         ###
     ###
     for filename in filenames2:
-        absFilename = os.path.abspath(os.path.join(folder,filename))
+        absFilename = os.path.abspath(os.path.join(folder, filename))
         print("filename = %s" %(absFilename))
         try:
-            (fem1,fem2,diffCards2) = runBDF(folder, filename, debug=debug, xref=xref, check=check, cid=cid, isFolder=True)
+            (fem1, fem2, diffCards2) = runBDF(folder, filename, debug=debug,
+                                              xref=xref, check=check, cid=cid,
+                                              isFolder=True)
             diffCards += diffCards
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
@@ -66,7 +68,7 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     bdfModel = str(bdfFilename)
     print("bdfModel = %s" %(bdfModel))
     if isFolder:
-        bdfModel = os.path.join(testPath, folder, bdfFilename)
+        bdfModel = os.path.join(test_path, folder, bdfFilename)
     
     assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
 
@@ -77,9 +79,9 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     diffCards = []
     try:
         #print "xref = ",xref
-        (outModel) = runFem1(fem1,bdfModel,meshForm,xref,cid)
+        (outModel) = run_fem1(fem1,bdfModel,meshForm,xref,cid)
 
-        (fem2) = runFem2(bdfModel, outModel, xref, debug=debug, log=None)
+        (fem2) = run_fem2(bdfModel, outModel, xref, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check)
 
     except KeyboardInterrupt:
@@ -103,8 +105,8 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     print("-"*80)
     return (fem1, fem2, diffCards)
 
-def runFem1(fem1, bdfModel, meshForm, xref, cid):
-    assert os.path.exists(bdfModel),bdfModel
+def run_fem1(fem1, bdfModel, meshForm, xref, cid):
+    assert os.path.exists(bdfModel), printBadPath(bdfModel)
     try:
         if '.pch' in bdfModel:
             fem1.readBDF_Punch(bdfModel, xref=False)
@@ -118,16 +120,16 @@ def runFem1(fem1, bdfModel, meshForm, xref, cid):
     outModel = bdfModel+'_out'
     if cid is not None and xref:
         fem1.resolveGrids(cid=cid)
-    if meshForm=='combined':
+    if meshForm == 'combined':
         fem1.writeBDFAsPatran(outModel)
-    elif meshForm=='separate':
+    elif meshForm == 'separate':
         fem1.writeBDF(outModel)
     else:
         raise NotImplementedError("meshForm=|%r| allowedForms=['combined','separate']" %(meshForm))
     #fem1.writeAsCTRIA3(outModel)
     return (outModel)
 
-def runFem2(bdfModel, outModel, xref, debug=False, log=None):
+def run_fem2(bdfModel, outModel, xref, debug=False, log=None):
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
     fem2 = BDF(debug=debug, log=log)
@@ -148,7 +150,7 @@ def runFem2(bdfModel, outModel, xref, debug=False, log=None):
     return (fem2)
 
 def divide(value1, value2):
-    if value1==value2:  # good for 0/0
+    if value1 == value2:  # good for 0/0
         return 1.0
     else:
         try:
@@ -159,12 +161,12 @@ def divide(value1, value2):
     ###
     return v
 
-def compareCardCount(fem1, fem2):
+def compare_card_count(fem1, fem2):
     cards1 = fem1.cardCount
     cards2 = fem2.cardCount
-    return computeInts(cards1, cards2, fem1)
+    return compute_ints(cards1, cards2, fem1)
 
-def computeInts(cards1, cards2, fem1):
+def compute_ints(cards1, cards2, fem1):
     cardKeys1 = set(cards1.keys())
     cardKeys2 = set(cards2.keys())
     allKeys  = cardKeys1.union(cardKeys2)
@@ -203,7 +205,7 @@ def computeInts(cards1, cards2, fem1):
     ###
     return listKeys1+listKeys2
 
-def compute(cards1,cards2):
+def compute(cards1, cards2):
     cardKeys1 = set(cards1.keys())
     cardKeys2 = set(cards2.keys())
     allKeys  = cardKeys1.union(cardKeys2)
@@ -218,24 +220,28 @@ def compute(cards1,cards2):
 
     for key in sorted(allKeys):
         msg = ''
-        if key in listKeys1: value1 = cards1[key]
-        else:                value1 = 0
-
-        if key in listKeys2: value2 = cards2[key]
-        else:                value2 = 0
-        
-        if key=='INCLUDE':
-            msg += '    key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
+        if key in listKeys1:
+            value1 = cards1[key]
         else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key,value1,value2)
+            value2 = 0
+
+        if key in listKeys2:
+            value2 = cards2[key]
+        else:
+            value2 = 0
+        
+        if key == 'INCLUDE':
+            msg += '    key=%-7s value1=%-7s value2=%-7s' %(key, value1, value2)
+        else:
+            msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key, value1, value2)
         msg = msg.rstrip()
         print(msg)
     ###
 
-def getElementStats(fem1,fem2):
-    for key,e in sorted(fem1.elements.iteritems()):
+def get_element_stats(fem1, fem2):
+    for (key, e) in sorted(fem1.elements.iteritems()):
         try:
-            if isinstance(e,ShellElement):
+            if isinstance(e, ShellElement):
                 a   = e.Area()
                 t   = e.Thickness()
                 nsm = e.Nsm()
@@ -244,15 +250,15 @@ def getElementStats(fem1,fem2):
                 c   = e.Centroid()
                 #mid = e.Mid()
                 pid = e.Pid()
-                n     = e.Normal()
-                a,c,n = e.AreaCentroidNormal()
-            elif isinstance(e,SolidElement):
+                n   = e.Normal()
+                a, c, n = e.AreaCentroidNormal()
+            elif isinstance(e, SolidElement):
                 v   = e.Volume()
                 m   = e.Mass()
                 c   = e.Centroid()
                 mid = e.Mid()
                 pid = e.Pid()
-            elif isinstance(e,LineElement): # ROD/BAR/BEAM
+            elif isinstance(e, LineElement): # ROD/BAR/BEAM
                 L   = e.Length()
                 nsm = e.Nsm()
                 A   = e.Area()
@@ -266,20 +272,22 @@ def getElementStats(fem1,fem2):
                 mid = e.Mid()
                 pid = e.Pid()
                 if J is None:
-                    print("Moment of Inertia not available - e.type=%s e.eid=%i" %(e.type,e.eid))
-            elif isinstance(e,RigidElement):
+                    print("Moment of Inertia not available - e.type=%s "
+                          "e.eid=%i" %(e.type, e.eid))
+            elif isinstance(e, RigidElement):
                 pass
-            elif isinstance(e,DamperElement):
+            elif isinstance(e, DamperElement):
                 b = e.B()
-            elif isinstance(e,SpringElement):
+            elif isinstance(e, SpringElement):
                 #L = e.Length()
                 K = e.K()
                 pid = e.Pid()
-            elif isinstance(e,PointElement):
+            elif isinstance(e, PointElement):
                 m = e.Mass()
                 c = e.Centroid()
             else:
-                print("statistics not available - e.type=%s e.eid=%s" %(e.type,e.eid))
+                print("statistics not available - e.type=%s e.eid=%s"
+                    %(e.type, e.eid))
                 #try:
                 #    print("e.type = ",e.type)
                 #except:
@@ -287,40 +295,44 @@ def getElementStats(fem1,fem2):
                 ###
             ###
         except:
-            print("*stats - e.type=%s eid=%s  element=\n%s" %(e.type,e.eid,str(e)))
+            print("*stats - e.type=%s eid=%s  element=\n%s"
+                %(e.type, e.eid, str(e)))
             raise
         ###
     ###
 
-def getMatrixStats(fem1,fem2):
-    for key,dmig in sorted(fem1.dmigs.iteritems()):
+def get_matrix_stats(fem1, fem2):
+    for (key, dmig) in sorted(fem1.dmigs.iteritems()):
         try:
-            if isinstance(dmig,NastranMatrix):
+            if isinstance(dmig, NastranMatrix):
                 dmig.getMatrix()
             else:
-                print("statistics not available - matrix.type=%s matrix.name=%s" %(dmig.type,dmig.name))
+                print("statistics not available - "
+                      "matrix.type=%s matrix.name=%s" %(dmig.type, dmig.name))
         except:
-            print("*stats - matrix.type=%s name=%s  matrix=\n%s" %(dmig.type,dmig.name,str(dmig)))
+            print("*stats - matrix.type=%s name=%s  matrix=\n%s"
+                %(dmig.type, dmig.name,str(dmig)))
             raise
         ###
 
 
-def compare(fem1,fem2,xref=True,check=True):
-    diffCards = compareCardCount(fem1,fem2)
+def compare(fem1, fem2, xref=True, check=True):
+    diffCards = compare_card_count(fem1, fem2)
     if xref and check:
-        getElementStats(fem1,fem2)
-        getMatrixStats(fem1,fem2)
-    compareCardContent(fem1,fem2)
-    #compareParams(fem1,fem2)
-    #printPoints(fem1,fem2)
+        get_element_stats(fem1, fem2)
+        get_matrix_stats(fem1, fem2)
+    compare_card_content(fem1, fem2)
+    #compare_params(fem1,fem2)
+    #print_points(fem1,fem2)
     return diffCards
 
-def compareParams(fem1,fem2):
-    compute(fem1.params,fem2.params)
+def compare_params(fem1, fem2):
+    compute(fem1.params, fem2.params)
 
-def printPoints(fem1,fem2):
-    for nid,n1 in sorted(fem1.nodes.iteritems()):
-        print("%s   xyz=%s  n1=%s  n2=%s" %(nid,n1.xyz,n1.Position(True),  fem2.Node(nid).Position()))
+def print_points(fem1, fem2):
+    for (nid, n1) in sorted(fem1.nodes.iteritems()):
+        print("%s   xyz=%s  n1=%s  n2=%s" %(nid, n1.xyz, n1.Position(True),
+                                            fem2.Node(nid).Position()))
         break
     ###
     coord = fem1.Coord(5)
@@ -331,15 +343,22 @@ def main():
     import argparse
 
     ver = str(pyNastran.__version__)
-    parser = argparse.ArgumentParser(description='Tests to see if a BDF will work with pyNastran.',add_help=True)
-    parser.add_argument('bdfFileName', metavar='bdfFileName', type=str, nargs=1,
-                       help='path to BDF/DAT file')
+    parser = argparse.ArgumentParser(description='Tests to see if a BDF will '
+                                     'work with pyNastran.', add_help=True)
+    parser.add_argument('bdfFileName', metavar='bdfFileName', type=str,
+                        nargs=1, help='path to BDF/DAT file')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument( '-q','--quiet',  dest='quiet',action='store_true',  help='Prints   debug messages (default=False)')
-    parser.add_argument('-x','--xref',   dest='xref', action='store_false', help='Disables cross-referencing and checks of the BDF')
-    parser.add_argument('-c','--checks', dest='check',action='store_false', help='Disables BDF checks.  Checks run the methods on every element/property to test them.  May fails if a card is not supported.')
-    parser.add_argument('-v','--version',action='version',version=ver,help="Shows pyNastran's version number and exits")
+    group.add_argument( '-q', '--quiet',  dest='quiet', action='store_true',
+                       help='Prints   debug messages (default=False)')
+    parser.add_argument('-x', '--xref', dest='xref', action='store_false',
+                       help='Disables cross-referencing and checks of the BDF')
+    parser.add_argument('-c', '--checks', dest='check', action='store_false',
+                       help='Disables BDF checks.  Checks run the methods on '
+                       'every element/property to test them.  May fails if a '
+                       'card is not supported.')
+    parser.add_argument('-v', '--version', action='version', version=ver,
+                       help="Shows pyNastran's version number and exits")
     
     if len(sys.argv)==1:
         parser.print_help()
@@ -356,8 +375,8 @@ def main():
     debug       = not(args.quiet)
     bdfFileName = args.bdfFileName[0]
 
-    runBDF('.',bdfFileName,debug=debug,xref=xref,check=check)
+    runBDF('.', bdfFileName, debug=debug, xref=xref, check=check)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
 
