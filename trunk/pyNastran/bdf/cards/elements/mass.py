@@ -1,4 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 from numpy import zeros,array
 
 from pyNastran.bdf.cards.baseCard import Element, BaseCard
@@ -31,11 +33,11 @@ class CMASS1(PointMass):
     CMASS1 EID PID G1 C1 G2 C2
     """
     type = 'CMASS1'
-    def __init__(self,card=None,data=None):
-        PointElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        PointMass.__init__(self, card, data)
         if card:
             self.eid = card.field(1)
-            self.pid = card.field(2,self.eid)
+            self.pid = card.field(2, self.eid)
             self.g1 = card.field(3)
             self.c1 = card.field(4)
             self.g2 = card.field(5)
@@ -158,8 +160,8 @@ class CMASS3(PointMassElement):
     CMASS3 EID PID S1 S2
     """
     type = 'CMASS3'
-    def __init__(self,card=None,data=None):
-        PointMass.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        PointMass.__init__(self, card, data)
 
         if card:
             self.eid  = card.field(1)
@@ -202,8 +204,8 @@ class CMASS4(PointMassElement):
     CMASS4 EID M S1 S2
     """
     type = 'CMASS4'
-    def __init__(self,card=None,data=None):
-        PointMass.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        PointMass.__init__(self, card, data)
         
         if card:
             self.eid  = card.field(1)
@@ -242,7 +244,7 @@ class CMASS4(PointMassElement):
    
 class CONM1(PointMass):
     type = 'CONM1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         Concentrated Mass Element Connection, General Form
         Defines a 6 x 6 symmetric mass matrix at a geometric grid point
@@ -258,7 +260,7 @@ class CONM1(PointMass):
               [    Sym         M55 M65]
               [                    M66]
         """
-        PointMass.__init__(self,card,data)
+        PointMass.__init__(self, card, data)
         m = zeros((6,6))
         if card:
             #self.nids  = [ card[1] ]

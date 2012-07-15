@@ -1,4 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 #import sys
 
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -70,7 +72,7 @@ class TableObj(object):
         fields2 = [] # remove extra ENDTs
         foundENDT = False
         for field in fields:
-            if isinstance(field, str) and 'ENDT' in field.upper():
+            if isinstance(field, unicode) and 'ENDT' in field.upper():
                 foundENDT = True
             else:
                 fields2.append(field)

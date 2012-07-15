@@ -1,36 +1,119 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=C0103,R0902,R0904,R0914,W0231,R0201
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
+
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Load(BaseCard):
     """defines the DefaultLoad class"""
     type = 'DefLoad'
     def __init__(self, card, data):
-        pass
+        self.cid = None
+        self.nodes = None
 
     def Cid(self):
         if isinstance(self.cid, int):
             return self.cid
         else:
             return self.cid.cid
-        ###
 
     def nodeIDs(self, nodes=None):
         """returns nodeIDs for repr functions"""
         if not nodes:
             nodes = self.nodes
         if isinstance(nodes[0], int):
-            return [node     for node in nodes]
+            return [node for node in nodes]
         else:
             return [node.nid for node in nodes]
+
+
+class LoadCombination(Load): # LOAD, DLOAD
+    def __init__(self, card, data):
+        Load.__init__(self, card, data)
+
+        if card:
+            ## load ID
+            self.sid = card.field(1)
+
+            ## overall scale factor
+            self.scale  = card.field(2)
+
+            loads = card.fields(3) # temp list
+            nLoadFields = len(loads)
+            #nLoads  = nLoadFields/2
+            assert nLoadFields%2 == 0
+
+            ## individual scale factors (corresponds to loadIDs)
+            self.scaleFactors = []
+
+            ## individual loadIDs (corresponds to scaleFactors)
+            self.loadIDs = []
+
+            # alternating of scale factor & load set ID
+            for i in range(0, nLoadFields, 2):
+                self.scaleFactors.append(loads[i  ])
+                self.loadIDs.append(     loads[i+1])
+        else:
+            self.sid = data[0]
+            self.scale = data[1]
+            self.scaleFactors = data[2]
+            self.loadIDs      = data[3]
+            assert len(data) == 4, '%s data=%s' % (self.type, data)
         ###
 
-    def rawFields(self):
-        fields = [self.type, self.lid]
-        return fields
 
-    def reprFields(self):
-        return self.rawFields()
+    def crossReference(self, model):
+        loadIDs2 = []
+        for loadID in self.loadIDs:
+            loadID2 = model.Load(loadID)
+            loadIDs2.append(loadID2)
+        self.loadIDs = loadIDs2
+    
+    def LoadID(self, lid):
+        if isinstance(lid, int):
+            return lid
+        elif isinstance(lid, list):
+            return lid[0].sid
+        else:
+            raise NotImplementedError(lid)
+
+    #def Sid(self):
+    #    try:
+    #        if isinstance(self.sid, int):
+    #            return self.sid
+    #        elif isinstance(self.sid, list):
+    #            #sys.stderr.write('type(lid[0]) = %s' %(type(self.lid[0])))
+    #            #sys.stderr.write("the offending load...%s" %(self.lid[0]))
+    #            return self.sid[0].sid
+    #        #elif isinstance(self.lid,load)
+    #        else:
+    #            #sys.stderr.write("the offending load...%s" %(self.lid))
+    #            return self.sid.sid
+    #    except:
+    #        msg = "error in loads.py - self.lid=\n %s\n" % (str(self.sid))
+    #        sys.stderr.write(msg)
+    #        raise
+
+    #def LoadID(self, loadID):
+        #print("load = ",loadID)
+        #if isinstance(loadID, int):
+        #    return loadID
+        #elif isinstance(loadID, list):
+        #    return loadID[0].LoadID()
+        ##print("self.lid = ",load.lid)
+        #asdf
+        #return load.lid
+    
+    def getLoads(self):
+        """@note requires a cross referenced load"""
+        loads = []
+        for allLoads in self.loadIDs:
+            for load in allLoads:
+                loads += load.getLoads()
+            #loads += self.ID  # @todo:  what does this mean, was uncommented
+        ###
+        return loads
 
 
 class LSEQ(BaseCard): # Requires LOADSET in case control deck
@@ -52,14 +135,14 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
             self.tid = data[3]
             raise NotImplementedError()
 
-    def nodeIDs(self, nodes=None):
-        """returns nodeIDs for repr functions"""
-        if not nodes:
-            nodes = self.nodes
-        if isinstance(nodes[0], int):
-            return [node     for node in nodes]
-        else:
-            return [node.nid for node in nodes]
+    #def nodeIDs(self, nodes=None):
+        #"""returns nodeIDs for repr functions"""
+        #if not nodes:
+        #    nodes = self.nodes
+        #if isinstance(nodes[0], int):
+        #    return [node for node in nodes]
+        #else:
+        #    return [node.nid for node in nodes]
         ###
 
     def crossReference(self, model):
@@ -69,6 +152,11 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
         ###
     
     def Lid(self):
+        if isinstance(self.lid, int):
+            return self.lid
+        else:
+            raise NotImplementedError('LSEQ '+str(self.lid)+type(self.lid))
+ 
         try:
             if isinstance(self.lid, int):
                 return self.lid
@@ -81,7 +169,7 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
                 #sys.stderr.write("the offending load...%s" %(self.lid))
                 return self.lid.lid
         except:
-            msg = "error - line 88 in loads.py - self.lid=\n %s\n" %(str(self.lid))
+            msg = "error in loads.py - self.lid=\n %s\n" % (str(self.lid))
             sys.stderr.write(msg)
             raise
         
@@ -112,13 +200,13 @@ class SLOAD(Load):
     type = 'SLOAD'
     def __init__(self, card=None, data=None):
         ## load ID
-        self.lid = card.field(1)
+        self.sid = card.field(1)
         
         fields = card.fields(2)
         n = len(fields)//2
         if len(fields)%2 == 1:
             n += 1
-            msg = 'missing last magnitude on SLOAD card=%s' %(card.fields())
+            msg = 'missing last magnitude on SLOAD card=%s' % (card.fields())
             raise RuntimeError(msg)
 
         self.nids = []
@@ -128,9 +216,6 @@ class SLOAD(Load):
             self.nids.append(fields[j  ])
             self.mags.append(fields[j+1])
         ###
-
-    def Lid(self):
-        return self.lid
 
     def crossReference(self, model):
         for (i, nid) in enumerate(self.nids):
@@ -143,7 +228,7 @@ class SLOAD(Load):
         return node.nid
 
     def rawFields(self):
-        fields = ['SLOAD', self.lid]
+        fields = ['SLOAD', self.sid]
         for (nid, mag) in zip(self.nids, self.mags):
             fields += [self.Nid(nid), mag]
         return fields
@@ -154,42 +239,25 @@ class SLOAD(Load):
 #---------------------------------------------------------------------
 # DLOAD loads
 
-class DLOAD(Load):
+class DLOAD(LoadCombination):
     type = 'DLOAD'
     def __init__(self, card=None, data=None):
-        ## load ID
-        self.lid   = card.field(1)
-        self.scale = card.field(2)
+        LoadCombination.__init__(self, card, data)
 
-        fields = card.fields(3)
-        n = len(fields)//2
-        if len(fields)%2 == 1:
-            n+=1
-            msg = 'missing last magnitude on DLOAD card=%s' %(card.fields()) 
-            raise RuntimeError(msg)
+    #def crossReference(self, model):
+    #    for (i, sid) in enumerate(self.sids):
+    #        self.sids[i] = model.Load(sid)
+    #    ###
 
-        self.sids = []
-        self.mags = []
-        for i in range(n):
-            j = 2*i
-            self.mags.append(fields[j  ])
-            self.sids.append(fields[j+1])  # RLOADx,TLOADx,ACSRC
-        ###
-
-    def crossReference(self, model):
-        for (i, sid) in enumerate(self.sids):
-            self.sids[i] = model.Load(sid)
-        ###
-
-    def Sid(self, sid):
-        if isinstance(sid, int):
-            return sid
-        return sid.lid
+    #def Sid(self, sid):
+    #    if isinstance(sid, int):
+    #        return sid
+    #    return sid.lid
 
     def rawFields(self):
-        fields = ['DLOAD', self.lid, self.scale]
-        for (mag, sid) in zip(self.mags, self.sids):
-            fields += [mag, self.Sid(sid)]
+        fields = ['DLOAD', self.sid, self.scale]
+        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
+            fields += [scaleFactor, self.LoadID(loadID)]
         return fields
 
     def reprFields(self):
@@ -238,7 +306,7 @@ class TLOAD1(TabularLoad):
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
         ## load ID
-        self.lid   = card.field(1)
+        self.sid = card.field(1)
 
         ## Identification number of DAREA or SPCD entry set or a thermal load
         ## set (in heat transfer analysis) that defines {A}. (Integer > 0)
@@ -273,8 +341,11 @@ class TLOAD1(TabularLoad):
         elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             self.Type = 'ACCE'
         else:
-            msg = 'invalid TLOAD1 type  Type=|%s|' %(self.Type)
+            msg = 'invalid TLOAD1 type  Type=|%s|' % (self.Type)
             raise RuntimeError(msg)
+
+    def getLoads(self):
+        return [self]
 
     def crossReference(self, model):
         if self.tid:
@@ -288,13 +359,15 @@ class TLOAD1(TabularLoad):
         return self.tid.tid
 
     def rawFields(self):
-        fields = ['TLOAD1', self.lid, self.exciteID, self.delay, self.Type, self.Tid(), self.us0, self.vs0]
+        fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
+                  self.Tid(), self.us0, self.vs0]
         return fields
 
     def reprFields(self):
         us0 = self.setBlankIfDefault(self.us0, 0.0)
         vs0 = self.setBlankIfDefault(self.vs0, 0.0)
-        fields = ['TLOAD1', self.lid, self.exciteID, self.delay, self.Type, self.Tid(), us0, vs0]
+        fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
+                  self.Tid(), us0, vs0]
         return fields
 
 class RLOAD1(TabularLoad):
@@ -309,7 +382,7 @@ class RLOAD1(TabularLoad):
     type = 'RLOAD1'
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
-        self.lid      = card.field(1)  # was sid
+        self.sid      = card.field(1)  # was sid
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
         self.dphase   = card.field(4)
@@ -326,7 +399,7 @@ class RLOAD1(TabularLoad):
         elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             self.Type = 'ACCE'
         else:
-            msg = 'invalid RLOAD1 type  Type=|%s|' %(self.Type)
+            msg = 'invalid RLOAD1 type  Type=|%s|' % (self.Type)
             raise RuntimeError(msg)
 
     def crossReference(self, model):
@@ -335,6 +408,12 @@ class RLOAD1(TabularLoad):
         if self.td:
             self.td = model.Table(self.td)
     
+    #def LoadID(self, lid):
+        #return self.Lid()
+
+    def getLoads(self):
+        return [self]
+
     def Tc(self):
         if self.tc == 0:
             return None
@@ -350,12 +429,14 @@ class RLOAD1(TabularLoad):
         return self.td.tid
 
     def rawFields(self):
-        fields = ['RLOAD1', self.lid, self.exciteID, self.delay, self.dphase, self.Tc(), self.Td(), self.Type]
+        fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
+                  self.Tc(), self.Td(), self.Type]
         return fields
 
     def reprFields(self):
         Type = self.setBlankIfDefault(self.Type, 'LOAD')
-        fields = ['RLOAD1', self.lid, self.exciteID, self.delay, self.dphase, self.Tc(), self.Td(), Type]
+        fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
+                  self.Tc(), self.Td(), Type]
         return fields
 
 class RLOAD2(TabularLoad):
@@ -371,7 +452,7 @@ class RLOAD2(TabularLoad):
     type = 'RLOAD2'
     def __init__(self, card=None, data=None):
         TabularLoad.__init__(self, card, data)
-        self.lid      = card.field(1)  # was sid
+        self.sid      = card.field(1)
         self.exciteID = card.field(2)
         self.delay    = card.field(3)
         self.dphase   = card.field(4)
@@ -388,7 +469,7 @@ class RLOAD2(TabularLoad):
         elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
             self.Type = 'ACCE'
         else:
-            msg = 'invalid RLOAD2 type  Type=|%s|' %(self.Type)
+            msg = 'invalid RLOAD2 type  Type=|%s|' % (self.Type)
             raise RuntimeError(msg)
 
     def crossReference(self, model):
@@ -397,6 +478,15 @@ class RLOAD2(TabularLoad):
         if self.tp:
             self.tp = model.Table(self.tp)
     
+    def getLoads(self):
+        return [self]
+
+    #def Lid(self):
+        #return self.lid
+
+    def LoadID(self):
+        return self.sid
+
     def Tb(self):
         if self.tb == 0:
             return None
@@ -412,12 +502,14 @@ class RLOAD2(TabularLoad):
         return self.tp.tid
 
     def rawFields(self):
-        fields = ['RLOAD2', self.lid, self.exciteID, self.delay, self.dphase, self.Tb(), self.Tp(), self.Type]
+        fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
+                  self.Tb(), self.Tp(), self.Type]
         return fields
 
     def reprFields(self):
         Type = self.setBlankIfDefault(self.Type, 0.0)
-        fields = ['RLOAD2', self.lid, self.exciteID, self.delay, self.dphase, self.Tb(), self.Tp(), Type]
+        fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
+                  self.Tb(), self.Tp(), Type]
         return fields
 
 #---------------------------------------------------------------------
@@ -439,7 +531,7 @@ class RANDPS(RandomLoad):
         if card:
             ## Random analysis set identification number. (Integer > 0)
             ## Defined by RANDOM in the Case Control Deck.
-            self.lid = card.field(1)
+            self.sid = card.field(1)
             
             ## Subcase identification number of the excited load set.
             ## (Integer > 0)
@@ -459,6 +551,9 @@ class RANDPS(RandomLoad):
         if self.tid:
             self.tid = model.Table(self.tid)
     
+    def getLoads(self):
+        return [self]
+
     def Tid(self):
         if self.tid == 0:
             return None
@@ -467,7 +562,8 @@ class RANDPS(RandomLoad):
         return self.tid.tid
 
     def rawFields(self):
-        fields = ['RANDPS',self.lid, self.j, self.k, self.x, self.y, self.Tid()]
+        fields = ['RANDPS', self.sid, self.j, self.k, self.x, self.y,
+                  self.Tid()]
         return fields
 
     def reprFields(self):

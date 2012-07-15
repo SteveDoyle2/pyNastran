@@ -1,6 +1,9 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
+from math import log, exp
+
 from pyNastran.bdf.cards.baseCard import BaseCard
-from math import log,exp
 
 
 class FREQ(BaseCard):

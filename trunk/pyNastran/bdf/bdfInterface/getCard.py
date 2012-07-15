@@ -1,10 +1,12 @@
+# pylint: disable=E1101,C0103
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
-import copy
+#import copy
 
 from pyNastran.bdf.cards.nodes import SPOINT
-from pyNastran.bdf.fieldWriter import printCard
 
-class getMethods(object):
+class GetMethods(object):
     def __init__(self):
         pass
 
@@ -19,35 +21,35 @@ class getMethods(object):
         
     def getNodes(self):
         nodes = []
-        for nid,node in sorted(self.nodes.iteritems()):
+        for (nid, node) in sorted(self.nodes.iteritems()):
             nodes.append(node)
         return nodes
 
-    def getNodeIDsWithElement(self,eid):
+    def getNodeIDsWithElement(self, eid):
         return self.getNodeIDsWithElements([eid])
 
-    def getNodeIDsWithElements(self,eids):
+    def getNodeIDsWithElements(self, eids):
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid)
-            self.log.debug("element.pid = %s" %(element.pid))
+            self.log.debug("element.pid = %s" % (element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
         ###
         return nids2
 
-    def Node(self,nid,allowEmptyNodes=False):
-        if nid==0 and allowEmptyNodes:
+    def Node(self, nid, allowEmptyNodes=False):
+        if nid == 0 and allowEmptyNodes:
             return None
         elif nid in self.nodes:
             return self.nodes[nid]
         elif self.spoints and nid in self.spoints.spoints:
             return SPOINT(nid)
         else:
-            raise RuntimeError('nid=%s is not a GRID or SPOINT' %(nid))
+            raise RuntimeError('nid=%s is not a GRID or SPOINT' % (nid))
         ###
 
-    def Nodes(self,nids,allowEmptyNodes=False):
+    def Nodes(self, nids, allowEmptyNodes=False):
         """
         Returns a series of node objects given a list of node IDs
         """
@@ -55,7 +57,7 @@ class getMethods(object):
         nodes = []
         if allowEmptyNodes:
             for nid in nids:
-                if nid==0:
+                if nid == 0:
                     nodes.append(None)
                 else:
                     nodes.append(self.nodes[nid])
@@ -73,10 +75,10 @@ class getMethods(object):
     def elementIDs(self):
         return self.elements.keys()
 
-    def getElementIDsWithPID(self,pid):
+    def getElementIDsWithPID(self, pid):
         return self.getElementIDsWithPIDs([pid])
 
-    def getElementIDsWithPIDs(self,pids):
+    def getElementIDsWithPIDs(self, pids):
         eids = self.elementIDs()
         eids2 = []
         #print "eids = ",eids
@@ -91,8 +93,10 @@ class getMethods(object):
     def getNodeIDToElementIDsMap(self):
         """
         Returns a dictionary that maps a node ID to a list of elemnents
-        @todo support 0d or 1d elements
-        @todo support elements with missing nodes (e.g. CQUAD8 with missing nodes)
+        @todo
+          support 0d or 1d elements
+        @todo
+          support elements with missing nodes (e.g. CQUAD8 with missing nodes)
         """
         nidToElementsMap = {}
         for nid in self.nodes: # initalize the mapper
@@ -103,9 +107,10 @@ class getMethods(object):
                 nidToElementsMap[nid] = []
             ###
         ###
-        for eid,element in self.elements.iteritems(): # load the mapper
+        for (eid, element) in self.elements.iteritems(): # load the mapper
             try:
-                nids = element.nodeIDs() # not supported for 0-D and 1-D elements
+                # not supported for 0-D and 1-D elements
+                nids = element.nodeIDs()
                 for nid in nids:  # (e.g. CQUAD8 with missing node)
                     nidToElementsMap[nid].append(eid)
             except:
@@ -138,7 +143,9 @@ class getMethods(object):
     def getMaterialIDToPropertyIDsMap(self):
         """
         Returns a dictionary that maps a material ID to a list of properties
-        @note all properties require an mid to be counted (except for PCOMP, which has multiple mids)
+        @note
+          all properties require an mid to be counted (except for PCOMP,
+          which has multiple mids)
         """
         midToPidsMap = {}
         for mid in self.materialIDs():
@@ -161,16 +168,16 @@ class getMethods(object):
         ###
         return (midToPidsMap)
 
-    def Element(self,eid):
+    def Element(self, eid):
         return self.elements[eid]
 
-    def Elements(self,eids):
+    def Elements(self, eids):
         elements = []
         for eid in eids:
             elements.append(self.elements[eid])
         return elements
 
-    def RigidElement(self,eid):
+    def RigidElement(self, eid):
         return self.rigidElements[eid]
 
     #--------------------
@@ -179,21 +186,22 @@ class getMethods(object):
     def propertyIDs(self):
         return self.properties.keys()
 
-    def Property(self,pid):
+    def Property(self, pid):
         try:
             return self.properties[pid]
         except KeyError:
-            raise KeyError('pid=%s not found.  Allowed Pids=%s' %(pid,self.propertyIDs()))
+            raise KeyError('pid=%s not found.  Allowed Pids=%s'
+                        % (pid,self.propertyIDs()))
         ###
 
-    def Properties(self,pids):
+    def Properties(self, pids):
         properties = []
         #print "pids = ",pids
         for pid in pids:
             properties.append(self.properties[pid])
         return properties
 
-    def Phbdy(self,pid):
+    def Phbdy(self, pid):
         return self.phbdys[pid]
 
     #--------------------
@@ -208,7 +216,7 @@ class getMethods(object):
     def thermalMaterialIDs(self):
         return self.thermalMaterials.keys()
 
-    def Material(self,mid):
+    def Material(self, mid):
         if mid in self.materials:
             return self.materials[mid]
         elif mid in self.thermalMaterials:
@@ -216,13 +224,13 @@ class getMethods(object):
         else:
             raise KeyError('Invalid Material ID:  mid=%s' %(mid))
 
-    def StructuralMaterial(self,mid):
+    def StructuralMaterial(self, mid):
         return self.materials[mid]
 
-    def ThermalMaterial(self,mid):
+    def ThermalMaterial(self, mid):
         return self.thermalMaterials[mid]
 
-    def Materials(self,mids):
+    def Materials(self, mids):
         materials = []
         for mid in mids:
             materials.append(self.Material(mid))
@@ -231,36 +239,34 @@ class getMethods(object):
     #--------------------
     # LOADS
 
-    def Load(self,lid):
-        #print 'lid=%s self.loads=%s' %(lid,(self.loads.keys()))
-        assert isinstance(lid,int),'lid=%s is not an integer\n' %(lid)
-        if lid in self.loads:
-            load = self.loads[lid]
+    def Load(self, sid):
+        #print 'sid=%s self.loads=%s' %(sid,(self.loads.keys()))
+        assert isinstance(sid, int), 'sid=%s is not an integer\n' %(sid)
+        if sid in self.loads:
+            load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=|%s|.' %(lid))
-        #print "returning load..."
+            raise KeyError('cannot find LoadID=|%s|.' %(sid))
         return load
 
-    def Grav(self,lid):
-        raise DeprecatedWarning('use Load(lid) instead of Grav(lid)')
-        return self.Load(lid)
+    def Grav(self, sid):
+        raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
+        return self.Load(sid)
 
     #--------------------
     # SPCs
 
-    def SPC(self,conid):
+    def SPC(self, conid):
         #print 'conid=%s self.spcs=%s' %(conid,(self.spcs.keys()))
-        assert isinstance(conid,int),'conid=%s is not an integer\n' %(conid)
+        assert isinstance(conid, int), 'conid=%s is not an integer\n' % (conid)
         if conid in self.spcs:
             constraint = self.spcs[conid]
         else:
-            raise KeyError('cannot find ConstraintID=|%s|.' %(conid))
-        #print "returning constraint..."
+            raise KeyError('cannot find ConstraintID=|%s|.' % (conid))
         return constraint
 
     #--------------------
     # COORDINATES CARDS
-    def Coord(self,cid):
+    def Coord(self, cid):
         return self.coords[cid]
 
     #--------------------
@@ -269,91 +275,90 @@ class getMethods(object):
     def nCAeros(self):
         return len(self.caeros)
 
-    def Aero(self,acsid):
+    def Aero(self, acsid):
         return self.aero[acsid]
 
-    def Aeros(self,acsid):
+    def Aeros(self, acsid):
         return self.aeros[acsid]
 
-    def Spline(self,eid):
+    def Spline(self, eid):
         return self.splines[eid]
 
-    def CAero(self,eid):
+    def CAero(self, eid):
         return self.caeros[eid]
 
-    def PAero(self,pid):
+    def PAero(self, pid):
         return self.paeros[pid]
 
-    def Gust(self,sid):
+    def Gust(self, sid):
         return self.gusts[sid]
 
     #--------------------
     # AERO CONTROL SURFACE CARDS
-    def AEStat(self,aid):
+    def AEStat(self, aid):
         return self.aestats[aid]
 
-    def AELink(self,linkID):
+    def AELink(self, linkID):
         return self.aelinks[linkID]
 
-    def AEParam(self,aid):
+    def AEParam(self, aid):
         return self.aeparams[aid]
 
     #--------------------
     # FLUTTER CARDS
 
-    def Flfact(self,sid):
+    def Flfact(self, sid):
         return self.flfacts[sid]
 
-    def Flutter(self,fid):
+    def Flutter(self, fid):
         return self.flutters[fid]
 
     #--------------------
     # OPTIMIZATION CARDS
 
-    def DConstr(self,oid):
+    def DConstr(self, oid):
         return self.dconstrs[oid]
 
-    def Desvar(self,oid):
+    def Desvar(self, oid):
         return self.desvars[oid]
 
-    def DDVal(self,oid):
+    def DDVal(self, oid):
         return self.ddvals[oid]
 
     #--------------------
     # SET CARDS
 
-    def Set(self,sid):
+    def Set(self, sid):
         return self.sets[sid]
 
-    def SetSuper(self,seid):
+    def SetSuper(self, seid):
         return self.setsSuper[seid]
 
     #--------------------
     # METHOD CARDS
-    def Method(self,sid):
+    def Method(self, sid):
         return self.methods[sid]
 
-    def CMethod(self,sid):
+    def CMethod(self, sid):
         return self.cMethods[sid]
 
     #--------------------
     # TABLE CARDS
-    def Table(self,tid):
+    def Table(self, tid):
         return self.tables[tid]
 
-    def RandomTable(self,sid): # 
+    def RandomTable(self, tid):
         return self.randomTables[tid]
 
     #--------------------
     # NONLINEAR CARDS
 
-    def NLParm(self,nid):
+    def NLParm(self, nid):
         return self.nlparms[nid]
-    ###
 
     #--------------------
     # MATRIX ENTRY CARDS
-    def DMIG(self,dname):
+    def DMIG(self, dname):
         return self.dmig[dname]
     #--------------------
 

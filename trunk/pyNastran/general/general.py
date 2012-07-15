@@ -1,4 +1,5 @@
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
 from numpy import matrix
 
@@ -78,19 +79,19 @@ def obscure(num):
         dictA[i] = vals[i]
 
     pack = []
-    i=0
-    while num>0:
-        print("num = ",num)
-        print("factor = ",num%n)
+    i = 0
+    while num > 0:
+        print("num = %s" % (num))
+        print("factor = %s" % (num%n))
         var = dictA[num%n]
         num = num/n
         pack.append(var)
-        i+=1
-        if i==100:
+        i += 1
+        if i == 100:
             break
     print(pack)
     print('')
-    print("%s > %s" %(lenNum,len(pack)))
+    print("%s > %s" % (lenNum, len(pack)))
     return pack
     
 
@@ -124,40 +125,38 @@ def ListPrint(listA):
     @param listA list, numpy array, or numpy matrix
     @retval msg the clean string representation of the object
     """
-    if len(listA)==0:
+    if len(listA) == 0:
         return '[]'
     ###
 
     msg = '['
-    if isinstance(listA,matrix):
-        (nrows,ncols) = listA.shape
+    if isinstance(listA, matrix):
+        (nrows, ncols) = listA.shape
         for irow in range(nrows):
             msg += '['
             for icol in range(ncols):
-                msg += '%-10g,' %(listA[irow,icol])
-            ###
+                msg += '%-10g,' %(listA[irow, icol])
             msg = msg[:-1]
             msg += '],\n '
-        ###
         msg = msg[:-1]
         msg += ']'
 
     else:
         for a in listA:
-            #print "a = ",a,type(a)
-            if isinstance(a,str):
-                msg += ' %s,' %(a)
+            #print "a = ", a, type(a)
+            if isinstance(a, unicode):
+                msg += ' %s,' % (str(a))
             elif a is None:
                 msg += ' None,'
-            elif isinstance(a,float):
-                msg += ' %-4.2f,' %(a)
-            elif isinstance(a,int):
-                msg += ' %g,' %(a)
+            elif isinstance(a, float):
+                msg += ' %-4.2f,' % (a)
+            elif isinstance(a, int):
+                msg += ' %g,' % (a)
             else:
                 try:
-                    msg += ' %g,' %(a)
+                    msg += ' %g,' % (a)
                 except TypeError:
-                    print("a = |%s|" %(a))
+                    print("a = |%s|" % (a))
                     raise
                 ###
             ###

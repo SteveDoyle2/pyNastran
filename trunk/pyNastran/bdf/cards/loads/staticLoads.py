@@ -1,69 +1,15 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 from numpy import array, cross, allclose
 from numpy.linalg import norm
 
-from pyNastran.bdf.cards.loads.loads import BaseCard, Load
+from pyNastran.bdf.cards.loads.loads import BaseCard, Load, LoadCombination
 
-class LOAD(Load):
+class LOAD(LoadCombination):
     type = 'LOAD'
     def __init__(self, card=None, data=None):
-        if card:
-            #fields   = card.fields()
-
-            ## load ID
-            self.lid = card.field(1)
-            #self.id  = self.lid
-
-            ## overall scale factor
-            self.scale  = card.field(2)
-
-            #print "nFields = ",nFields
-            #print "nLoads  = ",nLoads
-
-            loads = card.fields(3) # temp list
-            nLoadFields = len(loads)
-            #nLoads  = nLoadFields/2
-            assert nLoadFields%2 == 0
-
-            ## individual scale factors (corresponds to loadIDs)
-            self.scaleFactors = []
-
-            ## individual loadIDs (corresponds to scaleFactors)
-            self.loadIDs = []
-
-            for i in range(0, nLoadFields, 2):   # alternating of scale factor & load set ID
-                self.scaleFactors.append(loads[i  ])
-                self.loadIDs.append(     loads[i+1])
-        else:
-            self.lid = data[0]
-            self.scale = data[1]
-            self.scaleFactors = data[2]
-            self.loadIDs      = data[3]
-        ###
-
-    def crossReference(self, model):
-        loadIDs2 = []
-        for loadID in self.loadIDs:
-            loadID2 = model.Load(loadID)
-            loadIDs2.append(loadID2)
-        self.loadIDs = loadIDs2
-    
-    def LoadID(self, ID):
-        #print("ID = ",ID)
-        #if isinstance(ID,int):
-        #    return ID
-        return self.lid
-    
-    def getLoads(self):
-        """
-        @note requires a cross referenced load
-        """
-        loads = []
-        for load in self.loadIDs:
-            #loads += loadID.getLoads()
-            loads += self.ID
-        ###
-        return loads
+        LoadCombination.__init__(self, card, data)
 
     def getLoadIDs(self):
         """
@@ -85,7 +31,8 @@ class LOAD(Load):
                       isinstance(load, PLOAD4) or isinstance(load, GRAV)):
                     load_IDs += [load.lid]
                 else:
-                    msg = 'The getLoadIDs method doesnt support %s cards.\n%s' %(load.__class__.__name__,str(load))
+                    msg = ('The getLoadIDs method doesnt support %s cards.\n'
+                           '%s' % (load.__class__.__name__,str(load)))
                     raise NotImplementedError(msg)
  
                 ###
@@ -118,10 +65,9 @@ class LOAD(Load):
         #print "loadTypes = ",loadTypes
         return loadTypes
 
-
     def writeCalculixGRAV(self, gx, gy, gz):
         msg  = '*DLOAD\n'
-        msg += 'AllElements,GRAV,%s,%s,%s\n' %(gx, gy, gz)
+        msg += 'AllElements,GRAV,%s,%s,%s\n' % (gx, gy, gz)
         return msg
 
     def writeCodeAsterLoad(self, model, gridWord='node'):
@@ -130,9 +76,9 @@ class LOAD(Load):
         
         #msg = '# Loads\n'
         msg = ''
-        (typesFound,forceLoads, momentLoads,
-                    forceConstraints, momentConstraints,
-                    gravityLoads) = self.organizeLoads(model)
+        (typesFound, forceLoads, momentLoads,
+                     forceConstraints, momentConstraints,
+                     gravityLoads) = self.organizeLoads(model)
 
         nids = []
         for nid in forceLoads:
@@ -141,8 +87,8 @@ class LOAD(Load):
             nids.append(nid)
 
         if nids:
-            msg += '# typesFound = %s\n' %(list(typesFound))
-            msg += '# loadIDs    = %s\n' %(loadIDs)
+            msg += '# typesFound = %s\n' % (list(typesFound))
+            msg += '# loadIDs    = %s\n' % (loadIDs)
             msg += "load_bc=AFFE_CHAR_MECA(MODELE=modmod,\n"
             #msg += "                      DDL_IMPO=(_F(GROUP_MA='Lleft',\n"
             msg += "                       FORCE_NODALE=(\n"
@@ -156,26 +102,26 @@ class LOAD(Load):
         spaces = "                                 "
         for nid in sorted(nids): # ,load in sorted(forceLoads.iteritems())
             #print("nid = ",nid)
-            msg += spaces + "_F(NOEUD='%s%s',\n" %(gridWord, nid)
+            msg += spaces + "_F(NOEUD='%s%s',\n" % (gridWord, nid)
             #print "load = ",load
             
             if nid in forceLoads:
                 force = forceLoads[nid]
                 if abs(force[0]) > 0.:
-                    msg += spaces + "  FX=%s,\n" %(force[0])
+                    msg += spaces + "  FX=%s,\n" % (force[0])
                 if abs(force[1]) > 0.:
-                    msg += spaces + "  FY=%s,\n" %(force[1])
+                    msg += spaces + "  FY=%s,\n" % (force[1])
                 if abs(force[2]) > 0.:
-                    msg += spaces + "  FZ=%s,\n" %(force[2])
+                    msg += spaces + "  FZ=%s,\n" % (force[2])
 
             if nid in momentLoads:
                 moment = momentLoads[nid]
                 if abs(moment[0]) > 0.:
-                    msg += spaces + "  MX=%s,\n" %(moment[0])
+                    msg += spaces + "  MX=%s,\n" % (moment[0])
                 if abs(moment[1]) > 0.:
-                    msg += spaces + "  MY=%s,\n" %(moment[1])
+                    msg += spaces + "  MY=%s,\n" % (moment[1])
                 if abs(moment[2]) > 0.:
-                    msg += spaces + "  MZ=%s,\n" %(moment[2])
+                    msg += spaces + "  MZ=%s,\n" % (moment[2])
             msg = msg[:-2]
             msg += '),\n'
             # finish the load
@@ -190,7 +136,7 @@ class LOAD(Load):
         msg += ');\n'
         
         for gravityLoad in gravityLoads:
-            msg += 'CA_GRAVITY(%s);\n' %(str(gravityLoad))
+            msg += 'CA_GRAVITY(%s);\n' % (str(gravityLoad))
         return (msg, loadIDs, loadTypes)
 
     def getReducedLoads(self):
@@ -215,7 +161,8 @@ class LOAD(Load):
                     loads += loadsi
                     scaleFactors += [scale2*scalei for scalei in scaleFactorsi]
                 else:
-                    msg = '%s isnt supported in getReducedLoads method' %(load.__class__.__name__)
+                    msg = ('%s isnt supported in getReducedLoads method'
+                        % (load.__class__.__name__))
                     raise NotImplementedError(msg)
                 ###
             ###
@@ -238,7 +185,7 @@ class LOAD(Load):
         (scaleFactors, loads) = self.getReducedLoads()
 
         for (scaleFactor, load) in zip(scaleFactors, loads):
-            #print("*load = ",load_
+            #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
             if isinstance(load, Force):
@@ -274,13 +221,14 @@ class LOAD(Load):
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
                 for (nid, vector) in zip(nodes, vectors):
-                    forceLoads[nid] = vector*scaleFactor # not the same vector for all nodes
+                    # not the same vector for all nodes
+                    forceLoads[nid] = vector*scaleFactor
 
             elif isinstance(load, GRAV):
                 #(grav) = out
                 gravityLoads.append(out*scaleFactor) # grav
             else:
-                msg = '%s not supported' %(load.__class__.__name__)
+                msg = '%s not supported' % (load.__class__.__name__)
                 raise NotImplementedError(msg)
             ###
         ###
@@ -288,7 +236,7 @@ class LOAD(Load):
                 momentConstraints, gravityLoads)
 
     def rawFields(self):
-        fields = ['LOAD', self.lid, self.scale]
+        fields = ['LOAD', self.sid, self.scale]
         for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
             fields += [scaleFactor, self.LoadID(loadID)]
         return fields
@@ -307,7 +255,7 @@ class GRAV(BaseCard):
     def __init__(self, card=None, data=None):
         if card:
             ## Set identification number
-            self.lid = card.field(1)
+            self.sid = card.field(1)
             ## Coordinate system identification number.
             self.cid = card.field(2, 0)
             ## scale factor
@@ -322,15 +270,15 @@ class GRAV(BaseCard):
             ## (Integer; Default = 0)
             self.mb  = card.field(7, 0)
         else:
-            self.lid = data[0]
+            self.sid = data[0]
             self.cid = data[1]
             self.a   = data[2]
             self.N   = data[3:6]
             self.mb  = data[6]
             assert len(data)==7
 
-        assert not allclose(max(abs(self.N)),0.),(
-          'GRAV N is a zero vector, N=%s' %(str(self.N)))
+        assert not allclose(max(abs(self.N)), 0.),('GRAV N is a zero vector, '
+                                                   'N=%s' % (str(self.N)))
 
     def organizeLoads(self, model):
         typesFound = [self.type]
@@ -368,7 +316,8 @@ class GRAV(BaseCard):
         return self.scale*p
         
     def rawFields(self):
-        fields = ['GRAV', self.lid, self.Cid(), self.scale, self.N[0], self.N[1], self.N[2], self.mb]
+        N = list(self.N)
+        fields = ['GRAV', self.sid, self.Cid(), self.scale]+N+[self.mb]
         return fields
 
     def reprFields(self):
@@ -377,7 +326,7 @@ class GRAV(BaseCard):
             N.append(self.setBlankIfDefault(n, 0.0))
         
         mb = self.setBlankIfDefault(self.mb, 0)
-        fields = ['GRAV', self.lid, self.Cid(), self.scale]+N+[mb]
+        fields = ['GRAV', self.sid, self.Cid(), self.scale]+N+[mb]
         return fields
 
 class ACCEL1(BaseCard):
@@ -388,7 +337,7 @@ class ACCEL1(BaseCard):
     type = 'ACCEL1'
     def __init__(self, card=None, data=None):
         ## Load set identification number (Integer>0)
-        self.lid = card.field(1)
+        self.sid = card.field(1)
         
         ## Coordinate system identification number. (Integer>0: Default=0)
         self.cid = card.field(2, 0)
@@ -424,11 +373,12 @@ class ACCEL1(BaseCard):
         else:
             nodeIDs = [node.nid for node in nodes]
         ###
-        assert 0 not in nodeIDs, 'nodeIDs = %s' %(nodeIDs)
+        assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
         return nodeIDs
 
     def rawFields(self):
-        fields = ['ACCEL1', self.lid, self.Cid(), self.scale, self.N[0], self.N[1], self.N[2], None, None]+self.nodeIDs()
+        fields = ['ACCEL1', self.sid, self.Cid(), self.scale,
+                  self.N[0], self.N[1], self.N[2], None, None]+self.nodeIDs()
         return fields
 
 
@@ -524,13 +474,13 @@ class FORCE(Force):
         """
         Force.__init__(self, card, data)
         if card:
-            self.lid  = card.field(1)
+            self.sid  = card.field(1)
             self.node = card.field(2)
             self.cid  = card.field(3, 0)
             self.mag  = card.field(4)
             xyz = card.fields(5, 8, [0., 0., 0.])
         else:
-            self.lid  = data[0]
+            self.sid  = data[0]
             self.node = data[1]
             self.cid  = data[2]
             self.mag  = data[3]
@@ -555,12 +505,13 @@ class FORCE(Force):
         self.cid = model.Coord(self.cid)
 
     def rawFields(self):
-        fields = ['FORCE', self.lid, self.node, self.Cid(), self.mag] + list(self.xyz)
+        fields = ['FORCE', self.sid, self.node, self.Cid(), self.mag
+                 ] + list(self.xyz)
         return fields
 
     def reprFields(self):
         cid = self.setBlankIfDefault(self.Cid(), 0)
-        fields = ['FORCE', self.lid, self.node, cid, self.mag] + list(self.xyz)
+        fields = ['FORCE', self.sid, self.node, cid, self.mag] + list(self.xyz)
         return fields
 
 class FORCE1(Force):
@@ -572,13 +523,13 @@ class FORCE1(Force):
     def __init__(self, card=None, data=None):
         Force.__init__(self, card, data)
         if card:
-            self.lid  = card.field(1)
+            self.sid  = card.field(1)
             self.node = card.field(2)
             self.mag  = card.field(3)
             self.g1   = card.field(4)
             self.g2   = card.field(5)
         else:
-            self.lid  = data[0]
+            self.sid  = data[0]
             self.node = data[1]
             self.mag  = data[2]
             self.g1   = data[3]
@@ -611,7 +562,7 @@ class FORCE1(Force):
 
     def rawFields(self):
         (node, g1, g2) = self.nodeIDs([self.node, self.G1(), self.G2()])
-        fields = ['FORCE1', self.lid, node, self.mag, g1, g2]
+        fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
         return fields
 
     def reprFields(self):
@@ -629,7 +580,7 @@ class FORCE2(Force):
         """
         Force.__init__(self, card, data)
         if card:
-            self.lid  = card.field(1)
+            self.sid  = card.field(1)
             self.node = card.field(2)
             self.mag  = card.field(3)
             self.g1   = card.field(4)
@@ -637,7 +588,7 @@ class FORCE2(Force):
             self.g3   = card.field(5)
             self.g4   = card.field(5)
         else:
-            self.lid  = data[0]
+            self.sid  = data[0]
             self.node = data[1]
             self.mag  = data[2]
             self.g1   = data[3]
@@ -663,26 +614,27 @@ class FORCE2(Force):
         return self.node.nid
 
     def rawFields(self):
-        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2, self.g3, self.g4])
-        fields = ['FORCE2', self.lid, node, self.mag, g1, g2, g3, g4]
+        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
+                                               self.g3, self.g4])
+        fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
         return fields
 
     def reprFields(self):
         return self.rawFields()
 
 #------------------------------------------------------------------------------
-class MOMENT(Moment):  # can i copy the force init without making the MOMENT a FORCE ???
+class MOMENT(Moment):
     type = 'MOMENT'
     def __init__(self, card=None, data=None):
         """
-        Defines a static concentrated moment at a grid point by specifying a scale factor and
-        a vector that determines the direction.
+        Defines a static concentrated moment at a grid point by specifying a
+        scale factor and a vector that determines the direction.
 
         MOMENT SID G CID M    N1  N2  N3
         MOMENT 2   5   6 2.9 0.0 1.0 0.0
         """
         Moment.__init__(self, card, data)
-        self.lid  = card.field(1)
+        self.sid  = card.field(1)
         self.node = card.field(2)
         self.cid  = card.field(3, 0)
         self.mag  = card.field(4)
@@ -701,17 +653,18 @@ class MOMENT(Moment):  # can i copy the force init without making the MOMENT a F
         pass
 
     def rawFields(self):
-        fields = ['MOMENT', self.lid, self.node, self.Cid(), self.mag] + list(self.xyz)
+        fields = ['MOMENT', self.sid, self.node, self.Cid(), self.mag
+                 ] + list(self.xyz)
         return fields
 
     def reprFields(self):
         cid = self.setBlankIfDefault(self.Cid(), 0)
-        fields = ['MOMENT', self.lid, self.node, cid, self.mag] + list(self.xyz)
+        fields = ['MOMENT', self.sid, self.node, cid, self.mag] + list(self.xyz)
         return fields
 
 class MOMENT1(Moment):
     type = 'MOMENT1'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         """
         Defines a static concentrated moment at a grid point by specifying a
         magnitude and two grid points that determine the direction
@@ -720,7 +673,7 @@ class MOMENT1(Moment):
         """
         Moment.__init__(self, card, data)
         if card:
-            self.lid  = card.field(1)
+            self.sid  = card.field(1)
             self.node = card.field(2)
             self.mag  = card.field(3)
             self.g1   = card.field(4)
@@ -729,7 +682,7 @@ class MOMENT1(Moment):
             self.g4   = card.field(7)
             xyz = card.fields(5, 8, [0., 0., 0.])
         else:
-            self.lid  = data[0]
+            self.sid  = data[0]
             self.node = data[1]
             self.mag  = data[2]
             self.g1   = data[3]
@@ -750,7 +703,7 @@ class MOMENT1(Moment):
 
     def rawFields(self):
         (node, g1, g2) = self.nodeIDs([self.node, self.g1, self.g2])
-        fields = ['MOMENT1', self.lid, node, self.mag, g1, g2]
+        fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
         return fields
 
     def reprFields(self):
@@ -768,7 +721,7 @@ class MOMENT2(Moment):
         """
         Moment.__init__(self, card, data)
         if card:
-            self.lid  = card.field(1)
+            self.sid  = card.field(1)
             self.node = card.field(2)
             self.mag  = card.field(3)
             self.g1   = card.field(4)
@@ -777,7 +730,7 @@ class MOMENT2(Moment):
             self.g4   = card.field(7)
             xyz = card.fields(5, 8, [0., 0., 0.])
         else:
-            self.lid  = data[0]
+            self.sid  = data[0]
             self.node = data[1]
             self.mag  = data[2]
             self.g1   = data[3]
@@ -786,10 +739,10 @@ class MOMENT2(Moment):
             self.g4   = data[6]
             xyz       = data[7:10]
         ###
-        assert len(xyz)==3,'xyz=%s' %(xyz)
+        assert len(xyz) == 3, 'xyz=%s' % (xyz)
         self.xyz = array(xyz)
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         """@todo cross reference and fix repr function"""
         (self.g1, self.g2, self.g3, self.g4) = model.Nodes(self.g1, self.g2,
                                                            self.g3, self.g4)
@@ -802,7 +755,7 @@ class MOMENT2(Moment):
     def rawFields(self):
         (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
                                                           self.g3, self.g4])
-        fields = ['MOMENT2', self.lid, node, self.mag, g1, g2, g3, g4]
+        fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return fields
 
     def reprFields(self):
@@ -813,12 +766,12 @@ class PLOAD(Load):
     type = 'PLOAD'
     def __init__(self, card=None, data=None):
         if card:
-            self.lid   = card.field(1)
+            self.sid   = card.field(1)
             self.p     = card.field(2)
             nodes      = card.fields(3, 7)
             self.nodes = self._wipeEmptyFields(nodes)
         else:
-            self.lid   = data[0]
+            self.sid   = data[0]
             self.p     = data[1]
             self.nodes = data[2:]
             print("PLOAD = %s" %(data))
@@ -830,7 +783,7 @@ class PLOAD(Load):
         pass
 
     def rawFields(self):
-        fields = ['PLOAD', self.lid, self.p]+self.nodeIDs()
+        fields = ['PLOAD', self.sid, self.p]+self.nodeIDs()
         return fields
 
     def reprFields(self):
@@ -843,7 +796,7 @@ class PLOAD1(Load):
     validScales = ['LE', 'FR', 'LEPR', 'FRPR']
     def __init__(self, card=None, data=None):
         if card:
-            self.lid   = card.field(1)
+            self.sid   = card.field(1)
             self.eid   = card.field(2)
             self.Type  = card.field(3)
             self.scale = card.field(4)
@@ -852,7 +805,7 @@ class PLOAD1(Load):
             self.x2    = card.field(7)
             self.p2    = card.field(8)
         else:
-            self.lid   = data[0]
+            self.sid   = data[0]
             self.eid   = data[1]
             self.Type  = data[2]
             self.scale = data[3]
@@ -861,15 +814,16 @@ class PLOAD1(Load):
             self.x2    = data[6]
             self.p2    = data[7]
         ###
-        assert self.Type  in self.validTypes,  '%s is an invalid type on the PLOAD1 card' %(self.Type)
-        assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' %(self.scale)
+        assert self.Type  in self.validTypes,  '%s is an invalid type on the PLOAD1 card' % (self.Type)
+        assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
 
     def crossReference(self, model):
         """@todo cross reference and fix repr function"""
         pass
 
     def rawFields(self):
-        fields = ['PLOAD1', self.lid, self.eid, self.Type, self.scale, self.x1, self.p1, self.x2, self.p2]
+        fields = ['PLOAD1', self.sid, self.eid, self.Type, self.scale, self.x1,
+                  self.p1, self.x2, self.p2]
         return fields
 
     def reprFields(self):
@@ -879,7 +833,7 @@ class PLOAD2(Load):
     type = 'PLOAD2'
     def __init__(self, card=None, data=None):
         if card:
-            self.lid = card.field(1)
+            self.sid = card.field(1)
             self.p   = card.field(2)
             eids = card.fields(3, 9)
 
@@ -891,7 +845,7 @@ class PLOAD2(Load):
             ###
             self.eids = eids
         else:
-            self.lid   = data[0]
+            self.sid   = data[0]
             self.p     = data[1]
             self.eids = list(data[2:])
             #print "PLOAD2 = ",data
@@ -902,7 +856,7 @@ class PLOAD2(Load):
         pass
 
     def rawFields(self):
-        fields = ['PLOAD2', self.lid, self.p]
+        fields = ['PLOAD2', self.sid, self.p]
         if len(self.eids)>6:
             fields += [self.eids[0], 'THRU', self.eids[-1]]
         else:
@@ -916,7 +870,7 @@ class PLOAD4(Load):
     type = 'PLOAD4'
     def __init__(self, card=None, data=None):
         if card:
-            self.lid = card.field(1)
+            self.sid = card.field(1)
             self.eid = card.field(2)
             p1 = card.field(3)
             p  = card.fields(4, 7, [p1, p1, p1]) # [p1,p1,p1] are the defaults
@@ -930,10 +884,13 @@ class PLOAD4(Load):
 
                 self.g1   = None
                 self.g34  = None
-            else:   # used for CPENTA, CHEXA
+            else:
+                ## used for CPENTA, CHEXA
                 self.eids = [self.eid]
-                self.g1   = card.field(7) # used for solid element only
-                self.g34  = card.field(8) # g3/g4 - different depending on CHEXA/CPENTA or CTETRA
+                ## used for solid element only
+                self.g1   = card.field(7)
+                ## g3/g4 - different depending on CHEXA/CPENTA or CTETRA
+                self.g34  = card.field(8)
             ###
 
             ## Coordinate system identification number. See Remark 2.
@@ -945,7 +902,7 @@ class PLOAD4(Load):
             self.ldir    = card.field(14, 'NORM')
         else:
             #print "PLOAD4 = ",data
-            self.lid     = data[0]
+            self.sid     = data[0]
             self.eid     = data[1]
             self.pressures = data[2]
 
@@ -968,14 +925,15 @@ class PLOAD4(Load):
         @warning sorl=SURF is supported (not LINE)
         @warning ldir=NORM is supported (not X,Y,Z)
         """
-        assert self.sorl == 'SURF', 'only surface loads are supported.  required_sorl=SURF.  actual=%s' %(self.sorl)
-        assert self.ldir == 'NORM', 'only normal loads are supported.   required_ldir=NORM.  actual=%s' %(self.ldir)
-        assert len(self.eids) == 1, 'only one load may be defined on each PLOAD4.  nLoads=%s\n%s' %(len(self.eids), str(self))
+        assert self.sorl == 'SURF', 'only surface loads are supported.  required_sorl=SURF.  actual=%s' % (self.sorl)
+        assert self.ldir == 'NORM', 'only normal loads are supported.   required_ldir=NORM.  actual=%s' % (self.ldir)
+        assert len(self.eids) == 1, 'only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (len(self.eids), str(self))
 
         if self.g1 and self.g34: # solid elements
             nid = self.g1.nid
             nidOpposite = self.g34.nid
-            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid, nidOpposite)
+            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid,
+                                                               nidOpposite)
         else:
             faceNodeIDs = self.eid.nodeIDs()
             Area = self.eid.Area()
@@ -1027,7 +985,7 @@ class PLOAD4(Load):
         p2   = self.setBlankIfDefault(self.pressures[1], p1)
         p3   = self.setBlankIfDefault(self.pressures[2], p1)
         p4   = self.setBlankIfDefault(self.pressures[3], p1)
-        fields = ['PLOAD4', self.lid, eid, self.pressures[0], p2, p3, p4]
+        fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
         if self.g1 is not None: # is it a SOLID element
@@ -1042,9 +1000,9 @@ class PLOAD4(Load):
                     fields.append('THRU')
                     eid = self.eids[-1]
                 except:
-                    print("g1  = %s" %(self.g1))
-                    print("g34 = %s" %(self.g34))
-                    print("self.eids = %s" %(self.eids))
+                    print("g1  = %s" % (self.g1))
+                    print("g34 = %s" % (self.g34))
+                    print("self.eids = %s" % (self.eids))
                     raise
                 ###
                 fields.append(self.getElementIDs(eid) )

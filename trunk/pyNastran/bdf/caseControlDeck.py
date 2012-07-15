@@ -1,4 +1,6 @@
 # pylint: disable=R0904,R0902,C0103
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 import copy
 from pyNastran.bdf.subcase import Subcase

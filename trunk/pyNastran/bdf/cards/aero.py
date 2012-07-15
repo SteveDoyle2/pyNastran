@@ -1,5 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
-
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 #import sys
 from numpy import array, pi
 
@@ -1240,7 +1241,7 @@ class TRIM(BaseCard):
             while i<nFields: ## @todo doesnt support aeqr
                 label = fields[i]
                 ux = fields[i+1]
-                assert isinstance(label, str), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
+                assert isinstance(label, unicode), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
                 self.labels.append(label)
                 self.uxs.append(ux)
                 if i==2:

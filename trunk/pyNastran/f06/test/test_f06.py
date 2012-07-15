@@ -30,9 +30,9 @@ def runLotsOfFiles(files, debug=True, saveCases=True, skipFiles=[],
             if not isPassed:
                 sys.stderr.write('**file=%s\n' %(f06file))
                 failedCases.append(f06file)
-                nFailed +=1
+                nFailed += 1
             else:
-                nPassed +=1
+                nPassed += 1
             #sys.exit('end of test...test_f06.py')
         ###
     ###

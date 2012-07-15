@@ -1,9 +1,11 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class ThermalCard(BaseCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
     def crossReference(self,model):
         raise NotImplementedError('%s has not defined the crossReference method' %(self.type))
@@ -12,34 +14,34 @@ class ThermalCard(BaseCard):
         return False
 
 class ThermalBC(ThermalCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
 
 class ThermalElement(ThermalCard):
     pid = 0
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
 
     def nodeIDs(self):
         return []
 
     def Pid(self):
-        if isinstance(self.pid,int):
+        if isinstance(self.pid, int):
             return self.pid
         else:
             return self.pid.pid
         ###
 
 class ThermalProperty(ThermalCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
 
 class ThermalLoadDefault(ThermalCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
 
 class ThermalLoad(ThermalCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
 
 #-------------------------------------------------------
@@ -51,31 +53,32 @@ class CHBDYE(ThermalElement):
     """
     type = 'CHBDYE'
 
-    hexMap = {1: [4,3,2,1],  # CHEXA8/CHEXA20
-              2: [1,2,6,5],
-              3: [2,3,7,6],
-              4: [3,4,8,7],
-              5: [4,1,5,8],
-              6: [5,6,7,8],
+    hexMap = {1: [4, 3, 2, 1],  # CHEXA8/CHEXA20
+              2: [1, 2, 6, 5],
+              3: [2, 3, 7, 6],
+              4: [3, 4, 8, 7],
+              5: [4, 1, 5, 8],
+              6: [5, 6, 7, 8],
              }
 
-    pentMap = {1: [3,2,1],  # CPENTA
-               2: [1,2,5,4],
-               3: [2,3,6,5],
-               4: [3,1,4,6],
-               5: [4,5,6],
+    pentMap = {1: [3, 2, 1],  # CPENTA
+               2: [1, 2, 5, 4],
+               3: [2, 3, 6, 5],
+               4: [3, 1, 4, 6],
+               5: [4, 5, 6],
               }
 
-    tetMap = {1: [1,3,2],  # CTETRA
-              2: [1,2,4],
-              3: [2,3,4],
-              4: [3,1,4],
+    tetMap = {1: [1, 3, 2],  # CTETRA
+              2: [1, 2, 4],
+              3: [2, 3, 4],
+              4: [3, 1, 4],
              }
 
-    sideMaps = {'CHEXA': hexMap,'CPENTA':pentMap,'CTETRA':tetMap,'CTRIA3':[1,2,3],'CQUAD4':[1,2,3,4]}
+    sideMaps = {'CHEXA': hexMap, 'CPENTA':pentMap, 'CTETRA':tetMap,
+                'CTRIA3':[1,2,3], 'CQUAD4':[1,2,3,4]}
 
-    def __init__(self,card=None,data=None):
-        ThermalElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalElement.__init__(self, card, data)
         ## Surface element ID number for a side of an
         ## element. (0 < Integer < 100,000,000)
         self.eid  = card.field(1)
@@ -85,24 +88,24 @@ class CHBDYE(ThermalElement):
 
         ## A consistent element side identification number (1 < Integer < 6)
         self.side = card.field(3)
-        assert 0<self.side<7
+        assert 0 < self.side < 7
 
         ## A VIEW entry identification number for the front face
-        self.iViewFront  = card.field(4,0)
+        self.iViewFront  = card.field(4, 0)
         ## A VIEW entry identification number for the back face
-        self.iViewBack   = card.field(5,0)
+        self.iViewBack   = card.field(5, 0)
 
         ## RADM identification number for front face of surface element (Integer > 0)
-        self.radMidFront = card.field(6,0)        
+        self.radMidFront = card.field(6, 0)        
         ## RADM identification number for back face of surface element (Integer > 0)
-        self.radMidBack  = card.field(7,0)
+        self.radMidBack  = card.field(7, 0)
         
         self.grids = []
 
     #def crossReference(self,model):
     #    pass
     
-    def sideToEIDs(self,eid):
+    def sideToEIDs(self, eid):
         sideIDs = self.sideMaps[eid.type][self.side]
         ## [1,2,3]
         
@@ -111,12 +114,12 @@ class CHBDYE(ThermalElement):
         return side
         
     def rawFields(self):
-        fields = ['CHBDYE',self.eid,self.eid2,self.side,self.iViewFront,self.iViewBack,self.radMidFront,self.radMidBack]
+        fields = ['CHBDYE', self.eid, self.eid2, self.side, self.iViewFront, self.iViewBack,self.radMidFront,self.radMidBack]
         return fields
 
     def reprFields(self):
         #eids = self.collapseThruBy(self.eids)  ## @todo is this done
-        fields = ['CHBDYE',self.eid,self.eid2,self.side,self.iViewFront,self.iViewBack,self.radMidFront,self.radMidBack]
+        fields = ['CHBDYE', self.eid, self.eid2, self.side, self.iViewFront, self.iViewBack,self.radMidFront,self.radMidBack]
         return fields
 
 class CHBDYG(ThermalElement):
@@ -124,8 +127,8 @@ class CHBDYG(ThermalElement):
     Defines a boundary condition surface element without reference to a property entry.
     """
     type = 'CHBDYG'
-    def __init__(self,card=None,data=None):
-        ThermalElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalElement.__init__(self, card, data)
         
         if card:
             ## Surface element ID
@@ -186,8 +189,8 @@ class CHBDYP(ThermalElement):
     Defines a boundary condition surface element with reference to a PHBDY entry
     """
     type = 'CHBDYP'
-    def __init__(self,card=None,data=None):
-        ThermalElement.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalElement.__init__(self, card, data)
         if card:
             ## Surface element ID
             self.eid  = card.field(1)
@@ -263,7 +266,7 @@ class PCONV(ThermalProperty):
     surface element used for heat transfer analysis.
     """
     type = 'PCONV'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         ## Convection property identification number. (Integer > 0)
         self.pconid = card.field(1)
         ## Material property identification number. (Integer > 0)
@@ -316,7 +319,7 @@ class PCONVM(ThermalProperty):
     surface element used for heat transfer analysis.
     """
     type = 'PCONVM'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         ## Convection property identification number. (Integer > 0)
         self.pconid = card.field(1)
         ## Material property identification number. (Integer > 0)
@@ -360,7 +363,7 @@ class PHBDY(ThermalProperty):
     information for boundary condition surface elements
     """
     type = 'PHBDY'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         ## Property identification number. (Unique Integer among all PHBDY entries). (Integer > 0)
         self.pid = card.field(1)
 
@@ -398,8 +401,8 @@ class CONV(ThermalBC):
     connection to a surface element (CHBDYi entry).
     """
     type = 'CONV'
-    def __init__(self,card=None,data=None):
-        #ThermalBC.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        #ThermalBC.__init__(self, card, data)
         ## CHBDYG, CHBDYE, or CHBDYP surface element identification number. (Integer > 0)
         self.eid     = card.field(1)
         
@@ -440,8 +443,8 @@ class RADM(ThermalBC):
     Defines the radiation properties of a boundary element for heat transfer analysis
     """
     type = 'RADM'
-    def __init__(self,card=None,data=None):
-        ThermalBC.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalBC.__init__(self, card, data)
         ## Material identification number
         self.radmid = card.field(1)
         self.absorb = card.field(2)
@@ -463,8 +466,8 @@ class RADBC(ThermalBC):
     Specifies an CHBDYi element face for application of radiation boundary conditions
     """
     type = 'RADBC'
-    def __init__(self,card=None,data=None):
-        ThermalBC.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalBC.__init__(self, card, data)
         
         ## NODAMB Ambient point for radiation exchange. (Integer > 0)
         self.nodamb = card.field(1)
@@ -513,8 +516,8 @@ class QBDY1(ThermalLoad):
     Defines a uniform heat flux into CHBDYj elements.
     """
     type = 'QBDY1'
-    def __init__(self,card=None,data=None):
-        ThermalLoad.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalLoad.__init__(self, card, data)
         
         if card:
             ## Load set identification number. (Integer > 0)
@@ -557,8 +560,8 @@ class QBDY2(ThermalLoad): # not tested
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY2'
-    def __init__(self,card=None,data=None):
-        ThermalLoad.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalLoad.__init__(self, card, data)
 
         if card:
             ## Load set identification number. (Integer > 0)
@@ -596,8 +599,8 @@ class QBDY3(ThermalLoad):
     Defines a uniform heat flux load for a boundary surface.
     """
     type = 'QBDY3'
-    def __init__(self,card=None,data=None):
-        ThermalLoad.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalLoad.__init__(self, card, data)
 
         if card:
             ## Load set identification number. (Integer > 0)
@@ -649,8 +652,8 @@ class QHBDY(ThermalLoad):
     Defines a uniform heat flux into a set of grid points.
     """
     type = 'QHBDY'
-    def __init__(self,card=None,data=None):
-        ThermalLoad.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalLoad.__init__(self, card, data)
         
         if card:
             ## Load set identification number. (Integer > 0)

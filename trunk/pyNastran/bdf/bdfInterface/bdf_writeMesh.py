@@ -1,8 +1,10 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
 from pyNastran.bdf.fieldWriter import printCard
 
-class writeMesh(object):
+class WriteMesh(object):
     def __init__(self):
         pass
 
@@ -510,7 +512,7 @@ class writeMesh(object):
     def writeDynamic(self):
         msg = ''
         if (self.dareas or self.nlparms or self.frequencies or self.methods or
-            self.cMethods or self.tsteps):
+            self.cMethods or self.tsteps or self.tstepnls):
             msg += '$DYNAMIC\n'
             for (ID, method) in sorted(self.methods.iteritems()):
                 msg += str(method)
@@ -522,6 +524,8 @@ class writeMesh(object):
                 msg += str(nlparm)
             for (ID, tstep) in sorted(self.tsteps.iteritems()):
                 msg += str(tstep)
+            for (ID, tstepnl) in sorted(self.tstepnls.iteritems()):
+                msg += str(tstepnl)
             for (ID, freq) in sorted(self.frequencies.iteritems()):
                 msg += str(freq)
         return msg

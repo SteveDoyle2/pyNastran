@@ -1,4 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
 import sys
 
@@ -22,8 +24,8 @@ class bdfReader(object):
 
     def printFileName(self, filename):
         """
-        Takes a path such as C:/work/fem.bdf and locates the file using relative paths
-        If it's on another drive, the path is not modified.
+        Takes a path such as C:/work/fem.bdf and locates the file using
+        relative paths.  If it's on another drive, the path is not modified.
         @param self the object pointer
         @param filename a filename string
         @retval filenameString a shortened representation of the filename
@@ -45,9 +47,9 @@ class bdfReader(object):
             self.activeFileNames.append(infileName)
             #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName, os.getcwd()))
             if not os.path.exists(infileName):
-                msg = "infileName=|%s| does not exist..." %(infileName)
+                msg = "infileName=|%s| does not exist..." % (infileName)
                 raise IOError(msg)
-            infile = open(infileName,'r')
+            infile = open(infileName, 'r')
             self.infilesPack.append(infile)
             self.lineNumbers.append(0)
             self.isOpened[infileName] = True

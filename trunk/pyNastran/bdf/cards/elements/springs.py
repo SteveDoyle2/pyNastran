@@ -1,6 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
-
-from __future__ import print_function
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from numpy import matrix,zeros,dot,transpose
 from numpy.linalg import norm
@@ -8,8 +8,8 @@ from numpy.linalg import norm
 from pyNastran.bdf.cards.baseCard import Element
 
 class SpringElement(Element):
-    def __init__(self,card,data):
-        Element.__init__(self,card,data)
+    def __init__(self, card, data):
+        Element.__init__(self, card, data)
 
     def Length_noXref(self,n1=None,n2=None):
         """
@@ -99,7 +99,7 @@ class CELAS1(SpringElement):
     type = 'CELAS1'
     asterType = 'CELAS1'
     def __init__(self,card=None,data=None):
-        SpringElement.__init__(self,card,data)
+        SpringElement.__init__(self, card, data)
         if card:
             self.eid = card.field(1)
 
@@ -147,7 +147,7 @@ class CELAS2(SpringElement):
     type = 'CELAS2'
     asterType = 'CELAS2'
     def __init__(self,card=None,data=None):
-        SpringElement.__init__(self,card,data)
+        SpringElement.__init__(self, card, data)
         
         if card:
             self.eid = card.field(1)
@@ -237,7 +237,7 @@ class CELAS3(SpringElement):
     type = 'CELAS3'
     asterType = 'CELAS3'
     def __init__(self,card=None,data=None):
-        SpringElement.__init__(self,card,data)
+        SpringElement.__init__(self, card, data)
 
         if card:
             #nids = [card.field(3),card.field(5)]
@@ -287,7 +287,7 @@ class CELAS4(SpringElement):
     type = 'CELAS4'
     asterType = 'CELAS4'
     def __init__(self,card=None,data=None):
-        SpringElement.__init__(self,card,data)
+        SpringElement.__init__(self, card, data)
         
         if card:
             #nids = [card.field(3),card.field(5)]

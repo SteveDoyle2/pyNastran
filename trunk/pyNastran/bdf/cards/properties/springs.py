@@ -1,4 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
 import sys
 #from numpy import zeros,pi
@@ -7,14 +9,14 @@ from pyNastran.bdf.cards.baseCard import Property
 
 class SpringProperty(Property):
     type = 'SpringProperty'
-    def __init__(self,card,data):
-        Property.__init__(self,card,data)
+    def __init__(self, card, data):
+        Property.__init__(self, card, data)
         pass
 
 class PELAS(SpringProperty):
     type = 'PELAS'
     def __init__(self,card=None,nPELAS=0,data=None):
-        SpringProperty.__init__(self,card,data)
+        SpringProperty.__init__(self, card, data)
         nOffset = nPELAS*5
         if card:
             self.pid = card.field(1+nOffset) # 2 PELAS properties can be defined on 1 PELAS card
@@ -83,7 +85,7 @@ class PELAST(SpringProperty):
     """
     type = 'PELAST'
     def __init__(self,card=None,nPELAS=0,data=None):
-        SpringProperty.__init__(self,card,data)
+        SpringProperty.__init__(self, card, data)
         self.pid   = card.field(1)
         ## Identification number of a TABLEDi entry that defines the force per unit
         ## displacement vs. frequency relationship. (Integer > 0; Default = 0)

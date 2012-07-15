@@ -1,5 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
-
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 
 from numpy import array,eye,cross #zeros,dot
@@ -50,8 +51,8 @@ class ShellElement(Element):
         self.pid   = mesh.Property(self.pid)
 
 class TriShell(ShellElement):
-    def __init__(self,card,data):
-        ShellElement.__init__(self,card,data)
+    def __init__(self, card, data):
+        ShellElement.__init__(self, card, data)
 
     def Thickness(self):
         return self.pid.Thickness()
@@ -116,7 +117,7 @@ class CTRIA3(TriShell):
     asterType = 'TRIA3'
     calculixType = 'S3'
     def __init__(self,card=None,data=None):
-        TriShell.__init__(self,card,data)
+        TriShell.__init__(self, card, data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -218,7 +219,7 @@ class CTRIA6(TriShell):
     asterType = 'TRIA6'
     calculixType = 'S6'
     def __init__(self,card=None,data=None):
-        TriShell.__init__(self,card,data)
+        TriShell.__init__(self, card, data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -328,7 +329,7 @@ class CTRIA6(TriShell):
 class CTRIAR(TriShell):
     type = 'CTRIAR'
     def __init__(self,card=None,data=None):
-        TriShell.__init__(self,card,data)
+        TriShell.__init__(self, card, data)
         ## element ID number
         self.eid = int(card.field(1))
         self.pid = card.field(2)
@@ -382,7 +383,7 @@ class CTRIAX(TriShell):
     type = 'CTRIAX'
     calculixType = 'CAX6'
     def __init__(self,card=None,data=None):
-        TriShell.__init__(self,card,data)
+        TriShell.__init__(self, card, data)
         ## element ID number
         self.eid = int(card.field(1))
 
@@ -409,7 +410,7 @@ class CTRIAX6(TriShell):
     type = 'CTRIAX6'
     #calculixType = 'CAX6'
     def __init__(self,card=None,data=None):
-        TriShell.__init__(self,card,data)
+        TriShell.__init__(self, card, data)
         ## element ID number
         self.eid = int(card.field(1))
         self.mid = int(card.field(2))
@@ -467,7 +468,7 @@ class CTRIAX6(TriShell):
 
 class QuadShell(ShellElement):
     def __init__(self,card=None,data=None):
-        ShellElement.__init__(self,card,data)
+        ShellElement.__init__(self, card, data)
 
     def Thickness(self):
         return self.pid.Thickness()
@@ -609,7 +610,7 @@ class CSHEAR(QuadShell):
     type = 'CSHEAR'
     calculixType = 'S4'
     def __init__(self,card=None,data=None):
-        QuadShell.__init__(self,card,data)
+        QuadShell.__init__(self, card, data)
         if card:
             self.eid = card.field(1)
             self.pid = card.field(2)
@@ -708,7 +709,7 @@ class CQUAD4(QuadShell):
     asterType = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
     def __init__(self,card=None,data=None):
-        QuadShell.__init__(self,card,data)
+        QuadShell.__init__(self, card, data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -804,7 +805,7 @@ class CQUADR(QuadShell):
     type = 'CQUADR'
     #calculixType = 'CAX8'
     def __init__(self,card=None,data=None):
-        QuadShell.__init__(self,card,data)
+        QuadShell.__init__(self, card, data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -867,7 +868,7 @@ class CQUADR(QuadShell):
 class CQUAD(QuadShell):
     type = 'CQUAD'
     def __init__(self,card=None,data=None):
-        QuadShell.__init__(self,card,data)
+        QuadShell.__init__(self, card, data)
         ## element ID number
         self.eid = int(card.field(1))
         self.pid = card.field(2)
@@ -912,7 +913,7 @@ class CQUAD8(QuadShell):
     type = 'CQUAD8'
     asterType = 'QUAD8'
     def __init__(self,card=None,data=None):
-        QuadShell.__init__(self,card,data)
+        QuadShell.__init__(self, card, data)
         if card:
             ## element ID number
             self.eid = int(card.field(1))
@@ -1031,7 +1032,7 @@ class CQUADX(QuadShell):
     type = 'CQUADX'
     calculixType = 'CAX8'
     def __init__(self,card=None,data=None):
-        QuadShell.__init__(self,card,data)
+        QuadShell.__init__(self, card, data)
         ## element ID number
         self.eid = int(card.field(1))
         self.pid = card.field(2)
