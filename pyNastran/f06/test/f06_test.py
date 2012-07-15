@@ -1,7 +1,7 @@
 import os
 import sys
 #import time
-from pyNastran.op2.test.test_op2 import getFailedFiles
+from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.f06.test.test_f06 import runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
@@ -64,7 +64,7 @@ def main():
         files2 = []
         files2 += files
     else:
-        files2 = getFailedFiles('failedCases.in')
+        files2 = get_failed_files('failedCases.in')
     
     #files2 = [r'D:\work\move\move_tpl\ar29sadl.f06']
     #files = files+files2

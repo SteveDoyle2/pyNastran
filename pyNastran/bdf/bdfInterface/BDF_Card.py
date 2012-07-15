@@ -1,5 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
-
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 import copy
 
@@ -35,7 +36,7 @@ class BDF_Card(object):
         """
         cardB = []
         for field in card:
-            if isinstance(field, str) and field.strip() == '':
+            if isinstance(field, unicode) and field.strip() == '':
                 field = None
             cardB.append(field)
 
@@ -236,7 +237,7 @@ def wipeEmptyFields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, str) and field.strip() == '':
+        if isinstance(field, unicode) and field.strip() == '':
             field = None
         cardB.append(field)
 

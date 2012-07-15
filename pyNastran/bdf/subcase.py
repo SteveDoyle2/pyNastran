@@ -368,7 +368,7 @@ class Subcase(object):
     def _add_data(self, key, value, options, paramType):
         key = self.update_param_name(key)
         #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
-        if isinstance(value, str) and value.isdigit():
+        if isinstance(value, unicode) and value.isdigit():
             value = int(value)
 
         (key, value, options) = self._simplify_data(key, value, options,

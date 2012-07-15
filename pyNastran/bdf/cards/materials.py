@@ -1,23 +1,25 @@
-# pylint: disable=C0103,R0902,R0904,R0914
-from numpy import zeros,array
+# pylint: disable=C0103,R0902,R0904,R0914,E1101,W0612,E0602
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
+from numpy import zeros, array
 
-from pyNastran.bdf.cards.baseCard import BaseCard,Material
+from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
-    def __init__(self,card,data):
-        Material.__init__(self,card,data)
+    def __init__(self, card, data):
+        Material.__init__(self, card, data)
 
 class AnisotropicMaterial(Material):
     """Anisotropic Material Class"""
-    def __init__(self,card,data):
-        Material.__init__(self,card,data)
+    def __init__(self, card, data):
+        Material.__init__(self, card, data)
 
 class ThermalMaterial(Material):
     """Thermal Material Class"""
-    def __init__(self,card,data):
-        Material.__init__(self,card,data) 
+    def __init__(self, card, data):
+        Material.__init__(self, card, data) 
 
 class HyperelasticMaterial(Material):
     """Hyperelastic Material Class"""
@@ -73,7 +75,7 @@ class CREEP(Material):
         return self.mid.mid
 
     def rawFields(self):
-        fields = ['CREEP',self.Mid(), self.T0, self.exp, self.form, self.tidkp, self.tidcp, self.tidcs, self.thresh,
+        fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form, self.tidkp, self.tidcp, self.tidcs, self.thresh,
         self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return fields
 
@@ -81,7 +83,7 @@ class CREEP(Material):
         thresh = self.setBlankIfDefault(self.thresh, 1e-5)
         exp    = self.setBlankIfDefault(self.exp, 4.1e-9)
         T0     = self.setBlankIfDefault(self.T0, 0.0)
-        fields = ['CREEP',self.Mid(),T0,exp,self.form,self.tidkp,self.tidcp,self.tidcs,thresh,
+        fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp, self.tidcp, self.tidcs, thresh,
         self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return fields
 
@@ -91,8 +93,8 @@ class MAT1(Material):
     MAT1     1      1.03+7  3.9615+6.3      .098
     """
     type = 'MAT1'
-    def __init__(self,card=None,data=None):
-        Material.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Material.__init__(self, card, data)
 
         if card:
             self.mid  = card.field(1)
@@ -125,14 +127,14 @@ class MAT1(Material):
         nu12 = self.Nu()
         G12  = self.G()
 
-        D = zeros((3,3))
+        D = zeros((3, 3))
         #D = zeros((6,6))
         mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
-        D[0,0] = E11/mu
-        D[1,1] = E22/mu
-        D[0,1] = nu12*D[0,0]
-        D[1,0] = D[0,1]
-        D[2,2] = G12
+        D[0, 0] = E11/mu
+        D[1, 1] = E22/mu
+        D[0, 1] = nu12*D[0, 0]
+        D[1, 0] = D[0, 1]
+        D[2, 2] = G12
         return D
 
     def G(self):
@@ -174,7 +176,7 @@ class MAT1(Material):
             E  = 0.0
             nu = 0.0
         else:
-            msg = 'G=%s E=%s nu=%s' %(G, E, nu)
+            msg = 'G=%s E=%s nu=%s' % (G, E, nu)
             raise RuntimeError(msg)
         self.e = E
         self.g = G
@@ -187,25 +189,25 @@ class MAT1(Material):
 
     def writeCalculix(self, elementSet='ELSetDummyMat'):
         temperature = self.TRef # default value - same properties for all values
-        msg  = '*ELASTIC,TYPE=ISO,ELSET=%s\n' %(elementSet)
+        msg  = '*ELASTIC,TYPE=ISO,ELSET=%s\n' % (elementSet)
         msg += '** E,NU,TEMPERATURE\n'
-        msg += '%s,%s,%s\n' %(self.e, self.nu, temperature)
+        msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
         
         if self.rho > 0.:
             msg += '*DENSITY\n'
-            msg += '%s\n' %(self.rho)
+            msg += '%s\n' % (self.rho)
         if self.a > 0:
-            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' %(self.TRef)
+            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.TRef)
             msg += '** ALPHA,ALPHA*TREF\n'
-            msg += '%s,%s\n\n' %(self.a, self.a*self.TRef)
+            msg += '%s,%s\n\n' % (self.a, self.a*self.TRef)
         return msg
 
     def writeCodeAster(self):
-        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1 mid=%s\n' %(self.mid, self.e, self.mid)
+        msg  = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1 mid=%s\n' % (self.mid, self.e, self.mid)
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
         #msg += '                       E  =%g,\n'  %(self.e)
-        msg += '                       NU =%g,\n'  %(self.nu)
-        msg += '                       RHO=%g),);\n'  %(self.rho)
+        msg += '                       NU =%g,\n'    % (self.nu)
+        msg += '                       RHO=%g),);\n' % (self.rho)
         return msg
 
     #def crossReference(self, model):
@@ -218,7 +220,7 @@ class MAT1(Material):
         return fields
 
     def getG_default(self):
-        if self.g==0.0 or self.nu==0.0:
+        if self.g == 0.0 or self.nu == 0.0:
             G = self.g
         else:
             #G_default = self.e/2./(1+self.nu)
@@ -244,8 +246,8 @@ class MAT1(Material):
 
 class MAT2(AnisotropicMaterial):
     """
-    Defines the material properties for linear anisotropic materials for two-dimensional
-    elements.
+    Defines the material properties for linear anisotropic materials for
+    two-dimensional elements.
 
     MAT2 MID G11 G12 G13 G22 G23 G33 RHO
     A1 A2 A3 TREF GE ST SC SS
@@ -299,20 +301,20 @@ class MAT2(AnisotropicMaterial):
         """
         Eq 9.4.7 in Finite Element Method using Matlab
         """
-        D = zeros((6,6))
+        D = zeros((6, 6))
         E    = self.E()
         nu12 = self.nu12
         nu   = nu12
         
         mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
         Emu = E/mu
-        D[0,0] = Emu # E/(1-nu^2)
-        D[1,1] = Emu
-        D[2,2] = Emu
-        D[0,1] = nu*Emu # nu*E/(1-nu^2)
-        D[1,2] = D[2,1] = D[0,2] = D[2,0] = D[1,0] = D[0,1] # nu*E/(1-nu^2)
-        D[3,3] = (1.-nu)*0.5*Emu # (1.-nu)/2.*E/(1-nu^2)
-        D[5,5] = D[4,4] = D[3,3] # (1.-nu)/2.*E/(1-nu^2)
+        D[0, 0] = Emu # E/(1-nu^2)
+        D[1, 1] = Emu
+        D[2, 2] = Emu
+        D[0, 1] = nu*Emu # nu*E/(1-nu^2)
+        D[1, 2] = D[2, 1] = D[0, 2] = D[2, 0] = D[1, 0] = D[0, 1] # nu*E/(1-nu^2)
+        D[3, 3] = (1.-nu)*0.5*Emu   # (1.-nu)/2.*E/(1-nu^2)
+        D[5, 5] = D[4, 4] = D[3, 3] # (1.-nu)/2.*E/(1-nu^2)
 
     def Dplate(self):
         """
@@ -323,49 +325,49 @@ class MAT2(AnisotropicMaterial):
         nu   = nu12
         G12  = self.G()
 
-        D = zeros((3,3))
+        D = zeros((3, 3))
         mu = 1.-nu12*nu12 #*E11/E22    # not necessary b/c they're equal
         Emu = E/mu
-        D[0,0] = Emu
-        D[1,1] = Emu
-        D[0,1] = nu*Emu
-        D[1,0] = D[0,1]
-        D[2,2] = 1.-nu/2.*Emu
+        D[0, 0] = Emu
+        D[1, 1] = Emu
+        D[0, 1] = nu*Emu
+        D[1, 0] = D[0, 1]
+        D[2, 2] = 1.-nu/2.*Emu
         #D[4,4] =      ## @ todo verify
         #D[5,5] = G22
         #D[6,6] = G33
         return D
 
     def writeCalculix(self):
-        raise NotImplementedError()
+        raise NotImplementedError(self.type)
         msg  = '*ELASTIC,TYPE=ORTHO\n'
         temperature = 0. # default value - same properties for all values
-        msg += '%s,%s,%s\n' %(self.e, self.nu, temperature)
+        msg += '%s,%s,%s\n' % (self.e, self.nu, temperature)
         D = Dplate
-        D1111 = D[0,0]
+        D1111 = D[0, 0]
         D1122 = 0.
-        D2222 = D[1,1]
-        D1133 = D[0,2]
-        D2233 = D[1,2]
-        D3333 = D[2,2]
-        D1212 = D[0,1]
-        D1313 = D[0,2]
-        msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' %(D1111,D1122,D2222,D1133,D2233,D3333,D1212,D1313)
+        D2222 = D[1, 1]
+        D1133 = D[0, 2]
+        D2233 = D[1, 2]
+        D3333 = D[2, 2]
+        D1212 = D[0, 1]
+        D1313 = D[0, 2]
+        msg += '%s,%s,%s,%s,%s,%s,%s,%s\n\n' % (D1111, D1122, D2222, D1133, D2233, D3333, D1212, D1313)
         
         G23
         temperature = self.TRef
-        msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' %(self.mid)
+        msg = '*ELASTIC,TYPE=ENGINEERING CONSTANTS  ** MAT2,mid=%s\n' % (self.mid)
         msg += '** E1,E2,E3,NU12,NU13,NU23,G12,G13\n'
         msg += '** G23,TEMPERATURE\n'
-        msg += '%s,%s,%s,%s,%s,%s,%s,%s,%s\n' %(e1,e2,e3,nu12,nu13,nu23,g12,g13)
-        msg += '%s,%s\n' %(G23,temperature)
+        msg += '%s,%s,%s,%s,%s,%s,%s,%s\n' % (e1, e2, e3, nu12, nu13, nu23, g12, g13)
+        msg += '%s,%s\n' % (G23, temperature)
         if self.rho > 0.:
             msg += '*DENSITY\n'
-            msg += '%s\n' %(self.rho)
+            msg += '%s\n' % (self.rho)
         if self.a > 0:
-            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' %(self.TRef)
+            msg += '*EXPANSION,TYPE=ISO,ZERO=%s\n' % (self.TRef)
             msg += '** ALPHA,ALPHA*TREF\n'
-            msg += '%s,%s\n\n' %(self.a, self.a*self.TRef)
+            msg += '%s,%s\n\n' % (self.a, self.a*self.TRef)
         return msg
 
     def rawFields(self):
@@ -397,8 +399,8 @@ class MAT3(AnisotropicMaterial):
     -    -   GZX AX  ATH AZ TREF GE
     """
     type = 'MAT3'
-    def __init__(self,card=None,data=None):
-        AnisotropicMaterial.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        AnisotropicMaterial.__init__(self, card, data)
         if card:
             self.mid   = card.field(1)
             self.ex    = card.field(2)
@@ -433,16 +435,16 @@ class MAT3(AnisotropicMaterial):
             self.ge   = data[13]
 
     def rawFields(self):
-        fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,self.rho,
-                         None,None,self.gzx,self.ax,self.ath,self.az,self.TRef,self.ge]
+        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, self.rho,
+                         None, None, self.gzx, self.ax, self.ath, self.az, self.TRef, self.ge]
         return fields
 
     def reprFields(self):
         rho = self.setBlankIfDefault(self.rho, 0.0)
         TRef = self.setBlankIfDefault(self.TRef, 0.0)
         ge = self.setBlankIfDefault(self.ge, 0.0)
-        fields = ['MAT3',self.mid,self.ex,self.eth,self.ez,self.nuxth,self.nuthz,self.nuzx,rho,
-                         None,None,self.gzx,self.ax,self.ath,self.az,TRef,ge]
+        fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, rho,
+                         None, None, self.gzx, self.ax, self.ath, self.az, TRef, ge]
         return fields
 
 class MAT4(ThermalMaterial):
@@ -456,8 +458,8 @@ class MAT4(ThermalMaterial):
     TCH TDELTA QLAT
     """
     type = 'MAT4'
-    def __init__(self,card=None,data=None):
-        ThermalMaterial.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        ThermalMaterial.__init__(self, card, data)
         if card:
             self.mid  = card.field(1)
             self.k    = card.field(2)
@@ -485,8 +487,8 @@ class MAT4(ThermalMaterial):
         ###
 
     def rawFields(self):
-        fields = ['MAT4',self.mid, self.k, self.cp, self.rho, self.H, self.mu, self.hgen, self.refEnthalpy,
-                         self.tch, self.tdelta, self.qlat]
+        fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu, self.hgen, self.refEnthalpy,
+                          self.tch, self.tdelta, self.qlat]
         return fields
 
     def reprFields(self):
@@ -494,7 +496,7 @@ class MAT4(ThermalMaterial):
         hgen = self.setBlankIfDefault(self.hgen, 1.0)
         cp   = self.setBlankIfDefault(self.cp, 0.0)
         fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen, self.refEnthalpy,
-                         self.tch, self.tdelta, self.qlat]
+                          self.tch, self.tdelta, self.qlat]
         return fields
 
 class MAT5(ThermalMaterial):  # also AnisotropicMaterial
@@ -543,8 +545,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return k
 
     def rawFields(self):
-        fields = ['MAT5',self.mid, self.kxx, self.kxy, self.kxz, self.kyy, self.kyz, self.kzz, self.cp,
-                         self.rho, self.hgen]
+        fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy, self.kyz, self.kzz, self.cp,
+                          self.rho, self.hgen]
         return fields
 
     def reprFields(self):
@@ -632,13 +634,13 @@ class MAT8(AnisotropicMaterial):
         nu12 = self.Nu12()
         G12  = self.G12()
 
-        D = zeros((3,3))
+        D = zeros((3, 3))
         mu = 1.-nu12*nu12*E11/E22    # not necessary b/c they're equal
-        D[0,0] = E11/mu
-        D[1,1] = E22/mu
-        D[0,1] = nu12*D[0,0]
-        D[1,0] = D[0,1]
-        D[2,2] = G12
+        D[0, 0] = E11/mu
+        D[1, 1] = E22/mu
+        D[0, 1] = nu12*D[0, 0]
+        D[1, 0] = D[0, 1]
+        D[2, 2] = G12
         
         return D
 
@@ -740,8 +742,8 @@ class MAT9(AnisotropicMaterial):
             self.G66 = data[1][20]
             self.rho = data[2]
             self.A   = data[3]
-            self.TRef =data[4]
-            self.ge   =data[5]
+            self.TRef = data[4]
+            self.ge   = data[5]
         ###
         assert len(self.A)==6
             
@@ -755,9 +757,9 @@ class MAT9(AnisotropicMaterial):
         return D
 
     def rawFields(self):
-        fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                         self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                         self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+self.A+[self.TRef, self.ge]
+        fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
+                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
+                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, self.rho]+self.A+[self.TRef, self.ge]
         return fields
 
     def reprFields(self):
@@ -769,9 +771,9 @@ class MAT9(AnisotropicMaterial):
         rho = self.setBlankIfDefault(self.rho, 0.0)
         TRef = self.setBlankIfDefault(self.TRef, 0.0)
         ge = self.setBlankIfDefault(self.ge, 0.0)
-        fields = ['MAT9',self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
-                         self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
-                         self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, rho]+A+[TRef,ge]
+        fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
+                          self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
+                          self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, rho]+A+[TRef,ge]
         return fields
 
 class MAT10(Material):
@@ -785,7 +787,7 @@ class MAT10(Material):
         Material.__init__(self, card, data)
         if card:
             self.mid = card.field(1)
-            (self.bulk,self.rho,self.c) = self.getBulkRhoC(card)
+            self.getBulkRhoC(card)
             self.ge = card.field(5, 0.0)
         else:
             self.mid  = data[0]
@@ -822,7 +824,9 @@ class MAT10(Material):
             msg = 'c, bulk, and rho are all undefined on tbe MAT10'
             raise RuntimeError(msg)
         ###
-        return(bulk,rho,c)
+        self.bulk = bulk
+        self.rho = rho
+        self.c = c
 
     def rawFields(self):
         fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
@@ -883,7 +887,7 @@ class MATHP(HyperelasticMaterial):
             self.tabd = card.field(56)
         else:
             main = data[0]
-            (mid, a10, a01, d1,rho, av, alpha, tref, ge, sf, na, nd, kp,
+            (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
              a20, a11, a02, d2,
              a30, a21, a12, a03, d3,
              a40, a31, a22, a13, a04, d4,
@@ -931,7 +935,11 @@ class MATHP(HyperelasticMaterial):
             if continueFlag:
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = data[1]
             else:
-                tab1=None; tab2=None; tab3=None; tab4=None; tab5=None
+                tab1 = None
+                tab2 = None
+                tab3 = None
+                tab4 = None
+                tab5 = None
             ###
             self.tab1 = tab1
             self.tab2 = tab2
@@ -996,7 +1004,7 @@ class MATHP(HyperelasticMaterial):
         return fields
 
 class MaterialDependence(BaseCard):
-    def __init__(self,card,data):
+    def __init__(self, card, data):
         pass
 
 class MATS1(MaterialDependence):
@@ -1007,8 +1015,8 @@ class MATS1(MaterialDependence):
     (SOLs 106 and 129).
     """
     type = 'MATS1'
-    def __init__(self,card=None,data=None):
-        MaterialDependence.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        MaterialDependence.__init__(self, card, data)
         if card:
             ## Identification number of a MAT1, MAT2, or MAT9 entry.
             self.mid  = card.field(1)
@@ -1030,7 +1038,7 @@ class MATS1(MaterialDependence):
             ## Hardening Rule, selected by one of the following values
             ## (Integer): (1) Isotropic (Default) (2) Kinematic
             ## (3) Combined isotropic and kinematic hardening
-            self.hr   = card.field(6,1)
+            self.hr   = card.field(6, 1)
             ## Initial yield point
             self.limit1 = card.field(7)
             ## Internal friction angle, measured in degrees, for the
@@ -1040,12 +1048,12 @@ class MATS1(MaterialDependence):
             (mid, tid, Type, h, yf, hr, limit1, limit2) = data
             self.mid = mid
             self.tid = tid
-            if Type==1:
+            if Type == 1:
                 self.Type = 'NLELAST'
-            if Type==2:
+            if Type == 2:
                 self.Type = 'PLASTIC'
             else:
-                raise RuntimeError('invalid Type:  Type=%s' %(Type))
+                raise RuntimeError('invalid Type:  Type=%s' % (Type))
             self.h  = h
             self.yf = yf
             self.hr = hr
@@ -1054,11 +1062,11 @@ class MATS1(MaterialDependence):
         ###
 
     def Yf(self):
-        d = {1:'VonMises',2:'Tresca',3:'MohrCoulomb',4:'Drucker-Prager'}
+        d = {1:'VonMises', 2:'Tresca', 3:'MohrCoulomb', 4:'Drucker-Prager'}
         return d[self.yf]
 
     def Hf(self):
-        d = {1:'Isotropic',2:'Kinematic',3:'Combined'}
+        d = {1:'Isotropic', 2:'Kinematic', 3:'Combined'}
         return d[self.hr]
 
     def E(self, strain=None):

@@ -1,4 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from numpy import allclose, isinf
 
@@ -8,7 +10,7 @@ def isSame(value1, value2):
     @note this method is used by almost every card when printing
     """
     #print "value=%s default=%s" %(value1,value2)
-    if isinstance(value1, str) or value1 is None:
+    if isinstance(value1, unicode) or value1 is None:
         if value1==value2:
             return True
         return False

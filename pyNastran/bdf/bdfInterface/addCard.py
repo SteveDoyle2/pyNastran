@@ -1,6 +1,8 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
-class addMethods(object):
+class AddMethods(object):
     def __init__(self):
         pass
 
@@ -85,7 +87,7 @@ class addMethods(object):
                 #print 'Node was duplicated...nid=%s\nnode=\n%s' %(key,node)
                 pass
         else:
-            assert key>0, 'nid=%s node=%s' %(key, node)
+            assert key > 0, 'nid=%s node=%s' %(key, node)
             self.nodes[key] = node
         ###
 
@@ -107,7 +109,7 @@ class addMethods(object):
                 #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
                 assert elem.eid not in self.elements, 'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid, self.elements[elem.eid], elem)
         else:
-            assert key>0, 'eid=%s elem=%s' %(key, elem)
+            assert key > 0, 'eid=%s elem=%s' %(key, elem)
             self.elements[key] = elem
         ###
 
@@ -120,7 +122,7 @@ class addMethods(object):
                 #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
                 assert elem.eid not in self.damperElements,'eid=%s\noldDamperElement=\n%snewDamperElement=\n%s' %(elem.eid,self.damperElements[elem.eid],elem)
         else:
-            assert key>0,'eid=%s elem=%s' %(key,elem)
+            assert key > 0,'eid=%s elem=%s' %(key,elem)
             self.damperElements[key] = elem
         ###
 
@@ -130,7 +132,7 @@ class addMethods(object):
             print('eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.rigidElements[key],elem))
             #assert elem.eid not in self.rigidElements,'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid,self.rigidElements[elem.eid],elem)
             pass
-        assert key>0,'eid=%s elem=%s' %(key,elem)
+        assert key > 0,'eid=%s elem=%s' %(key,elem)
         self.rigidElements[key] = elem
 
     def addThermalElement(self,elem):
@@ -144,7 +146,7 @@ class addMethods(object):
         key = deqatn.eqID
         #if not allowOverwrites:
         #    assert prop.pid not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(prop.pid,self.properties[prop.pid],prop)
-        assert key>0,'ID=%s deqatn\n%s' %(key, deqatn)
+        assert key > 0,'ID=%s deqatn\n%s' %(key, deqatn)
         self.dequations[key] = deqatn
 
     def addProperty(self,prop,allowOverwrites=False):   
@@ -157,7 +159,7 @@ class addMethods(object):
                 #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
                 assert key not in self.properties,'pid=%s oldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
         else:
-            assert key>0,'pid=%s prop=%s' %(key,prop)
+            assert key > 0,'pid=%s prop=%s' %(key,prop)
             self.properties[key] = prop
         ###
 
@@ -174,7 +176,7 @@ class addMethods(object):
             if not material.isSameCard(self.materials[key]):
                 assert key not in self.materials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.materials[key],material)
         else:
-            assert key>0,'mid=%s material=\n%s' %(key,material)
+            assert key > 0,'mid=%s material=\n%s' %(key,material)
             self.materials[key] = material
 
     def addThermalMaterial(self,material,allowOverwrites=False):
@@ -183,7 +185,7 @@ class addMethods(object):
             if not material.isSameCard(self.thermalMaterials[key]):
                 assert key not in self.thermalMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.thermalMaterials[key],material)
         else:
-            assert key>0,'mid=%s material=\n%s' %(key,material)
+            assert key > 0,'mid=%s material=\n%s' %(key,material)
             self.thermalMaterials[key] = material
 
     def addMaterialDependence(self,material,allowOverwrites=False):
@@ -192,7 +194,7 @@ class addMethods(object):
             if not material.isSameCard(self.materialDeps[key]):
                 assert key not in self.materialDeps,'mid=%s\noldMaterialDep=\n%snewMaterialDep=\n%s' %(key,self.materialDeps[key],material)
         else:
-            assert key>0,'mid=%s material=\n%s' %(key,material)
+            assert key > 0,'mid=%s material=\n%s' %(key,material)
             self.materialDeps[key] = material
 
     def addCreepMaterial(self,material,allowOverwrites=False):
@@ -206,18 +208,18 @@ class addMethods(object):
             if not material.isSameCard(self.creepMaterials[key]):
                 assert key not in self.creepMaterials,'mid=%s\noldMaterial=\n%snewMaterial=\n%s' %(key,self.creepMaterials[key],material)
         else:
-            assert key>0,'mid=%s material=\n%s' %(key,material)
+            assert key > 0,'mid=%s material=\n%s' %(key,material)
             self.creepMaterials[key] = material
 
-    def addCoord(self,coord,allowOverwrites=False):
+    def addCoord(self,coord, allowOverwrites=False):
         key = coord.cid
         if not allowOverwrites:
             assert key not in self.coords,'cid=%s\noldElement=\n%snewElement=\n%s' %(key,self.coords[key],coord)
         assert coord.cid>-1,'cid=%s coord=\n%s' %(key,coord)
         self.coords[key] = coord
 
-    def addLoad(self,load):
-        key = load.lid
+    def addLoad(self, load):
+        key = load.sid
         if key in self.loads:
             self.loads[key].append(load)
         else:
@@ -232,7 +234,7 @@ class addMethods(object):
 
     def addThermalLoad(self,load):  # same function at the moment...
         key = load.lid
-        assert key>0
+        assert key > 0
         if key in self.loads:
             self.loads[key].append(load)
         else:
@@ -253,7 +255,7 @@ class addMethods(object):
     #    self.thermalProperties[prop.pconid] = prop
 
     def addThermalBC(self,bc,key):
-        assert key>0
+        assert key > 0
         if key in self.bcs:
             self.bcs[key].append(bc)
         else:
@@ -299,7 +301,7 @@ class addMethods(object):
         else:
             self.spcs[key] = [constraint]
 
-        #assert key>0
+        #assert key > 0
         #if self.constraints.has_key(key):
         #    self.constraints[key].append(constraint)
         #else:
@@ -336,7 +338,7 @@ class addMethods(object):
             if not aefact.isSameCard(self.aefacts[key]):
                 assert key not in self.aefacts,'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' %(key,self.aefacts[key],aefact)
         else:
-            assert key>0,'sid=%s method=\n%s' %(key,aefact)
+            assert key > 0,'sid=%s method=\n%s' %(key,aefact)
             self.aefacts[key] = aefact
         ###
 
@@ -375,13 +377,13 @@ class addMethods(object):
     def addCAero(self,caero):
         key = caero.eid
         assert key not in self.caeros,'\ncaero=\n|%s| oldCAERO=\n|%s|' %(caero,self.caeros[key])
-        assert key>0
+        assert key > 0
         self.caeros[key] = caero
 
     def addPAero(self,paero):
         key = paero.pid
         assert key not in self.paeros,'\npaero=\n|%s| oldPAERO=\n|%s|' %(paero,self.paeros[key])
-        assert key>0,'paero.pid = |%s|' %(key)
+        assert key > 0,'paero.pid = |%s|' %(key)
         self.paeros[key] = paero
 
     def addSpline(self,spline):
@@ -392,26 +394,26 @@ class addMethods(object):
     def addGust(self,gust):
         key = gust.sid
         assert key not in self.gusts
-        assert key>0
+        assert key > 0
         self.gusts[key] = gust
 
     def addTrim(self,trim,allowOverwrites=False):
         key = trim.sid
         if not allowOverwrites:
             assert key not in self.trims,'trim=%s oldTrim=\n%snewProperty=\n%s' %(key,self.trims[key],trim)
-        assert key>0,'trim=\n%s' %(key,trim)
+        assert key > 0,'trim=\n%s' %(key,trim)
         self.trims[key] = trim
 
     def addFlutter(self,flutter):
         key = flutter.sid
         assert key not in self.flutters
-        assert key>0
+        assert key > 0
         self.flutters[key] = flutter
 
     def addFLFACT(self,flfact):
         key = flfact.sid
         #assert key not in self.flfacts
-        assert key>0
+        assert key > 0
         self.flfacts[key] = flfact # set id...
         #print "added flfact...flflact =\n"+flfact
 
@@ -425,58 +427,67 @@ class addMethods(object):
     def addDesvar(self,desvar):
         key = desvar.oid
         assert key not in self.desvars
-        assert key>0
+        assert key > 0
         self.desvars[key] = desvar
 
     def addDDVal(self,ddval):
         key = ddval.oid
         assert key not in self.ddvals
-        assert key>0
+        assert key > 0
         self.ddvals[key] = ddval
 
     def addDLink(self,dlink):
         key = dlink.oid
         assert key not in self.dlinks
-        assert key>0
+        assert key > 0
         self.dlinks[key] = dlink
 
     def addDResp(self,dresp):
         key = dresp.oid
         assert key not in self.dresps
-        assert key>0
+        assert key > 0
         self.dresps[key] = dresp
 
-    def addDvmrel(self,dvmrel):
+    def addDvmrel(self, dvmrel):
         key = dvmrel.oid
         assert key not in self.dvmrels
-        assert key>0
+        assert key > 0
         self.dvmrels[key] = dvmrel
 
-    def addDvprel(self,dvprel):
+    def addDvprel(self, dvprel):
         key = dvprel.oid
         assert key not in self.dvprels
-        assert key>0
+        assert key > 0
         self.dvprels[key] = dvprel
 
-    def addNLParm(self,nlparm):
+    def addNLParm(self, nlparm):
         key = nlparm.nid
         assert key not in self.nlparms
-        assert key>0
+        assert key > 0
         self.nlparms[key] = nlparm
 
-    def addTStep(self,tstep,allowOverwrites=False):
+    def addTSTEP(self, tstep, allowOverwrites=False):
         key = tstep.sid
         if key in self.tsteps and not allowOverwrites:
             if not tstep.isSameCard(self.tsteps[key]):
-                assert key not in self.tsteps,'sid=%s\noldTStep=\n%snewTStep=\n%s' %(key,self.tsteps[key],tstep)
+                assert key not in self.tsteps,'sid=%s\noldTSTEP=\n%snewTSTEP=\n%s' %(key, self.tsteps[key], tstep)
         else:
-            assert key>0,'mid=%s material=\n%s' %(key,tstep)
+            assert key > 0, 'sid=%s tstep=\n%s' %(key,tstep)
             self.tsteps[key] = tstep
         ###
 
+    def addTSTEPNL(self, tstepnl, allowOverwrites=False):
+        key = tstepnl.sid
+        if key in self.tsteps and not allowOverwrites:
+            if not tstepnl.isSameCard(self.tsteps[key]):
+                assert key not in self.tstepnls, 'sid=%s\noldTSTEPNL=\n%snewTSTEPNL=\n%s' %(key, self.tstepnls[key], tstepnl)
+        else:
+            assert key > 0, 'sid=%s tstepnl=\n%s' %(key,tstepnl)
+            self.tstepnls[key] = tstepnl
+        ###
     def addFREQ(self,freq):
         key = freq.sid
-        assert key>0
+        assert key > 0
         if key in self.frequencies:
             self.frequencies[key].addFrequencyObject(freq)
         else:
@@ -510,13 +521,13 @@ class addMethods(object):
     def addTable(self,table):
         key = table.tid
         assert key not in self.tables,'\nTable=\n%s oldTable=\n%s' %(table,self.tables[key])
-        assert key>0
+        assert key > 0
         self.tables[key] = table
 
     def addRandomTable(self,table):
         key = table.tid
         assert key not in self.randomTables,'\nTable=\n%s oldTable=\n%s' %(table,self.randomTables[key])
-        assert key>0
+        assert key > 0
         self.randomTables[key] = table
 
     def addMethod(self,method,allowOverwrites=False):
@@ -525,7 +536,7 @@ class addMethods(object):
             if not method.isSameCard(self.methods[key]):
                 assert key not in self.methods,'sid=%s\noldMethod=\n%snewMethod=\n%s' %(key,self.methods[key],method)
         else:
-            assert key>0,'sid=%s method=\n%s' %(key,method)
+            assert key > 0,'sid=%s method=\n%s' %(key,method)
             self.methods[key] = method
         ###
 
@@ -535,7 +546,7 @@ class addMethods(object):
             if not cMethod.isSameCard(self.cMethods[key]):
                 assert key not in self.cMethods,'sid=%s\noldCMethod=\n%snewCMethod=\n%s' %(key,self.cMethods[key],cMethod)
         else:
-            assert key>0,'sid=%s cMethod=\n%s' %(key,cMethod)
+            assert key > 0,'sid=%s cMethod=\n%s' %(key,cMethod)
             self.cMethods[key] = cMethod
         ###
 

@@ -23,7 +23,7 @@ def parse_table_names_from_F06(f06Name):
     return names
 
 def get_failed_files(filename):
-    infile = open(filename,'r')
+    infile = open(filename, 'r')
     lines = infile.readlines()
     infile.close()
     

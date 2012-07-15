@@ -1,7 +1,9 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 import copy
 from math import sin,cos
-from numpy import zeros,transpose #,pi
+from numpy import zeros,transpose
 
 # pyNastran
 from pyNastran.bdf.cards.baseCard import Property,Material
@@ -9,7 +11,7 @@ from pyNastran.bdf.cards.baseCard import Property,Material
 class ShellProperty(Property):
     type = 'ShellProperty'
     def __init__(self,card=None,data=None):
-        Property.__init__(self,card,data)
+        Property.__init__(self, card, data)
         pass
 
     def S(self):
@@ -222,7 +224,7 @@ class PCOMP(ShellProperty):
     """
     type = 'PCOMP'
     def __init__(self,card=None,data=None): # not done, cleanup
-        ShellProperty.__init__(self,card,data)
+        ShellProperty.__init__(self, card, data)
         
         if card:
             #fields = card.fields(1)
@@ -514,7 +516,7 @@ class PCOMP(ShellProperty):
 class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
     type = 'PCOMPG'
     def __init__(self,card=None,data=None):
-        ShellProperty.__init__(self,card,data) ## @todo doesnt support data
+        ShellProperty.__init__(self, card, data) ## @todo doesnt support data
         self.pid  = card.field(1)
         #self.z0 = 
         self.nsm  = card.field(3,0.0)
@@ -580,7 +582,7 @@ class PSHEAR(ShellProperty):
         Defines the properties of a shear panel (CSHEAR entry).
         PSHEAR PID MID T NSM F1 F2
         """
-        ShellProperty.__init__(self,card,data)
+        ShellProperty.__init__(self, card, data)
         if card:
             ## Property ID
             self.pid = card.field(1)
@@ -619,7 +621,7 @@ class PSHELL(ShellProperty):
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
     def __init__(self,card=None,data=None):
-        ShellProperty.__init__(self,card,data)
+        ShellProperty.__init__(self, card, data)
         if card:
             self.pid  = int(card.field(1))
             self.mid1 = card.field(2)

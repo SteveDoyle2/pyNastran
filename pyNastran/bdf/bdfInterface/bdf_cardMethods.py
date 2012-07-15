@@ -1,12 +1,13 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
-
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
-#from BDF_Card import collapse
+
 from pyNastran.bdf.errors import (WhitespaceCardParseError,
                                   ScientificCardParseError,
                                   FloatScientificCardParseError,CardParseError)
 
-class cardMethods(object):
+class CardMethods(object):
     def __init__(self, nCardLinesMax=1000):
         self.nCardLinesMax = nCardLinesMax
 

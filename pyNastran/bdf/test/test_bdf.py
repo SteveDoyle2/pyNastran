@@ -1,4 +1,6 @@
 # pylint: disable=W0612,C0103
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
 import sys
 import numpy
@@ -10,7 +12,7 @@ from pyNastran.bdf.errors import ScientificCardParseError
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
-                               DamperElement, NastranMatrix)
+                               DamperElement, RodElement, NastranMatrix)
 from pyNastran.bdf.test.compareCardContent import compare_card_content
 
 import pyNastran.bdf.test
@@ -239,6 +241,16 @@ def compute(cards1, cards2):
     ###
 
 def get_element_stats(fem1, fem2):
+    for (key, loads) in sorted(fem1.loads.iteritems()):
+        for load in loads:
+            try:
+                allLoads = load.getLoads()
+            except:
+                print("load statistics not available - load.type=%s load.sid=%s"
+                    %(load.type, load.sid))
+                raise
+            
+
     for (key, e) in sorted(fem1.elements.iteritems()):
         try:
             if isinstance(e, ShellElement):
@@ -274,6 +286,15 @@ def get_element_stats(fem1, fem2):
                 if J is None:
                     print("Moment of Inertia not available - e.type=%s "
                           "e.eid=%i" %(e.type, e.eid))
+            elif isinstance(e, RodElement): # CROD, CONROD, CTUBE
+                L   = e.Length()
+                nsm = e.Nsm()
+                A   = e.Area()
+                mL  = e.MassPerLength()
+                m   = e.Mass()
+                c   = e.Centroid()
+                mid = e.Mid()
+                pid = e.Pid()
             elif isinstance(e, RigidElement):
                 pass
             elif isinstance(e, DamperElement):

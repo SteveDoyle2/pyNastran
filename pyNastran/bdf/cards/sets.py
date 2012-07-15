@@ -1,4 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
+
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.fieldWriter import printIntCard
 
@@ -217,7 +220,7 @@ class SET1(Set):
         fields = card.fields(2)
         self.isSkin = False
         i = 0
-        if isinstance(fields[0], str) and fields[0].upper()=='SKIN':
+        if isinstance(fields[0], str) and fields[0].upper() == 'SKIN':
             self.isSkin = True
             i+=1
         self.IDs = self.expandThru(fields[i:])

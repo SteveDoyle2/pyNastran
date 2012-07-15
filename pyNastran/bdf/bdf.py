@@ -1,6 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914,W0201
-
-from __future__ import print_function, absolute_import
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
 import sys
 #import copy
@@ -32,7 +32,7 @@ from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
 from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 #------
 from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
-                                      CBEND, LineElement)
+                                      CBEND, LineElement, RodElement)
 from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
                                         PBEAM, PBEAML) # PBEND
 #------
@@ -83,17 +83,17 @@ from .cards.tables import (TABLED1, TABLED2, TABLED3,
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods     import bdfMethods
 
-from .bdfInterface.getCard import getMethods
-from .bdfInterface.addCard import addMethods
+from .bdfInterface.getCard import GetMethods
+from .bdfInterface.addCard import AddMethods
 from .bdfInterface.BDF_Card   import BDF_Card
 from .bdfInterface.bdf_Reader import bdfReader
-from .bdfInterface.bdf_writeMesh   import writeMesh
-from .bdfInterface.bdf_cardMethods import cardMethods
+from .bdfInterface.bdf_writeMesh   import WriteMesh
+from .bdfInterface.bdf_cardMethods import CardMethods
 from .bdfInterface.crossReference  import XrefMesh
 
 
-class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
-          cardMethods, XrefMesh):
+class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
+          CardMethods, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -110,16 +110,16 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         """
         ## allows the BDF variables to be scoped properly (i think...)
         bdfReader.__init__(self, debug, log)
-        getMethods.__init__(self)
-        addMethods.__init__(self)
+        GetMethods.__init__(self)
+        AddMethods.__init__(self)
         bdfMethods.__init__(self)
-        writeMesh.__init__(self)
-        cardMethods.__init__(self, nCardLinesMax)
+        WriteMesh.__init__(self)
+        CardMethods.__init__(self, nCardLinesMax)
         XrefMesh.__init__(self)
 
         ## useful in debugging errors in input
         self.debug = debug
-        self._initSolution()
+        self._init_solution()
         
         ## flag that allows for OpenMDAO-style optimization syntax to be used
         self.isDynamicSyntax = False
@@ -271,7 +271,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         disableSet = set(cards)
         self.cardsToRead.difference(disableSet)
 
-    def isThermalSolution(self):
+    def is_thermal_solution(self):
         """
         @todo implement case control deck checker
         @warning dont use this...returns False
@@ -279,7 +279,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         return False
         #self.caseControlDeck.IsThermalSolution()
 
-    def _initSolution(self):
+    def _init_solution(self):
         """
         creates storage objects for the BDF object
         this would be in the init but doing it this way allows for
@@ -363,17 +363,17 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
                      190 : 'DBTRANS'   ,
                      200 : 'DESOPT'    ,  # optimization
                    }
-        self._initStructuralDefaults()
-        self._initAeroDefaults()
-        self._initThermalDefaults()
+        self._init_structural_defaults()
+        self._init_aero_defaults()
+        self._init_thermal_defaults()
 
-    def _isSpecialCard(self, cardName):
+    def _is_special_card(self, cardName):
         """these cards are listed in the case control and the bulk data deck"""
         if cardName in self.specialCards:
             return True
         return False
 
-    def _initStructuralDefaults(self):
+    def _init_structural_defaults(self):
         """
         creates storage objects for the BDF object
         this would be in the init but doing it this way allows for
@@ -439,8 +439,10 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         self.dareas  = {}
         ## stores NLPARM
         self.nlparms = {}
-        ## stores TSTEP, TSTEPNL
+        ## stores TSTEPs
         self.tsteps = {}
+        ## stores TSTEPNL
+        self.tstepnls = {}
 
         ## direct matrix input - DMIG
         self.dmis = {}
@@ -481,7 +483,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         self.methods  = {} ## EIGB, EIGR, EIGRL
         self.cMethods = {} ## EIGC, EIGP
 
-    def _initAeroDefaults(self):
+    def _init_aero_defaults(self):
         """
         creates storage objects for the BDF object
         this would be in the init but doing it this way allows for
@@ -523,7 +525,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         ## stores TRIM
         self.trims = {}
         
-    def _initThermalDefaults(self):
+    def _init_thermal_defaults(self):
         """initializes some bdf parameters"""
         # BCs
         ## stores thermal boundary conditions - CONV,RADBC
@@ -559,9 +561,9 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         #self.debug = True
         if self.debug:
             self.log.debug("*BDF.readBDF")
-        self._readExecutiveControlDeck()
-        self._readCaseControlDeck(self.bdfFileName)
-        self._readBulkDataDeck()
+        self._read_executive_control_deck()
+        self._read_case_control_deck(self.bdfFileName)
+        self._read_bulk_data_deck()
         #self.closeFile()
         self.crossReference(xref=xref)
         if self.debug:
@@ -602,11 +604,11 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         isDone = self.foundEndData
         return ('BulkDataDeck', isDone)
 
-    def _isExecutiveControlDeck(self, line):
+    def _is_executive_control_deck(self, line):
         """@todo code this..."""
         return True
 
-    def _readExecutiveControlDeck(self):
+    def _read_executive_control_deck(self):
         """
         reads the executive control deck
         """
@@ -621,15 +623,15 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
             line = lineIn.strip()
             if self.debug:
                 (n) = self.getLineNumber()
-                self.log.debug("executiveLine[%s]*= |%r|" %(n, line))
+                self.log.debug("executiveLine[%s] = |%s|" %(n, line))
             self.executiveControlLines.append(lineIn)
             if 'CEND' in line.upper():
                 break
             ###
         ###
-        self._parseExecutiveControlDeck()
+        self._parse_executive_control_deck()
 
-    def _parseExecutiveControlDeck(self):
+    def _parse_executive_control_deck(self):
         """
         extracts the solution from the executive control deck
         """
@@ -709,7 +711,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         ###
         self.isDynamicSyntax = True
 
-    def _isCaseControlDeck(self, line):
+    def _is_case_control_deck(self, line):
         """@todo not done..."""
         #print "line = |%r|" %(line)
         lineUpper = line.upper().strip()
@@ -729,7 +731,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         #print "True2"
         return True
 
-    def _readCaseControlDeck(self, infilename):
+    def _read_case_control_deck(self, infilename):
         """
         reads the case control deck
         @note called with recursion if an INCLUDE file is found
@@ -748,7 +750,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
             #print "lineIn = ",lineIn
             if lineIn == None:
                 return # file was closed and a 2nd readCaseControl was called
-            if not self._isCaseControlDeck(lineIn):
+            if not self._is_case_control_deck(lineIn):
                 self.linesPack = [lineIn]+self.linesPack
             line = lineIn.strip().split('$')[0].strip()
             lineUpper = line.upper()
@@ -803,11 +805,11 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
                 #print "^&*2",nextLine
 
             #print "include lines = |%s|" %(includeLines)
-            filename = self._getIncludeFileName(includeLines)
+            filename = self._get_include_file_name(includeLines)
 
-            self._addIncludeFile(filename)
+            self._add_include_file(filename)
             #self.openFile(filename)
-            self._readCaseControlDeck(filename)
+            self._read_case_control_deck(filename)
             line = nextLine
             #print "appending |%r|" %(nextLine)
             self.caseControlLines.append(nextLine)
@@ -853,7 +855,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
             self.rejectCount[cardName] += 1
         return True
 
-    def _getIncludeFileName(self, cardLines):
+    def _get_include_file_name(self, cardLines):
         """parses an INCLUDE file split into multiple lines (as a list)
         @param self the object poitner
         @param cardLines the list of lines in the include card (all the lines!)
@@ -873,7 +875,7 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         filename = os.path.join(self.includeDir, filename)
         return filename
 
-    def _addIncludeFile(self, infileName):
+    def _add_include_file(self, infileName):
         """
         This method must be called before opening an INCLUDE file.
         Identifies the new file as being opened.
@@ -883,14 +885,14 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
         """
         self.isOpened[infileName] = False
 
-    def _readBulkDataDeck(self):
+    def _read_bulk_data_deck(self):
         """parses the Bulk Data Deck"""
         if self.debug:
             self.log.debug("*readBulkDataDeck")
         self.openFile(self.bdfFileName)
 
         #oldCardObj = BDF_Card()
-        while len(self.activeFileNames)>0: # keep going until finished
+        while len(self.activeFileNames) > 0: # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self.getCard(debug=False)
             #print "outcard = ",card
@@ -898,9 +900,9 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
             if cardName == 'INCLUDE':
                 #print "rawCard = ",rawCard
                 #print "card    = ",card
-                filename = self._getIncludeFileName(rawCard)
+                filename = self._get_include_file_name(rawCard)
                 #print 'filename = ', os.path.relpath(filename)
-                self._addIncludeFile(filename)
+                self._add_include_file(filename)
                 self.openFile(filename)
                 reject = '$ INCLUDE processed:  %s\n' %(filename)
                 self.rejects.append([reject])
@@ -1682,10 +1684,10 @@ class BDF(bdfReader, bdfMethods, getMethods, addMethods, writeMesh,
                 self.addNLParm(nlparmObj)
             elif cardName == 'TSTEP':
                 tstepObj = TSTEP(cardObj)
-                self.addTStep(tstepObj)
+                self.addTSTEP(tstepObj)
             elif cardName == 'TSTEPNL':
-                tstepObj = TSTEPNL(cardObj)
-                self.addTStep(tstepObj)
+                tstepnlObj = TSTEPNL(cardObj)
+                self.addTSTEPNL(tstepnlObj)
 
             # frequencies
             elif cardName == 'FREQ':
