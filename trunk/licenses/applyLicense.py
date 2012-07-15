@@ -118,7 +118,6 @@ def updateCopyright():
             f.close()
             lines2 = cleanHeader(lines)
 
-
             #break
             lines3 = headerLines + lines2
 
