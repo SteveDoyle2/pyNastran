@@ -1,6 +1,9 @@
-from applyLicense import getFoldersFiles 
+import pyNastran
+from .applyLicense import getFoldersFiles 
 
-def fixObject(files):
+#assert sys.version_info[:2]==(2,7),'this must be done in python 2.7'
+
+def fix_object(files):
     for fname in files:
         if '.py' in fname:
             print "adding fname=%s" %(fname)
@@ -25,14 +28,14 @@ def fixObject(files):
                 elif '.iteritems()' in line:
                     line = line.replace('.iteritems()','.items()')
 
-                elif ",'wb')" in line:
-                    assert 'open' in line,codeLine
-                    line = line.replace(",'wb')",",'wb',encoding='ascii')")
-                elif ",'r')" in line:
-                    assert 'open' in line,codeLine
-                    line = line.replace(",'r')",",'r',encoding='ascii')")
-                elif 'import' in line and ('bdf' in line or 'op2' in line or 'f06' in line or 'gui' in line or 'op4' in line):
-                    assert 'pyNastran.' in line,line # validates that the import is correct
+                #elif ",'wb')" in line:
+                    #assert 'open' in line,codeLine
+                    #line = line.replace(",'wb')",",'wb',encoding='ascii')")
+                #elif ",'r')" in line:
+                    #assert 'open' in line,codeLine
+                    #line = line.replace(",'r')",",'r',encoding='ascii')")
+                #elif 'import' in line and ('bdf' in line or 'op2' in line or 'f06' in line or 'gui' in line or 'op4' in line):
+                    #assert 'pyNastran.' in line,line # validates that the import is correct
                 #elif 'print '
                 #elif 
                 if isPound:
@@ -46,6 +49,7 @@ def fixObject(files):
         ###
     ###
 
-(folders,files) = getFoldersFiles('../pyNastran')
-fixObject(files)
-
+if __name__ == "__main__":
+    pkg_path = pyNastran.__file__[0]
+    (folders,files) = getFoldersFiles(pkg_path)
+    fix_object(files)
