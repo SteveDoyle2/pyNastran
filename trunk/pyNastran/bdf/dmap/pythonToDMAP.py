@@ -13,7 +13,7 @@ def get_comment(line):
     nspaces = len(sline[0]) - len(cmd)
     return (nspaces, cmd, comment)
 
-from builtins import INT, FLOAT, STRING, ZEROS, ONES, ARRAY
+from builtins import INT, FLOAT, DOUBLE, STRING, ZEROS, ONES, ARRAY
 
 class PythonToDMAP(object):
     def __init__(self, pyName):
@@ -48,17 +48,18 @@ class PythonToDMAP(object):
         elif '=' in cmd:
             operator = '='
             (variable, expr) = cmd.split(operator)
-            
         else:
             print "cmd = |%s| not parsed" %(cmd)
             operator = None
-        
+        print "comment = ",comment
         if operator is not None:
             variable = variable.strip()
             expr = expr.strip()
             (operation, Type) = self.parse_operation(variable, operator, expr)
         
-            self.write_operation(operation, Type, variable, operator, expr)
+            self.write_operation(operation, Type, variable, operator, expr, comment)
+        elif comment:
+            self.commands.append(comment)
         #elif 'while' in cmd:
         #    operator = 
     
@@ -74,7 +75,9 @@ class PythonToDMAP(object):
             raise NotImplementedError(msg)
         return call
 
-    def write_operation(self, operation, Type, var, operator, expr):
+    def write_operation(self, operation, Type, var, operator, expr, comment):
+        if comment:
+            self.commands.append('$ '+comment)
         msg = "var=|%s| operator=|%s| expr=|%s|" %(var, operator, expr)
         if operation is None:
             msg = "var=|%s| operator=|%s| expr=|%s|" %(var, operator, expr)
@@ -95,9 +98,17 @@ class PythonToDMAP(object):
             (operation2, Type2) = self.parse_operation(var, '=', expr)
             if isinstance(Type2, STRING):
                 expr2 = eval(eval(expr,self.globals))
-                #print "expr  = |%s|" %(expr)
-                #print "expr2 = |%s|" %(expr2)
+                print "expr  = |%s|" %(expr)
+                print "expr2 = |%s|" %(expr2)
                 call = 'TYPE PARM,,CHAR%s,N, %s $' %(len(expr2),var.upper())
+                print call
+                self.commands.append(call)
+            elif isinstance(Type2, DOUBLE):
+                #expr2 = eval(eval(expr,self.globals))
+                print "expr  = |%s|" %(expr)
+                call = expr.upper()
+                #print "expr2 = |%s|" %(expr2)
+                call = 'TYPE PARM,,RD,N, %s $' %(var.upper())
                 print call
                 self.commands.append(call)
             else:
@@ -106,16 +117,23 @@ class PythonToDMAP(object):
                 
             #print operation2,type(Type2)
             #asd
-            #asdf
-            call = self.write_sub_operation(operation, var, operator, expr2)
+            #call = self.write_sub_operation(operation, var, operator, expr2)
+            call = expr.upper()
         elif isinstance(operation, STRING):
-            call = 'TYPE PARM,,CHAR%s,N, %s $' %(operation.length(self.globals),var.upper())
+            call = 'TYPE PARM,,CHAR%s,N, %s $' %(operation.length(self.globals)-2,var.upper())
             print call
             self.commands.append(call)
             call = self.write_sub_operation(operation, var, operator, expr)
         elif isinstance(operation, ZEROS):
             call = 'TYPE PARM,,CHAR%s,N, %s $' %(operation.length(self.globals),var.upper())
             call = self.write_sub_operation(operation, var, operator, expr)
+        elif isinstance(operation, DOUBLE):
+            call = 'TYPE PARM,,RD,N, %s $' %(var.upper())
+            print call
+            self.commands.append(call)
+            call = str(operation.real)
+            #call = self.write_sub_operation(operation, var, operator, expr)
+            print "call2 = ",call
         else:
             print type(operation)
             raise NotImplementedError(msg)
@@ -123,7 +141,7 @@ class PythonToDMAP(object):
         print call+'\n'
 
     def parse_assign(self, variable, expr):
-        if expr[0] in ['+','-']:
+        if expr[0] in ['+', '-']:
             sign = expr[0]
             expr = expr[1:]
         else:
@@ -147,6 +165,10 @@ class PythonToDMAP(object):
             ###
             # stuff goes here...
             if 'array(' in expr or 'zeros(' in expr or 'ones(' in expr:
+                expr_val = eval(expr.upper())
+                expr_val.name = variable
+                Type = expr_val
+            elif 'double(' in expr:
                 expr_val = eval(expr.upper())
                 expr_val.name = variable
                 Type = expr_val
@@ -179,6 +201,8 @@ class PythonToDMAP(object):
                 #print "Type1=%s Type2=%s" %(Type1, Type2)
                 if isinstance(Type1, INT) and isinstance(Type2, INT):
                     Type = expr1
+                elif isinstance(Type1, DOUBLE) or isinstance(Type2, DOUBLE):
+                    Type = expr2
                 elif isinstance(Type1, FLOAT) or isinstance(Type2, FLOAT):
                     Type = expr2
                 elif isinstance(Type1, STRING) and isinstance(Type2, STRING):
@@ -223,9 +247,14 @@ class PythonToDMAP(object):
             self.globals[variable] = expr_val
         return (expr_val, Type)
 
+    def write_dmap(self,bdf):
+        f = open(bdf,'wb')
+        for line in self.commands:
+            f.write(line+'\n')
+
 if __name__ == '__main__':
     comp = PythonToDMAP('spike.py')
     comp.run()
-    #comp.write('spike.bdf')
+    comp.write_dmap('spike.bdf')
 
     

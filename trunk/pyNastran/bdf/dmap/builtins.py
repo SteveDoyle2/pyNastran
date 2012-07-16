@@ -59,8 +59,8 @@ class FLOAT(Number):
         self.real = real
 
 class DOUBLE(Number):
-    def __init__(self, name, real):
-        Number.__init__(self, name)
+    def __init__(self, real):
+        Number.__init__(self, None)
         self.real = real
 
 class COMPLEX(Number):
