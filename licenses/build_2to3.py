@@ -1,5 +1,8 @@
-import pyNastran
-from .applyLicense import getFoldersFiles 
+from __future__ import absolute_import
+
+import sys
+import os
+from applyLicense import getFoldersFiles
 
 #assert sys.version_info[:2]==(2,7),'this must be done in python 2.7'
 
@@ -10,23 +13,44 @@ def fix_object(files):
             f = open(fname,'r')
             lines = f.readlines()
             f.close()
-            
+            #print lines
+            lines2 = []
+            #print "len(lines) = ",len(lines)
             for codeLine in lines:
-                if '#' in line:
+                codeLine.rstrip()
+                if '#' in codeLine:
                     isPound = True
-                    line = line.strip().split('#')[0]
-                    indx = line.index('#')
+                    indx = codeLine.index('#')
+                    sline = [codeLine[:indx],codeLine[indx:]]
+                    try:
+                        line = sline[0]
+                        comment = sline[1]
+                    except ValueError:
+                        line = sline[0]
+                        comment = ''
+                        raise
+
+                    nspaces = len(codeLine.strip())-len(codeLine.rstrip())
+                    #indx = codeLine.index('#')
                 else:
                     isPound = False
                     line = codeLine
-                    
-                if 
-                if 'from future' in line: # print & float
+
+                #line = ''
+                #if '(object):' in line:
+                    #line = line.replace('(object):','():')
+                if 'nested_scopes' in line or print_function in line:
                     line = ''
-                if '(object):' in line:
-                    line = line.replace('(object):','():')
+                elif 'unicode' in line:
+                    line = line.replace('unicode','str')
                 elif '.iteritems()' in line:
                     line = line.replace('.iteritems()','.items()')
+                elif '.itervalues()' in line:
+                    line = line.replace('.itervalues()','.values()')
+                elif '.iterkeys()' in line:
+                    line = line.replace('.iterkeys()','.keys()')
+                elif '.izip()' in line:
+                    line = line.replace('.izip()','.zip()')
 
                 #elif ",'wb')" in line:
                     #assert 'open' in line,codeLine
@@ -39,17 +63,25 @@ def fix_object(files):
                 #elif 'print '
                 #elif 
                 if isPound:
-                    line += codeLine[indx:]
+                    line = ' '*nspaces + line + comment #[indx:]
+                #if line != codeLine:
+                    #print line.rstrip()
+                    #print codeLine.rstrip()
+                    #adsf
                 lines2.append(line)
-                
+            
+            #print "len(lines2) = ",len(lines2)
             f = open(fname,'wb')
+            #f = open('bbb.py','wb')
             for line in lines2:
-                f.write(line)
+                f.write(line.rstrip('\n\r')+'\n')
+                #print line.rstrip()
             ###
+            #sys.exit(fname)
+            f.close()
         ###
     ###
 
 if __name__ == "__main__":
-    pkg_path = pyNastran.__file__[0]
-    (folders,files) = getFoldersFiles(pkg_path)
+    (folders,files) = getFoldersFiles('../pyNastran')
     fix_object(files)

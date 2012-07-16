@@ -1,12 +1,14 @@
 import os
 import sys
 import copy
+import pyNastran
 
 def getFoldersFiles(dirname):
     """
     I'm sure there's an automatic way to create this...
     try using os.walk
     """
+    #print dirname
     filesFolders = os.listdir(dirname)
     
     files = []
@@ -26,7 +28,7 @@ def getFoldersFiles(dirname):
                 ###
             else:
                 if '.pyc' not in fileFolder and '.bdf' not in fileFolder and '__init__.py' not in fileFolder:
-                    print "B %s" %(fullPath)
+                    #print "B %s" %(fullPath)
                     files.append(fullPath)
                 ###
                 else:
@@ -98,7 +100,7 @@ def cleanHeader(lines):
     return lines2
 
 def updateCopyright():
-    (folders,files) = getFoldersFiles('pyNastran')
+    (folders,files) = getFoldersFiles(pyNastran.__file__[0])
     printTree(files)
 
     header = open('header.txt','r')
@@ -136,4 +138,5 @@ def updateCopyright():
     print "files = ",'\n'.join(files)
 ###
 
-updateCopyright()
+if __name__=='__main__':
+    updateCopyright()
