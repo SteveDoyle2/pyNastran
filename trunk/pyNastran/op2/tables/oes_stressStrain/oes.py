@@ -217,6 +217,7 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
 
         if not self.isValidSubcase(): # lets the user skip a certain subcase
             self.log.debug("***skipping table=%s iSubcase=%s" % (self.tableName,self.iSubcase))
+            print("***skipping table=%s iSubcase=%s" % (self.tableName,self.iSubcase))
             self.skipOES_Element()
         elif self.thermal == 0:
             # Stress / Strain
@@ -720,14 +721,12 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
             if self.numWide==numWideReal:
                 resultName = self.makeOES_Object(self.solidStress,SolidStressObject,'solidStress',
                                                  self.solidStrain,SolidStrainObject,'solidStrain')
-                #self.handleResultsBuffer3(self.skipOES_Element)
                 self.handleResultsBuffer3(self.OES_CSOLID_67,resultName)
             elif self.numWide==numWideImag:
                 self.skipOES_Element()
                 return
                 resultName = self.makeOES_Object(self.solidStress,ComplexSolidStressObject,'solidStress',
                                                  self.solidStrain,ComplexSolidStrainObject,'solidStrain')
-                #self.handleResultsBuffer3(self.skipOES_Element)
                 self.handleResultsBuffer3(self.OES_CSOLID_67_alt,resultName)
             else:
                 raise NotImplementedError(self.codeInformation())
@@ -829,10 +828,10 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #    raise AddNewElementError(msg)
         else:
             #self.printBlock(self.data[0:100])
-            self.skipOES_Element()
             msg = '%s-OES format%s elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tableName,self.formatCode,self.elementType,self.ElementType(self.elementType),self.op2FileName.strip())
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)
+            self.skipOES_Element()
             #raise NotImplementedError(msg)
         ###
         #elif self.elementType == 1:    # crod     (done)

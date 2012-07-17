@@ -1,7 +1,7 @@
 import os
 import sys
 #import time
-from pyNastran.op2.test.test_op2 import getFailedFiles,runLotsOfFiles
+from pyNastran.op2.test.test_op2 import get_failed_files,runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 
 def parseSkippedCards(fname):
@@ -85,7 +85,7 @@ if __name__=='__main__':
         files2 = getAllFiles(foldersFile,'.op2')
         files2 += files
     else:
-        files2 = getFailedFiles('failedCases.in')
+        files2 = get_failed_files('failedCases.in')
     
     #files2 = [r'D:\work\move\move_tpl\ar29sadl.op2']
     #files = files+files2

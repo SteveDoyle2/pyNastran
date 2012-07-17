@@ -1,3 +1,5 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from struct import unpack
 
@@ -23,15 +25,16 @@ class OPG(object):
         self.deleteAttributes_OPG()
 
     def deleteAttributes_OPG(self):
-        params = ['lsdvm','mode','eigr','eign','eigi','modeCycle','freq','time','lftsfq','dLoadID','formatCode','numWide','oCode']
+        params = ['lsdvm', 'mode', 'eigr', 'eign', 'eigi', 'modeCycle', 'freq',
+                  'time', 'lftsfq', 'dLoadID', 'formatCode', 'numWide','oCode']
         self.deleteAttributes(params)
 
-    def readTable_OPG_3(self,iTable): # iTable=-3
+    def readTable_OPG_3(self, iTable): # iTable=-3
         bufferWords = self.getMarker()
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
-        bufferSize, = unpack('i',data)
+        bufferSize, = unpack(b'i',data)
         data = self.getData(4*50)
         
         #self.printBlock(data)
@@ -243,16 +246,16 @@ class OPG(object):
     def readOGS1_table26_numWide11(self): # surface stresses
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iccccffffffff'
+        format1 += 'i4sffffffff'
+        format1 = bytes(format1)
 
-        while len(self.data)>=44:
+        while len(self.data) >= 44:
             eData     = self.data[0:44]
             self.data = self.data[44: ] # 11*4
             out = unpack(format1,eData)
-            (eKey,eid,a,b,c,d,nx,ny,txy,angle,major,minor,tmax,ovm) = out
+            (eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm) = out
             eKey = extract(eKey,dt)
-            fiber = a+b+c+d
-            fiber = fiber.strip()
+            fiber = fiber.encode('utf-8').strip()
 
             self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
         #print len(self.data)
@@ -273,8 +276,9 @@ class OPG(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ifffffff'
+        format1 = bytes(format1)
 
-        while len(self.data)>=36:
+        while len(self.data) >= 36:
             eData     = self.data[0:36]
             self.data = self.data[36: ] # 9*4
             out = unpack(format1,eData)
@@ -289,6 +293,7 @@ class OPG(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'i'
+        format1 = bytes(format1)
 
         #nTotal = self.numWide*4
         nTotal = 40 # same as dn
@@ -299,13 +304,13 @@ class OPG(object):
             (gridDevice,eid) = unpack(format1,data[0:8])
             nodeID = extract(gridDevice,dt)
             
-            source = ''.join(unpack('cccccccc',data[8:16]))
-            (dx,dy,dz,rx,ry,rz) = unpack('ffffff',data[16:40])
+            source = unpack(b'8s',data[8:16])
+            (dx,dy,dz,rx,ry,rz) = unpack(b'ffffff',data[16:40])
             #print "source = |%s|" %(source)
             
             #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             source2 = source.replace('*','').replace('-','').strip()
-            assert source2.isalnum(),'source=|%s| contains invalid characters...' %(source)
+            assert source2.isalnum(), 'source=|%s| contains invalid characters...' % (source)
             
             self.obj.add(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             #print "gridDevice = ",gridDevice

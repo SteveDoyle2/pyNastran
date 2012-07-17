@@ -1,3 +1,5 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from struct import unpack
 
@@ -40,7 +42,7 @@ class OGF(object):
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
-        bufferSize, = unpack('i',data)
+        bufferSize, = unpack(b'i',data)
         data = self.getData(4*50)
         #print self.printBlock(data)
         
@@ -158,15 +160,15 @@ class OGF(object):
     def readOGF_numWide10(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'issssssssffffff'
+        format1 += 'i8sffffff'
+        format1 = bytes(format1)
 
-        while len(self.data)>=40:
+        while len(self.data) >= 40:
             eData     = self.data[0:4*10]
             self.data = self.data[4*10: ]
             out = unpack(format1,eData)
-            (eKey,eid,a,b,c,d,e,f,g,h,f1,f2,f3,m1,m2,m3) = out
+            (eKey,eid,elemName,f1,f2,f3,m1,m2,m3) = out
             eKey = extract(eKey,dt)
-            elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
             #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
             self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
@@ -178,14 +180,15 @@ class OGF(object):
     def readOGF_numWide16(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'issssssssffffffffffff'
+        format1 += 'i8sffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=64:
             eData     = self.data[0:4*16]
             self.data = self.data[4*16: ]
             out = unpack(format1,eData)
-            (eKey,eid,a,b,c,d,e,f,g,h,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i) = out
+            (eKey,eid,elemName,f1r,f2r,f3r,m1r,m2r,m3r,f1i,f2i,f3i,m1i,m2i,m3i) = out
             eKey = extract(eKey,dt)
 
             if isMagnitudePhase:
@@ -197,7 +200,6 @@ class OGF(object):
                 f2 = complex(f2r,f2i); m2 = complex(m2r,m2i)
                 f3 = complex(f3r,f3i); m3 = complex(m3r,m3i)
 
-            elemName = a+b+c+d+e+f+g+h
             elemName = elemName.strip()
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%s f2=%s f3=%s m1=%s m2=%s m3=%s" %(ekey,eid,elemName,f1r+f1i,f2r+f2i,f3r+f3i,m1r+m1i,m2r+m2i,m3r+m3i)
             self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
@@ -210,7 +212,7 @@ class OGF(object):
         nEntries = len(self.data)//32
         for i in range(nEntries):
             eData = self.data[n:n+32]
-            out = unpack('iiffffff', eData)
+            out = unpack(b'iiffffff', eData)
             #nid = (out[0]-self.deviceCode)//10  ## @todo update...
 
             #print out

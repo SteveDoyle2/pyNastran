@@ -141,7 +141,7 @@ class FortranFile(object):
         iFormat = bytes(iFormat)
         strings, = unpack(iFormat, data)
         #self.op2Debug.write('|%s|\n' % (str(strings)))
-        return strings.encode('utf-8')
+        return strings #.encode('utf-8')
 
     def getStrings2(self, data, endian):
         """
