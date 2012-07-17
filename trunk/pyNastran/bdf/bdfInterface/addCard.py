@@ -232,8 +232,8 @@ class AddMethods(object):
         else:
             self.loads[key] = [load]
 
-    def addThermalLoad(self,load):  # same function at the moment...
-        key = load.lid
+    def addThermalLoad(self, load):  # same function at the moment...
+        key = load.sid
         assert key > 0
         if key in self.loads:
             self.loads[key].append(load)

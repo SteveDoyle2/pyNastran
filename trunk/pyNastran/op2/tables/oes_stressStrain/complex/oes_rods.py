@@ -1,6 +1,10 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
-from ..real.oes_objects import stressObject,strainObject #,array
-from pyNastran.op2.op2Errors import *
+
+from ..real.oes_objects import stressObject,strainObject
+#from pyNastran.op2.op2Errors import *
+
 
 class ComplexRodDamperObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):
@@ -128,7 +132,7 @@ class ComplexRodStressObject(stressObject):
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         raise NotImplementedError()
         if self.nonlinearFactor is not None:
-            return self.writeF06Transient(header,pageStamp,pageNumf,isMagPhase)
+            return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 
         msg = header+['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',

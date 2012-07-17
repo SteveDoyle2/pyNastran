@@ -1,7 +1,9 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from struct import unpack
 
-from pyNastran.op2.op2Errors import *
+from pyNastran.op2.op2Errors import AddNewElementError
 
 #91  -> PENTANL
 #2   -> BEAM
@@ -14,10 +16,10 @@ class RealElementsStressStrain(object):
         #print 'skipping approach/table/format/sortCode=%s on %s table' %(self.atfsCode,self.tableName)
         #print self.codeInformation()
         #self.skipOES_Element2()
-        self.handleResultsBuffer3(self.dummyPass,None,debug=True)
+        self.handleResultsBuffer3(self.dummyPass, None, debug=True)
 
     def dummyPass(self):
-        self.data = ''
+        self.data = b''
 
     def OES_Thermal(self,debug=False):
         if self.makeOp2Debug:
@@ -27,6 +29,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'iifffff'
+        format1 = bytes(format1)
         while len(self.data)>=32:
             #print self.printSection(40)
             eData     = self.data[0:32]
@@ -60,7 +63,7 @@ class RealElementsStressStrain(object):
         (nTotal,dataFormat) = self.obj.getLength()
         dataFormat = format1+dataFormat
         #print "nTotal=%s dataFormat=%s len(data)=%s" %(nTotal,dataFormat,len(self.data))
-        
+        dataFormat = bytes(dataFormat)
         n = 0
         nEntries = len(self.data)//nTotal
         for i in range(nEntries):
@@ -82,7 +85,8 @@ class RealElementsStressStrain(object):
         (n1,format1) = self.obj.getLength1()
         (n2,format2) = self.obj.getLength2()
         format1 = formatStart+format1
-
+        format1 = bytes(format1)
+        format2 = bytes(format2)
         while len(self.data)>=nTotal:
             eData     = self.data[0:n1]
             self.data = self.data[n1: ]
@@ -113,7 +117,8 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffffff'
-
+        format1 = bytes(format1)
+        
         nNodes = 0 # centroid + 4 corner points
         #self.printSection(20)
         #term = data[0:4] CEN/
@@ -126,7 +131,7 @@ class RealElementsStressStrain(object):
         assert self.numWide==17,'invalid numWide...numWide=%s' %(self.numWide)
         while len(self.data)>=68: # 2+17*5 = 87 -> 87*4 = 348
             #print self.printBlock(self.data[0:100])
-            #(eid,) = unpack("i",self.data[0:4])
+            #(eid,) = unpack(b'i',self.data[0:4])
             #print "abcd=",a,b,c,d
             #self.data = self.data[8:]  # 2
             eData     = self.data[0:4*17]
@@ -148,7 +153,7 @@ class RealElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
-                out = unpack('iffffffffffffffff',eData[0:68])
+                out = unpack(b'iffffffffffffffff',eData[0:68])
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
@@ -178,6 +183,7 @@ class RealElementsStressStrain(object):
 
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'fffffffffffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=64:
             #self.printBlock(self.data)
@@ -210,7 +216,8 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += "issssi"
-
+        format1 = bytes(format1)
+        
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
         #term      = self.data[0:4] CEN/
@@ -252,7 +259,7 @@ class RealElementsStressStrain(object):
                 #print "self.tableCode = ",self.tableCode
                 #print "len(data) = ",len(self.data)
                 
-                gridDevice, = unpack('i',eData[0:4])
+                gridDevice, = unpack(b'i',eData[0:4])
                 #print "gridDevice = ",gridDevice
                 if gridDevice==0:
                     grid = 'C'
@@ -261,7 +268,7 @@ class RealElementsStressStrain(object):
                     grid = gridDevice
                 ###
 
-                out = unpack('ffffffffffffffffffff',eData[4:4*21])
+                out = unpack(b'ffffffffffffffffffff',eData[4:4*21])
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (sxx,sxy,s1,a1,a2,a3,pressure,svm,
@@ -311,8 +318,9 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffffff'
-
-        while len(self.data)>=68:
+        format1 = bytes(format1)
+        
+        while len(self.data) >= 68:
             eData     = self.data[0:4*17]
             self.data = self.data[4*17: ]
             out = unpack(format1,eData)
@@ -346,7 +354,8 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += "cccc"
-
+        format1 = bytes(format1)
+        
         nNodes=4  # this is a minimum, it will be reset later
         nNodesExpected = 1
         assert self.numWide in [82],'invalid numWide...numWide=%s' %(self.numWide)
@@ -388,10 +397,10 @@ class RealElementsStressStrain(object):
                 
                 #print "len(data) = ",len(self.data)
                 
-                #gridDevice, = unpack('i',eData[0:4])
+                #gridDevice, = unpack(b'i',eData[0:4])
                 #print "gridDevice = ",gridDevice
 
-                out = unpack('ifffffffffffffff',eData[:4*16])  # 18-3 = 15
+                out = unpack(b'ifffffffffffffff',eData[:4*16])  # 18-3 = 15
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
 
@@ -470,7 +479,8 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ifffffff'
-        while len(self.data)>=132: # (1+8*4) = 33*4 = 132
+        format1 = bytes(format1)
+        while len(self.data) >= 132: # (1+8*4) = 33*4 = 132
             eData     = self.data[0:4*9]
             self.data = self.data[4*9: ]
             out = unpack(format1,eData)
@@ -482,7 +492,7 @@ class RealElementsStressStrain(object):
             for i in range(3):
                 eData     = self.data[0:4*8]
                 self.data = self.data[4*8: ]
-                out = unpack('ifffffff',eData)
+                out = unpack(b'ifffffff',eData)
                 (loc,rs,azs,As,ss,maxp,tmax,octs) = out
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt,eid,loc,rs,azs,As,ss,maxp,tmax,octs)
@@ -495,8 +505,9 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffff'
-
-        while len(self.data)>=28:
+        format1 = bytes(format1)
+        
+        while len(self.data) >= 28:
             eData     = self.data[0:4*7]
             self.data = self.data[4*7: ]
             out = unpack(format1,eData)
@@ -518,6 +529,7 @@ class RealElementsStressStrain(object):
         
         nStep = 52  #4*13
         format1 += 'ffffffffffff'
+        format1 = bytes(format1)
         assert 13==self.numWide,'numWide=%s not 13' %(self.numWide)
 
         while len(self.data)>=nStep:
@@ -549,12 +561,14 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'cccc'
+        format1 = bytes(format1)
+        
         while len(self.data)>=456: # 2+16*7 = 114 -> 114*4 = 456
             eData = self.data[0:8]
             self.data = self.data[8:]
             (eid,a,b,c,d) = unpack(format1,eData)
             eid = extract(eid,dt)
-            #out = unpack("ii",eData)
+            #out = unpack(b"ii",eData)
             #(eid,cType) = out
             cType = a+b+c+d
 
@@ -562,7 +576,7 @@ class RealElementsStressStrain(object):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
-                out = unpack('ifffffffffffffff',eData)
+                out = unpack(b'ifffffffffffffff',eData)
                 assert len(out)==16
                 (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
                 #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
@@ -588,6 +602,8 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'cccc'
+        format1 = bytes(format1)
+        
         while len(self.data)>=584: # 2+16*9 = 146 -> 146*4 = 584
             eData = self.data[0:8]
             self.data = self.data[8:]
@@ -601,7 +617,7 @@ class RealElementsStressStrain(object):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
-                out = unpack('ifffffffffffffff',eData)
+                out = unpack(b'ifffffffffffffff',eData)
                 assert len(out)==16
                 (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
                 #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
@@ -627,11 +643,12 @@ class RealElementsStressStrain(object):
 
         n1 = 24
         format1 = 'ssssfffff'
+        format1 = bytes(format1)
         #print "len(data) = ",len(self.data)
         while len(self.data)>=nTotal:
             eData     = self.data[0:8]
             self.data = self.data[8: ]
-            (eid,gridA) = unpack('ii', eData)
+            (eid,gridA) = unpack(b'ii', eData)
             #print "eid=%s gridA=%s" %(eid,gridA)
 
             for i in range(1):
@@ -668,6 +685,8 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ifffffffff'
+        format1 = bytes(format1)
+        
         while len(self.data)>=44: # 2+17*5 = 87 -> 87*4 = 348
             eData     = self.data[0:4*11]
             self.data = self.data[4*11: ]
@@ -700,6 +719,7 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ssssiffffff'
+        format1 = bytes(format1)
         while len(self.data)>=148:
             #if x==2:
             #    sys.exit('end of hyperQuad')
@@ -715,7 +735,7 @@ class RealElementsStressStrain(object):
             for i in range(3):
                 eData     = self.data[0:4*7]
                 self.data = self.data[4*7: ]
-                out = unpack('iffffff',eData)
+                out = unpack(b'iffffff',eData)
                 #(ID,sx,sy,sxy,angle,smj,smi) = out
                 self.obj.add(dt,eid,out)
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(ID,sx,sy,sxy,angle,smj,smi)
@@ -744,8 +764,10 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffffff'
+        format1 = bytes(format1)
+
         while len(self.data)>=nTotal:
-            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+            (eid,_,_,_,_) = unpack(b'issss', self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid,dt)
             eData     = self.data[0:4*17]
@@ -762,7 +784,7 @@ class RealElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
-                out = unpack('iffffffffffffffff',eData)
+                out = unpack(b'iffffffffffffffff',eData)
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
@@ -819,8 +841,10 @@ class RealElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffffff'
+        format1 = bytes(format1)
+
         while len(self.data)>=nTotal:
-            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+            (eid,_,_,_,_) = unpack(b'issss',self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid,dt)
             eData     = self.data[0:4*17]
@@ -837,7 +861,7 @@ class RealElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:4*17]
                 self.data = self.data[4*17: ]
-                out = unpack('iffffffffffffffff',eData)
+                out = unpack(b'iffffffffffffffff',eData)
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,
@@ -861,12 +885,12 @@ class RealElementsStressStrain(object):
         ###
        # elif self.numWide==77:
        #     while len(self.data)>=308: # 2+15*5 = 77 -> 77*4 = 308
-       #         (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+       #         (eid,_,_,_,_) = unpack(b'issss',self.data[0:8])
        #         self.data = self.data[8:]  # 2
        #         eData     = self.data[0:4*15]
        #         self.data = self.data[4*15: ]
        #
-       #         out = unpack('iffffffffffffff',eData)  # 15
+       #         out = unpack(b'iffffffffffffff',eData)  # 15
        #         if self.makeOp2Debug:
        #             self.op2Debug.write('%s\n' %(str(out)))
        #         (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
@@ -875,7 +899,7 @@ class RealElementsStressStrain(object):
        #         for nodeID in range(nNodes):   #nodes pts
        #             eData     = self.data[0:4*15]
        #             self.data = self.data[4*15: ]
-       #             out = unpack('iffffffffffffff',eData)
+       #             out = unpack(b'iffffffffffffff',eData)
        #             if self.makeOp2Debug:
        #                 self.op2Debug.write('%s\n' %(str(out)))
        #             (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
@@ -885,12 +909,12 @@ class RealElementsStressStrain(object):
        # ###
        # elif self.numWide==47:
        #     while len(self.data)>=188: # 2+9*5 = 47 -> 47*4 = 188
-       #         (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+       #         (eid,_,_,_,_) = unpack(b'issss',self.data[0:8])
        #         self.data = self.data[8:]  # 2
        #         eData     = self.data[0:4*9]
        #         self.data = self.data[4*9: ]
        #
-       #         out = unpack('iffffffff',eData)  # 9
+       #         out = unpack(b'iffffffff',eData)  # 9
        #         if self.makeOp2Debug:
        #             self.op2Debug.write('%s\n' %(str(out)))
        #         (grid,fd1,sx1,sy1,txy1,
@@ -899,7 +923,7 @@ class RealElementsStressStrain(object):
        #         for nodeID in range(nNodes):   #nodes pts
        #             eData     = self.data[0:4*9]
        #             self.data = self.data[4*9: ]
-       #             out = unpack('iffffffff',eData)
+       #             out = unpack(b'iffffffff',eData)
        #             if self.makeOp2Debug:
        #                 self.op2Debug.write('%s\n' %(str(out)))
        #             (grid,fd1,sx1,sy1,txy1,

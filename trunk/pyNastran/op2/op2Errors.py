@@ -26,8 +26,8 @@ class TapeCodeError(RuntimeError):
 class ZeroBufferError(RuntimeError):
     pass
 
-class BufferError(RuntimeError):
-    pass
+#class BufferError(RuntimeError):
+#    pass
 
 class InvalidMarkersError(RuntimeError):
     pass

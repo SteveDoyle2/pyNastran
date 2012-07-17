@@ -159,7 +159,6 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             i+=2
         ###
         #print self
-        #sys.exit()
         
     def rawFields(self):
         fields = [self.type, self.eid]
@@ -400,7 +399,6 @@ class RBE3(RigidElement):  # not done, needs testing badly
             self.alpha = 0.0
         ###
         #print self
-        #sys.exit()
 
     def convertToMPC(self, mpcID):
         """

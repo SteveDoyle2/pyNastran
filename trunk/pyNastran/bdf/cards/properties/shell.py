@@ -1,18 +1,18 @@
+#pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import copy
-from math import sin,cos
-from numpy import zeros,transpose
+from math import sin, cos, radians
+from numpy import zeros, transpose, array
 
 # pyNastran
-from pyNastran.bdf.cards.baseCard import Property,Material
+from pyNastran.bdf.cards.baseCard import Property, Material
 
 class ShellProperty(Property):
     type = 'ShellProperty'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         Property.__init__(self, card, data)
-        pass
 
     def S(self):
         """"
@@ -74,13 +74,13 @@ class ShellProperty(Property):
         D = copy.deepcopy(A)
         H = copy.deepcopy(A)
 
-        for i,layer in enumerate(self.layers):
+        for (i, layer) in enumerate(self.layers):
             t = layer.t
             z0 = layer.z
             #z1 = z0+t
             zbar = (2*z0+t)/2. # (z1+z0)/2. 
             Qraw   = layer.Q() # needs E11, E22, G12, G13, nu12, nu21
-            qlayer = self.Qall(Qout,layer.thetad)
+            qlayer = self.Qall(Qout, layer.thetad)
             A += qlayer*t
             B += qlayer*t*z
             
@@ -92,7 +92,7 @@ class ShellProperty(Property):
         H = H*5./4.
             
             
-    def Qall(self,thetad):
+    def Qall(self, thetad):
         """
         Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
         \f[ \large  [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
@@ -123,7 +123,7 @@ class ShellProperty(Property):
         Q44a = Q44*c2t + Q55*s2t
         Q55a = Q44*s2t + Q55*c2t
         Q45a = (Q55-Q44)*st*ct
-        return array([Q11a,Q12a,Q22a,Q16a,Q26a,Q66a,Q44a,Q55a,Q45a])
+        return array([Q11a, Q12a, Q22a, Q16a, Q26a, Q66a, Q44a, Q55a, Q45a])
 
     def Q(self):
         """"
@@ -141,10 +141,10 @@ class ShellProperty(Property):
         Q66 = G12
         Q44 = G23
         Q55 = G13
-        Qout = (Q11,Q22,Q12,Q44,Q55,Q66)
+        Qout = (Q11, Q22, Q12, Q44, Q55, Q66)
         return Qout
         
-    def T(self,theta):
+    def T(self, theta):
         """
         calculates the Transformation matricies \$ [T] \$ and  \f$ [T]^{-1} \f$
         @param self           the object pointer
@@ -200,7 +200,7 @@ class ShellProperty(Property):
         """
         n = cos(theta)
         m = sin(theta)
-        Tinv  = zeros((6,6),'d')
+        Tinv  = zeros((6, 6), 'd')
         mm = m*m
         nn = n*n
         mn = m*n
@@ -213,7 +213,7 @@ class ShellProperty(Property):
         Tinv[2][1] = -mn
         Tinv[2][2] =  mm-nn
         TinvT = transpose(Tinv)
-        return (Tinv,TinvT)
+        return (Tinv, TinvT)
 
 class PCOMP(ShellProperty):
     """
@@ -223,7 +223,7 @@ class PCOMP(ShellProperty):
               300705      .5   0.0+0     YES
     """
     type = 'PCOMP'
-    def __init__(self,card=None,data=None): # not done, cleanup
+    def __init__(self, card=None, data=None): # not done, cleanup
         ShellProperty.__init__(self, card, data)
         
         if card:
@@ -231,11 +231,11 @@ class PCOMP(ShellProperty):
             ## Property ID
             self.pid  = card.field(1)
             ## Non-Structural Mass
-            self.nsm  = card.field(3,0.0)
-            self.sb   = card.field(4,0.0)
+            self.nsm  = card.field(3, 0.0)
+            self.sb   = card.field(4, 0.0)
             self.ft   = card.field(5)
-            self.TRef = card.field(6,0.0)
-            self.ge   = card.field(7,0.0)
+            self.TRef = card.field(6, 0.0)
+            self.ge   = card.field(7, 0.0)
 
             ## symmetric flag - default = No Symmetry (NO)
             self.lam  = card.field(8)
@@ -246,9 +246,9 @@ class PCOMP(ShellProperty):
 
             # counting plies
             nMajor    = nPlyFields//4
-            nLeftover = nPlyFields%4
+            nLeftover = nPlyFields % 4
             if nLeftover:
-                nMajor+=1
+                nMajor += 1
             nplies = nMajor
             #print "nplies = ",nplies
 
@@ -258,32 +258,32 @@ class PCOMP(ShellProperty):
             tLast = None
 
             ## supports single ply per line
-            for i in range(9,9+nplies*4,4):
-                defaults = [midLast,tLast,0.0,'NO']
-                (mid,t,theta,sout) = card.fields(i,i+4,defaults)
-                ply = [mid,t,theta,sout]
+            for i in range(9, 9+nplies*4, 4):
+                defaults = [midLast, tLast, 0.0, 'NO']
+                (mid, t, theta, sout) = card.fields(i, i+4, defaults)
+                ply = [mid, t, theta, sout]
                 
-                assert t>0.,'thickness of PCOMP layer is invalid iLayer=%s t=%s ply=[mid,t,theta,sout]=%s' %(iPly,t,ply)
-                if ply!=defaults: # if they're not all defaults...
+                assert t > 0., 'thickness of PCOMP layer is invalid iLayer=%s t=%s ply=[mid,t,theta,sout]=%s' % (iPly, t, ply)
+                if ply != defaults: # if they're not all defaults...
                     plies.append(ply)
                 midLast = mid
                 tLast = t
-                iPly +=1
+                iPly += 1
             #print "nplies = ",nplies
 
             ## list of plies
             self.plies = plies
 
             #self.plies = []
-            #if self.lam=='SYM':
-            #    if nplies%2==1:  # 0th layer is the core layer
+            #if self.lam == 'SYM':
+            #    if nplies%2 == 1:  # 0th layer is the core layer
             #        plies[0][1] = plies[0][1]/2. # cut the thickness in half to make the ply have an even number of plies, is there a better way???
             #
             #    pliesLower = plies.reverse()
             #    self.plies = pliesLower+plies
             #    #print str(self)
             ###
-            self.z0 = card.field(2,-0.5*self.Thickness())
+            self.z0 = card.field(2, -0.5*self.Thickness())
         else:
             #print "len(data) = ",len(data)
             self.pid  = data[0]
@@ -301,20 +301,19 @@ class PCOMP(ShellProperty):
 
             self.plies = []
             #ply = [mid,t,theta,sout]
-            for (mid,t,theta,sout) in zip(Mid,T,Theta,Sout):
-                if sout==1:  ## @todo not sure  0=NO,1=YES (most likely)
-                    sout='YES'
-                elif sout==0:
-                    sout= 'NO'
+            for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
+                if sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
+                    sout = 'YES'
+                elif sout == 0:
+                    sout = 'NO'
                 else:
-                    raise Exception('unsupported sout...needs debugging...\nPCOMP = %s' %(data))
-                self.plies.append([mid,t,theta,sout])
+                    raise RuntimeError('unsupported sout...needs debugging...'
+                                       '\nPCOMP = %s' %(data))
+                self.plies.append([mid, t, theta, sout])
             ###
         ###
         #print self
         #print "nPlies = %s" %(self.nPlies())
-        #if self.pid==2058:
-        #    sys.exit()
 
     def hasCoreLayer(self):
         """is there a center layer (matters most for a symmetrical ply)"""
@@ -330,14 +329,15 @@ class PCOMP(ShellProperty):
 
     def isSymmetrical(self):
         """is the laminate symmetrical laminate"""
-        if self.lam=='SYM':
+        if self.lam == 'SYM':
             return True
         return False
 
     def isSameCard(self, prop, debug=False):
-        if self.type!=self.prop.type:  return False
-        fields2 = [prop.nsm,prop.sb,prop.ft,prop.TRef,prop.ge,prop.lam]
-        fields1 = [self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam]
+        if self.type != self.prop.type:
+            return False
+        fields2 = [prop.nsm, prop.sb, prop.ft, prop.TRef, prop.ge, prop.lam]
+        fields1 = [self.nsm, self.sb, self.ft, self.TRef, self.ge, self.lam]
 
         for ply in self.plies:
             fields1 += ply
@@ -345,22 +345,22 @@ class PCOMP(ShellProperty):
             fields2 += ply
 
         if debug:
-            print("fields1=%s fields2=%s" %(fields1, fields2))
+            print("fields1=%s fields2=%s" % (fields1, fields2))
 
-        for (field1,field2) in zip(fields1,fields2):
-            if not self.isSame(field1,field2):
+        for (field1, field2) in zip(fields1, fields2):
+            if not self.isSame(field1, field2):
                 return False
             ###
         ###
         return True
 
-    def crossReference(self,model):
+    def crossReference(self, model):
         """
         links the material ID to the materials
         @param self the object pointer
         @param model a BDF object
         """
-        for iPly,ply in enumerate(self.plies):
+        for iPly in range(len(self.plies)):
             mid = self.plies[iPly][0]
             #print mid
             self.plies[iPly][0] = model.Material(mid)  # mid
@@ -369,14 +369,14 @@ class PCOMP(ShellProperty):
     def Nsm(self):
         return self.nsm
 
-    def Mid(self,iPly):
+    def Mid(self, iPly):
         """
         gets the material ID of the ith ply
         @param self the object pointer
         @param iPly the ply ID (starts from 0)
         """
         Mid = self.Material(iPly)
-        if isinstance(Mid,int):
+        if isinstance(Mid, int):
             return Mid
         return Mid.mid
 
@@ -391,7 +391,7 @@ class PCOMP(ShellProperty):
             mids.append(self.Mid(iPly))
         return mids
 
-    def Rho(self,iPly):
+    def Rho(self, iPly):
         """
         gets the density of the ith ply
         @param self the object pointer
@@ -400,29 +400,32 @@ class PCOMP(ShellProperty):
         mid = self.Material(iPly)
         return mid.rho
 
-    def Material(self,iPly):
+    def Material(self, iPly):
         """
-        gets the material of the ith ply (not the ID unless it's not cross-referenced)
+        gets the material of the ith ply (not the ID unless it's not
+        cross-referenced)
         @param self the object pointer
         @param iPly the ply ID (starts from 0)
         """
         Mid = self.plies[iPly][0]
         return Mid
 
-    def Thickness(self,iPly='all'):
+    def Thickness(self, iPly='all'):
         """
         gets the thickness of the ith ply
         @param self the object pointer
-        @param iPly the string 'all' (default) or the mass per area of the ith ply
+        @param iPly the string 'all' (default) or the mass per area of the ith
+        ply
         """
-        if iPly=='all': # get all layers
+        if iPly == 'all': # get all layers
             t = 0.
-            for (iply,ply) in enumerate(self.plies):
+            for iply in range(len(self.plies)):
                 t += self.Thickness(iply)
             ###
             if self.isSymmetrical():
                 if self.hasCoreLayer():
-                    t -= self.Thickness(0)/2.  # cut out the thickness of half the core layer
+                    # cut out the thickness of half the core layer
+                    t -= self.Thickness(0)/2.
                 return t*2.
             return t
             ###
@@ -432,7 +435,7 @@ class PCOMP(ShellProperty):
             return t
         ###
 
-    def Theta(self,iPly):
+    def Theta(self, iPly):
         """
         gets the ply angle of the ith ply (not the ID)
         @param self the object pointer
@@ -441,11 +444,11 @@ class PCOMP(ShellProperty):
         Theta = self.plies[iPly][2]
         return Theta
 
-    def sout(self,iPly):
+    def sout(self, iPly):
         Sout = self.plies[iPly][3]
         return Sout
 
-    def MassPerArea(self,iPly='all'):
+    def MassPerArea(self, iPly='all'):
         """
         mass = rho*A*t
         but area comes from the element
@@ -454,18 +457,16 @@ class PCOMP(ShellProperty):
         @param self the object pointer
         @param iPly the string 'all' (default) or the mass per area of the ith ply
         """
-        if iPly=='all': # get all layers
+        if iPly == 'all': # get all layers
             massPerArea = 0.
-            for (iply,ply) in enumerate(self.plies):
+            for iply in range(len(self.plies)):
                 massPerArea += self.MassPerArea(iply)
             ###
             if self.isSymmetrical():
                 if self.hasCoreLayer():
-                    massPerArea -= self.MassPerArea(0)/2.  # cut out the thickness of half the core layer
-                    
-                ###
+                    # cut out the thickness of half the core layer
+                    massPerArea -= self.MassPerArea(0)/2.
                 return massPerArea*2.
-            ###
             return massPerArea
         ###
         else:
@@ -475,9 +476,9 @@ class PCOMP(ShellProperty):
         ###
 
     def D(self):
-        D = zeros([3,3])
+        D = zeros([3, 3])
         #isSym = self.isSymmetrical()
-        for (iply,ply) in enumerate(self.plies):
+        for iply in range(len(self.plies)):
             theta = self.Theta(iply)
             #t    = self.Thickness(iply)
             mat   = self.Material(iply)
@@ -487,43 +488,44 @@ class PCOMP(ShellProperty):
         return D
 
     def rawFields(self):
-        fields = ['PCOMP',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
+        fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
+                  self.TRef, self.ge, self.lam,]
         #print "plies = ",self.plies
-        for (iPly,ply) in enumerate(self.plies):
-            (_mid,t,theta,sout) = ply
+        for (iPly, ply) in enumerate(self.plies):
+            (_mid, t, theta, sout) = ply
             mid = self.Mid(iPly)
-            fields += [mid,t,theta,sout]
+            fields += [mid, t, theta, sout]
         return fields
 
     def reprFields(self):
         #print "t = ",self.Thickness()
-        nsm  = self.setBlankIfDefault(self.nsm, 0.0)
-        sb   = self.setBlankIfDefault(self.sb,  0.0)
-        TRef = self.setBlankIfDefault(self.TRef,0.0)
-        ge   = self.setBlankIfDefault(self.ge,  0.0)
-        z0 = self.setBlankIfDefault(self.z0,-0.5*self.Thickness())
+        nsm  = self.setBlankIfDefault(self.nsm,  0.0)
+        sb   = self.setBlankIfDefault(self.sb,   0.0)
+        TRef = self.setBlankIfDefault(self.TRef, 0.0)
+        ge   = self.setBlankIfDefault(self.ge,   0.0)
+        z0 = self.setBlankIfDefault(self.z0, -0.5*self.Thickness())
 
-        fields = ['PCOMP',self.pid,z0,nsm,sb,self.ft,TRef,ge,self.lam,]
+        fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam,]
         #print "plies = ",self.plies
-        for (iPly,ply) in enumerate(self.plies):
-            (_mid,t,theta,sout) = ply
+        for (iPly, ply) in enumerate(self.plies):
+            (_mid, t, theta, sout) = ply
             mid = self.Mid(iPly)
             #theta = self.setBlankIfDefault(theta,0.0)
             sout  = self.setBlankIfDefault(sout,'NO')
-            fields += [mid,t,theta,sout]
+            fields += [mid, t, theta, sout]
         return fields
 
 class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
     type = 'PCOMPG'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         ShellProperty.__init__(self, card, data) ## @todo doesnt support data
         self.pid  = card.field(1)
         #self.z0 = 
-        self.nsm  = card.field(3,0.0)
-        self.sb   = card.field(4,0.0)
+        self.nsm  = card.field(3, 0.0)
+        self.sb   = card.field(4, 0.0)
         self.ft   = card.field(5)
-        self.TRef = card.field(6,0.0)
-        self.ge   = card.field(7,0.0)
+        self.TRef = card.field(6, 0.0)
+        self.ge   = card.field(7, 0.0)
         self.lam  = card.field(8)
         fields = card.fields(9)
 
@@ -533,51 +535,52 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         self.plies = []
         for i in range(len(fields)):
             gPlyID    = card.field(i)
-            mid       = card.field(i+1,midLast)
-            thickness = float(card.field(i+2,tLast)) # can be blank 2nd time thru
-            theta     = card.field(i+3,0.0)
-            sout      = card.field(i+4,'NO')
-            self.plies.append([mid,thickness,theta,sout,gPlyID])
+            mid       = card.field(i+1, midLast)
+            thickness = float(card.field(i+2, tLast)) # can be blank 2nd time thru
+            theta     = card.field(i+3, 0.0)
+            sout      = card.field(i+4, 'NO')
+            self.plies.append([mid, thickness, theta, sout, gPlyID])
             #[mid,t,theta,sout] # PCOMP
             assert mid       is not None
             assert thickness is not None
             midLast = mid
             tLast = thickness
-            T+=thickness
+            T += thickness
         ###
 
-    def GlobalPlyID(self,iPly):
+    def GlobalPlyID(self, iPly):
         gPlyID = self.plies[iPly][4]
         return gPlyID
         
     def rawFields(self):
-        fields = ['PCOMPG',self.pid,self.z0,self.nsm,self.sb,self.ft,self.TRef,self.ge,self.lam,]
-        for (iPly,ply) in enumerate(self.plies):
-            (_mid,t,theta,sout,gPlyID) = ply
+        fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
+                  self.TRef, self.ge, self.lam,]
+        for (iPly, ply) in enumerate(self.plies):
+            (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iPly)
-            fields += [mid,t,theta,sout,gPlyID,None,None,None]
+            fields += [mid, t, theta, sout, gPlyID, None, None, None]
         return fields
 
     def reprFields(self):
-        nsm  = self.setBlankIfDefault(self.nsm, 0.0)
-        sb   = self.setBlankIfDefault(self.sb,  0.0)
-        TRef = self.setBlankIfDefault(self.TRef,0.0)
-        ge   = self.setBlankIfDefault(self.ge,  0.0)
-        z0 = self.setBlankIfDefault(self.z0,-0.5*self.Thickness())
+        nsm  = self.setBlankIfDefault(self.nsm,  0.0)
+        sb   = self.setBlankIfDefault(self.sb,   0.0)
+        TRef = self.setBlankIfDefault(self.TRef, 0.0)
+        ge   = self.setBlankIfDefault(self.ge,   0.0)
+        z0 = self.setBlankIfDefault(self.z0, -0.5*self.Thickness())
 
-        fields = ['PCOMPG',self.pid,z0,nsm,sb,self.ft,TRef,ge,self.lam,]
+        fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
 
-        for (iPly,ply) in enumerate(self.plies):
-            (_mid,t,theta,sout,gPlyID) = ply
+        for (iPly, ply) in enumerate(self.plies):
+            (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iPly)
             #theta = self.setBlankIfDefault(theta,0.0)
-            sout  = self.setBlankIfDefault(sout,'NO')
-            fields += [mid,t,theta,sout,gPlyID,None,None,None]
+            sout  = self.setBlankIfDefault(sout, 'NO')
+            fields += [mid, t, theta, sout, gPlyID, None, None, None]
         return fields
 
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
-    def __init__(self,card=None,nPDAMP=0,data=None):
+    def __init__(self, card=None, nPDAMP=0, data=None):
         """
         Defines the properties of a shear panel (CSHEAR entry).
         PSHEAR PID MID T NSM F1 F2
@@ -589,9 +592,9 @@ class PSHEAR(ShellProperty):
             ## Material ID
             self.mid = card.field(2)
             self.t   = card.field(3)
-            self.nsm = card.field(4,0.0)
-            self.f1  = card.field(5,0.0)
-            self.f2  = card.field(6,0.0)
+            self.nsm = card.field(4, 0.0)
+            self.f1  = card.field(5, 0.0)
+            self.f2  = card.field(6, 0.0)
         else:
             #(pid,mid,t,nsm,f1,f2) = out
             self.pid = data[0]
@@ -603,15 +606,17 @@ class PSHEAR(ShellProperty):
         ###
 
     def isSameCard(self, prop, debug=False):
-        if self.type!=prop.type:  return False
+        if self.type != prop.type:
+            return False
         fields1 = self.rawFields()
         fields2 = prop.rawFields()
         if debug:
-            print("fields1=%s fields2=%s" %(fields1, fields2))
-        return self.isSameFields(fields1,fields2)
+            print("fields1=%s fields2=%s" % (fields1, fields2))
+        return self.isSameFields(fields1, fields2)
 
     def rawFields(self):
-        fields = ['PSHEAR',self.pid,self.Mid(),self.t,self.nsm,self.f1,self.f2]
+        fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
+                  self.f1, self.f2]
         return fields
 
 class PSHELL(ShellProperty):
@@ -620,7 +625,7 @@ class PSHELL(ShellProperty):
     Z1 Z2 MID4
     PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         ShellProperty.__init__(self, card, data)
         if card:
             self.pid  = int(card.field(1))
@@ -630,14 +635,14 @@ class PSHELL(ShellProperty):
             ## Material identification number for bending
             self.mid2 = card.field(4)
             ## \f$ \frac{12I}{t^3} \f$
-            self.twelveIt3 = card.field(5,1.0)  # poor name
+            self.twelveIt3 = card.field(5, 1.0)  # poor name
             self.mid3  = card.field(6)
-            self.tst   = card.field(7,0.833333)
-            self.nsm   = card.field(8,0.0)
+            self.tst   = card.field(7, 0.833333)
+            self.nsm   = card.field(8, 0.0)
 
             tOver2 = self.t/2.
-            self.z1    = card.field(9,-tOver2)
-            self.z2    = card.field(10,tOver2)
+            self.z1    = card.field(9, -tOver2)
+            self.z2    = card.field(10, tOver2)
             self.mid4  = card.field(11)
             #if self.mid2 is None:
             #    assert self.mid3 is None
@@ -664,35 +669,36 @@ class PSHELL(ShellProperty):
             #maxMid = max(self.mid,self.mid2,self.mid3,self.mid4)
         ###
 
-        assert self.t>0.0,'the thickness must be defined on the PSHELL card (Ti field not supported)'
+        assert self.t > 0.0,('the thickness must be defined on the PSHELL'
+                             ' card (Ti field not supported)')
 
     def mid(self):
-        if isinstance(self.mid1,Material):
+        if isinstance(self.mid1, Material):
             return self.mid1
         return self.mid2
 
     def Mid(self):
-        if isinstance(self.mid1,Material):
+        if isinstance(self.mid1, Material):
             return self.mid1.mid  # self.Mid1()
         return self.Mid2()
     
     def Mid1(self):
-        if isinstance(self.mid1,Material):
+        if isinstance(self.mid1, Material):
             return self.mid1.mid
         return self.mid1
 
     def Mid2(self):
-        if isinstance(self.mid2,Material):
+        if isinstance(self.mid2, Material):
             return self.mid2.mid
         return self.mid2
 
     def Mid3(self):
-        if isinstance(self.mid3,Material):
+        if isinstance(self.mid3, Material):
             return self.mid3.mid
         return self.mid3
 
     def Mid4(self):
-        if isinstance(self.mid4,Material):
+        if isinstance(self.mid4, Material):
             return self.mid4.mid
         return self.mid4
 
@@ -713,63 +719,67 @@ class PSHELL(ShellProperty):
         try:
             massPerArea = self.nsm + self.Rho()*self.t
         except:
-            print("nsm=%s rho=%s t=%s" %(self.nsm,self.Rho(),self.t))
+            print("nsm=%s rho=%s t=%s" % (self.nsm, self.Rho(), self.t))
             raise
         return massPerArea
 
     def D(self):
         return self.mid().Dplate()
         
-    def crossReference(self,mesh):
+    def crossReference(self, model):
         if self.mid1:
-            self.mid1 = mesh.Material(self.mid1)
+            self.mid1 = model.Material(self.mid1)
         if self.mid2 and self.mid2 != -1:
-            self.mid2 = mesh.Material(self.mid2)
+            self.mid2 = model.Material(self.mid2)
         if self.mid3:
-            self.mid3 = mesh.Material(self.mid3)
+            self.mid3 = model.Material(self.mid3)
         if self.mid4:
-            self.mid4 = mesh.Material(self.mid4)
+            self.mid4 = model.Material(self.mid4)
 
-    def writeCalculix(self,marker='markerDummyProp',elementSet='ELsetDummyProp'):
-        msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' %(marker,self.mid,elementSet,self.z1)
+    def writeCalculix(self, marker='markerDummyProp',
+                      elementSet='ELsetDummyProp'):
+        msg = '*SHELL SECTION,MATERIAL=M%s_%s,ELSET=%s,OFFSET=%s\n' % (marker, self.mid, elementSet, self.z1)
         msg += '** THICKNESS\n'
-        msg += '%s\n\n' %(self.t)
+        msg += '%s\n\n' % (self.t)
         return msg
 
     def writeCodeAster(self):
         """
         http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
         http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
-        # the angle_rep is a direction angle, use either angle(a,b) or vecteur(x,y,z)
-        # coque_ncou is the number of gauss nodes along the thickness, for linear analysis one node is sufficient.
+        the angle_rep is a direction angle, use either angle(a,b) or
+        vecteur(x,y,z)
+        coque_ncou is the number of gauss nodes along the thickness, for
+        linear analysis one node is sufficient.
         """
         msg = ''
-        msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" %(self.pid)
-        msg += "              EPAIS=%g, # EPAIS=thickness\n" %(self.t)
+        msg += "    COQUE=_F(GROUP_MA='P%s', # COQUE=PSHELL\n" % (self.pid)
+        msg += "              EPAIS=%g, # EPAIS=thickness\n" % (self.t)
         msg += "              ANGL_REP=(0.,90.),     # ???\n"  ## @todo what is this?
         #msg += "              VECTEUR=(1.0,0.0,0.0,) #  local coordinate system\n"
-        msg += "              EXCENTREMENT=%g,       # offset-Z1\n" %(self.z1)
+        msg += "              EXCENTREMENT=%g,       # offset-Z1\n" % (self.z1)
         msg += "              COQUE_NCOU=1,          # Number of Integration Layers\n"
         msg += "              CARA=('NSM'), # ???\n"  ## @todo check
-        msg += "              VALE=(%g),),\n"  %(self.nsm)
+        msg += "              VALE=(%g),),\n"  % (self.nsm)
         return msg
 
     def rawFields(self):
-        fields = ['PSHELL',self.pid,self.Mid1(),self.t,self.Mid2(),self.twelveIt3,self.Mid3(),self.tst,self.nsm,
-                           self.z1,self.z2,self.Mid4()]
+        fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
+                  self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
+                  self.z2, self.Mid4()]
         return fields
 
     def reprFields(self):
-        twelveIt3 = self.setBlankIfDefault(self.twelveIt3,1.0)
-        tst       = self.setBlankIfDefault(self.tst,0.833333)
-        nsm       = self.setBlankIfDefault(self.nsm,0.0)
+        twelveIt3 = self.setBlankIfDefault(self.twelveIt3, 1.0)
+        tst       = self.setBlankIfDefault(self.tst, 0.833333)
+        nsm       = self.setBlankIfDefault(self.nsm, 0.0)
 
         tOver2 = self.t/2.
-        z1 = self.setBlankIfDefault(self.z1,-tOver2)
-        z2 = self.setBlankIfDefault(self.z2, tOver2)
+        z1 = self.setBlankIfDefault(self.z1, -tOver2)
+        z2 = self.setBlankIfDefault(self.z2,  tOver2)
 
-        fields = ['PSHELL',self.pid,self.Mid1(),self.t,self.Mid2(),twelveIt3,self.Mid3(),tst,nsm,
-                           z1,z2,self.Mid4()]
+        fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
+                  twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         #print fields
         return fields
 

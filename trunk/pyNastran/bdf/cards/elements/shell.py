@@ -751,12 +751,10 @@ class CQUAD4(QuadShell):
         #    self.nodes.append(int(nid))
 
         #print 'self.T1 = ',self.T1
-        #sys.exit()
         #if self.id==20020:
             #print "thetaMcid = ",card.field(7)
             #print "actual = ",self.thetaMcid
             #print str(self)
-            #sys.exit()
         
     def flipNormal(self):
         """
@@ -798,7 +796,6 @@ class CQUAD4(QuadShell):
         #    print("actual = %s"%(self.thetaMcid)
         #    #print(str(self))
         #    print(fields)
-        #    sys.exit()
         return fields
 
 class CQUADR(QuadShell):

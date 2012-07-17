@@ -171,7 +171,7 @@ class TSTEPNL(BaseCard):
                 self.kStep = card.field(6, 2)
             elif self.method == 'ITER':
                 self.kStep = card.field(6, 10)
-            elif self.method == 'AUTO':
+            elif self.method in ['AUTO','TSTEP']:
                 self.kStep = card.field(6)
             else:
                 msg = 'invalid TSTEPNL Method.  method=|%s|' %(self.method)

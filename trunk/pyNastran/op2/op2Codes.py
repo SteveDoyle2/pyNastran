@@ -1,7 +1,8 @@
-from pyNastran.op2.op2Errors import *
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
 class Op2Codes(object):
-    def ElementType(self,eCode):
+    def ElementType(self, eCode):
         elements = {
             None  : '',
             0  : 'GRID',
@@ -298,7 +299,8 @@ class Op2Codes(object):
             54 : 'OLMPF2M - ???',
             55 : 'OGMPF2M - ???',
         }
-        msg += 'n=%s table=%s-%s' %(self.n,self.tableName,tableContent[tableCodeContent])
+        msg += 'n=%s table=%s-%s' %(self.n,self.tableName,
+                                    tableContent[tableCodeContent])
         return msg
 
     def codeInformation(self):

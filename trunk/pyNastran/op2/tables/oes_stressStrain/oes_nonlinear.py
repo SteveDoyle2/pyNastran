@@ -1,6 +1,10 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from math import isnan
+
 from .real.oes_objects import stressObject,strainObject #,array
+
 
 class NonlinearQuadObject(stressObject):
     def __init__(self,dataCode,isSort1,iSubcase,dt=None):

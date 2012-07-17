@@ -348,7 +348,6 @@ class CROD(RodElement):
         #print(K)
         print("K[%s] = \n%s\n" %(self.eid,K))
         #print("Fg[%s] = %s\n" %(self.eid,Fg))
-        #sys.exit('stopping in ROD stiffness...elementsBars.py')
 
         nodes = self.nodeIDs()
         nIJV  = [(nodes[0],1),(nodes[0],2),(nodes[1],1),(nodes[1],2),]
@@ -623,11 +622,13 @@ class CBAR(LineElement):
             self.w2b = main[10]
             self.w3b = main[11]
         ###
+        #print("offt = %s" %(self.offt))
         if not isinstance(self.offt, unicode):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%s|' %(self.offt))
 
         msg = 'invalid offt parameter of %s...offt=%s' %(self.type, self.offt)
+        # B,G,O
         assert self.offt[0] in ['G', 'B'], msg
         assert self.offt[1] in ['G', 'O'], msg
         assert self.offt[2] in ['G', 'O'], msg
@@ -641,7 +642,7 @@ class CBAR(LineElement):
         return A
 
     def Length(self):
-        L = self.Length_noXref(self.ga, self.gb)
+        L = norm(self.gb.Position()-self.ga.Position())
         assert isinstance(L, float)
         return L
 
@@ -750,9 +751,7 @@ class CBAR(LineElement):
         print("Fg   = ",Fg)
         #print(K)
         print("K[%s] = \n%s\n" %(self.eid,K))
-        #sys.exit('stopping in Stiffness-CBAR')
         #print("Fg[%s] = %s\n" %(self.eid,Fg))
-        #sys.exit('stopping in ROD stiffness...elementsBars.py')
 
         nodes = self.nodeIDs()
                  # u1          v1          theta1         u2,v2,w2
@@ -766,7 +765,6 @@ class CBAR(LineElement):
                  (nodes[0],1),(nodes[0],2),(nodes[0],5),  (nodes[1],1),(nodes[1],2),(nodes[1],5),  # M2
                 ]
         #print("nIJV = ",nIJV)
-        #sys.exit()
         nGrav = [(nodes[0],1),(nodes[0],2),(nodes[0],3),(nodes[1],1),(nodes[1],2),(nodes[1],3)]
 
         return(K, nIJV, Fg, nGrav)
@@ -948,6 +946,15 @@ class CBEAM3(CBAR):
         self.gb  = model.Node(self.gb)
         self.gc  = model.Node(self.gc)
         self.pid = model.Property(self.pid)
+
+    def Length(self):
+        """
+        L = gb-ga
+        @todo improve formula
+        """
+        L = norm(self.gb.Position()-self.ga.Position())
+        assert isinstance(L, float)
+        return L
 
     def rawFields(self):
         (x1,x2,x3) = self.getX_G0_defaults()

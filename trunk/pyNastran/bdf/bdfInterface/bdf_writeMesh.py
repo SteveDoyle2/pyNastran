@@ -216,22 +216,22 @@ class WriteMesh(object):
 
     def writeNodes(self):
         """writes the NODE-type cards"""
-        msg = ''
+        msg = []
         if self.nodes:
-            msg += '$NODES\n'
+            msg = ['$NODES\n']
             if self.gridSet:
-                msg += str(self.gridSet)
+                msg.append(str(self.gridSet))
             for (nid,node) in sorted(self.nodes.iteritems()):
-                msg += str(node)
+                msg.append(str(node))
 
         if 0:
             self.writeNodes_Associated()
 
         if self.spoints:
-            msg += '$SPOINTS\n'
-            msg += str(self.spoints)
+            msg.append('$SPOINTS\n')
+            msg.append(str(self.spoints))
         ###
-        return msg
+        return ''.join(msg)
 
     def writeNodes_Associated(self):
         """
@@ -271,31 +271,33 @@ class WriteMesh(object):
 
     def writeElements(self):
         """writes the elements in a sorted order"""
-        msg = ''
+        msg = []
         if self.elements:
-            msg += '$ELEMENTS\n'
+            msg = ['$ELEMENTS\n']
             for (eid, element) in sorted(self.elements.iteritems()):
                 try:
-                    msg += str(element)
+                    msg.append(str(element))
                 except:
-                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    print('failed printing element...'
+                          'type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
-        return msg
+        return ''.join(msg)
 
     def writeRigidElements(self):
         """writes the rigid elements in a sorted order"""
-        msg = ''
+        msg = []
         if self.rigidElements:
             msg += '$RIGID ELEMENTS\n'
             for (eid, element) in sorted(self.rigidElements.iteritems()):
                 try:
-                    msg += str(element)
+                    msg.append(str(element))
                 except:
-                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    print('failed printing element...'
+                          'type=%s eid=%s' %(element.type,eid))
                     raise
                 ###
-        return msg
+        return ''.join(msg)
 
     def writeProperties(self):
         """writes the properties in a sorted order"""
@@ -308,58 +310,53 @@ class WriteMesh(object):
 
     def writeElementsProperties(self):
         """writes the elements and properties in and interspersed order"""
-        msg = ''
+        msg = []
         missingProperties = []
         if self.properties:
-            msg += '$ELEMENTS_WITH_PROPERTIES\n'
+            msg = ['$ELEMENTS_WITH_PROPERTIES\n']
 
         eidsWritten = []
         for (pid, prop) in sorted(self.properties.iteritems()):
             eids = self.getElementIDsWithPID(pid)
-            eids.sort()
 
             if eids:
-                msg += str(prop)
+                msg.append(str(prop))
+                eids.sort()
                 for eid in eids:
                     element = self.Element(eid)
-                    #print "e.type = ",element.type
-                    #if element.type != 'CTRIA3':
                     try:
-                        msg += str(element)
+                        msg.append(str(element))
                     except:
-                        print('failed printing element...type=%s eid=%s' %(element.type,eid))
+                        print('failed printing element...'
+                              'type=%s eid=%s' %(element.type,eid))
                         raise
-                    #else:
-                    #    print("element.type = ",element.type)
-                    ###
                 ###
-                eidsWritten+=eids
+                eidsWritten += eids
             else:
-                #print "*MISSING",prop
                 missingProperties.append(str(prop))
             ###
         ###
 
         eidsMissing = set(self.elements.keys()).difference(set(eidsWritten))
         if eidsMissing:
-            msg += '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)\n'
+            msg.append('$ELEMENTS_WITH_NO_PROPERTIES '
+                       '(PID=0 and unanalyzed properties)\n')
             for eid in sorted(eidsMissing):
                 element = self.Element(eid)
                 try:
-                    msg += str(element)
+                    msg.append(str(element))
                 except:
-                    print('failed printing element...type=%s eid=%s' %(element.type,eid))
+                    print('failed printing element...'
+                          'type=%s eid=%s' %(element.type, eid))
                     raise
                 ###
             ###
 
         if missingProperties:
-            msg += '$UNASSOCIATED_PROPERTIES\n'
+            msg.append('$UNASSOCIATED_PROPERTIES\n')
             for missingProperty in missingProperties:
-                #print 'missingProperty = ',missingProperty
-                #print missingProperty
-                msg += str(missingProperty)
-        return msg
+                msg.append(str(missingProperty))
+        return ''.join(msg)
 
     def writeMaterials(self):
         """writes the materials in a sorted order"""
@@ -445,7 +442,8 @@ class WriteMesh(object):
                     try:
                         msg += str(load)
                     except:
-                        print('failed printing load...type=%s key=%s' %(load.type, key))
+                        print('failed printing load...type=%s key=%s'
+                            %(load.type, key))
                         raise
                     ###
                 ###
@@ -579,17 +577,17 @@ class WriteMesh(object):
 
     def writeFlutter(self):
         """writes the flutter cards"""
-        msg = ''
+        msg = []
         if (self.flfacts or self.flutters or self.mkaeros):
-            msg = '$FLUTTER\n'
+            msg = ['$FLUTTER\n']
             for (ID, flfact) in sorted(self.flfacts.iteritems()):
                 #if ID!=0:
-                msg += str(flfact)
+                msg.append(str(flfact))
             for (ID, flutter) in sorted(self.flutters.iteritems()):
-                msg += str(flutter)
+                msg.append(str(flutter))
             for mkaero in self.mkaeros:
-                msg += str(mkaero)
-        return msg
+                msg.append(str(mkaero))
+        return ''.join(msg)
 
     def writeThermal(self):
         """writes the thermal cards"""
@@ -641,8 +639,8 @@ class WriteMesh(object):
                 except:
                     for field in rejectCard:
                         if field is not None and '=' in field:
-                            msg = 'cannot reject equal signed cards\ncard=%s\n' %(rejectCard)
-                            raise SyntaxError(msg)
+                            raise SyntaxError('cannot reject equal signed '
+                                              'cards\ncard=%s\n' %(rejectCard))
                     raise
 
         if self.rejects:
@@ -655,6 +653,5 @@ class WriteMesh(object):
                     reject2 = reject.rstrip()
                     if reject2:
                         msg += str(reject2)+'\n'
-
         return msg
 
