@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-#import copy
+import warnings
 
 from pyNastran.general.general import ListPrint
 
@@ -265,6 +265,14 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         self.cardsToWrite = self.cardsToRead
 
     def disableCards(self, cards):
+        """
+        @see disable_cards
+        """
+        warnings.warn('disableCards has been deprecated; use disable_cards',
+                      DeprecationWarning, stacklevel=2)
+        self.disable_cards(cards)
+
+    def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
         @param self the object pointer
@@ -566,7 +574,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         self._read_executive_control_deck()
         self._read_case_control_deck(self.bdfFileName)
         self._read_bulk_data_deck()
-        #self.closeFile()
+        #self.close_file()
         self.crossReference(xref=xref)
         if self.debug:
             self.log.debug("***BDF.readBDF")
@@ -595,7 +603,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         if self.debug:
             self.log.debug("*BDF.readBDF_Punch")
         self._readBulkDataDeck()
-        #self.closeFile()
+        #self.close_file()
         self.crossReference(xref=xref)
         if self.debug:
             self.log.debug("***BDF.readBDF_Punch")
@@ -611,35 +619,44 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         return True
 
     def _read_executive_control_deck(self):
-        """
-        reads the executive control deck
-        """
-        self.openFile(self.bdfFileName)
+        """reads the executive control deck"""
+        self.open_file(self.bdfFileName)
         line = ''
-        #self.executiveControlLines = []
-        while len(self.activeFileNames)>0: # keep going until finished
-            lineIn = self.getNextLine()
-            if lineIn == None:
-                return# file was closed and a 2nd readCaseControl was called
-
-            line = lineIn.strip()
-            if self.debug:
-                (n) = self.getLineNumber()
-                self.log.debug("executiveLine[%s] = |%s|" %(n, line))
-            self.executiveControlLines.append(lineIn)
-            if 'CEND' in line.upper():
-                break
+        emptyLines = 0
+        while emptyLines < 50 and 'CEND' not in line.upper():
+            line = self.infilesPack[-1].readline()
+            line = line.rstrip('\n\r\t ')
+            if(len(line) > 0):
+                self.executiveControlLines.append(line)
+            else:
+                emptyLines += 1
             ###
         ###
+
+        if 0: # old method; breaks DMAP alters
+            while len(self.activeFileNames) > 0: # keep going until finished
+                lineIn = self.get_next_line()
+                print(lineIn)
+                if lineIn == None:  # file was closed and a 2nd readCaseControl
+                    return          # was called
+    
+                line = lineIn.strip()
+                if self.debug:
+                    (n) = self.get_line_number()
+                    self.log.debug("executiveLine[%s] = |%s|" %(n, line))
+                self.executiveControlLines.append(lineIn)
+                if 'CEND' in line.upper():
+                    break
+                ###
+            ###
         self._parse_executive_control_deck()
 
     def _parse_executive_control_deck(self):
-        """
-        extracts the solution from the executive control deck
-        """
+        """extracts the solution from the executive control deck"""
         for (i, eline) in enumerate(self.executiveControlLines):
             #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()  # uppercase line
+            uline = uline.split('$')[0]
             if 'SOL ' in uline:
                 #print "line = ",uline
                 if ',' in uline:
@@ -657,21 +674,28 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
                 sol = solValue[3:].strip()
                     
                 assert self.sol == None, ('cannot overwrite solution existing='
-                                        '|SOL %s| new =|%s|' %(self.sol,sline))
+                                        '|SOL %s| new =|%s|' %(self.sol,uline))
                 self.iSolLine = i
 
                 try:
-                    self.updateSolution(sol, method)
+                    self.update_solution(sol, method)
                 except:
-                    #msg = ('updateSolution failed...'
-                    #       'sline=%s' %(sline))
-                    #raise RuntimeError(msg)
+                    msg = ('update_solution failed...line=%s' %(uline))
+                    raise RuntimeError(msg)
                     raise
                 ###
             ###
         ###
 
     def updateSolution(self, sol, method=None):
+        """
+        @see update_solution
+        """
+        warnings.warn('updateSolution has been deprecated; use '
+                      'update_solution', DeprecationWarning, stacklevel=2)
+        self.update_solution(sol, method)
+
+    def update_solution(self, sol, method=None):
         """
         updates the overall solution type (e.g. 101,200,600)
         @param self   the object pointer
@@ -708,7 +732,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         self.dictOfVars = {}
         for (key, value) in dictOfVars.iteritems():
             assert len(key) <= 7, ('max length for key is 7; '
-                                   'len(%s)=%s' %(key,len(key)))
+                                   'len(%s)=%s' %(key, len(key)))
             self.dictOfVars[key.upper()] = value
         ###
         self.isDynamicSyntax = True
@@ -719,7 +743,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         lineUpper = line.upper().strip()
         #print "line = |%s|" %(lineUpper)
         if 'CEND' in line.upper():
-            raise Exception('invalid Case Control Deck card...CEND...')
+            raise SyntaxError('invalid Case Control Deck card...CEND...')
         if '=' in lineUpper or ' ' in lineUpper:
             #print "True1"
             return True
@@ -739,7 +763,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         @note called with recursion if an INCLUDE file is found
         """
         #print "opening |%s|" %(infilename)
-        self.openFile(infilename)
+        self.open_file(infilename)
         #self.log.info("reading Case Control Deck...")
         line = ''
         #self.caseControlControlLines = []
@@ -747,7 +771,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         i = 0
         while len(self.activeFileNames)>0: # keep going until finished
         #while 'BEGIN BULK' not in line:
-            lineIn = self.getNextLine()
+            lineIn = self.get_next_line()
             #print "lineIn = |%r|" %(lineIn)
             #print "lineIn = ",lineIn
             if lineIn == None:
@@ -798,19 +822,19 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
           the new current line (in all caps)
         """
         if lineUpper.startswith('INCLUDE'):
-            nextLine = self.getNextLine().strip().split('$')[0].strip()
+            nextLine = self.get_next_line().strip().split('$')[0].strip()
             includeLines = [line]
             #print "^&*1",nextLine
             while '\\' in nextLine or '/' in nextLine: # more includes
                 includeLines.append(nextLine)
-                nextLine = self.getNextLine().strip().split('$')[0].strip()
+                nextLine = self.get_next_line().strip().split('$')[0].strip()
                 #print "^&*2",nextLine
 
             #print "include lines = |%s|" %(includeLines)
             filename = self._get_include_file_name(includeLines)
 
             self._add_include_file(filename)
-            #self.openFile(filename)
+            #self.open_file(filename)
             self._read_case_control_deck(filename)
             line = nextLine
             #print "appending |%r|" %(nextLine)
@@ -891,12 +915,12 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         """parses the Bulk Data Deck"""
         if self.debug:
             self.log.debug("*readBulkDataDeck")
-        self.openFile(self.bdfFileName)
+        self.open_file(self.bdfFileName)
 
         #oldCardObj = BDF_Card()
         while len(self.activeFileNames) > 0: # keep going until finished
             ## gets the cardLines
-            (rawCard, card, cardName) = self.getCard(debug=False)
+            (rawCard, card, cardName) = self._get_card(debug=False)
             #print "outcard = ",card
 
             if cardName == 'INCLUDE':
@@ -905,12 +929,12 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
                 filename = self._get_include_file_name(rawCard)
                 #print 'filename = ', os.path.relpath(filename)
                 self._add_include_file(filename)
-                self.openFile(filename)
+                self.open_file(filename)
                 reject = '$ INCLUDE processed:  %s\n' %(filename)
                 self.rejects.append([reject])
                 continue
             #elif cardName is None:
-                #self.closeFile()
+                #self.close_file()
                 #continue
                 
             passCard = False
@@ -965,14 +989,14 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
                 #print "----------------------------"
                 #if special:
                     #print "iCard = ",iCard
-                self.addCard(card, cardName, iCard=0, oldCardObj=None)
+                self.add_card(card, cardName, iCard=0, oldCardObj=None)
                 #if self.foundEndData:
                 #    break
             ### iCard
             if self.doneReading or len(self.linesPack[-1])==0:
                 #print("doneReading=%s len(pack)=%s"
                 #    %(self.doneReading, len(self.linesPack[-1])))
-                self.closeFile()
+                self.close_file()
             ###
             #oldCardObj = copy.deepcopy(cardObj) # used for =(*1) stuff
             #print ""
@@ -996,6 +1020,11 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         ###
 
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
+        warnings.warn('addCard has been deprecated; use add_card',
+                      DeprecationWarning, stacklevel=2)
+        return self.add_card(card, cardName, iCard=0, oldCardObj=None)
+
+    def add_card(self, card, cardName, iCard=0, oldCardObj=None):
         """
         adds a card object to the BDF object. 
         @param self

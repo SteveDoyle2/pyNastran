@@ -26,21 +26,23 @@ class CardMethods(object):
                 break
         return self.linesPack[-1]
 
-    def updateCardLines(self, lines):
+    def update_card_lines(self, lines):
         """expands a card with tabs in it"""
         lines2 = []
         for line in lines:
             if '\t' in line:
-                #raise SyntaxError('lines are ambiguous when there are tabs...fix them...line=|%r|' %(line))
+                #raise SyntaxError('lines are ambiguous when there are tabs...'
+                #                  'fix them...line=|%r|' %(line))
                 if ',' in line:
                     #expandTabCommas(line2)
-                    raise SyntaxError('tabs and commas in the same line are not supported...line=|%r|' %(line))
+                    raise SyntaxError('tabs and commas in the same line are '
+                                      'not supported...line=|%r|' %(line))
                 line = line.expandtabs()
             ###
             lines2.append(line)
         return lines2
 
-    def getCard(self, debug=False):
+    def _get_card(self, debug=False):
         """gets a single unparsed card"""
         #debug = True
         
@@ -55,7 +57,7 @@ class CardMethods(object):
             #return(None, None, None)
 
         if linesPack == []:
-            self.closeFile()
+            self.close_file()
             linesPack = self._make_lines_pack(debug=debug)
         
         tempcard = [linesPack[0]]
@@ -64,10 +66,10 @@ class CardMethods(object):
         i = 1
         #if emptyLines<50:
         try:
-            (i, tempcard) = self.getMultiLineCard(i, tempcard, debug=debug)
+            (i, tempcard) = self._get_multi_line_card(i, tempcard, debug=debug)
         except IndexError:
             #try:
-            #    tempcard = self.getMultiLineCard(i, tempcard, debug=True)
+            #    tempcard = self._get_multi_line_card(i, tempcard, debug=True)
             #except IndexError:
             #    print("workscard = %s" %(tempcard))
             #    print("")
@@ -88,7 +90,7 @@ class CardMethods(object):
         
         #print "tempcard = ",''.join(tempcard)
         
-        tempcard = self.updateCardLines(tempcard)
+        tempcard = self.update_card_lines(tempcard)
         upperCard = [line.upper() for line in tempcard]
         cardName = self._get_card_name(upperCard)
         #print "|%s|" %(cardName)
@@ -104,8 +106,8 @@ class CardMethods(object):
 
     def _increaseCardCount(self, cardName):
         """
-        used for testing to check that the number of cards going in is the same as each time the model is read
-        verifies proper writing of cards
+        Used for testing to check that the number of cards going in is the
+        same as each time the model is read verifies proper writing of cards
         @warning
             this wont guarantee proper reading of cards, but will help
         """
@@ -117,7 +119,7 @@ class CardMethods(object):
         else:
             self.cardCount[cardName]  = 1
 
-    def getMultiLineCard(self, i, tempcard, isCSV=False, debug=False):
+    def _get_multi_line_card(self, i, tempcard, isCSV=False, debug=False):
         iline = self.linesPack[-1][i].rstrip()
         #while iline=='':
         #    i+=1
@@ -127,7 +129,7 @@ class CardMethods(object):
         isNotDone = len(iline) > 0 and (iline.strip()[0] in ['*', '+', ','] or sCardName == '')
         #debug = True
         if debug:
-            print("get MultiLineCard...i=%s" %(i))
+            print("_get_multi_line_card...i=%s" %(i))
             print("tempcard1 = %s" %(tempcard))
 
             self.log.debug("CRITERIA A")

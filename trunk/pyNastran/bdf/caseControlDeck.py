@@ -458,7 +458,8 @@ class CaseControlDeck(object):
         cases = {}
         for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
             if iSubcase != 0:
-                cases[iSubcase] = subcase.getOp2Data(self.sol, self.solmap_toValue)
+                cases[iSubcase] = subcase.getOp2Data(self.sol,
+                                                     self.solmap_toValue)
         return cases
 
     def __repr__(self):
@@ -466,6 +467,9 @@ class CaseControlDeck(object):
         subcase0 = self.subcases[0]
         for (iSubcase, subcase) in sorted(self.subcases.iteritems()):
             #if iSubcase==0:
+            #print("iSubcase = %s" %(iSubcase))
+            #print(subcase)
+            #print("********")
             msg += subcase.write_subcase(subcase0)
             #msg += str(subcase)
             #else:

@@ -72,7 +72,7 @@ class NastranMesh(BDF):
         # point on x-z plane is the max unit vector (ABC)
         coordCard = ['CORD2R',-2,0,  0.,0.,0., gx,gy,gz, bx,by,bz]
         cardName = 'CORD2R'
-        self.addCard(self,coordCard,cardName)
+        self.add_card(self, coordCard, cardName)
         #cardObj = BDF_Card(coordCard)
         #coord = CORD2R(cardObj)
         
@@ -191,10 +191,10 @@ class NastranMesh(BDF):
 
         if addElements:
             maxEid = max(self.elements)+1 # get the next available eid
-            for nid,mass in sorted(nodalMasses.iteritems()):
-                card = ['CONM2',maxEid,nid,0,mass]
-                self.addCard(self,card,'CONM2')
-                maxEid+=1
+            for (nid, mass) in sorted(nodalMasses.iteritems()):
+                card = ['CONM2', maxEid, nid, 0, mass]
+                self.add_card(self, card, 'CONM2')
+                maxEid += 1
 
         del self.coords[cid]
         return masses,X,Y

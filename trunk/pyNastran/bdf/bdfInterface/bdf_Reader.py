@@ -37,7 +37,7 @@ class bdfReader(object):
             return filename
         ###
 
-    def openFile(self, infileName):
+    def open_file(self, infileName):
         """
         Takes a filename and opens the file.  
         This method is used in order to support INCLUDE files.
@@ -45,7 +45,8 @@ class bdfReader(object):
         #print self.isOpened
         if self.isOpened[infileName] == False:
             self.activeFileNames.append(infileName)
-            #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName, os.getcwd()))
+            #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,
+            #                                               os.getcwd()))
             if not os.path.exists(infileName):
                 msg = "infileName=|%s| does not exist..." % (infileName)
                 raise IOError(msg)
@@ -60,16 +61,16 @@ class bdfReader(object):
             #print "is already open...skipping"
         ###
 
-    def getFileStats(self):
+    def get_file_stats(self):
         """
         gets information about the active BDF file being read
         @param self the object pointer
         @retval lineNumber the active file's line number
         """
         filename   = self.activeFileNames[-1]
-        return (filename,self.getLineNumber())
+        return (filename, self.get_line_number())
 
-    def getLineNumber(self):
+    def get_line_number(self):
         """
         Gets the line number of the active BDF (used for debugging).
         @param self the object pointer
@@ -78,12 +79,15 @@ class bdfReader(object):
         lineNumber = self.lineNumbers[-1]
         return lineNumber
 
-    def getNextLine(self,debug=False):
+    def get_next_line(self, debug=False):
         """
         Gets the next line in the BDF
-        @param self the object pointer
-        @param debug developer debug
-        @retval line the next line in the BDF or None if it's the end of a the current file
+        @param self
+          the BDF object
+        @param debug
+          developer debug
+        @retval line
+          the next line in the BDF or None if it's the end of the current file
         """
         self.lineNumbers[-1] += 1
         linesPack = self._make_lines_pack(debug=False)
@@ -92,24 +96,14 @@ class bdfReader(object):
             #print("$  |%r|" %(line))
 
         if len(linesPack) == 0:
-            self.closeFile()
+            self.close_file()
             return None
             #linesPack = self._make_lines_pack(debug=debug)
             #return lastLine
         #print linesPack[0]
         return linesPack.pop(0)
 
-    #def getNextLine2(self):
-    #    self.lineNumbers[-1]+=1
-    #    return self.infilesPack[-1].readline()
-
-    #    infile = self.infilesPack[-1]
-    #    #print "infile = |%s|" %(infile), type(infile)
-    #    line = infile.readline()
-    #    print "line = |%r|" %(line)
-    #    return line
-
-    def closeFile(self, debug=False):
+    def close_file(self, debug=False):
         """
         Closes the active file object.
         If no files are open, the function is skipped.
@@ -136,22 +130,29 @@ class bdfReader(object):
                           'and Case Control Decks are required...'
                           'put a CEND and BEGIN BULK in the BDF')
         nlines = len(self.linesPack[-1])
-        ## determines if self.activefilename should be closed at the next opportunity
+
+        ## determines if self.activefilename should be closed at the next
+        ## opportunity
         self.doneReading = False
         if debug:
             fnameA = self.printFileName(activeFileName)
             fnameB = self.printFileName(self.bdfFileName)
 
-            self.log.debug("activeFileName=|%s| infilename=%s len(pack)=%s\n" %(fnameA,fnameB,nlines))
+            self.log.debug("activeFileName=|%s| infilename=%s len(pack)=%s\n"
+                         %(fnameA,fnameB,nlines))
         ###
         #print "\n\n"
 
     def _setInfile(self, bdfFileName, includeDir=None):
         """
-        sets up the basic file/lines/cardCounting operations
-        @param self the object pointer
-        @param bdfFileName  the input BDF filename
-        @param includeDir   the location of include files if a absolute/relative path is not used (not supported in Nastran)
+        Sets up the basic file/lines/cardCounting operations
+        @param self
+          the BDF object
+        @param bdfFileName
+          the input BDF filename
+        @param includeDir
+          the location of include files if an absolute/relative path is
+          not used (not supported in Nastran)
         """
         ## automatically rejects every parsable card (default=False)
         self.autoReject   = False
@@ -175,7 +176,8 @@ class bdfReader(object):
         ## stores the line number of self.activefilename that the parser is on
         ## very helpful when debugging
         self.lineNumbers     = []
-        ## dictionary that says whether self.bdfFileName is open/close (boolean0
+        ## dictionary that says whether self.bdfFileName is open/close
+        ## (boolean)
         self.isOpened = {self.bdfFileName: False}
         ## list of all read in cards - useful in determining if
         ## entire BDF was read & really useful in debugging
