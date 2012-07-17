@@ -398,7 +398,7 @@ class OneDeeLoad(Load): # FORCE/MOMENT
         #print("self.xyz = ",self.xyz)
         (xyz, matrix) = self.cid.transformToGlobal(self.xyz)
         if self.mag > 0.:
-            #print("mag=%s xyz=%s" %(self.mag,xyz))
+            #print("mag=%s xyz=%s" % (self.mag, xyz))
             return (True, self.node, self.mag*xyz) # load
         return (False, self.node, xyz) # enforced displacement
 
@@ -419,6 +419,9 @@ class Force(OneDeeLoad):
     type = '1D_Load'
     def __init__(self, card, data):
         OneDeeLoad.__init__(self, card, data)
+
+    def getLoads(self):
+        return [self]
 
     def F(self):
         return self.xyz*self.mag
@@ -445,6 +448,9 @@ class Moment(OneDeeLoad):
     type = 'Moment'
     def __init__(self, card, data):
         OneDeeLoad.__init__(self, card, data)
+
+    def getLoads(self):
+        return [self]
 
     def getReducedLoads(self):
         scaleFactors = [1.]
@@ -486,7 +492,7 @@ class FORCE(Force):
             self.mag  = data[3]
             xyz  = data[4:7]
 
-        assert len(xyz)==3, 'xyz=%s' %(xyz)
+        assert len(xyz)==3, 'xyz=%s' % (xyz)
         self.xyz = array(xyz)
 
     def Cid(self):
@@ -542,7 +548,6 @@ class FORCE1(Force):
         self.g1 = model.Node(self.g1)
         self.g2 = model.Node(self.g2)
         self.xyz = self.g2.Position()-self.g1.Position()
-        #self.xyz = model.Node(self.g2).Position() - model.Node(self.g1).Position()
         self.Normalize()
     
     def G1(self):
@@ -659,7 +664,8 @@ class MOMENT(Moment):
 
     def reprFields(self):
         cid = self.setBlankIfDefault(self.Cid(), 0)
-        fields = ['MOMENT', self.sid, self.node, cid, self.mag] + list(self.xyz)
+        fields = ['MOMENT', self.sid, self.node, cid, self.mag
+                 ] + list(self.xyz)
         return fields
 
 class MOMENT1(Moment):
@@ -782,6 +788,9 @@ class PLOAD(Load):
         """@todo cross reference and fix repr function"""
         pass
 
+    def getLoads(self):
+        return [self]
+
     def rawFields(self):
         fields = ['PLOAD', self.sid, self.p]+self.nodeIDs()
         return fields
@@ -821,6 +830,9 @@ class PLOAD1(Load):
         """@todo cross reference and fix repr function"""
         pass
 
+    def getLoads(self):
+        return [self]
+
     def rawFields(self):
         fields = ['PLOAD1', self.sid, self.eid, self.Type, self.scale, self.x1,
                   self.p1, self.x2, self.p2]
@@ -854,6 +866,9 @@ class PLOAD2(Load):
     def crossReference(self, model):
         """@todo cross reference and fix repr function"""
         pass
+
+    def getLoads(self):
+        return [self]
 
     def rawFields(self):
         fields = ['PLOAD2', self.sid, self.p]
@@ -919,6 +934,9 @@ class PLOAD4(Load):
             self.g34 = self.g34
             self.eids = [self.eid]
         ###
+
+    def getLoads(self):
+        return [self]
 
     def transformLoad(self):
         """
@@ -1005,7 +1023,7 @@ class PLOAD4(Load):
                     print("self.eids = %s" % (self.eids))
                     raise
                 ###
-                fields.append(self.getElementIDs(eid) )
+                fields.append(self.getElementIDs(eid))
             else:
                 fields += [None, None]
             ###
@@ -1022,4 +1040,3 @@ class PLOAD4(Load):
     def reprFields(self):
         return self.rawFields()
 
-#------------------------------------------------------------------------------

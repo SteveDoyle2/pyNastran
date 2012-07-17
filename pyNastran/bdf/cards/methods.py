@@ -50,7 +50,6 @@ class EIGB(Method):
         #print self.rawFields()
         #print self.reprFields()
         #print self
-        #sys.exit()
 
     def crossReference(self, model):
         pass

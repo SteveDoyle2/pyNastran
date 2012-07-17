@@ -1,7 +1,11 @@
 # pylint: disable=E1101,C0103,R0902,R0904,R0914
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 
 from numpy import array
+
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+
 
 class nonlinearFluxObject(scalarObject): # approachCode=10, sortCode=0
     def __init__(self, dataCode, iSubcase, loadStep):

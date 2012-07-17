@@ -209,7 +209,7 @@ class CaseControlDeck(object):
                 i+=1
                 lines2.append(lines[i])
                 if i>100:
-                    sys.exit('huhh...')
+                    raise RuntimeError('too many lines in case control deck')
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             #print "i=%s j=%s" %(i,j)
             i+=1
@@ -224,7 +224,6 @@ class CaseControlDeck(object):
         #print "done with while loop...\n"
         
         #print str(self)
-        #sys.exit('stopping...')
         self.finish_subcases()
     ###
 
@@ -297,7 +296,13 @@ class CaseControlDeck(object):
             paramType = 'SUBCASE-type'
         elif (lineUpper.startswith('LABEL') or lineUpper.startswith('SUBTITLE')
               or lineUpper.startswith('TITLE')):
-            eIndex = line.index('=')
+            try:
+                eIndex = line.index('=')
+            except:
+                msg  = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
+                msg += "line = |%s|" %(lineUpper.strip())
+                raise RuntimeError(msg)
+
             key   = line[0:eIndex].strip()
             value = line[eIndex+1:].strip()
             options = []

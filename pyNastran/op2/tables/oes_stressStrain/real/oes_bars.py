@@ -1,6 +1,9 @@
-import sys
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
+
 from .oes_objects import stressObject, strainObject
 from pyNastran.op2.op2Errors import InvalidCodeError
+
 
 class BarStressObject(stressObject):
     """

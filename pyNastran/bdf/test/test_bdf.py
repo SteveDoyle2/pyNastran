@@ -31,23 +31,22 @@ def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
             filenames2.append(filename)
         ###
     ###
+    failedFiles = []
     for filename in filenames2:
         absFilename = os.path.abspath(os.path.join(folder, filename))
         print("filename = %s" %(absFilename))
+        isPassed = False
         try:
             (fem1, fem2, diffCards2) = runBDF(folder, filename, debug=debug,
                                               xref=xref, check=check, cid=cid,
                                               isFolder=True)
             diffCards += diffCards
+            isPassed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
         #except SyntaxError:
         #    pass
         #except ScientificParseError:
-        #    pass
-        #except IOError:
-        #    pass
-        #except BDFSyntaxError:
         #    pass
         except SystemExit:
             sys.exit('sys.exit...')
@@ -56,6 +55,8 @@ def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
             #raise
         ###
         print('-'*80)
+        if not isPassed:
+            failedFiles.append(absFilename)
     ###
     print('*'*80)
     try:
@@ -63,6 +64,7 @@ def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
     except TypeError:
         #print "type(diffCards) =",type(diffCards)
         print("diffCards2 = %s" %(diffCards))
+    return failedFiles
 ###
 
 def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
@@ -91,8 +93,6 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     except ScientificCardParseError:
         pass
     except IOError:
-        pass
-    except SyntaxError:
         pass
     except SystemExit:
         sys.exit('sys.exit...')

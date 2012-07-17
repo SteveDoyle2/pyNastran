@@ -1,14 +1,11 @@
 import sys
 from struct import unpack
 
-#from pyNastran.op2.op2Errors import *
-#from pyNastran.bdf.cards.loads.loads       import *
 from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
                                                    LOAD, PLOAD1, PLOAD2,
                                                    PLOAD4) # PLOAD3, 
+from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 
-from pyNastran.bdf.cards.thermal.thermal   import (QBDY1, QBDY2, QBDY3, TEMP,
-                                                   TEMPD)
 
 class Geometry3(object):
 

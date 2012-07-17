@@ -59,7 +59,6 @@ class PBUSH(BushingProperty):
             raise NotImplementedError('PBUSH data...')
         ###
         #print self
-        #sys.exit()
 
     def getK(self, card, iStart):
         ## Flag indicating that the next 1 to 6 fields are stiffness values in

@@ -150,7 +150,6 @@ class BaseCard(BDF_Card):
         #out = list(set(out))
         #out.sort()
         #print "out = ",out,'\n'
-        #sys.exit()
         return list(set(out))
 
     def expandThruExclude(self, fields):
@@ -199,7 +198,6 @@ class BaseCard(BDF_Card):
         (pre, i) = self._preCollapse(fields, dnMax=dnMax)
         mid = self._midCollapse(pre, dnMax=dnMax)
         #out = self._postCollapse(mid)
-        #sys.exit()
 
         out = []
         print("running post...")
@@ -279,19 +277,16 @@ class BaseCard(BDF_Card):
 
         for i in range(1, nFields):
             dn = fields[i]-fields[i-1]
-            print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" %(i, i, fields[i], i-1, fields[i-1], dn, dnMax))
-            if dn!=dnMax:
-                #i+=1
+            print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" % (i, i, fields[i], i-1, fields[i-1], dn, dnMax))
+            if dn != dnMax:
+                #i += 1
                 #out.append(fields[i])
                 break
             out.append(fields[i])
-            #if i==3:
-            #    sys.exit()
-        #i-=1
+        #i -= 1
         print("subOut = %s" %(out))
-        #i+=1
+        #i += 1
         print("iSubEnd = %s\n" %(i))
-        #sys.exit()
         return (out,i)
     ###
         

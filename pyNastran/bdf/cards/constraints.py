@@ -206,7 +206,6 @@ class constraintObject(object):
         #sys.stdout.flush()
         #print str(addConstraint.sets)
         #sys.stdout.flush()
-        #sys.exit('xxx1---constraints.py')
         #print "spcsets = ",spcsets
         for (i, conid) in enumerate(spcsets):
             #print "conid = ",conid
@@ -264,7 +263,6 @@ class constraintObject(object):
             ###
         ###
         #print msg
-        #sys.exit('asd')
         return msg
         
         # works for spc, spc1, spcd
@@ -364,9 +362,6 @@ class MPC(Constraint):
                 self.enforced.append(   pack2[2]) # default=0.0
             ###
         ###
-        #if self.conid==99002:
-            #print str(self)
-            #sys.exit()
 
         # reduce the size if there are duplicate Nones
         #nConstraints = max(len(self.gids       ),

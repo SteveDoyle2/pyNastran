@@ -1,4 +1,5 @@
-from __future__ import division
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from struct import unpack
 
@@ -11,6 +12,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=20: # 5*4
@@ -46,6 +48,8 @@ class ComplexForces(object):
         #print self.codeInformation()
         #nTotal = 16*11+1
         formatAll = 'ifffffffffffffff'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
         while len(self.data)>=708: # (16*11+1)*4 = 177*4
             eData     = self.data[0:4]
             self.data = self.data[4: ]
@@ -102,6 +106,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffffffffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=132: # 33*4
@@ -146,6 +151,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=12: # 3*4
@@ -175,6 +181,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=20: # 5*4
@@ -206,9 +213,10 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
-        while len(self.data)>=68: # 17*4
+        while len(self.data) >= 68: # 17*4
             eData     = self.data[0:68]
             self.data = self.data[68: ]
             #print "len(data) = ",len(eData)
@@ -250,6 +258,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=68: # 17*4
@@ -305,6 +314,8 @@ class ComplexForces(object):
         ###
             
         allFormat = 'fffffffffffffffff'
+        format1 = bytes(format1)
+        allFormat = bytes(allFormat)
         nTotal = 8+nNodes*68
         while len(self.data)>=nTotal:
             eData     = self.data[0:76]
@@ -375,13 +386,13 @@ class ComplexForces(object):
                 #print "len(data) = ",len(self.data)
             ###
         ###
-        #sys.exit('Plate2 stop...')
         #print self.plateForces2
 
     def OEF_Bend_alt(self): # 69-CBEND
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ifffffffffffffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=108: # 27*4
@@ -425,6 +436,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ccccccccfffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=64: # 16*4
@@ -460,6 +472,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=52: # 13*4
@@ -497,6 +510,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'iicccc'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         if self.elementType in [191]:
@@ -505,6 +519,7 @@ class ComplexForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'ifffffffffffff'
+        formatAll = bytes(formatAll)
         n = 16+56*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:16] # 8*4
@@ -562,6 +577,7 @@ class ComplexForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'iiccccii'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         if self.elementType in [189]: # VUQUAD
@@ -572,6 +588,8 @@ class ComplexForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'ifffiiifffffifffiiifffffi'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
         n = 24+100*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:24] # 6*4

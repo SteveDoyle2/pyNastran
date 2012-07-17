@@ -510,7 +510,6 @@ class Subcase(object):
         for (key, value) in sorted(op2Params.iteritems()):
             if value is not None:
                 print("   key=|%s| value=|%s|" %(key, value))
-        #sys.exit('exit subcase.py in bdf/subcase.py')
         
 
     def print_param(self, key, param, printBeginBulk=True):

@@ -211,7 +211,6 @@ class DRESP2(OptConstraint):
         #    print("  key=%s params=%s" %(key, valueList))
         
         #print self
-        #sys.exit()
 
     def packParams(self):
         packLength = {  # the amount of padding at the [beginning,end] of the 2nd line

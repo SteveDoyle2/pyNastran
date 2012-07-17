@@ -72,9 +72,11 @@ from .cards.params import PARAM
 from .cards.sets import (ASET, BSET, CSET, QSET,
                          ASET1, BSET1, CSET1, QSET1,
                          SET1, SET3, SESET, SEQSEP, RADSET)
+
+from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
 from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                    PHBDY, CONV, RADM, RADBC,
-                                    QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
+                                    PHBDY, CONV, RADM, RADBC,)
+                                    
 
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
@@ -819,7 +821,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         ###
         return (line, lineUpper)
 
-    def _getCardName(self, cardLines):
+    def _get_card_name(self, cardLines):
         """
         Given a list of card lines, determines the cardName.
         @param self      the object pointer
@@ -836,12 +838,12 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
             cardName = cardName.split(',')[0].strip()
 
         cardName = cardName.lstrip().rstrip(' *')
-        #self.log.debug("getCardName cardName=|%s|" %(cardName))
+        #self.log.debug("_get_card_name cardName=|%s|" %(cardName))
         return cardName
     
-    def _isReject(self, cardName):
+    def _is_reject(self, cardName):
         """can the card be read"""
-        #cardName = self._getCardName(card)
+        #cardName = self._get_card_name(card)
         if cardName.startswith('='):
             return False
         elif cardName in self.cardsToRead:
@@ -915,12 +917,12 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
             #if self._isSpecialCard(cardName):
             #    passCard = True
             #print 'card = ',card
-            if not self._isReject(cardName):
+            if not self._is_reject(cardName):
                 #print ""
                 #print "not a reject"
                 card = self.processCard(card) # parse the card into fields
                 #print "processedCard = ",card
-            elif card[0].strip()=='':
+            elif card[0].strip() == '':
                 #print "funny strip thing..."
                 pass
             else:
@@ -929,11 +931,10 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
                 continue
                 #print " rejecting card = ",card
                 #card = self.processCard(card)
-                #sys.exit()
 
             #print "card2 = ",ListPrint(card)
             #print "card = ",card
-            #cardName = self._getCardName(card)
+            #cardName = self._get_card_name(card)
             
             if 'ENDDATA' in cardName:
                 #print cardName
@@ -1090,7 +1091,6 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
                 #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
                 equation = DEQATN(cardObj)
                 self.addDEQATN(equation)
-                #sys.exit('filename=%s' %(self.bdfFileName))
 
             elif cardName == 'GRID':
                 node = GRID(cardObj)

@@ -1201,7 +1201,6 @@ class PBEAML(IntegratedLineProperty):
             ###
             #print("nsm = %s" %(self.nsm))
             #print self
-            #sys.exit()
     
     def MassPerLength(self):
         """

@@ -23,9 +23,10 @@ def assert_fields(card1, card2):
         value2 = printField(field2)
         if value1 != value2:
             msg = 'value1 != value2\n'
-            msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r value2=%r\n%r\n%r'
-               %(fields1[0], fields1[1], i, field1, field2, value1, value2,
-                 fields1, fields2))
+            msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
+                    'value2=%r\n%r\n%r' % (fields1[0], fields1[1], i, 
+                                           field1, field2, value1, value2,
+                                           fields1, fields2))
             raise RuntimeError(msg)
 
 def compare_card_content(fem1, fem2):
@@ -45,6 +46,7 @@ def compare_card_content(fem1, fem2):
     assert len(fem1.dareas)         == len(fem2.dareas)
     assert len(fem1.nlparms)        == len(fem2.nlparms)
     assert len(fem1.tsteps)         == len(fem2.tsteps)
+    assert len(fem1.tstepnls)       == len(fem2.tstepnls)
     assert len(fem1.dmigs)          == len(fem2.dmigs)
     assert len(fem1.dequations)     == len(fem2.dequations)
     assert len(fem1.frequencies)    == len(fem2.frequencies)
@@ -134,6 +136,11 @@ def compare_card_content(fem1, fem2):
     for key in fem1.tsteps:
         card1 = fem1.tsteps[key]
         card2 = fem2.tsteps[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.tstepnls:
+        card1 = fem1.tstepnls[key]
+        card2 = fem2.tstepnls[key]
         assert_fields(card1, card2)
 
     for key in fem1.dequations:
@@ -360,5 +367,4 @@ def compare_aero_content(fem1, fem2):
         card1 = fem1.trims[key]
         card2 = fem2.trims[key]
         assert_fields(card1, card2)
-
 

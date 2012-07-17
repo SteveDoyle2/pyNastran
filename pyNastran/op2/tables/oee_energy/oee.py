@@ -1,3 +1,5 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from struct import unpack
 
@@ -25,14 +27,14 @@ class OEE(object):
         #print "2-bufferWords = ",bufferWords,bufferWords*4,'\n'
 
         data = self.getData(4)
-        bufferSize, = unpack('i',data)
+        bufferSize, = unpack(b'i',data)
         data = self.getData(4*50)
         #print self.printBlock(data)
 
         aCode = self.getBlockIntEntry(data, 1)
         self.eTotal = self.parseApproachCode(data) # total energy of all elements in iSubcase/mode
         #print(self.printSection(100))
-        elementName, = unpack('8s',data[24:32])
+        elementName, = unpack(b'8s',data[24:32])
         #print("elementName = %s" %(elementName))
         elementName = elementName.decode()#.strip() ## element name
         #print("elementName = %s" %(elementName))
@@ -132,7 +134,8 @@ class OEE(object):
 
         (format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
         format1 += 'fff'
-
+        format1 = bytes(format1)
+        
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
             self.data = self.data[16: ]
@@ -157,7 +160,7 @@ class OEE(object):
         dt = self.nonlinearFactor
 
         #(format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
-        format1 = 'ccccccccfff'
+        format1 = b'ccccccccfff'
 
         while len(self.data)>=16: # 5*4
             eData     = self.data[0:20]

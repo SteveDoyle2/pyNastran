@@ -1,9 +1,10 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 import copy
 from numpy import array
 from struct import unpack
 
-#from pyNastran.op2.op2Errors     import *
 from pyNastran.op2.tables.oug.oug  import OUG
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 #from pyNastran.op2.tables.oes_stressStrain.oesnlxr import OESNLXR
@@ -25,8 +26,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
-        self.iTableMap = {
-                         }
+        self.iTableMap = {}
         self.readRecordTable('DUMMY')
 
     def readTableB_DUMMY(self):
@@ -58,13 +58,13 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         return 'f'
 
     def extractSort1(self,eidDevice,dt):
-        #eidDevice, = unpack('i',data)
+        #eidDevice, = unpack(b'i',data)
         #print "eidDevice=%s dt=%s eid-dev=%s out=%s" %(eidDevice,dt,eidDevice-self.deviceCode,(eidDevice-self.deviceCode)/10.)
         return (eidDevice-self.deviceCode)//10
 
     def extractSort2(self,timeFreq,eid):
         #print "timeFreq=%s eid=%s" %(timeFreq,eid)
-        #gridDevice, = unpack('i',data)
+        #gridDevice, = unpack(b'i',data)
         return timeFreq
     
     def addDataParameter(self,data,Name,Type,fieldNum,applyNonlinearFactor=True,fixDeviceCode=False):
@@ -177,7 +177,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             n = self.op2.tell()
             marker = self.getMarker()
             self.goto(n)
-            if marker!=146:
+            if marker != 146:
                 self.log.debug("marker = %s" %(marker))
                 exitFast = True
                 break
@@ -243,7 +243,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         while markerA is not None:
             self.markerStart = copy.deepcopy(self.n)
             #self.printSection(180)
-            self.readMarkers([iTable,1,0])
+            self.readMarkers([iTable, 1, 0])
             #print "starting OEF table 4..."
             if flag:
                 isTable4Done,isBlockDone = table4Data(iTable)
@@ -256,7 +256,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
                 break
             #print "finished reading oef table..."
             markerA = self.getMarker('A')
-            self.n-=12
+            self.n -= 12
             self.op2.seek(self.n)
             
             self.n = self.op2.tell()
@@ -279,10 +279,10 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         self.data = self.readBlock()
         #self.printBlock(data)
 
-        if bufferWords==146:  # table -4 is done, restarting table -3
+        if bufferWords == 146:  # table -4 is done, restarting table -3
             isTable4Done = True
             return isTable4Done,isBlockDone
-        elif bufferWords==0:
+        elif bufferWords == 0:
             #print "bufferWords 0 - done with Table4"
             isTable4Done = True
             isBlockDone = True
@@ -373,7 +373,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         nOld = self.n
         markers = self.readHeader()
 
-        if markers<0:  # not a buffer, the table may be done
+        if markers < 0:  # not a buffer, the table may be done
             self.goto(nOld)
             if markers is not None and markers%2==1:
                 self.isBufferDone = True
@@ -391,7 +391,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             nOld = self.n
             markers = self.readHeader()
 
-            if markers<0:  # not a buffer, the table may be done
+            if markers < 0:  # not a buffer, the table may be done
                 self.goto(nOld)
                 if markers is not None and markers%2==1:
                     self.isBufferDone = True
@@ -402,13 +402,13 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             ###
         ###
 
-    def handleResultsBuffer3(self,f,resultName,debug=False):
+    def handleResultsBuffer3(self, f, resultName, debug=False):
         """prototype method for getting results without recursion"""
         #if resultName not in self.allowedResultNames:
         #    return self.self.skipOES_Element()
 
         #stopBuffer = False
-        i=0
+        i = 0
         #print self.codeInformation()
         while not(self.isBufferDone):
             #print "n=%s len(data)=%s" %(self.n,len(self.data))
@@ -421,44 +421,53 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             if markers<0:  # not a buffer, the table may be done
                 self.goto(nOld)
                 #print "markers%%2 = %s" %(markers%2)
-                if markers is not None and markers%2==1:
+                if markers is not None and markers%2 == 1:
                     self.isBufferDone = True
             else:
                 data = self.readBlock()
+                if type(data) != type(self.data):
+                    msg = 'The function f=%s has a uniode error\n'%(f.__name__)
+                    msg += ("type(self.data)=%s type(data)=%s"
+                          % (type(self.data), type(data)))
+                sys.stdout.flush()
                 self.data += data
             ###
-            i+=1
-            if i==2000:
+            i += 1
+            if i == 2000:
                 raise RuntimeError('Infinite Loop or a really big model...')
             #print "isBufferDone=%s" %(self.isBufferDone)
         ###
         #print "---------------------------------"
 
-    def handleResultsBuffer(self,func,debug=False):
+    def handleResultsBuffer(self, func, debug=False):
         """
-        works by knowing that:
+        Works by knowing that:
         the end of an unbuffered table has a
-            - [4]
+          - [4]
         the end of an table with a buffer has a
-            - [4,4,x,4] where x is the next buffer size, which may have another buffer
+          - [4,4,x,4] where x is the next buffer size, which may have another
+            buffer
         the end of the final buffer block has
-            - nothing!
+          - nothing!
 
-        @param self the object pointer
-        @param func the function to recursively call (the function that called this)
-        @param debug developer debug
+        @param self
+          the object pointer
+        @param func
+          the function to recursively call (the function that called this)
+        @param debug
+          developer debug
 
         @note
-            The code knows that the large buffer is the default size and the
-            only way there will be a smaller buffer is if there are no more
-            buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
-            this end shift.  An extra marker value is read, but no big deal.
-            Beyond that it's just appending some data to the binary string
-            and calling the function that's passed in
+          The code knows that the large buffer is the default size and the
+          only way there will be a smaller buffer is if there are no more
+          buffers.  So, the op2 is shifted by 1 word (4 bytes) to account for
+          this end shift.  An extra marker value is read, but no big deal.
+          Beyond that it's just appending some data to the binary string and
+          calling the function that's passed in
 
         @warning
-            Dont modify this without LOTS of testing.
-            It's a VERY important function
+          Dont modify this without LOTS of testing.
+          It's a VERY important function
         """
         #print self.obj
         #print "len(data) = ",len(self.data)
@@ -479,9 +488,9 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         #print "markers = ",markers
         #print self.printSection(160)
         
-        if markers<0:  # not a buffer, the table may be done
+        if markers < 0:  # not a buffer, the table may be done
             self.goto(nOld)
-            if markers is not None and markers%2==1:
+            if markers is not None and markers%2 == 1:
                 self.isBufferDone = True
 
             #print self.printSection(120)
@@ -499,7 +508,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             func()
         ###
 
-    def readMappedScalarsOut(self,debug=False):
+    def readMappedScalarsOut(self, debug=False):
         readCase = True
         #print "isSort1() = ",self.isSort1()
         if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
@@ -511,7 +520,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             self.skipOES_Element()
         ###
 
-    def readScalarsOut(self,debug=False):
+    def readScalarsOut(self, debug=False):
         """
         reads len(strFormat) values and puts it into the result object
         the "o" in readScalars4o means "out" b/c it creates an out tuple
@@ -522,25 +531,26 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         """
         data = self.data
         #print type(self.obj)
-        (nTotal,strFormat) = self.obj.getLength()
+        (nTotal,iFormat) = self.obj.getLength()
+        iFormat = bytes(iFormat)
         n = 0
         #print  "strFormat = ",strFormat
         nEntries = len(data)//nTotal
         for i in range(nEntries):
             eData = data[n:n+nTotal]
-            out  = unpack(strFormat,eData)
+            out  = unpack(iFormat,eData)
             if debug:
-                self.log.debug("*out = %s" %(out))
+                self.log.debug("*out = %s" % (out))
             self.obj.add(out)
             n+=nTotal
         ###
         self.data = data[n:]
         #print self.printSection(200)
-        self.handleResultsBuffer(self.readScalarsOut,debug=False)
+        self.handleResultsBuffer(self.readScalarsOut, debug=False)
 
-def getCloseNum(v1,v2,closePoint):
-    numList = [v1,v2]
-    delta = array([v1,v2])-closePoint
+def getCloseNum(v1, v2, closePoint):
+    numList = [v1, v2]
+    delta = array([v1, v2])-closePoint
     #print "**delta=%s" %(delta)
     absDelta = list(abs(delta))
     closest = min(absDelta)

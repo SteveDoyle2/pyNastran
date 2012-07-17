@@ -86,7 +86,7 @@ class bdfReader(object):
         @retval line the next line in the BDF or None if it's the end of a the current file
         """
         self.lineNumbers[-1] += 1
-        linesPack = self.makeLinesPack(debug=False)
+        linesPack = self._make_lines_pack(debug=False)
         #print "len(linesPack) = ", len(linesPack)
         #for line in linesPack:
             #print("$  |%r|" %(line))
@@ -94,7 +94,7 @@ class bdfReader(object):
         if len(linesPack) == 0:
             self.closeFile()
             return None
-            #linesPack = self.makeLinesPack(debug=debug)
+            #linesPack = self._make_lines_pack(debug=debug)
             #return lastLine
         #print linesPack[0]
         return linesPack.pop(0)

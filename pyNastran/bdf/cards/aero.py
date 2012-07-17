@@ -768,14 +768,11 @@ class MKAERO1(BaseCard):
             for i in range(1, 1+nFields):
                 self.machs.append( card.field(i  ))
                 self.rFreqs.append(card.field(i+8))
-            ###
         else:
             raise NotImplementedError('MKAERO1')
         ###
         #print "machs  = ",self.machs
         #print "rFreqs = ",self.rFreqs
-        #print self
-        #sys.exit()
     
     def addFreqs(self, mkaero):
         self.getMach_rFreqs()
