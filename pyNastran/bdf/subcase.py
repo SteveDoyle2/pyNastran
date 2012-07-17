@@ -1,5 +1,6 @@
 # pylint: disable=C0103,R0201
 import sys
+import warnings
 
 class Subcase(object):
     solCodeMap = {
@@ -301,15 +302,23 @@ class Subcase(object):
         return tableCode
         
     def hasParameter(self, paramName):
+        warnings.warn('hasParameter has been deprecated; use has_parameter',
+                      DeprecationWarning, stacklevel=2)
         self.has_parameter(paramName)
 
     def getParameter(self, paramName):
+        warnings.warn('getParameter has been deprecated; use get_parameter',
+                      DeprecationWarning, stacklevel=2)
         self.get_parameter(paramName)
 
     def updateParamName(self, paramName):
+        warnings.warn('updateParamName has been deprecated; use '
+                      'update_param_name', DeprecationWarning, stacklevel=2)
         self.update_param_name(paramName)
 
     def writeSubcase(self, subcase0):
+        warnings.warn('writeSubcase has been deprecated; use write_subcase',
+                      DeprecationWarning, stacklevel=2)
         self.write_subcase(subcase0)
 
 #-----------------
@@ -360,14 +369,14 @@ class Subcase(object):
 
 
         #elif paramName.startswith('DFRE'):  paramName = 'D'
-#DFRE
         #elif paramName.startswith('TEMP'):  paramName = 'TEMPERATURE'  # handled in caseControlDeck.py
         #print '*paramName = ',paramName
         return  paramName
 
     def _add_data(self, key, value, options, paramType):
         key = self.update_param_name(key)
-        #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
+        #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+        #      "paramType=%s" %(self.id, key, value, options, paramType))
         if isinstance(value, unicode) and value.isdigit():
             value = int(value)
 
@@ -377,7 +386,8 @@ class Subcase(object):
 
     def _simplify_data(self, key, value, options, paramType):
         if paramType == 'SET-type':
-            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
+            #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+            #      "paramType=%s" %(self.id, key, value, options, paramType))
             values2 = []
             for (i, ivalue) in enumerate(value):
                 ivalue = ivalue.strip()
@@ -399,7 +409,8 @@ class Subcase(object):
             return (key, values2, options)
 
         elif paramType == 'CSV-type':
-            #print "adding iSubcase=%s key=|%s| value=|%s| options=|%s| paramType=%s" %(self.id, key, value, options, paramType)
+            #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
+            #      "paramType=%s" %(self.id, key, value, options, paramType))
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
             ###
@@ -450,15 +461,17 @@ class Subcase(object):
         for (key, param) in self.params.iteritems():
             key = key.upper()
             (value, options, paramType) = param
-            msg = "  -key=|%s| value=|%s| options=%s paramType=|%s|" %(key, value, options, paramType)
+            #msg = ("  -key=|%s| value=|%s| options=%s paramType=|%s|"
+            #    % (key, value, options, paramType))
 
         thermal = 0
         for (key, param) in self.params.iteritems():
             key = key.upper()
             (value, options, paramType) = param
-            msg = "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key, value, options, paramType)
-            print(msg)
-            #msg += self.printParam(key,param,printBeginBulk=False)
+            #msg = ("  *key=|%s| value=|%s| options=%s paramType=|%s|"
+            #    % (key, value, options, paramType)
+            #print(msg)
+            #msg += self.printParam(key, param, printBeginBulk=False)
             if paramType == 'SUBCASE-type':
                 op2Params['iSubcase'].append(value)
             elif key in ['BEGIN', 'ECHO', 'ANALYSIS'] or 'SET' in key:
@@ -492,16 +505,15 @@ class Subcase(object):
                 op2Params['tableCodes'].append(tableCode)
                 #analysisMethod = value
 
-            #elif key in ['ADACT','ADAPT','AERCONFIG',
-            #            'TITLE','SUBTITLE','LABEL',
-            #            'LOAD','SUPORT','SUPORT1','MPC','SPC',
-            #            'TSTEPNL','NLPARM','TRIM','GUST','METHOD','DESOBJ',
-            #            'DESSUB','FMETHOD','SEALL']:
+            #elif key in ['ADACT', 'ADAPT', 'AERCONFIG', 'TITLE', 'SUBTITLE',
+            #             'LABEL', 'LOAD', 'SUPORT', 'SUPORT1', 'MPC', 'SPC',
+            #            'TSTEPNL', 'NLPARM', 'TRIM', 'GUST', 'METHOD', 
+            #            'DESOBJ', 'DESSUB', 'FMETHOD', 'SEALL']:
             else:
                 op2Params[key.lower()] = value
             ###
             #else:
-            #    raise Exception('unsupported entry...\n%s' %(msg))
+            #    raise NotImplementedErrror('unsupported entry...\n%s' %(msg))
             ###
         ###
         op2Params['thermal'] = thermal
@@ -647,20 +659,26 @@ class Subcase(object):
         else:
             msg = 'SUBCASE %s\n' %(self.id)
             for (key, param) in self.subcase_sorted(self.params.items()):
-                if key in subcase0.params and subcase0.params[key]==param:
+                if key in subcase0.params and subcase0.params[key] == param:
                     pass # dont write global subcase parameters
                 else:
-                    if 'key'=='BEGIN':
+                    if 'key' == 'BEGIN':
                         continue
                     else:
-                        #print "key=%s param=%s" %(key,param)
+                        #print "key=%s param=%s" %(key, param)
                         (value, options, paramType) = param
-                        #print "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
-                        msg += self.print_param(key, param, printBeginBulk=False)
+                        #print("  *key=|%s| value=|%s| options=%s "
+                        #      "paramType=|%s|" % (key, value, options,
+                        #                          paramType))
+                        msg += self.print_param(key, param,
+                                                printBeginBulk=False)
                         #print ""
                     ###
                 ###
-        if self.id > 0 and 'BEGIN' in self.params: # self.id>0 and 'BEGIN' in self.params... why was that there???
+        
+        ## self.id>0 and 'BEGIN' in self.params used to prevent printing of
+        ## BEGIN BULK multiple times
+        if self.id > 0 and 'BEGIN' in self.params:
             msg += self.print_param('BEGIN', self.params['BEGIN'])
         return msg
 
@@ -668,9 +686,12 @@ class Subcase(object):
         """
         does a "smart" sort on the keys such that SET cards increment in
         numerical order.
-        @param self the subcase object
-        @param listA the list of subcase list objects
-        @retval listB the sorted version of listA
+        @param self
+          the subcase object
+        @param listA
+          the list of subcase list objects
+        @retval listB
+          the sorted version of listA
         """
         # presort the list to put all the SET cards next to each other
         listA.sort()
@@ -700,7 +721,7 @@ class Subcase(object):
                     break
         
         # grab the other entries
-        listAfter = listA[i:]
+        listAfter = listA[i+1:]
         
         # write the SET cards in a sorted order
         setList = []
@@ -713,7 +734,8 @@ class Subcase(object):
 
     def __repr__(self):
         """
-        prints out every entry in the subcase
+        Prints out every entry in the subcase.  Skips parameters already in
+        the global subcase.
         """
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
@@ -727,7 +749,7 @@ class Subcase(object):
             else:
                 #print "key=%s param=%s" %(key,param)
                 (value, options, paramType) = param
-                #print "  *key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
+                #print "  ?*key=|%s| value=|%s| options=%s paramType=|%s|" %(key,value,options,paramType)
                 msg += self.print_param(key, param, printBeginBulk=False)
                 #print ""
             ###

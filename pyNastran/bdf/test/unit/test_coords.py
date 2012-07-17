@@ -133,9 +133,9 @@ class TestCoords(unittest.TestCase):
         
         mesh = BDF()
         card = mesh.processCard(grid)
-        mesh.addCard(card,card[0])
+        mesh.add_card(card, card[0])
         card = mesh.processCard(coord)
-        mesh.addCard(card,card[0])
+        mesh.add_card(card, card[0])
         mesh.crossReference()
 
         g = mesh.Node(20143)
@@ -152,7 +152,7 @@ class TestCoords(unittest.TestCase):
 
         for (nid, grid) in enumerate(grids):
             (cid, x, y, z) = grid
-            mesh.addCard(['GRID', nid+1, cid, x, y, z], 'GRID')
+            mesh.add_card(['GRID', nid+1, cid, x, y, z], 'GRID')
             gridObj = mesh.Node(nid+1)
             if debug:
                 print(gridObj)
@@ -160,7 +160,7 @@ class TestCoords(unittest.TestCase):
         for (cid, coord) in enumerate(coords):
             #print coord
             (rid, x, y, z) = coord
-            obj  = mesh.addCard(['CORD2R', cid+1, rid]+x+y+z, 'CORD2R')
+            obj  = mesh.add_card(['CORD2R', cid+1, rid]+x+y+z, 'CORD2R')
             coordObj = mesh.Coord(cid+1)
             if debug:
                 print(coordObj)

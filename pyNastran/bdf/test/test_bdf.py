@@ -4,6 +4,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 import numpy
+import warnings
+warnings.simplefilter('always')
+
 numpy.seterr(all='raise')
 import traceback
 

@@ -53,7 +53,7 @@ def makeTruss2():
         if node[0]==0.:  # if x==0
             spc = str(123456)
         grid = ['GRID',i+1,None,node[0],node[1],node[2],None,spc]
-        model.addCard(grid,'GRID')
+        model.add_card(grid, 'GRID')
     
 
           #id
@@ -75,10 +75,10 @@ def makeTruss2():
     scaleFactor = 1.
     loadID = 123
     load = ['LOAD',loadID,scaleFactor,1.,loadID]
-    model.addCard(load,'LOAD')
+    model.add_card(load, 'LOAD')
 
     force = ['FORCE',loadID,2,None,1000.,  0.,1.,0.]
-    model.addCard(force,'FORCE')
+    model.add_card(force, 'FORCE')
     model.write('conrod.bdf')
     print "done"
     return model
@@ -104,7 +104,7 @@ def makeTruss():
         if node[2]==0.:
             spc = str(123456)
         grid = ['GRID',i+1,None,node[0],node[1],node[2],None,spc]
-        model.addCard(grid,'GRID')
+        model.add_card(grid, 'GRID')
 
 
     # c conrods
@@ -156,10 +156,10 @@ def makeTruss():
     scaleFactor = 1.
     loadID = 123
     load = ['LOAD',loadID,scaleFactor,1.,loadID]
-    model.addCard(load,'LOAD')
+    model.add_card(load, 'LOAD')
 
     force = ['FORCE',loadID,3,None,100.,  1.,0.,0.]
-    model.addCard(force,'FORCE')
+    model.add_card(force, 'FORCE')
     model.write('frame.bdf')
     print "done"
     return model
@@ -169,12 +169,12 @@ def addRods(model,rods,mat1,i,A,J):
     if isinstance(A,float):
         A = [A]*len(rods)
 
-    model.addCard(mat1,'MAT1')
-    for area,rod in zip(A,rods):
-        (n1,n2) = rod
+    model.add_card(mat1, 'MAT1')
+    for (area, rod) in zip(A, rods):
+        (n1, n2) = rod
         #print "rod = ",rod           #mid
         conrod = ['CONROD',i+1,n1,n2,mat1[1],area,J]
-        model.addCard(conrod,'CONROD')
+        model.add_card(conrod, 'CONROD')
         #print conrod
         #Ke = model.Element(i+1).Stiffness(model)
         i+=1
