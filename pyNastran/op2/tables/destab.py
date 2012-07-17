@@ -10,10 +10,8 @@ from struct import unpack
 class DESTAB(object):
 
     def readDesvar(self,data):
-        out = unpack('iiccccccccfff',data[0:28])
-        (idvid,dvid,alabel1,bLabel1,cLabel1,dLabel1,alabel2,bLabel2,cLabel2,dLabel2,vmin,vmax,delx) = out
-        label1 = alabel1+bLabel1+cLabel1+dLabel1
-        label2 = alabel2+bLabel2+cLabel2+dLabel2
+        out = unpack(b'ii4s4sfff',data[0:28])
+        (idvid,dvid,label1,label2,vmin,vmax,delx) = out
         #print "ivid=%s dvid=%s label1=%s label2=%s vmax=%g vmin=%g delx=%g" %(idvid,dvid,label1,label2,vmin,vmax,delx)
         #self.readData(8)
 

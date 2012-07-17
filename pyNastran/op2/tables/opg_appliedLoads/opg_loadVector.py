@@ -123,7 +123,7 @@ class LoadVectorObject(TableObject): # tableCode=2, sortCode=0, thermal=0
 
 class ComplexLoadVectorObject(ComplexTableObject): # tableCode=11, approachCode=???
     def __init__(self,dataCode,isSort1,iSubcase,dt):
-        complexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
+        ComplexTableObject.__init__(self,dataCode,isSort1,iSubcase,dt)
 
     def writeMatlab(self,iSubcase,f=None,isMagPhase=False):
         name = 'loadVector'

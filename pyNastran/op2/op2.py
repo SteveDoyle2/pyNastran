@@ -30,7 +30,7 @@ class OP2(BDF,
         """
         ## stores the set of all subcases that are in the OP2
         self.subcases = set()
-        if iSubcases is None:
+        if iSubcases is None or iSubcases==[]:
             ## stores if the user entered [] for iSubcases
             self.isAllSubcases = True
             self.validSubcases = []
@@ -39,7 +39,6 @@ class OP2(BDF,
             self.isAllSubcases = False
             ## the set of valid subcases -> set([1,2,3])
             self.validSubcases = set(iSubcases)
-        ###
         self.log.debug("setSubcases - iSubcases = %s" % (self.validSubcases))
 
     def setTransientTimes(self, times): ## @todo this name sucks...
@@ -54,7 +53,6 @@ class OP2(BDF,
             eTimes = list(times)
             eTimes.sort()
             expectedTimes[iSubcase] = array(eTimes)
-        ###
         self.expectedTimes = expectedTimes
 
     def isValidSubcase(self):
@@ -703,6 +701,7 @@ class OP2(BDF,
         if iWordStop == None:
             #print("iWordStart=%s data[%s:%s]" %(iWordStart,iWordStart*4,(iWordStart+1)*4))
             ds = data[(iWordStart-1)*4:iWordStart*4]
+            iFormat = bytes(iFormat)
             return unpack(iFormat, ds)[0]
         #print("type(data) = ",type(data))
         ds = data[(iWordStart-1)*4:(iWordStop-1)*4]

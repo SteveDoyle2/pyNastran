@@ -22,6 +22,7 @@ class ComplexElementsStressStrain(object):
         (format1,extract) = self.getOUG_FormatStart()
         nTotal = 12
         format1 += 'ffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
         
         n = 0
@@ -54,6 +55,7 @@ class ComplexElementsStressStrain(object):
         (format1,extract) = self.getOUG_FormatStart()
         nTotal = 12
         format1 += 'ff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
         
         n = 0
@@ -82,6 +84,7 @@ class ComplexElementsStressStrain(object):
 
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=76:
@@ -125,6 +128,7 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
         
         nNodes = 0 # centroid + 4 corner points
@@ -136,15 +140,15 @@ class ComplexElementsStressStrain(object):
         #print "self.numWide = ",self.numWide
         #print "len(data) = ",len(self.data)
         
-        assert self.numWide==15,'invalid numWide...numWide=%s' %(self.numWide)
-        while len(self.data)>=60: # 2+15*5 = 77 -> 77*4 = 308
+        assert self.numWide == 15,'invalid numWide...numWide=%s' %(self.numWide)
+        while len(self.data) >= 60: # 2+15*5 = 77 -> 77*4 = 308
             #print self.printBlock(self.data[0:100])
-            #(eid,) = unpack("i",self.data[0:4])
-            #print "abcd=",a,b,c,d
+            #(eid,) = unpack(b'i',self.data[0:4])
+            #print "abcd=",abcd
             #self.data = self.data[8:]  # 2
             eData     = self.data[0:60]  # 4*15=60
             self.data = self.data[60: ]
-            out = unpack(format1,eData)  # 15
+            out = unpack(format1, eData)  # 15
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
             (eid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
@@ -170,7 +174,7 @@ class ComplexElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:60] # 4*15=60
                 self.data = self.data[60: ]
-                out = unpack('iffffffffffffff',eData[0:60])
+                out = unpack(b'iffffffffffffff',eData[0:60])
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
@@ -207,6 +211,7 @@ class ComplexElementsStressStrain(object):
         assert self.numWide==25,"numWide=%s not 25" %(self.numWide)
         nTotal = 100 #4*25
         format1 += 'ffffffffffffffffffffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=nTotal:
             eData     = self.data[0:nTotal]
@@ -271,10 +276,11 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
-        while len(self.data)>=nTotal:
-            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+        while len(self.data) >= nTotal:
+            (eid, _) = unpack(b'i4s',self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid,dt)
             eData     = self.data[0:60] # 4*15
@@ -301,7 +307,7 @@ class ComplexElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:60] # 4*15=60
                 self.data = self.data[60: ]
-                out = unpack('iffffffffffffff',eData)
+                out = unpack(b'iffffffffffffff',eData)
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
@@ -339,6 +345,7 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffff'
+        format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
         while len(self.data)>=60:
@@ -387,6 +394,8 @@ class ComplexElementsStressStrain(object):
         (n1,format1) = self.obj.getLength1()
         (n2,format2) = self.obj.getLength2()
         format1 = formatStart+format1
+        format1 = bytes(format1)
+        format2 = bytes(format2)
 
         while len(self.data)>=nTotal:
             eData     = self.data[0:n1]
@@ -419,7 +428,8 @@ class ComplexElementsStressStrain(object):
         raise NotImplementedError()
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += "issssi"
+        format1 += "i4si"
+        format1 = bytes(format1)
 
         #nNodes = 5 # 1 centroid + 4 corner points
         #self.printSection(20)
@@ -436,11 +446,11 @@ class ComplexElementsStressStrain(object):
             #self.printBlock(eData)
 
             out = unpack(format1,eData)
-            (eid,cid,a,b,c,d,nNodes) = out
+            (eid, cid, abcd, nNodes) = out
             eid2 = extract(eid,dt)
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
-            #print "abcd = |%s|" %(a+b+c+d)
+            #print "abcd = |%s|" %(abcd)
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
             assert nNodes < 21,self.printBlock(eData)
@@ -462,7 +472,7 @@ class ComplexElementsStressStrain(object):
                 #print "self.tableCode = ",self.tableCode
                 #print "len(data) = ",len(self.data)
                 
-                gridDevice, = unpack('i',eData[0:4])
+                gridDevice, = unpack(b'i',eData[0:4])
                 #print "gridDevice = ",gridDevice
                 if gridDevice==0:
                     grid = 'C'
@@ -471,7 +481,7 @@ class ComplexElementsStressStrain(object):
                     grid = gridDevice
                 ###
 
-                out = unpack('ffffffffffffffffffff',eData[4:84])
+                out = unpack(b'ffffffffffffffffffff',eData[4:84])
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (sxx,sxy,s1,a1,a2,a3,pressure,svm,
@@ -527,7 +537,8 @@ class ComplexElementsStressStrain(object):
         #print "*****"
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += "cccc"
+        format1 += '4s'
+        format1 = bytes(format1)
 
         nNodes=4  # this is a minimum, it will be reset later
         nNodesExpected = 1
@@ -538,10 +549,10 @@ class ComplexElementsStressStrain(object):
             #self.printBlock(eData)
 
             out = unpack(format1,eData)
-            (eid,a,b,c,d) = out
+            (eid, abcd) = out
             if self.makeOp2Debug:
                 self.op2Debug.write('%s\n' %(str(out)))
-            #print "abcd = |%s|" %(a+b+c+d)
+            #print "abcd = |%s|" %(abcd)
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" %(eid,cid,nNodes,nNodesExpected)
             
             assert nNodes < 21,self.printBlock(eData)
@@ -570,10 +581,10 @@ class ComplexElementsStressStrain(object):
                 
                 #print "len(data) = ",len(self.data)
                 
-                #gridDevice, = unpack('i',eData[0:4])
+                #gridDevice, = unpack(b'i',eData[0:4])
                 #print "gridDevice = ",gridDevice
 
-                out = unpack('ifffffffffffffff',eData[:64])  # 18-3 = 15
+                out = unpack(b'ifffffffffffffff',eData[:64])  # 18-3 = 15
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
 
@@ -627,6 +638,7 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ifffffff'
+        format1 = bytes(format1)
         while len(self.data)>=132: # (1+8*4) = 33*4 = 132
             eData     = self.data[0:36]  # 4*9=36
             self.data = self.data[36: ]
@@ -639,7 +651,7 @@ class ComplexElementsStressStrain(object):
             for i in range(3):
                 eData     = self.data[0:32]  #4*8-32
                 self.data = self.data[32: ]
-                out = unpack('ifffffff',eData)
+                out = unpack(b'ifffffff',eData)
                 (loc,rs,azs,As,ss,maxp,tmax,octs) = out
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt,eid,loc,rs,azs,As,ss,maxp,tmax,octs)
@@ -653,6 +665,7 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=28:
             eData     = self.data[0:28] # 4*7=28
@@ -686,21 +699,22 @@ class ComplexElementsStressStrain(object):
         n = 0
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'cccc'
+        format1 += '4s'
+        format1 = bytes(format1)
+
         while len(self.data)>=456: # 2+16*7 = 114 -> 114*4 = 456
             eData = self.data[0:8]
             self.data = self.data[8:]
-            (eid,a,b,c,d) = unpack(format1,eData)
+            (eid,cType) = unpack(format1,eData)
             eid = extract(eid,dt)
-            #out = unpack("ii",eData)
+            #out = unpack('ii',eData)
             #(eid,cType) = out
-            cType = a+b+c+d
 
             for i in range(7):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
-                out = unpack('ifffffffffffffff',eData)
+                out = unpack(b'ifffffffffffffff',eData)
                 assert len(out)==16
                 (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
                 #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
@@ -726,21 +740,22 @@ class ComplexElementsStressStrain(object):
         n = 0
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'cccc'
+        format1 += '4s'
+        format1 = bytes(format1)
+
         while len(self.data)>=584: # 2+16*9 = 146 -> 146*4 = 584
             eData = self.data[0:8]
             self.data = self.data[8:]
-            (eid,a,b,c,d) = unpack(format1,eData)
+            (eid,cType) = unpack(format1,eData)
             eid = extract(eid,dt)
-            #out = unpack("ii",eData)
+            #out = unpack(b'ii',eData)
             #(eid,cType) = out
-            cType = a+b+c+d
 
             for i in range(9):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64] # 4*16
                 self.data = self.data[64:]
-                out = unpack('ifffffffffffffff',eData)
+                out = unpack(b'ifffffffffffffff',eData)
                 assert len(out)==16
                 (grid,sx,sy,sz,sxy,syz,sxz,se,eps,ecs,ex,ey,ez,exy,eyz,exz) = out
                 #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" %(eid,cType,sx,sy,sz,sxy,syz,sxz,se)
@@ -764,12 +779,13 @@ class ComplexElementsStressStrain(object):
         nTotal = 204
 
         n1 = 24
-        format1 = 'ssssfffff'
-        #print "len(data) = ",len(self.data)
+        format1 = '4sfffff'
+        format1 = bytes(format1)
+
         while len(self.data)>=nTotal:
             eData     = self.data[0:8]
             self.data = self.data[8: ]
-            (eid,gridA) = unpack('ii', eData)
+            (eid,gridA) = unpack(b'ii', eData)
             #print "eid=%s gridA=%s" %(eid,gridA)
 
             for i in range(1):
@@ -777,8 +793,7 @@ class ComplexElementsStressStrain(object):
                     eData     = self.data[0:n1]
                     self.data = self.data[n1: ]
                     out = unpack(format1, eData)
-                    (loc1,loc2,loc3,loc4,nsx,nse,te,epe,ece) = out
-                    loc = loc1+loc2+loc3+loc4
+                    (loc,nsx,nse,te,epe,ece) = out
                     #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" %(loc,nsx,nse,te,epe,ece)
                 ###
                 #self.obj.add(eid,out)
@@ -801,6 +816,8 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ifffffffff'
+        format1 = bytes(format1)
+
         while len(self.data)>=44: # 2+17*5 = 87 -> 87*4 = 348
             eData     = self.data[0:44] # 4*11=44
             self.data = self.data[44: ]
@@ -833,7 +850,9 @@ class ComplexElementsStressStrain(object):
         #x = 0
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ssssiffffff'
+        format1 += '4siffffff'
+        format1 = bytes(format1)
+
         while len(self.data)>=148:
             #if x==2:
             #    sys.exit('end of hyperQuad')
@@ -841,15 +860,14 @@ class ComplexElementsStressStrain(object):
             self.data = self.data[36: ]
             out = unpack(format1,eData)
 
-            (eid,t1,t2,t3,t4,ID,sx,sy,sxy,angle,smj,smi) = out
+            (eid,Type,ID,sx,sy,sxy,angle,smj,smi) = out
             eid = extract(eid,dt)
-            Type = t1+t2+t3+t4
             self.obj.addNewEid(dt,[eid,Type,sx,sy,sxy,angle,smj,smi])
             #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(eid,Type,ID,sx,sy,sxy,angle,smj,smi)
             for i in range(3):
                 eData     = self.data[0:28] #4*7=28
                 self.data = self.data[28: ]
-                out = unpack('iffffff',eData)
+                out = unpack(b'iffffff',eData)
                 #(ID,sx,sy,sxy,angle,smj,smi) = out
                 self.obj.add(dt,eid,out)
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(ID,sx,sy,sxy,angle,smj,smi)
@@ -876,8 +894,10 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'ffffffffffffffff'
+        format1 = bytes(format1)
+
         while len(self.data)>=nTotal:
-            (eid,_,_,_,_) = unpack("issss",self.data[0:8])
+            (eid,_) = unpack(b'i4s',self.data[0:8])
             self.data = self.data[8:]  # 2
             eid = extract(eid,dt)
             eData     = self.data[0:68]
@@ -894,7 +914,7 @@ class ComplexElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:68] # 4*17=68
                 self.data = self.data[68: ]
-                out = unpack('iffffffffffffffff',eData)
+                out = unpack(b'iffffffffffffffff',eData)
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1,

@@ -36,7 +36,11 @@ class OEE(object):
         #print(self.printSection(100))
         elementName, = unpack(b'8s',data[24:32])
         #print("elementName = %s" %(elementName))
-        elementName = elementName.decode()#.strip() ## element name
+        try:
+            elementName = elementName.encode('utf-8') #.strip() ## element name
+        except UnicodeDecodeError:
+            print("elementName = ",str(elementName))
+            raise
         #print("elementName = %s" %(elementName))
         if elementName.isalpha():
             self.dataCode['elementName'] = elementName
