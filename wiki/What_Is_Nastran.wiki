@@ -12,8 +12,8 @@ Due to the Fortran legacy, the file formats of this program are often criticized
 == File Types ==
 || *File Type* || *Acronym* || *Contents* || *Input/Output* || *Format* ||
 || BDF || Bulk Data File || Geometry/Loads/Constraints || Input  || ASCII  ||
-|| OP2 || Output #2      || Displacement/Stress/etc,   || Output || Binary ||
-|| F06 || File #6        || Displacement/Stress/etc,   || Output || ASCII  ||
+|| OP2 || Output #2      || Displacement/Stress/etc.   || Output || Binary ||
+|| F06 || File #6        || Displacement/Stress/etc.   || Output || ASCII  ||
 || OP4 || Output #4      || Matrices and Vectors       || Input/Output || ASCII/Binary ||
 
 == Explanation of Files ==
