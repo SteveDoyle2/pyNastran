@@ -6,6 +6,12 @@
 == Brief History ==
 [http://en.wikipedia.org/wiki/Nastran Nastran] (NASA Structrual ANalysis) is a series of commercial software products originally developed under a [http://en.wikipedia.org/wiki/NASA NASA] contract in the late 1960s by [http://www.mscsoftware.com/ MSC Software Corporation] using the [http://en.wikipedia.org/wiki/Fortran Fortran] programming language.  It uses the [http://en.wikipedia.org/wiki/Finite_element_method Finite Element Method] which discritizes geometry into small elements and solves large [http://en.wikipedia.org/wiki/Sparse_matrix sparse matrices] using linear algebra to find quantities like displacement and stress in order to design [http://en.wikipedia.org/wiki/Structural_engineering structures]. It became the industry standard program in part due to MSC buying competitors and incorporating their advances into their products.  After an antitrust settlement with the [http://en.wikipedia.org/wiki/Federal_Trade_Commission FTC] in 2002, their source code was released to various organizations.  Alternative Nastran versions were soon created including [http://www.nenastran.com/nei-nastran NEi-Nastran] and [http://www.plm.automation.siemens.com/en_us/products/velocity/femap/nxNastran/ NX Nastran].  Additionally, other competitors have emerged including [http://www.3ds.com/products/simulia/portfolio/abaqus/latest-release/ Abaqus] and [http://www.ansys.com/Industries/Aerospace+&+Defense/Aircraft Ansys].
 
+
+== A Finite Element Model (FEM) ==
+http://www.smartcae.com/uploads/u4/upload/breading_1.gif
+
+As the model is loaded, the displacement increases.  The contour plot shows [http://en.wikipedia.org/wiki/Stress_(mechanics) stress] (Force/Area) on the part.  At high stresses, the part will fail.  The stress vs [http://en.wikipedia.org/wiki/Deformation_(mechanics) strain] (change in length/initial length) [http://en.wikipedia.org/wiki/Stress-strain_curve curve] has a linear portion and a nonlinear portion.  Structures are designed to be operated linearly (to extend the life of the part), but under extreme cases take a additional load such that there is no catastrophic failure.
+
 == The Problem with Nastran ==
 Due to the Fortran legacy, the file formats of this program are often criticized as being cubersome.  For aerospace, mechanical, and civil engineers who use this program on a daily basis to analyze aircraft, spacecraft, buildings, and cars, this is a huge burden.
 
