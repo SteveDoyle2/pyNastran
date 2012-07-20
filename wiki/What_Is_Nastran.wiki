@@ -18,10 +18,10 @@ Due to the Fortran legacy, the file formats of this program are often criticized
 == File Types ==
 || *File Extension* || *Acronym* || *Contents* || *Input/Output* || *Format* ||
 || BDF/DAT/NAS || Bulk Data File / Data / Nastran || Geometry/Loads/Constraints || Input  || ASCII  ||
-|| OP2 || Output #2      || Displacement/Stress/etc.   || Output || Binary ||
-|| PCH || Punch        || See Note   || Output || ASCII  ||
 || F04 || File #4        || Solution Information  || Output || ASCII  ||
 || F06 || File #6        || Displacement/Stress/etc.   || Output || ASCII  ||
+|| PCH || Punch        || See Note   || Output || ASCII  ||
+|| OP2 || Output #2      || Displacement/Stress/etc.   || Output || Binary ||
 || OP4 || Output #4      || Matrices and Vectors       || Input/Output || ASCII/Binary ||
 
 *Note* the PCH file may be the outputs of an optimization run (and uses valid BDF syntax) and also may be another version of the OP2/F06 file.  This output looks very different than any of the other formats.
