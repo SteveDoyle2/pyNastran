@@ -3,7 +3,7 @@
 
 = Future Development =
 
-If you're not familar with Nastran, reading [http://code.google.com/p/pynastran/wiki/What_Is_Nastran What is Nastran?] help explain the importance of the software.
+If you're not familar with Nastran, reading "[http://code.google.com/p/pynastran/wiki/What_Is_Nastran What is Nastran]" will help explain the importance of the software.
 
 Major areas of future development include:
 
