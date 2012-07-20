@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 import copy
 
-class BDF_Card(object):
+class BDFCard(object):
     def __init__(self, card=None, oldCardObj=None, debug=False):
         self.debug = debug
         if card:

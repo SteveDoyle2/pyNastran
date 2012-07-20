@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 
-class bdfReader(object):
+class BDFReader(object):
     def __init__(self, debug, log):
         self.relpath = True
         if sys.version_info < (2,6):
