@@ -52,7 +52,7 @@ Many of the functions in the various classes are undocumented.  The HTML documen
 The current development version of pyNastran has 52k lines of code spanning 222 files.  Reducing this by 10% would help tremendously.
 
 Some statistics:
-|| Line Count    || Number of Lines ||
+|| *Line Count*  || *Number of Lines* ||
 || Total lines   || 72150 ||
 || Code lines    || 52101 ||
 || Comment lines || 10831 ||
