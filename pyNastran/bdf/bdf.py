@@ -83,18 +83,18 @@ from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
 
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
-from pyNastran.bdf.bdf_Methods     import bdfMethods
+from pyNastran.bdf.bdf_Methods     import BDFMethods
 
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
-from .bdfInterface.BDF_Card   import BDF_Card
-from .bdfInterface.bdf_Reader import bdfReader
+from .bdfInterface.BDF_Card   import BDFCard
+from .bdfInterface.bdf_Reader import BDFReader
 from .bdfInterface.bdf_writeMesh   import WriteMesh
 from .bdfInterface.bdf_cardMethods import CardMethods
 from .bdfInterface.crossReference  import XrefMesh
 
 
-class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
+class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           CardMethods, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
@@ -111,10 +111,10 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         @param nCardLinesMax the number of lines of the longest card in the deck (default=1000)
         """
         ## allows the BDF variables to be scoped properly (i think...)
-        bdfReader.__init__(self, debug, log)
+        BDFReader.__init__(self, debug, log)
         GetMethods.__init__(self)
         AddMethods.__init__(self)
-        bdfMethods.__init__(self)
+        BDFMethods.__init__(self)
         WriteMesh.__init__(self)
         CardMethods.__init__(self, nCardLinesMax)
         XrefMesh.__init__(self)
@@ -722,6 +722,12 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         
 
     def setDynamicSyntax(self, dictOfVars):
+        """@see set_dynamic_syntax"""
+        warnings.warn('setDynamicSyntax has been deprecated; use '
+                      'set_dynamic_syntax',DeprecationWarning, stacklevel=2)
+        self.set_dynamic_syntax(dictOfVars)
+
+    def set_dynamic_syntax(self, dictOfVars):
         """
         uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
@@ -730,7 +736,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         dictOfVars = {'varName': 10}
         """
         self.dictOfVars = {}
-        for (key, value) in dictOfVars.iteritems():
+        for (key, value) in sorted(dictOfVars.iteritems()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' %(key, len(key)))
             self.dictOfVars[key.upper()] = value
@@ -856,7 +862,6 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
             pulls off any spaces or asterisks and returns what is left.
         """
         #self.log.debug("getting cardName...")
-        #print 'cardLines[0] = ',cardLines
         cardName = cardLines[0][0:8].strip()
         if ',' in cardName:
             cardName = cardName.split(',')[0].strip()
@@ -866,7 +871,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         return cardName
     
     def _is_reject(self, cardName):
-        """can the card be read"""
+        """Can the card be read"""
         #cardName = self._get_card_name(card)
         if cardName.startswith('='):
             return False
@@ -882,10 +887,14 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         return True
 
     def _get_include_file_name(self, cardLines):
-        """parses an INCLUDE file split into multiple lines (as a list)
-        @param self the object poitner
-        @param cardLines the list of lines in the include card (all the lines!)
-        @param cardName INCLUDE or include (needed to strip it off without converting the case)
+        """Parses an INCLUDE file split into multiple lines (as a list).
+        @param self
+          the BDF object
+        @param cardLines
+          the list of lines in the include card (all the lines!)
+        @param cardName
+          INCLUDE or include (needed to strip it off without converting
+          the case)
         @retval filename the INCLUDE filename
         """
         cardLines2 = []
@@ -917,7 +926,7 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
             self.log.debug("*readBulkDataDeck")
         self.open_file(self.bdfFileName)
 
-        #oldCardObj = BDF_Card()
+        #oldCardObj = BDFCard()
         while len(self.activeFileNames) > 0: # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self._get_card(debug=False)
@@ -965,12 +974,12 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
                 break # exits while loop
             #self.log.debug('cardName = |%s|' %(cardName))
             
-            #cardObj = BDF_Card(card,oldCardObj)
+            #cardObj = BDFCard(card,oldCardObj)
             #if cardName in self.specialCards:
             #    cardObj = card
             #else:
-            #    cardObj = BDF_Card(card)
-            cardObj = BDF_Card(card)
+            #    cardObj = BDFCard(card)
+            cardObj = BDFCard(card)
 
             nCards = 1
             #special = False
@@ -1036,14 +1045,14 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         @param iCard
           used when reading Nastran Free-Format (disabled)
         @param oldCardObj
-          the last card object that was returned (type=BDF_Card or None; default=None)
+          the last card object that was returned (type=BDFCard or None; default=None)
         @retval cardObject
           the card object representation of card
         @note
           this is a very useful method for interfacing with the code
         @note
            the cardObject is not a card-type object...so not a GRID card
-           or CQUAD4 object.  It's a BDF_Card Object.  However, you know the
+           or CQUAD4 object.  It's a BDFCard Object.  However, you know the
            type (assuming a GRID), so just call the mesh.Node(nid) to get the
            No de object that was just created.
         @warning
@@ -1055,9 +1064,9 @@ class BDF(bdfReader, bdfMethods, GetMethods, AddMethods, WriteMesh,
         #if cardName in self.specialCards:
         #    pass #cardObj = card
         #else:
-        cardObj = BDF_Card(card, oldCardObj=None)
+        cardObj = BDFCard(card, oldCardObj=None)
 
-        #cardObj = BDF_Card(card,oldCardObj=None)
+        #cardObj = BDFCard(card,oldCardObj=None)
         #if self.debug:
         #    self.log.debug("*oldCardObj = \n%s" %(oldCardObj))
         #    self.log.debug("*cardObj = \n%s" %(cardObj))

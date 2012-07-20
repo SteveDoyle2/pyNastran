@@ -177,7 +177,7 @@ class PlateStressObject(stressObject):
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
         if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-           nid = nodeID
+           #nid = nodeID
            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
            self.deleteTransient(dt)
            self.addNewTransient(dt)
@@ -296,7 +296,7 @@ class PlateStressObject(stressObject):
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
                         oyy   = self.oyy[   dt][eid][nid][iLayer]
                         txy   = self.txy[   dt][eid][nid][iLayer]
-                        angle = self.angle[ dt][eid][nid][iLayer]
+                       #angle = self.angle[ dt][eid][nid][iLayer]
                         major = self.majorP[dt][eid][nid][iLayer]
                         minor = self.minorP[dt][eid][nid][iLayer]
                         ovm = self.ovmShear[dt][eid][nid][iLayer]
@@ -324,15 +324,15 @@ class PlateStressObject(stressObject):
         if self.nonlinearFactor is not None:
             return self.writeMatlabTransient(name,iSubcase,f,isMagPhase)
         
-        if self.isVonMises():
-            vonMises = 'vonMises'
-        else:
-            vonMises = 'maxShear'
+        #if self.isVonMises():
+        #    vonMises = 'vonMises'
+        #else:
+        #    vonMises = 'maxShear'
 
-        if self.isFiberDistance():
-            fiberCurvature = 'fiberDistance'
-        else:
-            fiberCurvature = 'fiberCurvature'
+        #if self.isFiberDistance():
+        #    fiberCurvature = 'fiberDistance'
+        #else:
+        #    fiberCurvature = 'fiberCurvature'
 
         triMsg   = None
         tri6Msg  = None
@@ -826,7 +826,7 @@ class PlateStressObject(stressObject):
                     oxx   = self.oxx[eid][nid][iLayer]
                     oyy   = self.oyy[eid][nid][iLayer]
                     txy   = self.txy[eid][nid][iLayer]
-                    angle = self.angle[eid][nid][iLayer]
+                   #angle = self.angle[eid][nid][iLayer]
                     major = self.majorP[eid][nid][iLayer]
                     minor = self.minorP[eid][nid][iLayer]
                     ovm = self.ovmShear[eid][nid][iLayer]
@@ -996,7 +996,7 @@ class PlateStrainObject(strainObject):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
         #if eid in self.exx:
@@ -1019,7 +1019,7 @@ class PlateStrainObject(strainObject):
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" %(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
         #print msg
 
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
         if dt not in self.exx:
@@ -1048,7 +1048,7 @@ class PlateStrainObject(strainObject):
         #print msg
         #print self.oxx
         #print self.fiberCurvature
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         self.fiberCurvature[eid][nodeID].append(curvature)
         self.exx[eid][nodeID].append(exx)
@@ -1066,7 +1066,7 @@ class PlateStrainObject(strainObject):
         #print msg
         #print self.oxx
         #print self.fiberCurvature
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
 
         self.fiberCurvature[eid][nodeID].append(curvature)
@@ -1434,7 +1434,7 @@ class PlateStrainObject(strainObject):
     def writeF06_Tri3Transient(self,dt,eid):
         msg = ''
         exxNodes = self.exx[dt][eid]
-        k = exxNodes.keys()
+        #k = exxNodes.keys()
         for nid in sorted(exxNodes):
             for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
@@ -1478,7 +1478,7 @@ class PlateStrainObject(strainObject):
                     exx   = self.exx[eid][nid][iLayer]
                     eyy   = self.eyy[eid][nid][iLayer]
                     exy   = self.exy[eid][nid][iLayer]
-                    angle = self.angle[eid][nid][iLayer]
+                   #angle = self.angle[eid][nid][iLayer]
                     major = self.majorP[eid][nid][iLayer]
                     minor = self.minorP[eid][nid][iLayer]
                     evm   = self.evmShear[eid][nid][iLayer]
@@ -1517,7 +1517,7 @@ class PlateStrainObject(strainObject):
                         exx   = self.exx[   dt][eid][nid][iLayer]
                         eyy   = self.eyy[   dt][eid][nid][iLayer]
                         exy   = self.exy[   dt][eid][nid][iLayer]
-                        angle = self.angle[ dt][eid][nid][iLayer]
+                       #angle = self.angle[ dt][eid][nid][iLayer]
                         major = self.majorP[dt][eid][nid][iLayer]
                         minor = self.minorP[dt][eid][nid][iLayer]
                         evm   = self.evmShear[   dt][eid][nid][iLayer]

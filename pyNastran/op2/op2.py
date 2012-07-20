@@ -117,7 +117,7 @@ class OP2(BDF,
         self.tablesToRead = [
              'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',  # nodes/geometry/loads/BCs
              'GEOM1S','GEOM2S','GEOM3S','GEOM4S', # nodes/geometry/loads/BCs - superelements
-             'GEOM1N', #???
+             'GEOM1OLD','GEOM1N', #???
              'EPT', 'MPT',  # properties/materials
              'EPTS','MPTS', # properties/materials - superelements
              'EDTS',         # ???
@@ -467,6 +467,8 @@ class OP2(BDF,
                 elif tableName == 'GEOM4S': # superelements - constraints
                     self.readTable_Geom4S()
 
+                elif tableName=='GEOM1OLD':
+                    self.readTable_Geom1Old()
                 #elif tableName=='GEOM1N':
                 #    self.readTable_Geom1N()
                 elif tableName == 'GEOM2': # elements

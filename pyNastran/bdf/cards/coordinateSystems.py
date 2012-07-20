@@ -6,7 +6,7 @@ from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from numpy import array, cross, dot, transpose, zeros
 from numpy.linalg import norm
 
-from pyNastran.bdf.cards.baseCard import BaseCard, BDF_Card
+from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
 from pyNastran.general.general import ListPrint
 
 class Coord(BaseCard):
@@ -15,7 +15,7 @@ class Coord(BaseCard):
         """
         Defines a general CORDxx object
         @param self the object pointer
-        @param card a BDF_Card object
+        @param card a BDFCard object
         @param data a list analogous to the card
         """
         ## has the coordinate system been linked yet
@@ -299,7 +299,7 @@ class Cord2x(Coord):
         """
         defines the CORD2x class
         @param self the object pointer
-        @param card a BDF_Card object
+        @param card a BDFCard object
         @param data a list analogous to the card
         """
         self.isResolved = False
@@ -579,7 +579,7 @@ class CORD3G(Coord):  # not done
         """
         if isinstance(card, list):
             assert len(card) == 8
-            card = BDF_Card(card)
+            card = BDFCard(card)
         Coord.__init__(self, card, data)
 
         self.cid = card.field(1)
@@ -679,7 +679,7 @@ class CORD1C(Cord1x, CylindricalCoord):
         @param self
           the object pointer
         @param card
-          a BDF_Card object
+          a BDFCard object
         @param nCoord
           the coordinate location on the line (there are possibly 2 coordinates
           on 1 card)
@@ -704,7 +704,7 @@ class CORD1S(Cord1x, SphericalCoord):
         @param self
           the object pointer
         @param card
-          a BDF_Card object
+          a BDFCard object
         @param nCoord
           the coordinate location on the line (there are possibly 2 coordinates
           on 1 card)
@@ -726,7 +726,7 @@ class CORD2R(Cord2x, RectangularCoord):
         @param self
           the object pointer
         @param card
-          a BDF_Card object
+          a BDFCard object
         @param data
           a list version of the fields (1 CORD2R only)
         """
@@ -747,7 +747,7 @@ class CORD2S(Cord2x, SphericalCoord):
         @param self
           the object pointer
         @param card
-          a BDF_Card object
+          a BDFCard object
         @param data
           a list version of the fields (1 CORD2S only)
         """
@@ -766,7 +766,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         @param self
           the object pointer
         @param card
-          a BDF_Card object
+          a BDFCard object
         @param data
           a list version of the fields (1 CORD2C only)
         """

@@ -5,9 +5,9 @@ import sys
 
 from pyNastran.bdf.fieldWriter import (printCard, setBlankIfDefault,
                                        setDefaultIfBlank, isSame)
-from pyNastran.bdf.bdfInterface.BDF_Card import BDF_Card
+from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
-class BaseCard(BDF_Card):
+class BaseCard(BDFCard):
     #def __init__(self,card):
     #    pass
 

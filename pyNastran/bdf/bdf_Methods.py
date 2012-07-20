@@ -7,7 +7,7 @@ from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
 from pyNastran.bdf.cards.elements.shell import ShellElement
 
 
-class bdfMethods(object):
+class BDFMethods(object):
     def __init__(self):
         pass
     #--------------------
