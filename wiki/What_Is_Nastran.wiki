@@ -24,7 +24,7 @@ Due to the Fortran legacy, the file formats of this program are often criticized
 || OP2 || Output #2      || Displacement/Stress/etc.   || Output || Binary ||
 || OP4 || Output #4      || Matrices and Vectors       || Input/Output || ASCII/Binary ||
 
-*Note* the PCH file may be the outputs of an optimization run (and uses valid BDF syntax) and also may be another version of the OP2/F06 file.  This output looks very different than any of the other formats.
+*Note* the PCH file may be the output of an optimization run (and uses valid BDF syntax) and also may be another version of the OP2/F06 file.  This output looks very different than any of the other formats.
 
 Nastran files aren't very descriptive with their names...
 
