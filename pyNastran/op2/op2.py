@@ -85,8 +85,6 @@ class OP2(BDF,
         (fname, extension) = os.path.splitext(op2FileName)
         self.tableName = 'temp'
         
-        #print("fname=%s ext=%s" % (fname, extension))
-        
         ## should the BDF tables be parsed
         self.makeGeom = makeGeom
         
@@ -330,7 +328,7 @@ class OP2(BDF,
 
     def readTapeCode(self):
         """
-        reads the OP2 header
+        Reads the OP2 header.  This table is still very much in development.
         @todo whats in this table?
         """
         #self.printSection(500)
@@ -408,18 +406,15 @@ class OP2(BDF,
         ## the byte position in the OP2
         self.n = self.op2.tell()
 
-        #self.readTapeCode()
-        #try:
-        self.readTapeCode()
-        #except:
-            #msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
-            #msg += '  If the F06 is OK:\n'
-            #msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT\n'
-            #msg += '      2.  Run the problem on a different Operating System\n'
-            #msg += '      3.  Are you running an OP2? :)  fname=%s' %(self.op2FileName)
-            #raise TapeCodeError(msg)
-            #raise
-        ###
+        try:
+            self.readTapeCode()
+        except:
+            msg  = 'When this happens, the analysis failed or the code bombed...check the F06.\n'
+            msg += '  If the F06 is OK:\n'
+            msg += '      1.  Make sure you used PARAM,POST,-1 in your BDF/DAT/NAS\n'
+            msg += '      2.  Run the problem on a different Operating System\n'
+            msg += '      3.  Are you running an OP2? :)  \nfname=%s' %(self.op2FileName)
+            raise TapeCodeError(msg)
 
         isAnotherTable = True
         while isAnotherTable:
@@ -467,8 +462,8 @@ class OP2(BDF,
                 elif tableName == 'GEOM4S': # superelements - constraints
                     self.readTable_Geom4S()
 
-                elif tableName=='GEOM1OLD':
-                    self.readTable_Geom1Old()
+                #elif tableName=='GEOM1OLD':
+                #    self.readTable_Geom1Old()
                 #elif tableName=='GEOM1N':
                 #    self.readTable_Geom1N()
                 elif tableName == 'GEOM2': # elements
@@ -490,7 +485,7 @@ class OP2(BDF,
                     self.readTable_LAMA()
 
                 elif tableName in ['VIEWTB', 'EQEXIN', 'EQEXINS', 'OEFIT',
-                                   'GEOM1N', 'OGPWG',]:
+                                   'GEOM1N', 'OGPWG','GEOM1OLD']:
                     self.readTable_DUMMY_GEOM(tableName)
                 elif tableName in ['OMM2']:
                     self.readTable_OMM2()
@@ -719,7 +714,6 @@ class OP2(BDF,
                    'nonlinearFactor', 'obj', 'subtitle', 'label']
         for param in params:
             if hasattr(self, param):
-                #print('%s = %s' % (param, getattr(self, param)))
                 delattr(self, param)
 
     def getBufferWords(self):
@@ -767,8 +761,6 @@ class OP2(BDF,
         self.tableNames.append(word)
         msg = '*'*20+word+'*'*20+'\n'
         #print(msg)
-        if self.makeOp2Debug:
-            self.op2Debug.write(msg)
 
     def getTableNamesFromOP2(self):
         """
@@ -825,8 +817,5 @@ class OP2(BDF,
                 except:
                     print('failed on %s' % (res.__class__.__name__))
                     raise
-                ###
-            ###
-        ###
         return msg
 

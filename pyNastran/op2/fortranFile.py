@@ -98,7 +98,7 @@ class FortranFile(object):
         #print "nData = ",nData
         data = self.op2.read(nData)
 
-        iFormat = 'i'*nInts
+        iFormat = str(nInts)+'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat,data)
         if debug and self.makeOp2Debug:
@@ -137,10 +137,9 @@ class FortranFile(object):
         unpacks a data set into a series of characters
         """
         n = len(data)
-        iFormat = '%ss' % (n)
+        iFormat = str(n)+'s'
         iFormat = bytes(iFormat)
         strings, = unpack(iFormat, data)
-        #self.op2Debug.write('|%s|\n' % (str(strings)))
         return strings #.encode('utf-8')
 
     def getStrings2(self, data, endian):
@@ -148,10 +147,9 @@ class FortranFile(object):
         unpacks a data set into a series of characters
         """
         n = len(data)
-        iFormat = endian+'s'*n
+        iFormat = endian+str(n)+'s'
         iFormat = bytes(iFormat)
         strings = unpack(iFormat, data)
-        #self.op2Debug.write('|%s|\n' % (str(strings)))
         return strings
 
     def getInts(self, data, debug=True):
@@ -161,10 +159,9 @@ class FortranFile(object):
         n = len(data)
         nInts = n//4
         #print "nInts = ",nInts
-        iFormat = bytes(nInts)+b'i'
+        iFormat = str(nInts)+'i'
+        iFormat = bytes(iFormat)
         ints = unpack(iFormat, data[:nInts*4])
-        if debug and self.makeOp2Debug:
-            self.op2Debug.write('|%s|\n' % (str(ints)))
         return ints
 
     def getInts2(self, data, endian, debug=True):
@@ -173,12 +170,9 @@ class FortranFile(object):
         """
         n = len(data)
         nInts = n//4
-        #print "nInts = ",nInts
-        iFormat = endian+'i'*nInts
+        iFormat = endian + str(nInts) + 'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data[:nInts*4])
-        if debug and self.makeOp2Debug:
-            self.op2Debug.write('|%s|\n' % (str(ints)))
         return ints
 
     def getLongs(self, data):
@@ -191,7 +185,8 @@ class FortranFile(object):
         #a = pack('l', 200)
         #print "len(a) = ", len(a)
         
-        iFormat = bytes(nLongs)+b'l'
+        iFormat = str(nLongs)+'l'
+        iFormat = bytes(iFormat)
         longs = unpack(iFormat, data[:nLongs*4])
         return longs
 
@@ -201,7 +196,8 @@ class FortranFile(object):
         """
         n = len(data)
         nFloats = n//4
-        iFormat = bytes(nFloats)+b'f'
+        iFormat = str(nFloats)+'f'
+        iFormat = bytes(iFormat)
         ints = unpack(iFormat, data[:nFloats*4])
         return ints
 
@@ -211,7 +207,7 @@ class FortranFile(object):
         """
         n = len(data)
         nFloats = n//4
-        iFormat = endian+'f'*nFloats
+        iFormat = endian+str(nFloats)+'f'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data[:nFloats*4])
         return ints
@@ -222,7 +218,7 @@ class FortranFile(object):
         """
         n = len(data)
         nDoubles = n//8
-        iFormat = 'd'*nDoubles
+        iFormat = str(nDoubles)+'d'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat,data[:nDoubles*8])
         return ints
@@ -263,7 +259,6 @@ class FortranFile(object):
         @note this is a great function for debugging
         """
         msg = ''
-        #raise Exception('disabled...')
         ints    = self.getInts2(data,endian)
         #longs   = self.getLongs(data)
         floats  = self.getFloats2(data,endian)
@@ -312,9 +307,7 @@ class FortranFile(object):
         @retval msg ints/floats/strings of the next nBytes (handles poorly sized nBytes; uncrashable :) )
         @note this the BEST function when adding new cards/tables/debugging
         """
-        #print("nBytes = ",nBytes)
         data = self.op2.read(nBytes)
-        #print("len(data) = ",len(data))
         msg = self.printBlock(data)
         self.op2.seek(self.n)
         return msg
@@ -334,27 +327,11 @@ class FortranFile(object):
     
     def skip(self,n):
         """skips nBits"""
-        if self.makeOp2Debug:
-            self.op2Debug.write('skipping\n')
-        #self.printSection(4)
-        if self.makeOp2Debug:
-            self.op2Debug.write('skipped\n')
-        #print "\n--SKIP--"
-        #print "tell = ",self.op2.tell()
-        #print "n = ",n
-        #print "self.n = ",self.n
         self.n += n
         self.op2.seek(self.n)
-        #print "*tell = ",self.op2.tell()
-        #print "\n"
 
     def scan(self,n):
         """same as skip, but actually reads the data instead of using seek"""
-        if self.makeOp2Debug:
-            self.op2Debug.write('skipping %s\n' % (n))
-        #self.printSection(4)
-        if self.makeOp2Debug:
-            self.op2Debug.write('skipped\n')
         self.op2.read(n)
         self.n+=n
 
@@ -464,7 +441,7 @@ class FortranFile(object):
             raise EndOfFileError("data=('')")
         
         iFormat = 'i'
-        iFormat = bytes(iFormat)        
+        iFormat = bytes(iFormat)
         nValues, = unpack(iFormat, data)
         self.n += 4
         data = self.op2.read(nValues)
@@ -509,9 +486,7 @@ class FortranFile(object):
         self.n += nValues+4
         self.goto(self.n)
 
-        #nInts = len(data)//4
         nInts = len(data)//4
-        #print("**nInts = ",nInts)
         iFormat = str(nInts)+'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat,data)
@@ -524,7 +499,7 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nLetters = len(data)
-        iFormat = '%is'%(nLetters) ## @todo should this be c instead of s???
+        iFormat = str(nLetters) + 's'
         iFormat = bytes(iFormat)
         word, = unpack(iFormat, data)
 
@@ -532,7 +507,7 @@ class FortranFile(object):
         #print "nLetters=%s word=|%s|" % (nLetters,word)
         if debug and self.makeOp2Debug:
             self.op2Debug.write('|%s|\n' % (str(word)))
-        return word#.decode()
+        return word
 
     def readIntBlock(self):
         """
@@ -541,8 +516,7 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nInts = len(data)//4
-        #print "**nInts = ",nInts
-        iFormat = 'i'*nInts
+        iFormat = str(nInts)+'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data)
         return ints
@@ -554,7 +528,7 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nFloats = len(data)//4
-        iFormat = 'f'*nFloats
+        iFormat = str(nFloats)+'f'
         iFormat = bytes(iFormat)
         floats = unpack(iFormat, data)
         return floats
@@ -566,7 +540,7 @@ class FortranFile(object):
         """
         data = self.readBlock()
         nDoubles = len(data)//8
-        iFormat = 'd'*nDoubles
+        iFormat = str(nDoubles)+'d'
         iFormat = bytes(iFormat)
         doubles = unpack(iFormat, data)
         return doubles
@@ -627,7 +601,7 @@ class FortranFile(object):
         self.readMarkers([-1, 7], tableName)
         
         dataPack = (4,1,4,  4,0,4,  4,0,4)  # marks the end of the table
-        binaryData = pack('iiiiiiiii',*dataPack)
+        binaryData = pack('9i',*dataPack)
         #[1,0,0] marks the end of the table
         
         i = 0
