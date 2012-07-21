@@ -776,7 +776,7 @@ class ComplexPlateStrainObject(strainObject):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
         #if eid in self.exx:
@@ -795,7 +795,7 @@ class ComplexPlateStrainObject(strainObject):
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" %(eid,nodeID,curvature,exx,eyy,exy)
         #print msg
 
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s %s' %(nodeID,msg)
 
         if dt not in self.exx:
@@ -820,7 +820,7 @@ class ComplexPlateStrainObject(strainObject):
         #print msg
         #print self.oxx
         #print self.fiberCurvature
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
         self.fiberCurvature[eid][nodeID].append(curvature)
         self.exx[eid][nodeID].append(exx)
@@ -834,7 +834,7 @@ class ComplexPlateStrainObject(strainObject):
         #print msg
         #print self.oxx
         #print self.fiberCurvature
-        if nodeID is not 'C': # centroid
+        if nodeID != 'C': # centroid
             assert 0<nodeID<1000000000, 'nodeID=%s' %(nodeID)
 
         self.fiberCurvature[eid][nodeID].append(curvature)

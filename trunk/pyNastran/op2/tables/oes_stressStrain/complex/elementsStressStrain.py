@@ -21,7 +21,7 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         nTotal = 12
-        format1 += 'ffff'
+        format1 += '4f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
         
@@ -54,7 +54,7 @@ class ComplexElementsStressStrain(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         nTotal = 12
-        format1 += 'ff'
+        format1 += '2f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
         
@@ -83,7 +83,7 @@ class ComplexElementsStressStrain(object):
         assert self.numWide==19,'invalid numWide...numWide=%s' %(self.numWide)
 
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ffffffffffffffffff'
+        format1 += '18f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -127,7 +127,7 @@ class ComplexElementsStressStrain(object):
         """
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ffffffffffffff'
+        format1 += '14f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
         
@@ -174,7 +174,7 @@ class ComplexElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:60] # 4*15=60
                 self.data = self.data[60: ]
-                out = unpack(b'iffffffffffffff',eData[0:60])
+                out = unpack(b'i14f',eData[0:60])
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
@@ -210,7 +210,7 @@ class ComplexElementsStressStrain(object):
         
         assert self.numWide==25,"numWide=%s not 25" %(self.numWide)
         nTotal = 100 #4*25
-        format1 += 'ffffffffffffffffffffffff'
+        format1 += '24f'
         format1 = bytes(format1)
 
         while len(self.data)>=nTotal:
@@ -275,7 +275,7 @@ class ComplexElementsStressStrain(object):
         assert nTotal==self.numWide*4,'eType=%s numWide*4=%s not nTotal=%s' %(self.elementType,self.numWide*4,nTotal)
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ffffffffffffff'
+        format1 += '14f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -307,7 +307,7 @@ class ComplexElementsStressStrain(object):
             for nodeID in range(nNodes):   #nodes pts
                 eData     = self.data[0:60] # 4*15=60
                 self.data = self.data[60: ]
-                out = unpack(b'iffffffffffffff',eData)
+                out = unpack(b'i14f',eData)
                 if self.makeOp2Debug:
                     self.op2Debug.write('%s\n' %(str(out)))
                 (grid,fd1,sx1r,sx1i,sy1r,sy1i,txy1r,txy1i,
@@ -344,7 +344,7 @@ class ComplexElementsStressStrain(object):
 
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'ffffffffffffff'
+        format1 += '14f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -380,9 +380,6 @@ class ComplexElementsStressStrain(object):
 
 #==============================================================================
 # dont work...
-
-
-
 
     def OES_CBEAM_2_alt(self):
         raise NotImplementedError()

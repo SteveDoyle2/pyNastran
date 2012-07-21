@@ -168,7 +168,6 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #print self.printBlock(data) # on
         #print "16 block..."
         #self.printBlock(data)
-        #self.printBlock(data)
         bufferWords, = unpack(b'i',data[4:8])
         #print "bufferWords = ",bufferWords
         if self.makeOp2Debug:
@@ -212,7 +211,6 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #print self.printBlock(self.data)
 
         #msg = 'elementType=%s -> %s' % (self.elementType,self.ElementType(self.elementType))
-        #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         self.parseStressCode()
 
         if not self.isValidSubcase(): # lets the user skip a certain subcase
@@ -229,13 +227,10 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
             else:
                 #raise InvalidATFSCodeError('invalid atfsCode=%s' % (self.atfsCode))
                 self.skipOES_Element()
-            ###
         elif self.thermal == 1:
             self.OES_Thermal()
-            #raise NotImplementedError('thermal stress')
         else:
             raise RuntimeError('invalid thermal option...')
-        ###
         
         #print self.obj
 
@@ -827,7 +822,6 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #    msg = '%s-OES format1_sort0 elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tableName,self.elementType,self.ElementType(self.elementType),self.op2FileName)
         #    raise AddNewElementError(msg)
         else:
-            #self.printBlock(self.data[0:100])
             msg = '%s-OES format%s elementType=%-3s -> %s is not supported - fname=%s\n' % (self.tableName,self.formatCode,self.elementType,self.ElementType(self.elementType),self.op2FileName.strip())
             self.log.debug(msg)
             self.skippedCardsFile.write(msg)

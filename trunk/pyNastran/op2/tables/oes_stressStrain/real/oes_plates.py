@@ -42,13 +42,11 @@ class PlateStressObject(stressObject):
                 self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
                 self.addNewNode = self.addNewNodeSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
             self.addNewNode = self.addNewNodeSort2
-        ###
 
 
     def addF06Data(self,data,transient):
@@ -153,7 +151,6 @@ class PlateStressObject(stressObject):
             #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
         #assert eid not in self.oxx
-        #print self.oxx
         self.eType[eid] = eType
         self.fiberCurvature[eid] = {nodeID: [fd]}
         assert isinstance(eid,int)
@@ -233,7 +230,6 @@ class PlateStressObject(stressObject):
 
     def addNewNode(self,dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm):
         #print "***addNewNode"
-        #print self.oxx
         assert eid is not None
         #assert nodeID not in self.oxx[eid]
         self.fiberCurvature[eid][nodeID] = [fd]
@@ -400,7 +396,7 @@ class PlateStressObject(stressObject):
                         for eid in eids:
                             out = self.writeMatlab_Tri3(eid)
                             msg.append(out)
-                    ###
+
                 elif eType in ['CTRIA3']:
                     a = 'fem.plateStress(%i).tri3.elementIDs = %s\n' %(iSubcase,eids)
                     b = 'fem.plateStress(%i).tri3.oxx = [' %(iSubcase)
@@ -749,7 +745,7 @@ class PlateStressObject(stressObject):
                     msg += '   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' %('','',    fd,oxx,oyy,txy,angle,major,minor,ovm.rstrip())
                 else:
                     #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy,angle,major,minor,ovm)
-                    raise Exception('Invalid option for cquad4')
+                    raise RuntimeError('Invalid option for cquad4')
                 ###
             ###
         ###
@@ -891,12 +887,10 @@ class PlateStrainObject(strainObject):
             if dt is not None:
                 self.add = self.addSort1
                 self.addNewEid = self.addNewEidSort1
-            ###
         else:
             assert dt is not None
             self.add = self.addSort2
             self.addNewEid = self.addNewEidSort2
-        ###
 
     def addF06Data(self,data,transient):
         if transient is None:
@@ -1458,8 +1452,6 @@ class PlateStrainObject(strainObject):
         return msg
 
     def __repr__(self):
-        #print "dt = ",self.dt
-        #print "nf = ",self.nonlinearFactor
         if self.nonlinearFactor is not None:
             return self.__reprTransient__()
 
