@@ -411,9 +411,13 @@ class OP4:                                                # {{{1
         cdef float  *array_CS
         cdef double *array_RD
         cdef double *array_CD
+        cdef double *I_coo_C
+        cdef double *J_coo_C
         cdef np.ndarray I_coo = np.zeros((n_nnz,), dtype=DTYPE)  # only true for first matrix
         cdef np.ndarray J_coo = np.zeros((n_nnz,), dtype=DTYPE)  # only true for first matrix
         cdef np.ndarray ndarray
+        cdef np.ndarray ndarray_I
+        cdef np.ndarray ndarray_J
         All_Matrices = []
 
         if nmat < 1 or \
@@ -468,6 +472,9 @@ class OP4:                                                # {{{1
 
             if self.storage[i]:          # sparse
 
+                I_coo_C = <DTYPE_t*>malloc(sizeof(double) * self.nnz[i])
+                J_coo_C = <DTYPE_t*>malloc(sizeof(double) * self.nnz[i])
+
                 if   self.type[i] == 1:  # sparse real single precision
                     array_RS = op4_load_S(fp        ,
                                           filetype  , # 1 = text
@@ -478,11 +485,8 @@ class OP4:                                                # {{{1
                                           self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                           complx    , # in  0=real   1=complex     
                                           self.nnz[i],# in number of nonzero terms
-                                         <DTYPE_t*>I_coo.data, # out sparse row ind
-                                         <DTYPE_t*>J_coo.data) # out sparse col ind
-                    # print('nnz=%d' % (self.nnz[i]))
-                    # print("I=",I_coo[:self.nnz[i]])
-                    # print("J=",J_coo[:self.nnz[i]])
+                                          I_coo_C   , # out sparse row ind
+                                          J_coo_C   ) # out sparse col ind
 
                     array_wrapper_RS = ArrayWrapper_RS()
                     array_wrapper_RS.set_data(self.nnz[i], <void*> array_RS) 
@@ -500,8 +504,8 @@ class OP4:                                                # {{{1
                                           self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                           complx    , # in  0=real   1=complex     
                                           self.nnz[i],# in number of nonzero terms
-                                         <DTYPE_t*>I_coo.data, # out sparse row ind
-                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+                                          I_coo_C   , # out sparse row ind
+                                          J_coo_C   ) # out sparse col ind
 
                     array_wrapper_RD = ArrayWrapper_RD()
                     array_wrapper_RD.set_data(self.nnz[i], <void*> array_RD) 
@@ -519,8 +523,8 @@ class OP4:                                                # {{{1
                                           self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                           complx    , # in  0=real   1=complex     
                                           self.nnz[i],# in number of nonzero terms
-                                         <DTYPE_t*>I_coo.data, # out sparse row ind
-                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+                                          I_coo_C   , # out sparse row ind
+                                          J_coo_C   ) # out sparse col ind
 
                     array_wrapper_CS = ArrayWrapper_CS()
                     array_wrapper_CS.set_data(self.nnz[i], <void*> array_CS) 
@@ -538,8 +542,8 @@ class OP4:                                                # {{{1
                                           self.storage[i], # in 0=dn  1,2=sp1,2  3=ccr  
                                           complx    , # in  0=real   1=complex     
                                           self.nnz[i],# in number of nonzero terms
-                                         <DTYPE_t*>I_coo.data, # out sparse row ind
-                                         <DTYPE_t*>J_coo.data) # out sparse col ind
+                                          I_coo_C   , # out sparse row ind
+                                          J_coo_C   ) # out sparse col ind
 
                     array_wrapper_CD = ArrayWrapper_CD()
                     array_wrapper_CD.set_data(self.nnz[i], <void*> array_CD) 
@@ -552,8 +556,20 @@ class OP4:                                                # {{{1
                     raise IOError
 ###############     print("matrix %d is sparse and not single prec, skipping" % i)
 
+                array_wrapper_I  = ArrayWrapper_RD()
+                array_wrapper_I.set_data(self.nnz[i], <void*> I_coo_C) 
+                ndarray_I = np.array(array_wrapper_I , copy=False)
+                ndarray_I.base = <PyObject*> array_wrapper_I
+                Py_INCREF(array_wrapper_I)
+
+                array_wrapper_J  = ArrayWrapper_RD()
+                array_wrapper_J.set_data(self.nnz[i], <void*> J_coo_C) 
+                ndarray_J = np.array(array_wrapper_J , copy=False)
+                ndarray_J.base = <PyObject*> array_wrapper_J
+                Py_INCREF(array_wrapper_J)
+
                 All_Matrices.append( sparse.coo_matrix(
-                    (ndarray, (I_coo[:self.nnz[i]] ,J_coo[:self.nnz[i]])), 
+                    (ndarray, (ndarray_I ,ndarray_J)), 
                      shape=(self.nrow[i], self.ncol[i])) )
 
             else:                        # dense
