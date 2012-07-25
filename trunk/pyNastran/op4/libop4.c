@@ -1329,7 +1329,8 @@ int  op4_valid_name(char   *name)         /* {{{1 */
     /* strip trailing blanks */
     fixed_len = len;
     for (i = len-1; i >= 0; i--) {
-        if (ISBLANK(name[i])) {
+        if (ISBLANK(name[i]) || (name[i] == 24)) {
+            /* binary op4 files use ASCII ord 24 for spaces */
             name[i] = 0;
             --fixed_len;
         } else {
