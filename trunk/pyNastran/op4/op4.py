@@ -491,7 +491,7 @@ class OP4(FortranFile):
             raise RuntimeError("Type=%s" %(Type))
         
         try:
-            print(printMatrix(A.todense()))
+            printMatrix(A.todense())
         except:
             pass
 

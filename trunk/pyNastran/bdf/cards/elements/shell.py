@@ -784,18 +784,10 @@ class CQUAD4(QuadShell):
 
     def reprFields(self):
         debug = False
-        #if self.id==20020:
-        #    debug = True
         (thetaMcid,zOffset,TFlag,T1,T2,T3,T4) = self.getReprDefaults(debug=debug)
 
         fields = ['CQUAD4',self.eid,self.Pid()]+self.nodeIDs()+[thetaMcid,zOffset,
                   None,TFlag,T1,T2,T3,T4]
-
-        #if self.id==20020:
-        #    print("thetaMcid = %s" %(thetaMcid)
-        #    print("actual = %s"%(self.thetaMcid)
-        #    #print(str(self))
-        #    print(fields)
         return fields
 
 class CQUADR(QuadShell):

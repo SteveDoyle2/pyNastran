@@ -41,13 +41,12 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
      7.  Break the rules if it's clearer.
 
  \subsection{Additional Info}
-     1.  pyNastran liberally uses classes (it has too many!), so don't write more classes than necessary.  Functions are often better to avoid having extra functions in objects the user has immediate access to (imagine having 100 functions to sift through) in an IDE.  Watch http://www.youtube.com/watch?v=o9pEzgHorH0 for a better explanation.
-     
+     1.  pyNastran liberally uses classes (it has too many!), so try not to write more classes than necessary.  Functions are often better to avoid having extra functions in objects the user has immediate access to (imagine having 100 functions to sift through) in an IDE.  Watch http://www.youtube.com/watch?v=o9pEzgHorH0 for a better explanation.
+
      2.  When deprecating functions, throw a warning using the Python warnings module.  It's easier to make sure the rest of the code isn't using it this way.
 
  \subsection{docstrings}
-     Docstrings use Doxygen.  Doxygen is nice because it allows LaTeX to be
-     embedded in the documentation and HTML docs are easily generated.
+     pyNastran uses Doxygen for docstrings.  Doxygen is nice because it allows LaTeX to be embedded in the documentation and HTML docs are easily generated.
      
      1.  \@param  in\_variable\_name a description goes here
 
