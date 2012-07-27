@@ -3,12 +3,18 @@
 \begin{tabular}{ll}
     $[B]$      & Displacement-to-Strain Matrix        \\
     $[D]$      & Material Matrix                      \\
-    $E$        & Young's Modulus ($\frac{F}{L^2}$)    \\
-    $G$        & Shear Modulus ($\frac{F}{L^2}$)      \\
+    $E$        & Young's Modulus ($F/L^2$)            \\
+    $\{F\}$    & Applied force vector                 \\
+    $\{F_g\}$  & Global  applied force vector         \\
+    $\{F_a\}$  & Reduced applied force vector         \\
+    $\{f\}$    & Generalized (Modal) force vector     \\
+    $G$        & Shear Modulus ($F/L^2$)              \\
     $[J]$      & Jacobian Matrix                      \\
-    $[K]$      & Global stiffness matrix              \\
-    $[K_e]$    & Element stiffness matrix ( $\frac{F}{L^2}$ ) \\
-    $k$        & Spring stiffness ( $\frac{F}{L^2}$ ) \\
+    $[K]$      & Stiffness matrix                     \\
+    $[K_e]$    & Element stiffness matrix ( $ F/ L^2$ ) \\
+    $[K_{gg}]$ & Global  Stiffness Matrix             \\
+    $[K_{aa}]$ & Reduced Stiffness Matrix             \\
+    $k$        & Spring stiffness ( $ F/L^2$ )        \\
     $L$        & Length (L)                           \\
     $L,M,N$    & X,Y,Z Moment (FL)                    \\
     $[M]$      & Mass Matrix                          \\
@@ -18,14 +24,19 @@
     nsm        & non-structural mass (M)              \\
     $[T]$      & Transformation matrix                \\
     $t$        & thickness (L)                        \\
-    $u$        & generalized load (displacement, rotation) \\
+    $T$        & translation (L)                      \\
+    $R$        & rotation (L/radians)                 \\
+    $u$        & generalized load (translation, rotation) \\
     $X,Y,Z$    & X,Y,Z Force (F)                      \\
     $x,y,z$    & displacement (L)                     \\
-    $V$        & Volume  ( $L^3$ )                    \\
-    $V_i$      & $i^{th}$ Volume  ( $L^3$ )                \\
-    $\epsilon$ & strain ($L/L$)                       \\
-    $\rho$     & density ($M/L^3$)                    \\
-    $\sigma$   & normal stress ($F/L^2$)              \\
-    $\tau$     & shear  stress ($F/L^2$)              \\
+    $\{x\}$    & generalized load (translation, rotation) \\
+    $V$        & Volume  ( $L^3$ )                     \\
+    $V_i$      & $i^{th}$ Volume  ( $L^3$ )            \\
+    $\epsilon$ & strain, shear strain ($\Delta L/L$)   \\
+    $\gamma$   & shear strain ($F/L^2$)                \\
+    $\nu$      & Poisson's ratio                       \\
+    $\rho$     & density ($M/L^3$)                     \\
+    $\sigma$   & normal stress, shear stress ($F/L^2$) \\
+    $\tau$     & shear stress ($F/L^2$)                \\
     $\theta$   & rotation (radians)
 \end {tabular}
