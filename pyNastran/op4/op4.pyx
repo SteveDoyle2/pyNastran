@@ -55,6 +55,8 @@ cdef extern from "stdio.h":
 cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
+cdef extern from "string.h":
+    void* memset(void *dest, int c, size_t n)
 
 # Import the Python-level symbols of numpy
 import numpy as np
@@ -413,8 +415,6 @@ class OP4:                                                # {{{1
         cdef double *array_CD
         cdef double *I_coo_C
         cdef double *J_coo_C
-        cdef np.ndarray I_coo = np.zeros((n_nnz,), dtype=DTYPE)  # only true for first matrix
-        cdef np.ndarray J_coo = np.zeros((n_nnz,), dtype=DTYPE)  # only true for first matrix
         cdef np.ndarray ndarray
         cdef np.ndarray ndarray_I
         cdef np.ndarray ndarray_J
@@ -473,7 +473,9 @@ class OP4:                                                # {{{1
             if self.storage[i]:          # sparse
 
                 I_coo_C = <DTYPE_t*>malloc(sizeof(double) * self.nnz[i])
+                memset(I_coo_C, 0,         sizeof(double) * self.nnz[i])
                 J_coo_C = <DTYPE_t*>malloc(sizeof(double) * self.nnz[i])
+                memset(J_coo_C, 0,         sizeof(double) * self.nnz[i])
 
                 if   self.type[i] == 1:  # sparse real single precision
                     array_RS = op4_load_S(fp        ,
