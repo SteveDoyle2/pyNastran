@@ -15,8 +15,8 @@ for in_file in [ #'test/mat_b_dn.op4' ,
     try:
         op4fh = OP4(in_file, 'r')
     except:
-        print('Failed to get header of %s' % (in_file))
-        raise SystemExit
+        print('Failed to get header of %s, ignoring.' % (in_file))
+        continue
 
     print('%s\n%s' % ('=' * 61, in_file))
     op4fh.print_header()
@@ -28,6 +28,3 @@ for in_file in [ #'test/mat_b_dn.op4' ,
         else:
             print('%s:' % op4fh.name[i])
             print printMatrix(a)
-
-# print 'It carries a reference to our deallocator: %s ' % a.base
-# np.testing.assert_allclose(a, np.arange(10))
