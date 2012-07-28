@@ -17,10 +17,23 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
 \tableofcontents
 \newpage
 
+\section{Brief Project Overview}
+  \subsection{Introduction}
+      Since the 1960's NASTRAN (NASA Structural ANalysis) has been used to solve structural/thermal/aerodynamic/dynamics/etc. problems.  The file formats were originally developed by MSC for a product now called MSC Nastran.  There have been many spinoff version of NASTRAN that have been created based on the 2001 source code release of MSC Nastran in 2002 after settlement with the FTC (Federal Trade Commisson).  There is now NX Nastran and NEi Nastran, which are developed independently.
+     
+     pyNastran is at it's core an API (Application Programming Interface) to the legacy formats used by Nastran.  These files include the BDF, F06, OP2, OP4, and PCH files.  Other code has been added to pyNastran in order to drive development of the software in order to be able to solve other engineering problems.  For example, Code\_Aster, an open-source finite element code developed by the EDF (Electricity of France), has a Nastran to Code\_Aster converter that is in development.  The development has helped to define the API for the loads in order to be able to extract them in a way that makes sense.  However, this is not the focus of the software.
+
+  \subsection{Target Audience}
+      pyNastran's target audience are users of Nastran and therefore are expected to be familiar with the software.  This has greatly reduced the necessity of documenting every variable exhasutively as users can easily reference existing Nastran documentation.  The BDF file has roughly 700 cards availble to a user with 200 being currently supported by pyNastran.  The majority of the cards, defined as separate Python classes, are not documented.  However, the Quick Reference Guide (QRG) defines each input to the card.  A user with the QRG should have little effort in understanding what the various objects do.
+
+     pyNastran's target audience largely uses MATLAB, a matrix based programming language, and typically has little experience with general programming.  There are also users that know Python, but have never used a class or a dictionary, which makes an API seems complicated.  Additionally, while not difficult to build, the Cython OP4 reader, which requires a C complier, has been a source of frustration for many users.  That said, most operations are relatively easy to accomplish, especially with the QRG handy.
+
+
 \section{Getting Started: Code Formatting}
  \subsection{PEP-8}
-     pyNastran is attempting to implement Python's PEP-8 formatting standard after not following it for multiple versions.  It's a work in progress to upgrade the code, so try to follow it.
-     Using Spyder with pylint integration helps a lot.
+     pyNastran is attempting to implement Python's PEP-8 formatting standard after not following it for multiple versions.  It's a work in progress to upgrade the code, so try to follow it.  The biggest challenge has been to come up with a clear way to reference methods and very similar variable names.  For example, the element.Area() method uses the element.area variable in the case of the CQUAD4, but references element.areas in the case of a multi-segmented CBAR.  It's recommended that developers use Spyder with pylint integration to help with identifying PEP-8 deficencies.
+
+    Python PEP-8:
      
      http://www.python.org/dev/peps/pep-0008/
 
@@ -40,13 +53,18 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
 
      7.  Break the rules if it's clearer.
 
- \subsection{Additional Info}
+     8.  Document functions/classes/variables.
+
+ \subsection{Additional Guidelines}
      1.  pyNastran liberally uses classes (it has too many!), so try not to write more classes than necessary.  Functions are often better to avoid having extra functions in objects the user has immediate access to (imagine having 100 functions to sift through) in an IDE.  Watch http://www.youtube.com/watch?v=o9pEzgHorH0 for a better explanation.
 
-     2.  When deprecating functions, throw a warning using the Python warnings module.  It's easier to make sure the rest of the code isn't using it this way.
+     2.  When writing classes, group similar classes in the same file to reduce having to search for a class across multiple files (very common in Java).
+     3.  When deprecating functions, throw a warning using the Python warnings module.  It's easier to make sure the rest of the code isn't using it this way.
 
- \subsection{docstrings}
-     pyNastran uses Doxygen for docstrings.  Doxygen is nice because it allows LaTeX to be embedded in the documentation and HTML docs are easily generated.
+ \subsection{Documentation}
+     pyNastran uses Doxygen for docstrings.  Doxygen is nice because it allows LaTeX to be embedded in the documentation and HTML docs are easily generated.  Sphinx is another documentation format, but no investigation has been done into how the quality of the documentation would change.  It is known that Sphinx also allows LaTeX and that it is much more commonly used.
+
+    Some guidelines for Doxygen:
      
      1.  \@param  in\_variable\_name a description goes here
 
