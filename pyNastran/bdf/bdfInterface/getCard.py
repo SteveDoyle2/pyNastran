@@ -55,15 +55,8 @@ class GetMethods(object):
         """
         #print "nids",nids
         nodes = []
-        if allowEmptyNodes:
-            for nid in nids:
-                if nid == 0:
-                    nodes.append(None)
-                else:
-                    nodes.append(self.nodes[nid])
-        else:
-            for nid in nids:
-                nodes.append(self.nodes[nid])
+        for nid in nids:
+            nodes.append(self.Node(nid,allowEmptyNodes))
         return nodes
 
     #--------------------

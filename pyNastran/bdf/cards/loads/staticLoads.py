@@ -280,6 +280,9 @@ class GRAV(BaseCard):
         assert not allclose(max(abs(self.N)), 0.),('GRAV N is a zero vector, '
                                                    'N=%s' % (str(self.N)))
 
+    def getLoads(self):
+        return [self]
+
     def organizeLoads(self, model):
         typesFound = [self.type]
         forceLoads = {}
@@ -1035,6 +1038,39 @@ class PLOAD4(Load):
         fields += [n1, n2, n3]
         fields.append(sorl)
         fields.append(ldir)
+        return fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+class PLOADX1(Load):
+    type = 'PLOADX1'
+    def __init__(self, card=None, data=None):
+        if card:
+            self.sid = card.field(1)
+            self.eid = card.field(2)
+            self.pa = card.field(3) # float
+            self.pb = card.field(4,self.pa) # float
+            self.ga = card.field(5) # int
+            self.gb = card.field(6) # int
+            self.theta = card.field(7,0.)
+        else:
+            self.sid   = data[0]
+            print("PLOADX1 = %s" %(data))
+            raise NotImplementedError('PLOADX1')
+    
+    def crossReference(self, model):
+        #self.eid = model.Element(self.eid)
+        #self.ga = model.Node(self.ga)
+        #self.gb = model.Node(self.gb)
+        pass
+
+    def getLoads(self):
+        return [self]
+
+    def rawFields(self):
+        fields = ['PLOADX1', self.sid, self.eid, self.pa, self.pb,
+                  self.ga, self.gb, self.theta]
         return fields
 
     def reprFields(self):

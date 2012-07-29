@@ -367,6 +367,50 @@ class TLOAD1(TabularLoad):
                   self.Tid(), us0, vs0]
         return fields
 
+class RFORCE(Load):
+    type = 'RFORCE'
+    def __init__(self, card=None, data=None):
+        if card:
+            self.sid = card.field(1)
+            self.nid = card.field(2)
+            self.cid = card.field(3, 0)
+            self.scale = card.field(4, 1.)
+            self.r1 = card.field(5, 0.)
+            self.r2 = card.field(6, 0.)
+            self.r3 = card.field(7, 0.)
+            self.method = card.field(8, 1)
+            self.racc   = card.field(9, 0.)
+            self.mb     = card.field(10, 0)
+            self.idrf   = card.field(11, 0)
+        else:
+            self.sid   = data[0]
+            print("PLOADX1 = %s" %(data))
+            raise NotImplementedError('PLOADX1')
+    
+    def crossReference(self, model):
+        #self.nid = model.Element(self.nid)
+        #self.cid = model.Coord(self.cid)
+        pass
+
+    def getLoads(self):
+        return [self]
+
+    def rawFields(self):
+        fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
+                  self.r1, self.r2, self.r3, self.method, self.racc,
+                  self.mb, self.idrf]
+        return fields
+
+    def reprFields(self):
+        #method = self.setBlankIfDefault(self.method,1)
+        racc = self.setBlankIfDefault(self.racc,0.)
+        mb = self.setBlankIfDefault(self.mb,0)
+        idrf = self.setBlankIfDefault(self.idrf,0)
+        fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
+                  self.r1, self.r2, self.r3, self.method, racc,
+                  mb, idrf]
+        return fields
+
 class RLOAD1(TabularLoad):
     """
     Defines a frequency-dependent dynamic load of the form

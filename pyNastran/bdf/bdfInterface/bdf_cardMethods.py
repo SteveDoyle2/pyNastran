@@ -22,7 +22,7 @@ class CardMethods(object):
             else:
                 emptyLines += 1
             ###
-            if emptyLines == 50:
+            if emptyLines == 500:
                 break
         return self.linesPack[-1]
 

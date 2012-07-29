@@ -12,7 +12,7 @@ import traceback
 
 from pyNastran.general.general import printBadPath
 from pyNastran.bdf.errors import ScientificCardParseError
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, CTRIAX, CTRIAX6
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
                                DamperElement, RodElement, NastranMatrix)
@@ -269,15 +269,18 @@ def get_element_stats(fem1, fem2):
         try:
             if isinstance(e, ShellElement):
                 a   = e.Area()
-                t   = e.Thickness()
-                nsm = e.Nsm()
-                mA  = e.MassPerArea()
-                m   = e.Mass()
-                c   = e.Centroid()
-                #mid = e.Mid()
-                pid = e.Pid()
-                n   = e.Normal()
-                a, c, n = e.AreaCentroidNormal()
+                if (isinstance(e,CTRIAX) or isinstance(e,CTRIAX6)):
+                    pass
+                else:
+                    t   = e.Thickness()
+                    nsm = e.Nsm()
+                    mA  = e.MassPerArea()
+                    m   = e.Mass()
+                    c   = e.Centroid()
+                    #mid = e.Mid()
+                    pid = e.Pid()
+                    n   = e.Normal()
+                    a, c, n = e.AreaCentroidNormal()
             elif isinstance(e, SolidElement):
                 v   = e.Volume()
                 m   = e.Mass()
