@@ -149,29 +149,26 @@ class LSEQ(BaseCard): # Requires LOADSET in case control deck
         self.lid = model.Load(self.lid)
         if self.tid:
             self.tid = model.Load(self.tid)
-        ###
-    
+
+    def LoadID(self, lid):
+        if isinstance(lid, int):
+            return lid
+        elif isinstance(lid, list):
+            return self.LoadID(lid[0])
+        else:
+            return lid.sid
+        raise RuntimeError(lid)
+        
+    def getLoads(self):
+        return self.lid
+ 
     def Lid(self):
         if isinstance(self.lid, int):
             return self.lid
         else:
-            raise NotImplementedError('LSEQ '+str(self.lid)+type(self.lid))
- 
-        try:
-            if isinstance(self.lid, int):
-                return self.lid
-            elif isinstance(self.lid, list):
-                #sys.stderr.write('type(lid[0]) = %s' %(type(self.lid[0])))
-                #sys.stderr.write("the offending load...%s" %(self.lid[0]))
-                return self.lid[0].lid
-            #elif isinstance(self.lid,load)
-            else:
-                #sys.stderr.write("the offending load...%s" %(self.lid))
-                return self.lid.lid
-        except:
-            msg = "error in loads.py - self.lid=\n %s\n" % (str(self.lid))
-            sys.stderr.write(msg)
-            raise
+            return self.LoadID(self.lid)
+            raise NotImplementedError('LSEQ '+str(self.lid)+
+                                      '\n%s' %(type(self.lid)))
         
     def Tid(self):
         if self.tid is None:
