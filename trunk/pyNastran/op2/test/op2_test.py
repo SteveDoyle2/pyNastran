@@ -12,15 +12,12 @@ def parseSkippedCards(fname):
     results = {}
     for line in lines:
         if 'OES' in line[0:3]:
-            #print line
             (fore,aft) = line.strip().split('->')
             (oes,form,elementTypeNum) = fore.strip().split(' ')
             (elementType,eType) = elementTypeNum.strip().split('=')
             (msg,fpath) = aft.strip().split('-')
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
-            #print fpath
-            #sys.exit()
             eName = msg.split(' ')[0]
             #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)
             key = (eName,eType,form)
@@ -31,7 +28,6 @@ def parseSkippedCards(fname):
     
     filesToAnalyze = []
     for (key,value) in sorted(results.iteritems()):
-        #print key,value
         filesToAnalyze.append(value)
     
     f = open('newElements.in','wb')
@@ -59,17 +55,13 @@ if __name__=='__main__':
     # works
     files = getFilesOfType('tests','.op2')
     
-    #moveDir = r'D:\work\move\hard_demo'
-    #moveDir = r'D:\work\move\move_tpl'
     foldersFile = 'tests/foldersRead.txt'
-    #moveDir = r'D:\work\move\solid_shell_bar'
-    #files2 = ['ann6611.op2']
 
     iSubcases = []
     debug     = False
     makeGeom  = False
     writeBDF  = False
-    writeF06  = True
+    writeF06  = False
     writeMatlab = False
     printResults = False
 
@@ -86,19 +78,9 @@ if __name__=='__main__':
         files2 += files
     else:
         files2 = get_failed_files('failedCases.in')
-    
-    #files2 = [r'D:\work\move\move_tpl\ar29sadl.op2']
-    #files = files+files2
     files = files2
-    #files = [r'D:\work\move\move_tpl\see101hs.op2']
-    #print len(files)
-    #files = []
     
-    #            HIS, R1B        EQEXIN
-    #skipFiles = ['accopt3.op2','acms111m.op2','adjoint.op2','aerobeam.op2',] # tpl
     skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
-    #skipFiles = []
-    #print files
 
     nStart = 0
     nStop = 10000
@@ -111,7 +93,6 @@ if __name__=='__main__':
     runLotsOfFiles(files,makeGeom,writeBDF,writeF06,writeMatlab,deleteF06,
                    printResults,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
-    #runLotsOfFiles(files,makeGeom,writeBDF,debug,saveCases,stopOnFailure,nStart,nStop)
     sys.exit('final stop...')
     
 
