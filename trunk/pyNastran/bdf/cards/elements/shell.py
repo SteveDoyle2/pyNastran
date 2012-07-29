@@ -419,7 +419,8 @@ class CTRIAX6(TriShell):
         self.prepareNodeIDs(nids,allowEmptyNodes=True)
         assert len(nids)==6,'error on CTRIAX6'
 
-        self.th = self.setDefaultIfBlank(card.fields(10),0.0)
+        ## theta
+        self.th = card.field(10,0.0)
 
     def Area(self):
         """
@@ -434,6 +435,9 @@ class CTRIAX6(TriShell):
 
     def Thickness(self):
         raise AttributeError('CTRIAX6 does not have a thickness')
+
+    def Nsm(self):
+        raise AttributeError('CTRIAX6 does not have a non-structural mass')
 
     def crossReference(self,model):
         self.nodes = model.Nodes(self.nodes)
@@ -461,7 +465,7 @@ class CTRIAX6(TriShell):
         return fields
 
     def reprFields(self):
-        th = self.th
+        th = self.setDefaultIfBlank(self.th,0.0)
         fields = ['CTRIAX6',self.eid,self.Mid()]+self.nodeIDs()+[
                   th]
         return fields

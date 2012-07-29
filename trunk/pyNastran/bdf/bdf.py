@@ -56,10 +56,10 @@ from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM)
 
 from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1,
-                                RLOAD1, RLOAD2, RANDPS)
+                                RLOAD1, RLOAD2, RANDPS, RFORCE)
 from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
                                       FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                      PLOAD, PLOAD1, PLOAD2, PLOAD4)
+                                      PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                           MAT8, MAT9, MAT10,
@@ -190,6 +190,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'GRAV', 'ACCEL1',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
+        'PLOADX1', 'RFORCE',
 
         # aero cards
         'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
@@ -636,7 +637,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if 0: # old method; breaks DMAP alters
             while len(self.activeFileNames) > 0: # keep going until finished
                 lineIn = self.get_next_line()
-                print(lineIn)
+                #print(lineIn)
                 if lineIn == None:  # file was closed and a 2nd readCaseControl
                     return          # was called
     
@@ -778,8 +779,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         while len(self.activeFileNames)>0: # keep going until finished
         #while 'BEGIN BULK' not in line:
             lineIn = self.get_next_line()
-            #print "lineIn = |%r|" %(lineIn)
-            #print "lineIn = ",lineIn
+            #print("lineIn = |%r|" %(lineIn))
+            #print("lineIn = ",lineIn)
             if lineIn == None:
                 return # file was closed and a 2nd readCaseControl was called
             if not self._is_case_control_deck(lineIn):
@@ -803,7 +804,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #print "self.caseControlLines = ",self.caseControlLines
         
         #for line in self.caseControlLines:
-        #    print "** line=|%r|" %(line)
+            #print "** line=|%r|" %(line)
 
         self.caseControlDeck = CaseControlDeck(self.caseControlLines, self.log)
         self.caseControlDeck.solmap_toValue = self.solmap_toValue
@@ -923,7 +924,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def _read_bulk_data_deck(self):
         """parses the Bulk Data Deck"""
         if self.debug:
-            self.log.debug("*readBulkDataDeck")
+            self.log.debug("*read_bulk_data_deck")
         self.open_file(self.bdfFileName)
 
         #oldCardObj = BDFCard()
@@ -1025,7 +1026,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #for reject in self.rejects:
                 #print printCard(reject)
                 #print ''.join(reject)
-            self.log.debug("***readBulkDataDeck")
+            self.log.debug("***read_bulk_data_deck")
         ###
 
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
@@ -1068,6 +1069,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         #cardObj = BDFCard(card,oldCardObj=None)
         #if self.debug:
+        #    self.log.debug(card)
         #    self.log.debug("*oldCardObj = \n%s" %(oldCardObj))
         #    self.log.debug("*cardObj = \n%s" %(cardObj))
         #cardObj.applyOldFields(iCard)
@@ -1511,6 +1513,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.addLoad(load)
             elif cardName == 'PLOAD4':
                 load = PLOAD4(cardObj)
+                self.addLoad(load)
+            elif cardName == 'PLOADX1':
+                load = PLOADX1(cardObj)
+                self.addLoad(load)
+            elif cardName == 'RFORCE':
+                load = RFORCE(cardObj)
                 self.addLoad(load)
 
 
