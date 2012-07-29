@@ -4,7 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array, cross, allclose
 from numpy.linalg import norm
 
-from pyNastran.bdf.cards.loads.loads import BaseCard, Load, LoadCombination
+from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
+from ..baseCard import BaseCard, expandThru, expandThruBy
 
 class LOAD(LoadCombination):
     type = 'LOAD'
@@ -356,7 +357,7 @@ class ACCEL1(BaseCard):
         self.N = array([N1, N2, N3])
         assert max(abs(self.N))>0.
         ## nodes to apply the acceleration to
-        self.nodes = self.expandThruBy(card.fields(9))
+        self.nodes = expandThruBy(card.fields(9))
 
     def crossReference(self, model):
         self.cid = model.Coord(self.cid)
@@ -898,7 +899,7 @@ class PLOAD4(Load):
             if card.field(7)=='THRU' and card.field(8): # plates
                 eid2 = card.field(8)
                 if eid2:
-                    self.eids = self.expandThru([self.eid, 'THRU', eid2])
+                    self.eids = expandThru([self.eid, 'THRU', eid2])
 
                 self.g1   = None
                 self.g34  = None

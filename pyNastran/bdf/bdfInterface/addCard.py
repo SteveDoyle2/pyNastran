@@ -113,6 +113,21 @@ class AddMethods(object):
             self.elements[key] = elem
         ###
 
+    def addMassElement(self, elem, allowOverwrites=False):
+        key = elem.eid
+        #self.massElements[key] = elem  ## @todo temporary
+        #return                         ## @todo temporary
+
+        if key in self.massElements and not allowOverwrites:
+            if not elem.isSameCard(self.massElements[key]):
+                elem.isSameCard(self.elements[key], debug=True)
+                #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
+                assert elem.eid not in self.massElements, 'eid=%s\noldElement=\n%snewElement=\n%s' %(elem.eid, self.massElements[elem.eid], elem)
+        else:
+            assert key > 0, 'eid=%s elem=%s' %(key, elem)
+            self.massElements[key] = elem
+        ###
+
     def addDamperElement(self, elem, allowOverwrites=False):
         """@warning can dampers have the same ID as a standard element?"""
         return self.addElement(elem, allowOverwrites)

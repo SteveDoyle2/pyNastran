@@ -61,235 +61,6 @@ class BaseCard(BDFCard):
         msg = "%s needs to implement the 'crossReference' method" %(self.type)
         raise NotImplementedError(msg)
 
-   # def off_expandThru(self, fields):
-   #     """
-   #     not used...
-   #     expands a list of values of the form [1,5,THRU,10,13]
-   #     to be [1,5,6,7,8,9,10,13]
-   #     """
-   #     nFields = len(fields)
-   #     fieldsOut = []
-   #     for i in range(nFields):
-   #         if fields[i]=='THRU':
-   #             for j in range(fields[i-1], fields[i+1]):                    
-   #                 fieldsOut.append(fields[j])
-   #             ###
-   #         else:
-   #             fieldsOut.append(fields[i])
-   #         ###
-   #     ###
-   #     return fieldsOut
-
-    def expandThru(self, fields):
-        """
-        expands a list of values of the form [1,5,THRU,9,13]
-        to be [1,5,6,7,8,9,13]
-        """
-        if len(fields) == 1:
-            return fields
-        #print("expandThru")
-        #print("fields = ", fields)
-        out = []
-        nFields = len(fields)
-        i=0
-        while(i<nFields):
-            if fields[i] == 'THRU':
-                for j in range(fields[i-1], fields[i+1]+1):
-                    out.append(j)
-                ###
-                i+=2
-            else:
-                out.append(fields[i])
-                i+=1
-            ###
-        ###
-        #print "out = ",out,'\n'
-        return list(set(out))
-    
-    def expandThruBy(self, fields):
-        """
-        expands a list of values of the form [1,5,THRU,9,BY,2,13]
-        to be [1,5,7,9,13]
-        @todo not tested
-        @note used for QBDY3, ???
-        """
-        if len(fields) == 1:
-            return fields
-        #print "expandThruBy"
-        #print "fields = ",fields
-        out = []
-        nFields = len(fields)
-        i=0
-        by = 1
-        while(i<nFields):
-            if fields[i] == 'THRU':
-                by = 1
-                if i+2<nFields and fields[i+2] == 'BY':
-                    by = fields[i+3]
-                    #sys.stderr.write("BY was found...untested...")
-                    #raise NotImplementedError('implement BY support\nfields=%s' %(fields))
-                else:
-                    by = 1
-                minValue = fields[i-1]
-                maxValue = fields[i+1]
-                #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
-                for j in range(0,(maxValue-minValue)//by+1): # +1 is to include final point
-                    value = minValue+by*j
-                    out.append(value)
-                ###
-                if by==1: # null/standard case
-                    i+=2
-                else:     # BY case
-                    i+=3
-                ###
-            else:
-                out.append(fields[i])
-                i+=1
-            ###
-        ###
-        #out = list(set(out))
-        #out.sort()
-        #print "out = ",out,'\n'
-        return list(set(out))
-
-    def expandThruExclude(self, fields):
-        """
-        expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
-        to be [1,5,6,9,10,11,13]
-        @todo not tested
-        """
-        fieldsOut = []
-        nFields = len(fields)
-        for i in range(nFields):
-            if fields[i] == 'THRU':
-                storedList = []
-                for j in range(fields[i-1], fields[i+1]):
-                    storedList.append(fields[j])
-                ###
-            elif fields[i] == 'EXCLUDE':
-                storedSet = set(storedList)
-                while fields[i] < max(storedList):
-                    storedSet.remove(fields[i])
-                storedList = list(storedSet)
-            else:
-                if storedList:
-                    fieldsOut += storedList
-                fieldsOut.append(fields[i])
-            ###
-        ###
-
-    def collapseThru(self, fields):
-        return fields
-
-    def collapseThruBy(self, fields):
-        return fields
-
-    def _collapseThru(self, fields):
-        """
-        1,THRU,10
-        1,3,THRU,19,15
-        @warning doesnt work
-        """
-        fields = list(set(fields))
-        
-        #assumes sorted...
-
-        dnMax = 1
-        (pre, i) = self._preCollapse(fields, dnMax=dnMax)
-        mid = self._midCollapse(pre, dnMax=dnMax)
-        #out = self._postCollapse(mid)
-
-        out = []
-        print("running post...")
-        for data in mid:
-            print("data = %s" %(data))
-            nData = len(data)
-            if nData == 1:
-                out.append(data[0]) # 1 field only
-            else:
-                assert data[2] == 1 # dn
-                out += [data[0], 'THRU', data[1]]
-            ###
-        ###
-        print("dataOut = ",out)
-        return out
-        ###
-
-    def _midCollapse(self, preCollapse, dnMax=10000000):
-        """
-        input is lists of [[1,3,5,7],2]  dn=2
-        dNmax = 2
-        output is [1,7,2]
-        """
-        out = []
-        print(preCollapse)
-        for collapse in preCollapse:
-            print("collapse = ", collapse)
-            (data,dn) = collapse
-            print("data = ",data)
-            print("dn = ",dn)
-            if len(data)>1:
-                if dn<=dnMax: # 1:11:2 - patran syntax
-                    fields = [data[0], data[-1], dn]
-                    out.append(fields)
-                ###
-                else: # bigger than dn
-                    for field in data:
-                        out.append(field)
-                    ###
-                ###
-            else: # 1 item
-                out.append([data[0]])
-            ###
-        return out
-    
-    def _preCollapse(self, fields, dnMax=10000000): # assumes sorted
-        out = []
-        nFields = len(fields)-1
-        i=0
-        while(i<nFields):
-            dn = fields[i+1]-fields[i]
-            print("preFields = %s" %(fields[i:]))
-            (outFields,j) = self._subCollapse(fields[i:], dn, dnMax)
-            print("outFields = %s" %(outFields))
-            out.append([outFields, dn])
-            i+=j
-            ###
-            #if i==nFields+1:
-            #    out.append([[fields[i-1]],1])
-            #    print("lastOut = ",out[-1])
-            ###
-        ###
-        
-        print("i=%s out=%s" %(i,out))
-        print("--end of preCollapse")
-        return (out, i)
-
-    def _subCollapse(self, fields, dn, dnMax=10000000):
-        """
-        in  = [1,2,3,  7]
-        out = [1,2,3]
-        """
-        # dn=1
-        print("subIn = %s" %(fields))
-        out = [fields[0]]
-        nFields = len(fields)
-
-        for i in range(1, nFields):
-            dn = fields[i]-fields[i-1]
-            print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" % (i, i, fields[i], i-1, fields[i-1], dn, dnMax))
-            if dn != dnMax:
-                #i += 1
-                #out.append(fields[i])
-                break
-            out.append(fields[i])
-        #i -= 1
-        print("subOut = %s" %(out))
-        #i += 1
-        print("iSubEnd = %s\n" %(i))
-        return (out,i)
-    ###
-        
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
         builds a table of the form:
@@ -521,6 +292,217 @@ class Element(BaseCard):
         msg = 'massMatrix not implemented in the %s class' %(self.__class__.__name__)
         raise NotImplementedError(msg)
 
+
+def expandThru(fields):
+    """
+    expands a list of values of the form [1,5,THRU,9,13]
+    to be [1,5,6,7,8,9,13]
+    """
+    if len(fields) == 1:
+        return fields
+    #print("expandThru")
+    #print("fields = ", fields)
+    out = []
+    nFields = len(fields)
+    i=0
+    while(i<nFields):
+        if fields[i] == 'THRU':
+            for j in range(fields[i-1], fields[i+1]+1):
+                out.append(j)
+            ###
+            i+=2
+        else:
+            out.append(fields[i])
+            i+=1
+        ###
+    ###
+    #print "out = ",out,'\n'
+    return list(set(out))
+    
+def expandThruBy(fields):
+    """
+    expands a list of values of the form [1,5,THRU,9,BY,2,13]
+    to be [1,5,7,9,13]
+    @todo not tested
+    @note used for QBDY3, ???
+    """
+    if len(fields) == 1:
+        return fields
+    #print "expandThruBy"
+    #print "fields = ",fields
+    out = []
+    nFields = len(fields)
+    i=0
+    by = 1
+    while(i<nFields):
+        if fields[i] == 'THRU':
+            by = 1
+            if i+2<nFields and fields[i+2] == 'BY':
+                by = fields[i+3]
+                #sys.stderr.write("BY was found...untested...")
+                #raise NotImplementedError('implement BY support\nfields=%s' %(fields))
+            else:
+                by = 1
+            minValue = fields[i-1]
+            maxValue = fields[i+1]
+            #print "minValue=%s maxValue=%s by=%s" %(minValue,maxValue,by)
+            for j in range(0,(maxValue-minValue)//by+1): # +1 is to include final point
+                value = minValue+by*j
+                out.append(value)
+            ###
+            if by==1: # null/standard case
+                i+=2
+            else:     # BY case
+                i+=3
+            ###
+        else:
+            out.append(fields[i])
+            i+=1
+        ###
+    ###
+    #out = list(set(out))
+    #out.sort()
+    #print "out = ",out,'\n'
+    return list(set(out))
+
+def expandThruExclude(self, fields):
+    """
+    expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
+    to be [1,5,6,9,10,11,13]
+    @todo not tested
+    """
+    fieldsOut = []
+    nFields = len(fields)
+    for i in range(nFields):
+        if fields[i] == 'THRU':
+            storedList = []
+            for j in range(fields[i-1], fields[i+1]):
+                storedList.append(fields[j])
+            ###
+        elif fields[i] == 'EXCLUDE':
+            storedSet = set(storedList)
+            while fields[i] < max(storedList):
+                storedSet.remove(fields[i])
+            storedList = list(storedSet)
+        else:
+            if storedList:
+                fieldsOut += storedList
+            fieldsOut.append(fields[i])
+        ###
+    ###
+
+def collapseThru(fields):
+    return fields
+
+def collapseThruBy(fields):
+    return fields
+
+def _collapseThru(fields):
+    """
+    1,THRU,10
+    1,3,THRU,19,15
+    @warning doesnt work
+    """
+    fields = list(set(fields))
+    
+    #assumes sorted...
+
+    dnMax = 1
+    (pre, i) = _preCollapse(fields, dnMax=dnMax)
+    mid = _midCollapse(pre, dnMax=dnMax)
+    #out = self._postCollapse(mid)
+
+    out = []
+    print("running post...")
+    for data in mid:
+        print("data = %s" %(data))
+        nData = len(data)
+        if nData == 1:
+            out.append(data[0]) # 1 field only
+        else:
+            assert data[2] == 1 # dn
+            out += [data[0], 'THRU', data[1]]
+        ###
+    ###
+    print("dataOut = ",out)
+    return out
+    ###
+
+def _midCollapse(preCollapse, dnMax=10000000):
+    """
+    input is lists of [[1,3,5,7],2]  dn=2
+    dNmax = 2
+    output is [1,7,2]
+    """
+    out = []
+    print(preCollapse)
+    for collapse in preCollapse:
+        print("collapse = ", collapse)
+        (data,dn) = collapse
+        print("data = ",data)
+        print("dn = ",dn)
+        if len(data)>1:
+            if dn<=dnMax: # 1:11:2 - patran syntax
+                fields = [data[0], data[-1], dn]
+                out.append(fields)
+            ###
+            else: # bigger than dn
+                for field in data:
+                    out.append(field)
+                ###
+            ###
+        else: # 1 item
+            out.append([data[0]])
+        ###
+    return out
+
+def _preCollapse(fields, dnMax=10000000): # assumes sorted
+    out = []
+    nFields = len(fields)-1
+    i=0
+    while(i<nFields):
+        dn = fields[i+1]-fields[i]
+        print("preFields = %s" %(fields[i:]))
+        (outFields,j) = _subCollapse(fields[i:], dn, dnMax)
+        print("outFields = %s" %(outFields))
+        out.append([outFields, dn])
+        i+=j
+        ###
+        #if i==nFields+1:
+        #    out.append([[fields[i-1]],1])
+        #    print("lastOut = ",out[-1])
+        ###
+    ###
+    
+    print("i=%s out=%s" %(i,out))
+    print("--end of preCollapse")
+    return (out, i)
+
+def _subCollapse(fields, dn, dnMax=10000000):
+    """
+    in  = [1,2,3,  7]
+    out = [1,2,3]
+    """
+    # dn=1
+    print("subIn = %s" %(fields))
+    out = [fields[0]]
+    nFields = len(fields)
+
+    for i in range(1, nFields):
+        dn = fields[i]-fields[i-1]
+        print("i=%s field[%s]=%s fields[%s]=%s dn=%s dnMax=%s" % (i, i, fields[i], i-1, fields[i-1], dn, dnMax))
+        if dn != dnMax:
+            #i += 1
+            #out.append(fields[i])
+            break
+        out.append(fields[i])
+    #i -= 1
+    print("subOut = %s" %(out))
+    #i += 1
+    print("iSubEnd = %s\n" %(i))
+    return (out,i)
+###
+        
 
 #dnMax = 2
 if __name__=='__main__':

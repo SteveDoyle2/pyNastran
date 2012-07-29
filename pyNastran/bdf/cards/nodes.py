@@ -1,11 +1,10 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
 #import sys
 from numpy import array
 
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard, expandThru, collapseThru
 
 class Ring(BaseCard):
     """Generic Ring base class"""
@@ -104,7 +103,7 @@ class SPOINTs(Node):
             fields  = card.fields(1)
         else:
             fields = data
-        self.spoints = set(self.expandThru(fields))
+        self.spoints = set(expandThru(fields))
         #i = 0
         #while i<nFields: # =1 ???
         #    if fields[i]=='THRU':
@@ -137,7 +136,7 @@ class SPOINTs(Node):
         spoints = list(self.spoints)
         spoints.sort()
         #print("self.spoints = %s" %(self.spoints))
-        spoints = self.collapseThru(spoints)
+        spoints = collapseThru(spoints)
         fields = ['SPOINT']+spoints
         return fields
 

@@ -411,6 +411,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.elements = {}
         ## stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
+        ## store CMASS1,CMASS2,CMASS3,CMASS4,CMASS5
+        #self.massElements = {}
         ## stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
         ## stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
@@ -502,7 +504,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         # aero cards
         ## stores CAEROx
-        self.caeros = {}  # can this be combined with self.elements???
+        self.caeros = {}
         ## stores PAEROx
         self.paeros = {}
         ## stores AERO
@@ -562,9 +564,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         @param includeDir the relative path to any include files (default=None if no include files)
         @param xref should the bdf be cross referenced (default=True)
         """
-        self._setInfile(infilename, includeDir)
+        self._set_infile(infilename, includeDir)
 
-        fname = self.printFileName(self.bdfFileName)
+        fname = self.print_filename(self.bdfFileName)
         self.log.debug('---starting BDF.readBDF of %s---' %(fname))
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
@@ -593,9 +595,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         @param includeDir the relative path to any include files (default=None if no include files)
         @param xref should the bdf be cross referenced (default=True)
         """
-        self._setInfile(infilename, includeDir)
+        self._set_infile(infilename, includeDir)
 
-        fname = self.printFileName(self.bdfFileName)
+        fname = self.print_filename(self.bdfFileName)
         self.log.debug('---starting BDF.readBDF_Punch of %s---' %(fname))
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
