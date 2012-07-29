@@ -22,7 +22,7 @@ class BDFReader(object):
             log = loggerObj.startLog(word) # or info
         self.log = log
 
-    def printFileName(self, filename):
+    def print_filename(self, filename):
         """
         Takes a path such as C:/work/fem.bdf and locates the file using
         relative paths.  If it's on another drive, the path is not modified.
@@ -135,15 +135,15 @@ class BDFReader(object):
         ## opportunity
         self.doneReading = False
         if debug:
-            fnameA = self.printFileName(activeFileName)
-            fnameB = self.printFileName(self.bdfFileName)
+            fnameA = self.print_filename(activeFileName)
+            fnameB = self.print_filename(self.bdfFileName)
 
             self.log.debug("activeFileName=|%s| infilename=%s len(pack)=%s\n"
                          %(fnameA,fnameB,nlines))
         ###
         #print "\n\n"
 
-    def _setInfile(self, bdfFileName, includeDir=None):
+    def _set_infile(self, bdfFileName, includeDir=None):
         """
         Sets up the basic file/lines/cardCounting operations
         @param self

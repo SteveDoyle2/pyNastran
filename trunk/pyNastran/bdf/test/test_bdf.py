@@ -45,7 +45,8 @@ def run_lots_of_files(filenames, folder='',debug=False, xref=True, check=True, c
     failedFiles = []
     for filename in filenames2:
         absFilename = os.path.abspath(os.path.join(folder, filename))
-        print("filename = %s" %(absFilename))
+        if folder!='':
+            print("filename = %s" %(absFilename))
         isPassed = False
         try:
             (fem1, fem2, diffCards2) = runBDF(folder, filename, debug=debug,
@@ -101,10 +102,10 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except ScientificCardParseError:
-        pass
-    except IOError:
-        pass
+    #except ScientificCardParseError:
+        #pass
+    #except IOError:
+        #pass
     except SystemExit:
         sys.exit('sys.exit...')
     except:

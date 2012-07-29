@@ -340,7 +340,7 @@ class CardMethods(object):
         
         #print "valueIn = |%s|" %(valueIn)
         if ' ' in valueIn:
-            msg = ('there are embedded blanks in the field.\n'
+            msg = ('there are embedded blanks in the field (mixed tabs/commas/spaces).\n'
                    'valueRaw=|%s| valueIn=|%s| card=%s' %(valueRaw, valueIn,
                                                           card))
             raise SyntaxError(msg)

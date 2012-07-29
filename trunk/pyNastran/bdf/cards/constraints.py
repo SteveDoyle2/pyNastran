@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 
 
 class constraintObject2(object):
@@ -505,7 +505,7 @@ class SPC1(Constraint):
         self.conid       = card.field(1)
         self.constraints = str(card.field(2, ''))  # 246 = y; dx, dz dir
         nodes = card.fields(3)
-        self.nodes = self.expandThru(nodes)
+        self.nodes = expandThru(nodes)
         self.nodes.sort()
 
     def crossReference(self, i, node):
@@ -570,7 +570,7 @@ class SPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         self.conid = card.field(1)
         sets      = card.fields(2)
-        self.sets = self.expandThru(sets)
+        self.sets = expandThru(sets)
         self.sets.sort()
 
     def organizeConstraints(self, model):
@@ -608,7 +608,7 @@ class MPCADD(ConstraintADD):
         ConstraintADD.__init__(self, card, data)
         self.conid = card.field(1)
         sets       = card.fields(2)
-        self.sets = self.expandThru(sets)
+        self.sets = expandThru(sets)
         self.sets.sort()
 
     def crossReference(self, i, node):

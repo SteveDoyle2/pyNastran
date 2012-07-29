@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from .thermal import ThermalCard
+from ..baseCard import expandThru, expandThruBy, collapseThruBy
 
 class ThermalLoadDefault(ThermalCard):
     def __init__(self, card, data):
@@ -29,7 +30,7 @@ class QBDY1(ThermalLoad):
             self.qFlux = card.field(2)
             eids       = card.fields(3)
             ## CHBDYj element identification numbers (Integer)
-            self.eids = self.expandThru(eids)  # @warning should this use expandThruBy ???
+            self.eids = expandThru(eids)  # @warning should this use expandThruBy ???
         else:
             self.sid   = data[0]
             self.qFlux = data[1]
@@ -52,7 +53,7 @@ class QBDY1(ThermalLoad):
         return fields
 
     def reprFields(self):
-        eids = self.collapseThruBy(self.eids)
+        eids = collapseThruBy(self.eids)
         fields = ['QBDY1', self.sid, self.qFlux]+list(eids)+[self.qFlux]
         #print "FIELDS = ",fields
         return fields
@@ -113,7 +114,7 @@ class QBDY3(ThermalLoad):
             self.cntrlnd = card.field(3,0)
             eids         = card.fields(4)
             ## CHBDYj element identification numbers
-            self.eids = self.expandThruBy(eids)
+            self.eids = expandThruBy(eids)
         else:
             self.sid     = data[0]
             self.Q0      = data[1]
@@ -144,7 +145,7 @@ class QBDY3(ThermalLoad):
 
     def reprFields(self):
         cntrlnd = self.setBlankIfDefault(self.cntrlnd,0)
-        eids = self.collapseThruBy(self.Eids())
+        eids = collapseThruBy(self.Eids())
         eids.sort()
         fields = ['QBDY3',self.sid, self.Q0, cntrlnd]+eids
         return fields
@@ -172,7 +173,7 @@ class QHBDY(ThermalLoad):
             self.grids = card.fields(5)
 
             ## Grid point identification of connected grid points. (Integer > 0 or blank)
-            self.grids = self.expandThruBy(self.grids)
+            self.grids = expandThruBy(self.grids)
         else:
             self.sid   = data[0]
             self.flag  = data[1]

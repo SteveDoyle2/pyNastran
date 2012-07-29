@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 from pyNastran.bdf.fieldWriter import printIntCard
 
 class Set(BaseCard):
@@ -130,7 +130,7 @@ class ABQSet1(Set):
         self.components = str(card.field(1, 0))
 
         ## Identifiers of grids points. (Integer > 0)
-        self.IDs = self.expandThru(card.fields(2))
+        self.IDs = expandThru(card.fields(2))
 
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -175,7 +175,7 @@ class CSET1(Set):
             self.components = '123456'
         else:
             self.components = str(card.field(1))
-            self.IDs = self.expandThru(card.fields(2))
+            self.IDs = expandThru(card.fields(2))
         ###
 
     def rawFields(self):
@@ -223,7 +223,7 @@ class SET1(Set):
         if isinstance(fields[0], str) and fields[0].upper() == 'SKIN':
             self.isSkin = True
             i+=1
-        self.IDs = self.expandThru(fields[i:])
+        self.IDs = expandThru(fields[i:])
         self.cleanIDs()
 
     def IsSkin(self):
@@ -260,7 +260,7 @@ class SET3(Set):
         self.IDs = []
 
         fields = card.fields(2)
-        self.IDs = self.expandThru(fields)
+        self.IDs = expandThru(fields)
         self.cleanIDs()
 
     def IsGrid(self):
@@ -305,7 +305,7 @@ class SESET(SetSuper):
         self.IDs = []
 
         fields = card.fields(2)
-        self.IDs = self.expandThru(fields)
+        self.IDs = expandThru(fields)
         self.cleanIDs()
 
     def rawFields(self):
@@ -330,7 +330,7 @@ class SEQSEP(SetSuper): # not integrated...is this an SESET ???
         self.IDs = []
 
         fields = card.fields(3)
-        self.IDs = self.expandThru(fields)
+        self.IDs = expandThru(fields)
         self.cleanIDs()
 
     def rawFields(self):
@@ -354,7 +354,7 @@ class RADSET(Set): # not integrated
         self.IDs = []
 
         fields = card.fields(2)
-        self.IDs = self.expandThru(fields)
+        self.IDs = expandThru(fields)
         self.cleanIDs()
 
     def addRadsetObject(self, radset):
