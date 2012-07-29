@@ -22,10 +22,18 @@ import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]
 #print "test_path = ",test_path
 
-def runAllFilesInFolder(folder, debug=False, xref=True, check=True, cid=None):
-    #debug = True
+
+def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
+                            cid=None):
     print("folder = %s" %(folder))
     filenames  = os.listdir(folder)
+    run_lots_of_files(filenames, debug=debug, xref=xref, check=check, cid=cid)
+
+def run_lots_of_files(filenames, folder='',debug=False, xref=True, check=True, cid=None):
+    filenames = list(set(filenames))
+    filenames.sort()
+
+    #debug = True
     filenames2 = []
     diffCards = []
     for filename in filenames:
@@ -248,6 +256,9 @@ def get_element_stats(fem1, fem2):
         for load in loads:
             try:
                 allLoads = load.getLoads()
+                if not isinstance(allLoads, list):
+                    raise TypeError('allLoads should return a list...%s' %(
+                                    type(allLoads)))
             except:
                 print("load statistics not available - load.type=%s load.sid=%s"
                     %(load.type, load.sid))
