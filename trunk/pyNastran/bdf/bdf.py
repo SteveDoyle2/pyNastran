@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,W0201
+# pylint: disable=C0103,R0902,R0904,R0914,W0201,C0302,W0611
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
@@ -55,7 +55,7 @@ from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
 from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM)
 
-from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1,
+from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
                                 RLOAD1, RLOAD2, RANDPS, RFORCE)
 from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
                                       FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -185,7 +185,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         # loads
         'LOAD', 'LSEQ', 'RANDPS',
-        'DLOAD', 'SLOAD', 'TLOAD1', 'RLOAD1', 'RLOAD2',
+        'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
         'FORCE',  'FORCE1',  'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'GRAV', 'ACCEL1',
@@ -220,7 +220,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         
         # direct matrix input cards
         'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-        #'DEQATN',
+        'DEQATN',
         
         # optimization cards
         'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DVPREL1', 'DVPREL2',
@@ -288,7 +288,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         @warning dont use this...returns False
         """
         return False
-        #self.caseControlDeck.IsThermalSolution()
+        #self.caseControlDeck.is_thermal_solution()
 
     def _init_solution(self):
         """
@@ -560,9 +560,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
     def readBDF(self, infilename, includeDir=None, xref=True):
         """
         main read method for the bdf
-        @param infilename the input bdf
-        @param includeDir the relative path to any include files (default=None if no include files)
-        @param xref should the bdf be cross referenced (default=True)
+        @param infilename
+          the input bdf
+        @param includeDir
+          the relative path to any include files (default=None
+          if no include files)
+        @param xref
+          should the bdf be cross referenced (default=True)
         """
         self._set_infile(infilename, includeDir)
 
@@ -577,7 +581,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self._read_executive_control_deck()
         self._read_case_control_deck(self.bdfFileName)
         self._read_bulk_data_deck()
-        #self.close_file()
+
         self.crossReference(xref=xref)
         if self.debug:
             self.log.debug("***BDF.readBDF")
@@ -585,15 +589,16 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.log.debug('---finished BDF.readBDF of %s---' %(fname))
         sys.stdout.flush()
 
-        isDone = self.foundEndData
-        return ('BulkDataDeck', isDone)
-
     def readBDF_Punch(self, infilename, includeDir=None, xref=True):
         """
         BDF punch file reader
-        @param infilename the input bdf
-        @param includeDir the relative path to any include files (default=None if no include files)
-        @param xref should the bdf be cross referenced (default=True)
+        @param infilename
+          the input bdf
+        @param includeDir
+          the relative path to any include files (default=None
+          if no include files)
+        @param xref
+          should the bdf be cross referenced (default=True)
         """
         self._set_infile(infilename, includeDir)
 
@@ -605,7 +610,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.debug = True
         if self.debug:
             self.log.debug("*BDF.readBDF_Punch")
-        self._readBulkDataDeck()
+        self._read_bulk_data_deck()
         #self.close_file()
         self.crossReference(xref=xref)
         if self.debug:
@@ -613,9 +618,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
         self.log.debug('---finished BDF.readBDF_Punch of %s---' %(fname))
         sys.stdout.flush()
-
-        isDone = self.foundEndData
-        return ('BulkDataDeck', isDone)
 
     def _is_executive_control_deck(self, line):
         """@todo code this..."""
@@ -626,7 +628,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         self.open_file(self.bdfFileName)
         line = ''
         emptyLines = 0
-        while emptyLines < 50 and 'CEND' not in line.upper():
+        while emptyLines < 50 and 'CEND' not in line.upper()[:4]:
             line = self.infilesPack[-1].readline()
             line = line.rstrip('\n\r\t ')
             if(len(line) > 0):
@@ -660,7 +662,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()  # uppercase line
             uline = uline.split('$')[0]
-            if 'SOL ' in uline:
+            if 'SOL ' in uline[:4]:
                 #print "line = ",uline
                 if ',' in uline:
                     sline = uline.split(',') # SOL 600,method
@@ -685,10 +687,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 except:
                     msg = ('update_solution failed...line=%s' %(uline))
                     raise RuntimeError(msg)
-                    raise
                 ###
             ###
         ###
+        #print("sol = ", sol)
 
     def updateSolution(self, sol, method=None):
         """
@@ -781,8 +783,8 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         while len(self.activeFileNames)>0: # keep going until finished
         #while 'BEGIN BULK' not in line:
             lineIn = self.get_next_line()
-            #print("lineIn = |%r|" %(lineIn))
-            #print("lineIn = ",lineIn)
+            #print("lineIn = |%r|" % (lineIn))
+            #print("lineIn = ", lineIn)
             if lineIn == None:
                 return # file was closed and a 2nd readCaseControl was called
             if not self._is_case_control_deck(lineIn):
@@ -905,11 +907,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             line = line.strip('\t\r\n ')
             cardLines2.append(line)
 
-        #print "cardLinesRaw = ",cardLines2
         cardLines2[0] = cardLines2[0][7:].strip() # truncate the cardname
         filename = ''.join(cardLines2)
         filename = filename.strip('"').strip("'")
-        #print 'filename = |%s|' %(filename)
+        if ':' in filename:
+            ifilepaths = filename.split(':')
+            filename = os.path.join(*ifilepaths)
+        #print 'filename = |%s|' % (filename)
         filename = os.path.join(self.includeDir, filename)
         return filename
 
@@ -929,7 +933,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             self.log.debug("*read_bulk_data_deck")
         self.open_file(self.bdfFileName)
 
-        #oldCardObj = BDFCard()
+        #old_card_obj = BDFCard()
         while len(self.activeFileNames) > 0: # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self._get_card(debug=False)
@@ -942,7 +946,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print 'filename = ', os.path.relpath(filename)
                 self._add_include_file(filename)
                 self.open_file(filename)
-                reject = '$ INCLUDE processed:  %s\n' %(filename)
+                reject = '$ INCLUDE processed:  %s\n' % (filename)
                 self.rejects.append([reject])
                 continue
             #elif cardName is None:
@@ -950,10 +954,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #continue
                 
             passCard = False
-            #if self._isSpecialCard(cardName):
-            #    passCard = True
-            #print 'card = ',card
-            if not self._is_reject(cardName):
+            if self._is_special_card(cardName):
+                passCard = True
+                card = rawCard
+                print(rawCard)
+                #sys.exit()
+            elif not self._is_reject(cardName):
                 #print ""
                 #print "not a reject"
                 card = self.processCard(card) # parse the card into fields
@@ -982,7 +988,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #    cardObj = card
             #else:
             #    cardObj = BDFCard(card)
-            cardObj = BDFCard(card)
+            #cardObj = BDFCard(card)
 
             nCards = 1
             #special = False
@@ -1001,7 +1007,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #print "----------------------------"
                 #if special:
                     #print "iCard = ",iCard
-                self.add_card(card, cardName, iCard=0, oldCardObj=None)
+                self.add_card(card, cardName, iCard=0, old_card_obj=None)
                 #if self.foundEndData:
                 #    break
             ### iCard
@@ -1032,11 +1038,13 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ###
 
     def addCard(self, card, cardName, iCard=0, oldCardObj=None):
+        """@see add_card"""
         warnings.warn('addCard has been deprecated; use add_card',
                       DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName, iCard=0, oldCardObj=None)
+        return self.add_card(card, cardName, iCard=iCard,
+                             old_card_obj=oldCardObj)
 
-    def add_card(self, card, cardName, iCard=0, oldCardObj=None):
+    def add_card(self, card, cardName, iCard=0, old_card_obj=None):
         """
         adds a card object to the BDF object. 
         @param self
@@ -1047,8 +1055,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
           the cardName -> 'GRID'
         @param iCard
           used when reading Nastran Free-Format (disabled)
-        @param oldCardObj
-          the last card object that was returned (type=BDFCard or None; default=None)
+        @param old_card_obj
+          the last card object that was returned (type=BDFCard or None;
+          default=None)
         @retval cardObject
           the card object representation of card
         @note
@@ -1069,10 +1078,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #else:
         cardObj = BDFCard(card, oldCardObj=None)
 
-        #cardObj = BDFCard(card,oldCardObj=None)
+        #cardObj = BDFCard(card, old_card_obj=None)
         #if self.debug:
         #    self.log.debug(card)
-        #    self.log.debug("*oldCardObj = \n%s" %(oldCardObj))
+        #    self.log.debug("*old_card_obj = \n%s" %(old_card_obj))
         #    self.log.debug("*cardObj = \n%s" %(cardObj))
         #cardObj.applyOldFields(iCard)
 
@@ -1101,7 +1110,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     name = cardObj.field(1)
                     dmij = self.dmijs[name]
                     dmij.addColumn(cardObj)
-                ###
             elif cardName == 'DMIJI':
                 if cardObj.field(2)==0:
                     dmiji = DMIJI(cardObj)
@@ -1110,7 +1118,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     name = cardObj.field(1)
                     dmiji = self.dmijis[name]
                     dmiji.addColumn(cardObj)
-                ###
             elif cardName == 'DMIK':
                 if cardObj.field(2)==0:
                     dmik = DMIK(cardObj)
@@ -1119,7 +1126,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     name = cardObj.field(1)
                     dmik = self.dmiks[name]
                     dmik.addColumn(cardObj)
-                ###
             elif cardName == 'DMI':
                 if cardObj.field(2)==0:
                     dmi = DMI(cardObj)
@@ -1128,11 +1134,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                     name = cardObj.field(1)
                     dmi = self.dmis[name]
                     dmi.addColumn(cardObj)
-                ###
+
             elif cardName == 'DEQATN':  # buggy for commas
                 #print 'DEQATN:  cardObj.card=%s' %(cardObj.card)
-                equation = DEQATN(cardObj)
-                self.addDEQATN(equation)
+                #equation = DEQATN(cardObj)
+                #self.addDEQATN(equation)
+                self.rejects.append(card)
 
             elif cardName == 'GRID':
                 node = GRID(cardObj)
@@ -1266,7 +1273,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'CONM1':
                 elem = CONM1(cardObj)
                 self.addElement(elem)
-            elif cardName == 'CONM2': # cid=0 not supported...
+            elif cardName == 'CONM2':
                 elem = CONM2(cardObj)
                 self.addElement(elem)
 
@@ -1360,7 +1367,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 if cardObj.field(5):
                     prop = PVISC(card, 1)
                     self.addProperty(prop)
-                ###
             elif cardName == 'PROD':
                 prop = PROD(cardObj)
                 self.addProperty(prop)
@@ -1538,6 +1544,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             elif cardName == 'TLOAD1':
                 load = TLOAD1(cardObj)
                 self.addLoad(load)
+            elif cardName == 'TLOAD2':
+                load = TLOAD2(cardObj)
+                self.addLoad(load)
             elif cardName == 'RLOAD1':
                 load = RLOAD1(cardObj)
                 self.addLoad(load)
@@ -1691,7 +1700,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.addAEList(aelist)
             elif cardName == 'AEPARM':
                 aeparm = AEPARM(cardObj)
-                self.addAEParm(aeparm)
+                self.addAEParam(aeparm)
             elif cardName == 'AESTAT':
                 aestat = AESTAT(cardObj)
                 self.addAEStat(aestat)
@@ -1956,7 +1965,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             print("filename = %s\n" %(self.bdfFileName))
             sys.stdout.flush()
             raise
-        ### try-except block
 
         return cardObj
     

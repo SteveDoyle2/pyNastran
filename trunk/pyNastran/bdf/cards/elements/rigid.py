@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Element
 
 class RigidElement(Element):
@@ -73,7 +74,7 @@ class RBAR(RigidElement):
         return fields
 
     def reprFields(self):
-        alpha = self.setBlankIfDefault(self.alpha, 0.0)
+        alpha = setBlankIfDefault(self.alpha, 0.0)
         fields = ['RBAR', self.eid, self.ga,self.gb, self.cna, self.cnb, self.cma, self.cmb, alpha]
         return fields
 
@@ -104,7 +105,7 @@ class RBAR1(RigidElement):
         return fields
 
     def reprFields(self):
-        alpha = self.setBlankIfDefault(self.alpha, 0.0)
+        alpha = setBlankIfDefault(self.alpha, 0.0)
         fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return fields
 
@@ -309,7 +310,7 @@ class RBE2(RigidElement):
         return fields
 
     def reprFields(self):
-        alpha = self.setBlankIfDefault(self.alpha, 0.)
+        alpha = setBlankIfDefault(self.alpha, 0.)
         fields = ['RBE2', self.eid, self.gn, self.cm]+self.Gmi+[alpha]
         return fields
 

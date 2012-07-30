@@ -8,6 +8,7 @@ from numpy.linalg import norm
 #from pyNastran.general.generalMath import printMatrix
 
 from pyNastran.bdf.errors import CardInstantiationError
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Element, Mid
 
 
@@ -546,9 +547,9 @@ class CONROD(RodElement):
         return fields
 
     def reprFields(self):
-        j   = self.setBlankIfDefault(self.j,   0.0)
-        c   = self.setBlankIfDefault(self.c,   0.0)
-        nsm = self.setBlankIfDefault(self.nsm, 0.0)
+        j   = setBlankIfDefault(self.j,   0.0)
+        c   = setBlankIfDefault(self.c,   0.0)
+        nsm = setBlankIfDefault(self.nsm, 0.0)
         fields = ['CONROD', self.eid]+self.nodeIDs()+[self.Mid(), self.A, j, c, nsm]
         return fields
 
@@ -718,9 +719,9 @@ class CBAR(LineElement):
         if self.g0:
             return (self.g0, None, None)
         else:
-            #x1 = self.setBlankIfDefault(self.x1, 0.0)
-            #x2 = self.setBlankIfDefault(self.x2, 0.0)
-            #x3 = self.setBlankIfDefault(self.x3, 0.0)
+            #x1 = setBlankIfDefault(self.x1, 0.0)
+            #x2 = setBlankIfDefault(self.x2, 0.0)
+            #x3 = setBlankIfDefault(self.x3, 0.0)
             return (self.x1, self.x2, self.x3)
         ###
 
@@ -878,24 +879,24 @@ class CBAR(LineElement):
     def rawFields(self):
         """@todo not perfectly accurate"""
         (x1, x2, x3) = self.getX_G0_defaults()
-        offt = self.setBlankIfDefault(self.offt, 'GGG')
+        offt = setBlankIfDefault(self.offt, 'GGG')
         fields = ['CBAR',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
                          self.pa,self.pb,self.w1a,self.w2a,self.w3a,self.w1b,self.w2b,self.w3b]
 
         return fields
 
     def reprFields(self):
-        pa = self.setBlankIfDefault(self.pa, 0)
-        pb = self.setBlankIfDefault(self.pb, 0)
+        pa = setBlankIfDefault(self.pa, 0)
+        pb = setBlankIfDefault(self.pb, 0)
 
-        w1a = self.setBlankIfDefault(self.w1a, 0.0)
-        w2a = self.setBlankIfDefault(self.w2a, 0.0)
-        w3a = self.setBlankIfDefault(self.w3a, 0.0)
-        w1b = self.setBlankIfDefault(self.w1b, 0.0)
-        w2b = self.setBlankIfDefault(self.w2b, 0.0)
-        w3b = self.setBlankIfDefault(self.w3b, 0.0)
+        w1a = setBlankIfDefault(self.w1a, 0.0)
+        w2a = setBlankIfDefault(self.w2a, 0.0)
+        w3a = setBlankIfDefault(self.w3a, 0.0)
+        w1b = setBlankIfDefault(self.w1b, 0.0)
+        w2b = setBlankIfDefault(self.w2b, 0.0)
+        w3b = setBlankIfDefault(self.w3b, 0.0)
         (x1, x2, x3) = self.getX_G0_defaults()
-        offt = self.setBlankIfDefault(self.offt,'GGG')
+        offt = setBlankIfDefault(self.offt,'GGG')
         fields = ['CBAR',self.eid,self.Pid(),self.Ga(),self.Gb(),x1,x2,x3,offt,
                          pa,pb,w1a,w2a,w3a,w1b,w2b,w3b]
 
@@ -965,19 +966,19 @@ class CBEAM3(CBAR):
         return fields
 
     def reprFields(self):
-        w1a = self.setBlankIfDefault(self.w1a, 0.0)
-        w2a = self.setBlankIfDefault(self.w2a, 0.0)
-        w3a = self.setBlankIfDefault(self.w3a, 0.0)
-        w1b = self.setBlankIfDefault(self.w1b, 0.0)
-        w2b = self.setBlankIfDefault(self.w2b, 0.0)
-        w3b = self.setBlankIfDefault(self.w3b, 0.0)
-        w1c = self.setBlankIfDefault(self.w1c, 0.0)
-        w2c = self.setBlankIfDefault(self.w2c, 0.0)
-        w3c = self.setBlankIfDefault(self.w3c, 0.0)
+        w1a = setBlankIfDefault(self.w1a, 0.0)
+        w2a = setBlankIfDefault(self.w2a, 0.0)
+        w3a = setBlankIfDefault(self.w3a, 0.0)
+        w1b = setBlankIfDefault(self.w1b, 0.0)
+        w2b = setBlankIfDefault(self.w2b, 0.0)
+        w3b = setBlankIfDefault(self.w3b, 0.0)
+        w1c = setBlankIfDefault(self.w1c, 0.0)
+        w2c = setBlankIfDefault(self.w2c, 0.0)
+        w3c = setBlankIfDefault(self.w3c, 0.0)
 
-        twa = self.setBlankIfDefault(self.twa, 0.0)
-        twb = self.setBlankIfDefault(self.twb, 0.0)
-        twc = self.setBlankIfDefault(self.twc, 0.0)
+        twa = setBlankIfDefault(self.twa, 0.0)
+        twb = setBlankIfDefault(self.twb, 0.0)
+        twc = setBlankIfDefault(self.twc, 0.0)
 
         (x1, x2, x3) = self.getX_G0_defaults()
         (ga, gb, gc) = self.nodeIDs()
@@ -1100,7 +1101,7 @@ class CBEAM(CBAR):
         if self.isOfft:
             field8 = self.offt
         else:
-            field8 = self.setBlankIfDefault(self.bit, 0.0)
+            field8 = setBlankIfDefault(self.bit, 0.0)
         return field8
 
     def crossReference(self,model):
@@ -1182,12 +1183,12 @@ class CBEAM(CBAR):
         return fields
 
     def reprFields(self):
-        w1a = self.setBlankIfDefault(self.w1a, 0.0)
-        w2a = self.setBlankIfDefault(self.w2a, 0.0)
-        w3a = self.setBlankIfDefault(self.w3a, 0.0)
-        w1b = self.setBlankIfDefault(self.w1b, 0.0)
-        w2b = self.setBlankIfDefault(self.w2b, 0.0)
-        w3b = self.setBlankIfDefault(self.w3b, 0.0)
+        w1a = setBlankIfDefault(self.w1a, 0.0)
+        w2a = setBlankIfDefault(self.w2a, 0.0)
+        w3a = setBlankIfDefault(self.w3a, 0.0)
+        w1b = setBlankIfDefault(self.w1b, 0.0)
+        w2b = setBlankIfDefault(self.w2b, 0.0)
+        w3b = setBlankIfDefault(self.w3b, 0.0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
         ga,gb = self.nodeIDs()

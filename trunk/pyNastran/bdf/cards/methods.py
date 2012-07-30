@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 #import sys
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Method(BaseCard):
@@ -60,12 +61,12 @@ class EIGB(Method):
         return fields
 
     def reprFields(self):
-        #method = self.setBlankIfDefault(self.method,'INV')
-        nep = self.setBlankIfDefault(self.nep, 0)
-        ndp = self.setBlankIfDefault(self.ndp, 3*self.nep)
-        ndn = self.setBlankIfDefault(self.ndn, 3*self.nep)
+        #method = setBlankIfDefault(self.method,'INV')
+        nep = setBlankIfDefault(self.nep, 0)
+        ndp = setBlankIfDefault(self.ndp, 3*self.nep)
+        ndn = setBlankIfDefault(self.ndn, 3*self.nep)
         #print "nep = ",self.nep,ndn
-        norm = self.setBlankIfDefault(self.norm, 'MAX')
+        norm = setBlankIfDefault(self.norm, 'MAX')
         fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp, ndn, None,
                          norm, self.G, self.C]
         return fields
@@ -178,21 +179,21 @@ class EIGC(Method): ## not done
             for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
                  self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
                  self.LJs, self.NEJs, self.NDJs):
-                alphaA = self.setBlankIfDefault(alphaA, 0.0)
-                omegaA = self.setBlankIfDefault(omegaA, 0.0)
-                alphaB = self.setBlankIfDefault(alphaB, 0.0)
-                omegaB = self.setBlankIfDefault(omegaB, 0.0)
+                alphaA = setBlankIfDefault(alphaA, 0.0)
+                omegaA = setBlankIfDefault(omegaA, 0.0)
+                alphaB = setBlankIfDefault(alphaB, 0.0)
+                omegaB = setBlankIfDefault(omegaB, 0.0)
                 fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
             ###
         elif self.method=='CLAN':
             for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
                  self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
                  self.ksteps, self.NJIs):
-                alphaA = self.setBlankIfDefault(alphaA, 0.0)
-                omegaA = self.setBlankIfDefault(omegaA, 0.0)
-                mblksz = self.setBlankIfDefault(mblksz, 7)
-                iblksz = self.setBlankIfDefault(iblksz, 2)
-                kstep  = self.setBlankIfDefault(kstep, 5)
+                alphaA = setBlankIfDefault(alphaA, 0.0)
+                omegaA = setBlankIfDefault(omegaA, 0.0)
+                mblksz = setBlankIfDefault(mblksz, 7)
+                iblksz = setBlankIfDefault(iblksz, 2)
+                kstep  = setBlankIfDefault(kstep, 5)
                 
                 fields += [alphaA, omegaA, mblksz, iblksz, kstep, None, Nj, None]
         else:
@@ -258,8 +259,8 @@ class EIGR(Method):
         return fields
 
     def reprFields(self):
-        method = self.setBlankIfDefault(self.method, 'LAN')
-        norm = self.setBlankIfDefault(self.norm, 'MASS')
+        method = setBlankIfDefault(self.method, 'LAN')
+        norm = setBlankIfDefault(self.norm, 'MASS')
         fields = ['EIGR',self.sid, method, self.f1, self.f2, self.ne, self.nd, None, None,
                          norm, self.G, self.C]
         return fields
@@ -365,7 +366,7 @@ class EIGRL(Method):
         return fields
 
     def reprFields(self):
-        msglvl = self.setBlankIfDefault(self.msglvl, 0)
+        msglvl = setBlankIfDefault(self.msglvl, 0)
         fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,msglvl,self.maxset,self.shfscl,self.norm]
         for (option, value) in zip(self.options, self.values):
             fields += [option+'='+str(value)]

@@ -1,29 +1,101 @@
+$EXECUTIVE CONTROL DECK
 $ NASTRAN input file created by the MSC MSC.Nastran input file
 $ translator ( MSC.Patran 13.1.116 ) on January   28, 2012 at 12:59:35.
 $ Direct Text Input for Nastran System Cell Section
 $ Direct Text Input for File Management Section
 $ Linear Static Analysis, Database
-SOL 101
+SOL 101   $ stuff
 $ Direct Text Input for Executive Control
 CEND
-TITLE = MSC.Nastran job created on 28-Jan-12 at 12:52:32
+$CASE CONTROL DECK
 ECHO = NONE
-$ Direct Text Input for Global Case Control Data
+TITLE = MSC.Nastran job created on 28-Jan-12 at 12:52:32
 SUBCASE 1
-$ Subcase name : Default
-   SUBTITLE=Default
-   SPC = 2
-   LOAD = 2
    DISPLACEMENT(SORT1,REAL)=ALL
+   LOAD = 2
+   SPC = 2
    SPCFORCES(SORT1,REAL)=ALL
    STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
+   SUBTITLE=Default
 BEGIN BULK
+$PARAMS
 PARAM    POST    -1
 PARAM   PRTMAXIM YES
-$ Direct Text Input for Bulk Data
-$ Elements and Element Properties for region : steel
+$NODES
+GRID     1              .513061 1.49287 .811943
+GRID     2              .523257 .859242 .831558
+GRID     3              .511411 .490321 .480616
+GRID     4              .499951 1.45859 1.49985
+GRID     5              .486939 1.49287 2.18777
+GRID     6              .473466 .462498 2.52883
+GRID     7              .476743 .859339 2.16805
+GRID     8              .499951 .73106  1.49985
+GRID     9              1.      1.52546 .473247
+GRID     10             1.      .442442 .452206
+GRID     11             1.      .976036 .507736
+GRID     12             1.      .527678 2.50749
+GRID     13             1.      .731012 1.81262
+GRID     14             1.      .577233 1.02027
+GRID     15             1.      1.24412 2.48353
+GRID     16             1.      1.4585  1.83091
+GRID     17             1.      1.32147 1.12276
+GRID     18             1.      .666667  0.
+GRID     19             1.      1.33347  0.
+GRID     20             .499997 1.61112  0.
+GRID     21             .499997 .388851  0.
+GRID     22             .499993 1.       0.
+GRID     23             1.       0.      0.
+GRID     24              0.      0.      0.
+GRID     25             .5       0.      0.
+GRID     26              0.     2.       0.
+GRID     27              0.     1.33333  0.
+GRID     28              0.     .666533  0.
+GRID     29             1.      2.       0.
+GRID     30             .5      2.       0.
+GRID     31             1.       0.     3.
+GRID     32             1.       0.     .7497
+GRID     33             1.       0.     1.49985
+GRID     34             1.       0.     2.25
+GRID     35             1.      2.      3.
+GRID     36             1.      2.      .7497
+GRID     37             1.      2.      1.49985
+GRID     38             1.      2.      2.25
+GRID     39              0.     2.      3.
+GRID     40              0.     2.      .7497
+GRID     41              0.     2.      1.49985
+GRID     42              0.     2.      2.25
+GRID     43              0.      0.     3.
+GRID     44              0.      0.     .7497
+GRID     45              0.      0.     1.49985
+GRID     46              0.      0.     2.25
+GRID     47             1.      1.33333 3.
+GRID     48             1.      .666533 3.
+GRID     49             .500041 2.      .439023
+GRID     50             .500067 2.      1.86596
+GRID     51             .500036 2.      1.13427
+GRID     52             .500022 2.      2.56117
+GRID     53             .5      2.      3.
+GRID     54              0.     1.52556 2.52654
+GRID     55              0.     .976206 2.49198
+GRID     56              0.     .442556 2.54759
+GRID     57              0.     .527721 .492339
+GRID     58              0.     .731134 1.18705
+GRID     59              0.     .577382 1.97938
+GRID     60              0.     1.24417 .516304
+GRID     61              0.     1.4586  1.16876
+GRID     62              0.     1.32163 1.87691
+GRID     63              0.     .666667 3.
+GRID     64              0.     1.33347 3.
+GRID     65             .500004  0.     2.56076
+GRID     66             .500005  0.     1.13366
+GRID     67             .500025  0.     1.86547
+GRID     68             .500015  0.     .438689
+GRID     69             .5       0.     3.
+GRID     70             .500008 .388889 3.
+GRID     71             .500008 1.61116 3.
+GRID     72             .500015 1.00001 3.
+$ELEMENTS_WITH_PROPERTIES
 PSOLID   1       1       0
-$ Pset: "steel" will be imported as: "psolid.1"
 CTETRA   1       1       8       13      67      33
 CTETRA   2       1       8       7       62      59
 CTETRA   3       1       8       45      58      66
@@ -210,92 +282,9 @@ CTETRA   183     1       10      11      3       14
 CTETRA   184     1       3       22      11      18
 CTETRA   185     1       54      39      64      71
 CTETRA   186     1       8       62      4       58
-$ Referenced Material Records
-$ Material Record : steel
-$ Description of Material : Date: 28-Jan-12           Time: 12:35:45
+$MATERIALS
 MAT1     1      3.+7            .3      1.              70.
-$ Nodes of the Entire Model
-GRID     1              .513061 1.49287 .811943
-GRID     2              .523257 .859242 .831558
-GRID     3              .511411 .490321 .480616
-GRID     4              .499951 1.45859 1.49985
-GRID     5              .486939 1.49287 2.18777
-GRID     6              .473466 .462498 2.52883
-GRID     7              .476743 .859339 2.16805
-GRID     8              .499951 .73106  1.49985
-GRID     9              1.      1.52546 .473247
-GRID     10             1.      .442442 .452206
-GRID     11             1.      .976036 .507736
-GRID     12             1.      .527678 2.50749
-GRID     13             1.      .731012 1.81262
-GRID     14             1.      .577233 1.02027
-GRID     15             1.      1.24412 2.48353
-GRID     16             1.      1.4585  1.83091
-GRID     17             1.      1.32147 1.12276
-GRID     18             1.      .666667  0.
-GRID     19             1.      1.33347  0.
-GRID     20             .499997 1.61112  0.
-GRID     21             .499997 .388851  0.
-GRID     22             .499993 1.       0.
-GRID     23             1.       0.      0.
-GRID     24              0.      0.      0.
-GRID     25             .5       0.      0.
-GRID     26              0.     2.       0.
-GRID     27              0.     1.33333  0.
-GRID     28              0.     .666533  0.
-GRID     29             1.      2.       0.
-GRID     30             .5      2.       0.
-GRID     31             1.       0.     3.
-GRID     32             1.       0.     .7497
-GRID     33             1.       0.     1.49985
-GRID     34             1.       0.     2.25
-GRID     35             1.      2.      3.
-GRID     36             1.      2.      .7497
-GRID     37             1.      2.      1.49985
-GRID     38             1.      2.      2.25
-GRID     39              0.     2.      3.
-GRID     40              0.     2.      .7497
-GRID     41              0.     2.      1.49985
-GRID     42              0.     2.      2.25
-GRID     43              0.      0.     3.
-GRID     44              0.      0.     .7497
-GRID     45              0.      0.     1.49985
-GRID     46              0.      0.     2.25
-GRID     47             1.      1.33333 3.
-GRID     48             1.      .666533 3.
-GRID     49             .500041 2.      .439023
-GRID     50             .500067 2.      1.86596
-GRID     51             .500036 2.      1.13427
-GRID     52             .500022 2.      2.56117
-GRID     53             .5      2.      3.
-GRID     54              0.     1.52556 2.52654
-GRID     55              0.     .976206 2.49198
-GRID     56              0.     .442556 2.54759
-GRID     57              0.     .527721 .492339
-GRID     58              0.     .731134 1.18705
-GRID     59              0.     .577382 1.97938
-GRID     60              0.     1.24417 .516304
-GRID     61              0.     1.4586  1.16876
-GRID     62              0.     1.32163 1.87691
-GRID     63              0.     .666667 3.
-GRID     64              0.     1.33347 3.
-GRID     65             .500004  0.     2.56076
-GRID     66             .500005  0.     1.13366
-GRID     67             .500025  0.     1.86547
-GRID     68             .500015  0.     .438689
-GRID     69             .5       0.     3.
-GRID     70             .500008 .388889 3.
-GRID     71             .500008 1.61116 3.
-GRID     72             .500015 1.00001 3.
-$ Loads for Load Case : Default
-SPCADD   2       1       3
-LOAD     2      1.      1.       1
-$ Displacement Constraints of Load Set : wall
-SPC1     1       123456  31      35      39      43      47      48
-         53      63      64      69      70      71      72
-$ Displacement Constraints of Load Set : solid
-SPC1     3       456     1       THRU    72
-$ Nodal Forces of Load Set : load
+$LOADS
 FORCE    1       9       0      1000.   1.       0.      0.
 FORCE    1       10      0      1000.   1.       0.      0.
 FORCE    1       11      0      1000.   1.       0.      0.
@@ -319,5 +308,10 @@ FORCE    1       37      0      1000.   1.       0.      0.
 FORCE    1       38      0      1000.   1.       0.      0.
 FORCE    1       47      0      1000.   1.       0.      0.
 FORCE    1       48      0      1000.   1.       0.      0.
-$ Referenced Coordinate Frames
+LOAD     2      1.      1.       1
+$SPCs
+SPC1     1       123456  31      35      39      43      47      48
+         53      63      64      69      70      71      72
+SPCADD   2       1       3
+SPC1     3       456     1       THRU    72
 ENDDATA 6a7d6a3b

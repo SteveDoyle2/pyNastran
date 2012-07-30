@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 
@@ -237,36 +238,36 @@ class TSTEPNL(BaseCard):
         return fields
 
     def reprFields(self):
-        #no      = self.setBlankIfDefault(self.no,1)
+        #no      = setBlankIfDefault(self.no,1)
         no = self.no
-        method  = self.setBlankIfDefault(self.method, 'ADAPT')
+        method  = setBlankIfDefault(self.method, 'ADAPT')
 
         kStep = self.kStep
         #if self.method=='ADAPT':
-            #kStep = self.setBlankIfDefault(self.kStep, 2)
+            #kStep = setBlankIfDefault(self.kStep, 2)
         #elif self.method=='ITER':
-            #kStep = self.setBlankIfDefault(self.kStep, 10)
+            #kStep = setBlankIfDefault(self.kStep, 10)
         #else:
             #msg = 'invalid TSTEPNL Method.  method=|%s|' %(self.method)
             #raise RuntimeError(msg)
 
-        #maxIter = self.setBlankIfDefault(self.maxIter, 10)
-        conv    = self.setBlankIfDefault(self.conv, 'PW')
+        #maxIter = setBlankIfDefault(self.maxIter, 10)
+        conv    = setBlankIfDefault(self.conv, 'PW')
 
-        epsU    = self.setBlankIfDefault(self.epsU,  1e-2)
-        epsP    = self.setBlankIfDefault(self.epsP,  1e-3)
-        epsW    = self.setBlankIfDefault(self.epsW,  1e-6)
-        maxDiv  = self.setBlankIfDefault(self.maxDiv,   2)
-        maxQn   = self.setBlankIfDefault(self.maxQn,   10)
-        MaxLs   = self.setBlankIfDefault(self.MaxLs,    2)
-        fStress = self.setBlankIfDefault(self.fStress,0.2)
+        epsU    = setBlankIfDefault(self.epsU,  1e-2)
+        epsP    = setBlankIfDefault(self.epsP,  1e-3)
+        epsW    = setBlankIfDefault(self.epsW,  1e-6)
+        maxDiv  = setBlankIfDefault(self.maxDiv,   2)
+        maxQn   = setBlankIfDefault(self.maxQn,   10)
+        MaxLs   = setBlankIfDefault(self.MaxLs,    2)
+        fStress = setBlankIfDefault(self.fStress,0.2)
 
-        maxBisect = self.setBlankIfDefault(self.maxBisect ,5)
-        adjust  = self.setBlankIfDefault(self.adjust ,5)
-        rb      = self.setBlankIfDefault(self.rb     ,0.6)
-        maxR    = self.setBlankIfDefault(self.maxR   ,32.)
-        uTol    = self.setBlankIfDefault(self.uTol   ,0.1)
-        rTolB   = self.setBlankIfDefault(self.rTolB  ,20.)
+        maxBisect = setBlankIfDefault(self.maxBisect ,5)
+        adjust  = setBlankIfDefault(self.adjust ,5)
+        rb      = setBlankIfDefault(self.rb     ,0.6)
+        maxR    = setBlankIfDefault(self.maxR   ,32.)
+        uTol    = setBlankIfDefault(self.uTol   ,0.1)
+        rTolB   = setBlankIfDefault(self.rTolB  ,20.)
 
         fields = ['TSTEPNL', self.sid, self.ndt, self.dt, no, method, kStep, self.maxIter, conv,
                             epsU, epsP, epsW, maxDiv, maxQn, MaxLs, fStress, None,
@@ -342,24 +343,24 @@ class NLPARM(BaseCard):
         return fields
 
     def reprFields(self):
-        ninc      = self.setBlankIfDefault(self.ninc,     10)
-        dt        = self.setBlankIfDefault(self.dt,      0.0)
-        kMethod   = self.setBlankIfDefault(self.kMethod, 'AUTO')
-        kStep     = self.setBlankIfDefault(self.kStep,     5)
-        maxIter   = self.setBlankIfDefault(self.maxIter,  25)
-        conv      = self.setBlankIfDefault(self.conv,   'PW')
-        intOut    = self.setBlankIfDefault(self.intOut, 'NO')
-        epsU      = self.setBlankIfDefault(self.epsU,   0.01)
-        epsP      = self.setBlankIfDefault(self.epsP,   0.01)
-        epsW      = self.setBlankIfDefault(self.epsW,   0.01)
-        maxDiv    = self.setBlankIfDefault(self.maxDiv,    3)
-        maxQn     = self.setBlankIfDefault(self.maxQn, self.maxIter)
-        maxLs     = self.setBlankIfDefault(self.maxLs,     4)
-        fStress   = self.setBlankIfDefault(self.fStress, 0.2)
-        lsTol     = self.setBlankIfDefault(self.lsTol,   0.5)
-        maxBisect = self.setBlankIfDefault(self.maxBisect, 5)
-        maxR      = self.setBlankIfDefault(self.maxR,    20.)
-        rTolB     = self.setBlankIfDefault(self.rTolB,   20.)
+        ninc      = setBlankIfDefault(self.ninc,     10)
+        dt        = setBlankIfDefault(self.dt,      0.0)
+        kMethod   = setBlankIfDefault(self.kMethod, 'AUTO')
+        kStep     = setBlankIfDefault(self.kStep,     5)
+        maxIter   = setBlankIfDefault(self.maxIter,  25)
+        conv      = setBlankIfDefault(self.conv,   'PW')
+        intOut    = setBlankIfDefault(self.intOut, 'NO')
+        epsU      = setBlankIfDefault(self.epsU,   0.01)
+        epsP      = setBlankIfDefault(self.epsP,   0.01)
+        epsW      = setBlankIfDefault(self.epsW,   0.01)
+        maxDiv    = setBlankIfDefault(self.maxDiv,    3)
+        maxQn     = setBlankIfDefault(self.maxQn, self.maxIter)
+        maxLs     = setBlankIfDefault(self.maxLs,     4)
+        fStress   = setBlankIfDefault(self.fStress, 0.2)
+        lsTol     = setBlankIfDefault(self.lsTol,   0.5)
+        maxBisect = setBlankIfDefault(self.maxBisect, 5)
+        maxR      = setBlankIfDefault(self.maxR,    20.)
+        rTolB     = setBlankIfDefault(self.rTolB,   20.)
 
         fields = ['NLPARM', self.nid, ninc, dt, kMethod, kStep, maxIter, conv, intOut,
                            epsU, epsP, epsW, maxDiv, maxQn, maxLs, fStress, lsTol,

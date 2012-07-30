@@ -1,4 +1,4 @@
-# pylint: disable=E1101,C0103,R0902,R0904,R0914
+# pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
 
 from __future__ import print_function
 import sys
@@ -23,20 +23,20 @@ class XrefMesh(object):
             #for key,e in self.elements.iteritems():
                 #print(e)
 
-            self.crossReference_Nodes()
-            self.crossReference_Coordinates()
+            self._cross_reference_nodes()
+            self._cross_reference_coordinates()
 
-            self.crossReference_Elements()
-            self.crossReference_Properties()
-            self.crossReference_Materials()
+            self._cross_reference_elements()
+            self._cross_reference_properties()
+            self._cross_reference_materials()
 
-            self.crossReference_Aero()
-            self.crossReference_Constraints()
-            self.crossReference_Loads()
+            self._cross_reference_aero()
+            self._cross_reference_constraints()
+            self._cross_reference_loads()
             #self.caseControlDeck.crossReference(self)
         ###
     
-    def crossReference_Constraints(self):
+    def _cross_reference_constraints(self):
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC cards.
         """
@@ -44,27 +44,24 @@ class XrefMesh(object):
         #self.mpcObject.crossReference(self)  # enable to output MPCs
         
         #self.spcObject2 = constraintObject2()
-        for (key, spcadd) in sorted(self.spcadds.iteritems()):
-            #print("adding SPCADD")
+        for spcadd in sorted(self.spcadds.itervalues()):
             self.spcObject2.Add(spcadd)
 
-        for (key, spcs) in sorted(self.spcs.iteritems()):
-            #print spcs
+        for spcs in sorted(self.spcs.itervalues()):
             for spc in spcs:
                 self.spcObject2.append(spc)
 
-        for (key, mpcadd) in sorted(self.mpcadds.iteritems()):
+        for mpcadd in sorted(self.mpcadds.itervalues()):
             self.mpcObject2.Add(mpcadd)
 
-        for (key, mpcs) in sorted(self.mpcs.iteritems()):
-            #print mpcs
+        for mpcs in sorted(self.mpcs.itervalues()):
             for mpc in mpcs:
                 self.mpcObject2.append(mpc)
         #self.mpcObject2 = constraintObject2()
         #self.spcObject.crossReference(self)
 
 
-    def crossReference_Coordinates(self):
+    def _cross_reference_coordinates(self):
         """
         Links up all the coordinate cards to other coordinate cards and nodes
         """
@@ -81,7 +78,7 @@ class XrefMesh(object):
         for coord in self.coords.itervalues(): 
             coord.resolveCid()
 
-    def crossReference_Aero(self):
+    def _cross_reference_aero(self):
         """
         Links up all the aero cards
         """
@@ -91,7 +88,7 @@ class XrefMesh(object):
         for spline in self.splines.itervalues():
             spline.crossReference(self)
 
-    def crossReference_Nodes(self):
+    def _cross_reference_nodes(self):
         """
         Links the nodes to coordinate systems
         """
@@ -100,13 +97,13 @@ class XrefMesh(object):
             try:
                 n.crossReference(self, gridSet)
             except:
-                self.log.error("Couldn't cross reference GRID.\n%s" %(str(n)))
+                self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
                 raise
 
         if self.spoints:
             self.spointi = self.spoints.createSPOINTi()
 
-    def crossReference_Elements(self):
+    def _cross_reference_elements(self):
         """
         Links the elements to nodes, properties (and materials depending on
         the card).
@@ -115,11 +112,11 @@ class XrefMesh(object):
             try:
                 elem.crossReference(self)
             except:
-                msg = "Couldn't cross reference Element.\n%s" %(str(elem))
+                msg = "Couldn't cross reference Element.\n%s" % (str(elem))
                 self.log.error(msg)
                 raise
 
-    def crossReference_Properties(self):
+    def _cross_reference_properties(self):
         """
         Links the properties to materials
         """
@@ -127,11 +124,11 @@ class XrefMesh(object):
             try:
                 prop.crossReference(self)
             except:
-                msg = "Couldn't cross reference Property.\n%s" %(str(prop))
+                msg = "Couldn't cross reference Property.\n%s" % (str(prop))
                 self.log.error(msg)
                 raise
 
-    def crossReference_Materials(self):
+    def _cross_reference_materials(self):
         """
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
@@ -140,7 +137,7 @@ class XrefMesh(object):
             try:
                 mat.crossReference(self)
             except:
-                msg = "Couldn't cross reference Material\n%s" %(str(mat))
+                msg = "Couldn't cross reference Material\n%s" % (str(mat))
                 self.log.error(msg)
                 raise
 
@@ -148,11 +145,11 @@ class XrefMesh(object):
             try:
                 mat.crossReference(self)
             except:
-                msg = "Couldn't cross reference Material\n%s" %(str(mat))
+                msg = "Couldn't cross reference Material\n%s" % (str(mat))
                 self.log.error(msg)
                 raise
 
-    def crossReference_Loads(self):
+    def _cross_reference_loads(self):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
@@ -162,8 +159,8 @@ class XrefMesh(object):
                 try:
                     load.crossReference(self)
                 except:
-                    self.log.error("lid=%s sid=%s" %(lid, sid))
-                    msg = "Couldn't cross reference Load\n%s" %(str(load))
+                    self.log.error("lid=%s sid=%s" % (lid, sid))
+                    msg = "Couldn't cross reference Load\n%s" % (str(load))
                     self.log.error(msg)
                     raise
 

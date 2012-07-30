@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros,array
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Element, BaseCard
 
 
@@ -149,7 +150,7 @@ class CMASS2(PointMassElement):
         return fields
 
     def reprFields(self):
-        mass = self.setBlankIfDefault(self.mass, 0.)
+        mass = setBlankIfDefault(self.mass, 0.)
         fields = ['CMASS2', self.eid, mass,self.G1(),self.c1,self.G2(),self.c2]
         #print "cmass2 fields = ",fields
         return fields
@@ -343,7 +344,7 @@ class CONM1(PointMass):
         return self.massMatrix
 
     def rawFields(self):
-        cid  = self.setBlankIfDefault(self.Cid(), 0)
+        cid  = setBlankIfDefault(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
         fields = ['CONM1',self.eid,nid,cid,m[0,0],m[1,0],m[1,1],m[2,0],m[2,1],
@@ -355,7 +356,7 @@ class CONM1(PointMass):
         fields = self.rawFields()
         fields2 = fields[0:4]
         for field in fields[4:]:
-            val = self.setBlankIfDefault(field, 0.)
+            val = setBlankIfDefault(field, 0.)
             #print "field=%s value=%s" %(field,val)
             fields2.append(val)
         #print "fields  = ",fields
@@ -477,8 +478,8 @@ class CONM2(PointMassElement): ## @todo not done
             ###
         ###
 
-        cid  = self.setBlankIfDefault(self.Cid(), 0)
-        mass = self.setBlankIfDefault(self.mass, 0.)
+        cid  = setBlankIfDefault(self.Cid(), 0)
+        mass = setBlankIfDefault(self.mass, 0.)
         fields = ['CONM2', self.eid, self.Nid(), cid, mass]+X+[None]+I
         return fields
 
