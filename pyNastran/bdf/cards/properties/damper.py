@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Property
 
 class DamperProperty(Property):
@@ -33,7 +34,7 @@ class PVISC(DamperProperty):
         return fields
     
     def reprFields(self):
-        cr = self.setBlankIfDefault(self.cr,0.)
+        cr = setBlankIfDefault(self.cr,0.)
         fields = ['PVISC',self.pid,self.ce,cr]
         return fields
 

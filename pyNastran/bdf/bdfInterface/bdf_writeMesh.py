@@ -35,7 +35,7 @@ class WriteMesh(object):
         #print "eids = ",eids
         nextEID = max(eids)+1  # set the new ID
         msg = '$ELEMENTS\n'
-        for (key, element) in sorted(self.elements.iteritems()):
+        for element in sorted(self.elements.itervalues()):
             if element.Is('CQUAD4'):
                 msg += element.writeAsCTRIA3(nextEID)
                 nextEID += 1
@@ -103,7 +103,7 @@ class WriteMesh(object):
         msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        fname = self.printFileName(outFileName)
+        fname = self.print_filename(outFileName)
         self.log.debug("***writing %s" %(fname))
         
         outfile = open(outFileName,'wb')
@@ -130,7 +130,7 @@ class WriteMesh(object):
         msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        fname = self.printFileName(outFileName)
+        fname = self.print_filename(outFileName)
         self.log.debug("***writing %s" %(fname))
 
         outfile = open(outFileName,'wb')
@@ -155,10 +155,10 @@ class WriteMesh(object):
         msg += self.writeCommon()
         msg += 'ENDDATA\n'
 
-        fname = self.printFileName(outFileName)
-        self.log.debug("***writing %s" %(fname))
+        fname = self.print_filename(outFileName)
+        self.log.debug("***writing %s" % (fname))
 
-        outfile = open(outFileName,'wb')
+        outfile = open(outFileName, 'wb')
         outfile.write(msg)
         outfile.close()
 
@@ -636,11 +636,11 @@ class WriteMesh(object):
             for rejectCard in self.rejectCards:
                 try:
                     msg += printCard(rejectCard)
-                except:
+                except RuntimeError:
                     for field in rejectCard:
                         if field is not None and '=' in field:
                             raise SyntaxError('cannot reject equal signed '
-                                              'cards\ncard=%s\n' %(rejectCard))
+                                          'cards\ncard=%s\n' %(rejectCard))
                     raise
 
         if self.rejects:

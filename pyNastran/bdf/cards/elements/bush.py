@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 #from numpy.linalg import norm
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Element
 
 class BushElement(Element):
@@ -105,7 +106,7 @@ class CBUSH(BushElement):
         else:
             x = self.x
         
-        cid = self.setBlankIfDefault(self.Cid(), 0)
+        cid = setBlankIfDefault(self.Cid(), 0)
         fields = ['CBUSH', self.eid, self.Pid(), self.ga, self.gb]+x+[cid,
                           self.s, self.ocid]+self.si
         return fields
@@ -139,7 +140,7 @@ class CBUSH1D(BushElement):
 
     def reprFields(self):
         nodeIDs = self.nodeIDs()
-        cid = self.setBlankIfDefault(self.Cid(), 0)
+        cid = setBlankIfDefault(self.Cid(), 0)
         fields = ['CBUSH1D', self.eid, self.Pid(), nodeIDs[0], nodeIDs[1], cid]
         return fields
 

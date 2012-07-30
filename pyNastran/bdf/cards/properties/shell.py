@@ -6,7 +6,7 @@ import copy
 from math import sin, cos, radians
 from numpy import zeros, transpose, array
 
-# pyNastran
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Property, Material
 
 class ShellProperty(Property):
@@ -499,19 +499,19 @@ class PCOMP(ShellProperty):
 
     def reprFields(self):
         #print "t = ",self.Thickness()
-        nsm  = self.setBlankIfDefault(self.nsm,  0.0)
-        sb   = self.setBlankIfDefault(self.sb,   0.0)
-        TRef = self.setBlankIfDefault(self.TRef, 0.0)
-        ge   = self.setBlankIfDefault(self.ge,   0.0)
-        z0 = self.setBlankIfDefault(self.z0, -0.5*self.Thickness())
+        nsm  = setBlankIfDefault(self.nsm,  0.0)
+        sb   = setBlankIfDefault(self.sb,   0.0)
+        TRef = setBlankIfDefault(self.TRef, 0.0)
+        ge   = setBlankIfDefault(self.ge,   0.0)
+        z0   = setBlankIfDefault(self.z0, -0.5*self.Thickness())
 
         fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam,]
         #print "plies = ",self.plies
         for (iPly, ply) in enumerate(self.plies):
             (_mid, t, theta, sout) = ply
             mid = self.Mid(iPly)
-            #theta = self.setBlankIfDefault(theta,0.0)
-            sout  = self.setBlankIfDefault(sout,'NO')
+            #theta = setBlankIfDefault(theta,0.0)
+            sout  = setBlankIfDefault(sout,'NO')
             fields += [mid, t, theta, sout]
         return fields
 
@@ -562,19 +562,19 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         return fields
 
     def reprFields(self):
-        nsm  = self.setBlankIfDefault(self.nsm,  0.0)
-        sb   = self.setBlankIfDefault(self.sb,   0.0)
-        TRef = self.setBlankIfDefault(self.TRef, 0.0)
-        ge   = self.setBlankIfDefault(self.ge,   0.0)
-        z0 = self.setBlankIfDefault(self.z0, -0.5*self.Thickness())
+        nsm  = setBlankIfDefault(self.nsm,  0.0)
+        sb   = setBlankIfDefault(self.sb,   0.0)
+        TRef = setBlankIfDefault(self.TRef, 0.0)
+        ge   = setBlankIfDefault(self.ge,   0.0)
+        z0 = setBlankIfDefault(self.z0, -0.5*self.Thickness())
 
         fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
 
         for (iPly, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iPly)
-            #theta = self.setBlankIfDefault(theta,0.0)
-            sout  = self.setBlankIfDefault(sout, 'NO')
+            #theta = setBlankIfDefault(theta,0.0)
+            sout  = setBlankIfDefault(sout, 'NO')
             fields += [mid, t, theta, sout, gPlyID, None, None, None]
         return fields
 
@@ -770,13 +770,13 @@ class PSHELL(ShellProperty):
         return fields
 
     def reprFields(self):
-        twelveIt3 = self.setBlankIfDefault(self.twelveIt3, 1.0)
-        tst       = self.setBlankIfDefault(self.tst, 0.833333)
-        nsm       = self.setBlankIfDefault(self.nsm, 0.0)
+        twelveIt3 = setBlankIfDefault(self.twelveIt3, 1.0)
+        tst       = setBlankIfDefault(self.tst, 0.833333)
+        nsm       = setBlankIfDefault(self.nsm, 0.0)
 
         tOver2 = self.t/2.
-        z1 = self.setBlankIfDefault(self.z1, -tOver2)
-        z2 = self.setBlankIfDefault(self.z2,  tOver2)
+        z1 = setBlankIfDefault(self.z1, -tOver2)
+        z2 = setBlankIfDefault(self.z2,  tOver2)
 
         fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                   twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]

@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from numpy import array
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru, collapseThru
 
 class Ring(BaseCard):
@@ -171,10 +172,10 @@ class GRDSET(Node):
         return fields
 
     def reprFields(self):
-        cp   = self.setBlankIfDefault(self.Cp(), 0)
-        cd   = self.setBlankIfDefault(self.Cd(), 0)
-        ps   = self.setBlankIfDefault(self.ps, 0)
-        seid = self.setBlankIfDefault(self.Seid(), 0)
+        cp   = setBlankIfDefault(self.Cp(), 0)
+        cd   = setBlankIfDefault(self.Cd(), 0)
+        ps   = setBlankIfDefault(self.ps, 0)
+        seid = setBlankIfDefault(self.Seid(), 0)
         fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return fields
 
@@ -208,10 +209,10 @@ class GRIDB(Node):
         return fields
 
     def reprFields(self):
-        #phi = self.setBlankIfDefault(self.phi,0.0)
-        cd  = self.setBlankIfDefault(self.Cd(), 0)
-        ps  = self.setBlankIfDefault(self.ps, 0)
-        idf = self.setBlankIfDefault(self.idf, 0)
+        #phi = setBlankIfDefault(self.phi,0.0)
+        cd  = setBlankIfDefault(self.Cd(), 0)
+        ps  = setBlankIfDefault(self.ps, 0)
+        idf = setBlankIfDefault(self.idf, 0)
         fields = ['GRIDB', self.nid, None, None, self.phi, None, cd, ps, idf]
         return fields
 
@@ -324,9 +325,9 @@ class GRID(Node):
         return fields
 
     def reprFields(self):
-        cp   = self.setBlankIfDefault(self.Cp(), 0)
-        cd   = self.setBlankIfDefault(self.Cd(), 0)
-        seid = self.setBlankIfDefault(self.Seid(), 0)
+        cp   = setBlankIfDefault(self.Cp(), 0)
+        cd   = setBlankIfDefault(self.Cd(), 0)
+        seid = setBlankIfDefault(self.Seid(), 0)
         fields = ['GRID', self.nid, cp]+list(self.xyz)+[cd, self.ps, seid]
         return fields
 

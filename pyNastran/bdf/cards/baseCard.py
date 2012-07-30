@@ -32,7 +32,7 @@ class BaseCard(BDFCard):
         ###
         return True
 
-    def Is(self,typeCheck):
+    def Is(self, typeCheck):
         """retruns True if the card type is the same as the object"""
         if self.type==typeCheck:
             return True
@@ -51,10 +51,6 @@ class BaseCard(BDFCard):
         """used to initialize default values"""
         #raise Exception('time to upgrade...')
         return setDefaultIfBlank(value, default)
-
-    def setBlankIfDefault(self, value, default):
-        """used to set default values for object repr functions"""
-        return setBlankIfDefault(value, default)
 
     def crossReference(self, model):
         #self.mid = model.Material(self.mid)
@@ -426,7 +422,6 @@ def _collapseThru(fields):
     ###
     print("dataOut = ",out)
     return out
-    ###
 
 def _midCollapse(preCollapse, dnMax=10000000):
     """

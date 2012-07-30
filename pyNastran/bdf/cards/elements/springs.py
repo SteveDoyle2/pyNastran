@@ -5,6 +5,7 @@ import sys
 from numpy import matrix,zeros,dot,transpose
 from numpy.linalg import norm
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Element
 
 class SpringElement(Element):
@@ -228,8 +229,8 @@ class CELAS2(SpringElement):
 
     def reprFields(self):
         nodes = self.nodeIDs(allowEmptyNodes=True,msg=str(['CELAS2',self.eid]))
-        ge = self.setBlankIfDefault(self.ge,0.)
-        s  = self.setBlankIfDefault(self.s,0.)
+        ge = setBlankIfDefault(self.ge,0.)
+        s  = setBlankIfDefault(self.s,0.)
         fields = ['CELAS2',self.eid,self.k,nodes[0],self.c1,nodes[1],self.c2,ge,s]
         return fields
 
@@ -278,8 +279,8 @@ class CELAS3(SpringElement):
         return fields
 
     #def reprFields(self):
-        #s1 = self.setBlankIfDefault(self.s1,0)
-        #s2 = self.setBlankIfDefault(self.s2,0)
+        #s1 = setBlankIfDefault(self.s1,0)
+        #s2 = setBlankIfDefault(self.s2,0)
         #fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return fields
 
@@ -328,8 +329,8 @@ class CELAS4(SpringElement):
         return fields
 
     #def reprFields(self):
-        #s1 = self.setBlankIfDefault(self.s1,0)
-        #s2 = self.setBlankIfDefault(self.s2,0)
+        #s1 = setBlankIfDefault(self.s1,0)
+        #s2 = setBlankIfDefault(self.s2,0)
         #fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return fields
 

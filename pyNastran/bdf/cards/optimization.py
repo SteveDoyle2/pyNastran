@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 #import sys
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 
@@ -35,10 +36,10 @@ class DCONSTR(OptConstraint):
         return fields
 
     def reprFields(self):
-        lid    = self.setBlankIfDefault(self.lid, -1e20)
-        uid    = self.setBlankIfDefault(self.uid,  1e20)
-        lowfq  = self.setBlankIfDefault(self.lowfq, 0.0)
-        highfq = self.setBlankIfDefault(self.highfq, 1e20)
+        lid    = setBlankIfDefault(self.lid, -1e20)
+        uid    = setBlankIfDefault(self.uid,  1e20)
+        lowfq  = setBlankIfDefault(self.lowfq, 0.0)
+        highfq = setBlankIfDefault(self.highfq, 1e20)
         fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
         return fields
 
@@ -59,9 +60,9 @@ class DESVAR(OptConstraint):
         return fields
 
     def reprFields(self):
-        xlb  = self.setBlankIfDefault(self.xlb, -1e20)
-        xub  = self.setBlankIfDefault(self.xub,  1e20)
-        delx = self.setBlankIfDefault(self.delx, 1e20)
+        xlb  = setBlankIfDefault(self.xlb, -1e20)
+        xub  = setBlankIfDefault(self.xub,  1e20)
+        delx = setBlankIfDefault(self.delx, 1e20)
         fields = ['DESVAR', self.oid, self.label, self.xinit, xlb, xub, delx, self.ddval]
         return fields
 
@@ -138,13 +139,34 @@ class DLINK(OptConstraint):
         return fields
 
     def reprFields(self):
-        c0    = self.setBlankIfDefault(self.c0, 0.)
-        cmult = self.setBlankIfDefault(self.cmult, 1.)
+        c0    = setBlankIfDefault(self.c0, 0.)
+        cmult = setBlankIfDefault(self.cmult, 1.)
         fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
         for (idv, ci) in zip(self.IDv, self.Ci):
             fields += [idv, ci]
         return fields
 
+
+class DSCREEN(OptConstraint):
+    type = 'DSCREEN'
+    def __init__(self,card=None,data=None):
+        ## Response type for which the screening criteria apply. (Character)
+        self.rType = card.field(1)
+        ## Truncation threshold. (Real; Default = -0.5)
+        self.trs = card.field(2, -0.5)
+        ## Maximum number of constraints to be retained per region per load
+        ## case. (Integer > 0; Default = 20)
+        self.nstr = card.field(3, 20)
+    
+    def rawFields(self):
+        fields = ['DSCREEN', self.rType, self.trs, self.nstr]
+        return fields
+
+    def reprFields(self):
+        trs  = setBlankIfDefault(self.trs,  -0.5)
+        nstr = setBlankIfDefault(self.nstr, 20)
+        fields = ['DSCREEN', self.rType, trs, nstr]
+        return fields
 
 class DRESP1(OptConstraint):
     type = 'DRESP1'
@@ -248,9 +270,9 @@ class DRESP2(OptConstraint):
         return fields
 
     def reprFields(self):
-        method = self.setBlankIfDefault(self.method, 'MIN')
-        c1 = self.setBlankIfDefault(self.c1, 100.)
-        c2 = self.setBlankIfDefault(self.c2, 0.005)
+        method = setBlankIfDefault(self.method, 'MIN')
+        c1 = setBlankIfDefault(self.c1, 100.)
+        c2 = setBlankIfDefault(self.c2, 0.005)
 
         fields = ['DRESP2', self.oid, self.label, self.eqidFunc, self.region, method, c1, c2, self.c3]
         fields += self.packParams()
@@ -308,8 +330,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         return fields
 
     def reprFields(self):
-        mpMax = self.setBlankIfDefault(self.mpMax, 1e20)
-        c0    = self.setBlankIfDefault(self.c0, 0.)
+        mpMax = setBlankIfDefault(self.mpMax, 1e20)
+        c0    = setBlankIfDefault(self.c0, 0.)
         fields = ['DVMREL1', self.oid, self.Type, self.Mid(), self.mpName, self.mpMin, mpMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
@@ -366,8 +388,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         return fields
 
     def reprFields(self):
-        pMax = self.setBlankIfDefault(self.pMax, 1e20)
-        c0   = self.setBlankIfDefault(self.c0, 0.)
+        pMax = setBlankIfDefault(self.pMax, 1e20)
+        c0   = setBlankIfDefault(self.c0, 0.)
         fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0,None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)

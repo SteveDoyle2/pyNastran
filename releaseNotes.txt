@@ -24,7 +24,7 @@ BDF Bug Fixes:
 Removed BDF
 
 Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1
+   - *** SET2,PEALST,TIC,DMI,CONM1,RFORCE,PLOADX1
 
 Removed BDF
 

@@ -5,6 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 #from numpy import zeros,pi
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import Property
 
 class SpringProperty(Property):
@@ -70,8 +71,8 @@ class PELAS(SpringProperty):
         return fields
 
     def reprFields(self):
-        ge = self.setBlankIfDefault(self.ge,0.)
-        s  = self.setBlankIfDefault(self.s,0.)
+        ge = setBlankIfDefault(self.ge,0.)
+        s  = setBlankIfDefault(self.s,0.)
         fields = ['PELAS',self.pid,self.k,ge,s]
         return fields
 

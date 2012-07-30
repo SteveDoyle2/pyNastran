@@ -11,7 +11,7 @@ numpy.seterr(all='raise')
 import traceback
 
 from pyNastran.general.general import printBadPath
-from pyNastran.bdf.errors import ScientificCardParseError
+#from pyNastran.bdf.errors import ScientificCardParseError
 from pyNastran.bdf.bdf import BDF, CTRIAX, CTRIAX6
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,

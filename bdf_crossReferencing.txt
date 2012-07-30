@@ -204,6 +204,7 @@ PLOAD1  (done)
 PLOAD2  (done)
 PLOAD4  (done)
 PLOADB3
+RLOAD   (no)
 
 MOMENT  (done)
 MOMENT1 (done)
@@ -213,7 +214,7 @@ DLOAD   (???)
 SLOAD   (done)
 
 TLOAD1  (no delay)
-TLOAD2
+TLOAD2  (no delay)
 RLOAD1  (no delay)
 RLOAD2  (no delay)
 
@@ -392,7 +393,7 @@ PCONEAX
 
 ----Axial Loads----:
 FORCEAX
-PLOADX1
+PLOADX1  (no)
 MOMAX
 TEMPAX
 PRESAX

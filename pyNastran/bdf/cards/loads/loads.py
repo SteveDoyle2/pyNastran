@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
+from pyNastran.bdf.fieldWriter import setBlankIfDefault
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Load(BaseCard):
@@ -361,10 +362,96 @@ class TLOAD1(TabularLoad):
         return fields
 
     def reprFields(self):
-        us0 = self.setBlankIfDefault(self.us0, 0.0)
-        vs0 = self.setBlankIfDefault(self.vs0, 0.0)
+        us0 = setBlankIfDefault(self.us0, 0.0)
+        vs0 = setBlankIfDefault(self.vs0, 0.0)
         fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), us0, vs0]
+        return fields
+
+class TLOAD2(TabularLoad):
+    """
+    Transient Response Dynamic Excitation, Form 1
+    Defines a time-dependent dynamic load or enforced motion of the form:
+    \f[ {P(t)} = {A} \cdot F(t-\tau) \f]
+    for use in transient response analysis.
+    """
+    type = 'TLOAD2'
+    def __init__(self, card=None, data=None):
+        TabularLoad.__init__(self, card, data)
+        ## load ID
+        ## SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
+        self.sid = card.field(1)
+        
+        self.exciteID = card.field(2)
+        self.delay = card.field(3,0)
+        
+        ## Defines the type of the dynamic excitation. (Integer; character
+        ## or blank; Default = 0)
+        self.Type = card.field(4,0)
+        
+        ## Time constant. (Real >= 0.0)
+        if delay==0:
+            self.T1 = card.field(5,0.)
+        else:
+            self.T1 = card.field(5)
+        ## Time constant. (Real; T2 > T1)
+        self.T2 = card.field(6,self.T1)
+        ## Frequency in cycles per unit time. (Real >= 0.0; Default = 0.0)
+        self.frequency = card.field(7,0.)
+        ## Phase angle in degrees. (Real; Default = 0.0)
+        self.phase = card.field(8,0.)
+        ## Exponential coefficient. (Real; Default = 0.0)
+        self.c = card.field(9,0.)
+        ## Growth coefficient. (Real; Default = 0.0)
+        self.b = card.field(10,0.)
+        ## Factor for initial displacements of the enforced degrees-of-freedom.
+        ## (Real; Default = 0.0)
+        self.us0 = card.field(11,0.)
+        ## Factor for initial velocities of the enforced degrees-of-freedom
+        ## (Real; Default = 0.0)
+        self.vs0 = card.field(12,0.)
+
+        if   self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+            self.Type = 'LOAD'
+        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
+            self.Type = 'DISP'
+        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
+            self.Type = 'VELO'
+        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+            self.Type = 'ACCE'
+        elif self.Type in [5, 6, 7, 12, 13]:
+            pass
+        else:
+            msg = 'invalid TLOAD1 type  Type=|%s|' % (self.Type)
+            raise RuntimeError(msg)
+
+    def getLoads(self):
+        return [self]
+
+    def crossReference(self, model):
+        pass
+        # delay
+        # exciteID
+
+    def rawFields(self):
+        fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
+                  self.T1, self.T2, self.frequency, self.phase, self.c, self.b,
+                  self.us0, self.vs0]
+        return fields
+
+    def reprFields(self):
+        #self.Type = card.field(4,0)
+        #self.T1 = card.field(5,0.)
+        #self.T2 = card.field(6,self.T1)
+        frequency = setBlankIfDefault(self.frequency,0.)
+        phase = setBlankIfDefault(self.phase,0.)
+        c = setBlankIfDefault(self.c,0.)
+        b = setBlankIfDefault(self.b,0.)
+
+        us0 = setBlankIfDefault(self.us0, 0.0)
+        vs0 = setBlankIfDefault(self.vs0, 0.0)
+        fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type, 
+                  self.T1, self.T2,self.frequency, phase, c, b, us0, vs0]
         return fields
 
 class RFORCE(Load):
@@ -402,10 +489,10 @@ class RFORCE(Load):
         return fields
 
     def reprFields(self):
-        #method = self.setBlankIfDefault(self.method,1)
-        racc = self.setBlankIfDefault(self.racc,0.)
-        mb = self.setBlankIfDefault(self.mb,0)
-        idrf = self.setBlankIfDefault(self.idrf,0)
+        #method = setBlankIfDefault(self.method,1)
+        racc = setBlankIfDefault(self.racc,0.)
+        mb = setBlankIfDefault(self.mb,0)
+        idrf = setBlankIfDefault(self.idrf,0)
         fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
                   self.r1, self.r2, self.r3, self.method, racc,
                   mb, idrf]
@@ -475,7 +562,7 @@ class RLOAD1(TabularLoad):
         return fields
 
     def reprFields(self):
-        Type = self.setBlankIfDefault(self.Type, 'LOAD')
+        Type = setBlankIfDefault(self.Type, 'LOAD')
         fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tc(), self.Td(), Type]
         return fields
@@ -548,7 +635,7 @@ class RLOAD2(TabularLoad):
         return fields
 
     def reprFields(self):
-        Type = self.setBlankIfDefault(self.Type, 0.0)
+        Type = setBlankIfDefault(self.Type, 0.0)
         fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tb(), self.Tp(), Type]
         return fields
