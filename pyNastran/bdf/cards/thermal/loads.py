@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from .thermal import ThermalCard
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import expandThru, expandThruBy, collapseThruBy
 
 class ThermalLoadDefault(ThermalCard):
@@ -145,7 +145,7 @@ class QBDY3(ThermalLoad):
         return fields
 
     def reprFields(self):
-        cntrlnd = setBlankIfDefault(self.cntrlnd,0)
+        cntrlnd = set_blank_if_default(self.cntrlnd,0)
         eids = collapseThruBy(self.Eids())
         eids.sort()
         fields = ['QBDY3',self.sid, self.Q0, cntrlnd]+eids

@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThruBy, collapseThruBy
 
 class ThermalCard(BaseCard):
@@ -174,10 +174,10 @@ class CHBDYG(ThermalElement):
         return fields
 
     def reprFields(self):
-        iViewFront  = setBlankIfDefault(self.iViewFront,  0)
-        iViewBack   = setBlankIfDefault(self.iViewBack,   0)
-        radMidFront = setBlankIfDefault(self.radMidFront, 0)
-        radMidBack  = setBlankIfDefault(self.radMidBack,  0)
+        iViewFront  = set_blank_if_default(self.iViewFront,  0)
+        iViewBack   = set_blank_if_default(self.iViewBack,   0)
+        radMidFront = set_blank_if_default(self.radMidFront, 0)
+        radMidBack  = set_blank_if_default(self.radMidBack,  0)
 
         fields = ['CHBDYG',self.eid,None,self.Type,iViewFront,iViewBack,radMidFront,radMidBack,None,
         ]+self.grids
@@ -243,13 +243,13 @@ class CHBDYP(ThermalElement):
         return fields
 
     def reprFields(self):
-        iViewFront  = setBlankIfDefault(self.iViewFront,  0)
-        iViewBack   = setBlankIfDefault(self.iViewBack,   0)
-        radMidFront = setBlankIfDefault(self.radMidFront, 0)
-        radMidBack  = setBlankIfDefault(self.radMidBack,  0)
+        iViewFront  = set_blank_if_default(self.iViewFront,  0)
+        iViewBack   = set_blank_if_default(self.iViewBack,   0)
+        radMidFront = set_blank_if_default(self.radMidFront, 0)
+        radMidBack  = set_blank_if_default(self.radMidBack,  0)
 
-        g0 = setBlankIfDefault(self.g0, 0)
-        ce = setBlankIfDefault(self.ce, 0)
+        g0 = set_blank_if_default(self.g0, 0)
+        ce = set_blank_if_default(self.ce, 0)
 
         fields = ['CHBDYP',self.eid,self.Pid(),self.Type,iViewFront,iViewBack,self.g1,self.g2,g0,
                   radMidFront,radMidBack,self.gmid,ce,self.e1,self.e2,self.e3]
@@ -305,10 +305,10 @@ class PCONV(ThermalProperty):
         return fields
 
     def reprFields(self):
-        form  = setBlankIfDefault(self.form,  0)
-        expf  = setBlankIfDefault(self.expf,0.0)
-        ftype = setBlankIfDefault(self.ftype, 0)
-        ce    = setBlankIfDefault(self.ce,    0)
+        form  = set_blank_if_default(self.form,  0)
+        expf  = set_blank_if_default(self.expf,0.0)
+        ftype = set_blank_if_default(self.ftype, 0)
+        ce    = set_blank_if_default(self.ce,    0)
         fields = ['PCONV',self.pconid,self.mid,form,expf,ftype,self.tid,None,None,
                           self.chlen,self.gidin,ce,self.e1,self.e2,self.e3]
         return fields
@@ -349,11 +349,11 @@ class PCONVM(ThermalProperty):
         return fields
 
     def reprFields(self):
-        form  = setBlankIfDefault(self.form,   0)
-        flag  = setBlankIfDefault(self.flag,   0)
-        expr  = setBlankIfDefault(self.expr, 0.0)
-        exppi = setBlankIfDefault(self.exppi,0.0)
-        exppo = setBlankIfDefault(self.exppo,0.0)
+        form  = set_blank_if_default(self.form,   0)
+        flag  = set_blank_if_default(self.flag,   0)
+        expr  = set_blank_if_default(self.expr, 0.0)
+        exppi = set_blank_if_default(self.exppi,0.0)
+        exppo = set_blank_if_default(self.exppo,0.0)
         fields = ['PCONVM',self.pconid,self.mid,form,flag,self.coef,expr,exppi,exppo]
         return fields
 
@@ -386,7 +386,7 @@ class PHBDY(ThermalProperty):
         return fields
 
     def reprFields(self):
-        d2  = setBlankIfDefault(self.d2,self.d1)
+        d2  = set_blank_if_default(self.d2,self.d1)
         fields = ['PHBDY',self.pid,self.af,self.d1,d2]
         return fields
 
@@ -433,8 +433,8 @@ class CONV(ThermalBC):
         return fields
 
     def reprFields(self):
-        flmnd   = setBlankIfDefault(self.flmnd,  0)
-        cntrlnd = setBlankIfDefault(self.cntrlnd,0)
+        flmnd   = set_blank_if_default(self.flmnd,  0)
+        cntrlnd = set_blank_if_default(self.cntrlnd,0)
         fields = ['CONV',self.eid,self.pconID,flmnd,cntrlnd]+self.ta
         return fields
 
@@ -502,7 +502,7 @@ class RADBC(ThermalBC):
         return fields
 
     def reprFields(self):
-        cntrlnd = setBlankIfDefault(self.cntrlnd,0)
+        cntrlnd = set_blank_if_default(self.cntrlnd,0)
         eids   = collapseThruBy(self.Eids())
         fields = ['RADBC',self.nodamb,self.famb,cntrlnd]+eids
         return fields

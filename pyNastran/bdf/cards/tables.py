@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.general.general import ListPrint
 
@@ -113,8 +113,8 @@ class TABLED1(Table):
         return fields
 
     def reprFields(self):
-        #xaxis = setBlankIfDefault(self.xaxis,'LINEAR')
-        #yaxis = setBlankIfDefault(self.yaxis,'LINEAR')
+        #xaxis = set_blank_if_default(self.xaxis,'LINEAR')
+        #yaxis = set_blank_if_default(self.yaxis,'LINEAR')
         return self.rawFields()
         #fields = ['TABLED1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         #return fields
@@ -345,8 +345,8 @@ class TABRND1(RandomTable):
         return fields
 
     def reprFields(self):
-        xaxis = setBlankIfDefault(self.xaxis,'LINEAR')
-        yaxis = setBlankIfDefault(self.yaxis,'LINEAR')
+        xaxis = set_blank_if_default(self.xaxis,'LINEAR')
+        yaxis = set_blank_if_default(self.yaxis,'LINEAR')
         fields = ['TABRND1',self.tid,xaxis,yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 

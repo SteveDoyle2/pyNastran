@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import zeros, array
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, Material
 from pyNastran.bdf.cards.tables import Table
 
@@ -81,9 +81,9 @@ class CREEP(Material):
         return fields
 
     def reprFields(self):
-        thresh = setBlankIfDefault(self.thresh, 1e-5)
-        exp    = setBlankIfDefault(self.exp, 4.1e-9)
-        T0     = setBlankIfDefault(self.T0, 0.0)
+        thresh = set_blank_if_default(self.thresh, 1e-5)
+        exp    = set_blank_if_default(self.exp, 4.1e-9)
+        T0     = set_blank_if_default(self.T0, 0.0)
         fields = ['CREEP', self.Mid(), T0, exp, self.form, self.tidkp, self.tidcp, self.tidcs, thresh,
         self.Type, self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return fields
@@ -232,14 +232,14 @@ class MAT1(Material):
     def reprFields(self):
         G = self.getG_default()
 
-        rho  = setBlankIfDefault(self.rho, 0.)
-        a    = setBlankIfDefault(self.a, 0.)
-        TRef = setBlankIfDefault(self.TRef, 0.0)
-        ge   = setBlankIfDefault(self.ge, 0.)
-        St   = setBlankIfDefault(self.St, 0.)
-        Sc   = setBlankIfDefault(self.Sc, 0.)
-        Ss   = setBlankIfDefault(self.Ss, 0.)
-        Mcsid = setBlankIfDefault(self.Mcsid, 0)
+        rho  = set_blank_if_default(self.rho, 0.)
+        a    = set_blank_if_default(self.a, 0.)
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        ge   = set_blank_if_default(self.ge, 0.)
+        St   = set_blank_if_default(self.St, 0.)
+        Sc   = set_blank_if_default(self.Sc, 0.)
+        Ss   = set_blank_if_default(self.Ss, 0.)
+        Mcsid = set_blank_if_default(self.Mcsid, 0)
 
         fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
                   St, Sc, Ss, Mcsid]
@@ -378,15 +378,15 @@ class MAT2(AnisotropicMaterial):
         return fields
 
     def reprFields(self):
-        G11 = setBlankIfDefault(self.G11, 0.0)
-        G12 = setBlankIfDefault(self.G12, 0.0)
-        G13 = setBlankIfDefault(self.G13, 0.0)
-        G22 = setBlankIfDefault(self.G22, 0.0)
-        G23 = setBlankIfDefault(self.G23, 0.0)
-        G33 = setBlankIfDefault(self.G33, 0.0)
-        rho = setBlankIfDefault(self.rho, 0.0)
-        TRef = setBlankIfDefault(self.TRef, 0.0)
-        ge   = setBlankIfDefault(self.ge, 0.0)
+        G11 = set_blank_if_default(self.G11, 0.0)
+        G12 = set_blank_if_default(self.G12, 0.0)
+        G13 = set_blank_if_default(self.G13, 0.0)
+        G22 = set_blank_if_default(self.G22, 0.0)
+        G23 = set_blank_if_default(self.G23, 0.0)
+        G33 = set_blank_if_default(self.G33, 0.0)
+        rho = set_blank_if_default(self.rho, 0.0)
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        ge   = set_blank_if_default(self.ge, 0.0)
         fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
                   self.a1, self.a2, self.a3, TRef, ge, self.St, self.Sc, self.Ss,
                   self.Mcsid]
@@ -441,9 +441,9 @@ class MAT3(AnisotropicMaterial):
         return fields
 
     def reprFields(self):
-        rho = setBlankIfDefault(self.rho, 0.0)
-        TRef = setBlankIfDefault(self.TRef, 0.0)
-        ge = setBlankIfDefault(self.ge, 0.0)
+        rho = set_blank_if_default(self.rho, 0.0)
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        ge = set_blank_if_default(self.ge, 0.0)
         fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth, self.nuthz, self.nuzx, rho,
                          None, None, self.gzx, self.ax, self.ath, self.az, TRef, ge]
         return fields
@@ -493,9 +493,9 @@ class MAT4(ThermalMaterial):
         return fields
 
     def reprFields(self):
-        rho  = setBlankIfDefault(self.rho, 1.0)
-        hgen = setBlankIfDefault(self.hgen, 1.0)
-        cp   = setBlankIfDefault(self.cp, 0.0)
+        rho  = set_blank_if_default(self.rho, 1.0)
+        hgen = set_blank_if_default(self.hgen, 1.0)
+        cp   = set_blank_if_default(self.cp, 0.0)
         fields = ['MAT4', self.mid, self.k, cp, rho, self.H, self.mu, hgen, self.refEnthalpy,
                           self.tch, self.tdelta, self.qlat]
         return fields
@@ -551,16 +551,16 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return fields
 
     def reprFields(self):
-        kxx  = setBlankIfDefault(self.kxx, 0.0)
-        kyy  = setBlankIfDefault(self.kyy, 0.0)
-        kzz  = setBlankIfDefault(self.kzz, 0.0)
-        kxy  = setBlankIfDefault(self.kxy, 0.0)
-        kyz  = setBlankIfDefault(self.kyz, 0.0)
-        kxz  = setBlankIfDefault(self.kxz, 0.0)
+        kxx  = set_blank_if_default(self.kxx, 0.0)
+        kyy  = set_blank_if_default(self.kyy, 0.0)
+        kzz  = set_blank_if_default(self.kzz, 0.0)
+        kxy  = set_blank_if_default(self.kxy, 0.0)
+        kyz  = set_blank_if_default(self.kyz, 0.0)
+        kxz  = set_blank_if_default(self.kxz, 0.0)
 
-        rho  = setBlankIfDefault(self.rho, 1.0)
-        hgen = setBlankIfDefault(self.hgen, 1.0)
-        cp   = setBlankIfDefault(self.cp,  0.0)
+        rho  = set_blank_if_default(self.rho, 1.0)
+        hgen = set_blank_if_default(self.hgen, 1.0)
+        cp   = set_blank_if_default(self.cp,  0.0)
         fields = ['MAT5', self.mid, kxx, kxy, kxz, kyy, kyz, kzz, cp,
                          rho, hgen]
         return fields
@@ -652,25 +652,25 @@ class MAT8(AnisotropicMaterial):
         return fields
 
     def reprFields(self):
-        G12  = setBlankIfDefault(self.g12, 0.)
-        G1z  = setBlankIfDefault(self.g1z, 1e8)
-        G2z  = setBlankIfDefault(self.g2z, 1e8)
+        G12  = set_blank_if_default(self.g12, 0.)
+        G1z  = set_blank_if_default(self.g1z, 1e8)
+        G2z  = set_blank_if_default(self.g2z, 1e8)
 
-        rho  = setBlankIfDefault(self.rho, 0.0)
-        a1   = setBlankIfDefault(self.a1,  0.0)
-        a2   = setBlankIfDefault(self.a2,  0.0)
-        TRef = setBlankIfDefault(self.TRef, 0.0)
+        rho  = set_blank_if_default(self.rho, 0.0)
+        a1   = set_blank_if_default(self.a1,  0.0)
+        a2   = set_blank_if_default(self.a2,  0.0)
+        TRef = set_blank_if_default(self.TRef, 0.0)
 
-        Xt   = setBlankIfDefault(self.Xt, 0.)
-        Yt   = setBlankIfDefault(self.Yt, 0.)
+        Xt   = set_blank_if_default(self.Xt, 0.)
+        Yt   = set_blank_if_default(self.Yt, 0.)
 
-        Xc   = setBlankIfDefault(self.Xc, self.Xt)
-        Yc   = setBlankIfDefault(self.Yc, self.Yt)
+        Xc   = set_blank_if_default(self.Xc, self.Xt)
+        Yc   = set_blank_if_default(self.Yc, self.Yt)
         
-        S    = setBlankIfDefault(self.S,   0.0)
-        ge   = setBlankIfDefault(self.ge,  0.0)
-        F12  = setBlankIfDefault(self.F12, 0.0)
-        strn = setBlankIfDefault(self.strn, 0.0)
+        S    = set_blank_if_default(self.S,   0.0)
+        ge   = set_blank_if_default(self.ge,  0.0)
+        F12  = set_blank_if_default(self.F12, 0.0)
+        strn = set_blank_if_default(self.strn, 0.0)
         
         fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, G12, G1z, G2z, rho,
                   a1, a2, TRef, Xt, Xc, Yt, Yc, S,
@@ -766,12 +766,12 @@ class MAT9(AnisotropicMaterial):
     def reprFields(self):
         A = []
         for a in self.A:
-            a = setBlankIfDefault(a, 0.0)
+            a = set_blank_if_default(a, 0.0)
             A.append(a)
 
-        rho  = setBlankIfDefault(self.rho, 0.0)
-        TRef = setBlankIfDefault(self.TRef, 0.0)
-        ge   = setBlankIfDefault(self.ge, 0.0)
+        rho  = set_blank_if_default(self.rho, 0.0)
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        ge   = set_blank_if_default(self.ge, 0.0)
         fields = ['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14, self.G15, self.G16, self.G22,
                           self.G23, self.G24, self.G25, self.G26, self.G33, self.G34, self.G35, self.G36,
                           self.G44, self.G45, self.G46, self.G55, self.G56, self.G66, rho]+A+[TRef,ge]
@@ -834,7 +834,7 @@ class MAT10(Material):
         return fields
 
     def reprFields(self):
-        ge = setBlankIfDefault(self.ge, 0.0)
+        ge = set_blank_if_default(self.ge, 0.0)
         fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
         return fields
        
@@ -959,42 +959,42 @@ class MATHP(HyperelasticMaterial):
         return fields
 
     def reprFields(self):
-        av = setBlankIfDefault(self.av, 0.0)
-        na = setBlankIfDefault(self.na, 0.0)
-        nd = setBlankIfDefault(self.nd, 0.0)
+        av = set_blank_if_default(self.av, 0.0)
+        na = set_blank_if_default(self.na, 0.0)
+        nd = set_blank_if_default(self.nd, 0.0)
 
-        a01 = setBlankIfDefault(self.a01, 0.0)
-        a10 = setBlankIfDefault(self.a10, 0.0)
-        d1  = setBlankIfDefault(self.d1, 1000*(self.a01+self.a10))
+        a01 = set_blank_if_default(self.a01, 0.0)
+        a10 = set_blank_if_default(self.a10, 0.0)
+        d1  = set_blank_if_default(self.d1, 1000*(self.a01+self.a10))
 
-        a20 = setBlankIfDefault(self.a20, 0.0)
-        a11 = setBlankIfDefault(self.a11, 0.0)
-        a02 = setBlankIfDefault(self.a02, 0.0)
-        d2  = setBlankIfDefault(self.d2, 0.0)
+        a20 = set_blank_if_default(self.a20, 0.0)
+        a11 = set_blank_if_default(self.a11, 0.0)
+        a02 = set_blank_if_default(self.a02, 0.0)
+        d2  = set_blank_if_default(self.d2, 0.0)
 
-        a30 = setBlankIfDefault(self.a30, 0.0)
-        a12 = setBlankIfDefault(self.a12, 0.0)
-        a21 = setBlankIfDefault(self.a21, 0.0)
-        a03 = setBlankIfDefault(self.a03, 0.0)
-        d3  = setBlankIfDefault(self.d3, 0.0)
+        a30 = set_blank_if_default(self.a30, 0.0)
+        a12 = set_blank_if_default(self.a12, 0.0)
+        a21 = set_blank_if_default(self.a21, 0.0)
+        a03 = set_blank_if_default(self.a03, 0.0)
+        d3  = set_blank_if_default(self.d3, 0.0)
 
-        a40 = setBlankIfDefault(self.a40, 0.0)
-        a31 = setBlankIfDefault(self.a31, 0.0)
-        a22 = setBlankIfDefault(self.a22, 0.0)
-        a13 = setBlankIfDefault(self.a13, 0.0)
-        a04 = setBlankIfDefault(self.a04, 0.0)
-        d4  = setBlankIfDefault(self.d4, 0.0)
+        a40 = set_blank_if_default(self.a40, 0.0)
+        a31 = set_blank_if_default(self.a31, 0.0)
+        a22 = set_blank_if_default(self.a22, 0.0)
+        a13 = set_blank_if_default(self.a13, 0.0)
+        a04 = set_blank_if_default(self.a04, 0.0)
+        d4  = set_blank_if_default(self.d4, 0.0)
 
-        a50 = setBlankIfDefault(self.a50, 0.0)
-        a41 = setBlankIfDefault(self.a41, 0.0)
-        a32 = setBlankIfDefault(self.a32, 0.0)
-        a23 = setBlankIfDefault(self.a23, 0.0)
-        a14 = setBlankIfDefault(self.a14, 0.0)
-        a05 = setBlankIfDefault(self.a05, 0.0)
-        d5  = setBlankIfDefault(self.d5, 0.0)
+        a50 = set_blank_if_default(self.a50, 0.0)
+        a41 = set_blank_if_default(self.a41, 0.0)
+        a32 = set_blank_if_default(self.a32, 0.0)
+        a23 = set_blank_if_default(self.a23, 0.0)
+        a14 = set_blank_if_default(self.a14, 0.0)
+        a05 = set_blank_if_default(self.a05, 0.0)
+        d5  = set_blank_if_default(self.d5, 0.0)
 
-        TRef = setBlankIfDefault(self.TRef, 0.0)
-        ge   = setBlankIfDefault(self.ge, 0.0)
+        TRef = set_blank_if_default(self.TRef, 0.0)
+        ge   = set_blank_if_default(self.ge, 0.0)
         fields = ['MATHP', self.mid, a10, a01, d1, self.rho, av, TRef, ge,
                           None, na, nd,  None, None, None, None, None,
                           a20, a11, a02, d2,   None, None, None, None,

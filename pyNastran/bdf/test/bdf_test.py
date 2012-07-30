@@ -1,3 +1,4 @@
+#pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
@@ -9,7 +10,7 @@ from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.op2.test.op2_test import getAllFiles
 from pyNastran.general.general import getFilesOfType
 
-if __name__=='__main__':
+if __name__ == '__main__':
     # works
     files  = getFilesOfType('tests', '.bdf')
     files += getFilesOfType('tests', '.dat')
@@ -46,7 +47,11 @@ if __name__=='__main__':
     check = True
     xref = False
     debug = False
-    run_lots_of_files(files, debug=debug, xref=xref, check=check, cid=cid)
+    failed_files = run_lots_of_files(files, debug=debug, xref=xref,
+                                     check=check, cid=cid)
+    f = open('failedCases.in','wb')
+    for fname in failed_files:
+        f.write('%s\n' %(fname))
+    f.close()
     sys.exit('final stop...')
     
-

@@ -5,7 +5,7 @@ from numpy import array, cross, allclose
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import BaseCard, expandThru, expandThruBy
 
 class LOAD(LoadCombination):
@@ -328,9 +328,9 @@ class GRAV(BaseCard):
     def reprFields(self):
         N = []
         for n in self.N:
-            N.append(setBlankIfDefault(n, 0.0))
+            N.append(set_blank_if_default(n, 0.0))
         
-        mb = setBlankIfDefault(self.mb, 0)
+        mb = set_blank_if_default(self.mb, 0)
         fields = ['GRAV', self.sid, self.Cid(), self.scale]+N+[mb]
         return fields
 
@@ -521,7 +521,7 @@ class FORCE(Force):
         return fields
 
     def reprFields(self):
-        cid = setBlankIfDefault(self.Cid(), 0)
+        cid = set_blank_if_default(self.Cid(), 0)
         fields = ['FORCE', self.sid, self.node, cid, self.mag] + list(self.xyz)
         return fields
 
@@ -668,7 +668,7 @@ class MOMENT(Moment):
         return fields
 
     def reprFields(self):
-        cid = setBlankIfDefault(self.Cid(), 0)
+        cid = set_blank_if_default(self.Cid(), 0)
         fields = ['MOMENT', self.sid, self.node, cid, self.mag
                  ] + list(self.xyz)
         return fields
@@ -1001,13 +1001,13 @@ class PLOAD4(Load):
 
     def rawFields(self):
         eid  = self.Eid(self.eid)
-        cid  = setBlankIfDefault(self.Cid(), 0)
-        sorl = setBlankIfDefault(self.sorl, 'SURF')
-        ldir = setBlankIfDefault(self.ldir, 'NORM')
+        cid  = set_blank_if_default(self.Cid(), 0)
+        sorl = set_blank_if_default(self.sorl, 'SURF')
+        ldir = set_blank_if_default(self.ldir, 'NORM')
         p1   = self.pressures[0]
-        p2   = setBlankIfDefault(self.pressures[1], p1)
-        p3   = setBlankIfDefault(self.pressures[2], p1)
-        p4   = setBlankIfDefault(self.pressures[3], p1)
+        p2   = set_blank_if_default(self.pressures[1], p1)
+        p3   = set_blank_if_default(self.pressures[2], p1)
+        p4   = set_blank_if_default(self.pressures[3], p1)
         fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
@@ -1034,9 +1034,9 @@ class PLOAD4(Load):
             ###
         fields.append(cid)
         
-        n1 = setBlankIfDefault(self.NVector[0], 0.0)
-        n2 = setBlankIfDefault(self.NVector[1], 0.0)
-        n3 = setBlankIfDefault(self.NVector[2], 0.0)
+        n1 = set_blank_if_default(self.NVector[0], 0.0)
+        n2 = set_blank_if_default(self.NVector[1], 0.0)
+        n3 = set_blank_if_default(self.NVector[2], 0.0)
         fields += [n1, n2, n3]
         fields.append(sorl)
         fields.append(ldir)
