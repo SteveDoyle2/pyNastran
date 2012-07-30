@@ -18,13 +18,14 @@ This code was written entirely in Python and should install easily.
 -----------------------v0.6 released 2012/06/??-----------------------
 
 Overall Notes
+   - more PEP-8
 Overall BDF
 BDF API Additions
 BDF Bug Fixes:
 Removed BDF
 
 Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1,RFORCE,PLOADX1
+   - *** SET2,PEALST,TIC,DMI,CONM1
 
 Removed BDF
 
@@ -59,13 +60,7 @@ Overall Notes
    - OP2 is much, much better at reading frequency analysis results
    - new OP4 reader in pure Python.  Writer isn't fully functional yet.
    - improved code to better support Python 3
-
-Overall BDF
-   -
-
-BDF API Additions
-   - LOAD objects now have a getReducedLoads() method that determines
-     a list of scaleFactors and FORCE/MOMENT/GRAV/etc. cards
+   - implementing PEP-8 slowly
 
 BDF API Changes
    - moved files around; if you want your imports to work, import from bdf.py
@@ -75,6 +70,8 @@ BDF API Changes
    - LOAD cards now have a getReducedLoads() which gets the scale factors and load objects
      for all sub-loads (supports LOAD, FORCEx, MOMENTx, GRAV)
      not implemented across all load types, so having a LOAD card is still a good thing
+   - LOAD objects now have a getReducedLoads() method that determines
+     a list of scaleFactors and FORCE/MOMENT/GRAV/etc. cards
 
 BDF Bug Fixes:
    - SPOINTs were lost when cross referenced
@@ -96,7 +93,7 @@ Added BDF
    - ASET, ASET1, BSET, BSET1, CSET, CSET1, QSET, QSET1
    - DMIG, DMIJ, DMIJI, DMIK
    - TABRNDG
-   - TLOAD1, ACCEL1
+   - TLOAD1, ACCEL1,,RFORCE, PLOADX1
    - SPLINE4, SPLINE5
    - CBUSH1D, PBUSH1D
    - PRAC2D, PRAC3D
@@ -129,7 +126,6 @@ OP2 API Changes
 Overall F06 Reader/Writer
    - updated to work with OP2 updates
 
-Added F06 Reader
 Added F06 Writer
    - many, but not all loads
 
