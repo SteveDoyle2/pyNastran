@@ -1,3 +1,5 @@
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
 import platform
 
@@ -421,7 +423,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
 
         if len(self.caseKeys)>0:
             key = self.caseKeys[self.iCase]
-            print("key = %s" %(key))
+            print("key = %s" %(str(key)))
             if key[2] == 3: # vector size=3 -> vector, skipping ???
                 self.incrementCycle()
             foundCases = True
@@ -435,8 +437,8 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
     def cycleResults(self):
         plotNodal      = self.isNodal
         plotCentroidal = self.isCentroidal
-        print "plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal)
-        print "nCases = ",self.nCases+1
+        print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
+        print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
             return
 
@@ -500,7 +502,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
                 #    self.gridResult.InsertNextTuple3(value)  # x,y,z
                 ###
             ###
-            print "max=%g min=%g norm=%g\n" %(maxValue, minValue, normValue)
+            print("max=%g min=%g norm=%g\n" %(maxValue, minValue, normValue))
 
             nValueSet = len(valueSet)
             

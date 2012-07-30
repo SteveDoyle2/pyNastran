@@ -67,7 +67,8 @@ class NastranIO(object):
             self.resultCases = {}
             self.nCases = 0
             try:
-                del self.caseKeys
+                if hasattr(self,caseKeys):
+                    del self.caseKeys
                 del self.iCase
                 del self.iSubcaseNameMap
             except NameError:
