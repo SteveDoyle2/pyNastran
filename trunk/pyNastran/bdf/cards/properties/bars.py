@@ -16,7 +16,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from numpy import zeros,pi
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault, setDefaultIfBlank
+from pyNastran.bdf.fieldWriter import set_blank_if_default, set_default_if_blank
 from pyNastran.general.generalMath import integrateLine, integratePositiveLine
 from pyNastran.bdf.cards.baseCard import Property
 
@@ -536,9 +536,9 @@ class PROD(LineProperty):
         return fields
         
     def reprFields(self):
-        j   = setBlankIfDefault(self.j, 0.0)
-        c   = setBlankIfDefault(self.c, 0.0)
-        nsm = setBlankIfDefault(self.nsm, 0.0)
+        j   = set_blank_if_default(self.j, 0.0)
+        c   = set_blank_if_default(self.c, 0.0)
+        nsm = set_blank_if_default(self.nsm, 0.0)
         fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return fields
 
@@ -608,9 +608,9 @@ class PTUBE(LineProperty):
         return fields
     
     def reprFields(self):
-        t   = setBlankIfDefault(self.t, self.OD1/2.)
-        nsm = setBlankIfDefault(self.nsm, 0.0)
-        OD2 = setBlankIfDefault(self.OD2, self.OD1)
+        t   = set_blank_if_default(self.t, self.OD1/2.)
+        nsm = set_blank_if_default(self.nsm, 0.0)
+        OD2 = set_blank_if_default(self.OD2, self.OD1)
         fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return fields
     
@@ -732,27 +732,27 @@ class PBAR(LineProperty):
         return fields
 
     def reprFields(self):
-        #A  = setBlankIfDefault(self.A,0.0)
-        i1  = setBlankIfDefault(self.i1, 0.0)
-        i2  = setBlankIfDefault(self.i2, 0.0)
-        i12 = setBlankIfDefault(self.i12, 0.0)
-        j   = setBlankIfDefault(self.j, 0.0)
-        nsm = setBlankIfDefault(self.nsm, 0.0)
+        #A  = set_blank_if_default(self.A,0.0)
+        i1  = set_blank_if_default(self.i1, 0.0)
+        i2  = set_blank_if_default(self.i2, 0.0)
+        i12 = set_blank_if_default(self.i12, 0.0)
+        j   = set_blank_if_default(self.j, 0.0)
+        nsm = set_blank_if_default(self.nsm, 0.0)
         
-        C1  = setBlankIfDefault(self.C1, 0.0)
-        C2  = setBlankIfDefault(self.C2, 0.0)
+        C1  = set_blank_if_default(self.C1, 0.0)
+        C2  = set_blank_if_default(self.C2, 0.0)
 
-        D1  = setBlankIfDefault(self.D1, 0.0)
-        D2  = setBlankIfDefault(self.D2, 0.0)
+        D1  = set_blank_if_default(self.D1, 0.0)
+        D2  = set_blank_if_default(self.D2, 0.0)
 
-        E1  = setBlankIfDefault(self.E1, 0.0)
-        E2  = setBlankIfDefault(self.E2, 0.0)
+        E1  = set_blank_if_default(self.E1, 0.0)
+        E2  = set_blank_if_default(self.E2, 0.0)
 
-        F1  = setBlankIfDefault(self.F1, 0.0)
-        F2  = setBlankIfDefault(self.F2, 0.0)
+        F1  = set_blank_if_default(self.F1, 0.0)
+        F2  = set_blank_if_default(self.F2, 0.0)
         
-        K1  = setBlankIfDefault(self.K1, 1e8)
-        K2  = setBlankIfDefault(self.K2, 1e8)
+        K1  = set_blank_if_default(self.K1, 1e8)
+        K2  = set_blank_if_default(self.K2, 1e8)
 
         #print "line3 = ",line3
         
@@ -805,7 +805,7 @@ class PBARL(LineProperty):
 
             #self.dim = fields(9)
             if nDim>0:
-                self.nsm = self.setDefaultIfBlank(self.dim.pop(), 0.0)
+                self.nsm = self.set_default_if_blank(self.dim.pop(), 0.0)
             else:
                 self.nsm = 0.0
             ###
@@ -877,7 +877,7 @@ class PBARL(LineProperty):
         return fields
 
     def reprFields(self):
-        group = setBlankIfDefault(self.group, 'MSCBMLO')
+        group = set_blank_if_default(self.group, 'MSCBMLO')
         fields = ['PBARL',self.pid,self.Mid(),group,self.Type,None,None,None,None,
         ]+self.dim+[self.nsm]
         return fields
@@ -949,19 +949,19 @@ class PBEAM(IntegratedLineProperty):
                 self.so.append( propFields[0])
                 self.xxb.append(propFields[1])
                 self.A.append(  propFields[2])
-                self.i1.append( setDefaultIfBlank(propFields[3],0.0))
-                self.i2.append( setDefaultIfBlank(propFields[4],0.0))
-                self.i12.append(setDefaultIfBlank(propFields[5],0.0))
-                self.j.append(  setDefaultIfBlank(propFields[6],0.0))
-                self.nsm.append(setDefaultIfBlank(propFields[7],0.0))
-                self.c1.append( setDefaultIfBlank(propFields[8],0.0))
-                self.c2.append( setDefaultIfBlank(propFields[9],0.0))
-                self.d1.append( setDefaultIfBlank(propFields[10],0.0))
-                self.d2.append( setDefaultIfBlank(propFields[11],0.0))
-                self.e1.append( setDefaultIfBlank(propFields[12],0.0))
-                self.e2.append( setDefaultIfBlank(propFields[13],0.0))
-                self.f1.append( setDefaultIfBlank(propFields[14],0.0))
-                self.f2.append( setDefaultIfBlank(propFields[15],0.0))
+                self.i1.append( set_default_if_blank(propFields[3],0.0))
+                self.i2.append( set_default_if_blank(propFields[4],0.0))
+                self.i12.append(set_default_if_blank(propFields[5],0.0))
+                self.j.append(  set_default_if_blank(propFields[6],0.0))
+                self.nsm.append(set_default_if_blank(propFields[7],0.0))
+                self.c1.append( set_default_if_blank(propFields[8],0.0))
+                self.c2.append( set_default_if_blank(propFields[9],0.0))
+                self.d1.append( set_default_if_blank(propFields[10],0.0))
+                self.d2.append( set_default_if_blank(propFields[11],0.0))
+                self.e1.append( set_default_if_blank(propFields[12],0.0))
+                self.e2.append( set_default_if_blank(propFields[13],0.0))
+                self.f1.append( set_default_if_blank(propFields[14],0.0))
+                self.f2.append( set_default_if_blank(propFields[15],0.0))
             #print "nRepeated = ",nRepeated
 
             # footer fields
@@ -1059,21 +1059,21 @@ class PBEAM(IntegratedLineProperty):
             self.so,self.xxb,self.A,self.i1,self.i2,self.i12,self.j,self.nsm,
             self.c1,self.c2,self.d1,self.d2,self.e1,self.e2,self.f1,self.f2):
 
-            i1  = setBlankIfDefault(i1,0.0)
-            i2  = setBlankIfDefault(i2,0.0)
-            i12 = setBlankIfDefault(i12,0.0)
-            j   = setBlankIfDefault(j,0.0)
+            i1  = set_blank_if_default(i1,0.0)
+            i2  = set_blank_if_default(i2,0.0)
+            i12 = set_blank_if_default(i12,0.0)
+            j   = set_blank_if_default(j,0.0)
 
-            nsm = setBlankIfDefault(nsm,0.0)
-            c1 = setBlankIfDefault(c1,0.0)
-            d1 = setBlankIfDefault(d1,0.0)
-            e1 = setBlankIfDefault(e1,0.0)
-            f1 = setBlankIfDefault(f1,0.0)
+            nsm = set_blank_if_default(nsm,0.0)
+            c1 = set_blank_if_default(c1,0.0)
+            d1 = set_blank_if_default(d1,0.0)
+            e1 = set_blank_if_default(e1,0.0)
+            f1 = set_blank_if_default(f1,0.0)
 
-            c2 = setBlankIfDefault(c2,0.0)
-            d2 = setBlankIfDefault(d2,0.0)
-            e2 = setBlankIfDefault(e2,0.0)
-            f2 = setBlankIfDefault(f2,0.0)
+            c2 = set_blank_if_default(c2,0.0)
+            d2 = set_blank_if_default(d2,0.0)
+            e2 = set_blank_if_default(e2,0.0)
+            f2 = set_blank_if_default(f2,0.0)
 
             #print "  i = ",i
             if i==0: # the 1st 2 fields aren't written
@@ -1081,29 +1081,29 @@ class PBEAM(IntegratedLineProperty):
             else:
                 fields += [so,xxb,A,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2]
             i+=1
-        k1 = setBlankIfDefault(self.k1, 1.0)
-        k2 = setBlankIfDefault(self.k2, 1.0)
-        s1 = setBlankIfDefault(self.s1, 0.0)
-        s2 = setBlankIfDefault(self.s2, 0.0)
+        k1 = set_blank_if_default(self.k1, 1.0)
+        k2 = set_blank_if_default(self.k2, 1.0)
+        s1 = set_blank_if_default(self.s1, 0.0)
+        s2 = set_blank_if_default(self.s2, 0.0)
         
-        nsia = setBlankIfDefault(self.nsia, 0.0)
-        nsib = setBlankIfDefault(self.nsib, self.nsia)
+        nsia = set_blank_if_default(self.nsia, 0.0)
+        nsib = set_blank_if_default(self.nsib, self.nsia)
 
-        cwa = setBlankIfDefault(self.cwa, 0.0)
-        cwb = setBlankIfDefault(self.cwb, self.cwa)
+        cwa = set_blank_if_default(self.cwa, 0.0)
+        cwb = set_blank_if_default(self.cwb, self.cwa)
 
-        m1a = setBlankIfDefault(self.m1a, 0.0)
-        m2a = setBlankIfDefault(self.m2a, self.m1a)
-        m1b = setBlankIfDefault(self.m1b, 0.0)
-        m2b = setBlankIfDefault(self.m2b, self.m1b)
+        m1a = set_blank_if_default(self.m1a, 0.0)
+        m2a = set_blank_if_default(self.m2a, self.m1a)
+        m1b = set_blank_if_default(self.m1b, 0.0)
+        m2b = set_blank_if_default(self.m2b, self.m1b)
 
         #print "m1a=%s m2a=%s" %(m1a,m2a)
         #print "m1b=%s m2b=%s" %(m1b,m2b)
 
-        n1a = setBlankIfDefault(self.n1a, 0.0)
-        n2a = setBlankIfDefault(self.n2a, self.n1a)
-        n1b = setBlankIfDefault(self.n1b, 0.0)
-        n2b = setBlankIfDefault(self.n2b, self.n1b)
+        n1a = set_blank_if_default(self.n1a, 0.0)
+        n2a = set_blank_if_default(self.n2a, self.n1a)
+        n1b = set_blank_if_default(self.n1b, 0.0)
+        n2b = set_blank_if_default(self.n2b, self.n1b)
         #print "n1a=%s n2a=%s" %(n1a,n2a)
         #print "n1b=%s n2b=%s" %(n1b,n2b)
 
@@ -1306,7 +1306,7 @@ class PBEAML(IntegratedLineProperty):
         return fields
 
     def reprFields(self):
-        group = setBlankIfDefault(self.group,'MSCBMLO')
+        group = set_blank_if_default(self.group,'MSCBMLO')
         fields = self.rawFields()
         fields[3] = group
         return fields

@@ -6,7 +6,8 @@ import sys
 from numpy import array,eye,cross #zeros,dot
 from numpy.linalg import det # inv
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import (set_blank_if_default,
+                                       set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.general.generalMath import (Area, Triangle_AreaCentroidNormal,
                                            Normal)
@@ -195,13 +196,13 @@ class CTRIA3(TriShell):
         return J
 
     def getReprDefaults(self):
-        zOffset   = setBlankIfDefault(self.zOffset, 0.0)
-        TFlag     = setBlankIfDefault(self.TFlag, 0)
-        thetaMcid = setBlankIfDefault(self.thetaMcid, 0.0)
+        zOffset   = set_blank_if_default(self.zOffset, 0.0)
+        TFlag     = set_blank_if_default(self.TFlag, 0)
+        thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
 
-        T1 = setBlankIfDefault(self.T1, 1.0)
-        T2 = setBlankIfDefault(self.T2, 1.0)
-        T3 = setBlankIfDefault(self.T3, 1.0)
+        T1 = set_blank_if_default(self.T1, 1.0)
+        T2 = set_blank_if_default(self.T2, 1.0)
+        T3 = set_blank_if_default(self.T3, 1.0)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
     def rawFields(self):
@@ -307,13 +308,13 @@ class CTRIA6(TriShell):
         self.nodes = [n1,n3,n2,n6,n5,n4]
         
     def getReprDefaults(self):
-        zOffset   = setBlankIfDefault(self.zOffset,0.0)
-        TFlag     = setBlankIfDefault(self.TFlag,0)
-        thetaMcid = setBlankIfDefault(self.thetaMcid,0.0)
+        zOffset   = set_blank_if_default(self.zOffset,0.0)
+        TFlag     = set_blank_if_default(self.TFlag,0)
+        thetaMcid = set_blank_if_default(self.thetaMcid,0.0)
 
-        T1 = setBlankIfDefault(self.T1,1.0)
-        T2 = setBlankIfDefault(self.T2,1.0)
-        T3 = setBlankIfDefault(self.T3,1.0)
+        T1 = set_blank_if_default(self.T1,1.0)
+        T2 = set_blank_if_default(self.T2,1.0)
+        T3 = set_blank_if_default(self.T3,1.0)
         return (thetaMcid,zOffset,TFlag,T1,T2,T3)
 
     def rawFields(self):
@@ -361,13 +362,13 @@ class CTRIAR(TriShell):
         self.nodes = [n1,n3,n2]
 
     def getReprDefaults(self):
-        zOffset   = setBlankIfDefault(self.zOffset,0.0)
-        TFlag     = setBlankIfDefault(self.TFlag,0)
-        thetaMcid = setBlankIfDefault(self.thetaMcid,0.0)
+        zOffset   = set_blank_if_default(self.zOffset,0.0)
+        TFlag     = set_blank_if_default(self.TFlag,0)
+        thetaMcid = set_blank_if_default(self.thetaMcid,0.0)
 
-        T1 = setBlankIfDefault(self.T1,1.0)
-        T2 = setBlankIfDefault(self.T2,1.0)
-        T3 = setBlankIfDefault(self.T3,1.0)
+        T1 = set_blank_if_default(self.T1,1.0)
+        T2 = set_blank_if_default(self.T2,1.0)
+        T3 = set_blank_if_default(self.T3,1.0)
         return (thetaMcid,zOffset,TFlag,T1,T2,T3)
 
     def rawFields(self):
@@ -466,9 +467,8 @@ class CTRIAX6(TriShell):
         return fields
 
     def reprFields(self):
-        th = setDefaultIfBlank(self.th,0.0)
-        fields = ['CTRIAX6',self.eid,self.Mid()]+self.nodeIDs()+[
-                  th]
+        th = set_default_if_blank(self.th, 0.0)
+        fields = ['CTRIAX6', self.eid, self.Mid()]+self.nodeIDs()+[th]
         return fields
 
 class QuadShell(ShellElement):
@@ -584,14 +584,14 @@ class QuadShell(ShellElement):
         self.nodes = [n1,n4,n3,n2]
 
     def getReprDefaults(self,debug=False):
-        zOffset   = setBlankIfDefault(self.zOffset,0.0)
-        TFlag     = setBlankIfDefault(self.TFlag,0)
-        thetaMcid = setBlankIfDefault(self.thetaMcid,0.0)
+        zOffset   = set_blank_if_default(self.zOffset,0.0)
+        TFlag     = set_blank_if_default(self.TFlag,0)
+        thetaMcid = set_blank_if_default(self.thetaMcid,0.0)
 
-        T1 = setBlankIfDefault(self.T1,1.0)
-        T2 = setBlankIfDefault(self.T2,1.0)
-        T3 = setBlankIfDefault(self.T3,1.0)
-        T4 = setBlankIfDefault(self.T4,1.0)
+        T1 = set_blank_if_default(self.T1,1.0)
+        T2 = set_blank_if_default(self.T2,1.0)
+        T3 = set_blank_if_default(self.T3,1.0)
+        T4 = set_blank_if_default(self.T4,1.0)
         if debug:
         #if 1:
             print("eid       = %s" %(self.eid))
@@ -776,7 +776,7 @@ class CQUAD4(QuadShell):
         triangle - 012
         triangle - 023
         """
-        zOffset = setBlankIfDefault(self.zOffset, 0.0)
+        zOffset = set_blank_if_default(self.zOffset, 0.0)
         nodes1 = [self.nodes[0], self.nodes[1], self.nodes[2]]
         nodes2 = [self.nodes[0], self.nodes[2], self.nodes[3]]
         fields1 = ['CTRIA3', self.eid, self.Pid()]+nodes1+[self.thetaMcid, zOffset]

@@ -3,8 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from pyNastran.bdf.fieldWriter import (printCard, setBlankIfDefault,
-                                       setDefaultIfBlank, isSame)
+from pyNastran.bdf.fieldWriter import (printCard, set_default_if_blank, isSame)
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 class BaseCard(BDFCard):
@@ -46,11 +45,6 @@ class BaseCard(BDFCard):
         """prints a card object"""
         #print "fields = ",fields
         return printCard(fields, tol)
-
-    def setDefaultIfBlank(self, value, default):
-        """used to initialize default values"""
-        #raise Exception('time to upgrade...')
-        return setDefaultIfBlank(value, default)
 
     def crossReference(self, model):
         #self.mid = model.Material(self.mid)

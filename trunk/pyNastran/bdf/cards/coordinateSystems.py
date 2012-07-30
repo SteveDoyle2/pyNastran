@@ -6,7 +6,7 @@ from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from numpy import array, cross, dot, transpose, zeros
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, BDFCard
 from pyNastran.general.general import ListPrint
 
@@ -735,7 +735,7 @@ class CORD2R(Cord2x, RectangularCoord):
         Cord2x.__init__(self, card, data)
         
     def rawFields(self):
-        rid = setBlankIfDefault(self.Rid(), 0)
+        rid = set_blank_if_default(self.Rid(), 0)
         fields = ['CORD2R', self.cid, rid] +list(self.e1)+list(self.e2)+list(self.e3)
         return fields
 
@@ -755,7 +755,7 @@ class CORD2S(Cord2x, SphericalCoord):
         Cord2x.__init__(self, card, data)
 
     def rawFields(self):
-        rid = setBlankIfDefault(self.Rid(), 0)
+        rid = set_blank_if_default(self.Rid(), 0)
         fields = ['CORD2S', self.cid, rid] +list(self.e1)+list(self.e2)+list(self.e3)
         return fields
 
@@ -774,6 +774,6 @@ class CORD2C(Cord2x, CylindricalCoord):
         Cord2x.__init__(self, card, data)
 
     def rawFields(self):
-        rid = setBlankIfDefault(self.Rid(), 0)
+        rid = set_blank_if_default(self.Rid(), 0)
         fields = ['CORD2C', self.cid, rid] +list(self.e1)+list(self.e2)+list(self.e3)
         return fields

@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
-from pyNastran.bdf.fieldWriter import printIntCard
+from pyNastran.bdf.fieldWriter import print_int_card
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
@@ -28,7 +28,7 @@ class Set(BaseCard):
         return fields
 
     def __repr__(self):
-        return printIntCard(self.reprFields())
+        return print_int_card(self.reprFields())
 
 class SetSuper(Set):
     """Generic Class all Superelement SETx cards inherit from."""

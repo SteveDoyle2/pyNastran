@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 class Load(BaseCard):
@@ -362,8 +362,8 @@ class TLOAD1(TabularLoad):
         return fields
 
     def reprFields(self):
-        us0 = setBlankIfDefault(self.us0, 0.0)
-        vs0 = setBlankIfDefault(self.vs0, 0.0)
+        us0 = set_blank_if_default(self.us0, 0.0)
+        vs0 = set_blank_if_default(self.vs0, 0.0)
         fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), us0, vs0]
         return fields
@@ -443,13 +443,13 @@ class TLOAD2(TabularLoad):
         #self.Type = card.field(4,0)
         #self.T1 = card.field(5,0.)
         #self.T2 = card.field(6,self.T1)
-        frequency = setBlankIfDefault(self.frequency,0.)
-        phase = setBlankIfDefault(self.phase,0.)
-        c = setBlankIfDefault(self.c,0.)
-        b = setBlankIfDefault(self.b,0.)
+        frequency = set_blank_if_default(self.frequency,0.)
+        phase = set_blank_if_default(self.phase,0.)
+        c = set_blank_if_default(self.c,0.)
+        b = set_blank_if_default(self.b,0.)
 
-        us0 = setBlankIfDefault(self.us0, 0.0)
-        vs0 = setBlankIfDefault(self.vs0, 0.0)
+        us0 = set_blank_if_default(self.us0, 0.0)
+        vs0 = set_blank_if_default(self.vs0, 0.0)
         fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type, 
                   self.T1, self.T2,self.frequency, phase, c, b, us0, vs0]
         return fields
@@ -489,10 +489,10 @@ class RFORCE(Load):
         return fields
 
     def reprFields(self):
-        #method = setBlankIfDefault(self.method,1)
-        racc = setBlankIfDefault(self.racc,0.)
-        mb = setBlankIfDefault(self.mb,0)
-        idrf = setBlankIfDefault(self.idrf,0)
+        #method = set_blank_if_default(self.method,1)
+        racc = set_blank_if_default(self.racc,0.)
+        mb = set_blank_if_default(self.mb,0)
+        idrf = set_blank_if_default(self.idrf,0)
         fields = ['RFORCE', self.sid, self.nid, self.cid, self.scale,
                   self.r1, self.r2, self.r3, self.method, racc,
                   mb, idrf]
@@ -562,7 +562,7 @@ class RLOAD1(TabularLoad):
         return fields
 
     def reprFields(self):
-        Type = setBlankIfDefault(self.Type, 'LOAD')
+        Type = set_blank_if_default(self.Type, 'LOAD')
         fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tc(), self.Td(), Type]
         return fields
@@ -635,7 +635,7 @@ class RLOAD2(TabularLoad):
         return fields
 
     def reprFields(self):
-        Type = setBlankIfDefault(self.Type, 0.0)
+        Type = set_blank_if_default(self.Type, 0.0)
         fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tb(), self.Tp(), Type]
         return fields

@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
 
 class PFAST(Property):
@@ -47,14 +47,14 @@ class PFAST(Property):
         return fields
 
     def reprFields(self):
-        mcid = setBlankIfDefault(self.mcid, -1)
-        mflag = setBlankIfDefault(self.mflag, 0)
-        kr1 = setBlankIfDefault(self.kr1, 0.0)
-        kr2 = setBlankIfDefault(self.kr2, 0.0)
-        kr3 = setBlankIfDefault(self.kr3, 0.0)
+        mcid = set_blank_if_default(self.mcid, -1)
+        mflag = set_blank_if_default(self.mflag, 0)
+        kr1 = set_blank_if_default(self.kr1, 0.0)
+        kr2 = set_blank_if_default(self.kr2, 0.0)
+        kr3 = set_blank_if_default(self.kr3, 0.0)
 
-        mass = setBlankIfDefault(self.mass, 0.0)
-        ge = setBlankIfDefault(self.ge, 0.0)
+        mass = set_blank_if_default(self.mass, 0.0)
+        ge = set_blank_if_default(self.ge, 0.0)
         fields = ['PFAST',self.pid,self.d,mcid,mflag,self.kt1,self.kt2,self.kt3,kr1,
                           kr2,kr3,mass,ge]
         return fields
@@ -110,16 +110,16 @@ class PGAP(Property):
         return fields
 
     def reprFields(self):
-        u0    = setBlankIfDefault(self.u0, 0.)
-        f0    = setBlankIfDefault(self.f0, 0.)
-        ka    = setBlankIfDefault(self.ka, 1.e8)
-        kb    = setBlankIfDefault(self.kb, 1e-14*self.ka)
-        kt    = setBlankIfDefault(self.kt, self.mu1*self.ka)
-        mu1   = setBlankIfDefault(self.mu1, 0.)
-        mu2   = setBlankIfDefault(self.mu2, self.mu1)
-        tmax  = setBlankIfDefault(self.tmax, 0.)
-        mar   = setBlankIfDefault(self.mar, 100.)
-        trmin = setBlankIfDefault(self.trmin, 0.001)
+        u0    = set_blank_if_default(self.u0, 0.)
+        f0    = set_blank_if_default(self.f0, 0.)
+        ka    = set_blank_if_default(self.ka, 1.e8)
+        kb    = set_blank_if_default(self.kb, 1e-14*self.ka)
+        kt    = set_blank_if_default(self.kt, self.mu1*self.ka)
+        mu1   = set_blank_if_default(self.mu1, 0.)
+        mu2   = set_blank_if_default(self.mu2, self.mu1)
+        tmax  = set_blank_if_default(self.tmax, 0.)
+        mar   = set_blank_if_default(self.mar, 100.)
+        trmin = set_blank_if_default(self.trmin, 0.001)
         
         fields = ['PGAP',self.pid, u0, f0, ka, kb, kt, mu1, mu2,
                          tmax, mar, trmin]
@@ -162,7 +162,7 @@ class PLSOLID(SolidProperty):
         self.mid = model.Material(self.mid)
 
     def rawFields(self):
-        stressStrain = setBlankIfDefault(self.str, 'GRID')
+        stressStrain = set_blank_if_default(self.str, 'GRID')
         fields = ['PLSOLID', self.pid, self.Mid(), stressStrain]
         return fields
 
@@ -208,8 +208,8 @@ class PSOLID(SolidProperty):
         return fields
 
     def reprFields(self):
-        cordm = setBlankIfDefault(self.cordm, 0)
-        fctn  = setBlankIfDefault(self.fctn, 'SMECH')
+        cordm = set_blank_if_default(self.cordm, 0)
+        fctn  = set_blank_if_default(self.fctn, 'SMECH')
         fields = ['PSOLID',self.pid,self.Mid(),cordm,self.integ,self.stress,self.isop,fctn]
         return fields
 
@@ -261,9 +261,9 @@ class PRAC2D(CrackProperty):
         return fields
 
     def reprFields(self):
-        nsm   = setBlankIfDefault(self.nsm, 0.)
-        gamma = setBlankIfDefault(self.gamma, 0.5)
-        phi   = setBlankIfDefault(self.phi, 180.)
+        nsm   = set_blank_if_default(self.nsm, 0.)
+        gamma = set_blank_if_default(self.gamma, 0.5)
+        phi   = set_blank_if_default(self.phi, 180.)
         fields = ['PRAC2D',self.pid,self.Mid(),self.thick,self.iPlane,nsm,gamma,phi]
         return fields
 
@@ -296,13 +296,13 @@ class PRAC3D(CrackProperty):
         self.mid = model.Material(self.mid) # MAT1, MAT9
 
     def rawFields(self):
-        fields = ['PRAC3D',self.pid,self.Mid(),self.gamma,self.phi]
+        fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
         return fields
 
     def reprFields(self):
-        gamma = setBlankIfDefault(self.gamma, 0.5)
-        phi   = setBlankIfDefault(self.phi, 180.)
-        fields = ['PRAC3D',self.pid,self.Mid(),gamma,phi]
+        gamma = set_blank_if_default(self.gamma, 0.5)
+        phi   = set_blank_if_default(self.phi, 180.)
+        fields = ['PRAC3D', self.pid, self.Mid(), gamma, phi]
         return fields
 
 class PCONEAX(Property): #not done

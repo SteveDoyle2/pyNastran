@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 from numpy import array, pi
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 
 
@@ -213,13 +213,13 @@ class AESURF(BaseCard):
         return fields
 
     def reprFields(self):
-        eff   = setBlankIfDefault(self.eff, 1.0)
-        ldw   = setBlankIfDefault(self.ldw, 'LDW')
-        crefc = setBlankIfDefault(self.crefc, 1.0)
-        crefs = setBlankIfDefault(self.crefs, 1.0)
+        eff   = set_blank_if_default(self.eff, 1.0)
+        ldw   = set_blank_if_default(self.ldw, 'LDW')
+        crefc = set_blank_if_default(self.crefc, 1.0)
+        crefs = set_blank_if_default(self.crefs, 1.0)
 
-        pllim = setBlankIfDefault(self.pllim, -pi/2.)
-        pulim = setBlankIfDefault(self.pulim,  pi/2.)
+        pllim = set_blank_if_default(self.pllim, -pi/2.)
+        pulim = set_blank_if_default(self.pulim,  pi/2.)
         
         fields = ['AESURF', self.aesid, self.cntlid, self.label, self.cid1, self.alid1, self.cid2, self.alid2, eff, ldw,
                            crefc, crefs, pllim, pulim, self.hmllim, self.hmulim, self.tqllim, self.tqulim]
@@ -319,8 +319,8 @@ class AERO(Aero):
         return fields
 
     def reprFields(self):
-        symXZ = setBlankIfDefault(self.symXZ, 0)
-        symXY = setBlankIfDefault(self.symXY, 0)
+        symXZ = set_blank_if_default(self.symXZ, 0)
+        symXY = set_blank_if_default(self.symXY, 0)
         fields = ['AERO', self.acsid, self.velocity, self.cRef, self.rhoRef, symXZ, symXY]
         return fields
 
@@ -357,8 +357,8 @@ class AEROS(Aero):
         return fields
 
     def reprFields(self):
-        symXZ = setBlankIfDefault(self.symXZ, 0)
-        symXY = setBlankIfDefault(self.symXY, 0)
+        symXZ = set_blank_if_default(self.symXZ, 0)
+        symXY = set_blank_if_default(self.symXY, 0)
         fields = ['AEROS', self.acsid, self.rcsid, self.cRef, self.bRef, self.Sref, symXZ, symXY]
         return fields
 
@@ -503,9 +503,9 @@ class CAERO1(BaseCard):
         return fields
 
     def reprFields(self):
-        cp     = setBlankIfDefault(self.Cp(), 0)
-        nspan  = setBlankIfDefault(self.nspan, 0)
-        nchord = setBlankIfDefault(self.nchord, 0)
+        cp     = set_blank_if_default(self.Cp(), 0)
+        nspan  = set_blank_if_default(self.nspan, 0)
+        nchord = set_blank_if_default(self.nchord, 0)
         fields = ['CAERO1', self.eid, self.Pid(), cp, nspan, nchord, self.lspan, self.lchord, self.igid,
                          ]+list(self.p1)+[self.x12]+list(self.p4)+[self.x43]
         return fields
@@ -598,7 +598,7 @@ class CAERO2(BaseCard):
         return fields
 
     def reprFields(self):
-        cp     = setBlankIfDefault(self.Cp(), 0)
+        cp     = set_blank_if_default(self.Cp(), 0)
         fields = ['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint, self.lsb, self.lint, self.igid,
                          ]+list(self.p1)+[self.x12]
         return fields
@@ -704,7 +704,7 @@ class FLUTTER(BaseCard):
 
     def _reprNValueOMax(self):
         if self.method in ['K', 'KE']:
-            imethod = setBlankIfDefault(self.imethod, 'L')
+            imethod = set_blank_if_default(self.imethod, 'L')
             return (imethod,self.nValue)
             assert self.imethod in ['L', 'S']
         elif self.method in ['PKS', 'PKNLS']:
@@ -989,11 +989,11 @@ class SPLINE1(Spline):
         return fields
 
     def reprFields(self):
-        dz        = setBlankIfDefault(self.dz, 0.)
-        method    = setBlankIfDefault(self.method, 'IPS')
-        usage     = setBlankIfDefault(self.usage, 'BOTH')
-        nelements = setBlankIfDefault(self.nelements, 10)
-        melements = setBlankIfDefault(self.melements, 10)
+        dz        = set_blank_if_default(self.dz, 0.)
+        method    = set_blank_if_default(self.method, 'IPS')
+        usage     = set_blank_if_default(self.usage, 'BOTH')
+        nelements = set_blank_if_default(self.nelements, 10)
+        melements = set_blank_if_default(self.melements, 10)
         
         fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2, self.Set(), dz, method, usage,
                             nelements, melements]
@@ -1058,8 +1058,8 @@ class SPLINE2(Spline):
         return fields
 
     def reprFields(self):
-        dz    = setBlankIfDefault(self.dz, 0.)
-        usage = setBlankIfDefault(self.usage, 'BOTH')
+        dz    = set_blank_if_default(self.dz, 0.)
+        usage = set_blank_if_default(self.usage, 'BOTH')
         fields = ['SPLINE2',self.eid, self.CAero(), self.id1, self.id2, self.Set(), dz, self.dtor, self.Cid(),
                             self.thx, self.thy, None, usage]
         return fields
@@ -1131,11 +1131,11 @@ class SPLINE4(Spline):
         return fields
 
     def reprFields(self):
-        dz        = setBlankIfDefault(self.dz, 0.)
-        method    = setBlankIfDefault(self.method, 'IPS')
-        usage     = setBlankIfDefault(self.usage, 'BOTH')
-        nelements = setBlankIfDefault(self.nelements, 10)
-        melements = setBlankIfDefault(self.melements, 10)
+        dz        = set_blank_if_default(self.dz, 0.)
+        method    = set_blank_if_default(self.method, 'IPS')
+        usage     = set_blank_if_default(self.usage, 'BOTH')
+        nelements = set_blank_if_default(self.nelements, 10)
+        melements = set_blank_if_default(self.melements, 10)
         
         fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None, self.Set(), dz, method, usage,
                             nelements, melements]
@@ -1206,8 +1206,8 @@ class SPLINE5(Spline):
         return fields
 
     def reprFields(self):
-        dz    = setBlankIfDefault(self.dz, 0.)
-        usage = setBlankIfDefault(self.usage, 'BOTH')
+        dz    = set_blank_if_default(self.dz, 0.)
+        usage = set_blank_if_default(self.usage, 'BOTH')
         fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None, self.Set(), dz, self.dtor, self.Cid(),
                             self.thx, self.thy, None, usage]
         return fields

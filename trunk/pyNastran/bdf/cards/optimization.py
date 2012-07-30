@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 #import sys
 
-from pyNastran.bdf.fieldWriter import setBlankIfDefault
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 
 
@@ -36,10 +36,10 @@ class DCONSTR(OptConstraint):
         return fields
 
     def reprFields(self):
-        lid    = setBlankIfDefault(self.lid, -1e20)
-        uid    = setBlankIfDefault(self.uid,  1e20)
-        lowfq  = setBlankIfDefault(self.lowfq, 0.0)
-        highfq = setBlankIfDefault(self.highfq, 1e20)
+        lid    = set_blank_if_default(self.lid, -1e20)
+        uid    = set_blank_if_default(self.uid,  1e20)
+        lowfq  = set_blank_if_default(self.lowfq, 0.0)
+        highfq = set_blank_if_default(self.highfq, 1e20)
         fields = ['DCONSTR', self.oid, self.rid, lid, uid, lowfq, highfq]
         return fields
 
@@ -60,9 +60,9 @@ class DESVAR(OptConstraint):
         return fields
 
     def reprFields(self):
-        xlb  = setBlankIfDefault(self.xlb, -1e20)
-        xub  = setBlankIfDefault(self.xub,  1e20)
-        delx = setBlankIfDefault(self.delx, 1e20)
+        xlb  = set_blank_if_default(self.xlb, -1e20)
+        xub  = set_blank_if_default(self.xub,  1e20)
+        delx = set_blank_if_default(self.delx, 1e20)
         fields = ['DESVAR', self.oid, self.label, self.xinit, xlb, xub, delx, self.ddval]
         return fields
 
@@ -139,8 +139,8 @@ class DLINK(OptConstraint):
         return fields
 
     def reprFields(self):
-        c0    = setBlankIfDefault(self.c0, 0.)
-        cmult = setBlankIfDefault(self.cmult, 1.)
+        c0    = set_blank_if_default(self.c0, 0.)
+        cmult = set_blank_if_default(self.cmult, 1.)
         fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
         for (idv, ci) in zip(self.IDv, self.Ci):
             fields += [idv, ci]
@@ -163,8 +163,8 @@ class DSCREEN(OptConstraint):
         return fields
 
     def reprFields(self):
-        trs  = setBlankIfDefault(self.trs,  -0.5)
-        nstr = setBlankIfDefault(self.nstr, 20)
+        trs  = set_blank_if_default(self.trs,  -0.5)
+        nstr = set_blank_if_default(self.nstr, 20)
         fields = ['DSCREEN', self.rType, trs, nstr]
         return fields
 
@@ -270,9 +270,9 @@ class DRESP2(OptConstraint):
         return fields
 
     def reprFields(self):
-        method = setBlankIfDefault(self.method, 'MIN')
-        c1 = setBlankIfDefault(self.c1, 100.)
-        c2 = setBlankIfDefault(self.c2, 0.005)
+        method = set_blank_if_default(self.method, 'MIN')
+        c1 = set_blank_if_default(self.c1, 100.)
+        c2 = set_blank_if_default(self.c2, 0.005)
 
         fields = ['DRESP2', self.oid, self.label, self.eqidFunc, self.region, method, c1, c2, self.c3]
         fields += self.packParams()
@@ -330,8 +330,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         return fields
 
     def reprFields(self):
-        mpMax = setBlankIfDefault(self.mpMax, 1e20)
-        c0    = setBlankIfDefault(self.c0, 0.)
+        mpMax = set_blank_if_default(self.mpMax, 1e20)
+        c0    = set_blank_if_default(self.c0, 0.)
         fields = ['DVMREL1', self.oid, self.Type, self.Mid(), self.mpName, self.mpMin, mpMax, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)
@@ -388,8 +388,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         return fields
 
     def reprFields(self):
-        pMax = setBlankIfDefault(self.pMax, 1e20)
-        c0   = setBlankIfDefault(self.c0, 0.)
+        pMax = set_blank_if_default(self.pMax, 1e20)
+        c0   = set_blank_if_default(self.c0, 0.)
         fields = ['DVPREL1',self.oid,self.Type,self.Pid(),self.pNameFid,self.pMin,pMax,c0,None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             fields.append(dvid)

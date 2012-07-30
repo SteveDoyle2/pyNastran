@@ -437,8 +437,8 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
     def cycleResults(self):
         plotNodal      = self.isNodal
         plotCentroidal = self.isCentroidal
-        print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
-        print("nCases = %i" %(self.nCases+1))
+        #print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
+        #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
             return
 
