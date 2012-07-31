@@ -1,15 +1,15 @@
-import os
+#import os
 import sys
-import copy
+#import copy
 
 from math import ceil,sin,cos,radians
-from numpy import array,zeros,ones,transpose,cross,dot
-from numpy.linalg import norm
+from numpy import array,zeros,ones
 
-from panairGridPatch import PanairPatch,PanairWakePatch,PanairGridHelper,sInt
+
+from panairGridPatch import PanairPatch,PanairWakePatch,PanairGridHelper
 from panairWrite import PanairWrite
 
-from pyNastran.general.general import ListPrint
+#from pyNastran.general.general import ListPrint
 
 #CL = -Fx*sin(alpha)*cos(beta) + Fy*sin(alpha)*sin(beta) +Fz*cos(alpha)
 #CD =  Fx*cos(alpha)*cos(beta) - Fy*cos(alpha)*sin(beta) +Fz*sin(alpha)
@@ -144,7 +144,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
 
         outfile.close()
 
-    def removeComments(self,lines):
+    def removeComments(self, lines):
         lines2 = []
         for line in lines:
             line = line.rstrip().lower()
@@ -158,23 +158,22 @@ class PanairGrid(PanairGridHelper,PanairWrite):
                 # else: skip
             else:
                 lines2.append(line)
-        #sys.exit('stopping')
         
         return lines2
 
-    def getTitle(self,section):
+    def getTitle(self, section):
         #print "hi"
         #self.title = section[1:]
         self.titleSection = '\n'.join(section)+'\n'
         self.titleLines = section[1:]
         return True
 
-    def getDataCheck(self,section):
+    def getDataCheck(self, section):
         self.dataCheck = int(float(section[1][0:10]))
         self.dataCheck = 2
         return True
 
-    def getSymmetry(self,section):
+    def getSymmetry(self, section):
         """
         $symmetry - xz plane of symmetry
         =misymm   mjsymm
@@ -235,18 +234,18 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         self.patches[patch.iNetwork] = patch # deepcopy?
         self.nNetworks+=1
     
-    def findPatchByName(self,netName):
+    def findPatchByName(self, netName):
         names = []
         for patchID,patch in self.patches.items():
             self.log.debug("patchID=%s" %(patchID))
             #self.log.debug("*patch = %s" %(patch))
             self.log.debug("patch.netName=%s" %(patch.netName))
-            if patch.netName==netName:
+            if patch.netName == netName:
                 return patch
             names.append(patch.netName)
-        raise Exception('couldnt findPatchbyName name=|%s| names=%s' %(netName,names))
+        raise KeyError('couldnt findPatchbyName name=|%s| names=%s' %(netName,names))
 
-    def getPoints(self,section):
+    def getPoints(self, section):
         """
         $points - wing-body  with composite panels
         =kn                                               cpnorm
@@ -277,7 +276,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
             nn = int(float(section[n-1][10:20]))
             netName = section[n-1][70:80]
             self.log.debug("kt=%s nm=%s nn=%s netname=%s" %(kt,nm,nn,netName))
-            #sys.exit('asdf')
+
             x = zeros([nm,nn])
             y = zeros([nm,nn])
             z = zeros([nm,nn])
@@ -554,7 +553,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
 
         return True
 
-    def getTrailingWakes(self,section):
+    def getTrailingWakes(self, section):
         """
         $trailing wakes from body
         =kn                                               cpnorm
@@ -586,10 +585,10 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         #matcw = int(float(section[2][10:20]))
         
         n=3
-        self.msg += '      kn,kt            %i          %i\n' %(nNetworks,kt)
-        self.log.debug('kt=%s cpNorm=%s matchw=%s' %(kt,cpNorm,matchw))
+        self.msg += '      kn,kt            %i          %i\n' % (nNetworks,kt)
+        self.log.debug('kt=%s cpNorm=%s matchw=%s' % (kt,cpNorm,matchw))
         for iNetwork in range(nNetworks):
-            self.log.debug("lines[* %s] = %s" %(n,section[n]))
+            self.log.debug("lines[* %s] = %s" % (n,section[n]))
             
             trailedPanel = section[n][ 0:10].strip()
             edgeNumber   = int(float(section[n][10:20]))
@@ -610,9 +609,9 @@ class PanairGrid(PanairGridHelper,PanairWrite):
             (p1,x1,y1,z1) = patch.getEdge(edgeNumber)
 
             nPoints = len(x1)
-            X = zeros([2,nPoints])
-            Y = zeros([2,nPoints])
-            Z = zeros([2,nPoints])
+            X = zeros([2, nPoints])
+            Y = zeros([2, nPoints])
+            Z = zeros([2, nPoints])
             
             X[0][:] = x1[0]
             Y[0][:] = y1[0]
@@ -624,7 +623,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
                 Z[1][:] = z1[0]
             else:
                 #alphaC, betaC
-                raise Exception('tWake isnt supported')
+                raise NotImplementedError('tWake isnt supported')
             self.log.debug("--X---")
             self.log.debug(X)
             self.log.debug("--Y---")
@@ -633,13 +632,14 @@ class PanairGrid(PanairGridHelper,PanairWrite):
             self.log.debug(Z)
             #nm = int(float(section[n-1][0 :10]))
             #nn = int(float(section[n-1][10:20]))
-            options = [kt,cpNorm,matchw,trailedPanel,edgeNumber,xWake,tWake]
-            patch = self.addWakePatch(netName,options,X,Y,Z)
+            options = [kt, cpNorm, matchw, trailedPanel, edgeNumber, xWake,
+                       tWake]
+            patch = self.addWakePatch(netName, options, X, Y, Z)
             n+=1
         ###
         return True
 
-    def getPartialEdgeAbutments(self,section):
+    def getPartialEdgeAbutments(self, section):
         self.peaSection = '\n'.join(section)+'\n'
         return True
 
@@ -648,8 +648,8 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         msg += '%10s'*6 %(self.epsgeo,self.igeoin,self.igeout,self.nwxref,self.triint,self.iabsum) + '\n'
         return msg
 
-    def getLiberalizedAbutments(self,section):
-        self.log.debug("section[1] = %s" %(section[1]))
+    def getLiberalizedAbutments(self, section):
+        self.log.debug("section[1] = %s" % (section[1]))
         self.epsgeo = section[1][ 0:10].strip()
         if self.epsgeo:
             self.epsgeo = float(self.epsgeo)
@@ -697,11 +697,11 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         # -1.0 no abutment printout
         return True
 
-    def getSectionalProperties(self,section):
+    def getSectionalProperties(self, section):
         self.sectionalPropSection = '\n'.join(section)+'\n'
         return True
 
-    def getFlowfieldProperties(self,section):
+    def getFlowfieldProperties(self, section):
         self.flowSection = '\n'.join(section)+'\n'
         return True
 

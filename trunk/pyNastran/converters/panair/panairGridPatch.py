@@ -1,5 +1,6 @@
 import sys
-from numpy import array,zeros
+from numpy import array, zeros, cross, transpose
+from numpy.linalg import norm
 
 def sInt(value):
     """
@@ -46,15 +47,15 @@ class PanairPatch(object):
         elif self.kt==20:
             src=0; dblt=20; nlopt1=0; nropt1=9; nlopt2=6; nropt2= 2; ipot=2
         else:
-            raise Exception('new kt...')
+            raise NotImplementedError('new kt...kt=%s' %(self.kt))
         pts =self.nPoints()
         pans=self.nPanels()
         #cumPts=33
         #cumPn =50
-        msg +=' %-10s %4s %7s %7s %3s '   %(self.netName,self.iNetwork+1,self.nRows,self.nCols,self.kt,)
-        msg += '%4s %5s %7s %7s %7s %7s ' %(src,dblt,nlopt1,nropt1,nlopt2,nropt2)
-        msg += '%7s %7s %7s %7s '         %(ipot,pts,pans,self.cpNorm)
-        msg += '%7s %7s\n'                %(cumPts,cumPn)
+        msg +=' %-10s %4s %7s %7s %3s '   % (self.netName, self.iNetwork+1, self.nRows, self.nCols, self.kt,)
+        msg += '%4s %5s %7s %7s %7s %7s ' % (src, dblt, nlopt1, nropt1, nlopt2, nropt2)
+        msg += '%7s %7s %7s %7s '         % (ipot, pts, pans, self.cpNorm)
+        msg += '%7s %7s\n'                % (cumPts, cumPn)
         return msg
 
     def nPanels(self):
@@ -85,7 +86,7 @@ class PanairPatch(object):
         p4 = self.getPointID(r+1,c  )
         return (p1,p2,p3,p4)
 
-    def getSubpanelProperties(self,iPanel):
+    def getSubpanelProperties(self, iPanel):
         (p1,p2,p3,p4) = self.getPanelPoints(iPanel)
         p5 = 0.5*(p1+p2)
         p6 = 0.5*(p2+p3)
@@ -176,32 +177,32 @@ class PanairPatch(object):
         edgeNumber=2
         #edgeNumber = 4
         #print "edgeNumber=%s" %(edgeNumber)
-        if edgeNumber==1:
+        if edgeNumber == 1:
             x = self.x[0][:]
             y = self.y[0][:]
             z = self.z[0][:] # pretty sure edge 1 is the 0th row
             p = [iCol for iCol in range(self.nCols)] # good
-        elif edgeNumber==2:
-            self.log.debug("x.shape = %s" %(str(self.x.shape)))
+        elif edgeNumber == 2:
+            self.log.debug("x.shape = %s" % (str(self.x.shape)))
             x = self.x[:][self.nCols-1]
             y = self.y[:][self.nCols-1]
             z = self.z[:][self.nCols-1] # pretty sure edge 2 is the 0th row
             p = [iCol*(self.nRows)+(self.nRows-1) for iCol in range(self.nCols)]  #
             #p = [iRow*(self.nCols)+(self.nCols-1) for iRow in range(self.nRows)]  #
-        elif edgeNumber==3:
+        elif edgeNumber == 3:
             x = self.x[self.nRows-1][:]
             y = self.y[self.nRows-1][:]
             z = self.z[self.nRows-1][:] # pretty sure edge3 is the last row
             p = [iCol+self.nRows*iCol for iCol in range(self.nCols)] # good
             #p = [(self.nCols-1)*(self.nRows)+iRow for iRow in range(self.nRows)]
-        elif edgeNumber==4:
+        elif edgeNumber == 4:
             x = self.x[:][0]
             y = self.y[:][0]
             z = self.z[:][0] # pretty sure edge 2 is the 0th row
             p = [self.nRows*iCol for iCol in range(self.nCols)] # good
         else:
-            raise Exception('invalid edge; edgeNumber=%s' %(edgeNumber))
-        self.log.debug("nRows=%s nCols=%s edgeNumber=%s" %(self.nRows,self.nCols,edgeNumber))
+            raise ValueError('invalid edge; edgeNumber=%s' % (edgeNumber))
+        self.log.debug("nRows=%s nCols=%s edgeNumber=%s" % (self.nRows, self.nCols, edgeNumber))
         #print "nx = ",len(x)
         #print "p = ",p
         #print "x = ",x
@@ -213,8 +214,6 @@ class PanairPatch(object):
             p2 = self.getIPoint(pointID)
             #print "point[%s]=%s" %(pointID,p2)
 
-        #if edgeNumber != 1:
-        #    sys.exit('asdf')
         return (p,x,y,z)
 
     def getEdges(self):
@@ -365,7 +364,6 @@ class PanairPatch(object):
             pointOut.append(sValue.rstrip('0'))
             #print "sValue=%s len=%s" %(sValue,len(sValue))
         #print "pointOut = ",pointOut
-        #sys.exit('stopping...')
         return pointOut
 
 class PanairWakePatch(PanairPatch):

@@ -1011,12 +1011,12 @@ class PBEAM(IntegratedLineProperty):
 
     #def Area(self):
     #    """@warning area field not supported fully on PBEAM card"""
-    #    #raise Exception(self.A[0])
+    #    #raise RuntimeError(self.A[0])
     #    return self.A[0]
 
     #def Nsm(self):
     #    """@warning nsm field not supported fully on PBEAM card"""
-    #    #raise Exception(self.nsm[0])
+    #    #raise RuntimeError(self.nsm[0])
     #    return self.nsm[0]
 
     def MassPerLength(self):
@@ -1371,7 +1371,6 @@ class PBEAM3(LineProperty): # not done, cleanup
 
     def Nsm(self):
         """@warning nsm field not supported fully on PBEAM3 card"""
-        #raise Exception(self.nsm[0])
         return self.nsm
 
     def crossReference(self, model):
@@ -1458,7 +1457,7 @@ class PBEND(LineProperty):
 
     #def Nsm(self):
         #"""@warning nsm field not supported fully on PBEND card"""
-        #raise Exception(self.nsm[0])
+        #raise RuntimeError(self.nsm[0])
         #return self.nsm
 
     def crossReference(self, model):
@@ -1474,6 +1473,6 @@ class PBEND(LineProperty):
             fields += [self.fsi, self.rm, self.t, self.p, self.rb, self.thetab,
                        None, None, self.nsm, self.rc, self.zc]
         else:
-            raise Exception('only beamType=1 and 2 supported')
+            raise ValueError('only beamType=1 and 2 supported')
         return fields
 

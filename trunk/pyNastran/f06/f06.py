@@ -242,7 +242,7 @@ class F06(OES,OUG,OQG,F06Writer):
         #print ''.join(self.storedLines)
         self.Title = subcaseName #'no title'
         #print "Title = ",self.Title
-        #sys.exit()
+
         #print "subcaseLine = |%r|" %(subcaseName)
         if subcaseName=='':
             iSubcase = 1

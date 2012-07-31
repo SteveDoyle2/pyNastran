@@ -76,7 +76,7 @@ def makeEnd():
     return ''.join(lines)
 
 class MatlabWriter(object):
-    def __init__(self,model='tria3'):
+    def __init__(self, model='tria3'):
         self.Title = ''
         self.setF06Name(model)
 
@@ -84,9 +84,11 @@ class MatlabWriter(object):
         self.model = model
         self.f06OutName = '%s.f06.out' %(self.model)
 
-    def loadOp2(self,isTesting=False):
+    def loadOp2(self, isTesting=False):
         if isTesting==False:  ## @todo implement in way that doesnt require a variable (e.g. check parent class)
-            raise Exception("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
+            msg = ("Don't call this method unless you're testing the "
+                   "F06Writer.  It breaks the F06 and OP2 classes.")
+            raise RuntimeError(msg)
         from pyNastran.op2.op2 import OP2
         self.op2Name = model+'.op2'
         op2 = OP2(self.op2Name)

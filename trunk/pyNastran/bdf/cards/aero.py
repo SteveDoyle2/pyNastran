@@ -1027,8 +1027,6 @@ class SPLINE2(Spline):
             self.thy   = card.field(10)
             
             self.usage = card.field(12, 'BOTH')
-            #print self
-            #raise Exception(str(self))
         else:
             raise NotImplementedError('not supported')
         ###
@@ -1169,8 +1167,6 @@ class SPLINE5(Spline):
             self.thy   = card.field(10)
             
             self.usage = card.field(12, 'BOTH')
-            #print self
-            #raise Exception(str(self))
         else:
             raise NotImplementedError('not supported')
         ###

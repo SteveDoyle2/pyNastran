@@ -959,7 +959,6 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 passCard = True
                 card = rawCard
                 #print(rawCard)
-                #sys.exit()
             elif not self._is_reject(cardName):
                 #print ""
                 #print "not a reject"

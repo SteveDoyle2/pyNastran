@@ -61,7 +61,7 @@ class CGAP(Element):
                 self.x   = [x1, x2, x3]
                 self.cid = card.field(8, 0)
             else:
-                #raise Exception('invalid CGAP...x1/g0 = |%s|' %(x1G0))
+                #raise RuntimeError('invalid CGAP...x1/g0 = |%s|' %(x1G0))
                 self.g0 = None
                 self.x  = [None, None, None]
                 self.cid = None

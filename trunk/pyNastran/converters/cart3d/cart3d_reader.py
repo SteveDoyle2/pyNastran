@@ -243,18 +243,18 @@ class Cart3DAsciiReader(object):
     def writeElements(self,f,nodes,elements):
         msg = ''
         strElements = len(str(len(elements)))
-        format = " %%%ss " %(strElements)
-        #format = '%-10s '+format*3 + '\n'
-        #format = format*3 + '\n'
-        #print "format = ",format
+        Format = " %%%ss " %(strElements)
+        #Format = '%-10s '+Format*3 + '\n'
+        #Format = Format*3 + '\n'
+        #print "Format = ",Format
 
         maxNodes = []
         for (iElement,element) in sorted(elements.items()):
             #self.log.info("element = %s" %(element))
-            #msg += format %(iElement,element[0],element[1],element[2])
-            msg  += "%s  %s  %s\n" %(element[0],element[1],element[2])
+            #msg += Format %(iElement,element[0],element[1],element[2])
+            msg  += "%s  %s  %s\n" %(element[0], element[1], element[2])
             for nid in element:
-                assert nid in nodes,'nid=%s is missing' %(nid)
+                assert nid in nodes, 'nid=%s is missing' % (nid)
 
             maxNode = max(element)
             maxNodes.append(maxNode)
@@ -287,7 +287,7 @@ class Cart3DAsciiReader(object):
             self.nPoints,self.nElements,self.nResults = int(sline[0]),int(sline[1]),int(sline[2])
             self.cartType = 'result'
         else:
-            raise Exception('invalid result type')
+            raise ValueError('invalid result type')
 
         if self.readHalf:
             self.nElementsRead = self.nElements//2
@@ -391,13 +391,6 @@ class Cart3DAsciiReader(object):
                     r+=1
         ###
         return regions
-    
-    def getLoads(self,outputs):   ## TODO:  outputs isnt used...
-        loads = self.readResults(self,i,self.infile)
-        #Cp = [0.1]*self.nElements ## TODO:  Cp is hardcoded to 0.1
-        loads = {'Cp':Cp,'rho':[],'U':[],'V':[],'W':[],'pressure':[]}
-        raise Exception('DEPRECIATED...')
-        return loads
 
     def readResults(self,i,infile):
         """
@@ -473,8 +466,8 @@ class Cart3DAsciiReader(object):
         try:
             sline2 = convertToFloat(sline)
         except ValueError:
-            print "sline = %s" %sline
-            raise Exception('cannot parse %s' %(sline))
+            print("sline = %s" %(sline))
+            raise SyntaxError('cannot parse %s' %(sline))
         return sline2
 
     def getValue(self,sline):
@@ -486,10 +479,10 @@ class Cart3DAsciiReader(object):
     def exportToNastran(self,fname,points,elements,regions):
         from pyNastran.bdf.fieldWriter import printCard
         
-        f = open(fname,'wb')
-        for nid,grid in enumerate(1,points):
-            (x,y,z) = grid
-            f.write(printCard(['GRID',nid,'',x,y,z]))
+        f = open(fname, 'wb')
+        for nid, grid in enumerate(1, points):
+            (x, y, z) = grid
+            f.write(printCard(['GRID', nid, '', x, y, z]))
         ###
 
         e = 1e7
@@ -603,19 +596,19 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         #while size>0: # 4k is 1000 points
         n=nPoints
         if size>0:
-            leftover = size-(nPoints-np)*12
+            #leftover = size-(nPoints-np)*12
             data = self.op2.read(size)
             #print "leftover=%s size//4=%s" %(leftover,size//4)
             Format = '>'+'f'*(size//4)
 
             #print "len(data) = ",len(data)
-            nodeXYZs = list(unpack(Format,data))
+            nodeXYZs = list(unpack(Format, data))
             while nodeXYZs:
                 z = nodeXYZs.pop()
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
                 node = [x,y,z]
-                assert n not in nodes,'nid=%s in nodes' %(nid)
+                assert n not in nodes,'nid=%s in nodes' %(n)
                 nodes[n] = node
                 n-=1
                 np+=1

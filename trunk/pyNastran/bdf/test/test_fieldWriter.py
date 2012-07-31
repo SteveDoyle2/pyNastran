@@ -69,7 +69,7 @@ class TestFieldWriter(unittest.TestCase):
         if val != 0:
             p = (val-valueIn)/val
             if p>0.01:
-                raise Exception('val=%s valueIn=%s' %(val, valueIn))
+                raise ValueError('val=%s valueIn=%s' %(val, valueIn))
         #assert allclose(val,valueIn),
 
 if __name__ == "__main__":

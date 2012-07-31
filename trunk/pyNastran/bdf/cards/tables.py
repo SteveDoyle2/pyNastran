@@ -16,7 +16,7 @@ class Table(BaseCard):
         if axis==0:
             axisType = 'LINEAR'
         else:
-            raise Exception('axis=|%s|' %(axis))
+            raise ValueError('axis=|%s|' %(axis))
         return axisType
 
     def parseFields(self, fields, nRepeated, isData=False):
@@ -326,27 +326,28 @@ class TABRND1(RandomTable):
             self.yaxis = self.mapAxis(data[2])
             fields = data[3:]
             isData = True
-        assert self.xaxis in ['LINEAR','LOG'],'xaxis=|%s|' %(self.xaxis)
-        assert self.yaxis in ['LINEAR','LOG'],'yaxis=|%s|' %(self.yaxis)
-        self.parseFields(fields,nRepeated=2,isData=isData)
+        assert self.xaxis in ['LINEAR', 'LOG'], 'xaxis=|%s|' % (self.xaxis)
+        assert self.yaxis in ['LINEAR', 'LOG'], 'yaxis=|%s|' % (self.yaxis)
+        self.parseFields(fields, nRepeated=2, isData=isData)
 
-    def parseFields(self,fields,nRepeated,isData=False):
-        self.table = TableObj(fields,nRepeated,isData)
+    def parseFields(self,fields, nRepeated, isData=False):
+        self.table = TableObj(fields, nRepeated, isData)
 
-    def mapAxis(self,axis):
-        if axis==0:
+    def mapAxis(self, axis):
+        if axis == 0:
             axisType = 'LINEAR'
         else:
-            raise Exception('axis=|%s|' %(axis))
+            raise ValueError('axis=|%s|' %(axis))
         return axisType
 
     def rawFields(self):
-        fields = ['TABRND1',self.tid,self.xaxis,self.yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
+        fields = ['TABRND1', self.tid, self.xaxis, self.yaxis, None, None,
+                  None, None, None]+self.table.fields()+['ENDT']
         return fields
 
     def reprFields(self):
-        xaxis = set_blank_if_default(self.xaxis,'LINEAR')
-        yaxis = set_blank_if_default(self.yaxis,'LINEAR')
+        xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
+        yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
         fields = ['TABRND1',self.tid,xaxis,yaxis,None,None,None,None,None]+self.table.fields()+['ENDT']
         return fields
 

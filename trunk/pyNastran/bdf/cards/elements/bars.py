@@ -1218,9 +1218,9 @@ class CBEND(LineElement):
             self.x2 = card.field(6)
             self.x3 = card.field(7)
         else:
-            raise Exception('invalid x1Go=|%s| on CBEND' %(x1Go))
+            raise ValueError('invalid x1Go=|%s| on CBEND' % (x1Go))
         self.geom = card.field(8)
-        assert self.geom in [1,2,3,4],'geom is invalid geom=|%s|' %(self.geom)
+        assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=|%s|' % (self.geom)
 
     def Area(self):
         return self.pid.Area()

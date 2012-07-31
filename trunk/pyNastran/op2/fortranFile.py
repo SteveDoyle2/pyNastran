@@ -236,7 +236,6 @@ class FortranFile(object):
             #data2 = data[:nMax]
         
         msg = ''
-        #raise Exception('disabled...')
         ints    = self.getInts(data2)
         #longs   = self.getLongs(data2)
         floats  = self.getFloats(data2)

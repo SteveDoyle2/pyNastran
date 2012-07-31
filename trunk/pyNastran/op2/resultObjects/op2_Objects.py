@@ -230,13 +230,6 @@ class scalarObject(baseScalarObject):
             msg += '\n'
         ###
         return msg+'\n'
-            
-    #def printDataMember(word,selfVarName):
-        #msg = ''
-        #if self.getVar(selfVarName):
-            #msg += '%s = %s' %(word,selfVarName)
-        #raise Exception('do i need this...msg=%s' %(msg))
-        #return msg
 
     def recastGridType(self,gridType):
         """converts a gridType integer to a string"""

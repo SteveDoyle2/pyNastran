@@ -199,12 +199,7 @@ class OES(object):
             #print "*",out
             data.append(out)
             self.i+=2
-            ###
-        ###
-        #print "--------"
-        #for line in data:
-            #print line
-        #sys.exit()
+
         return data
 
     def getQuadCompositeStress(self):
@@ -334,8 +329,7 @@ class OES(object):
             sline += self.parseLine(line,[   float, float,float,float, float,float,float, float]) # line 2
             data.append(sline)
             self.i+=2
-            ###
-        ###
+
         return data
 
     def getQuadStress(self):
@@ -423,7 +417,7 @@ class OES(object):
                 data.append(sline)
                 line = self.infile.readline() # blank line
                 self.i+=3
-            ###
+
             for i in range(4):
                 line = self.infile.readline()[1:].strip().split()
                 sline = self.parseLine(line,[int,float, float,float,float, float,float,float, float]) # line 1
@@ -433,8 +427,7 @@ class OES(object):
                 data.append(sline)
                 line = self.infile.readline() # blank line
                 self.i+=3
-            ###
-        ###
+
         return data
 
     def getSolidStressHexa(self):
