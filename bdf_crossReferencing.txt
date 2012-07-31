@@ -191,7 +191,7 @@ SUPORT1 (???)
 LOAD    (done)
 LSEQ    (done)
 
-RFORCE
+RFORCE  (no)
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
@@ -204,7 +204,6 @@ PLOAD1  (done)
 PLOAD2  (done)
 PLOAD4  (done)
 PLOADB3
-RLOAD   (no)
 
 MOMENT  (done)
 MOMENT1 (done)

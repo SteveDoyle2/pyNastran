@@ -1,14 +1,24 @@
 from __future__ import absolute_import
 
-import sys
 import os
+import sys
 from applyLicense import getFoldersFiles
 
 #assert sys.version_info[:2]==(2,7),'this must be done in python 2.7'
 
 def fix_object(files):
+    isPython3 = True
+    isPython2 = False
+    assert isPython3 != isPython2
+    
     for fname in files:
-        if '.py' in fname:
+
+        if '.py' in fname and '.pyx' not in fname and 'licenses' not in fname:
+            #print fname,
+            
+            #print os.path.dirname('licenses')==os.path.relpath(os.path.dirname(os.path.abspath(fname)))
+            #sys.exit()
+
             print "adding fname=%s" %(fname)
             f = open(fname,'r')
             lines = f.readlines()
@@ -36,21 +46,32 @@ def fix_object(files):
                     isPound = False
                     line = codeLine
 
-                #line = ''
-                #if '(object):' in line:
-                    #line = line.replace('(object):','():')
-                if 'nested_scopes' in line or print_function in line:
-                    line = ''
-                elif 'unicode' in line:
-                    line = line.replace('unicode','str')
-                elif '.iteritems()' in line:
-                    line = line.replace('.iteritems()','.items()')
-                elif '.itervalues()' in line:
-                    line = line.replace('.itervalues()','.values()')
-                elif '.iterkeys()' in line:
-                    line = line.replace('.iterkeys()','.keys()')
-                elif '.izip()' in line:
-                    line = line.replace('.izip()','.zip()')
+                if isPython2:
+                    if 'nested_scopes' in line:
+                        line = ''
+                    elif 'unicode_literals' in line:
+                        line = 'from __future__ import division, print_function'
+                    elif 'unicode' in line:
+                        line = line.replace('unicode','str')
+
+                elif isPython3:
+                    #line = ''
+                    #if '(object):' in line:
+                        #line = line.replace('(object):','():')
+                    if 'nested_scopes' in line:
+                        line = ''
+                    elif 'unicode_literals' in line:
+                        line = ''
+                    elif 'unicode' in line:
+                        line = line.replace('unicode','str')
+                    elif '.iteritems()' in line:
+                        line = line.replace('.iteritems()','.items()')
+                    elif '.itervalues()' in line:
+                        line = line.replace('.itervalues()','.values()')
+                    elif '.iterkeys()' in line:
+                        line = line.replace('.iterkeys()','.keys()')
+                    elif '.izip()' in line:
+                        line = line.replace('.izip()','.zip()')
 
                 #elif ",'wb')" in line:
                     #assert 'open' in line,codeLine
@@ -71,8 +92,8 @@ def fix_object(files):
                 lines2.append(line)
             
             #print "len(lines2) = ",len(lines2)
-            f = open(fname,'wb')
-            #f = open('bbb.py','wb')
+            f = open(fname, 'wb')
+            #f = open('bbb.py', 'wb')
             for line in lines2:
                 f.write(line.rstrip('\n\r')+'\n')
                 #print line.rstrip()
