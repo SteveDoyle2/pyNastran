@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 
-from pyNastran.bdf.fieldWriter import (printCard, set_default_if_blank, isSame)
+from pyNastran.bdf.fieldWriter import (printCard, set_default_if_blank,
+                                       is_same)
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 class BaseCard(BDFCard):
@@ -25,7 +26,7 @@ class BaseCard(BDFCard):
 
     def isSameFields(self, fields1, fields2):
         for (field1, field2) in zip(fields1, fields2):
-            if not isSame(field1, field2):
+            if not is_same(field1, field2):
                 return False
             ###
         ###

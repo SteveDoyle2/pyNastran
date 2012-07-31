@@ -140,9 +140,9 @@ class FrameVTK(object):
         self.renWin.SetWindowName("pyNastran v%s - %s" %(version,bdfFileName))
         iren.Start()
 
-    def loadGeometry(self,bdfFileName):
+    def loadGeometry(self,bdf_filename):
         model = BDF()
-        model.readBDF(bdfFileName)
+        model.readBDF(bdf_filename)
 
         nNodes    = model.nNodes()
         nElements = model.nElements()

@@ -56,7 +56,7 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
         f06 = F06(f06file, debug=debug)
         #f06.setSubcases(iSubcases)  ## @todo not supported
 
-        #f06.readBDF(f06.bdfFileName,includeDir=None,xref=False)
+        #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
         f06.readF06()
         #tableNamesF06 = parseTableNamesFromF06(f06.f06FileName)
         #tableNamesF06 = f06.getTableNamesFromF06()

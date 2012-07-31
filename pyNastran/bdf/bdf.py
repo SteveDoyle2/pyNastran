@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914,W0201,C0302,W0611
+# pylint: disable=C0103,C0302,R0902,R0904,R0914,W0201,W0611
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
@@ -129,11 +129,11 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## that isnt supported
         self.rejects = []
         ## cards that were created, but not processed
-        self.rejectCards = []
+        self.reject_cards = []
         ## list of execive control deck lines
-        self.executiveControlLines = []
+        self.executive_control_lines = []
         ## list of case control deck lines
-        self.caseControlLines = []
+        self.case_control_lines = []
 
         ## the list of possible cards that will be parsed
         self.cardsToRead = set([
@@ -299,7 +299,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         References:
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
-        self.bdfFileName = None
+        self.bdf_filename = None
         self.autoReject = False
         self.solmap_toValue = {
                         
@@ -397,7 +397,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         ## the line with SOL on it, marks ???
         self.iSolLine  = None
         self.caseControlDeck = CaseControlDeck([], self.log)
-        #self.executiveControlLines = [self.sol]
+        #self.executive_control_lines = [self.sol]
 
         # main structural block
         ## store the PARAM cards
@@ -570,7 +570,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         self._set_infile(infilename, includeDir)
 
-        fname = self.print_filename(self.bdfFileName)
+        fname = self.print_filename(self.bdf_filename)
         self.log.debug('---starting BDF.readBDF of %s---' %(fname))
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
@@ -579,7 +579,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         if self.debug:
             self.log.debug("*BDF.readBDF")
         self._read_executive_control_deck()
-        self._read_case_control_deck(self.bdfFileName)
+        self._read_case_control_deck(self.bdf_filename)
         self._read_bulk_data_deck()
 
         self.crossReference(xref=xref)
@@ -602,7 +602,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """
         self._set_infile(infilename, includeDir)
 
-        fname = self.print_filename(self.bdfFileName)
+        fname = self.print_filename(self.bdf_filename)
         self.log.debug('---starting BDF.readBDF_Punch of %s---' %(fname))
         #self.log.info('xref=%s' %(xref))
         sys.stdout.flush()
@@ -625,21 +625,21 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def _read_executive_control_deck(self):
         """reads the executive control deck"""
-        self.open_file(self.bdfFileName)
+        self.open_file(self.bdf_filename)
         line = ''
         emptyLines = 0
         while emptyLines < 50 and 'CEND' not in line.upper()[:4]:
             line = self.infilesPack[-1].readline()
             line = line.rstrip('\n\r\t ')
             if(len(line) > 0):
-                self.executiveControlLines.append(line)
+                self.executive_control_lines.append(line)
             else:
                 emptyLines += 1
             ###
         ###
 
         if 0: # old method; breaks DMAP alters
-            while len(self.activeFileNames) > 0: # keep going until finished
+            while len(self._active_filenames) > 0: # keep going until finished
                 lineIn = self.get_next_line()
                 #print(lineIn)
                 if lineIn == None:  # file was closed and a 2nd readCaseControl
@@ -649,7 +649,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 if self.debug:
                     (n) = self.get_line_number()
                     self.log.debug("executiveLine[%s] = |%s|" %(n, line))
-                self.executiveControlLines.append(lineIn)
+                self.executive_control_lines.append(lineIn)
                 if 'CEND' in line.upper():
                     break
                 ###
@@ -658,7 +658,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
     def _parse_executive_control_deck(self):
         """extracts the solution from the executive control deck"""
-        for (i, eline) in enumerate(self.executiveControlLines):
+        for (i, eline) in enumerate(self.executive_control_lines):
             #print 'eLine = |%r|' %(eline)
             uline = eline.strip().upper()  # uppercase line
             uline = uline.split('$')[0]
@@ -780,7 +780,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         #self.caseControlControlLines = []
 
         i = 0
-        while len(self.activeFileNames)>0: # keep going until finished
+        while len(self._active_filenames)>0: # keep going until finished
         #while 'BEGIN BULK' not in line:
             lineIn = self.get_next_line()
             #print("lineIn = |%r|" % (lineIn))
@@ -805,18 +805,19 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                                    'Case Control Deck < 600')
             i += 1
         #self.log.info("finished with Case Control Deck..")
-        #print "self.caseControlLines = ",self.caseControlLines
+        #print("self.case_controlLines = ",self.case_control_lines)
         
-        #for line in self.caseControlLines:
+        #for line in self.case_control_lines:
             #print "** line=|%r|" %(line)
 
-        self.caseControlDeck = CaseControlDeck(self.caseControlLines, self.log)
+        self.caseControlDeck = CaseControlDeck(self.case_control_lines,
+                                               self.log)
         self.caseControlDeck.solmap_toValue = self.solmap_toValue
         self.caseControlDeck.rsolmap_toStr  = self.rsolmap_toStr
 
         #print "done w/ case control..."
         #print '***********************'
-        return self.caseControlLines
+        return self.case_control_lines
 
     def _checkForIncludeFile_CaseControlDeck(self, lineIn, line, lineUpper):
         """
@@ -849,10 +850,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             self._read_case_control_deck(filename)
             line = nextLine
             #print "appending |%r|" %(nextLine)
-            self.caseControlLines.append(nextLine)
+            self.case_control_lines.append(nextLine)
         else:
             #print "appending |%r|" %(lineIn)
-            self.caseControlLines.append(lineIn)
+            self.case_control_lines.append(lineIn)
         ###
         return (line, lineUpper)
 
@@ -931,10 +932,10 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         """parses the Bulk Data Deck"""
         if self.debug:
             self.log.debug("*read_bulk_data_deck")
-        self.open_file(self.bdfFileName)
+        self.open_file(self.bdf_filename)
 
         #old_card_obj = BDFCard()
-        while len(self.activeFileNames) > 0: # keep going until finished
+        while len(self._active_filenames) > 0: # keep going until finished
             ## gets the cardLines
             (rawCard, card, cardName) = self._get_card(debug=False)
             #print "outcard = ",card
@@ -957,7 +958,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             if self._is_special_card(cardName):
                 passCard = True
                 card = rawCard
-                print(rawCard)
+                #print(rawCard)
                 #sys.exit()
             elif not self._is_reject(cardName):
                 #print ""
@@ -1020,7 +1021,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #print ""
             
             #print "self.linesPack[-1] = ",len(self.linesPack[-1])
-            #print "self.activeFileNames = ",self.activeFileNames
+            #print "self._active_filenames = ",self._active_filenames
         ### end of while loop
 
         #self.debug = True
@@ -1088,12 +1089,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         try:
             if self.autoReject == True:
                 print('rejecting processed %s' %(card))
-                self.rejectCards.append(card)
+                self.reject_cards.append(card)
             elif card == [] or cardName == '':
                 pass
             elif cardName == 'DMIG': # not done...
                 if cardObj.field(2)=='UACCEL': # special DMIG card
-                    self.rejectCards.append(card)
+                    self.reject_cards.append(card)
                 elif cardObj.field(2)==0:
                     dmig = DMIG(cardObj)
                     self.addDMIG(dmig)
@@ -1768,49 +1769,49 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
 
             # SETx
             elif cardName == 'ASET':
-                setObj = ASET(cardObj)
-                self.addASet(setObj)
+                set_obj = ASET(cardObj)
+                self.addASet(set_obj)
             elif cardName == 'BSET':
-                setObj = BSET(cardObj)
-                self.addBSet(setObj)
+                set_obj = BSET(cardObj)
+                self.addBSet(set_obj)
             elif cardName == 'CSET':
-                setObj = CSET(cardObj)
-                self.addCSet(setObj)
+                set_obj = CSET(cardObj)
+                self.addCSet(set_obj)
             elif cardName == 'QSET':
-                setObj = QSET(cardObj)
-                self.addQSet(setObj)
+                set_obj = QSET(cardObj)
+                self.addQSet(set_obj)
             elif cardName == 'ASET1':
-                setObj = ASET1(cardObj)
-                self.addASet(setObj)
+                set_obj = ASET1(cardObj)
+                self.addASet(set_obj)
             elif cardName == 'BSET1':
-                setObj = BSET1(cardObj)
-                self.addBSet(setObj)
+                set_obj = BSET1(cardObj)
+                self.addBSet(set_obj)
             elif cardName == 'CSET1':
-                setObj = CSET1(cardObj)
-                self.addCSet(setObj)
+                set_obj = CSET1(cardObj)
+                self.addCSet(set_obj)
             elif cardName == 'QSET1':
-                setObj = QSET1(cardObj)
-                self.addQSet(setObj)
+                set_obj = QSET1(cardObj)
+                self.addQSet(set_obj)
 
             #elif cardName == 'USET':
-            #    setObj = USET(cardObj)
-            #    self.addSet(setObj)
+            #    set_obj = USET(cardObj)
+            #    self.addSet(set_obj)
             #elif cardName == 'USET1':
-            #    setObj = USET1(cardObj)
-            #    self.addSet(setObj)
+            #    set_obj = USET1(cardObj)
+            #    self.addSet(set_obj)
             elif cardName == 'SET1':
-                setObj = SET1(cardObj)
-                self.addSet(setObj)
+                set_obj = SET1(cardObj)
+                self.addSet(set_obj)
             #elif cardName == 'SET2':
-            #    setObj = SET2(cardObj)
-            #    self.addSet(setObj)
+            #    set_obj = SET2(cardObj)
+            #    self.addSet(set_obj)
             elif cardName == 'SET3':
-                setObj = SET3(cardObj)
-                self.addSet(setObj)
+                set_obj = SET3(cardObj)
+                self.addSet(set_obj)
 
             elif cardName == 'SESET':
-                setObj = SESET(cardObj)
-                self.addSetSuper(setObj)
+                set_obj = SESET(cardObj)
+                self.addSetSuper(set_obj)
 
             # optimization
             elif cardName == 'DCONSTR':
@@ -1957,12 +1958,12 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 ## are not announced when they are rejected
                 if '=' not in card[0]:
                     print('rejecting processed %s' %(card))
-                self.rejectCards.append(card)
+                self.reject_cards.append(card)
             ###
         except:
             print("cardName = |%r|" %(cardName))
             print("failed! Unreduced Card=%s\n" %(ListPrint(card)))
-            print("filename = %s\n" %(self.bdfFileName))
+            print("filename = %s\n" %(self.bdf_filename))
             sys.stdout.flush()
             raise
 

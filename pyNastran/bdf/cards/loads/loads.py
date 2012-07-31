@@ -390,7 +390,7 @@ class TLOAD2(TabularLoad):
         self.Type = card.field(4,0)
         
         ## Time constant. (Real >= 0.0)
-        if delay==0:
+        if self.delay==0:
             self.T1 = card.field(5,0.)
         else:
             self.T1 = card.field(5)

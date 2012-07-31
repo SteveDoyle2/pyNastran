@@ -7,10 +7,11 @@ import sys
 class BDFReader(object):
     def __init__(self, debug, log):
         self.relpath = True
-        if sys.version_info < (2,6):
+        if sys.version_info < (2, 6):
             #version = sys.version_info
             self.relpath = False
-            #raise Exception("must use python 2.6 or greater...version=%s" %(str(version)))
+            #raise RuntimeError("must use python 2.6 or greater...version=%s"
+            #                   %(str(version)))
 
         if log is None:
             from pyNastran.general.logger import dummyLogger
@@ -30,7 +31,7 @@ class BDFReader(object):
         @param filename a filename string
         @retval filenameString a shortened representation of the filename
         """
-        driveLetter = os.path.splitdrive(filename)[0]
+        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
         if driveLetter == os.path.splitdrive(os.curdir)[0] and self.relpath:
             return os.path.relpath(filename)
         else:
@@ -44,7 +45,7 @@ class BDFReader(object):
         """
         #print self.isOpened
         if self.isOpened[infileName] == False:
-            self.activeFileNames.append(infileName)
+            self._active_filenames.append(infileName)
             #self.log.info("*openFile bdf=|%s|  pwd=|%s|" %(infileName,
             #                                               os.getcwd()))
             if not os.path.exists(infileName):
@@ -67,7 +68,7 @@ class BDFReader(object):
         @param self the object pointer
         @retval lineNumber the active file's line number
         """
-        filename   = self.activeFileNames[-1]
+        filename   = self._active_filenames[-1]
         return (filename, self.get_line_number())
 
     def get_line_number(self):
@@ -119,11 +120,11 @@ class BDFReader(object):
         infile.close()
 
         #if debug:
-        #    print [os.path.relpath(fname) for fname in self.activeFileNames]
+        #    print [os.path.relpath(fname) for fname in self._active_filenames]
         lineNumbers = self.lineNumbers.pop()
-        activeFileName = self.activeFileNames.pop()
+        active_filename = self._active_filenames.pop()
         linesPack = self.linesPack.pop()
-        self.isOpened[activeFileName] = False
+        self.isOpened[active_filename] = False
         
         if len(self.linesPack) == 0:
             raise IOError('\nThe bdf closed unexpectedly...\n  an Executive '
@@ -135,20 +136,20 @@ class BDFReader(object):
         ## opportunity
         self.doneReading = False
         if debug:
-            fnameA = self.print_filename(activeFileName)
-            fnameB = self.print_filename(self.bdfFileName)
+            fnameA = self.print_filename(active_filename)
+            fnameB = self.print_filename(self.bdf_filename)
 
-            self.log.debug("activeFileName=|%s| infilename=%s len(pack)=%s\n"
+            self.log.debug("active_filename=|%s| infilename=%s len(pack)=%s\n"
                          %(fnameA,fnameB,nlines))
         ###
         #print "\n\n"
 
-    def _set_infile(self, bdfFileName, includeDir=None):
+    def _set_infile(self, bdf_filename, includeDir=None):
         """
         Sets up the basic file/lines/cardCounting operations
         @param self
           the BDF object
-        @param bdfFileName
+        @param bdf_filename
           the input BDF filename
         @param includeDir
           the location of include files if an absolute/relative path is
@@ -162,9 +163,9 @@ class BDFReader(object):
         self.foundEndData = False
 
         if includeDir is None:
-            includeDir = os.path.dirname(bdfFileName)
+            includeDir = os.path.dirname(bdf_filename)
         ## the active filename (string)
-        self.bdfFileName = bdfFileName
+        self.bdf_filename = bdf_filename
         ## the directory of the 1st BDF (include BDFs are relative to this one)
         self.includeDir = includeDir
         ## list of infile objects (needed for INCLUDE files)
@@ -172,13 +173,13 @@ class BDFReader(object):
         ## list of lines from self.activeFilename that are stored
         self.linesPack       = []
         ## list of all open filenames
-        self.activeFileNames = []
+        self._active_filenames = []
         ## stores the line number of self.activefilename that the parser is on
         ## very helpful when debugging
         self.lineNumbers     = []
-        ## dictionary that says whether self.bdfFileName is open/close
+        ## dictionary that says whether self.bdf_filename is open/close
         ## (boolean)
-        self.isOpened = {self.bdfFileName: False}
+        self.isOpened = {self.bdf_filename: False}
         ## list of all read in cards - useful in determining if
         ## entire BDF was read & really useful in debugging
         self.cardCount = {}
