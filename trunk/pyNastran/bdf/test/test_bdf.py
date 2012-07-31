@@ -11,7 +11,6 @@ numpy.seterr(all='raise')
 import traceback
 
 from pyNastran.general.general import printBadPath
-#from pyNastran.bdf.errors import ScientificCardParseError
 from pyNastran.bdf.bdf import BDF, CTRIAX, CTRIAX6
 from pyNastran.bdf.bdf import (ShellElement, SolidElement, LineElement,
                                RigidElement, SpringElement, PointElement,
@@ -29,7 +28,8 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
     filenames  = os.listdir(folder)
     run_lots_of_files(filenames, debug=debug, xref=xref, check=check, cid=cid)
 
-def run_lots_of_files(filenames, folder='',debug=False, xref=True, check=True, cid=None):
+def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
+                      cid=None):
     filenames = list(set(filenames))
     filenames.sort()
 
@@ -45,7 +45,7 @@ def run_lots_of_files(filenames, folder='',debug=False, xref=True, check=True, c
     failedFiles = []
     for filename in filenames2:
         absFilename = os.path.abspath(os.path.join(folder, filename))
-        if folder!='':
+        if folder != '':
             print("filename = %s" %(absFilename))
         isPassed = False
         try:
@@ -57,8 +57,6 @@ def run_lots_of_files(filenames, folder='',debug=False, xref=True, check=True, c
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
         #except SyntaxError:
-        #    pass
-        #except ScientificParseError:
         #    pass
         except SystemExit:
             sys.exit('sys.exit...')
@@ -94,8 +92,8 @@ def runBDF(folder, bdfFilename, debug=False, xref=True, check=True, cid=None,
     fem2 = None
     diffCards = []
     try:
-        #print "xref = ",xref
-        (outModel) = run_fem1(fem1,bdfModel,meshForm,xref,cid)
+        #print("xref = ", xref)
+        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, cid)
 
         (fem2) = run_fem2(bdfModel, outModel, xref, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check)
@@ -139,7 +137,8 @@ def run_fem1(fem1, bdfModel, meshForm, xref, cid):
     elif meshForm == 'separate':
         fem1.writeBDF(outModel)
     else:
-        raise NotImplementedError("meshForm=|%r| allowedForms=['combined','separate']" %(meshForm))
+        msg = "meshForm=|%r| allowedForms=['combined','separate']" % (meshForm)
+        raise NotImplementedError(msg)
     #fem1.writeAsCTRIA3(outModel)
     return (outModel)
 
@@ -169,7 +168,7 @@ def divide(value1, value2):
     else:
         try:
             v = value1/float(value2)
-        except:
+        except ZeroDivisionError:
             v = 0.
         ###
     ###
@@ -194,11 +193,15 @@ def compute_ints(cards1, cards2, fem1):
 
     for key in sorted(allKeys):
         msg = ''
-        if key in listKeys1: value1 = cards1[key]
-        else:                value1 = 0
+        if key in listKeys1:
+            value1 = cards1[key]
+        else:
+            value1 = 0
 
-        if key in listKeys2: value2 = cards2[key]
-        else:                value2 = 0
+        if key in listKeys2:
+            value2 = cards2[key]
+        else:
+            value2 = 0
         
         diff = abs(value1-value2)
         star = ' '
@@ -207,13 +210,14 @@ def compute_ints(cards1, cards2, fem1):
         if key not in fem1.cardsToRead:
             star = '-'
 
-        factor1 = divide(value1,value2)
-        factor2 = divide(value2,value1)
+        factor1 = divide(value1, value2)
+        factor2 = divide(value2, value1)
         factorMsg = ''
         if factor1 != factor2:
-            factorMsg = 'diff=%s factor1=%g factor2=%g' %(diff, factor1, factor2)
-
-        msg += '  %skey=%-7s value1=%-7s value2=%-7s' %(star, key, value1, value2)+factorMsg #+'\n'
+            factorMsg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
+                                                          factor2)
+        msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (star, key, value1,
+                                                       value2)+factorMsg #+'\n'
         msg = msg.rstrip()
         print(msg)
     ###
@@ -230,7 +234,7 @@ def compute(cards1, cards2):
     listKeys2 = list(cardKeys2)
     msg = ''
     if diffKeys1 or diffKeys2:
-        msg = 'diffKeys1=%s diffKeys2=%s' %(diffKeys1, diffKeys2)
+        msg = 'diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2)
 
     for key in sorted(allKeys):
         msg = ''
@@ -245,24 +249,27 @@ def compute(cards1, cards2):
             value2 = 0
         
         if key == 'INCLUDE':
-            msg += '    key=%-7s value1=%-7s value2=%-7s' %(key, value1, value2)
+            msg += '    key=%-7s value1=%-7s value2=%-7s' % (key,
+                                                             value1, value2)
         else:
-            msg += '   *key=%-7s value1=%-7s value2=%-7s' %(key, value1, value2)
+            msg += '   *key=%-7s value1=%-7s value2=%-7s' % (key,
+                                                             value1, value2)
         msg = msg.rstrip()
         print(msg)
     ###
 
 def get_element_stats(fem1, fem2):
+    """verifies that the various element methods work"""
     for (key, loads) in sorted(fem1.loads.iteritems()):
         for load in loads:
             try:
                 allLoads = load.getLoads()
                 if not isinstance(allLoads, list):
-                    raise TypeError('allLoads should return a list...%s' %(
-                                    type(allLoads)))
+                    raise TypeError('allLoads should return a list...%s'
+                                    %(type(allLoads)))
             except:
-                print("load statistics not available - load.type=%s load.sid=%s"
-                    %(load.type, load.sid))
+                print("load statistics not available - load.type=%s "
+                      "load.sid=%s" %(load.type, load.sid))
                 raise
             
 
@@ -270,7 +277,7 @@ def get_element_stats(fem1, fem2):
         try:
             if isinstance(e, ShellElement):
                 a   = e.Area()
-                if (isinstance(e,CTRIAX) or isinstance(e,CTRIAX6)):
+                if (isinstance(e, CTRIAX) or isinstance(e, CTRIAX6)):
                     pass
                 else:
                     t   = e.Thickness()
@@ -412,9 +419,9 @@ def main():
     xref        = args.xref
     check       = args.check
     debug       = not(args.quiet)
-    bdfFileName = args.bdfFileName[0]
+    bdf_filename = args.bdfFileName[0]
 
-    runBDF('.', bdfFileName, debug=debug, xref=xref, check=check)
+    runBDF('.', bdf_filename, debug=debug, xref=xref, check=check)
 
 if __name__ == '__main__':
     main()

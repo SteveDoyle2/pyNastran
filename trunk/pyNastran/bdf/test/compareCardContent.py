@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.bdf.bdfInterface.BDF_Card import wipeEmptyFields
-from pyNastran.bdf.fieldWriter import printField, printCard
+from pyNastran.bdf.fieldWriter import print_field, printCard
 
 def assert_fields(card1, card2):
     try:
@@ -19,8 +19,8 @@ def assert_fields(card1, card2):
         raise RuntimeError(msg)
 
     for (i, (field1, field2)) in enumerate(zip(fields1, fields2)):
-        value1 = printField(field1)
-        value2 = printField(field2)
+        value1 = print_field(field1)
+        value2 = print_field(field2)
         if value1 != value2:
             msg = 'value1 != value2\n'
             msg += ('cardName=%s ID=%s i=%s field1=%r field2=%r value1=%r '
