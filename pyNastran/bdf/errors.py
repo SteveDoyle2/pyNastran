@@ -5,6 +5,9 @@ class CardParseError(SyntaxError):
 class ParamParseError(CardParseError):
     pass
 
+class ScientificCardParseError(CardParseError):
+    pass
+
 #-----------------------------------------------------
 
 class CardInstantiationError(RuntimeError):
