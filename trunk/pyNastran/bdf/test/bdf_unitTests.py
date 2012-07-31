@@ -5,7 +5,7 @@ import unittest
 import pyNastran
 testPath = pyNastran.__path__[0]
 #print("testPath = %s" %(testPath))
-from pyNastran.bdf.test.test_bdf import runBDF, runAllFilesInFolder
+from pyNastran.bdf.test.test_bdf import runBDF, run_all_files_in_folder
 
 class Tester(unittest.TestCase):
 
@@ -17,7 +17,7 @@ class Tester(unittest.TestCase):
                meshForm=meshForm, debug=debug)
 
     def runAllFilesInFolder(self, folder, xref=False, cid=None, debug=False):
-        runAllFilesInFolder(folder, xref=xref, cid=cid, debug=debug)
+        run_all_files_in_folder(folder, xref=xref, cid=cid, debug=debug)
 
 
 class BDF_Test(Tester):
