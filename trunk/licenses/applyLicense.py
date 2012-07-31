@@ -8,13 +8,13 @@ def getFoldersFiles(dirname):
     I'm sure there's an automatic way to create this...
     try using os.walk
     """
-    #print dirname
+    print(dirname)
     filesFolders = os.listdir(dirname)
     
     files = []
     folders = []
     for fileFolder in filesFolders:
-        if '.svn' not in fileFolder and 'op4' not in fileFolder:
+        if '.svn' not in fileFolder:
             fullPath = os.path.join(dirname,fileFolder)
             if os.path.isdir(fullPath):
                 (subFolders,fullPaths) = getFoldersFiles(fullPath)
@@ -27,7 +27,7 @@ def getFoldersFiles(dirname):
                     files.append(fullPath)
                 ###
             else:
-                if '.pyc' not in fileFolder and '.bdf' not in fileFolder and '__init__.py' not in fileFolder:
+                if '.pyc' not in fileFolder and '.pyx' not in fileFolder and '.bdf' not in fileFolder and '__init__.py' not in fileFolder:
                     #print "B %s" %(fullPath)
                     files.append(fullPath)
                 ###
@@ -100,10 +100,13 @@ def cleanHeader(lines):
     return lines2
 
 def updateCopyright():
-    (folders,files) = getFoldersFiles(pyNastran.__file__[0])
+    # must be in ../licenses
+    dirname = os.path.relpath(os.path.dirname(pyNastran.__file__))
+    print("dirname = %s" %(dirname))
+    (folders,files) = getFoldersFiles(dirname)
     printTree(files)
 
-    header = open('header.txt','r')
+    header = open(os.path.join('licenses','header.txt'),'r')
     headerLines = header.readlines()
     header.close()
 

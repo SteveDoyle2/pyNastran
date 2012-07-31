@@ -176,10 +176,10 @@ SUPORT1 (done)
 LOAD    (done)
 LSEQ    (done)
 
-RFORCE
 FORCE   (done)
 FORCE1  (done)
 FORCE2  (done)
+RFORCE  (done)
 
 ACCEL1  (done)
 GRAV    (done)
@@ -189,7 +189,6 @@ PLOAD1  (done)
 PLOAD2  (done)
 PLOAD4  (done)
 PLOADB3
-RLOAD   (done)
 
 MOMENT  (done)
 MOMENT1 (done)
