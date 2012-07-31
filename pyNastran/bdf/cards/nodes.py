@@ -189,7 +189,7 @@ class GRIDB(Node):
         Node.__init__(self, card, data)
 
         if card:
-            raise Exception('not implemented...')
+            raise NotImplementedError('GRIDB data')
         else:
             print(data)
             self.nid = data[0]

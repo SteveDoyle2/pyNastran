@@ -21,7 +21,6 @@ class ShellElement(Element):
         raise NotImplementedError('Area undefined for %s' %(self.type))
 
     def Thickness(self):
-        #raise Exception('area undefined for %s' %(self.type))
         return self.pid.Thickness()
 
     def mid(self):

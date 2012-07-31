@@ -241,7 +241,6 @@ class CardMethods(object):
                 #if fieldCounter==8:
                     #print "**type(value) = ",type(value)
                     #break
-                    #sys.exit(12131)
                 #if debug:
                     #print "type(value) = ",type(value)
                     #print ""

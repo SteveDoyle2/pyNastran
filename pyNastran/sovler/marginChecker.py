@@ -1,9 +1,8 @@
 import sys
-from math import sqrt
+from math import sqrt,log10
 from numpy import array
 from numpy.linalg import norm
 
-#pyNastran
 from pyNastran.op2.op2 import OP2
 
 class MarginChecker(object):
@@ -276,7 +275,7 @@ class MarginChecker(object):
                     #print o.keys()
                     #ovm^2 = o1^2 - o1*o2 + o2^2 + 3*o12^2
                     ovm = sqrt(oxx**2+oyy**2 - oxx*oyy + 3*txy**2) # 2d stress
-                    eidResults.append(ov)
+                    eidResults.append(ovm)
                 stressP[icase][eid] = min(eidResults)
             ###
         ###
@@ -345,7 +344,6 @@ class MarginChecker(object):
                     #print o.keys()
                     ovm = sqrt((oxx-oyy)**2+(oyy-ozz)**2+(oxx-ozz)**2 + 6*(txy**2+tyz**2+txz**2)) # 3d stress
                     print "ovm = %s" %(ovm)
-                    sys.exit()
                     eidResults.append(ovm)
                 stressP[icase][eid] = min(eidResults)
             ###

@@ -394,7 +394,7 @@ class Op2Codes(object):
         else:
             thermalWord = '???'
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
-            #raise Exception(msg)
+            #raise ValueError(msg)
         
         analysis='???'
         if(  self.analysisCode== 1):  analysis = "Statics"

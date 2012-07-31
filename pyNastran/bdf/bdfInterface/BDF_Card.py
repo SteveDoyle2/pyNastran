@@ -217,7 +217,7 @@ class BDFCard(object):
         self.nfields = len(self.card)
         
         if stop:
-            sys.exit("asdfasdf")
+            sys.exit("stopping in applyOldFields")
 
     def getOldField(self, i):
         """used for nastran = format"""

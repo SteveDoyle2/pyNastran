@@ -145,7 +145,7 @@ class OP4(FortranFile):
         nLoops = 0
         wasBroken=False
         while 1:
-            if nLoops>0 and not wasBroken:
+            if nLoops > 0 and not wasBroken:
                 line = f.readline().rstrip()
             wasBroken = False
 
@@ -1188,7 +1188,6 @@ def compressColumn(col):
 
 if __name__=='__main__':
     #compressColumn([14, 15, 16, 20, 21, 22, 26, 27, 28])
-    #sys.exit()
     filenames = [
                  #'test/mat_t_dn.op4',
                  'test/mat_t_s1.op4',
@@ -1227,7 +1226,7 @@ if __name__=='__main__':
         for name,(form,matrix) in sorted(matrices.items()):
             print("-----------------------------------")
             print("name = |%s|" %(name))
-            if isinstance(matrix,coo_matrix):
+            if isinstance(matrix, coo_matrix):
                 print("SPARSE")
                 #matrix = matrix.todense()
                 #print printAnnotatedMatrix(matrix)
@@ -1237,7 +1236,7 @@ if __name__=='__main__':
             
             #if 't' in fname:
             #f.write(op4.writeDenseMatrixAscii(name,matrix,form=form,precision='default'))
-            if isinstance(matrix,coo_matrix):
+            if isinstance(matrix, coo_matrix):
                 op4.writeSparseMatrixAscii(f,name,matrix,form=form,precision='default',isBigMat=isBigMat)
             else:
                 f.write(op4.writeDenseMatrixAscii(name,matrix,1,'single'))

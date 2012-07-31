@@ -53,7 +53,7 @@ class CBUSH(BushElement):
                 x3  = card.field(7)
                 self.x  = [x1, x2, x3]
             else:
-                #raise Exception('invalid CBUSH...x1/g0 = |%s|' %(x1G0))
+                #raise RuntimeError('invalid CBUSH...x1/g0 = |%s|' %(x1G0))
                 self.g0 = None
                 self.x  = [None, None, None]
             ###

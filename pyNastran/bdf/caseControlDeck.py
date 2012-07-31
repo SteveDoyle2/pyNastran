@@ -363,7 +363,7 @@ class CaseControlDeck(object):
                 paramType = 'SET-type'
             elif ',' in value: # STRESS-type; special TITLE = stuffA,stuffB
                 #print 'A ??? line = ',line
-                #raise Exception(line)
+                #raise RuntimeError(line)
                 pass
             else:  # STRESS-type; TITLE = stuff
                 #print 'B ??? line = ',line

@@ -32,7 +32,8 @@ class SpringElement(Element):
         return p
 
     def K(self):
-        raise Exception('K not implemented in the %s class' %(self.type))
+        raise NotImplementedError('K not implemented in the '
+                                  '%s class' % (self.type))
 
     def Lambda(self,model):
         """
@@ -218,7 +219,7 @@ class CELAS2(SpringElement):
         elif self.c1==2:
             msg += "VALE=(0.,0.,%g)\n" %(self.k)
         else:
-            raise Exception('unsupported value of c1=%s' %(self.c1))
+            raise ValueError('unsupported value of c1=%s' %(self.c1))
         ###
         return msg
 

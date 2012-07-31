@@ -21,7 +21,7 @@ def parseSkippedCards(fname):
             #print "fpath=|%s|" %(fpath)
             fpath = fpath.lstrip()[6:]
             #print fpath
-            #sys.exit()
+
             eName = msg.split(' ')[0]
             #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)
             key = (eName,eType,form)

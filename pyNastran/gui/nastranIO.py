@@ -212,7 +212,7 @@ class NastranIO(object):
                 #msg = "CTRIAX6 %i %i %i" %(nidMap[nodeIDs[a[0]]],
                 #                           nidMap[nodeIDs[a[1]]],
                 #                           nidMap[nodeIDs[a[2]]] )
-                #raise Exception(msg)
+                #raise RuntimeError(msg)
                 #sys.stdout.flush()
                 
                 #elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])

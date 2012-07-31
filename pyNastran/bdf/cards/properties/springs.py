@@ -46,34 +46,34 @@ class PELAS(SpringProperty):
         if nodes[0]:
             msg += "     CARA='K_T_D_N'\n"
             msg += "     GROUP_MA=P_%s\n" %(self.Pid())
-            msg += "     NOEUD=N%i,\n" %(nodes[0])
+            msg += "     NOEUD=N%i,\n" % (nodes[0])
 
         if nodes[1]:
             msg += "     CARA='K_T_D_L'\n"
-            msg += "     NOEUD=N%i,\n" %(nodes[1])
-            msg += "     AMOR_HYST=%g # ge - damping\n" %(self.ge)
+            msg += "     NOEUD=N%i,\n" % (nodes[1])
+            msg += "     AMOR_HYST=%g # ge - damping\n" % (self.ge)
         msg += "     )\n"
         msg += "\n"
         
-        if self.c1==1:  ## @todo what is this???
+        if self.c1 == 1:  ## @todo what is this???
             msg += "VALE=(%g,0.,0.)\n" %(self.k)
-        elif self.c1==2:
+        elif self.c1 == 2:
             msg += "VALE=(0.,%g,0.)\n" %(self.k)
-        elif self.c1==2:
+        elif self.c1 == 2:
             msg += "VALE=(0.,0.,%g)\n" %(self.k)
         else:
-            raise Exception('unsupported value of c1=%s' %(self.c1))
+            raise ValueError('unsupported value of c1=%s' % (self.c1))
         ###
         return msg
 
     def rawFields(self):
-        fields = ['PELAS',self.pid,self.k,self.ge,self.s]
+        fields = ['PELAS', self.pid, self.k, self.ge, self.s]
         return fields
 
     def reprFields(self):
-        ge = set_blank_if_default(self.ge,0.)
-        s  = set_blank_if_default(self.s,0.)
-        fields = ['PELAS',self.pid,self.k,ge,s]
+        ge = set_blank_if_default(self.ge, 0.)
+        s  = set_blank_if_default(self.s, 0.)
+        fields = ['PELAS', self.pid, self.k, ge, s]
         return fields
 
 class PELAST(SpringProperty):

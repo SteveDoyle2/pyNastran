@@ -109,7 +109,7 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,
         self.readMarkers([iTable,1,0])
         #print self.iTableMap
 
-        tableName = self.readTableName(rewind=True,stopOnFailure=False)
+        tableName = self.readTableName(rewind=True, stopOnFailure=False)
         if tableName:
             #print "**tableName = |%r|" %(tableName)
             return tableName,isNextTable,isNextSubTable,False
@@ -120,12 +120,12 @@ class GeometryTables(Geometry1,Geometry2,Geometry3,Geometry4,EPT,MPT,DIT,
             #print self.printSection(200)
             marker = self.getMarker()
             #print "marker = ",marker
-            if marker<0:
+            if marker < 0:
                 msg = 'marker is less than 0...'
                 raise Exception(msg)
             data += self.readBlock()
             if not isTableActive:
-                tableType = unpack('iii',data[:12])
+                tableType = unpack('iii', data[:12])
                 data = data[12:]
 
             #print "iTable=%s lenGeomData=%s" %(iTable,len(data))

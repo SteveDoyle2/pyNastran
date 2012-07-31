@@ -81,8 +81,8 @@ def runF06(f06file,iSubcases=[],writeF06=True,debug=False,stopOnFailure=True):
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
-    except IOError: # missing file
-        pass
+    #except IOError: # missing file
+        #pass
     #except AssertionError:
     #    isPassed = True
 
