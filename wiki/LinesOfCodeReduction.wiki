@@ -1,0 +1,10 @@
+#summary Summary of project aiming to reduce size of pyNastran codebase
+
+= Introduction =
+
+The current development version of pyNastran has 52k lines of code spanning 222 files. Reducing this by 10% would help tremendously.
+
+
+= Details =
+
+Project details will be added soon.
