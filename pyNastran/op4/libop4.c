@@ -1240,7 +1240,7 @@ FILE* op4_open_r(const char *filename, long offset) {  /* in {{{1 */
      * handle to a location past the start of the file.
      */
 
-    fp = fopen(filename, "r");
+    fp = fopen(filename, "rb");
     if (fp == NULL)
         return NULL;
     if (offset)
