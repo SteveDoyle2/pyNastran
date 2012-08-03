@@ -5,7 +5,6 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2_helper import polarToRealImag
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from .ogf_Objects import gridPointForcesObject,complexGridPointForcesObject
 
 class OGF(object):
@@ -96,7 +95,7 @@ class OGF(object):
             #self.extractDt = self.extractInt
             #self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
 
         
         #print "*iSubcase=%s"%(self.iSubcase)

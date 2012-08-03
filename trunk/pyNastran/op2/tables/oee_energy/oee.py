@@ -4,7 +4,6 @@ import sys
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from .oee_objects import StrainEnergyObject
 
 class OEE(object):
@@ -96,7 +95,7 @@ class OEE(object):
             self.addDataParameter(data,'time','f',5)   ## time step
             self.applyDataCodeValue('dataNames',['time'])
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         ###
         
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)

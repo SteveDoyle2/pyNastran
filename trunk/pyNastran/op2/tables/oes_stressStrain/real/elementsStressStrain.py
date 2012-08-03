@@ -3,8 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import unpack
 
-from pyNastran.op2.op2Errors import AddNewElementError
-
 #91  -> PENTANL
 #2   -> BEAM
 #33  -> TUBE
@@ -224,7 +222,7 @@ class RealElementsStressStrain(object):
             elif ElementType=='PENTA':   nNodesExpected = 7
             elif ElementType=='HEXA':    nNodesExpected = 9
             else:
-                raise AddNewElementError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' % (ElementType,self.elementType,nNodes,self.numWide))
+                raise NotImplementedError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' % (ElementType,self.elementType,nNodes,self.numWide))
 
             #print "len(data) = ",len(self.data)
             for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
@@ -850,5 +848,5 @@ class RealElementsStressStrain(object):
        #     ###
        # ###
        # else:
-       #     raise AddNewElementError('invalid numWide')
+       #     raise NotImplementedError('invalid numWide')
 

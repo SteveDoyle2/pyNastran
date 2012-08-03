@@ -1,7 +1,6 @@
 import sys
 from struct import unpack
 
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import(
                                         SPCForcesObject,ComplexSPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import(
@@ -100,7 +99,7 @@ class OQG(object):
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)

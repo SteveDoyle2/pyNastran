@@ -61,7 +61,7 @@ if __name__=='__main__':
     debug     = False
     makeGeom  = False
     writeBDF  = False
-    writeF06  = False
+    writeF06  = True
     writeMatlab = False
     printResults = False
 

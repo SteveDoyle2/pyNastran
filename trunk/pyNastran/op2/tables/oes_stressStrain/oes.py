@@ -4,7 +4,6 @@ import sys
 from struct import unpack
 
 # pyNastran
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_rods    import RodStressObject,   RodStrainObject
 from .real.oes_shear   import ShearStressObject, ShearStrainObject
@@ -118,7 +117,7 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
             self.addDataParameter(data,'dt','f',5)   ## Time step ??? --> straight from DMAP
             self.applyDataCodeValue('dataNames',['dt'])
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' % (self.analysisCode))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' % (self.analysisCode))
         # tCode=2
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
