@@ -2,7 +2,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 from struct import unpack
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 
 # pyNastran
 #from pyNastran.op2.tables.oug.oug_displacements import displacementObject
@@ -122,7 +121,7 @@ class OEF(ThermalElements,RealForces,ComplexForces):
             self.applyDataCodeValue('dataNames',['loadID'])
             #print "loadID(5)=%s" %(self.loadID)
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
 
         # tCode=2
         #if self.analysisCode==2: # sort2

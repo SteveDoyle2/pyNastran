@@ -8,7 +8,6 @@ from struct import unpack
 #    temperatureObject,
 #    nonlinearTemperatureObject,
 #    fluxObject,nonlinearFluxObject)
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject #ComplexAppliedLoadsObject
 from .opg_loadVector   import LoadVectorObject,ComplexLoadVectorObject,ThermalLoadVectorObject
 from .opnl_forceVector import ForceVectorObject,ComplexForceVectorObject
@@ -98,7 +97,7 @@ class OPG(object):
             self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
             self.applyDataCodeValue('dataNames',['lsdvmn'])
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         ###
         # tCode=2
         #if self.analysisCode==2: # sort2

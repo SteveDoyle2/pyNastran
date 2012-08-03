@@ -3,7 +3,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 from struct import unpack
 
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 
 class RealForces(object):
 
@@ -53,7 +52,7 @@ class RealForces(object):
             #self.addDataParameter(data,'loadID','i',5)   ## load set ID number
             #print "loadID(5)=%s" %(self.loadID)
         else:
-            raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
+            raise RuntimeError('invalid analysisCode...analysisCode=%s' %(str(self.analysisCode)+'\n'+self.codeInformation()))
         return format1
 
     def getOEF_FormatStart(self):

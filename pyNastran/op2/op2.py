@@ -9,7 +9,7 @@ from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.op2.op2Codes import Op2Codes
 from pyNastran.op2.op2Errors import (EndOfFileError, InvalidMarkersError,
-                                     InvalidKeywordError)
+                                     TapeCodeError)
 
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
@@ -586,7 +586,7 @@ class OP2(BDF,
                     self.readTable_DUMMY_GEOM(tableName)
                 else:
                     msg = 'unhandled tableName=|%s|' % (tableName)
-                    raise InvalidKeywordError(msg)
+                    raise KeyError(msg)
                 #print("endTell   = ",self.op2.tell())
                 #print("---isAnotherTable---")
                 (isAnotherTable) = self.hasMoreTables()

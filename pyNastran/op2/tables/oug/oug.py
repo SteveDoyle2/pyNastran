@@ -31,7 +31,6 @@ from pyNastran.op2.tables.oug.oug_eigenvectors import (
      )
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
 from pyNastran.op2.op2_helper import polarToRealImag
-from pyNastran.op2.op2Errors import InvalidAnalysisCodeError
 
 class OUG(object):
     """Table of displacements/velocities/acceleration/heat flux/temperature"""
@@ -116,7 +115,7 @@ class OUG(object):
                 self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
                 self.applyDataCodeValue('dataNames',['lsdvmn'])
             else:
-                raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+                raise RuntimeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         else: # sort2
             
             eidDevice = self.getValues(data,'i',5)

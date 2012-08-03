@@ -1,20 +1,10 @@
 class InvalidCodeError(RuntimeError):
     pass
 
-class InvalidAnalysisCodeError(InvalidCodeError):
-    pass
-
-class InvalidATFSCodeError(InvalidCodeError):
-    pass
-
-class InvalidFormatCodeError(InvalidCodeError):
-    pass
-
-
 class InvalidGridID_Error(ValueError):
     pass
 
-class AddNewElementError(InvalidCodeError):
+class TapeCodeError(InvalidCodeError):
     pass
 
 class EndOfFileError(RuntimeError):
@@ -32,5 +22,3 @@ class InvalidMarkersError(RuntimeError):
 class InvalidMarkerError(RuntimeError):
     pass
 
-class InvalidKeywordError(RuntimeError):
-    pass
