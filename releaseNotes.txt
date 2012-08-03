@@ -60,7 +60,7 @@ Overall Notes
    - OP2 is much, much better at reading frequency analysis results
    - new OP4 reader in pure Python.  Writer isn't fully functional yet.
    - improved code to better support Python 3
-   - implementing PEP-8 slowly
+   - implementing PEP-8
 
 BDF API Changes
    - moved files around; if you want your imports to work, import from bdf.py
