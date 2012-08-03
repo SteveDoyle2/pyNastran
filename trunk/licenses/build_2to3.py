@@ -53,6 +53,8 @@ def fix_object(files):
                         line = 'from __future__ import division, print_function'
                     elif 'unicode' in line:
                         line = line.replace('unicode','str')
+                    elif "elementName.encode('utf-8')" in line:
+                        line = line.replace(".encode('utf-8')","")
 
                 elif isPython3:
                     #line = ''
