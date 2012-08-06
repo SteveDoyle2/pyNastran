@@ -406,7 +406,7 @@ class AddMethods(object):
         assert spline.eid>0
         self.splines[spline.eid] = spline
 
-    def addGust(self,gust):
+    def addGUST(self,gust):
         key = gust.sid
         assert key not in self.gusts
         assert key > 0

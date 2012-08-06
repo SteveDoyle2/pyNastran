@@ -16,36 +16,35 @@ class ThermalElements(object):
         if self.elementType in [107,108,109]: # CHBDYE, CHBDYG, CHBDYP
             assert self.numWide==8,self.codeInformation()
             self.createTransientObject(self.thermalLoad_CHBDY,HeatFlux_CHBDYx)
-            self.OEF_CHBDYx()
+            self.handleResultsBuffer3(self.OEF_CHBDYx,resultName='thermalLoad_CHBDY')
         elif self.elementType in [33,39,67,68]: # QUAD4,TETRA,HEXA,PENTA
             assert self.numWide in [9,10],self.codeInformation()
             self.createTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D)
-            self.OEF_2D_3D()
+            self.handleResultsBuffer3(self.OEF_2D_3D,resultName='thermalLoad_2D_3D')
         elif self.elementType in [53,64,74,75]: # TRIAX6,QUAD8,TRIA3,TRIA6
             assert self.numWide==9,self.codeInformation()
             self.createTransientObject(self.thermalLoad_2D_3D,HeatFlux_2D_3D)
-            self.OEF_2D_3D()
+            self.handleResultsBuffer3(self.OEF_2D_3D,resultName='thermalLoad_2D_3D')
         elif self.elementType in [1,2,3,10,34,69]: # ROD,BEAM,TUBE,CONROD,BAR,BEND
             assert self.numWide==9,self.codeInformation()
             self.createTransientObject(self.thermalLoad_1D,HeatFlux_1D)
-            self.OEF_1D()
+            self.handleResultsBuffer3(self.OEF_1D,resultName='thermalLoad_1D')
         elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             #assert self.numWide==27,self.codeInformation()
             self.createTransientObject(self.thermalLoad_VU,HeatFlux_VU)
-            self.OEF_VU_Element()
+            self.handleResultsBuffer3(self.OEF_VU_Element,resultName='thermalLoad_VU')
         elif self.elementType in [191]: # VUBEAM
             #assert self.numWide==27,self.codeInformation()
             self.createTransientObject(self.thermalLoad_VUBeam,HeatFlux_VUBEAM)
-            self.OEF_VUBeam_Element()
+            self.handleResultsBuffer3(self.OEF_VUBeam_Element,resultName='thermalLoad_VUBeam')
         elif self.elementType in [145,146,147]: # VUHEXA,VUPENTA,VUTETRA
             self.createTransientObject(self.thermalLoad_VU_3D,HeatFlux_VU_3D)
-            self.OEF_VU_3D_Element()
+            self.handleResultsBuffer3(self.OEF_VU_3D_Element,resultName='thermalLoad_VU_3D')
         elif self.elementType in [110]:
             self.createTransientObject(self.thermalLoad_CONV,HeatFlux_CONV)
-            self.OEF_CONV()
+            self.handleResultsBuffer3(self.OEF_CONV,resultName='thermalLoad_CONV')
         else:
-            #print self.codeInformation()
-            raise NotImplementedError(self.codeInformation())
+            self.NotImplementedOrSkip()
         ###
 
     def OEF_CHBDYx(self): # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
@@ -83,7 +82,6 @@ class ThermalElements(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CHBDYx)
         if self.makeOp2Debug:
             print("done with OEF_CHBDYx")
         #print(self.thermalLoad_CHBDY)
@@ -121,7 +119,6 @@ class ThermalElements(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_CONV)
         if self.makeOp2Debug:
             print("done with OEF_CONV")
         #print(self.thermalLoad_CHBDY)
@@ -184,10 +181,8 @@ class ThermalElements(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_VU_Element)
         if self.makeOp2Debug:
             print("done with OEF_1D")
-        #sys.exit('thermalLoad_VU')
         #print self.thermalLoad_VU
 
     def OEF_VUBeam_Element(self): # 191-VUBEAM
@@ -244,7 +239,6 @@ class ThermalElements(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_VUBeam_Element)
         if self.makeOp2Debug:
             print("done with OEF_1D")
         #sys.exit('thermalLoad_VUBeam')
@@ -304,7 +298,6 @@ class ThermalElements(object):
             self.obj.add(nNodes,dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_VU_3D_Element)
         if self.makeOp2Debug:
             print("done with OEF_VU_3D_Element")
         #print self.thermalLoad_VU_3D
@@ -344,7 +337,6 @@ class ThermalElements(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_1D)
         if self.makeOp2Debug:
             print("done with OEF_1D")
         #print self.thermalLoad_1D
@@ -403,7 +395,6 @@ class ThermalElements(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEF_2D_3D)
         if self.makeOp2Debug:
             print("done with OEF_2D_3D")
         

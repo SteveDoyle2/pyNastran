@@ -71,7 +71,10 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
         for op2file in failedCases:
             f.write('%s\n' %(op2file))
         f.close()
-    print("dt = %s seconds" %(time.time()-t0))
+    
+    seconds = time.time()-t0
+    minutes = seconds/60.
+    print("dt = %s seconds = %s minutes" %(seconds,minutes))
     
     #op2 = OP2('test_tet10_subcase_1.op2')
     #op2.readOP2()

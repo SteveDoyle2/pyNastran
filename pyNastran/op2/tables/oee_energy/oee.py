@@ -120,9 +120,9 @@ class OEE(object):
     def readStrainEnergy_table18(self): # real ???
         self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         if self.numWide==4:
-            self.OEE_Strain4()
+            self.handleResultsBuffer3(self.OEE_Strain4,resultName='strainEnergy')
         elif self.numWide==5:
-            self.OEE_Strain5()
+            self.handleResultsBuffer3(self.OEE_Strain5,resultName='strainEnergy')
         else:   
             self.NotImplementedOrSkip()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
@@ -151,7 +151,6 @@ class OEE(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEE_Strain4)
         #print self.strainEnergy
 
     def OEE_Strain5(self):
@@ -178,5 +177,4 @@ class OEE(object):
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###
-        self.handleResultsBuffer(self.OEE_Strain5)
         #print self.strainEnergy

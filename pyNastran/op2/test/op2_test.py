@@ -1,6 +1,5 @@
 import os
 import sys
-#import time
 from pyNastran.op2.test.test_op2 import get_failed_files,runLotsOfFiles
 from pyNastran.general.general import getFilesOfType
 

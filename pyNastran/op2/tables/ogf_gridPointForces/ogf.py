@@ -125,14 +125,14 @@ class OGF(object):
         if self.numWide==10:  # real/random
             #if self.thermal==0:
             self.createTransientObject(self.gridPointForces,gridPointForcesObject) # real
-            self.readOGF_numWide10()
+            self.handleResultsBuffer3(self.readOGF_numWide10,resultName='gridPointForces')
             #else:
                 #self.NotImplementedOrSkip()
             #self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==16:  # real/imaginary or mag/phase
             #if self.thermal==0:
             self.createTransientObject(self.gridPointForces,complexGridPointForcesObject) # complex
-            self.readOGF_numWide16()
+            self.handleResultsBuffer3(self.readOGF_numWide16,resultName='gridPointForces')
             #else:
                 #self.NotImplementedOrSkip()
             #self.handleResultsBuffer3(self.OUG_ComplexTable)
@@ -157,7 +157,6 @@ class OGF(object):
             self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
         #print len(self.data)
-        self.handleResultsBuffer(self.readOGF_numWide10)
 
     def readOGF_numWide16(self):
         dt = self.nonlinearFactor
@@ -185,7 +184,6 @@ class OGF(object):
             elemName = elemName.strip()
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%s f2=%s f3=%s m1=%s m2=%s m3=%s" %(ekey,eid,elemName,f1r+f1i,f2r+f2i,f3r+f3i,m1r+m1i,m2r+m2i,m3r+m3i)
             self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
-        self.handleResultsBuffer(self.readOGF_numWide16)
 
     def readThermal4(self):
         #print self.codeInformation()

@@ -336,7 +336,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             self.dtMap[iSubcase] = {}
         if iclose in self.dtMap[iSubcase]:
             v1 = self.dtMap[iSubcase][iclose]
-            vact = getCloseNum(v1,num,actualValue)
+            vact = get_close_num(v1,num,actualValue)
 
             if vact!=self.dtMap[iSubcase][iclose]:
                 del self.dtMap[iSubcase][iclose]
@@ -370,6 +370,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         return readCase
 
     def handleResultsBufferShort(self,func,debug=False):
+        raise RuntimeError('this function has been removed...')
         nOld = self.n
         markers = self.readHeader()
 
@@ -385,6 +386,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
 
     def handleResultsBufferNoRecursion(self,f,debug=False):
         """prototype method for getting results without recursion"""
+        raise RuntimeError('this function has been removed...')
         stopBuffer = False
         while not(stopBuffer):
             f()
@@ -412,7 +414,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             self.skipOES_Element()
 
     def handleResultsBuffer3(self, f, resultName, debug=False):
-        """prototype method for getting results without recursion"""
+        """method for getting results without recursion"""
         #if resultName not in self.allowedResultNames:
         #    return self.self.skipOES_Element()
 
@@ -473,11 +475,15 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
           this end shift.  An extra marker value is read, but no big deal.
           Beyond that it's just appending some data to the binary string and
           calling the function that's passed in
+        @note
+          this will soon be replaced by handleResultsBuffer3 (and then
+          renamed to handleResultsBuffer after this is removed)
 
         @warning
           Dont modify this without LOTS of testing.
           It's a VERY important function
         """
+        raise RuntimeError('this function has been removed...')
         #print self.obj
         #print "len(data) = ",len(self.data)
         #if marker[0]==4:
@@ -518,6 +524,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         ###
 
     def readMappedScalarsOut(self, debug=False):
+        raise RuntimeError('this function must be modified...')
         readCase = True
         #print "isSort1() = ",self.isSort1()
         if self.iSubcase in self.expectedTimes and len(self.expectedTimes[self.iSubcase])>0:
@@ -538,6 +545,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             nTotal is the number of bytes
             strFormat = 'iiii'
         """
+        raise RuntimeError('this function has been removed...')
         data = self.data
         #print type(self.obj)
         (nTotal,iFormat) = self.obj.getLength()
@@ -557,7 +565,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         #print self.printSection(200)
         self.handleResultsBuffer(self.readScalarsOut, debug=False)
 
-def getCloseNum(v1, v2, closePoint):
+def get_close_num(v1, v2, closePoint):
     numList = [v1, v2]
     delta = array([v1, v2])-closePoint
     #print "**delta=%s" %(delta)
