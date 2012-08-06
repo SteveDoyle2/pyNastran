@@ -800,9 +800,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.log.debug('found the end of the case control deck!')
                 #print "breaking"
                 break
-            if i > 600:
+            if i > 10000:
                 raise RuntimeError('there are too many lines in the '
-                                   'Case Control Deck < 600')
+                                   'Case Control Deck; max=10000')
             i += 1
         #self.log.info("finished with Case Control Deck..")
         #print("self.case_controlLines = ",self.case_control_lines)

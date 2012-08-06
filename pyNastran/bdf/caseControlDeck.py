@@ -208,17 +208,18 @@ class CaseControlDeck(object):
                 #print "lines[%s] = %s" %(i,lines[i])
                 i+=1
                 lines2.append(lines[i])
-                if i>100:
-                    raise RuntimeError('too many lines in case control deck')
+                if i>10000:
+                    msg =  'There are too many lines in case control deck.\n'
+                    msg += 'Assuming an infinite loop was found.'
+                    raise RuntimeError(msg)
             (j, key, value, options, paramType) = self._parse_entry(lines2)
-            #print "i=%s j=%s" %(i,j)
             i+=1
             #print ""
             #print "key=|%s| value=|%s| options=|%s| paramType=%s" %(key,value,options,paramType)
             iSubcase = self._addParameterToSubcase(key, value, options, paramType, iSubcase)
             #print "--------------"
-            if i==600:
-                msg = 'too many lines in Case Control Deck <600...'
+            if i == 10000:
+                msg = 'too many lines in Case Control Deck < 10000...'
                 raise RuntimeError(msg)
         ###
         #print "done with while loop...\n"
