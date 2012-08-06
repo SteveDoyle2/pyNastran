@@ -7,8 +7,8 @@ from applyLicense import getFoldersFiles
 #assert sys.version_info[:2]==(2,7),'this must be done in python 2.7'
 
 def fix_object(files):
-    isPython3 = True
-    isPython2 = False
+    isPython3 = False
+    isPython2 = True
     assert isPython3 != isPython2
     
     for fname in files:
@@ -47,13 +47,15 @@ def fix_object(files):
                     line = codeLine
 
                 if isPython2:
+                    #if "utf-8" in line or "elementName" in line:
+                    #    print line
                     if 'nested_scopes' in line:
                         line = ''
                     elif 'unicode_literals' in line:
                         line = 'from __future__ import division, print_function'
                     elif 'unicode' in line:
                         line = line.replace('unicode','str')
-                    elif "elementName.encode('utf-8')" in line:
+                    elif "encode('utf-8')" in line:
                         line = line.replace(".encode('utf-8')","")
 
                 elif isPython3:
