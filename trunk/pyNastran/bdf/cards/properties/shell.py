@@ -537,22 +537,29 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         i=0
         n = 0
         while i < len(fields):
-            gPlyID    = card.field(10+i)
-            #print('n=%s gPlyID=%s len=%s' %(n,gPlyID,len(fields)))
-            mid       = card.field(10+i+1, midLast)
-            thickness = float(card.field(10+i+2, tLast)) # can be blank 2nd time thru
-            theta     = card.field(10+i+3, 0.0)
-            sout      = card.field(10+i+4, 'NO')
-            self.plies.append([mid, thickness, theta, sout, gPlyID])
+            gPlyID    = card.field(9+i)
+            mid       = card.field(9+i+1, midLast)
+            thickness = card.field(9+i+2, tLast) # can be blank 2nd time thru
+            theta     = card.field(9+i+3, 0.0)
+            sout      = card.field(9+i+4, 'NO')
+            #print('n=%s gPlyID=%s mid=%s thickness=%s len=%s' %(n,gPlyID,mid,thickness,len(fields)))
+
+            ply = [mid, thickness, theta, sout, gPlyID]
+            #print("ply = %s" %(ply))
+            self.plies.append(ply)
             #[mid,t,theta,sout] # PCOMP
+            
             assert mid       is not None
             assert thickness is not None
+            assert isinstance(mid,int),'mid=%s' %(mid)
+            assert isinstance(thickness,float),'thickness=%s' %(thickness)
             midLast = mid
             tLast = thickness
             T += thickness
             i += 8
             n += 1
         ###
+        self.z0 = card.field(2, -0.5*T)
 
     def GlobalPlyID(self, iPly):
         gPlyID = self.plies[iPly][4]
@@ -564,7 +571,7 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         for (iPly, ply) in enumerate(self.plies):
             (_mid, t, theta, sout, gPlyID) = ply
             mid = self.Mid(iPly)
-            fields += [mid, t, theta, sout, gPlyID, None, None, None]
+            fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return fields
 
     def reprFields(self):
@@ -581,7 +588,7 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
             mid = self.Mid(iPly)
             #theta = set_blank_if_default(theta,0.0)
             sout  = set_blank_if_default(sout, 'NO')
-            fields += [mid, t, theta, sout, gPlyID, None, None, None]
+            fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return fields
 
 class PSHEAR(ShellProperty):
