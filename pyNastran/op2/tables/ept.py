@@ -60,9 +60,8 @@ class EPT(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            out = unpack(b'iccccif',eData)
-            (sid,A,B,C,D,ID,value) = out
-            propSet = A+B+C+D
+            out = unpack(b'i4sif',eData)
+            (sid,propSet,ID,value) = out
             #print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
             prop = NSM(None,None,[sid,propSet,ID,value])
             #self.addOp2Property(prop)
@@ -87,7 +86,7 @@ class EPT(object):
         while len(data)>=76: # 19*4
             eData = data[:76]
             data  = data[76:]
-            out = unpack(b'iifffffffffffffffff',eData)
+            out = unpack(b'2i17f',eData)
             #print "len(out) = ",len(out)
             #print out
             (pid,mid,a,I1,I2,J,nsm,fe,c1,c2,d1,d2,e1,e2,f1,f2,k1,k2,I12) = out
@@ -127,15 +126,11 @@ class EPT(object):
         while len(data)>=28: # 7*4 - ROD - shortest entry...could be buggy... ## @todo fix this
             eData = data[:28]
             data  = data[28:]
-            out = unpack(b'iiccccccccccccccccf',eData)
-            (pid,mid,a,b,c,d, e,f,g,h, i,j,k,l, m,n,o,p,value) = out
-            group1 = a+b+c+d
-            group2 = e+f+g+h
-            type1  = i+j+k+l
-            type2  = m+n+o+p
-            Type = (type1+type2).strip()
-            dataIn = [pid,mid,group1+group2,Type,value]
-            #print "pid=%s mid=%s group1=|%s| group2=|%s| type1=|%s| type2=|%s| value=%s" %(pid,mid,group1,group2,type1,type2,value)
+            out = unpack(b'2i8s8sf',eData)
+            (pid,mid,group,Type,value) = out
+            Type = Type.strip()
+            dataIn = [pid,mid,group,Type,value]
+            #print "pid=%s mid=%s group=|%s| Type=|%s| value=%s" %(pid,mid,group,Type,value)
             expectedLength = validTypes[Type]
             iFormat = 'f'*expectedLength
             iFormat = bytes(iFormat)
@@ -161,7 +156,7 @@ class EPT(object):
         while len(data)>=1072: # 44+12*84+20
             eData = data[:20]
             data  = data[20:]
-            dataIn = list(unpack(b'iiiif',eData))
+            dataIn = list(unpack(b'4if',eData))
             #print "len(out) = ",len(out)
             #print out
             (pid,mid,nsegs,ccf,x) = dataIn
@@ -169,14 +164,14 @@ class EPT(object):
             for i in range(12):
                 eData = data[64:]
                 data  = data[:64]
-                pack = unpack(b'ffffffffffffffff',eData)
+                pack = unpack(b'16f',eData)
                 (so,xxb,a,i1,i2,i12,j,nsm,c1,c2,d1,d2,e1,e2,f1,f2) = pack
                 dataIn.append(pack)
             
             eData = data[:44]
             data  = data[44:]
 
-            dataIn = list(unpack(b'fffffffffff',eData))
+            dataIn = list(unpack(b'11f',eData))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
             
             prop = PBEAM(None,dataIn)
@@ -212,7 +207,7 @@ class EPT(object):
             isSymmetrical = 'NO'
             eData = data[:32]
             data  = data[32:]
-            out = unpack(b'iifffiff',eData)
+            out = unpack(b'2i3fi2f',eData)
             (pid,nLayers,z0,nsm,sb,ft,Tref,ge,) = out
             
             eData = data[:16*(nLayers)]
@@ -227,7 +222,7 @@ class EPT(object):
 
             for n in range(nLayers):
                 #print "len(eData) = ",len(eData)
-                (mid,t,theta,sout) = unpack(b'iffi',eData[0:16])
+                (mid,t,theta,sout) = unpack(b'i2fi',eData[0:16])
                 Mid.append(mid)
                 T.append(t)
                 Theta.append(theta)
@@ -267,7 +262,7 @@ class EPT(object):
         while len(data)>=16: # 4*4
             eData = data[:16]
             data  = data[16:]
-            out = unpack(b'ifff',eData)
+            out = unpack(b'i3f',eData)
             #(pid,k,ge,s) = out
             prop = PELAS(data=out)
             self.addOp2Property(prop)
@@ -284,7 +279,7 @@ class EPT(object):
         while len(data)>=44: # 11*4
             eData = data[:44]
             data  = data[44:]
-            out = unpack(b'iffffffffff',eData)
+            out = unpack(b'i10f',eData)
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP(None,out)
             self.addOp2Property(prop)
@@ -320,7 +315,7 @@ class EPT(object):
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
-            out = unpack(b'iiffff',eData)
+            out = unpack(b'2i4f',eData)
             (pid,mid,a,j,c,nsm) = out
             prop = PROD(None,out)
             self.addOp2Property(prop)
@@ -334,7 +329,7 @@ class EPT(object):
         while len(data)>=24: # 6*4
             eData = data[:24]
             data  = data[24:]
-            out = unpack(b'iiffff',eData)
+            out = unpack(b'2i4f',eData)
             (pid,mid,t,nsm,f1,f2) = out
             prop = PSHEAR(data=out)
             self.addOp2Property(prop)
@@ -368,8 +363,7 @@ class EPT(object):
         while len(data)>=28: # 7*4
             eData = data[:28]
             data  = data[28:]
-            (pid,mid,cid,inp,stress,isop,fctnA,fctnB,fctnC,fctnD) = unpack(b'iiiiiicccc',eData)
-            fctn = fctnA+fctnB+fctnC+fctnD
+            (pid,mid,cid,inp,stress,isop,fctn) = unpack(b'6i4s',eData)
             dataIn = [pid,mid,cid,inp,stress,isop,fctn]
             prop = PSOLID(None,dataIn)
             self.addOp2Property(prop)
@@ -390,7 +384,7 @@ class EPT(object):
         while len(data)>=20: # 5*4
             eData = data[:20]
             data  = data[20:] # or 24
-            (pid,mid,OD,t,nsm) = unpack(b'iifff',eData)
+            (pid,mid,OD,t,nsm) = unpack(b'2i3f',eData)
             dataIn = [pid,mid,OD,t,nsm]
             prop = PTUBE(None,dataIn)
             self.addOp2Property(prop)
@@ -405,7 +399,7 @@ class EPT(object):
         while len(data)>=12: # 3*4
             eData = data[:12]
             data  = data[12:]
-            out = unpack(b'iff',eData)
+            out = unpack(b'i2f',eData)
             #(pid,ce,cr) = out
             prop = PVISC(data=out)
             self.addOp2Property(prop)

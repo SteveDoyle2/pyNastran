@@ -262,7 +262,7 @@ class MPT(object):
             data  = data[4:]
             number, = unpack(b'i',eData)
             
-            iFormat = 'if'+'f'*number
+            iFormat = 'if'+str(number)+'f'
             eDataLen = len(strings)*4
             
             eData = data[:eDataLen]
@@ -312,7 +312,7 @@ class MPT(object):
             out = unpack(b'iifiiiiifffiiifiiiffff',eData)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            tstep = TSTEPNL(None,out)
-            self.addTStep(tstep)
+            tstepnl = TSTEPNL(None,out)
+            self.addTSTEPNL(tstepnl)
         ###
         

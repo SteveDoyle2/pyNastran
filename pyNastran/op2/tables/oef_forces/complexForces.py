@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from struct import unpack
 
 from pyNastran.op2.op2_helper import polarToRealImag
@@ -11,7 +11,7 @@ class ComplexForces(object):
         #deviceCode = self.deviceCode
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffff'
+        format1 += '4f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -47,7 +47,7 @@ class ComplexForces(object):
 
         #print self.codeInformation()
         #nTotal = 16*11+1
-        formatAll = 'ifffffffffffffff'
+        formatAll = 'i15f'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
         while len(self.data)>=708: # (16*11+1)*4 = 177*4
@@ -105,7 +105,7 @@ class ComplexForces(object):
     def OEF_Shear_alt(self): # 4-CSHEAR
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffffffffffffffffffffffffffff'
+        format1 += '32f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -127,19 +127,20 @@ class ComplexForces(object):
                 f34r = polarToRealImag(f34r,f34i); s34 = polarToRealImag(s34r,s34i)
                 f14r = polarToRealImag(f14r,f14i); s41 = polarToRealImag(s41r,s41i)
             else:
-                f41 = complex(f41r,f41i); kf1 = complex(kf1r,kf1i)
-                f21 = complex(f21r,f21i); kf2 = complex(kf2r,kf2i)
-                f12 = complex(f12r,f12i); kf3 = complex(kf3r,kf3i)
-                f23 = complex(f23r,f23i); kf4 = complex(kf4r,kf4i)
-                f32 = complex(f32r,f32i); s12 = complex(s12r,s12i)
-                f43 = complex(f43r,f43i); s23 = complex(s23r,s23i)
-                f34 = complex(f34r,f34i); s34 = complex(s34r,s34i)
-                f14 = complex(f14r,f14i); s41 = complex(s41r,s41i)
+                f41 = complex(f41r, f41i); kf1 = complex(kf1r, kf1i)
+                f21 = complex(f21r, f21i); kf2 = complex(kf2r, kf2i)
+                f12 = complex(f12r, f12i); kf3 = complex(kf3r, kf3i)
+                f23 = complex(f23r, f23i); kf4 = complex(kf4r, kf4i)
+                f32 = complex(f32r, f32i); s12 = complex(s12r, s12i)
+                f43 = complex(f43r, f43i); s23 = complex(s23r, s23i)
+                f34 = complex(f34r, f34i); s34 = complex(s34r, s34i)
+                f14 = complex(f14r, f14i); s41 = complex(s41r, s41i)
             
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
-            dataIn = [eid2,f41,f21,f12,f32,f23,f43,f34,f14,kf1,s12,kf2,s23,kf3,s34,kf4,s41]
+            dataIn = [eid2, f41, f21, f12, f32, f23, f43, f34, f14,
+                      kf1 ,s12, kf2, s23, kf3, s34, kf4, s41]
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
@@ -180,7 +181,7 @@ class ComplexForces(object):
     def OEF_CVisc_alt(self): # 24-CVISC
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffff'
+        format1 += '4f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -212,7 +213,7 @@ class ComplexForces(object):
     def OEF_CBar_alt(self): # 34-CBAR
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffffffffffff'
+        format1 += '16f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -257,7 +258,7 @@ class ComplexForces(object):
     def OEF_Plate_alt(self): # 33-CQUAD4,74-CTRIA3
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffffffffffff'
+        format1 += '16f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -302,7 +303,7 @@ class ComplexForces(object):
     def OEF_Plate2_alt(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'cccc'
+        format1 += '4s'
         isMagnitudePhase = self.isMagnitudePhase()
         
         if self.elementType in [70,75]: # CTRIAR,CTRIA6
@@ -313,7 +314,7 @@ class ComplexForces(object):
             raise NotImplementedError(self.codeInformation())
         ###
             
-        allFormat = 'fffffffffffffffff'
+        allFormat = '17f'
         format1 = bytes(format1)
         allFormat = bytes(allFormat)
         nTotal = 8+nNodes*68
@@ -324,9 +325,9 @@ class ComplexForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1+allFormat, eData)
-            (eid,a,b,c,d,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
-                             mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi) = out
-            term = a+b+c+d # CEN\
+            (eid,term,nid,mxr,myr,mxyr,bmxr,bmyr,bmxyr,txr,tyr,
+                          mxi,myi,mxyi,bmxi,bmyi,bmxyi,txi,tyi) = out
+            #term = 'CEN\'
             #print "eType=%s" %(eType)
 
             eid2  = extract(eid,dt)
@@ -391,7 +392,7 @@ class ComplexForces(object):
     def OEF_Bend_alt(self): # 69-CBEND
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ifffffffffffffffffffffffff'
+        format1 += 'i25f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -435,7 +436,7 @@ class ComplexForces(object):
     def OEF_PentaPressure_alt(self): # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ccccccccfffffffffffff'
+        format1 += '8s13f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -445,10 +446,10 @@ class ComplexForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,axr,ayr,azr,vxr,vyr,vzr,pressure,
-                                 axi,ayi,azi,vxi,vyi,vzi) = out
-            eName = a+b+c+d+e+f+g+h
+            (eid,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
+                       axi,ayi,azi,vxi,vyi,vzi) = out
             eid2  = extract(eid,dt)
+            eName = eName.encode('utf-8').strip()
             #print "eType=%s" %(eType)
             
             if isMagnitudePhase:
@@ -471,7 +472,7 @@ class ComplexForces(object):
     def OEF_CBush_alt(self): # 102-CBUSH
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffffffff'
+        format1 += '12f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -485,9 +486,6 @@ class ComplexForces(object):
                  fxi,fyi,fzi,mxi,myi,mzi) = out
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
-            complex
-            complex
-            complex
             
             if isMagnitudePhase:
                 fx = polarToRealImag(fxr,fxi); mx = polarToRealImag(mxr,mxi)
@@ -509,7 +507,7 @@ class ComplexForces(object):
     def OEF_Force_VU_alt(self): # 191-VUBEAM
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iicccc'
+        format1 += '2i4s'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -518,7 +516,7 @@ class ComplexForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
 
-        formatAll = 'ifffffffffffff'
+        formatAll = 'i13f'
         formatAll = bytes(formatAll)
         n = 16+56*nNodes
         while len(self.data)>=n:
@@ -527,8 +525,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD) = out
-            icord = icordA+icordB+icordC+icordD
+            (eid,parent,coord,icord) = out
 
             eid2  = extract(eid,dt)
             dataIn = [eid2,parent,coord,icord]
@@ -576,7 +573,7 @@ class ComplexForces(object):
     def OEF_Force_VUTRIA_alt(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iiccccii'
+        format1 += 'ii4sii'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -587,7 +584,7 @@ class ComplexForces(object):
         else:
             raise NotImplementedError(self.codeInformation())
 
-        formatAll = 'ifffiiifffffifffiiifffffi'
+        formatAll = 'i3f3i5fi3f3i5fi'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
         n = 24+100*nNodes
@@ -597,8 +594,7 @@ class ComplexForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD,theta,_) = out
-            icord = icordA+icordB+icordC+icordD
+            (eid,parent,coord,icord,theta,_) = out
 
             eid2  = extract(eid,dt)
             dataIn = [eid2,parent,coord,icord,theta]

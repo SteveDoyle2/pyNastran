@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from struct import unpack
 
 # pyNastran
@@ -104,24 +104,10 @@ class OGF(object):
         #self.printBlock(data)
         self.readTitle()
 
-        # this may be a really good idea...
-    #def extractDt(self):
-        #pass
-    #def extractInt(self):
-        #return 'i',self.scaleEid
-    #def extractFloat(self):
-        #return 'f',self.scaleDt
-    #def scaleEid(self,eid):
-        #return (eid-self.deviceCode)//10
-    #def scaleDt(self,dt):
-        #return dt
-
     def readOGF_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
         #print self.dataCode
-        #if self.thermal==2:
-        #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         
         if self.tableCode==19: # grid point forces
@@ -129,9 +115,7 @@ class OGF(object):
             self.readOGF_Data_table19()
         else:
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OGF table' %(self.tableName,self.atfsCode))
-            print(self.codeInformation())
-            #self.skipOES_Element()
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName))
+            self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OGF table' %(self.atfsCode,self.tableName))
         ###
         #print self.obj
 
@@ -141,16 +125,16 @@ class OGF(object):
         if self.numWide==10:  # real/random
             #if self.thermal==0:
             self.createTransientObject(self.gridPointForces,gridPointForcesObject) # real
-            #else:
-                #raise NotImplementedError(self.codeInformation())
-            #self.handleResultsBuffer3(self.OUG_RealTable)
             self.readOGF_numWide10()
+            #else:
+                #self.NotImplementedOrSkip()
+            #self.handleResultsBuffer3(self.OUG_RealTable)
         elif self.numWide==16:  # real/imaginary or mag/phase
             #if self.thermal==0:
             self.createTransientObject(self.gridPointForces,complexGridPointForcesObject) # complex
-            #else:
-                #raise NotImplementedError(self.codeInformation())
             self.readOGF_numWide16()
+            #else:
+                #self.NotImplementedOrSkip()
             #self.handleResultsBuffer3(self.OUG_ComplexTable)
         else:
             raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
@@ -159,7 +143,7 @@ class OGF(object):
     def readOGF_numWide10(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'i8sffffff'
+        format1 += 'i8s6f'
         format1 = bytes(format1)
 
         while len(self.data) >= 40:
@@ -172,14 +156,13 @@ class OGF(object):
             #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
             self.obj.add(dt,eKey,eid,elemName,f1,f2,f3,m1,m2,m3)
             #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
-            #sys.exit('asfd')
         #print len(self.data)
         self.handleResultsBuffer(self.readOGF_numWide10)
 
     def readOGF_numWide16(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'i8sffffffffffff'
+        format1 += 'i8s12f'
         format1 = bytes(format1)
         isMagnitudePhase = self.isMagnitudePhase()
 
@@ -211,10 +194,8 @@ class OGF(object):
         nEntries = len(self.data)//32
         for i in range(nEntries):
             eData = self.data[n:n+32]
-            out = unpack(b'iiffffff', eData)
+            out = unpack(b'2i6f', eData)
             #nid = (out[0]-self.deviceCode)//10  ## @todo update...
-
             #print out
             n+=32
             #print "nid = ",nid
-        #sys.exit('thermal4...')

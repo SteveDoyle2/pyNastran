@@ -1,9 +1,8 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 
 from ..real.oes_objects import stressObject,strainObject
-#from pyNastran.op2.op2Errors import *
 
 
 class ComplexRodDamperObject(stressObject):
@@ -130,6 +129,7 @@ class ComplexRodStressObject(stressObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        return 'ComplexRodStress writeF06 not implemented...',pageNum
         raise NotImplementedError()
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
@@ -161,6 +161,7 @@ class ComplexRodStressObject(stressObject):
         return(''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        return 'ComplexRodStress writeF06Transient not implemented...',pageNum
         raise NotImplementedError()
         words = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
@@ -336,6 +337,7 @@ class ComplexRodStrainObject(strainObject):
         return msg
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        return 'ComplexRodStrain writeF06 not implemented...',pageNum
         raise NotImplementedError()
         if self.dt is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
@@ -366,6 +368,7 @@ class ComplexRodStrainObject(strainObject):
         return(''.join(msg),pageNum)
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        return 'ComplexRodStress writeF06Transient not implemented...',pageNum
         raise NotImplementedError()
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',

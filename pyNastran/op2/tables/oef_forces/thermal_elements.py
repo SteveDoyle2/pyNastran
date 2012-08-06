@@ -57,14 +57,15 @@ class ThermalElements(object):
         isSort1 = self.isSort1()
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iccccccccfffff' # SORT1
+            format1 = 'i8s5f' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fccccccccfffff' # SORT2
+            format1 = 'f8s5f' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
+        format1 = bytes(format1)
 
         while len(self.data)>=32: # 8*4
             eData     = self.data[0:32]
@@ -72,9 +73,8 @@ class ThermalElements(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,fApplied,freeConv,forceConv,fRad,fTotal) = out
+            (eid,eType,fApplied,freeConv,forceConv,fRad,fTotal) = out
             eid2  = extract(eid,dt)
-            eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,fApplied,freeConv,forceConv,fRad,fTotal]
@@ -105,6 +105,7 @@ class ThermalElements(object):
             format1 = 'ffif' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
+        format1 = bytes(format1)
 
         while len(self.data)>=16: # 4*4
             eData     = self.data[0:16]
@@ -141,16 +142,18 @@ class ThermalElements(object):
 
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiiccccii' # SORT1
+            format1 = 'iii4sii' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiiccccii' # SORT2
+            format1 = 'fii4sii' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
         formatAll = 'iffffff'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
 
         n = 24+28*nNodes
         while len(self.data)>=n:
@@ -159,8 +162,7 @@ class ThermalElements(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD,theta,null) = out
-            icord = icordA+icordB+icordC+icordD
+            (eid,parent,coord,icord,theta,null) = out
 
             eid2  = extract(eid,dt)
             dataIn = [eid2,parent,coord,icord,theta]
@@ -200,16 +202,18 @@ class ThermalElements(object):
 
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iiicccc' # SORT1
+            format1 = 'iii4s' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fiicccc' # SORT2
+            format1 = 'fii4s' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
-        formatAll = 'iffffff'
+        formatAll = 'i6f'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
 
         n = 16+28*nNodes
         while len(self.data)>=n:
@@ -218,8 +222,7 @@ class ThermalElements(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD) = out
-            icord = icordA+icordB+icordC+icordD
+            (eid,parent,coord,icord) = out
 
             eid2  = extract(eid,dt)
             dataIn = [eid2,parent,coord,icord]
@@ -272,7 +275,9 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
-        formatAll = 'iffffff'
+        formatAll = 'i6f'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
 
         n = 8+28*nNodes
         while len(self.data)>=n:
@@ -311,15 +316,16 @@ class ThermalElements(object):
         n = 36
         if isSort1:
             #print "SORT1 - %s" %(self.ElementType(self.elementType))
-            format1 = 'iccccccccffffff' # SORT1
+            format1 = 'i8sffffff' # SORT1
             extract = self.extractSort1
             #dt = self.nonlinearFactor
         else:
             #print "SORT2 - %s" %(self.ElementType(self.elementType))
-            format1 = 'fccccccccffffff' # SORT2
+            format1 = 'f8sffffff' # SORT2
             extract = self.extractSort2
             #eid = self.nonlinearFactor
         ###
+        format1 = bytes(format1)
 
         n = 36
         while len(self.data)>=n: # 10*4
@@ -328,9 +334,8 @@ class ThermalElements(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = out
+            (eid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = out
             eid2  = extract(eid,dt)
-            eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
@@ -354,45 +359,47 @@ class ThermalElements(object):
             n = 40
             if isSort1:
                 #print "SORT1 - %s" %(self.ElementType(self.elementType))
-                format1 = 'iccccccccffffffi' # SORT1
+                format1 = 'i8s6fi' # SORT1
                 extract = self.extractSort1
                 #dt = self.nonlinearFactor
             else:
                 #print "SORT2 - %s" %(self.ElementType(self.elementType))
-                format1 = 'fccccccccffffffi' # SORT2
+                format1 = 'f8s6fi' # SORT2
                 extract = self.extractSort2
                 #eid = self.nonlinearFactor
         elif self.elementType in [33,53,64,74,75]: # no zed on this element for some reason...
             n = 36
             if isSort1:
                 #print "SORT1 - %s" %(self.ElementType(self.elementType))
-                format1 = 'iccccccccffffff' # SORT1
+                format1 = 'i8s6f' # SORT1
                 extract = self.extractSort1
                 #dt = self.nonlinearFactor
             else:
                 #print "SORT2 - %s" %(self.ElementType(self.elementType))
-                format1 = 'fccccccccffffff' # SORT2
+                format1 = 'f8s6f' # SORT2
                 extract = self.extractSort2
                 #eid = self.nonlinearFactor
             ###
         else:
             raise NotImplementedError(self.codeInformation())
         ###
+        format1 = bytes(format1)
 
-        #n = 36
+
         while len(self.data)>=n: # 10*4
             eData     = self.data[0:n]
             self.data = self.data[n: ]
 
             out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = out[0:15]
+            #print("len(out)=",len(out))
+            # len=8
+            (eid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux) = out[:8]
             eid2  = extract(eid,dt)
-            eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
             
             dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
             #print "heatFlux %s" %(self.ElementType(self.elementType)),dataIn
-            #eid = self.obj.addNewEid(out)            
+            #eid = self.obj.addNewEid(out)
             self.obj.add(dt,dataIn)
             #print "len(data) = ",len(self.data)
         ###

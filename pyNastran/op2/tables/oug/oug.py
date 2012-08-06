@@ -1,12 +1,6 @@
 # http://www.cadfamily.com/online-help/I-DEAS/SDRCHelp/LANG/English/slv_ug/NAS_results_imported.htm
-import sys
+#import sys
 from struct import unpack
-
-# pyNastran
-#from oug_Objects import (
-    #fluxObject,                            # analysisCode=1, formatCode=1 sortCode=3
-    #nonlinearTemperatureObject,            # analysisCode=10,formatCode=1 sortCode=0 ???
-#     )
 
 from pyNastran.op2.tables.oug.oug_displacements import (
      DisplacementObject,              # tableCode=1     formatCode=1 sortCode=0
@@ -121,8 +115,8 @@ class OUG(object):
             eidDevice = self.getValues(data,'i',5)
             floatVal  = self.getValues(data,'f',5)
             #eid = (eidDevice-self.deviceCode)//10
-            print("EID = %s" %(eidDevice))
-            print("floatVal = %s" %(floatVal))
+            #print("EID = %s" %(eidDevice))
+            #print("floatVal = %s" %(floatVal))
 
             if self.tableName=='OUGRMS2' and self.analysisCode==1:
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency
@@ -132,7 +126,7 @@ class OUG(object):
             elif self.analysisCode in [1,5]: # 5 # freq
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## frequency
                 self.applyDataCodeValue('dataNames',['nodeID'])
-                print("nodeID = %s" %(self.nodeID))
+                #print("nodeID = %s" %(self.nodeID))
                 #sys.exit(self.nodeID)
             elif self.analysisCode==6: # transient dt
                 self.addDataParameter(data,'nodeID','i',5,fixDeviceCode=True)   ## time step
@@ -188,7 +182,7 @@ class OUG(object):
                 format1 = 'f' # SORT1
                 extract = self.extractSort2
             else:
-                raise InvalidAnalysisCodeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
+                raise KeyError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
             ###
             #eid = self.nonlinearFactor
         return (format1,extract)
@@ -196,41 +190,40 @@ class OUG(object):
     def readOUG_Data(self):
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        #self.skipOES_Element()
-        #return
 
         #print self.dataCode
-        #if self.thermal == 2:
-        #    self.skipOES_Element()
         #print "tfsCode=%s" %(tfsCode)
         
         if self.tableCode == 1 and self.tableName in ['OUGV1','OUPV1']:    # displacement
-            assert self.tableName in ['OUGV1','OUPV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
-            self.readOUG_Data_table1()
+            if self.tableName=='OUGV1':
+                assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+                self.readOUG_Data_table1()
+            else: # 'OUPV1'
+                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         elif self.tableCode == 1 and self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',]:    # displacement
             #assert self.tableName in ['OUGATO2','OUGCRM2','OUGPSD2','OUGRMS2','OUGNO2',],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
             self.readOUG_Data_table1()
         elif self.tableCode == 7:  # modes
-            assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
-            self.readOUG_Data_table7()
+            if self.tableName=='OUGV1':
+                assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+                self.readOUG_Data_table7()
+            else:
+                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         elif self.tableCode == 10: # velocity
-            assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
-            #self.skipOES_Element()
-            #return
-            self.readOUG_Data_table10()
+            if self.tableName=='OUGV1':
+                assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+                self.readOUG_Data_table10()
+            else:
+                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         elif self.tableCode == 11: # Acceleration vector
-            assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
-            #self.skipOES_Element()
-            #return
-            self.readOUG_Data_table11()
+            if self.tableName=='OUGV1':
+                assert self.tableName in ['OUGV1'],'tableName=%s tableCode=%s\n%s' %(self.tableName,self.tableCode,self.codeInformation())
+                self.readOUG_Data_table11()
+            else:
+                self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         else:
-            #print "***start skipping***"
             #self.log.debug('skipping approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
-            #self.skipOES_Element()
-            #print "***end skipping***"
-            print(self.codeInformation())
-            #raise NotImplementedError(self.codeInformation())
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
+            self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OUG table' %(self.atfsCode,self.tableName))
         ###
         #print self.obj
 
@@ -242,7 +235,7 @@ class OUG(object):
         nEntries = len(self.data)//32
         for i in range(nEntries):
             eData = self.data[n:n+32]
-            out = unpack('iiffffff', eData)
+            out = unpack('2i6f', eData)
             #nid = (out[0]-self.deviceCode)//10    ## @todo fix the deviceCode
 
             #print out
@@ -257,8 +250,7 @@ class OUG(object):
         OUGPSD2 - PSD in sort 2
         OUGATO2 - auto-correlated in sort 2
         """
-        #isSort1 = self.isSort1()
-        #print "isSort2 = ",not(isSort1)
+        isSkip = False
         if self.numWide == 8:  # real/random
             if self.thermal == 0:
                 #print self.dataCode
@@ -281,25 +273,29 @@ class OUG(object):
                     resultName = 'displacementsNO'
                     self.createTransientObject(self.displacementsNO,DisplacementObject) # random
                 else:
-                    raise NotImplementedError('***table=%s***\n%s' %(self.tableName,self.codeInformation()))
+                    isSkip = True
+                    self.NotImplementedOrSkip('***table=%s***\n%s' %(self.tableName,self.codeInformation()))
+                if not isSkip:
+                    self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             elif self.thermal == 1:
                 resultName = 'temperatures'
                 self.createTransientObject(self.temperatures,TemperatureObject)
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             #elif self.thermal == 8:
                 #resultName = 'scaledDisplacements'
                 #self.createTransientObject(self.scaledDisplacements,displacementObject)
+                #self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError('***thermal=%s***\n%s' %(self.thermal,self.codeInformation()))
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip('***thermal=%s***\n%s' %(self.thermal,self.codeInformation()))
         elif self.numWide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'displacements'
                 self.createTransientObject(self.displacements,ComplexDisplacementObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 
     def readOUG_Data_table7(self): # eigenvector
@@ -308,67 +304,64 @@ class OUG(object):
             if self.thermal == 0:
                 resultName = 'eigenvectors'
                 self.createTransientObject(self.eigenvectors,EigenVectorObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'eigenvectors'
                 self.createTransientObject(self.eigenvectors,ComplexEigenVectorObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 
     def readOUG_Data_table10(self): # velocity
-        #isSort1 = self.isSort1()
         if self.numWide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'velocities'
                 self.createTransientObject(self.velocities,VelocityObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'velocities'
                 self.createTransientObject(self.velocities,ThermalVelocityVectorObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable, resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable, resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'velocities'
                 self.createTransientObject(self.velocities, ComplexVelocityObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
-        ###
+            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
 
     def readOUG_Data_table11(self): # acceleration
-        #isSort1 = self.isSort1()
         if self.numWide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'accelerations'
                 self.createTransientObject(self.accelerations,AccelerationObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'accelerations'
                 self.createTransientObject(self.accelerations,ComplexAccelerationObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
-        ###
+            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
 
     def OUG_RealTable(self):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'iffffff'
+        format1 += 'i6f'
 
         #print "len(data) = ",len(self.data)
         while len(self.data) >= 32: # 8*4
@@ -393,7 +386,7 @@ class OUG(object):
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOUG_FormatStart()
-        format1 += 'iffffffffffff'
+        format1 += 'i12f'
         #print "format1 = ",format1
         isMagnitudePhase = self.isMagnitudePhase()
 

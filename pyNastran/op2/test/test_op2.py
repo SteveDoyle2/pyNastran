@@ -46,7 +46,7 @@ def runLotsOfFiles(files ,makeGeom=True, writeBDF=False, writeF06=True,
     for (i, op2file) in enumerate(files[nStart:nStop], nStart):  # 149
         baseName = os.path.basename(op2file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
-        if baseName not in skipFiles:
+        if baseName not in skipFiles and '#' not in op2file:
             print("%"*80)
             print('file=%s\n' %(op2file))
             n = '%s ' %(i)

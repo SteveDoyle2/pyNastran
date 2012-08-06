@@ -74,7 +74,8 @@ class ComplexCelasStressObject(complexStressObject):
         """
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
-        raise NotImplementedError()
+        return 'ComplexCelasStressObject writeF06 not implemented...\n'
+        #raise NotImplementedError()
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         """

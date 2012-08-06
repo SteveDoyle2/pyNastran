@@ -1,22 +1,9 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from struct import unpack
 
-# pyNastran
-#from pyNastran.op2.tables.oug.oug_displacements import displacementObject
-#from pyNastran.op2.resultObjects.ougv1_Objects import (
-#    temperatureObject,displacementObject,
-#    nonlinearTemperatureObject,
-#    fluxObject,nonlinearFluxObject)
 
-#from pyNastran.op2.tables.oug.ougv1_Objects import (
-#    displacementObject,temperatureObject)
-#from pyNastran.op2.tables.oug.oug_eigenvectors import (
-#    eigenVectorObject)
-#from oef_Objects import (nonlinearFluxObject)
-
-#from thermal_elements import ThermalElements
 from .realForces    import RealForces
 from .complexForces import ComplexForces
 
@@ -63,12 +50,12 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         aCode = self.getBlockIntEntry(data,1)
         
         self.parseApproachCode(data)
-        self.addDataParameter(data,'elementType', 'i',3,False)   ## element type
-        self.addDataParameter(data,'dLoadID',     'i',8,False)   ## dynamic load set ID/random code
-        self.addDataParameter(data,'formatCode',  'i',9,False)   ## format code
-        self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
-        self.addDataParameter(data,'oCode',       'i',11,False)  ## undefined in DMAP...
-        self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
+        self.addDataParameter(data,'elementType', 'i', 3, False)   ## element type
+        self.addDataParameter(data,'dLoadID',     'i', 8, False)   ## dynamic load set ID/random code
+        self.addDataParameter(data,'formatCode',  'i', 9, False)   ## format code
+        self.addDataParameter(data,'numWide',     'i', 10, False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'oCode',       'i', 11, False)  ## undefined in DMAP...
+        self.addDataParameter(data,'thermal',     'i', 23, False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
 
         #print "dLoadID(8)=%s formatCode(9)=%s numwde(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         #print "thermal(23)=%s elementType(3)=%s" %(self.thermal,self.elementType)
@@ -243,254 +230,228 @@ class OEF(ThermalElements,RealForces,ComplexForces):
 
         Real = realMapper[self.elementType]
         Imag = imagMapper[self.elementType]
-        return (Real,Imag)
+        return (Real, Imag)
 
     def readOEF_Data(self):
         """
         OEF1X - 
         DOEF1 - 
         """
-        self.skipOES_Element() # skipping entire table
-        return
-
         if self.tableCode==4 and self.tableName in ['OEF1X','DOEF1']: # Forces/Heat Flux
             assert self.tableName in ['OEF1X','DOEF1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOEF_Data_table4()
-        elif self.tableName in ['OEFATO2','OEFCRM2','OEFPSD2','OEFRMS2','OEFNO2',]:
-            self.skipOES_Element() # skipping entire table
+        #elif self.tableName in ['OEFATO2','OEFCRM2','OEFPSD2','OEFRMS2','OEFNO2',]:
+            #self.skipOES_Element() # skipping entire table
         else:
-            raise NotImplementedError(self.codeInformation())
+            self.NotImplementedOrSkip()
         ###
 
     def readOEF_Data_table4(self): # Forces/Heat Flux
-        if self.thermal in [0,8]:
+        if self.thermal in [0, 8]:
             self.readOEF_Forces()
-        elif self.thermal==1:
+        elif self.thermal == 1:
             self.readOEF_Thermal()
         else:
-            raise NotImplementedError('thermal=%s' %(self.thermal))
-        ###
-        if self.thermal==8:
-            raise NotImplementedError(self.obj)
+            self.NotImplementedOrSkip('thermal=%s' %(self.thermal))
+
+        #if self.thermal==8:
+        #    self.NotImplementedOrSkip('thermal=%s' %(self.thermal))
 
     def readOEF_Forces(self):
         #print self.codeInformation()
         try:
             (numWideReal,numWideImag) = self.OEF_ForceCode()
         except KeyError:
-            raise NotImplementedError(self.codeInformation())
+            self.NotImplementedOrSkip()
 
         if self.elementType in [1,3,10]: # CROD,CTUBE,CONROD
             resultName = 'rodForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.rodForces,RealRodForce)
                 self.handleResultsBuffer3(self.OEF_Rod,resultName)
-                #asdf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.rodForces,ComplexRodForce)
                 self.handleResultsBuffer3(self.OEF_Rod_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [2]: # CBEAM
             resultName = 'beamForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.beamForces,RealCBeamForce)
                 self.handleResultsBuffer3(self.OEF_Beam,resultName)
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.beamForces,ComplexCBeamForce)
                 self.handleResultsBuffer3(self.OEF_Beam_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [4]: # CSHEAR
             resultName = 'shearForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.shearForces,RealCShearForce)
                 self.handleResultsBuffer3(self.OEF_Shear,resultName)
-                #asf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.shearForces,ComplexCShearForce)
                 self.handleResultsBuffer3(self.OEF_Shear_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [11,12,13,14]: # CELAS1,CELAS2,CELAS3,CELAS4
             resultName = 'springForces'
-            if self.numWide==numWideReal: ## @todo is this correct or is DMAP wrong (CELAS1)???
+            if self.numWide == numWideReal: ## @todo is this correct or is DMAP wrong (CELAS1)???
                 self.createTransientObject(self.springForces,RealSpringForce)
                 self.handleResultsBuffer3(self.OEF_Spring,resultName)
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.springForces,ComplexSpringForce)
                 self.handleResultsBuffer3(self.OEF_Spring_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [20,21,22,23]: # CDAMP1,CDAMP2,CDAMP3,CDAMP4
             resultName = 'damperForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.damperForces,RealDamperForce)
                 self.handleResultsBuffer3(self.OEF_Spring,resultName) # same reader as for springs
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.damperForces,ComplexDamperForce)
                 self.handleResultsBuffer3(self.OEF_Spring_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [24]: # CVISC
             resultName = 'viscForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.viscForces,RealViscForce)
                 self.handleResultsBuffer3(self.OEF_CVisc,resultName)
-                #asdf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.viscForces,ComplexViscForce)
                 self.handleResultsBuffer3(self.OEF_CVisc_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         elif self.elementType in [33,74,235]: # CQUAD4,CTRIA3,CQUADR
             resultName = 'plateForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 #print self.codeInformation()
                 self.createTransientObject(self.plateForces,RealPlateForce)
                 self.handleResultsBuffer3(self.OEF_Plate,resultName)
-                #sdaf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.plateForces,ComplexPlateForce)
                 self.handleResultsBuffer3(self.OEF_Plate_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+
         #elif self.elementType in [235]: # CQUADR
-            #if self.numWide==numWideReal:
+            #if self.numWide == numWideReal:
                 #self.OEF_Plate()
-            #elif self.numWide==numWideImag:
+            #elif self.numWide == numWideImag:
                 #self.OEF_Plate_alt()
             #else:
                 #raise NotImplementedError(self.codeInformation())
-            ###
         elif self.elementType in [35]: # CCONEAX
             resultName = 'coneAxForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.coneAxForces,RealConeAxForce)
                 self.handleResultsBuffer3(self.OEF_ConeAx,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [64,70,75,82,144]: # CQUAD8,CTRIAR,CTRIA6,CQUADR,CQUAD4-bilinear
             resultName = 'plateForces2'
-            if self.numWide==numWideReal:
-                #print self.codeInformation()
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.plateForces2,RealPLATE2Force)
                 self.handleResultsBuffer3(self.OEF_Plate2,resultName)
-                #asdf
-            elif self.numWide==numWideImag:
-                #print self.codeInformation()
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.plateForces2,ComplexPLATE2Force)
                 self.handleResultsBuffer3(self.OEF_Plate2_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [34]: # CBAR
             resultName = 'barForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.barForces,RealCBARForce)
                 self.handleResultsBuffer3(self.OEF_CBar,resultName)
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.barForces,ComplexCBARForce)
                 self.handleResultsBuffer3(self.OEF_CBar_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [100]: # CBAR
-            if self.numWide==numWideReal:
+            resultName = 'barForces'
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.bar100Forces,RealCBAR100Force)
                 self.handleResultsBuffer3(self.OEF_CBar100,resultName)
-                #asf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.handleResultsBuffer3(self.OEF_CBar100_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [38]: # CGAP
             resultName = 'gapForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.gapForces,RealCGAPForce)
                 self.handleResultsBuffer3(self.OEF_CGap,resultName)
-                #asdf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.handleResultsBuffer3(self.OEF_CGap_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [69]: # CBEND
             resultName = 'bendForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.bendForces,RealBendForce)
                 self.handleResultsBuffer3(self.OEF_Bend,resultName)
-                #asdf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.bendForces,ComplexBendForce)
                 self.handleResultsBuffer3(self.OEF_Bend_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [76,77,78]: # CHEXA_PR,PENTA_PR,CTETRA_PR
             resultName = 'solidPressureForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.solidPressureForces,RealPentaPressureForce)
                 self.handleResultsBuffer3(self.OEF_PentaPressure,resultName)
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.solidPressureForces,ComplexPentaPressureForce)
                 self.handleResultsBuffer3(self.OEF_PentaPressure_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
-        elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
-            resultName = '???' ## @todo why is there no object...
-            if self.numWide==numWideReal:
-                self.handleResultsBuffer3(self.OEF_CompositePlate,resultName)
-                #asf
-            elif self.numWide==numWideImag:
-                self.handleResultsBuffer3(self.OEF_CompositePlate_alt)
-            else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
+        #elif self.elementType in [95,96,97,98]: # composite CQUAD4,CQUAD8,CTRIA3,CTRIA6
+        #    resultName = '???' ## @todo why is there no object...
+        #    if self.numWide == numWideReal:
+        #        self.handleResultsBuffer3(self.OEF_CompositePlate,resultName)
+        #    elif self.numWide == numWideImag:
+        #        self.handleResultsBuffer3(self.OEF_CompositePlate_alt)
+        #    else:
+        #        self.NotImplementedOrSkip()
         elif self.elementType in [102]: # CBUSH
             resultName = 'bushForces'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.bushForces,RealCBUSHForce)
                 self.handleResultsBuffer3(self.OEF_CBush,resultName)
-                #asf
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.bushForces,ComplexCBUSHForce)
                 self.handleResultsBuffer3(self.OEF_CBush_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [189,190]: # VUQUAD,VUTRIA
             resultName = 'force_VU_2D'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.force_VU_2D,RealForce_VU_2D)
                 self.handleResultsBuffer3(self.OEF_Force_VUTRIA,resultName)
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.force_VU_2D,ComplexForce_VU_2D)
                 self.handleResultsBuffer3(self.OEF_Force_VUTRIA_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         elif self.elementType in [191]: # VUBEAM
             resultName = 'force_VU'
-            if self.numWide==numWideReal:
+            if self.numWide == numWideReal:
                 self.createTransientObject(self.force_VU,RealForce_VU)
                 self.handleResultsBuffer3(self.OEF_Force_VU,resultName)
-            elif self.numWide==numWideImag:
+            elif self.numWide == numWideImag:
                 self.createTransientObject(self.force_VU,ComplexForce_VU)
                 self.handleResultsBuffer3(self.OEF_Force_VU_alt,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            ###
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('New Element'+self.codeInformation())
+            self.NotImplementedOrSkip()
         ###

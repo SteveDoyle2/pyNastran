@@ -380,7 +380,7 @@ class ComplexElementsStressStrain(object):
 #==============================================================================
 # dont work...
 
-    def OES_CBEAM_2_alt(self):
+    def xOES_CBEAM_2_alt(self):
         raise NotImplementedError()
         dt = self.nonlinearFactor
         (formatStart,extract) = self.getOUG_FormatStart()
@@ -414,7 +414,7 @@ class ComplexElementsStressStrain(object):
             #print "len(data) = ",len(self.data)
         ###
 
-    def OES_CSOLID_67_alt(self):  # works
+    def xOES_CSOLID_67_alt(self):  # works
         """
         stress is extracted at the centroid
         CTETRA_39
@@ -517,7 +517,7 @@ class ComplexElementsStressStrain(object):
         ###
         #print self.solidStress[self.iSubcase]
 
-    def OES_CSOLID_85_alt(self):  # works
+    def xOES_CSOLID_85_alt(self):  # works
         """
         stress is extracted at the centroid
         CTETRA_85
@@ -627,7 +627,7 @@ class ComplexElementsStressStrain(object):
         #print self.solidStress[self.iSubcase]
 
 
-    def OES_CTRIAX6_53_alt(self):
+    def xOES_CTRIAX6_53_alt(self):
         raise NotImplementedError()
         #(Format1,scaleValue) = self.OES_field1()
         #Format = Format1+'ifffffff'
@@ -656,7 +656,7 @@ class ComplexElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
 
-    def OES_RODNL_89_92_alt(self):
+    def xOES_RODNL_89_92_alt(self):
         raise NotImplementedError()
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
@@ -682,7 +682,7 @@ class ComplexElementsStressStrain(object):
                 self.op2Debug.write('%s\n' %(str(out)))
         ###
 
-    def OES_CPENTANL_91_alt(self):
+    def xOES_CPENTANL_91_alt(self):
         """
         The DMAP manual says fields 3-18 repeat 7 times. but they dont.
         They repeat 6 times.  Other DMAP cards are correct with
@@ -723,7 +723,7 @@ class ComplexElementsStressStrain(object):
         #print "buffer time..."
         #self.firstPass = True
 
-    def OES_CHEXANL_93_alt(self):
+    def xOES_CHEXANL_93_alt(self):
         """
         The DMAP manual says fields 3-18 repeat 9 times. but they dont.
         They repeat 8 times.  Other DMAP cards are correct with
@@ -798,7 +798,7 @@ class ComplexElementsStressStrain(object):
 
         #raise Exception('add CBEAM-94...')
 
-    def OES_CQUAD4_95_alt(self): # works (doesnt handle all stress/strain cases tho)
+    def xOES_CQUAD4_95_alt(self): # works (doesnt handle all stress/strain cases tho)
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
@@ -837,7 +837,7 @@ class ComplexElementsStressStrain(object):
         #print "3 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" %(eid,iLayer,o1,o2,ovm)
         #self.printSection(100)
 
-    def OES_QUAD4FD_139(self): # hyperelastic
+    def xOES_QUAD4FD_139(self): # hyperelastic
         """
         Hyperelastic Quad
         36+4*7*4 = 148
@@ -875,7 +875,7 @@ class ComplexElementsStressStrain(object):
         ###
         #sys.exit('end of hyperQuad')
     
-    def OES_CQUADR_82_alt(self): # not done...
+    def xOES_CQUADR_82_alt(self): # not done...
         """
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """

@@ -1,19 +1,14 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
+#import sys
 from struct import unpack
 
-# pyNastran
-#from pyNastran.op2.resultObjects.ougv1_Objects import (
-#    temperatureObject,
-#    nonlinearTemperatureObject,
-#    fluxObject,nonlinearFluxObject)
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject #ComplexAppliedLoadsObject
-from .opg_loadVector   import LoadVectorObject,ComplexLoadVectorObject,ThermalLoadVectorObject
-from .opnl_forceVector import ForceVectorObject,ComplexForceVectorObject
+from .opg_Objects      import AppliedLoadsObject #ComplexAppliedLoadsObject
+from .opg_loadVector   import LoadVectorObject, ComplexLoadVectorObject, ThermalLoadVectorObject
+from .opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
 
 # OGS table ## @todo move this...
-from pyNastran.op2.tables.ogf_gridPointForces.ogs_surfaceStresses import GridPointStressesObject,GridPointStressesVolumeObject
+from ..ogf_gridPointForces.ogs_surfaceStresses import GridPointStressesObject,GridPointStressesVolumeObject
 
 class OPG(object):
     """Table of element forces"""
@@ -44,11 +39,11 @@ class OPG(object):
         self.parseApproachCode(data)
         #iSubcase = self.getValues(data,'i',4)
 
-        self.addDataParameter(data,'dLoadID',     'i',8,False)   ## dynamic load set ID/random code
-        self.addDataParameter(data,'formatCode',  'i',9,False)   ## format code
-        self.addDataParameter(data,'numWide',     'i',10,False)  ## number of words per entry in record; @note is this needed for this table ???
-        self.addDataParameter(data,'oCode',       'i',11,False)   ## undefined in DMAP...
-        self.addDataParameter(data,'thermal',     'i',23,False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
+        self.addDataParameter(data,'dLoadID',    'i', 8, False)   ## dynamic load set ID/random code
+        self.addDataParameter(data,'formatCode', 'i', 9, False)   ## format code
+        self.addDataParameter(data,'numWide',    'i', 10, False)  ## number of words per entry in record; @note is this needed for this table ???
+        self.addDataParameter(data,'oCode',      'i', 11, False)   ## undefined in DMAP...
+        self.addDataParameter(data,'thermal',    'i', 23, False)  ## thermal flag; 1 for heat ransfer, 0 otherwise
 
         #print "dLoadID(8)=%s formatCode(9)=%s numWide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.formatCode,self.numWide,self.oCode,self.thermal)
         if not self.isSort1():
@@ -56,46 +51,46 @@ class OPG(object):
         #assert self.isThermal()==False,self.thermal
         
         ## assuming tCode=1
-        if self.analysisCode==1:   # statics
-            self.addDataParameter(data,'lsdvmn',  'i',5,False)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+        if self.analysisCode == 1:   # statics
+            self.addDataParameter(data, 'lsdvmn', 'i', 5, False)   ## load set number
+            self.applyDataCodeValue('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
-        elif self.analysisCode==2: # normal modes/buckling (real eigenvalues)
-            self.addDataParameter(data,'mode',     'i',5)   ## mode number
-            self.addDataParameter(data,'eign',     'f',6,False)   ## real eigenvalue
-            self.addDataParameter(data,'modeCycle','f',7,False)   ## mode or cycle @todo confused on the type - F1???
-            self.applyDataCodeValue('dataNames',['mode','eign','modeCycle'])
-        #elif self.analysisCode==3: # differential stiffness
+        elif self.analysisCode == 2: # normal modes/buckling (real eigenvalues)
+            self.addDataParameter(data,'mode',      'i', 5)   ## mode number
+            self.addDataParameter(data, 'eign',      'f', 6, False)   ## real eigenvalue
+            self.addDataParameter(data, 'modeCycle', 'f', 7, False)   ## mode or cycle @todo confused on the type - F1???
+            self.applyDataCodeValue('dataNames', ['mode', 'eign', 'modeCycle'])
+        #elif self.analysisCode == 3: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        #elif self.analysisCode==4: # differential stiffness
+        #elif self.analysisCode == 4: # differential stiffness
         #    self.lsdvmn = self.getValues(data,'i',5) ## load set number
-        elif self.analysisCode==5:   # frequency
-            self.addDataParameter(data,'freq','f',5)   ## frequency
-            self.applyDataCodeValue('dataNames',['freq'])
-        elif self.analysisCode==6: # transient
-            self.addDataParameter(data,'time','f',5)   ## time step
-            self.applyDataCodeValue('dataNames',['time'])
-        elif self.analysisCode==7: # pre-buckling
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode==8: # post-buckling
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.addDataParameter(data,'eigr',    'f',6,False)   ## real eigenvalue
-            self.applyDataCodeValue('dataNames',['lsdvmn','eigr'])
-        elif self.analysisCode==9: # complex eigenvalues
-            self.addDataParameter(data,'mode','i',5)   ## mode number
-            self.addDataParameter(data,'eigr','f',6,False)   ## real eigenvalue
-            self.addDataParameter(data,'eigi','f',7,False)   ## imaginary eigenvalue
+        elif self.analysisCode == 5:   # frequency
+            self.addDataParameter(data,'freq', 'f', 5)   ## frequency
+            self.applyDataCodeValue('dataNames', ['freq'])
+        elif self.analysisCode == 6: # transient
+            self.addDataParameter(data,'time', 'f', 5)   ## time step
+            self.applyDataCodeValue('dataNames', ['time'])
+        elif self.analysisCode == 7: # pre-buckling
+            self.addDataParameter(data,'lsdvmn', 'i', 5)   ## load set number
+            self.applyDataCodeValue('dataNames', ['lsdvmn'])
+        elif self.analysisCode == 8: # post-buckling
+            self.addDataParameter(data,'lsdvmn',  'i', 5)   ## load set number
+            self.addDataParameter(data,'eigr',    'f', 6, False)   ## real eigenvalue
+            self.applyDataCodeValue('dataNames', ['lsdvmn', 'eigr'])
+        elif self.analysisCode == 9: # complex eigenvalues
+            self.addDataParameter(data, 'mode', 'i', 5)   ## mode number
+            self.addDataParameter(data, 'eigr', 'f', 6, False)   ## real eigenvalue
+            self.addDataParameter(data, 'eigi', 'f', 7, False)   ## imaginary eigenvalue
             self.applyDataCodeValue('dataNames',['mode','eigr','eigi'])
-        elif self.analysisCode==10: # nonlinear statics
+        elif self.analysisCode == 10: # nonlinear statics
             self.addDataParameter(data,'lftsfq','f',5)   ## load step
             self.applyDataCodeValue('dataNames',['lftsfq'])
-        elif self.analysisCode==11: # old geometric nonlinear statics
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
-        elif self.analysisCode==12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            self.addDataParameter(data,'lsdvmn',  'i',5)   ## load set number
-            self.applyDataCodeValue('dataNames',['lsdvmn'])
+        elif self.analysisCode == 11: # old geometric nonlinear statics
+            self.addDataParameter(data, 'lsdvmn', 'i', 5)   ## load set number
+            self.applyDataCodeValue('dataNames', ['lsdvmn'])
+        elif self.analysisCode == 12: # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            self.addDataParameter(data,'lsdvmn', 'i', 5)   ## load set number
+            self.applyDataCodeValue('dataNames', ['lsdvmn'])
         else:
             raise RuntimeError('invalid analysisCode...analysisCode=%s' %(self.analysisCode))
         ###
@@ -116,29 +111,29 @@ class OPG(object):
         self.atfsCode = [self.analysisCode,self.tableCode,self.formatCode,self.sortCode]
 
         
-        if   self.tableCode==19:
+        if self.tableCode == 19:
             assert self.tableName in [None],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOPG_Data_table19() # grid point force balance
-        elif self.tableCode==2:  # load vector
+        elif self.tableCode == 2:  # load vector
             assert self.tableName in ['OPG1','OPGV1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOPG_Data_table2()
-        elif self.tableCode==12:  # nonlinear force vector
+        elif self.tableCode == 12:  # nonlinear force vector
             assert self.tableName in ['OPNL1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOPG_Data_table12()
-        elif self.tableCode==26:  # OGS1 - grid point stresses - surface
+        elif self.tableCode == 26:  # OGS1 - grid point stresses - surface
             assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOGS1_Data_table26()
-        elif self.tableCode==27:  # OGS1 - grid point stresses - volume direct
+        elif self.tableCode == 27:  # OGS1 - grid point stresses - volume direct
             assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOGS1_Data_table27()
 
-        elif self.tableCode==28:  # OGS1- grid point stresses - principal
-            assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
+        #elif self.tableCode == 28:  # OGS1- grid point stresses - principal
+            #assert self.tableName in ['OGS1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             #self.readOGS1_Data_table28()
-            self.skipOES_Element() # skipping entire table
+            #self.NotImplementedOrSkip()
 
-        elif self.tableCode==35:  # OGS - Grid point stress discontinuities (plane strain)
-            self.skipOES_Element() # skipping entire table
+        #elif self.tableCode == 35:  # OGS - Grid point stress discontinuities (plane strain)
+            #self.NotImplementedOrSkip()
         
         # OFMPF2M - does this belong here?
         #elif tfsCode==[51,3,3]:
@@ -160,10 +155,7 @@ class OPG(object):
         #elif tfsCode==[55,3,3]:
         #    self.readOPG_Data_format3_sort3()
         else:
-            print(self.codeInformation())
-            raise RuntimeError('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName))
-            #print 'bad analysis/tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName)
-            #self.skipOES_Element()
+            self.NotImplementedOrSkip('bad tableCode/formatCode/sortCode=%s on %s-OPG table' %(self.atfsCode,self.tableName))
         ###
         #print self.obj
 
@@ -174,22 +166,22 @@ class OPG(object):
             if self.thermal==0:
                 resultName = 'loadVectors'
                 self.createTransientObject(self.loadVectors,LoadVectorObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             elif self.thermal==1:
                 resultName = 'thermalLoadVectors'
                 self.createTransientObject(self.thermalLoadVectors,ThermalLoadVectorObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'loadVectors'
                 self.createTransientObject(self.loadVectors,ComplexLoadVectorObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
-        ###
+            raise RuntimeError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
 
     def readOPG_Data_table12(self): # Nonlinear Force Vector (in progress)
         #isSort1 = self.isSort1()
@@ -197,19 +189,18 @@ class OPG(object):
             if self.thermal==0:
                 resultName = 'forceVectors'
                 self.createTransientObject(self.forceVectors,ForceVectorObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'forceVectors'
                 self.createTransientObject(self.forceVectors,ComplexForceVectorObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
-        ###
+            raise RuntimeError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
 
     def readOPG_Data_table19(self): # Applied Loads
         #isSort1 = self.isSort1()
@@ -217,20 +208,19 @@ class OPG(object):
             resultName = 'appliedLoads'
             if self.thermal == 0:
                 self.createTransientObject(self.appliedLoads,AppliedLoadsObject) # real
+                self.handleResultsBuffer3(self.readOPGForces,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.readOPGForces,resultName)
-        elif self.numWide == 14:  # real/imaginary or mag/phase
-            if self.thermal == 0:
-                self.createTransientObject(self.appliedLoads,ComplexAppliedLoadsObject) # complex
-                raise NotImplementedError('can this use a OUG_Complex table???')
-            else:
-                raise NotImplementedError(self.codeInformation())
-            #self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
-            raise NotImplementedError(self.codeInformation())
+                self.NotImplementedOrSkip()
+        #elif self.numWide == 14:  # real/imaginary or mag/phase
+        #    if self.thermal == 0:
+        #        self.createTransientObject(self.appliedLoads,ComplexAppliedLoadsObject) # complex
+        #        raise NotImplementedError('can this use a OUG_Complex table???')
+        #    else:
+        #        raise NotImplementedError(self.codeInformation())
+        #    #self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+        #    raise NotImplementedError(self.codeInformation())
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
-        ###
+            raise RuntimeError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
 
     def readOGS1_Data_table26(self): # OGS1 - grid point stresses - surface
         #isSort1 = self.isSort1()
@@ -239,13 +229,12 @@ class OPG(object):
             self.createTransientObject(self.gridPointStresses,GridPointStressesObject) # real
             self.handleResultsBuffer3(self.readOGS1_table26_numWide11,resultName)
         else:
-            raise NotImplementedError('only numWide=11 is allowed  numWide=%s' %(self.numWide))
-        ###
+            raise RuntimeError('only numWide=11 is allowed  numWide=%s' %(self.numWide))
 
     def readOGS1_table26_numWide11(self): # surface stresses
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'i4sffffffff'
+        format1 += 'i4s8f'
         format1 = bytes(format1)
 
         while len(self.data) >= 44:
@@ -255,7 +244,6 @@ class OPG(object):
             (eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm) = out
             eKey = extract(eKey,dt)
             fiber = fiber.encode('utf-8').strip()
-
             self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
         #print len(self.data)
 
@@ -266,15 +254,13 @@ class OPG(object):
             resultName = 'gridPointVolumeStresses'
             self.createTransientObject(self.gridPointVolumeStresses,GridPointStressesVolumeObject) # real
             self.handleResultsBuffer3(self.readOGS1_table27_numWide9,resultName)
-
         else:
-            raise NotImplementedError('only numWide=10 or 16 is allowed  numWide=%s' %(self.numWide))
-        ###
+            raise RuntimeError('only numWide=9 is allowed  numWide=%s' %(self.numWide))
 
     def readOGS1_table27_numWide9(self): # surface stresses
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ifffffff'
+        format1 += 'i7f'
         format1 = bytes(format1)
 
         while len(self.data) >= 36:
@@ -289,6 +275,7 @@ class OPG(object):
 
 
     def readOPGForces(self): ## @todo needs some work...
+        raise RuntimeError('this should never been called...)
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'i'
@@ -304,7 +291,7 @@ class OPG(object):
             nodeID = extract(gridDevice,dt)
             
             source = unpack(b'8s',data[8:16])
-            (dx,dy,dz,rx,ry,rz) = unpack(b'ffffff',data[16:40])
+            (dx,dy,dz,rx,ry,rz) = unpack(b'6f',data[16:40])
             #print "source = |%s|" %(source)
             
             #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)

@@ -249,7 +249,7 @@ class ComplexPlateStressObject(stressObject):
                                 msg += '%10s ' %('0')
                             else:
                                 try:
-                                    msg += '%10i ' %(int(val))
+                                    msg += '%10i %10i' %(int(val.real),int(val.imag))
                                 except:
                                     print("bad val = %s" %(val))
                                     raise
@@ -646,7 +646,7 @@ class ComplexPlateStressObject(stressObject):
                             msg += '%10s ' %('0')
                         else:
                             try:
-                                msg += '%10i ' %(val)
+                                msg += '%10i %10i' %(val.real,val.imag)
                             except:
                                 print("bad val = %s" %(val))
                                 raise

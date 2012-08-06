@@ -402,6 +402,15 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             ###
         ###
 
+    def NotImplementedOrSkip(self,msg=''):
+        """stops if code is in development and continues otherwise"""
+        if False:
+            raise NotImplementedError(msg)
+        else:
+            self.log.info("skipping...")
+            self.log.info("\n"+self.codeInformation())
+            self.skipOES_Element()
+
     def handleResultsBuffer3(self, f, resultName, debug=False):
         """prototype method for getting results without recursion"""
         #if resultName not in self.allowedResultNames:
@@ -426,7 +435,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             else:
                 data = self.readBlock()
                 if type(data) != type(self.data):
-                    msg = 'The function f=%s has a uniode error\n'%(f.__name__)
+                    msg = 'The function f=%s has a unicode error\n'%(f.__name__)
                     msg += ("type(self.data)=%s type(data)=%s"
                           % (type(self.data), type(data)))
                 sys.stdout.flush()

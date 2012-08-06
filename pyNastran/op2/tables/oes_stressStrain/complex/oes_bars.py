@@ -329,13 +329,13 @@ class ComplexBarStrainObject(strainObject):
 
         if isSort1:
             if dt is not None:
-                self.add = self.addSort1
-                self.addNewEid = self.NewEidSort1
+                #self.add = self.addSort1
+                self.addNewEid = self.addNewEidSort1
             ###
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.addNewEid = self.NewEidSort2
+            #self.add = self.addSort2
+            self.addNewEid = self.addNewEidSort2
         ###
 
     def addF06Data(self,data,transient):
@@ -423,6 +423,7 @@ class ComplexBarStrainObject(strainObject):
         #if nodeID==0: raise Exception(msg)
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
+        return 'ComplexBarStress writeF06 not implemented...',pageNum
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f,isMagPhase)
 

@@ -15,7 +15,7 @@ class AppliedLoadsObject(scalarObject): # approachCode=1, sortCode=0
         self.moments = {}
         if self.dt is not None:
             assert dt>=0.
-            raise NotImplementedError('not implemented...')
+            raise NotImplementedError('transient appliedLoads not implemented...')
             self.eids    = {dt: []}
             self.sources = {dt: []}
             self.forces  = {dt: []}

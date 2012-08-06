@@ -17,7 +17,6 @@ class baseScalarObject(Op2Codes):
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         msg = 'writeF06Transient is not implemented in %s\n' %(self.__class__.__name__)
         return (''.join(msg),pageNum)
-        #raise NotImplementedError(msg)
 
     def writeFloats10E(self,vals):
         vals2 = []
