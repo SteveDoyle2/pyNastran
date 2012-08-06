@@ -1051,10 +1051,10 @@ class MATS1(MaterialDependence):
             self.tid = tid
             if Type == 1:
                 self.Type = 'NLELAST'
-            if Type == 2:
+            elif Type == 2:
                 self.Type = 'PLASTIC'
             else:
-                raise RuntimeError('invalid Type:  Type=%s' % (Type))
+                raise RuntimeError('invalid Type:  Type=%s; must be 1=NLELAST or 2=PLASTIC' % (Type))
             self.h  = h
             self.yf = yf
             self.hr = hr

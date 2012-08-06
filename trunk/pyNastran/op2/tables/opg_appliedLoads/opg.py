@@ -275,7 +275,7 @@ class OPG(object):
 
 
     def readOPGForces(self): ## @todo needs some work...
-        raise RuntimeError('this should never been called...)
+        raise RuntimeError('this should never been called...')
         dt = self.nonlinearFactor
         (format1,extract) = self.getOUG_FormatStart()
         format1 += 'i'

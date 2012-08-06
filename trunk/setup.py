@@ -19,7 +19,12 @@ setup(name='pyNastran',
       description=pyNastran.__desc__,
       long_description="""\
 """,
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      classifiers=[
+                   'Natural Language :: English',
+                   'Intended Audience :: Science/Research',
+                   'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+                   'Programming Language :: Python :: 2',
+                   'Programming Language :: Python :: 3'], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author=pyNastran.__author__,
       author_email=pyNastran.__email__,
@@ -32,6 +37,7 @@ setup(name='pyNastran',
           # -*- Extra requirements: -*-
           'numpy >= 1.3.0',
           'scipy >= 0.6.0',
+#          'matplotlib >= 1.1.0',
 #          'vtk >= 5.8.0',
 #          'wx >= 2.8.12.0',
 #          'cython',
@@ -46,5 +52,4 @@ setup(name='pyNastran',
                            ]
       },
       test_suite = 'pyNastran.all_tests',
-      #**extra
       )
