@@ -116,7 +116,7 @@ class Geometry3(object):
             out = unpack('iiffffi',eData)
             (sid,cid,a,n1,n2,n3,mb) = out
             grav = GRAV(None,out)
-            self.addGrav(grav)
+            self.addLoad(grav)
             n+=28
         ###
         data = data[n:]
@@ -261,7 +261,7 @@ class Geometry3(object):
         nEntries = len(data)//20  # 5*4
         for i in range(nEntries):
             eData = data[n:n+20]
-            out = unpack('ifiii',eData)
+            out = unpack('if3i',eData)
             (sid,p,eid,n1,n2) = out
             load = PLOAD3(None,out)
             self.addLoad(load)
@@ -279,7 +279,7 @@ class Geometry3(object):
         for i in range(nEntries):
             eData = data[n:n+48]
                          #iiffffiiifffi   ssssssssssssssss
-            out = unpack('iiffffiiifff',eData)
+            out = unpack('2i4f3i3f',eData)
             (sid,eid,p1,p2,p3,p4,g1,g34,cid,n1,n2,n3) = out
             #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
             #sdrlA = s1+s2+s3+s4

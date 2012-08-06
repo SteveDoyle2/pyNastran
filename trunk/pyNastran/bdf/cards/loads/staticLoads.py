@@ -275,7 +275,7 @@ class GRAV(BaseCard):
             self.sid = data[0]
             self.cid = data[1]
             self.a   = data[2]
-            self.N   = data[3:6]
+            self.N   = array(data[3:6])
             self.mb  = data[6]
             assert len(data)==7
 
@@ -350,12 +350,9 @@ class ACCEL1(BaseCard):
         ## Acceleration vector scale factor. (Real)
         self.scale = card.field(3)
         
-        N1 = card.field(4, 0.)
-        N2 = card.field(5, 0.)
-        N3 = card.field(6, 0.)
         ## Components of the acceleration vector measured in coordinate system
         ## CID. (Real; at least one Ni != 0)
-        self.N = array([N1, N2, N3])
+        self.N   = array(card.fields(4, 7, [0., 0., 0.]))
         assert max(abs(self.N))>0.
         ## nodes to apply the acceleration to
         self.nodes = expandThruBy(card.fields(9))

@@ -115,7 +115,7 @@ class ComplexEigenvalues(baseScalarObject):
         msg = header+['                                        C O M P L E X   E I G E N V A L U E S\n',
                       '   MODE    EXTRACTION      EIGENVALUE            CYCLES            DAMPING\n',
                       '    NO.       ORDER\n']
-        raise NotImplementedError()
+        #raise NotImplementedError()
         for (iMode,order) in sorted(self.extractionOrder.iteritems()):
             eigen = self.eigenvalues[iMode]
             freq  = self.cycles[iMode]

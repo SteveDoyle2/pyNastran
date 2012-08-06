@@ -77,6 +77,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
+        format1 = bytes(format1)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -100,6 +101,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ff'
+        format1 = bytes(format1)
 
         while len(self.data)>=12: # 3*4
             eData     = self.data[0:12]
@@ -124,6 +126,8 @@ class RealForces(object):
         (format1,extract) = self.getOEF_FormatStart()
         #print self.codeInformation()
         formatAll = 'iffffffff'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
 
         while len(self.data)>=400: # 1+(10-1)*11=100 ->100*4 = 400
             #print "eType=%s" %(eType)
@@ -163,6 +167,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffffffffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=68: # 17*4
             eData     = self.data[0:68]
@@ -186,6 +191,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'f'
+        format1 = bytes(format1)
 
         while len(self.data)>=8: # 2*4
             eData     = self.data[0:8]
@@ -209,6 +215,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -232,6 +239,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'fffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:32]
@@ -255,6 +263,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -277,7 +286,7 @@ class RealForces(object):
     def OEF_Plate2(self): # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'cccc'
+        format1 += '4s'
 
         if self.elementType in [70,75]: # CTRIAR,CTRIA6
             nNodes = 4
@@ -288,6 +297,9 @@ class RealForces(object):
         ###
 
         allFormat = 'fffffffff'
+        format1 = bytes(format1)
+        allFormat = bytes(allFormat)
+
         nTotal = 44+nNodes*36
         while len(self.data)>=nTotal:
             eData     = self.data[0:44]
@@ -296,8 +308,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1+allFormat, eData)
-            (eid,a,b,c,d,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
-            term = a+b+c+d # CEN\
+            (eid,term,nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
+            #term= 'CEN\'
             #print "eType=%s" %(eType)
 
             eid2  = extract(eid,dt)
@@ -324,7 +336,8 @@ class RealForces(object):
     def OEF_ConeAx(self): # 35-CCONEAX
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffffff'
+        format1 += '6f'
+        format1 = bytes(format1)
 
         while len(self.data)>=28: # 7*4
             eData     = self.data[0:28]
@@ -348,6 +361,7 @@ class RealForces(object):
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
+        format1 = bytes(format1)
 
         while len(self.data)>=36: # 9*4
             eData     = self.data[0:36]
@@ -370,7 +384,8 @@ class RealForces(object):
     def OEF_Bend(self): # 69-CBEND
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ifffffffffffff'
+        format1 += 'i13f'
+        format1 = bytes(format1)
 
         while len(self.data)>=60: # 15*4
             eData     = self.data[0:60]
@@ -395,7 +410,8 @@ class RealForces(object):
     def OEF_PentaPressure(self): # 77-CPENTA_PR,78-CTETRA_PR
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ccccccccfffffff'
+        format1 += '8s7f'
+        format1 = bytes(format1)
 
         while len(self.data)>=40: # 10*4
             eData     = self.data[0:40]
@@ -403,8 +419,7 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,a,b,c,d,e,f,g,h,ax,ay,az,vx,vy,vz,pressure) = out
-            eName = a+b+c+d+e+f+g+h
+            (eid,eName,ax,ay,az,vx,vy,vz,pressure) = out
             eid2  = extract(eid,dt)
             #print "eType=%s" %(eType)
             
@@ -419,7 +434,8 @@ class RealForces(object):
     def OEF_CBush(self): # 102-CBUSH
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'ffffff'
+        format1 += '6f'
+        format1 = bytes(format1)
 
         while len(self.data)>=28: # 7*4
             eData     = self.data[0:28]
@@ -443,14 +459,17 @@ class RealForces(object):
         dt = self.nonlinearFactor
 
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iicccc'
+        format1 += 'ii4s'
 
         if self.elementType in [191]:
             nNodes = 2
         else:
             raise NotImplementedError(self.codeInformation())
 
-        formatAll = 'ifffffff'
+        formatAll = 'i7f'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
+
         n = 16+32*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:16] # 8*4
@@ -458,8 +477,7 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD) = out
-            icord = icordA+icordB+icordC+icordD
+            (eid,parent,coord,icord) = out
 
             eid2  = extract(eid,dt)
             dataIn = [eid2,parent,coord,icord]
@@ -488,7 +506,7 @@ class RealForces(object):
     def OEF_Force_VUTRIA(self): # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinearFactor
         (format1,extract) = self.getOEF_FormatStart()
-        format1 += 'iiccccii'
+        format1 += 'ii4sii'
 
         if self.elementType in [189]: # VUQUAD
             nNodes = 4
@@ -498,6 +516,8 @@ class RealForces(object):
             raise NotImplementedError(self.codeInformation())
 
         formatAll = 'ifffiiifffffi'
+        format1 = bytes(format1)
+        formatAll = bytes(formatAll)
         n = 24+52*nNodes
         while len(self.data)>=n:
             eData     = self.data[0:24] # 6*4
@@ -505,8 +525,7 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid,parent,coord,icordA,icordB,icordC,icordD,theta,_) = out
-            icord = icordA+icordB+icordC+icordD
+            (eid,parent,coord,icord,theta,_) = out
 
             eid2  = extract(eid,dt)
             dataIn = [eid2,parent,coord,icord,theta]

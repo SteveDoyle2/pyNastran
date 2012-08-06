@@ -1,7 +1,6 @@
 # pylint: disable=E1101
-#asdf pylint: disable=C0103,R0902,R0904,R0914
-import sys
-from struct import pack
+#import sys
+#from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 
 class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
@@ -29,8 +28,6 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
                     nodeID = gridID+i
                     self.gridTypes[nodeID] = gridType
                     self.temperatures[nodeID] = temp
-                ###
-            ###
             return
 
         (dtName,dt) = transient
@@ -49,38 +46,6 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             ###
         ###
 
-   # def parseLength(self):
-   #     self.mainHeaders = []
-   #     self.strFormat = ''
-   #     print "analysisCode = %s" %(self.analysisCode)
-   #     if 0: #self.analysisCode==6:  # disabled
-   #         self.mainHeaders.append('Freq')
-   #         self.strFormat += 'fi'
-   #         self.add = self.addF
-   #     elif self.analysisCode in[5]:
-   #         self.mainHeaders.append('Time')
-   #         self.strFormat += 'fi'
-   #         self.add = self.addF
-   #     elif self.analysisCode in [1,2,3,4,6,7,8,9,10,11,12]:
-   #         self.mainHeaders.append('NodeID')
-   #         self.strFormat += 'ii'
-   #     else:
-   #         raise NotImplementedError('invalid analysisCode=%s' %(self.analysisCode))
-   #     self.mainHeaders.append('GridType')
-   #
-   #     if self.isImaginary():  # elif self.dataFormat==1:
-   #         self.strFormat += 'ffffffffffff'
-   #         self.headers = ['Temperature']
-   #         raise NotImplementedError('verify...add imaginary...')
-   #     else:
-   #         self.strFormat += 'ffffff'         # if self.dataFormat in [0,2]
-   #         self.headers = ['Temperature']
-   #     
-   #     self.mainHeaders = tuple(self.mainHeaders)
-   #
-   # def getLength(self):
-   #     return (4*len(self.strFormat),self.strFormat)
-
     def updateDt(self,dataCode,dt):
         self.dataCode = dataCode
         self.applyDataCode()
@@ -88,7 +53,6 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             self.log.debug("updating %s...%s=%s  iSubcase=%s" %(self.dataCode['name'],self.dataCode['name'],dt,self.iSubcase))
             self.dt = dt
             self.addNewTransient(dt)
-        ###
 
     def deleteTransient(self, dt):
         del self.temperatures[dt]
@@ -110,7 +74,6 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
         gridType = self.recastGridType(gridType)
         self.gridTypes[nodeID] = gridType
         self.temperatures[nodeID] = v1
-    ###
 
     def addSort1(self,dt,out):
         if dt not in self.temperatures:
@@ -242,12 +205,11 @@ class TemperatureObject(scalarObject): # approachCode=1, sortCode=0, thermal=1
             packOut = ipack[:8]
             ipack = [nID+6,gType]+ipack[8:]
             msg.append('      %8i   %4s      %10.6E   %10.6E   %10.6E   %10.6E   %10.6E   %10.6E\n' %(tuple(packOut)))
-        ###
+
         if ipack:
             fmt = '      %8i   %4s   '+'   %10.6E'*(len(ipack)-2)+'\n'
             out = fmt %(tuple(ipack))
             msg.append(out)
-        ###
         return msg
 
     def __repr__(self):

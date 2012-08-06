@@ -56,29 +56,6 @@ class EigenVectorObject(TableObject): # approachCode=2, sortCode=0, thermal=0
         self.translations[iMode] = {}
         self.rotations[iMode] = {}
 
-    #def add(self,nodeID,gridType,v1,v2,v3,v4,v5,v6):
-        #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        #assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.translations
-
-        #if gridType==0:
-        #    Type = 'S'
-        #if gridType==1:
-        #    Type = 'G'
-        #elif gridType==2:
-        #    Type = 'S'
-        #elif gridType==7:
-        #    Type = 'L'
-        #else:
-        #    raise Exception('invalid grid type...gridType=%s' %(gridType))
-
-        #self.gridTypes[nodeID] = Type
-        #print 'self.caseVall = %s' %(self.caseVal),type(self.caseVal)
-        #print "d = ",self.translations
-        #self.translations[self.caseVal][nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        #self.rotations[self.caseVal][nodeID]    = array([v4,v5,v6]) # rx,ry,rz
-    ###
-
     def eigenvalues(self):
         return self.eigrs
 
@@ -200,8 +177,6 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         #print "*self.dataCode = ",self.dataCode
         self.translations[self.caseVal] = {}
         self.rotations[self.caseVal]    = {}
-        #print "dt = ",dt
-        #raise Exception(self.dataCode)
         
     def deleteTransient(self,dt):
         del self.translations[dt]
@@ -226,7 +201,7 @@ class realEigenVectorObject(scalarObject): # approachCode=2, sortCode=0, thermal
         elif gridType==7:
             Type = 'L'
         else:
-            raise Exception('invalid grid type...gridType=%s' %(gridType))
+            raise ValueError('invalid grid type...gridType=%s' %(gridType))
 
         self.gridTypes[nodeID] = Type
         #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
@@ -344,27 +319,6 @@ class ComplexEigenVectorObject(ComplexTableObject): # approachCode=2, sortCode=0
     def addNewMode(self,iMode):
         self.translations[iMode] = {}
         self.rotations[iMode] = {}
-
-    #def add(self,nodeID,gridType,v1r,v1i,v2r,v2i,v3r,v3i,v4r,v4i,v5r,v5i,v6r,v6i):
-        #msg = "nodeID=%s v1=%s v2=%s v3=%s v4=%s v5=%s v6=%s" %(nodeID,v1,v2,v3,v4,v5,v6)
-        #assert 0<nodeID<1000000000, msg
-        #assert nodeID not in self.translations
-
-        #if gridType==0:
-        #    Type = 'S??'
-        #if gridType==1:
-        #    Type = 'G'
-        #elif gridType==2:
-        #    Type = 'S'
-        #else:
-        #    raise Exception('invalid grid type...gridType=%s' %(gridType))
-
-        #self.gridTypes[nodeID] = Type
-        #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
-        #print "d = ",self.translations
-        #self.translations[self.caseVal][nodeID] = [v1r,v1i,v2r,v2i,v3r,v3i] # dx,dy,dz
-        #self.rotations[self.caseVal][nodeID]    = [v4r,v4i,v5r,v5i,v6r,v6i] # rx,ry,rz
-    ###
 
     def eigenvalues(self):
         return sorted(self.translations.keys())

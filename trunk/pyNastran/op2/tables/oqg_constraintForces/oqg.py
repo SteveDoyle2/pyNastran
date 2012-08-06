@@ -114,8 +114,6 @@ class OQG(object):
 
     def readOQG_Data(self):
         #tfsCode = [self.tableCode,self.formatCode,self.sortCode]
-        self.skipOES_Element() # skipping entire table
-        return
 
         #print "self.analysisCode=%s tableCode(1)=%s thermal(23)=%g" %(self.analysisCode,self.tableCode,self.thermal)
         assert self.thermal in [0,1,8],self.codeInformation()
@@ -127,9 +125,7 @@ class OQG(object):
             assert self.tableName in ['OQMG1'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readOQG_Data_table3()
         else:
-            #self.skipOES_Element()
-            print(self.codeInformation())
-            raise NotImplementedError('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
+            self.NotImplementedOrSkip('bad analysis/table/format/sortCode=%s' %(self.atfsCode))
         ###
         #print self.obj
 
@@ -141,21 +137,20 @@ class OQG(object):
             if self.thermal==0:
                 resultName = 'spcForces'
                 self.createTransientObject(self.spcForces, ComplexSPCForcesObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide==8:  # real/random
             if self.thermal==0:
                 resultName = 'spcForces'
                 self.createTransientObject(self.spcForces,SPCForcesObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
-        if self.thermal not in [0,1]:
-            raise NotImplementedError(self.obj)
+        #if self.thermal not in [0,1]:
             #print self.obj
             #raise RuntimeError('check the printout for thermal...')
 
@@ -165,17 +160,17 @@ class OQG(object):
             if self.thermal == 0:
                 resultName = 'mpcForces'
                 self.createTransientObject(self.mpcForces,MPCForcesObject) # real
+                self.handleResultsBuffer3(self.OUG_RealTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_RealTable,resultName)
+                self.NotImplementedOrSkip()
         elif self.numWide==14:  # real/imaginary or mag/phase
             if self.thermal==0:
                 resultName = 'mpcForces'
                 self.createTransientObject(self.mpcForces,ComplexMPCForcesObject) # complex
+                self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
             else:
-                raise NotImplementedError(self.codeInformation())
-            self.handleResultsBuffer3(self.OUG_ComplexTable,resultName)
+                self.NotImplementedOrSkip()
         else:
-            raise NotImplementedError('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
+            self.NotImplementedOrSkip('only numWide=8 or 14 is allowed  numWide=%s' %(self.numWide))
         ###
 

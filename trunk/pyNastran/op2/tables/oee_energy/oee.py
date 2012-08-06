@@ -113,13 +113,10 @@ class OEE(object):
             assert self.tableName in ['ONRGY1','ONRGY2'],'tableName=%s tableCode=%s' %(self.tableName,self.tableCode)
             self.readStrainEnergy_table18()
         else:
-            #self.skipOES_Element()
-            print(self.codeInformation())
-            raise NotImplementedError('bad approach/table/format/sortCode=%s on %s-OEE table' %(self.atfsCode,self.tableName))
+            self.NotImplementedOrSkip('bad approach/table/format/sortCode=%s on %s-OEE table' %(self.atfsCode,self.tableName))
         ###
         #print str(self.obj)
 
-    
     def readStrainEnergy_table18(self): # real ???
         self.createTransientObject(self.strainEnergy,StrainEnergyObject)
         if self.numWide==4:
@@ -127,8 +124,7 @@ class OEE(object):
         elif self.numWide==5:
             self.OEE_Strain5()
         else:   
-            print(self.codeInformation())
-            raise NotImplementedError()
+            self.NotImplementedOrSkip()
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 
     def OEE_Strain4(self):
@@ -163,7 +159,7 @@ class OEE(object):
         dt = self.nonlinearFactor
 
         #(format1,extract) = self.getOUG_FormatStart()  ## @todo change to OEE
-        format1 = b'ccccccccfff'
+        format1 = b'8s3f'
 
         while len(self.data)>=16: # 5*4
             eData     = self.data[0:20]
@@ -171,9 +167,8 @@ class OEE(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (a,b,c,d,e,f,g,h,energy,percent,density) = out
+            (word,energy,percent,density) = out
             #print "out = ",out
-            word = a+b+c+d+e+f+g+h
             word = word.strip()
             #print "eType=%s" %(eType)
             

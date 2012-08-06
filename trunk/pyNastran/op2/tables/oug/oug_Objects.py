@@ -14,7 +14,7 @@ class fluxObject(scalarObject): # approachCode=1, tableCode=3, thermal=1
         if dt is not None:
             self.fluxes = {}
             self.isTransient = True
-            raise Exception('transient is supported yet...')
+            raise NotImplementedError('transient fluxObject is supported...')
 
     def deleteTransient(self,dt):
         del self.fluxes[dt]

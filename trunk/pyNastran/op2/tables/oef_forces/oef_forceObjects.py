@@ -1229,12 +1229,13 @@ class RealPentaPressureForce(scalarObject): # 77-PENTA_PR,78-TETRA_PR
         self.pressure[dt][eid] = pressure
 
     def writeF06(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
-        words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
-                 ' \n',
-                 '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
+        #words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
+        #         ' \n',
+        #         '    TIME         EL-TYPE             X-ACCELERATION            Y-ACCELERATION            Z-ACCELERATION            PRESSURE (DB)\n']
         if self.nonlinearFactor is not None:
             return self.writeF06Transient(header,pageStamp,pageNum,f)
-        raise NotImplementedError()
+        return 'RealPentaPressureForce writeF06 not implemented...\n'
+        #raise NotImplementedError()
 
     def writeF06Transient(self,header,pageStamp,pageNum=1,f=None,isMagPhase=False):
         words = ['                                   P E A K   A C C E L E R A T I O N S   A N D   P R E S S U R E S\n',
