@@ -533,12 +533,16 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
         midLast = None
         tLast = None
         self.plies = []
-        for i in range(len(fields)):
-            gPlyID    = card.field(i)
-            mid       = card.field(i+1, midLast)
-            thickness = float(card.field(i+2, tLast)) # can be blank 2nd time thru
-            theta     = card.field(i+3, 0.0)
-            sout      = card.field(i+4, 'NO')
+        
+        i=0
+        n = 0
+        while i < len(fields):
+            gPlyID    = card.field(10+i)
+            #print('n=%s gPlyID=%s len=%s' %(n,gPlyID,len(fields)))
+            mid       = card.field(10+i+1, midLast)
+            thickness = float(card.field(10+i+2, tLast)) # can be blank 2nd time thru
+            theta     = card.field(10+i+3, 0.0)
+            sout      = card.field(10+i+4, 'NO')
             self.plies.append([mid, thickness, theta, sout, gPlyID])
             #[mid,t,theta,sout] # PCOMP
             assert mid       is not None
@@ -546,6 +550,8 @@ class PCOMPG(PCOMP):  ## @todo check for bugs in ply parser
             midLast = mid
             tLast = thickness
             T += thickness
+            i += 8
+            n += 1
         ###
 
     def GlobalPlyID(self, iPly):
