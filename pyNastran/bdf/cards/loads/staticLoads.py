@@ -277,6 +277,7 @@ class GRAV(BaseCard):
             self.a   = data[2]
             self.N   = array(data[3:6])
             self.mb  = data[6]
+            self.scale = 1.
             assert len(data)==7
 
         assert not allclose(max(abs(self.N)), 0.),('GRAV N is a zero vector, '
