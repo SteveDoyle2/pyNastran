@@ -1727,7 +1727,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 self.addFLFACT(flfact)
             elif cardName == 'GUST':
                 gust = GUST(cardObj)
-                self.addGust(gust)
+                self.addGUST(gust)
 
             # dynamic
             elif cardName == 'DAREA':

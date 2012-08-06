@@ -16,7 +16,7 @@ class DIT(object):
                            #(105,1,93): self.readTableM1, # record 9
                             (205,2,94): self.readTableM2, # record 10
                             (305,3,95): self.readTableM3, # record 11
-                            (405,4,96): self.readTableM4, # record 12
+                           #(405,4,96): self.readTableM4, # record 12
                             
                             (15, 21, 162): self.readFake,
                             (56, 26, 303): self.readFake,
