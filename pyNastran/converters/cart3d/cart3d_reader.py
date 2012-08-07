@@ -502,6 +502,141 @@ class Cart3DAsciiReader(object):
         f.close()
 
 #------------------------------------------------------------------
+    def getSegments(self,nodes,elements):
+        segments = {} # key=eid, 
+        lengths = {}
+        for eid,e in elements.iteritems():
+            a = tuple(sorted([ e[0],e[1] ]))  # segments of e
+            b = tuple(sorted([ e[1],e[2] ]))
+            c = tuple(sorted([ e[2],e[0] ]))
+            print eid,a,b,c
+            
+            #a.sort()
+            #b.sort()
+            #c.sort()
+            if a in segments:
+                segments[a].append(eid)
+            else:
+                segments[a] = [eid]
+                #print(a)
+                #print nodes[1]
+                lengths[a] = nodes[a[1]]-nodes[a[0]]
+
+            if b in segments:
+                segments[b].append(eid)
+            else:
+                segments[b] = [eid]
+                lengths[b] = nodes[b[1]]-nodes[b[0]]
+
+            if c in segments:
+                segments[c].append(eid)
+            else:
+                segments[c] = [eid]
+                lengths[c] = nodes[c[1]]-nodes[c[0]]
+
+        return segments,lengths
+
+    def makeQuads(self,nodes,elements):
+        segments,lengths = self.getSegments(nodes,elements)
+        for eid,e in elements.iteritems():
+            a = tuple(sorted([ e[0],e[1] ]))  # segments of e
+            b = tuple(sorted([ e[1],e[2] ]))
+            c = tuple(sorted([ e[2],e[0] ]))
+            #a.sort()
+            #b.sort()
+            #c.sort()
+            print eid,e
+            print segments[a]
+            print lengths[a]
+            print len(segments[a])
+            
+            eidA = self.getSegment(a,eid,segments)
+            eidB = self.getSegment(b,eid,segments)
+            eidC = self.getSegment(c,eid,segments)
+            print "eidA=%s eidB=%s eidC=%s" %(eidA,eidB,eidC)
+            if eidA:
+                i=0
+                e2 = elements[eidA]
+                self.checkQuad(nodes,eid,eidA,e,e2,a,b,c,i)
+                del segments[a]
+            if eidB:
+                i=1
+                e2 = elements[eidB]
+                self.checkQuad(nodes,eid,eidB,e,e2,a,b,c,i)
+                del segments[b]
+            if eidC:
+                i=2
+                e2 = elements[eidC]
+                self.checkQuad(nodes,eid,eidC,e,e2,a,b,c,i)
+                del segments[c]
+
+            print "------"
+            #break
+        #for segment in segments:
+        asdf
+
+    def checkQuad(self,nodes,eid,eidA,e,e2,a,b,c,i):
+        """
+        A----B
+        | \ e|
+        |e2 \|
+        C----D
+        
+        two tests
+           1.  folding angle A-B x A-C
+           2a. abs(A-C) - abs(B-D)  = 0  (abs to prevent 2L)
+           2b. abs(A-B) - abs(C-D)  = 0
+        """
+        
+        iplus1 = i+1
+        iplus2 = i+2
+
+        if iplus1 > 2:
+            iplus1 -= 3
+        if iplus2 > 2:
+            iplus2 -= 3
+        print (i,iplus1)
+        print (iplus1,iplus2)
+        print (iplus2,i)
+        AD = nodes[e[i]]     -nodes[e[iplus1]]
+        AB = nodes[e[iplus1]]-nodes[e[iplus2]]
+        BD = nodes[e[iplus2]]-nodes[e[i]]
+        
+        print AD
+        print AB
+        print BD
+        print e2
+        j = e2.index(e[i])
+        
+        jplus1 = j+1
+        jplus2 = j+2
+        if jplus1 > 2:
+            jplus1 -= 3
+        if jplus2 > 2:
+            jplus2 -= 3
+
+        print "DA = ",e[j],e[jplus1]
+        DA = nodes[e[j]]     -nodes[e[jplus1]]
+        print DA
+        
+        asdf
+
+    def getSegment(self,a,eid,segments):
+        if a in segments:
+            aElems = segments[a]
+            print aElems
+            i = aElems.index(eid)
+            #print i
+            aElems.pop(i)
+            #print aElems
+            eidA = aElems[0]
+            #eidA = elements[a]
+            print "eidA = ",eidA
+            return eidA
+        return None
+            
+
+#------------------------------------------------------------------
 class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
     modelType = 'cart3d'
     isStructured = False
@@ -518,6 +653,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         self.infile = None
         self.infilename = None
         self.readHalf = False
+        self.isNodeArray = True
 
         self.makeOp2Debug = False
         self.n = 0
@@ -540,7 +676,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         regions = self.readRegions(self.nElements)
         loads = {}
         #print "size = ",size
-        print self.printSection2(200,'>')
+        #print self.printSection2(200,'>')
         
         
         #print self.printSection2(200,'>')
@@ -584,7 +720,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
                 z = nodeXYZs.pop()
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
-                node = [x,y,z]
+                node = array([x,y,z])
                 assert n not in nodes,'nid=%s in nodes' %(n)
                 nodes[n] = node
                 n-=1
@@ -607,7 +743,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
                 z = nodeXYZs.pop()
                 y = nodeXYZs.pop()
                 x = nodeXYZs.pop()
-                node = [x,y,z]
+                node = array([x,y,z])
                 assert n not in nodes,'nid=%s in nodes' %(n)
                 nodes[n] = node
                 n-=1
@@ -761,10 +897,12 @@ def genericCart3DReader(infileName,log=None,debug=False):
 
 if __name__=='__main__':
     # binary
-    cart3dGeom  = os.path.join('models','threePlugs.tri')
-    outfilename = os.path.join('models','threePlugs2.tri')
+    cart3dGeom  = os.path.join('models','spike.a.tri')
+    #outfilename = os.path.join('models','threePlugs2.tri')
     cart = genericCart3DReader(cart3dGeom)
     (points,elements,regions,loads) = cart.readCart3d(cart3dGeom)
+    #cart.makeQuads(points,elements)
+    
     cart.writeOutfile(outfilename,points,elements,regions)
 
     # ascii
