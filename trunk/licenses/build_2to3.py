@@ -78,10 +78,22 @@ def fix_object(files):
                     elif '=' in line and ('keys()' in line or 'values()' in line) and 'sorted' not in line:
                         i = line.index('=')
                         before,after = line[:i],line[i+1:]
+                        after = after.strip()
+                        if '[' in after:
+                            after = after.strip('\r\n')
+                            #print "before=|%s| after=|%s|" %(before,after)
+                            j = after.index('[')
+                            if 'keys()' in after[j:]:
+                                line = before + '= list(' + after + ')'
+                            else:
+                                line = before + '= list(' + after[:j] + ')' + after[j:]
+                                print line
+                        else:
+                            line = before + '= list(' + after + ')'
+                            
+                        
                         #after = after.strip('\r\n')
                         #print "before=|%s| after=|%s|" %(before,after)
-                        after = after.strip()
-                        line = before + '= list(' + after + ')'
 
                     elif ('keys()' in line or 'values()' in line) and 'sorted' in line:
                         i = line.index('sorted(')
@@ -132,15 +144,18 @@ def fix_object(files):
                     #adsf
                 lines2.append(line)
             
-            #print "len(lines2) = ",len(lines2)
-            f = open(fname, 'wb')
-            #f = open('bbb.py', 'wb')
-            for line in lines2:
-                f.write(line.rstrip('\n\r')+'\n')
-                #print line.rstrip()
-            ###
-            #sys.exit(fname)
-            f.close()
+            if 1:
+                os.system('python C:\\Python32\\Tools\\Scripts\\2to3.py -p -w %s >> junk.out' %(fname))
+            if 0:
+                #print "len(lines2) = ",len(lines2)
+                f = open(fname, 'wb')
+                #f = open('bbb.py', 'wb')
+                for line in lines2:
+                    f.write(line.rstrip('\n\r')+'\n')
+                    #print line.rstrip()
+                ###
+                #sys.exit(fname)
+                f.close()
         ###
     ###
 
