@@ -223,7 +223,7 @@ class scalarObject(baseScalarObject):
         msg += '\n'
         
         nModes = len(keyVals[0])
-        for i in range(nModes):
+        for i in xrange(nModes):
             for vals in keyVals:
                 msg += '%-10g ' %(vals[i])
             msg += '\n'

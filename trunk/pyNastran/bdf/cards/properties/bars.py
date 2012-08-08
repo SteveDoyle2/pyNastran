@@ -954,7 +954,7 @@ class PBEAM(IntegratedLineProperty):
                 x += 16
 
             #print "  nMajor = ",nMajor
-            for nRepeated in range(1, nMajor):
+            for nRepeated in xrange(1, nMajor):
                 #print "  adding a major"
                 nStart = nRepeated*16+1  # field 17 is the first possible so
                 propFields = card.fields(nStart, nStart+16)

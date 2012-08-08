@@ -55,7 +55,7 @@ class ABCQSet(Set):
         self.components = []
 
         fields = card.fields(1)
-        for i in range(0, fields, 2):
+        for i in xrange(0, fields, 2):
             self.IDs.append(fields[i])
             self.components.append(str(fields[i+1]))
 

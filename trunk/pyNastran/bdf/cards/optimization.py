@@ -96,7 +96,7 @@ class DOPTPRM(OptConstraint):
         nFields = len(fields)
         
         self.params = {}
-        for i in range(0,nFields, 2):
+        for i in xrange(0,nFields, 2):
             param = fields[i]
             val   = fields[i+1]
             self.params[param] = val
@@ -127,7 +127,7 @@ class DLINK(OptConstraint):
         self.IDv = []
         self.Ci  = []
         
-        for i in range(0, nFields, 2):
+        for i in xrange(0, nFields, 2):
             self.IDv.append(fields[i])
             self.Ci.append(fields[i+1])
         ###
@@ -304,7 +304,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             endFields.append(None)
             nFields+=1
         i = 0
-        for i in range(0,nFields,2):
+        for i in xrange(0,nFields,2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
@@ -362,7 +362,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             endFields.append(None)
             nFields+=1
         i = 0
-        for i in range(0, nFields, 2):
+        for i in xrange(0, nFields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i+1])
         if nFields%2==1:
@@ -449,7 +449,7 @@ class DVPREL2(OptConstraint):
         self.dvids = []
         self.dtables = []
         if iDesvar:
-            for i in range(10, iDesStop):
+            for i in xrange(10, iDesStop):
                 dvid = card.field(i)
                 if dvid:
                     self.dvids.append(dvid)
@@ -457,7 +457,7 @@ class DVPREL2(OptConstraint):
             ###
         ###
         if iDTable:
-            for i in range(iDTable+1, iEnd):
+            for i in xrange(iDTable+1, iEnd):
                 dtable = card.field(i)
                 if dtable:
                     assert dtable is not 'DTABLE'

@@ -165,9 +165,9 @@ class Geometry4(object):
     def readSPC(self,data):
         """SPC(5501,55,16) - Record 44"""
         #self.skippedCardsFile.write('skipping SPC in GEOM4\n')
-        n=0
+        n = 0
         nEntries = len(data)//20  # 5*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+20]
             (sid,ID,c,xxx,dx) = unpack(b'iiiif',eData)
 
@@ -181,9 +181,9 @@ class Geometry4(object):
         """SPC1(5481,58,12) - Record 45"""
         self.skippedCardsFile.write('skipping SPC1 in GEOM4\n')
         return
-        n=0
+        n = 0
         nEntries = len(data)//20  # 5*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+20]
             (sid,c,thruFlag) = unpack(b'iifii',eData)
 
@@ -200,9 +200,9 @@ class Geometry4(object):
     def readSPCD(self,data):
         """SPCD(5110,51,256) - Record 47"""
         #self.skippedCardsFile.write('skipping SPCD in GEOM4\n')
-        n=0
+        n = 0
         nEntries = len(data)//20  # 5*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+20]
             (sid,ID,c,xxx,dx) = unpack(b'iiiif',eData)
 
@@ -243,9 +243,9 @@ class Geometry4(object):
     def readSUPORT(self,data):
         """SUPORT(5601,56, 14) - Record 59"""
         #self.skippedCardsFile.write('skipping SUPORT in GEOM4\n')
-        n=0
+        n = 0
         nEntries = len(data)//8  # 2*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+8]
             (sid,c) = unpack(b'ii',eData)
 

@@ -50,7 +50,7 @@ def deObscure(num):
     #vals = ['0','1']
     dictA = {}
     n = len(vals)
-    for i in range(n):
+    for i in xrange(n):
         dictA[vals[i]] = i
 
     print("n = ",n)
@@ -75,7 +75,7 @@ def obscure(num):
             #'0','1','2','3','4','5','6','7','8','9']  # 0,1,2,...
     dictA = {}
     n = len(vals)
-    for i in range(n):
+    for i in xrange(n):
         dictA[i] = vals[i]
 
     pack = []
@@ -132,9 +132,9 @@ def ListPrint(listA):
     msg = '['
     if isinstance(listA, matrix):
         (nrows, ncols) = listA.shape
-        for irow in range(nrows):
+        for irow in xrange(nrows):
             msg += '['
-            for icol in range(ncols):
+            for icol in xrange(ncols):
                 msg += '%-10g,' %(listA[irow, icol])
             msg = msg[:-1]
             msg += '],\n '

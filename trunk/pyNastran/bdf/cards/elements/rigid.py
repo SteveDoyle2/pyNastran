@@ -383,7 +383,7 @@ class RBE3(RigidElement):  # not done, needs testing badly
         if iUm:
             i = iUm+1
             #print "i=%s iUmStop=%s" %(i,iUmStop)
-            for j in range(i, iUmStop, 2):
+            for j in xrange(i, iUmStop, 2):
                 gmi = card.field(j)
                 if gmi is not None:
                     cmi = card.field(j+1)

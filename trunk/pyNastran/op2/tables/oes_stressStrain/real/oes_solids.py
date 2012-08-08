@@ -83,8 +83,8 @@ class SolidStressObject(stressObject):
         eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
         if self.nonlinearFactor is None:
             ipack = []
-            i=0
-            n=0
+            i = 0
+            n = 0
             while n<len(self.data):
                 line = self.data[n]
                 #print n,line
@@ -105,8 +105,8 @@ class SolidStressObject(stressObject):
                 self.o2[eid]  = {}
                 self.o3[eid]  = {}
                 self.ovmShear[eid] = {}
-                n+=1
-                for j in range(nNodes):
+                n += 1
+                for j in xrange(nNodes):
                     #print self.data[n]
                     (blank,nodeID,x,oxx,xy,txy,a,o1,lx,d1,d2,d3,pressure,ovmShear) = self.data[n]
                     (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
@@ -643,8 +643,8 @@ class SolidStrainObject(strainObject):
         eMap = {'CTETRA':5,'CPENTA':7,'CHEXA':9,'HEXA':9,'PENTA':7,'TETRA':5,}   # +1 for the centroid
         if self.nonlinearFactor is None:
             pack = []
-            i=0
-            n=0
+            i = 0
+            n = 0
             while n<len(self.data):
                 line = self.data[n]
                 #print n,line
@@ -665,8 +665,8 @@ class SolidStrainObject(strainObject):
                 self.e2[eid]  = {}
                 self.e3[eid]  = {}
                 self.evmShear[eid] = {}
-                n+=1
-                for j in range(nNodes):
+                n += 1
+                for j in xrange(nNodes):
                     #print self.data[n]
                     (blank,nodeID,x,exx,xy,exy,a,e1,lx,d1,d2,d3,pressure,evmShear) = self.data[n]
                     (blank,blank, y,eyy,yz,eyz,b,e2,ly,d1,d2,d3,blank,blank) = self.data[n+1]

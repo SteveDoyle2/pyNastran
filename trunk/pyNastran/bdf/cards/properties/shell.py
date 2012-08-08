@@ -258,7 +258,7 @@ class PCOMP(ShellProperty):
             tLast = None
 
             ## supports single ply per line
-            for i in range(9, 9+nplies*4, 4):
+            for i in xrange(9, 9+nplies*4, 4):
                 defaults = [midLast, tLast, 0.0, 'NO']
                 (mid, t, theta, sout) = card.fields(i, i+4, defaults)
                 ply = [mid, t, theta, sout]
@@ -360,7 +360,7 @@ class PCOMP(ShellProperty):
         @param self the object pointer
         @param model a BDF object
         """
-        for iPly in range(len(self.plies)):
+        for iPly in xrange(len(self.plies)):
             mid = self.plies[iPly][0]
             #print mid
             self.plies[iPly][0] = model.Material(mid)  # mid
@@ -387,7 +387,7 @@ class PCOMP(ShellProperty):
         @retval mids the material IDs
         """
         mids = []
-        for iPly in range(len(self.plies)):
+        for iPly in xrange(len(self.plies)):
             mids.append(self.Mid(iPly))
         return mids
 
@@ -419,7 +419,7 @@ class PCOMP(ShellProperty):
         """
         if iPly == 'all': # get all layers
             t = 0.
-            for iply in range(len(self.plies)):
+            for iply in xrange(len(self.plies)):
                 t += self.Thickness(iply)
             ###
             if self.isSymmetrical():
@@ -459,7 +459,7 @@ class PCOMP(ShellProperty):
         """
         if iPly == 'all': # get all layers
             massPerArea = 0.
-            for iply in range(len(self.plies)):
+            for iply in xrange(len(self.plies)):
                 massPerArea += self.MassPerArea(iply)
             ###
             if self.isSymmetrical():
@@ -478,7 +478,7 @@ class PCOMP(ShellProperty):
     def D(self):
         D = zeros([3, 3])
         #isSym = self.isSymmetrical()
-        for iply in range(len(self.plies)):
+        for iply in xrange(len(self.plies)):
             theta = self.Theta(iply)
             #t    = self.Thickness(iply)
             mat   = self.Material(iply)

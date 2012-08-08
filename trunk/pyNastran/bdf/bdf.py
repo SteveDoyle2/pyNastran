@@ -1003,7 +1003,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
                 #cardName = oldCardObj.field(0)
             ###
 
-            for iCard in range(nCards):
+            for iCard in xrange(nCards):
                 #print "----------------------------"
                 #if special:
                     #print "iCard = ",iCard

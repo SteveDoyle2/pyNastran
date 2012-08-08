@@ -94,10 +94,10 @@ class constraintObject2(object):
         constraints2 = {}
         Keys = constraints.keys()
         nKeys = len(Keys)-1
-        for i in range(nKeys):
+        for i in xrange(nKeys):
             Key = Keys[i]
             constraints2[Key]
-            for j in range(nKeys):
+            for j in xrange(nKeys):
                 if i > j:                    
                     constraints2[Key].append(constraints[Key])
                 ###
@@ -291,7 +291,7 @@ class SUPORT1(Constraint):
         
         self.IDs = []
         self.Cs  = []
-        for i in range(0, len(fields), 2):
+        for i in xrange(0, len(fields), 2):
             self.IDs.append(fields[i  ])
             self.Cs.append( fields[i+1])
         ###
@@ -317,7 +317,7 @@ class SUPORT(Constraint):
         
         self.IDs = []
         self.Cs  = []
-        for i in range(0,len(fields),2):
+        for i in xrange(0,len(fields),2):
             self.IDs.append(fields[i  ])
             self.Cs.append( fields[i+1])
         ###
@@ -346,7 +346,7 @@ class MPC(Constraint):
         nFields = len(fields)-1
         #print "fields = ",fields
         #print "nFields = ",nFields
-        for iField in range(2,nFields, 8):
+        for iField in xrange(2,nFields, 8):
             pack1 = [card.field(iField), card.field(iField+1, 0), card.field(iField+2, 0.)]
             #print "pack1 = ",pack1
             self.gids.append(       pack1[0])
@@ -512,7 +512,7 @@ class SPC1(Constraint):
         self.nodes[i] = node
 
     def rawFields(self): # SPC1
-        #test = [i for i in range(self.nodes[0],self.nodes[-1]+1)]
+        #test = [i for i in xrange(self.nodes[0],self.nodes[-1]+1)]
         #print "self.nodes = ",self.nodes
         #print "test       = ",test
         #if self.nodes==test:

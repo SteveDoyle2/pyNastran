@@ -84,7 +84,7 @@ class MPT(object):
             #print "MAT2 = ",out
             mat = MAT2(None,out)
 
-            if mid>1e8 or mid<0:  # just a checker for out of range materials
+            if mid > 1e8 or mid < 0:  # just a checker for out of range materials
                 self.bigMaterials[mid] = mat
             else:
                 self.addOp2Material(mat)

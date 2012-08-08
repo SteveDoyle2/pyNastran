@@ -39,7 +39,7 @@ class TableObj(object):
         i=0
         while i<nFields:
             pack = []
-            for j in range(nRepeated):
+            for j in xrange(nRepeated):
                 pack.append(fields[i+j])
             i+=nRepeated
             self.table.append(pack)
@@ -49,8 +49,8 @@ class TableObj(object):
         try:
             msg = ''
             #k = 0
-            for i in range(nFields):
-                for j in range(nRepeated):
+            for i in xrange(nFields):
+                for j in xrange(nRepeated):
                     try:
                         msg += '%-8g ' %(fields[i*nRepeated+j])
                     except TypeError:

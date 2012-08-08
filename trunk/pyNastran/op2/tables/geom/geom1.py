@@ -44,9 +44,9 @@ class Geometry1(object):
         (1701,17,6) - the marker for Record 1
         """
         #print "reading CORD1C"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             (cid,one,two,g1,g2,g3) = unpack(b'iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
@@ -61,9 +61,9 @@ class Geometry1(object):
         (1801,18,5) - the marker for Record 2
         """
         #print "reading CORD1R"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             (cid,one,one,g1,g2,g3) = unpack(b'iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
@@ -78,9 +78,9 @@ class Geometry1(object):
         (1901,19,7) - the marker for Record 3
         """
         #print "reading CORD1S"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             (cid,three,one,g1,g2,g3) = unpack(b'iiiiii',eData)
             dataIn = [cid,g1,g2,g3]
@@ -95,9 +95,9 @@ class Geometry1(object):
         (2001,20,9) - the marker for Record 4
         """
         #print "reading CORD2C"
-        n=0
+        n = 0
         nEntries = len(data)//52
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+52] # 13*4
             (cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack(b'iiiifffffffff',eData)
             #print "cid=%s two=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,two,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
@@ -113,9 +113,9 @@ class Geometry1(object):
         (2101,21,8) - the marker for Record 5
         """
         #print "reading CORD2R"
-        n=0
+        n = 0
         nEntries = len(data)//52
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+52] # 13*4
             (cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack(b'iiiifffffffff',eData)
             dataIn = [cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3]
@@ -131,9 +131,9 @@ class Geometry1(object):
         (2201,22,10) - the marker for Record 6
         """
         #print "reading CORD2S"
-        n=0
+        n = 0
         nEntries = len(data)//52
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+52] # 13*4
             (cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3) = unpack(b'iiiifffffffff',eData)
             #print "cid=%s sixty5=%s eight=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,sixty5,eight,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
@@ -150,9 +150,9 @@ class Geometry1(object):
         @todo isnt this a CORD3G, not a CORD3R ???
         """
         #print "reading CORD3G"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             (cid,n1,n2,n3) = unpack(b'iiii',eData)
             dataIn = [cid,n1,n2,n3]
@@ -165,9 +165,9 @@ class Geometry1(object):
     def readGrid(self,data):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         #print "reading GRID"
-        n=0
+        n = 0
         nEntries = len(data)//32
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+32]
             out = unpack(b'iifffiii',eData)
 

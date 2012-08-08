@@ -220,13 +220,13 @@ class NastranMesh(BDF):
         dy = height/ny
         
         nidStart = 200
-        n=nidStart
+        n = nidStart
         #x=[]; y=[]
         ij_NMap = {}
         points = {}
-        for j in range(ny+1):
+        for j in xrange(ny+1):
             yi = dy*j
-            for i in range(nx+1):
+            for i in xrange(nx+1):
                 xi = dx*i
                 points[n] = array([xi,yi,0.])
                 ij_NMap[(i,j)] = n
@@ -235,8 +235,8 @@ class NastranMesh(BDF):
         ###
         
         elements = []
-        for j in range(ny):
-            for i in range(nx):
+        for j in xrange(ny):
+            for i in xrange(nx):
                 element = [ij_NMap[(i,  j  )],
                            ij_NMap[(i+1,j  )],
                            ij_NMap[(i+1,j+1)],]

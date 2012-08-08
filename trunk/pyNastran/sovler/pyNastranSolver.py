@@ -27,7 +27,7 @@ def partition_sparse(Is, Js, Vs):
     return(I2, J2, V2)
 
 def getDOF_Set(nAll, dofs):
-    dofsAll = set([i for i in range(nAll)])
+    dofsAll = set([i for i in xrange(nAll)])
     dofs = list(dofsAll.difference(set(dofs)))
     return dofs
     
@@ -418,8 +418,8 @@ class Solver(F06, OP2):
                 if dof in Dofs:  # is3D
                     F[Dofs[dof]] += fg
 
-            for i in range(Ki):
-                for j in range(Kj):
+            for i in xrange(Ki):
+                for j in xrange(Kj):
                     kij = K[i, j]
                     #if abs(kij)>1e-8:
                     #print('niJV = ',nIJV[ij])

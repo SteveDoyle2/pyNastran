@@ -302,10 +302,10 @@ class OP4(FortranFile):
 
     def letterCount(self,word,letter):
         """Counts the number of occurrences of a letter in a word/line."""
-        n=0
+        n = 0
         for L in word:
-            if L==letter:
-                n+=1
+            if L == letter:
+                n += 1
         return n
 
 #--------------------------------------------------------------------------
@@ -1163,12 +1163,12 @@ def matrices():
 def compressColumn(col):
     packs = []
 
-    n=0
-    i=0
+    n = 0
+    i = 0
     packi = []
-    while i<len(col):
+    while i < len(col):
         #print "i=%s n=%s col[i]=%s" %(i,n,col[i])
-        if col[i]==n+1:
+        if col[i] == n+1:
             #print "i=n=%s" %(i)
             packi.append(i)
             n+=1
@@ -1177,7 +1177,7 @@ def compressColumn(col):
                 packs.append(packi)
                 #print "pack = ",pack
             packi = [i]
-            n=col[i]
+            n = col[i]
         #print "pack = ",pack
         i+=1
 

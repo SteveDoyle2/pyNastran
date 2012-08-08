@@ -137,7 +137,7 @@ class RealForces(object):
             eid, = unpack(format1, eData)
             eid2 = extract(eid,dt)
 
-            for i in range(11):
+            for i in xrange(11):
                 eData     = self.data[0:36]
                 self.data = self.data[36: ]
                 #print "len(data) = ",len(eData)
@@ -318,7 +318,7 @@ class RealForces(object):
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
-            for i in range(nNodes-1):
+            for i in xrange(nNodes-1):
                 eData     = self.data[0:36]
                 self.data = self.data[36: ]
                 dataIn = unpack(allFormat, eData)
@@ -483,7 +483,7 @@ class RealForces(object):
             dataIn = [eid2,parent,coord,icord]
 
             forces = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:32] # 8*4
                 self.data = self.data[32: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -531,7 +531,7 @@ class RealForces(object):
             dataIn = [eid2,parent,coord,icord,theta]
 
             forces = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:52] # 13*4
                 self.data = self.data[52: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))

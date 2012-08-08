@@ -153,11 +153,11 @@ class NastranMatrix(BaseCard):
 
         #print "minLoops = ",minLoops
         #print "nLoops   = ",nLoops
-        for i in range(minLoops):
+        for i in xrange(minLoops):
             self.GCj.append((Gj,Cj))
 
         if self.isComplex():
-            for i in range(minLoops):
+            for i in xrange(minLoops):
                 n = 5+4*i
                 Gi = card.field(n)
                 Ci = card.field(n+1)
@@ -165,7 +165,7 @@ class NastranMatrix(BaseCard):
                 self.Real.append(card.field(n+2))
                 self.Complex.append(card.field(n+3))
         else:
-            for i in range(minLoops):
+            for i in xrange(minLoops):
                 n = 5+4*i
                 Gi = card.field(n)
                 Ci = card.field(n+1)
@@ -209,8 +209,8 @@ class NastranMatrix(BaseCard):
         #A = ss.lil_matrix((3,3), dtype='d') # double precision
 
         #rows=[]; cols=[]; data=[]
-        #for i in range(3):
-        #    for j in range(3):
+        #for i in xrange(3):
+        #    for j in xrange(3):
         #        k = float((i+1)*(j+1))
         #        rows.append(i)
         #        cols.append(j)
@@ -449,7 +449,7 @@ class DMI(BaseCard):
                         #print "*i=%s j=%s value=%s" %(i1,j,realValue)
                         endI = fields[i+1]
                         #print "*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue)
-                        for ii in range(i1, endI+1):
+                        for ii in xrange(i1, endI+1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)

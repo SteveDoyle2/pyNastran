@@ -126,7 +126,7 @@ class EIGC(Method): ## not done
         self.iblkszs = []
         self.ksteps  = []
         self.NJIs    = []
-        for iRow in range(nRows):
+        for iRow in xrange(nRows):
             #NDJ_default = None
 
             self.alphaAjs.append(card.field(9+8*iRow  , 0.0))
@@ -155,7 +155,7 @@ class EIGC(Method): ## not done
             alphaOmega_default = 0.0
             LJ_default = 1.0
 
-        for iRow in range(nRows):
+        for iRow in xrange(nRows):
             NEj = card.field(9+7*iRow+5)
             NDJ_default = None
             if self.method=='INV':
