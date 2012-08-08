@@ -7,8 +7,8 @@ from applyLicense import getFoldersFiles
 #assert sys.version_info[:2]==(2,7),'this must be done in python 2.7'
 
 def fix_object(files):
-    isPython3 = False
-    isPython2 = True
+    isPython3 = True
+    isPython2 = False
     assert isPython3 != isPython2
     
     for fname in files:
@@ -66,8 +66,6 @@ def fix_object(files):
                         line = ''
                     elif 'unicode_literals' in line:
                         line = ''
-                    elif 'unicode' in line:
-                        line = line.replace('unicode','str')
                     elif '.iteritems()' in line:
                         line = line.replace('.iteritems()','.items()')
                     elif '.itervalues()' in line:
@@ -76,6 +74,45 @@ def fix_object(files):
                         line = line.replace('.iterkeys()','.keys()')
                     elif '.izip()' in line:
                         line = line.replace('.izip()','.zip()')
+
+                    elif '=' in line and ('keys()' in line or 'values()' in line) and 'sorted' not in line:
+                        i = line.index('=')
+                        before,after = line[:i],line[i+1:]
+                        #after = after.strip('\r\n')
+                        #print "before=|%s| after=|%s|" %(before,after)
+                        after = after.strip()
+                        line = before + '= list(' + after + ')'
+
+                    elif ('keys()' in line or 'values()' in line) and 'sorted' in line:
+                        i = line.index('sorted(')
+                        before,after = line[:i+7],line[i+7:] # 7 is the length of 'sorted('
+                        #after = after.strip('\r\n')
+                        #print "before=|%s| after=|%s|" %(before,after)
+                        after = after.strip()
+                        line = before + 'list(' + after + ')'
+                        print "***",line
+
+                    elif "'wb')" in line:
+                        line = line.replace("'wb')","'w')")
+                    elif 'format1 = bytes(format1)' in line:
+                        line = ''
+                    elif 'format2 = bytes(format2)' in line:
+                        line = ''
+                    elif 'iFormat = bytes(iFormat)' in line:
+                        line = ''
+                    elif 'formatAll = bytes(formatAll)' in line:
+                        line = ''
+                    elif 'dataFormat = bytes(dataFormat)' in line:
+                        line = ''
+                    elif "unpack(b'" in line:
+                        line = line.replace("unpack(b'","unpack('")
+                    elif " b'" in line and 'data' not in line:
+                        line = line.replace(" b'"," '")
+                    elif 'unicode' in line:
+                        line = line.replace('unicode','str')
+
+                    elif 'keys()' in line:
+                        print '??? ',line
 
                 #elif ",'wb')" in line:
                     #assert 'open' in line,codeLine
