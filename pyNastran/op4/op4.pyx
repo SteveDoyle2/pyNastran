@@ -305,7 +305,7 @@ class OP4:                                                # {{{1
                  4 : 'CD' ,}  # complex double precision
     def __init__(self          ,                # {{{2
                  char *filename,
-                 char *mode    ):
+                 mode          ):
         cdef int  Max_Matrices_Per_OP4 = 100
         cdef int  nmat_in_file
 #       cdef char name[Max_Matrices_Per_OP4][9]   # not allowed
@@ -320,13 +320,15 @@ class OP4:                                                # {{{1
         cdef int  digits[100]
         cdef long offset[100]
 #       print('op4.File got [%s], [%c]' % (filename, mode))
-        if not os.path.exists(filename):
-            print('op4.File: no such file %s' % (filename))
-            raise IOError
-        elif not os.path.isfile(filename):
-            print('op4.File: not a file %s' % (filename))
-            raise IOError
+        if mode == 'r' or mode == 'R':
+            if not os.path.exists(filename):
+                print('op4.File: no such file %s' % (filename))
+                raise IOError
+            elif not os.path.isfile(filename):
+                print('op4.File: not a file %s' % (filename))
+                raise IOError
         self.filename = os.path.abspath(filename)
+        if mode == 'w' or mode == 'W': return
         # Scan the file for number of matrices and headers for each matrix.
         try:
             rv = op4_scan(filename , # in                            
@@ -663,5 +665,20 @@ class OP4:                                                # {{{1
         else:
             return All_Matrices
 
+    # 2}}}
+    def Save(self     ,                         # {{{2
+             *matrices,
+             digits=0 ): # default output format is binary
+
+        if digits:
+            if digits <  2: digits =  2
+            if digits > 26: digits = 26
+        print('write to %s with digits=%d' % (self.filename, digits))
+        for m in matrices:
+            print(' -> type=[%s]' % (m.dtype))
+            if m.dtype not in ['float32', 'float64', 'complex64', 'complex128',]:
+                print('   type %s not supported, converting to float64')
+                m = m.astype(np.float64)
+            print(m)
     # 2}}}
 # 1}}}
