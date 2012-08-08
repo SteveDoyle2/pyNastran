@@ -333,9 +333,9 @@ class CTETRA4(SolidElement):
         (P,W) = gauss(1)
 
         K = zeros((6,6))
-        for i in range(ng):
-            for j in range(ng):
-                for k in range(ng):
+        for i in xrange(ng):
+            for j in xrange(ng):
+                for k in xrange(ng):
                     p = [ P[i],P[j],P[k] ]
                     w = W[i]*W[j]*W[k]
                     pz = self.zeta(p)

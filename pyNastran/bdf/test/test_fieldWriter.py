@@ -23,7 +23,7 @@ class TestFieldWriter(unittest.TestCase):
         field = print_field(-0.0748662); assert '-.074866' == field, '|%s|' %(field)
     
     def a_test_2(self):
-        for i in range(1000):
+        for i in xrange(1000):
             a = random.uniform(-20,20)
             a2 = 10**a
             self.compare(a2)

@@ -56,7 +56,7 @@ class ComplexForces(object):
             eidTemp, = unpack(format1, eData)
             eid2  = extract(eidTemp,dt)
 
-            for i in range(11):
+            for i in xrange(11):
                 eData     = self.data[0:64]
                 self.data = self.data[64: ]
                 #print "len(data) = ",len(eData)
@@ -355,7 +355,7 @@ class ComplexForces(object):
             #print "%s" %(self.ElementType(self.elementType)),dataIn
             self.obj.addNewElement(eid2,dt,dataIn)
 
-            for i in range(nNodes-1):  ## @todo fix crash...
+            for i in xrange(nNodes-1):  ## @todo fix crash...
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
                 out = unpack(allFormat, eData)
@@ -531,7 +531,7 @@ class ComplexForces(object):
             dataIn = [eid2,parent,coord,icord]
 
             forces = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:56] # 14*4
                 self.data = self.data[56: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -600,7 +600,7 @@ class ComplexForces(object):
             dataIn = [eid2,parent,coord,icord,theta]
 
             forces = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:100] # 13*4
                 self.data = self.data[100: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))

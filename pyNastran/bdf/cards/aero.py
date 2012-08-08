@@ -52,7 +52,7 @@ class AELINK(BaseCard):
         #print "aelink fields = ",fields
         assert len(fields)%2==0,'fields=%s' %(fields)
         #print "len(fields) = ",len(fields)
-        for i in range(0,len(fields),2):
+        for i in xrange(0,len(fields),2):
             independentLabel = fields[i]
             Ci               = fields[i+1]
             self.independentLabels.append(independentLabel)
@@ -439,25 +439,25 @@ class CAERO1(BaseCard):
         2------3
         """
         #Material.__init__(self,card)
-        self.eid    =  card.field(1)
-        self.pid    =  card.field(2)
-        self.cp     =  card.field(3, 0)
-        self.nspan  =  card.field(4, 0)
-        self.nchord =  card.field(5, 0)
+        self.eid    = card.field(1)
+        self.pid    = card.field(2)
+        self.cp     = card.field(3, 0)
+        self.nspan  = card.field(4, 0)
+        self.nchord = card.field(5, 0)
         
         #if self.nspan==0:
-        self.lspan  =  card.field(6)
+        self.lspan  = card.field(6)
 
         #if self.nchord==0:
-        self.lchord =  card.field(7)
+        self.lchord = card.field(7)
         
-        self.igid =  card.field(8)
+        self.igid = card.field(8)
 
-        self.p1   =  array([card.field(9, 0.0), card.field(10, 0.0), card.field(11, 0.0)])
+        self.p1 = array([card.field(9, 0.0), card.field(10, 0.0), card.field(11, 0.0)])
         self.x12 = card.field(12, 0.)
         #self.p2   =  self.p1+array([card.field(12, 0.0), 0., 0.])
 
-        self.p4   =  array([card.field(13, 0.0), card.field(14, 0.0), card.field(15, 0.0)])
+        self.p4 = array([card.field(13, 0.0), card.field(14, 0.0), card.field(15, 0.0)])
         self.x43 = card.field(16, 0.)
         #self.p3   =  self.p4+array([card.field(16, 0.0), 0., 0.])
 
@@ -632,7 +632,7 @@ class FLFACT(BaseCard):
                 msg = 'embedded THRUs not supported yet on FLFACT card\n'
                 raise NotImplementedError(msg)
                 #(a,thru,b,n,dn) = factors
-                #for i in range(
+                #for i in xrange(
             ###
         else:
             self.sid     = data[0]
@@ -766,7 +766,7 @@ class MKAERO1(BaseCard):
             nFields = len(fields)-8
             self.machs  = []
             self.rFreqs = []
-            for i in range(1, 1+nFields):
+            for i in xrange(1, 1+nFields):
                 self.machs.append( card.field(i  ))
                 self.rFreqs.append(card.field(i+8))
         else:
@@ -814,7 +814,7 @@ class MKAERO2(BaseCard):
             nFields = len(fields)
             self.machs  = []
             self.rFreqs = []
-            for i in range(1, 1+nFields, 2):
+            for i in xrange(1, 1+nFields, 2):
                 self.machs.append( card.field(i  ))
                 self.rFreqs.append(card.field(i+1))
             ###
@@ -908,7 +908,7 @@ class PAERO2(BaseCard):
         self.thn = []
         fields = card.fields(9)
         nFields = len(fields)
-        for i in range(9, 9+nFields, 2):
+        for i in xrange(9, 9+nFields, 2):
             self.thi.append(card.field(i  ))
             self.thi.append(card.field(i+1))
         ###

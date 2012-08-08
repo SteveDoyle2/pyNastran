@@ -300,7 +300,7 @@ def printCard(fields, tol=0.):
         sys.stdout.flush()
         raise
     
-    for i in range(1, len(fields)):
+    for i in xrange(1, len(fields)):
         field = fields[i]
         try:
             out += print_field(field, tol=tol)
@@ -337,7 +337,7 @@ def print_int_card(fields, tol=0.):
         sys.stdout.flush()
         raise
     
-    for i in range(1, len(fields)):
+    for i in xrange(1, len(fields)):
         field = fields[i]
         try:
             out += "%8i" % (field) # balks if you have None or string fields

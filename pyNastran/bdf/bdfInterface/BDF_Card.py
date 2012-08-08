@@ -89,7 +89,7 @@ class BDFCard(object):
         out = []
         
         d = 0
-        for n in range(i, j):
+        for n in xrange(i, j):
             if debug:
                 print("  default = %s" %(defaults[d]))
             value = self.field(n, defaults[d])
@@ -162,7 +162,7 @@ class BDFCard(object):
         
         cardBuilt = [fieldsOld[0]]
         
-        for i in range(1, minLength):
+        for i in xrange(1, minLength):
             fieldOld = fieldsOld[i]
             fieldNew = fieldsNew[i]
 
@@ -202,11 +202,11 @@ class BDFCard(object):
         
         if maxLength < len(cardBuilt):
             # the new card is longer than builtCard
-            for i in range(self.nfields, maxLength):
+            for i in xrange(self.nfields, maxLength):
                 cardBuilt.append(self.card[i])
         elif len(cardBuilt) < self.oldCard.nfields:
             # builtCard is shorter than the old card
-            for i in range(self.nfields, maxLength):
+            for i in xrange(self.nfields, maxLength):
                 cardBuilt.append(self.oldCard.field(i))
         #else: # same length
             #pass

@@ -105,7 +105,7 @@ class CHBDYE(ThermalElement):
         ## [1,2,3]
         
         # id-1 is for the 0 based python index
-        nodes = [enodes[id-1] for id in range(len(eid.nodes)) if id in sideIDs ]
+        nodes = [enodes[id-1] for id in xrange(len(eid.nodes)) if id in sideIDs ]
         return side
         
     def rawFields(self):

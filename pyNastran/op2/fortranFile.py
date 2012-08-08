@@ -396,7 +396,7 @@ class FortranFile(object):
     def getNMarkers(self,nMarkers,rewind=False):
         """gets the next N markers, verifies they're correct"""
         markers = []
-        for iMarker in range(nMarkers):
+        for iMarker in xrange(nMarkers):
             tableCode = self.readHeader(None)
             markers.append(tableCode)
         ###
@@ -577,7 +577,8 @@ class FortranFile(object):
             #print "n      = ",n
             #print "self.n = ",self.n
             #print "op2.tell = ",self.op2.tell()
-            return word.strip()
+            tableName = word.strip()
+            return tableName.decode('utf-8')
         except:
             if rewind and not stopOnFailure:
                 self.n = n

@@ -599,7 +599,7 @@ class F06(OES,OUG,OQG,F06Writer):
         return True
 
     def skip(self,iskip):
-        for i in range(iskip-1):
+        for i in xrange(iskip-1):
             self.infile.readline()
         self.i += iskip
         return self.infile.readline()

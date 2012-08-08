@@ -105,9 +105,9 @@ class Geometry2(object):
         CBAR(2408,24,180) - the marker for Record 8
         """
         #print "reading CBAR"
-        n=0
+        n = 0
         nEntries = len(data)//64
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+64] # 16*4
             f, = unpack(b'i',eData[28:32])
             #print "len(eData) = %s" %(len(eData))
@@ -145,9 +145,9 @@ class Geometry2(object):
         CBEAM(5408,54,261) - the marker for Record 10
         """
         #print "reading CBEAM"
-        n=0
+        n = 0
         nEntries = len(data)//72
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+72] # 18*4
             f, = unpack(b'i',eData[40:44])
             #print "f = ",f
@@ -211,9 +211,9 @@ class Geometry2(object):
         CDAMP1(201,2,69) - the marker for Record 16
         """
         #print "reading CDAMP1"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             out = unpack(b'iiiiii',eData)
             (eid,pid,g1,g2,c1,c2) = out
@@ -228,9 +228,9 @@ class Geometry2(object):
         CDAMP2(301,3,70) - the marker for Record 17
         """
         #print "reading CDAMP2"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             out = unpack(b'ifiiii',eData)
             (eid,b,g1,g2,c1,c2) = out
@@ -245,9 +245,9 @@ class Geometry2(object):
         CDAMP3(401,4,71) - the marker for Record 18
         """
         #print "reading CDAMP3"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'iiii',eData)
             (eid,pid,s1,s2) = out
@@ -262,9 +262,9 @@ class Geometry2(object):
         CDAMP4(501,5,72) - the marker for Record 19
         """
         #print "reading CDAMP4"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'ifii',eData)
             (eid,b,s1,s2) = out
@@ -279,9 +279,9 @@ class Geometry2(object):
         CDAMP5(10608,106,404) - the marker for Record 20
         """
         #print "reading CDAMP5"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'iiii',eData)
             (eid,pid,s1,s2) = out
@@ -347,9 +347,9 @@ class Geometry2(object):
         CELAS4(901,9,76) - the marker for Record 32
         """
         #print "reading CELAS4"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'ifii',eData)
             (eid,k,s1,s2) = out
@@ -371,9 +371,9 @@ class Geometry2(object):
         CGAP(1908,19,104) - the marker for Record 39
         """
         #print "reading CGAP"
-        n=0
+        n = 0
         nEntries = len(data)//36
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+36] # 9*4
             out = unpack(b'iiiifffii',eData)
             (eid,pid,ga,gb,x1,x2,x3,f,cid) = out # f=0,1
@@ -450,9 +450,9 @@ class Geometry2(object):
         CMASS1(1001,10,65) - the marker for Record 51
         """
         #print "reading CMASS1"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             out = unpack(b'iiiiii',eData)
             #(eid,pid,g1,g2,c1,c2) = out
@@ -467,9 +467,9 @@ class Geometry2(object):
         CMASS2(1101,11,66) - the marker for Record 52
         """
         #print "reading CMASS2"
-        n=0
+        n = 0
         nEntries = len(data)//24
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24] # 6*4
             out = unpack(b'ifiiii',eData)
             #(eid,m,g1,g2,c1,c2) = out
@@ -484,9 +484,9 @@ class Geometry2(object):
         CMASS3(1201,12,67) - the marker for Record 53
         """
         #print "reading CMASS3"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'iiii',eData)
             #(eid,pid,s1,s2) = out
@@ -501,9 +501,9 @@ class Geometry2(object):
         CMASS4(1301,13,68) - the marker for Record 54
         """
         #print "reading CMASS4"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'ifii',eData)
             #(eid,m,s1,s2) = out
@@ -524,9 +524,9 @@ class Geometry2(object):
         CONM1(1401,14,63) - the marker for Record 56
         """
         #print "reading CONM1"
-        n=0
+        n = 0
         nEntries = len(data)//96
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+96] # 24*4
             out = unpack(b'iiifffffffffffffffffffff',eData)
             (eid,g,cid,m1, m2a,m2b, m3a,m3b,m3c, m4a,m4b,m4c,m4d,
@@ -611,9 +611,9 @@ class Geometry2(object):
         CPENTA(4108,41,280) - the marker for Record 62
         """
         #print "reading CPENTA"
-        n=0
+        n = 0
         nEntries = len(data)//68
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+68] # 17*4
             out = unpack(b'iiiiiiiiiiiiiiiii',eData)
             (eid,pid,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,
@@ -646,9 +646,9 @@ class Geometry2(object):
         
     def runCQUAD(self,data,Element):
         """common method for CQUAD, CQUADX"""
-        n=0
+        n = 0
         nEntries = len(data)//44 # 11*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+44]
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9) = unpack(b'iiiiiiiiiii',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
@@ -672,9 +672,9 @@ class Geometry2(object):
         """
         common method for CQUAD4, CQUADR
         """
-        n=0
+        n = 0
         nEntries = len(data)//56
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+56] # 14*4
             (eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4) = unpack(b'iiiiiiffiiffff',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
@@ -694,9 +694,9 @@ class Geometry2(object):
         """
         #print "reading CQUAD8"
         return
-        n=0
+        n = 0
         nEntries = len(data)//64 # 17*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+64]
             out = unpack(b'iiiiiiiiiifffffi',eData)
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,t1,t2,t3,t4,theta,tflag) = out
@@ -736,9 +736,9 @@ class Geometry2(object):
         CROD(3001,30,48)    - the marker for Record 80
         """
         #print "reading CROD"
-        n=0
+        n = 0
         nEntries = len(data)//16 # 4*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16]
             out = unpack(b'iiii',eData)
             (eid,pid,n1,n2) = out
@@ -756,9 +756,9 @@ class Geometry2(object):
         CSHEAR(3101,31,61)    - the marker for Record 83
         """
         #print "reading CSHEAR"
-        n=0
+        n = 0
         nEntries = len(data)//24 # 6*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+24]
             out = unpack(b'iiiiii',eData)
             (eid,pid,n1,n2,n3,n4) = out
@@ -803,9 +803,9 @@ class Geometry2(object):
         CTETRA(5508,55,217)    - the marker for Record 87
         """
         #print "reading CTETRA"
-        n=0
+        n = 0
         nEntries = len(data)//48 # 12*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+48]
             out = unpack(b'iiiiiiiiiiii',eData)
             (eid,pid,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10) = out
@@ -853,9 +853,9 @@ class Geometry2(object):
         """
         #print "reading CTRIA6"
         return
-        n=0
+        n = 0
         nEntries = len(data)//52 # 13*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+52]
             out = unpack(b'iiiiiiiiffffi',eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
@@ -885,9 +885,9 @@ class Geometry2(object):
         CTUBE(3701,37,49)    - the marker for Record 103
         """
         #print "reading CTUBE"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'iiii',eData)
             (eid,pid,n1,n2) = out
@@ -900,9 +900,9 @@ class Geometry2(object):
     def readCVISC(self,data):
         """CVISC(3901,39, 50) - the marker for Record 104"""
         #print "reading CVISC"
-        n=0
+        n = 0
         nEntries = len(data)//16
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+16] # 4*4
             out = unpack(b'iiii',eData)
             #(eid,pid,n1,n2) = out

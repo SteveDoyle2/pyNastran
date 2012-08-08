@@ -261,8 +261,8 @@ class HyperelasticQuadObject(stressObject):
                 majorP = self.majorP[dt][eid]
                 minorP = self.minorP[dt][eid]
                 
-                for i in range(4): # 1,2,3,4
-                    if i==0:
+                for i in xrange(4): # 1,2,3,4
+                    if i == 0:
                         msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' %(eid,gauss,i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))
                     else:
                         msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' %('','',    i+1,oxx[i],oyy[i],txy[i],angle[i],majorP[i],minorP[i]))

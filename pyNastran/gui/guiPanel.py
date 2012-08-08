@@ -83,7 +83,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in range(0, numActors):
+            for i in xrange(0, numActors):
                 print("iactor = %i" %(i))
                 actor = actors.GetNextItem()
                 
@@ -116,7 +116,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in range(0, numActors):
+            for i in xrange(0, numActors):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToFlat()
             self.widget.Render()
@@ -127,7 +127,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in range(0, numActors):
+            for i in xrange(0, numActors):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToGouraud()
             self.widget.Render()
@@ -138,7 +138,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO):
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in range(0, numActors):
+            for i in xrange(0, numActors):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToPhong()
             self.widget.Render()

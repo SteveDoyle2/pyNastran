@@ -181,25 +181,25 @@ class PanairPatch(object):
             x = self.x[0][:]
             y = self.y[0][:]
             z = self.z[0][:] # pretty sure edge 1 is the 0th row
-            p = [iCol for iCol in range(self.nCols)] # good
+            p = [iCol for iCol in xrange(self.nCols)] # good
         elif edgeNumber == 2:
             self.log.debug("x.shape = %s" % (str(self.x.shape)))
             x = self.x[:][self.nCols-1]
             y = self.y[:][self.nCols-1]
             z = self.z[:][self.nCols-1] # pretty sure edge 2 is the 0th row
-            p = [iCol*(self.nRows)+(self.nRows-1) for iCol in range(self.nCols)]  #
-            #p = [iRow*(self.nCols)+(self.nCols-1) for iRow in range(self.nRows)]  #
+            p = [iCol*(self.nRows)+(self.nRows-1) for iCol in xrange(self.nCols)]  #
+            #p = [iRow*(self.nCols)+(self.nCols-1) for iRow in xrange(self.nRows)]  #
         elif edgeNumber == 3:
             x = self.x[self.nRows-1][:]
             y = self.y[self.nRows-1][:]
             z = self.z[self.nRows-1][:] # pretty sure edge3 is the last row
-            p = [iCol+self.nRows*iCol for iCol in range(self.nCols)] # good
-            #p = [(self.nCols-1)*(self.nRows)+iRow for iRow in range(self.nRows)]
+            p = [iCol+self.nRows*iCol for iCol in xrange(self.nCols)] # good
+            #p = [(self.nCols-1)*(self.nRows)+iRow for iRow in xrange(self.nRows)]
         elif edgeNumber == 4:
             x = self.x[:][0]
             y = self.y[:][0]
             z = self.z[:][0] # pretty sure edge 2 is the 0th row
-            p = [self.nRows*iCol for iCol in range(self.nCols)] # good
+            p = [self.nRows*iCol for iCol in xrange(self.nCols)] # good
         else:
             raise ValueError('invalid edge; edgeNumber=%s' % (edgeNumber))
         self.log.debug("nRows=%s nCols=%s edgeNumber=%s" % (self.nRows, self.nCols, edgeNumber))
@@ -208,7 +208,7 @@ class PanairPatch(object):
         #print "x = ",x
         #print "y = ",y
         #print "z = ",z
-        p = [iPoint for iPoint in range(self.nPoints())]
+        p = [iPoint for iPoint in xrange(self.nPoints())]
         for pointID in p:
             #pointID = 2
             p2 = self.getIPoint(pointID)
@@ -224,7 +224,7 @@ class PanairPatch(object):
         z = zeros(nx)
         
         i = 0
-        for edgeID in range(1,4+1):
+        for edgeID in xrange(1,4+1):
             (p1,x1,y1,z1) = self.getEdge(edgeID)
             nx1 = len(x1)
             p[i:i+nx1] = p1[0:nx1]
@@ -237,7 +237,7 @@ class PanairPatch(object):
     def getElements(self,pointI):
         panels = []
         #print "pointI=%s" %(pointI)
-        for iPanel in range(self.nPanels()):
+        for iPanel in xrange(self.nPanels()):
             panel = self.getPanelPointIDs(iPanel)
             panel2 = []
             
@@ -252,8 +252,8 @@ class PanairPatch(object):
         #self.log.debug("size(X) = %s" %( str( self.x.shape ) ))
         #print "size(X) = %s" %( str(X.size())
         
-        for j in range(self.nCols):
-            for i in range(self.nRows):
+        for j in xrange(self.nCols):
+            for i in xrange(self.nRows):
                 point = [self.x[i][j],self.y[i][j],self.z[i][j]]
                 points.append(point)
 
@@ -278,9 +278,9 @@ class PanairPatch(object):
         out += "\n"
         self.log.debug(out)
         #print x
-        #for c in range(self.nCols):
+        #for c in xrange(self.nCols):
         #    nPointsLeft = nFullLines*2+nPartialLines
-        #    for r in range(0,self.nRows,2)
+        #    for r in xrange(0,self.nRows,2)
         return out
         
     def rotate(self):
@@ -320,9 +320,9 @@ class PanairPatch(object):
         nPartialLines = self.nRows%2
         nLines = nFullLines+nPartialLines
 
-        for c in range(self.nCols):
+        for c in xrange(self.nCols):
             nPointsLeft = nFullLines*2+nPartialLines
-            for r in range(0,self.nRows,2):
+            for r in xrange(0,self.nRows,2):
                 if nPointsLeft>1:
                     x1 = self.x[r][c]
                     y1 = self.y[r][c]

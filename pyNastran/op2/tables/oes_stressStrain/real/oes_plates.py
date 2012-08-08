@@ -287,7 +287,7 @@ class PlateStressObject(stressObject):
             for eid,oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(oxxNodes):
-                    for iLayer in range(len(self.oxx[dt][eid][nid])):
+                    for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                         fd    = self.fiberCurvature[eid][nid][iLayer]
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
                         oyy   = self.oyy[   dt][eid][nid][iLayer]
@@ -423,7 +423,7 @@ class PlateStressObject(stressObject):
         msg = ''
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
-            for iLayer in range(len(self.oxx[eid][nid])):
+            for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
@@ -694,7 +694,7 @@ class PlateStressObject(stressObject):
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
-            for iLayer in range(len(self.oxx[eid][nid])):
+            for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
@@ -725,7 +725,7 @@ class PlateStressObject(stressObject):
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
-            for iLayer in range(len(self.oxx[dt][eid][nid])):
+            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
@@ -755,7 +755,7 @@ class PlateStressObject(stressObject):
         msg = ''
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
-            for iLayer in range(len(self.oxx[eid][nid])):
+            for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
                 oyy   = self.oyy[eid][nid][iLayer]
@@ -780,7 +780,7 @@ class PlateStressObject(stressObject):
         msg = ''
         oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
-            for iLayer in range(len(self.oxx[dt][eid][nid])):
+            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
                 oyy   = self.oyy[dt][eid][nid][iLayer]
@@ -817,7 +817,7 @@ class PlateStressObject(stressObject):
         for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(oxxNodes):
-                for iLayer in range(len(self.oxx[eid][nid])):
+                for iLayer in xrange(len(self.oxx[eid][nid])):
                     fd    = self.fiberCurvature[eid][nid][iLayer]
                     oxx   = self.oxx[eid][nid][iLayer]
                     oyy   = self.oyy[eid][nid][iLayer]
@@ -1343,7 +1343,7 @@ class PlateStrainObject(strainObject):
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
-            for iLayer in range(len(self.exx[eid][nid])):
+            for iLayer in xrange(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
@@ -1374,7 +1374,7 @@ class PlateStrainObject(strainObject):
         k.sort()
         k.pop(-1)
         for nid in ['C']+k:
-            for iLayer in range(len(self.exx[dt][eid][nid])):
+            for iLayer in xrange(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
@@ -1404,7 +1404,7 @@ class PlateStrainObject(strainObject):
         msg = ''
         k = self.exx[eid].keys()
         for nid in sorted(k):
-            for iLayer in range(len(self.exx[eid][nid])):
+            for iLayer in xrange(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[eid][nid][iLayer]
                 eyy   = self.eyy[eid][nid][iLayer]
@@ -1430,7 +1430,7 @@ class PlateStrainObject(strainObject):
         exxNodes = self.exx[dt][eid]
         #k = exxNodes.keys()
         for nid in sorted(exxNodes):
-            for iLayer in range(len(self.exx[dt][eid][nid])):
+            for iLayer in xrange(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
                 eyy   = self.eyy[dt][eid][nid][iLayer]
@@ -1465,7 +1465,7 @@ class PlateStrainObject(strainObject):
         for eid,exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
             for nid in sorted(exxNodes):
-                for iLayer in range(len(self.exx[eid][nid])):
+                for iLayer in xrange(len(self.exx[eid][nid])):
                     fd    = self.fiberCurvature[eid][nid][iLayer]
                     exx   = self.exx[eid][nid][iLayer]
                     eyy   = self.eyy[eid][nid][iLayer]
@@ -1504,7 +1504,7 @@ class PlateStrainObject(strainObject):
             for eid,exxNodes in sorted(exx.iteritems()):
                 eType = self.eType[eid]
                 for nid in sorted(exxNodes):
-                    for iLayer in range(len(self.exx[dt][eid][nid])):
+                    for iLayer in xrange(len(self.exx[dt][eid][nid])):
                         fd    = self.fiberCurvature[eid][nid][iLayer]
                         exx   = self.exx[   dt][eid][nid][iLayer]
                         eyy   = self.eyy[   dt][eid][nid][iLayer]

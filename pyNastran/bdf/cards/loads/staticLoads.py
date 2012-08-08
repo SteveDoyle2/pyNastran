@@ -854,7 +854,7 @@ class PLOAD2(Load):
 
             if card.field(4)=='THRU':
                 #print "PLOAD2 %s %s" %(eids[0],eids[-1])
-                eids = [i for i in range(eids[0], eids[2]+1)]
+                eids = [i for i in xrange(eids[0], eids[2]+1)]
                 #print "found a THRU on PLOAD2"
                 #raise NotImplementedError('PLOAD2')
             ###

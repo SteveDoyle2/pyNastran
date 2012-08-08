@@ -68,7 +68,7 @@ class FREQ1(FREQ):
         ndf = card.field(4, 1)
         
         self.freqs = []
-        for i in range(ndf):
+        for i in xrange(ndf):
             self.freqs.append(f1+i*df)
         ###
         self.cleanFreqs()
@@ -90,7 +90,7 @@ class FREQ2(FREQ):
         
         d = 1./nf*log(f2/f1)
         self.freqs = []
-        for i in range(nf):
+        for i in xrange(nf):
             self.freqs.append(f1*exp(i*d)) # 0 based index
         self.cleanFreqs()
 

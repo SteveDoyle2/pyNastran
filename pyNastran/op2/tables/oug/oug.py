@@ -231,9 +231,9 @@ class OUG(object):
     def readThermal4(self): # used on self.thermal in [2,4,8]:
         #print self.codeInformation()
         #print self.printBlock(self.data)
-        n=0
+        n = 0
         nEntries = len(self.data)//32
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = self.data[n:n+32]
             out = unpack('2i6f', eData)
             #nid = (out[0]-self.deviceCode)//10    ## @todo fix the deviceCode

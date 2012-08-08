@@ -403,8 +403,8 @@ class TestFrame(wx.Frame):
         
         
         labels = "1 2 3 4 5 6 7 8 9 0".split()
-        for col in range(3):
-            for row in range(3):
+        for col in xrange(3):
+            for row in xrange(3):
                 bw = wx.Button(self, label=labels[row*3 + col])
                 sizer.Add(bw, pos=(row, col))
 

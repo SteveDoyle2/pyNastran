@@ -242,17 +242,17 @@ def printCard_16(fields,tol=0.):
     try:
         out = '%-8s' %(fields[0])
     except:
-        print "ERROR!  fields=%s" %(fields)
+        print("ERROR!  fields=%s" %(fields))
         sys.stdout.flush()
         raise
     
-    for i in range(1,len(fields)):
+    for i in xrange(1,len(fields)):
         field = fields[i]
         try:
             out += printField16(field)
             #print "|%r|" %(printField(field))
         except AssertionError:
-            print "bad fields = ",fields
+            print("bad fields = ",fields)
             raise
         if i%4==0: # allow 1+4 fields per line
             #print "-------------------------"

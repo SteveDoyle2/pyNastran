@@ -133,7 +133,7 @@ class PanairWrite(object):
 
         totalPoints = 0
         totalPanels = 0
-        for patchID in range(self.nPatches()):
+        for patchID in xrange(self.nPatches()):
             patch = self.patch(patchID)
             msg3 += patch.quickSummary(totalPoints,totalPanels)
             totalPanels += patch.nPanels()
@@ -142,7 +142,7 @@ class PanairWrite(object):
 
         msg2 += '0  case       alpha          beta      mag(f-s-v)\n'
         msg2 += ' ------    ----------    ----------   -----------\n'
-        for (iCase) in range(self.ncases):
+        for (iCase) in xrange(self.ncases):
             alpha=self.alphas[iCase]; beta=self.betas[iCase]
             msg2 += '     %2s      %f      %f      1.000000\n' %(iCase+1,alpha,beta)
 

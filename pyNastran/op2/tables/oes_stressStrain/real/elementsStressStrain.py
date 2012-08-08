@@ -56,7 +56,7 @@ class RealElementsStressStrain(object):
         dataFormat = bytes(dataFormat)
         n = 0
         nEntries = len(self.data)//nTotal
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = self.data[n:n+nTotal]
             out = unpack(dataFormat, eData)
             #print "out = ",out
@@ -86,7 +86,7 @@ class RealElementsStressStrain(object):
             eid2 = extract(out[0], dt)
             self.obj.addNewEid(dt, eid2,out[1:])
             
-            for iNode in range(nNodes):
+            for iNode in xrange(nNodes):
                 eData     = self.data[0:n2]
                 self.data = self.data[n2: ]
                 out = unpack(format2, eData)
@@ -134,7 +134,7 @@ class RealElementsStressStrain(object):
             self.obj.addNewEid('CQUAD4',dt, eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
             self.obj.add(               dt, eid,'C',fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
             
-            for nodeID in range(nNodes):   #nodes pts
+            for nodeID in xrange(nNodes):   #nodes pts
                 eData     = self.data[0:68] # 4*17
                 self.data = self.data[68: ]
                 out = unpack(b'i16f', eData[0:68])
@@ -224,7 +224,7 @@ class RealElementsStressStrain(object):
                 raise NotImplementedError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' % (ElementType,self.elementType,nNodes,self.numWide))
 
             #print "len(data) = ",len(self.data)
-            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
+            for nodeID in xrange(nNodesExpected):   #nodes pts, +1 for centroid (???)
                 #print "len(data)A = ",len(self.data)
                 eData     = self.data[0:4*21]  # for the stresses
                 self.data = self.data[4*21: ]
@@ -351,7 +351,7 @@ class RealElementsStressStrain(object):
             #    raise Exception('not supported....nNodes=%s' % (nNodes))
 
             #print "len(data) = ",len(self.data)
-            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
+            for nodeID in xrange(nNodesExpected):   #nodes pts, +1 for centroid (???)
                 #print "len(data)A = ",len(self.data)
                 eData     = self.data[0:64]  # 4*16; for the stresses
                 self.data = self.data[64: ]
@@ -451,7 +451,7 @@ class RealElementsStressStrain(object):
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
             self.obj.addNewEid(dt, eid,loc,rs,azs,As,ss,maxp,tmax,octs)
 
-            for i in range(3):
+            for i in xrange(3):
                 eData     = self.data[0:32] # 4*8
                 self.data = self.data[32: ]
                 out = unpack(b'i7f', eData)
@@ -523,7 +523,7 @@ class RealElementsStressStrain(object):
             #(eid,cType) = out
             cType = a+b+c+d
 
-            for i in range(7):
+            for i in xrange(7):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
@@ -562,7 +562,7 @@ class RealElementsStressStrain(object):
             #out = unpack('2i',eData)
             #(eid,cType) = out
 
-            for i in range(9):
+            for i in xrange(9):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
@@ -598,8 +598,8 @@ class RealElementsStressStrain(object):
             (eid,gridA) = unpack(b'2i', eData)
             #print "eid=%s gridA=%s" % (eid,gridA)
 
-            for i in range(1):
-                for j in range(4): # c,d,e,f @ A;    c,d,e,f @ B
+            for i in xrange(1):
+                for j in xrange(4): # c,d,e,f @ A;    c,d,e,f @ B
                     eData     = self.data[0:n1]
                     self.data = self.data[n1: ]
                     out = unpack(format1, eData)
@@ -668,7 +668,7 @@ class RealElementsStressStrain(object):
             eid = extract(eid, dt)
             self.obj.addNewEid(dt,[eid,Type,sx,sy,sxy,angle,smj,smi])
             #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (eid,Type,ID,sx,sy,sxy,angle,smj,smi)
-            for i in range(3):
+            for i in xrange(3):
                 eData     = self.data[0:28] # 4*7
                 self.data = self.data[28: ]
                 out = unpack(b'i6f', eData)
@@ -711,7 +711,7 @@ class RealElementsStressStrain(object):
             self.obj.addNewEid(eType,eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(            eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-            for nodeID in range(nNodes):   #nodes pts
+            for nodeID in xrange(nNodes):   #nodes pts
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
                 out = unpack(b'i16f', eData)
@@ -782,7 +782,7 @@ class RealElementsStressStrain(object):
             self.obj.addNewEid(eType,dt, eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(            dt, eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-            for nodeID in range(nNodes):   #nodes pts
+            for nodeID in xrange(nNodes):   #nodes pts
                 eData     = self.data[0:68]
                 self.data = self.data[68: ]
                 out = unpack(b'i16f', eData)
@@ -816,7 +816,7 @@ class RealElementsStressStrain(object):
        #         (grid,fd1,sx1r,sx11,sy1r,sy11,txy1r,txy11,
        #               fd2,sx2r,sx21,sy2r,sy21,txy2r,txy21) = out
        #
-       #         for nodeID in range(nNodes):   #nodes pts
+       #         for nodeID in xrange(nNodes):   #nodes pts
        #             eData     = self.data[0:4*15]
        #             self.data = self.data[4*15: ]
        #             out = unpack(b'i14f', eData)
@@ -836,7 +836,7 @@ class RealElementsStressStrain(object):
        #         (grid,fd1,sx1,sy1,txy1,
        #               fd2,sx2,sy2,txy2) = out
        #
-       #         for nodeID in range(nNodes):   #nodes pts
+       #         for nodeID in xrange(nNodes):   #nodes pts
        #             eData     = self.data[0:36] # 4*9
        #             self.data = self.data[36: ]
        #             out = unpack(b'i8f', eData)

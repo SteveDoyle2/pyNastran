@@ -165,7 +165,7 @@ class ThermalElements(object):
             dataIn = [eid2,parent,coord,icord,theta]
 
             gradFluxes = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:28] # 7*4
                 self.data = self.data[28: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -223,7 +223,7 @@ class ThermalElements(object):
             dataIn = [eid2,parent,coord,icord]
 
             gradFluxes = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:28] # 7*4
                 self.data = self.data[28: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))
@@ -286,7 +286,7 @@ class ThermalElements(object):
             dataIn = [eid2,parent]
 
             gradFluxes = []
-            for i in range(nNodes):
+            for i in xrange(nNodes):
                 eData     = self.data[0:7*4]
                 self.data = self.data[7*4: ]
                 #print "i=%s len(data)=%s" %(i,len(eData))

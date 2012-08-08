@@ -29,9 +29,9 @@ class DIT(object):
         GUST(1005,10,174)    - the marker for Record 1
         """
         #print "reading GUST"
-        n=0
+        n = 0
         nEntries = len(data)//20 # 5*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+20]
             out = unpack('iifff',eData)
             (sid,dload,wg,x0,V) = out
@@ -56,7 +56,7 @@ class DIT(object):
         self.readTable1(func,data)
 
     def readTable1(self,func,data):
-        n=0
+        n = 0
         #nEntries = len(data)//40 # 10*4
         while len(data)>=40:
             eData = data[n:n+40]
@@ -89,7 +89,7 @@ class DIT(object):
         self.readTable2(func,data)
 
     def readTable2(self,func,data):
-        n=0
+        n = 0
         while len(data)>=40:
             eData = data[n:n+40]
             out = unpack('ifiiiiiiff',eData)
@@ -121,7 +121,7 @@ class DIT(object):
         self.readTable3(func,data)
 
     def readTable3(self,func,data):
-        n=0
+        n = 0
         while len(data)>=40:
             eData = data[n:n+40]
             out = unpack('iffiiiiiff',eData)

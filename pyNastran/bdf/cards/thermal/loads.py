@@ -208,11 +208,11 @@ class TEMP(ThermalLoad):
 
             fields = card.fields(2)
             nFields = len(fields)
-            assert nFields%2==0
+            assert nFields%2 == 0
 
             ## dictionary of temperatures where the key is the grid ID (Gi) and the value is the temperature (Ti)
-            self.temperatures={}
-            for i in range(0,nFields,2):
+            self.temperatures = {}
+            for i in xrange(0, nFields, 2):
                 self.temperatures[fields[i]] = fields[i+1]
             ###
         else:
@@ -264,7 +264,7 @@ class TEMPD(ThermalLoadDefault):
 
             ## dictionary of temperatures where the key is the set ID (SIDi) and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in range(0, nFields, 2):
+            for i in xrange(0, nFields, 2):
                 self.temperatures[fields[i]] = fields[i+1]
             ###
         else:

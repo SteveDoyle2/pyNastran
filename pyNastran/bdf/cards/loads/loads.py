@@ -52,7 +52,7 @@ class LoadCombination(Load): # LOAD, DLOAD
             self.loadIDs = []
 
             # alternating of scale factor & load set ID
-            for i in range(0, nLoadFields, 2):
+            for i in xrange(0, nLoadFields, 2):
                 self.scaleFactors.append(loads[i  ])
                 self.loadIDs.append(     loads[i+1])
         else:
@@ -209,7 +209,7 @@ class SLOAD(Load):
 
         self.nids = []
         self.mags = []
-        for i in range(n):
+        for i in xrange(n):
             j = 2*i
             self.nids.append(fields[j  ])
             self.mags.append(fields[j+1])

@@ -195,7 +195,7 @@ class PSOLID(SolidProperty):
             self.isop   = data[5]
             self.fctn   = data[6]
 
-            if self.fctn=='SMEC':
+            if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
         ###
 

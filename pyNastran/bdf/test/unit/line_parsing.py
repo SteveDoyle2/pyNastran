@@ -22,7 +22,7 @@ def parseSetSline(listA):
                 vals = set([])
                 startValue = interpretValue(sline[0])
                 endValue = interpretValue(sline[2])+1
-                for i in range(startValue,endValue,by):
+                for i in xrange(startValue,endValue,by):
                     vals.add(i)
                 #print "vals = ",vals
                 if 'EXCEPT' in sline:

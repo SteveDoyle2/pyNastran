@@ -553,7 +553,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
         n = 0
         #print  "strFormat = ",strFormat
         nEntries = len(data)//nTotal
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+nTotal]
             out  = unpack(iFormat,eData)
             if debug:

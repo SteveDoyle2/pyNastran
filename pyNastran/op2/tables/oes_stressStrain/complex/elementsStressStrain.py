@@ -26,7 +26,7 @@ class ComplexElementsStressStrain(object):
         
         n = 0
         nEntries = len(self.data)//nTotal
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = self.data[n:n+nTotal]
             (eid,axialReal,axialImag,torsionReal,torsionImag)= unpack(format1,eData)
 
@@ -59,7 +59,7 @@ class ComplexElementsStressStrain(object):
         
         n = 0
         nEntries = len(self.data)//nTotal
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = self.data[n:n+nTotal]
             (eid,axialReal,axialImag) = unpack(format1,eData)
 
@@ -170,7 +170,7 @@ class ComplexElementsStressStrain(object):
             self.obj.addNewEid('CQUAD4',dt,eid,'C',fd1,sx1,sy1,txy1)
             self.obj.add(               dt,eid,'C',fd2,sx2,sy2,txy2)
             
-            for nodeID in range(nNodes):   #nodes pts
+            for nodeID in xrange(nNodes):   #nodes pts
                 eData     = self.data[0:60] # 4*15=60
                 self.data = self.data[60: ]
                 out = unpack(b'i14f',eData[0:60])
@@ -303,7 +303,7 @@ class ComplexElementsStressStrain(object):
             self.obj.addNewEid(eType,dt,eid,grid,fd1,sx1,sy1,txy1)
             self.obj.add(            dt,eid,grid,fd2,sx2,sy2,txy2)
 
-            for nodeID in range(nNodes):   #nodes pts
+            for nodeID in xrange(nNodes):   #nodes pts
                 eData     = self.data[0:60] # 4*15=60
                 self.data = self.data[60: ]
                 out = unpack(b'i14f',eData)
@@ -403,7 +403,7 @@ class ComplexElementsStressStrain(object):
             eid2 = extract(out[0],dt)
             self.obj.addNewEid(dt,eid2,out[1:])
             
-            for iNode in range(nNodes):
+            for iNode in xrange(nNodes):
                 eData     = self.data[0:n2]
                 self.data = self.data[n2: ]
                 out = unpack(format2, eData)
@@ -458,7 +458,7 @@ class ComplexElementsStressStrain(object):
                 raise NotImplementedError('not supported....EType=%s eType=%s nNodes=%s numWide=%s' %(ElementType,self.elementType,nNodes,self.numWide))
 
             #print "len(data) = ",len(self.data)
-            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
+            for nodeID in xrange(nNodesExpected):   #nodes pts, +1 for centroid (???)
                 #print "len(data)A = ",len(self.data)
                 eData     = self.data[0:84] # 4*21=84 # for the stresses
                 self.data = self.data[84: ]
@@ -566,7 +566,7 @@ class ComplexElementsStressStrain(object):
             #    raise Exception('not supported....nNodes=%s' %(nNodes))
 
             #print "len(data) = ",len(self.data)
-            for nodeID in range(nNodesExpected):   #nodes pts, +1 for centroid (???)
+            for nodeID in xrange(nNodesExpected):   #nodes pts, +1 for centroid (???)
                 #print "len(data)A = ",len(self.data)
                 eData     = self.data[0:64]  # 4*16=64 # for the stresses
                 self.data = self.data[64: ]
@@ -644,7 +644,7 @@ class ComplexElementsStressStrain(object):
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,loc,rs,azs,As,ss,maxp,tmax,octs)
             self.obj.addNewEid(dt,eid,loc,rs,azs,As,ss,maxp,tmax,octs)
 
-            for i in range(3):
+            for i in xrange(3):
                 eData     = self.data[0:32]  #4*8-32
                 self.data = self.data[32: ]
                 out = unpack(b'ifffffff',eData)
@@ -706,7 +706,7 @@ class ComplexElementsStressStrain(object):
             #out = unpack('ii',eData)
             #(eid,cType) = out
 
-            for i in range(7):
+            for i in xrange(7):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64]
                 self.data = self.data[64:]
@@ -747,7 +747,7 @@ class ComplexElementsStressStrain(object):
             #out = unpack(b'ii',eData)
             #(eid,cType) = out
 
-            for i in range(9):
+            for i in xrange(9):
                 #print "len(self.data) = ",len(self.data)
                 eData = self.data[0:64] # 4*16
                 self.data = self.data[64:]
@@ -784,8 +784,8 @@ class ComplexElementsStressStrain(object):
             (eid,gridA) = unpack(b'ii', eData)
             #print "eid=%s gridA=%s" %(eid,gridA)
 
-            for i in range(1):
-                for j in range(4): # c,d,e,f @ A;    c,d,e,f @ B
+            for i in xrange(1):
+                for j in xrange(4): # c,d,e,f @ A;    c,d,e,f @ B
                     eData     = self.data[0:n1]
                     self.data = self.data[n1: ]
                     out = unpack(format1, eData)
@@ -860,7 +860,7 @@ class ComplexElementsStressStrain(object):
             eid = extract(eid,dt)
             self.obj.addNewEid(dt,[eid,Type,sx,sy,sxy,angle,smj,smi])
             #print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" %(eid,Type,ID,sx,sy,sxy,angle,smj,smi)
-            for i in range(3):
+            for i in xrange(3):
                 eData     = self.data[0:28] #4*7=28
                 self.data = self.data[28: ]
                 out = unpack(b'iffffff',eData)
@@ -907,7 +907,7 @@ class ComplexElementsStressStrain(object):
             self.obj.addNewEid(eType,eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             self.obj.add(            eid,grid,fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
 
-            for nodeID in range(nNodes):   #nodes pts
+            for nodeID in xrange(nNodes):   #nodes pts
                 eData     = self.data[0:68] # 4*17=68
                 self.data = self.data[68: ]
                 out = unpack(b'iffffffffffffffff',eData)

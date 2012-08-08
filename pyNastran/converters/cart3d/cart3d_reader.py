@@ -102,7 +102,7 @@ class Cart3DAsciiReader(object):
         #regionsB={}
 
         nThree = 147120+10 #len(elements)*2   ## todo why is there +10???
-        allSet = set([i+1 for i in range(nThree)])
+        allSet = set([i+1 for i in xrange(nThree)])
         elementKeysSet = set(elements.keys())
         missingKeys    = list(allSet.difference(elementKeysSet))
         missingKeys.sort()
@@ -126,7 +126,7 @@ class Cart3DAsciiReader(object):
             iMissing += 1
         ###
         
-        for i in range(1,len(elements)):
+        for i in xrange(1,len(elements)):
             assert i in elements,'i=%s is not in elements...' %(i)
             #assert i in regions ,'i=%s is not in regions...' %(i)
         self.log.info('---finished makeFullModel---')
@@ -372,7 +372,7 @@ class Cart3DAsciiReader(object):
     def getRegions(self,bypass=True):
         regions = {}
         if bypass:
-            for i in range(self.nElements):
+            for i in xrange(self.nElements):
                 self.infile.readline()
         else:
             r=0
@@ -413,13 +413,13 @@ class Cart3DAsciiReader(object):
         if(self.cartType=='result'):
             nResultLines = int(ceil(self.nResults/5.))-1
             #print "nResultLines = ",nResultLines
-            for pointNum in range(self.nPoints):
+            for pointNum in xrange(self.nPoints):
                 #print "pointNum = ", pointNum
                 sline = infile.readline().strip().split() # rho rhoU,rhoV,rhoW,pressure/rhoE/E
                 i+=1
-                for n in range(nResultLines):
+                for n in xrange(nResultLines):
                     #print "nResultLines = ",n
-                    sline+=infile.readline().strip().split() # Cp
+                    sline += infile.readline().strip().split() # Cp
                     #infile.readline()
                     i+=1
                     #print "sline = ",sline
@@ -712,7 +712,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         np=1
         while size>12000: # 12k = 4 bytes/float*3 floats/point*1000 points
             #print "size = ",size
-            n=np+999
+            n = np+999
             #print "nStart=%s np=%s" %(n,np)
             data = self.op2.read(4*3000)
             nodeXYZs = list(unpack(Format,data))
@@ -730,7 +730,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         assert size>=0
         #print "size = ",size
         #while size>0: # 4k is 1000 points
-        n=nPoints
+        n = nPoints
         if size>0:
             #leftover = size-(nPoints-np)*12
             data = self.op2.read(size)
@@ -759,7 +759,7 @@ class Cart3DBinaryReader(FortranFile,Cart3DAsciiReader):
         else:
             raise RuntimeError('unBuffered')
 
-        for nid in range(1,nPoints+1):
+        for nid in xrange(1,nPoints+1):
             assert nid in nodes,'nid=%s not in nodes' %(nid)
         self.op2.read(8)  # end of second block, start of third block
         return nodes

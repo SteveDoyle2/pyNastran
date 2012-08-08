@@ -161,7 +161,7 @@ class EPT(object):
             #print out
             (pid,mid,nsegs,ccf,x) = dataIn
 
-            for i in range(12):
+            for i in xrange(12):
                 eData = data[64:]
                 data  = data[:64]
                 pack = unpack(b'16f',eData)
@@ -220,7 +220,7 @@ class EPT(object):
             #print "nLayers = ",nLayers
             assert 0<nLayers<100,'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' %(pid,nLayers,z0,nsm,sb,ft,Tref,ge)
 
-            for n in range(nLayers):
+            for n in xrange(nLayers):
                 #print "len(eData) = ",len(eData)
                 (mid,t,theta,sout) = unpack(b'i2fi',eData[0:16])
                 Mid.append(mid)
@@ -295,9 +295,9 @@ class EPT(object):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
-        n=0
+        n = 0
         nEntries = len(data)//8  # 2*4
-        for i in range(nEntries):
+        for i in xrange(nEntries):
             eData = data[n:n+8]
             out = unpack(b'ii',eData)
             #out = (pid,mass)

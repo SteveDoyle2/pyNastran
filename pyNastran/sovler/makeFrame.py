@@ -260,14 +260,14 @@ def applyBoundaryConditions(model,Kg):
 def setRow(Kg,nid,value):
     #Kg[:][nid] = 10.
     nrows,ncols = Kg.shape
-    for irow in range(nrows):
+    for irow in xrange(nrows):
         Kg[irow,nid] = value
     return Kg
 
 def setCol(Kg,nid,value):
     #Kg[nid][:] = 9.
     nrows,ncols = Kg.shape
-    for icol in range(ncols):
+    for icol in xrange(ncols):
         Kg[nid,icol] = value
     return Kg
 

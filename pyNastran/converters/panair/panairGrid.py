@@ -90,7 +90,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
 
     def nPanels(self):
         totalNPanels = 0
-        for patchID in range(self.nPatches()):
+        for patchID in xrange(self.nPatches()):
             patch = self.patch(patchID)
             if patch.kt==1:
                 totalNPanels += patch.nPanels()
@@ -194,7 +194,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         reads the points
         """
         points = []
-        for n in range(nActual):
+        for n in xrange(nActual):
             #(x1,y1,z1) = lines[n][0 :10].strip(),lines[n][10:20].strip(),lines[n][20:30].strip()
             #print "x1=%s y1=%s z1=%s" %(x1,y1,z1)
             (x1,y1,z1) = float(lines[n][0 :10]),float(lines[n][10:20]),float(lines[n][20:30])
@@ -267,10 +267,10 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         else:
             self.log.debug("nNetworks=%s" %(nNetworks))
         
-        n=4
+        n = 4
         self.msg += '      kn,kt            %i          %i\n' %(nNetworks,kt)
 
-        for iNetwork in range(nNetworks):
+        for iNetwork in xrange(nNetworks):
             self.log.debug("lines[* %s] = %s" %(n-1,section[n-1]))
             nm = int(float(section[n-1][0 :10]))
             nn = int(float(section[n-1][10:20]))
@@ -284,7 +284,7 @@ class PanairGrid(PanairGridHelper,PanairWrite):
             nPartialLines = nm%2
             nLines = nFullLines+nPartialLines
             #print "nFullLines=%s nPartialLines=%s nLines=%s" %(nFullLines,nPartialLines,nLines)
-            for j in range(nn):
+            for j in xrange(nn):
                 lines = section[n:n+nLines]
                 n+=nLines
                 #print '\n'.join(lines)
@@ -334,10 +334,10 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         else:
             self.log.debug("nNetworks=%s" %(nNetworks))
         
-        n=3
+        n = 3
         self.msg += '      kn,kt            %i          %i\n' %(nNetworks,kt)
 
-        for iNetwork in range(nNetworks):
+        for iNetwork in xrange(nNetworks):
             self.log.debug("lines[%s] = %s" %(n,section[n]))
             nDisplacement = int(float(section[n][0 :10]))  # 0-noDisplacement; 1-Specify
             assert nDisplacement in [0,1],section[n]
@@ -584,10 +584,10 @@ class PanairGrid(PanairGridHelper,PanairWrite):
         #print ""
         #matcw = int(float(section[2][10:20]))
         
-        n=3
+        n = 3
         self.msg += '      kn,kt            %i          %i\n' % (nNetworks,kt)
         self.log.debug('kt=%s cpNorm=%s matchw=%s' % (kt,cpNorm,matchw))
-        for iNetwork in range(nNetworks):
+        for iNetwork in xrange(nNetworks):
             self.log.debug("lines[* %s] = %s" % (n,section[n]))
             
             trailedPanel = section[n][ 0:10].strip()
