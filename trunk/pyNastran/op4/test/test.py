@@ -1,12 +1,13 @@
 import os
-#from pyNastran.op4.cop4 import OP4
+#from pyNastran.op4.cop4 import OP4 as cOP4
 #print "f = ",op4.__file__
+from numpy import ndarray
 import unittest
 from pyNastran.op4.op4 import OP4
 
 
 def pass_test1():
-    fh = OP4(os.path.abspath('mat_b_dn.op4'),'r')
+    fh = cOP4(os.path.abspath('mat_b_dn.op4'),'r')
     fh.print_header()
     #print fh.nmat = 9
     
@@ -17,7 +18,7 @@ def pass_test1():
     print(c)
 
 def failed_test1():
-    fh = OP4('mat_b_dn.op4','r')
+    fh = cOP4('mat_b_dn.op4','r')
     fh.print_header()
     #print fh.nmat = 9
     
@@ -27,7 +28,7 @@ def failed_test1():
     print(c)
 
 def pass_test2():
-    fh = OP4(os.path.abspath('mat_b_dn.op4'),'r')
+    fh = cOP4(os.path.abspath('mat_b_dn.op4'),'r')
     #print fh.nmat = 9
 
     # crash with "unnamed is sparse, skipping for now"
@@ -37,7 +38,7 @@ def pass_test2():
     print(c)
 
 def failed_test2():
-    fh = OP4('mat_b_dn.op4','r')
+    fh = cOP4('mat_b_dn.op4','r')
     #print fh.nmat = 9
 
     # ValueError:  need more than 8 values to unpack
@@ -46,35 +47,36 @@ def failed_test2():
     print(b)
     print(c)
 
-def testAscii():
-    print("ascii")
-    for fname in ['mat_t_dn.op4',
-                  'mat_t_s1.op4',
-                  'mat_t_s2.op4',
-                  ]:
-        op4 = OP4()
-        matrices = op4.readOP4(fname)
-        for name,matrix in sorted(matrices.items()):
-            print("name = %s" %(name))
-            print(matrix)
-
-def testBinary():
-    print("binary")
-    for fname in ['mat_b_dn.op4' ,
-                  'mat_t_s1.op4',
-                  'mat_t_s2.op4',
-                  ]:
-        op4 = OP4()
-        matrices = op4.readOP4(fname)
-        for (name, matrix) in sorted(matrices.items()):
-            print("name = %s" %(name))
-            print(matrix)
-
 class OP4_Test(unittest.TestCase):
-    def op4_1(self):
-        testBinary()
-    def op4_2(self):
-        testAscii()
+    def test_binary(self):
+        for fname in ['mat_b_dn.op4' ,
+                      'mat_b_s1.op4',
+                      'mat_b_s2.op4',
+                      ]:
+            op4 = OP4()
+            matrices = op4.readOP4(fname)
+            for name, (form,matrix) in sorted(matrices.items()):
+                print("name = %s" %(name))
+                if isinstance(matrix,ndarray):
+                    print(matrix)
+                else:
+                    #print(matrix.todense())
+                    print(matrix)
+
+    def test_ascii(self):
+        for fname in ['mat_t_dn.op4',
+                      'mat_t_s1.op4',
+                      'mat_t_s2.op4',
+                      ]:
+            op4 = OP4()
+            matrices = op4.readOP4(fname)
+            for name,(form,matrix) in sorted(matrices.items()):
+                print("name = %s" %(name))
+                if isinstance(matrix,ndarray):
+                    print(matrix)
+                else:
+                    #print(matrix.todense())
+                    print(matrix)
 
 if __name__ == '__main__':
     #failed_test1()
@@ -83,7 +85,4 @@ if __name__ == '__main__':
     
     #pass_test1()
     #pass_test2()
-    testAscii()
-    print("-------------")
-    testBinary()
     unittest.main()
