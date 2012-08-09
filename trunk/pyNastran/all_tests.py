@@ -12,7 +12,7 @@ from pyNastran.op2.test.op2_unitTests import OP2_Test
 from pyNastran.f06.test.f06_test import main as F06
 
 #op4
-from pyNastran.op4.test.test import OP4_Test
+from pyNastran.op4.test.op4_test import OP4_Test
 
 #gui - just tests the imports
 #import pyNastran.gui.gui

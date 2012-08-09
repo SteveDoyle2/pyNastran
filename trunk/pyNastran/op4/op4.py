@@ -1040,7 +1040,7 @@ class OP4(FortranFile):
                 if Type in [1,2]:
                     #nValues = iEnd-iStart+1
                     #msg += pack('d'*nValues,A[iStart:iEnd+1,icol])
-                    for i,irow in enumerate(range(iStart,iEnd)):
+                    for i,irow in enumerate(xrange(iStart,iEnd)):
                         msg += pack('d',A[irow,icol])
                 
                 else: # complex
@@ -1091,7 +1091,7 @@ class OP4(FortranFile):
                 #i=0
                 if Type in [1,2]:
                     #print "iStart=%s iEnd=%s" %(iStart,iEnd)
-                    for i,irow in enumerate(range(iStart,iEnd)):
+                    for i,irow in enumerate(xrange(iStart,iEnd)):
                         if abs(A[irow,icol])>tol:
                             valueStr += '%23.16E' %(A[irow,icol])
                         else:
