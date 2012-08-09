@@ -4,6 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 import copy
 from math import sin, cos, radians
+from itertools import izip
+
 from numpy import zeros, transpose, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -301,7 +303,7 @@ class PCOMP(ShellProperty):
 
             self.plies = []
             #ply = [mid,t,theta,sout]
-            for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
+            for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
                 if sout == 1:  ## @todo not sure  0=NO,1=YES (most likely)
                     sout = 'YES'
                 elif sout == 0:
@@ -347,7 +349,7 @@ class PCOMP(ShellProperty):
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
 
-        for (field1, field2) in zip(fields1, fields2):
+        for (field1, field2) in izip(fields1, fields2):
             if not self.isSame(field1, field2):
                 return False
             ###

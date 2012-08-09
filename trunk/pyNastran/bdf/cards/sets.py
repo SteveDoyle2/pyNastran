@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 from pyNastran.bdf.fieldWriter import print_int_card
@@ -62,7 +63,7 @@ class ABCQSet(Set):
     def rawFields(self):
         """gets the "raw" card without any processing as a list for printing"""
         fields = [self.type] # ASET, BSET
-        for (ID, comp) in zip(self.IDs, self.components):
+        for (ID, comp) in izip(self.IDs, self.components):
             fields += [ID, comp]
         return fields
 

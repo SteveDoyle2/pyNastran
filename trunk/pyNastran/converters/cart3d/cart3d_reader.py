@@ -1,7 +1,9 @@
 import os
 import sys
-from math import ceil,sqrt
+from math import ceil, sqrt
+from itertools import izip
 from numpy import array
+
 #from pyNastran.general.general import ListPrint
 from struct import unpack
 from pyNastran.op2.fortranFile import FortranFile
@@ -495,7 +497,7 @@ class Cart3DAsciiReader(object):
             f.write(printCard(['PSHELL',pidMid,pidMid,thickness]))
         ###
 
-        for eid,(nodes,region) in enumerate(1,zip(elements,regions)):
+        for eid,(nodes,region) in enumerate(1,izip(elements,regions)):
             (n1,n2,n3) = nodes
             f.write(printCard(['CTRIA3',eid,region,n1,n2,n3]))
         ###

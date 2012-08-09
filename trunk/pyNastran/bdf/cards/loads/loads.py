@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
+from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -227,7 +228,7 @@ class SLOAD(Load):
 
     def rawFields(self):
         fields = ['SLOAD', self.sid]
-        for (nid, mag) in zip(self.nids, self.mags):
+        for (nid, mag) in izip(self.nids, self.mags):
             fields += [self.Nid(nid), mag]
         return fields
 
@@ -254,7 +255,7 @@ class DLOAD(LoadCombination):
 
     def rawFields(self):
         fields = ['DLOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
+        for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
             fields += [scaleFactor, self.LoadID(loadID)]
         return fields
 

@@ -1,5 +1,5 @@
-import sys
 import os
+#import sys
 
 from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
 from pyNastran.converters.cart3d.cart3d_reader import genericCart3DReader
@@ -129,16 +129,15 @@ class Cart3dToPanair(PanairGridHelper):
             cart = genericCart3DReader(cart3dGeom)
             (points,elements,regions,loads) = cart.readCart3d(cart3dGeom)
 
-            #for i,(element,region) in enumerate(zip(elements,regions)):
-            for pid,point in sorted(points.iteritems()):
+            for pid, point in sorted(points.iteritems()):
                 #if pid<85:
                 #    print pid,point
                 pass
-            for eid,element in sorted(elements.iteritems()):
+            for eid, element in sorted(elements.iteritems()):
                 region = regions[eid]
                 if region not in BCMap:
                     continue
-                (kt,cpNorm) = BCMap[region]
+                (kt, cpNorm) = BCMap[region]
                 if cpNorm is None:
                     cpNorm = ''
 

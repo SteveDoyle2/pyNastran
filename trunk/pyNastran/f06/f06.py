@@ -1,5 +1,6 @@
 import os
 import sys
+from itertools import izip
 
 from pyNastran.general.general import printBadPath
 
@@ -477,7 +478,7 @@ class F06(OES,OUG,OQG,F06Writer):
 
     def parseLineGradientsFluxes(self,sline,Format):
         out = []
-        for entry,iFormat in zip(sline,Format):
+        for entry,iFormat in izip(sline,Format):
             if entry.strip() is '':
                 out.append(0.0)
             else:
@@ -513,7 +514,7 @@ class F06(OES,OUG,OQG,F06Writer):
         @param Format list of types [int,str,float,float,float] that maps to sline
         """
         out = []
-        for entry,iFormat in zip(sline,Format):
+        for entry,iFormat in izip(sline,Format):
             try:
                 entry2 = iFormat(entry)
             except:
@@ -525,7 +526,7 @@ class F06(OES,OUG,OQG,F06Writer):
     def parseLineBlanks(self,sline,Format):
         """allows blanks"""
         out = []
-        for entry,iFormat in zip(sline,Format):
+        for entry,iFormat in izip(sline,Format):
             if entry.strip():
                 entry2 = iFormat(entry)
             else:

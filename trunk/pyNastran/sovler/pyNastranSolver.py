@@ -1,6 +1,7 @@
 # pylint: disable=E0602,C0103
 from __future__ import print_function
 import sys
+from itertools import izip
 from numpy import array, zeros, ones
 from numpy.linalg import solve
 
@@ -81,7 +82,7 @@ def departition_dense_vector(n, IsVs):
     V = zeros(n)
     for IV in IVs:
         (Is, Vs) = IV
-        for (i, v) in zip(Is, Vs):
+        for (i, v) in izip(Is, Vs):
             V[i] = v
         ###
     ###
@@ -413,7 +414,7 @@ class Solver(F06, OP2):
                 nij2.append(Dofs[ij])
             print('nij2', nij2)
 
-            for (fg, dof) in zip(Fg, nGrav):
+            for (fg, dof) in izip(Fg, nGrav):
                 #print("dof = ",dof)
                 if dof in Dofs:  # is3D
                     F[Dofs[dof]] += fg
@@ -434,7 +435,7 @@ class Solver(F06, OP2):
         if 0:
             # n is (nid,componentID), IJV is the (ith,jth,value) in K
             #(n,IJV) = elem.nIJV()
-            for (ni, ijv) in zip(n, IJV):
+            for (ni, ijv) in izip(n, IJV):
                 i = nidComponentToID(ni)
                 j = nidComponentToID(ji)
                 #(i,j,v) = ijv

@@ -1,4 +1,5 @@
 import sys
+from itertools import izip
 from math import sqrt,log10
 from numpy import array
 from numpy.linalg import norm
@@ -66,7 +67,7 @@ class MarginChecker(object):
             #self.plateStressResults[fname] = 
         
         #print "self.subcases2 = ",self.subcases
-        for (fname,subcaseID,ID) in zip(self.filenames,self.subcases,self.IDs):
+        for (fname,subcaseID,ID) in izip(self.filenames,self.subcases,self.IDs):
             self.cases[fname].append(subcaseID)
         
         for key in self.cases:
