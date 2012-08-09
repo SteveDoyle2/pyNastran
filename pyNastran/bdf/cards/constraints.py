@@ -1,6 +1,7 @@
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 
@@ -297,8 +298,8 @@ class SUPORT1(Constraint):
         ###
 
     def rawFields(self):
-        fields = ['SUPORT1',self.conid]
-        for ID,c in zip(self.IDs,self.Cs):
+        fields = ['SUPORT1', self.conid]
+        for ID,c in izip(self.IDs, self.Cs):
             fields += [ID,c]
         return fields
 
@@ -308,8 +309,8 @@ class SUPORT(Constraint):
     SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
     """
     type = 'SUPORT'
-    def __init__(self,card=None,data=None):
-        Constraint.__init__(self,card,data)
+    def __init__(self, card=None, data=None):
+        Constraint.__init__(self, card, data)
         if card:
             fields = card.fields(1)
         else:
@@ -324,7 +325,7 @@ class SUPORT(Constraint):
 
     def rawFields(self):
         fields = ['SUPORT']
-        for ID,c in zip(self.IDs,self.Cs):
+        for ID,c in izip(self.IDs,self.Cs):
             fields += [ID,c]
         return fields
 
@@ -373,7 +374,7 @@ class MPC(Constraint):
 
     def rawFields(self): # MPC
         fields = ['MPC', self.conid]
-        for i,(gid, constraint, enforced) in enumerate(zip(self.gids, self.constraints, self.enforced)):
+        for (i, gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
             #print [gid,constraint,enforced]
             fields += [gid, constraint, enforced]
             if i%2==1 and i>0:
@@ -432,7 +433,7 @@ class SPC(Constraint):
 
     def rawFields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in zip(self.gids, self.constraints, self.enforced):
+        for (gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 
@@ -444,14 +445,14 @@ class SPCD(SPC):
     SPCD 100 32 436 -2.6  5    2.9
     """
     type = 'SPCD'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         # defines everything :) at least until cross-referencing methods are
         # implemented
-        SPC.__init__(self,card,data)
+        SPC.__init__(self, card, data)
 
     def rawFields(self):
         fields = ['SPCD', self.conid]
-        for (gid, constraint, enforced) in zip(self.gids, self.constraints, self.enforced):
+        for (gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
         return fields
 

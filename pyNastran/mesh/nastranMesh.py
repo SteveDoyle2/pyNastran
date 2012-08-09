@@ -1,4 +1,6 @@
+from itertools import izip
 from numpy import array,dot
+
 from pyNastran.bdf.bdf import BDF,printCard
 
 class NastranMesh(BDF):
@@ -324,7 +326,7 @@ class NastranMesh(BDF):
             #print "out = ",out
 
             closeNodes = set()
-            for dist,iLoc in zip(dists,iLocs):
+            for dist,iLoc in izip(dists,iLocs):
                 closeNodes.add(nodeIs[iLoc])
                 #print "nodeClose[%s] = %s" %(nodeIs[iLoc],nodeLocations[nodeIs[iLoc]])
             intersectionNodes = closeNodes.intersection(oldNodes)

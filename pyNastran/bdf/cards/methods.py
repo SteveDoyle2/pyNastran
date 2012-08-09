@@ -1,8 +1,8 @@
 ## pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
 #import sys
+from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -176,7 +176,7 @@ class EIGC(Method): ## not done
     def rawMethod(self):
         fields = []
         if self.method in ['HESS', 'INV']:
-            for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
+            for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in izip(
                  self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
                  self.LJs, self.NEJs, self.NDJs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
@@ -186,7 +186,7 @@ class EIGC(Method): ## not done
                 fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
             ###
         elif self.method=='CLAN':
-            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
+            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in izip(
                  self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
                  self.ksteps, self.NJIs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
@@ -361,13 +361,13 @@ class EIGRL(Method):
 
     def rawFields(self):
         fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,self.msglvl,self.maxset,self.shfscl,self.norm]
-        for (option, value) in zip(self.options, self.values):
+        for (option, value) in izip(self.options, self.values):
             fields += [option+'='+str(value)]
         return fields
 
     def reprFields(self):
         msglvl = set_blank_if_default(self.msglvl, 0)
         fields = ['EIGRL',self.sid,self.v1,self.v2,self.nd,msglvl,self.maxset,self.shfscl,self.norm]
-        for (option, value) in zip(self.options, self.values):
+        for (option, value) in izip(self.options, self.values):
             fields += [option+'='+str(value)]
         return fields

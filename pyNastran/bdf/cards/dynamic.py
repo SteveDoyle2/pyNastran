@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp
+from itertools import izip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -131,14 +132,14 @@ class TSTEP(BaseCard):
     output in transient analysis.
     """
     type = 'TSTEP'
-    def __init__(self,card=None,data=None):
+    def __init__(self, card=None, data=None):
         self.sid = card.field(1)
         self.N=[]; self.DT=[]; self.NO=[]
         fields = card.fields(1)
         
-        i=1
+        i = 1
         nFields = len(fields)
-        while i<nFields:
+        while i < nFields:
             self.N.append(card.field(i+1,1))
             self.DT.append(card.field(i+2,0.))
             self.NO.append(card.field(i+3,1))
@@ -146,7 +147,7 @@ class TSTEP(BaseCard):
 
     def rawFields(self):
         fields = ['TSTEP',self.sid]
-        for (n,dt,no) in zip(self.N,self.DT,self.NO):
+        for (n, dt, no) in izip(self.N, self.DT, self.NO):
             fields += [n,dt,no,None,None,None,None,None]
         return fields
 

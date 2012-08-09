@@ -13,7 +13,7 @@ class PARAM(BaseCard):
     #def isSameCard(self, param, debug=False):
         #fields1 = [self.key, self.value ]
         #fields2 = [param.key, param.value]
-        #for (field1, field2) in zip(fields1, fields2):
+        #for (field1, field2) in izip(fields1, fields2):
         #    if not self.isSame(field1, field2):
         #        return False
         #    ###

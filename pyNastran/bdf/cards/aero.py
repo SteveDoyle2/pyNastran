@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
+from itertools import izip, count
 from numpy import array, pi
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -64,7 +65,7 @@ class AELINK(BaseCard):
         fields = ['AELINK', self.id, self.label]
         #print "self.independentLabels = ",self.independentLabels
         #print "self.Cis = ",self.Cis
-        for (ivar, ival) in zip(self.independentLabels, self.Cis):
+        for (ivar, ival) in izip(self.independentLabels, self.Cis):
             fields += [ivar, ival]
         #print "AELINK fields = ",fields
         return fields
@@ -784,7 +785,7 @@ class MKAERO1(BaseCard):
 
     def rawFields(self):
         #fields = ['MKAERO2']
-        #for i,(mach,rfreq) in enumerate(zip(self.machs,self.rFreqs)):
+        #for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
         #    fields += [mach,rfreq]
         machs = [None]*8        
         freqs = [None]*8
@@ -832,7 +833,7 @@ class MKAERO2(BaseCard):
 
     def rawFields(self):
         fields = ['MKAERO2']
-        for i,(mach, rfreq) in enumerate(zip(self.machs, self.rFreqs)):
+        for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
             fields += [mach, rfreq]
         return fields
 
@@ -915,7 +916,7 @@ class PAERO2(BaseCard):
 
     def rawFields(self):
         fields = ['PAERO2', self.pid, self.orient, self.width, self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
-        for (thi, thn) in zip(self.thi, self.thn):
+        for (thi, thn) in izip(self.thi, self.thn):
             fields += [thi, thn]
         return fields
 
@@ -1249,7 +1250,7 @@ class TRIM(BaseCard):
 
     def rawFields(self):
         fields = ['TRIM', self.sid, self.mach, self.q]
-        for i,(label, ux) in enumerate(zip(self.labels, self.uxs)):
+        for (i, label, ux) in izip(count(), self.labels, self.uxs):
             fields += [label, ux]
             if i==1:
                 fields += [self.aeqr]
