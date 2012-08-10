@@ -22,6 +22,7 @@ First part of this project is all about learning. For Python coding standards an
 
 Most of the time it will be necessary to refactor existing code. Therefore it is especially important to make sure that the changes will not break existing code. This is the place where Python [http://docs.python.org/library/unittest.html unittest] module comes in. For changed code new tests will be written and existing ones will be used extensively.
  
+
 The general idea is to create automatic system that will check the project against different versions of Python after code change.
 
 = Project code =
