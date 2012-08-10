@@ -33,11 +33,12 @@ class Cart3DAsciiReader(object):
 
         if log is None:
             from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
             if debug:
-                log = loggerObj.startLog('debug') # or info
+                word = 'debug'
             else:
-                log = loggerObj.startLog('info') # or info
+                word = 'info'
+            loggerObj = dummyLogger()
+            log = loggerObj.startLog(word) # or info
         self.log = log
 
     def readCart3d(self,infilename):

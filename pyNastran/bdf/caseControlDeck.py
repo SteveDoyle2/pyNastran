@@ -20,8 +20,9 @@ class CaseControlDeck(object):
         if log is None:
         #if 1:
             from pyNastran.general.logger import dummyLogger
+            word = 'debug'
             loggerObj = dummyLogger()
-            log = loggerObj.startLog('debug') # or info
+            log = loggerObj.startLog(word) # or info
         self.debug = False
         #self.debug = True
 

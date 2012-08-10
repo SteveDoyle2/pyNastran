@@ -15,11 +15,11 @@ class BDFReader(object):
 
         if log is None:
             from pyNastran.general.logger import dummyLogger
-            loggerObj = dummyLogger()
             if debug:
                 word = 'debug'
             else:
                 word = 'info'
+            loggerObj = dummyLogger()
             log = loggerObj.startLog(word) # or info
         self.log = log
 
