@@ -3,8 +3,27 @@
 = Introduction =
 
 The current development version of pyNastran has 52k lines of code spanning 222 files. Reducing this by 10% would help tremendously.
+One of the ways to achieve this goal in the more extensive usage of Python idioms and Python standard library.
 
 
-= Details =
+= Preparations =
 
-Project details will be added soon.
+First part of this project is all about learning. For Python coding standards and coding tips I found these websites particularly interesting:
+
+ * [http://www.python.org/dev/peps/pep-0008/ PEP 8 -- Style Guide for Python Code]
+ * [http://www.python.org/dev/peps/pep-0257/ PEP 257 -- Docstring Conventions]
+ * [http://ivory.idyll.org/articles/advanced-swc/ Intermediate and Advanced Software Carpentry in Python]
+ * [http://python.net/~goodger/projects/pycon/2007/idiomatic/handout.html Code Like a Pythonista: Idiomatic Python]
+ * [http://www.memonic.com/user/pneff/folder/python/id/1bufp Python Idioms and Efficiency]
+ * [http://www.youtube.com/watch?v=o9pEzgHorH0 Stop Writing Classes ]
+
+
+= Testing =
+
+Most of the time it will be necessary to refactor existing code. Therefore it is especially important to make sure that the changes will not break existing code. This is the place where Python [http://docs.python.org/library/unittest.html unittest] module comes in. For changed code new tests will be written and existing ones will be used extensively.
+ 
+The general idea is to create automatic system that will check the project against different versions of Python after code change.
+
+= Project code =
+
+New code will be maintained in [http://code.google.com/p/pynastran/source/browse/#svn%2Fbranches%2Flocr_2012 locr_2012] SVN branch.
