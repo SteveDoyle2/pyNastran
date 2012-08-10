@@ -243,7 +243,7 @@ class OPG(object):
             out = unpack(format1,eData)
             (eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm) = out
             eKey = extract(eKey,dt)
-            fiber = fiber.encode('utf-8').strip()
+            fiber = fiber.decode('utf-8').strip()
             self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
         #print len(self.data)
 
