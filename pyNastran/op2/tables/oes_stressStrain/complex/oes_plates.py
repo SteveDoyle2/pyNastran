@@ -235,7 +235,10 @@ class ComplexPlateStressObject(stressObject):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,oxxNodes in sorted(oxxs.iteritems()):
                 eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
+                k = oxxNodes.keys()
+                k.remove('C')
+                k.sort()
+                for nid in ['C']+k:
                     for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                         fd    = self.fiberCurvature[eid][nid][iLayer]
                         oxx   = self.oxx[   dt][eid][nid][iLayer]
@@ -578,8 +581,10 @@ class ComplexPlateStressObject(stressObject):
 
     def writeF06_Tri3(self,eid,isMagPhase):
         msg = ''
-        oxxNodes = self.oxx[eid].keys()
-        for nid in sorted(oxxNodes):
+        k = self.oxx[eid].keys()
+        k.remove('C')
+        k.sort()
+        for nid in ['C']+k:
             for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[eid][nid][iLayer]
@@ -598,8 +603,10 @@ class ComplexPlateStressObject(stressObject):
 
     def writeF06_Tri3Transient(self,dt,eid,isMagPhase):
         msg = ''
-        oxxNodes = self.oxx[dt][eid].keys()
-        for nid in sorted(oxxNodes):
+        k = self.oxx[dt][eid].keys()
+        k.remove('C')
+        k.sort()
+        for nid in ['C']+k:
             for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 oxx   = self.oxx[dt][eid][nid][iLayer]
@@ -632,7 +639,10 @@ class ComplexPlateStressObject(stressObject):
         #print self.oxx.keys()
         for eid,oxxNodes in sorted(self.oxx.iteritems()):
             eType = self.eType[eid]
-            for nid in sorted(oxxNodes):
+            k = oxxNodes.keys()
+            k.remove('C')
+            k.sort()
+            for nid in ['C']+k:
                 for iLayer in xrange(len(self.oxx[eid][nid])):
                     fd    = self.fiberCurvature[eid][nid][iLayer]
                     oxx   = self.oxx[eid][nid][iLayer]
@@ -1176,7 +1186,9 @@ class ComplexPlateStrainObject(strainObject):
     def writeF06_Tri3(self,eid,isMagPhase):
         msg = ''
         k = self.exx[eid].keys()
-        for nid in sorted(k):
+        k.remove('C')
+        k.sort()
+        for nid in ['C']+k:
             for iLayer in xrange(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[eid][nid][iLayer]
@@ -1196,9 +1208,10 @@ class ComplexPlateStrainObject(strainObject):
 
     def writeF06_Tri3Transient(self,dt,eid,isMagPhase):
         msg = ''
-        exxNodes = self.exx[dt][eid]
-        k = exxNodes.keys()
-        for nid in sorted(exxNodes):
+        k = self.exx[dt][eid].keys()
+        k.remove('C')
+        k.sort()
+        for nid in ['C']+k:
             for iLayer in xrange(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
                 exx   = self.exx[dt][eid][nid][iLayer]
@@ -1231,7 +1244,10 @@ class ComplexPlateStrainObject(strainObject):
 
         for eid,exxNodes in sorted(self.exx.iteritems()):
             eType = self.eType[eid]
-            for nid in sorted(exxNodes):
+            k = exxNodes.keys()
+            k.remove('C')
+            k.sort()
+            for nid in ['C']+k:
                 for iLayer in xrange(len(self.exx[eid][nid])):
                     fd    = self.fiberCurvature[eid][nid][iLayer]
                     exx   = self.exx[eid][nid][iLayer]
@@ -1266,7 +1282,10 @@ class ComplexPlateStrainObject(strainObject):
             msg += '%s = %g\n' %(self.dataCode['name'],dt)
             for eid,exxNodes in sorted(exx.iteritems()):
                 eType = self.eType[eid]
-                for nid in sorted(exxNodes):
+                k = exxNodes.keys()
+                k.remove('C')
+                k.sort()
+                for nid in ['C']+k:
                     for iLayer in xrange(len(self.exx[dt][eid][nid])):
                         fd    = self.fiberCurvature[eid][nid][iLayer]
                         exx   = self.exx[   dt][eid][nid][iLayer]

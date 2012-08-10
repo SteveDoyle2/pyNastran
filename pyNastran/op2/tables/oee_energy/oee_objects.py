@@ -75,7 +75,7 @@ class StrainEnergyObject(scalarObject):
         (eid,energy,percent,density) = out
         #print "energyGridIDs = %s" %(self.energy.keys())
         #assert grid not in self.energy,'grid=%s out=%s' %(grid,out)
-        if eid<=0:
+        if isinstance(eid, int) and eid <= 0:
             raise InvalidGridID_Error('eid=%s' %(eid))
         self.energy[eid]  = energy
         self.percent[eid] = percent
