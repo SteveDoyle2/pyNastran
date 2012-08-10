@@ -130,7 +130,7 @@ class PlateStressObject(stressObject):
         k = self.oxx.keys()
         k.sort()
         return k
-
+    
     def addNewTransient(self,dt):
         """
         initializes the transient variables
@@ -691,8 +691,8 @@ class PlateStressObject(stressObject):
     def writeF06_Quad4_Bilinear(self,eid,n):
         msg = ''
         k = self.oxx[eid].keys()
+        k.remove('C')
         k.sort()
-        k.pop(-1)
         for nid in ['C']+k:
             for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
@@ -722,8 +722,8 @@ class PlateStressObject(stressObject):
     def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
         msg = ''
         k = self.oxx[dt][eid].keys()
+        k.remove('C')
         k.sort()
-        k.pop(-1)
         for nid in ['C']+k:
             for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
@@ -1340,8 +1340,8 @@ class PlateStrainObject(strainObject):
     def writeF06_Quad4_Bilinear(self,eid,n):
         msg = ''
         k = self.exx[eid].keys()
+        k.remove('C')
         k.sort()
-        k.pop(-1)
         for nid in ['C']+k:
             for iLayer in xrange(len(self.exx[eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]
@@ -1371,8 +1371,8 @@ class PlateStrainObject(strainObject):
     def writeF06_Quad4_BilinearTransient(self,dt,eid,n):
         msg = ''
         k = self.exx[dt][eid].keys()
+        k.remove('C')
         k.sort()
-        k.pop(-1)
         for nid in ['C']+k:
             for iLayer in xrange(len(self.exx[dt][eid][nid])):
                 fd    = self.fiberCurvature[eid][nid][iLayer]

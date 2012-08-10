@@ -395,11 +395,8 @@ class SolidStressObject(stressObject):
             #eType = self.eType[eid]
 
             k = self.oxx[eid].keys()
-            #kc = k.index('C')
-            #k.pop(kc)
+            k.remove('C')
             k.sort()
-            k.pop(-1)
-            #print k
             msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes) )
             for nid in ['C']+k:
                 oxx = self.oxx[eid][nid]
@@ -441,11 +438,8 @@ class SolidStressObject(stressObject):
             #eType = self.eType[eid]
 
             k = self.oxx[dt][eid].keys()
-            #kc = k.index('C')
-            #k.pop(kc)
+            k.remove('C')
             k.sort()
-            k.pop(-1)
-            #print k
             msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes))
             for nid in ['C']+k:
                 oxx = self.oxx[dt][eid][nid]
@@ -967,11 +961,8 @@ class SolidStrainObject(strainObject):
             #eType = self.eType[eid]
 
             k = self.exx[eid].keys()
-            #kc = k.index('C')
-            #k.pop(kc)
+            k.remove('C')
             k.sort()
-            k.pop(-1)
-            #print k
             msg.append('0  %8s           0GRID CS  %i GP\n' %(eid,nNodes) )
             for nid in ['C']+k:
                 exx = self.exx[eid][nid]
@@ -1014,11 +1005,8 @@ class SolidStrainObject(strainObject):
             #eType = self.eType[eid]
 
             k = self.exx[dt][eid].keys()
-            #kc = k.index('C')
-            #k.pop(kc)
+            k.remove('C')
             k.sort()
-            k.pop(-1)
-            #print k
             msgA  = '0  %8s           0GRID CS  %i GP\n' %(eid,nNodes)
             for nid in ['C']+k:
                 exx = self.exx[dt][eid][nid]
