@@ -44,17 +44,17 @@ class XrefMesh(object):
         #self.mpcObject.crossReference(self)  # enable to output MPCs
         
         #self.spcObject2 = constraintObject2()
-        for spcadd in sorted(self.spcadds.itervalues()):
+        for spcadd in self.spcadds.itervalues():
             self.spcObject2.Add(spcadd)
 
-        for spcs in sorted(self.spcs.itervalues()):
+        for spcs in self.spcs.itervalues():
             for spc in spcs:
                 self.spcObject2.append(spc)
 
-        for mpcadd in sorted(self.mpcadds.itervalues()):
+        for mpcadd in self.mpcadds.itervalues():
             self.mpcObject2.Add(mpcadd)
 
-        for mpcs in sorted(self.mpcs.itervalues()):
+        for mpcs in self.mpcs.itervalues():
             for mpc in mpcs:
                 self.mpcObject2.append(mpc)
         #self.mpcObject2 = constraintObject2()

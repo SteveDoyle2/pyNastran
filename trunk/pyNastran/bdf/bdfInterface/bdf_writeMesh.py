@@ -35,7 +35,7 @@ class WriteMesh(object):
         #print "eids = ",eids
         nextEID = max(eids)+1  # set the new ID
         msg = '$ELEMENTS\n'
-        for element in sorted(self.elements.itervalues()):
+        for eid, element in sorted(self.elements.iteritems()):
             if element.Is('CQUAD4'):
                 msg += element.writeAsCTRIA3(nextEID)
                 nextEID += 1
