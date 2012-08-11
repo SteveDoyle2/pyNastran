@@ -150,7 +150,7 @@ class BDFMethods(object):
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=|%s| b/c it doesnt exist' %(cid))
-        for node in sorted(self.nodes.itervalues()):
+        for nid,node in sorted(self.nodes.iteritems()):
             p = node.PositionWRT(self, cid)
             #p = node.Position(self)
             #print "p = ",p
