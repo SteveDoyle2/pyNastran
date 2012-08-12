@@ -1201,7 +1201,7 @@ class PBEAML(IntegratedLineProperty):
                     #print "*2",
                     #print "dim = ",Dim
                     if isinstance(dim, unicode):
-                        raise RuntimeError('nsm is a string...nsm=|%s|' %(dim))
+                        raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' %(dim,card.fields()))
                     self.nsm.append(dim)
                     if n > 0:
                         so  = card.field(i+1, 'YES')

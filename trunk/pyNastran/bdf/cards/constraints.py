@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from itertools import izip, count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru
 
@@ -374,7 +374,7 @@ class MPC(Constraint):
 
     def rawFields(self): # MPC
         fields = ['MPC', self.conid]
-        for (i, gid, constraint, enforced) in izip(self.gids, self.constraints, self.enforced):
+        for (i, gid, constraint, enforced) in izip(count(), self.gids, self.constraints, self.enforced):
             #print [gid,constraint,enforced]
             fields += [gid, constraint, enforced]
             if i%2==1 and i>0:
