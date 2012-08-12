@@ -51,8 +51,6 @@ const char op4_type_str[4][3] = { {'R',  'S',  0},
                                   {'C',  'D',  0}
                            };
  /* 1}}} */
-
-//-----------------------------------------------------------------------
 float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
                    int     filetype   ,  /* in  1=text, other is binary    */
                    int     nRow       ,  /* in  # rows    in matrix        */
@@ -159,9 +157,6 @@ float  *op4_load_S(FILE   *fp         ,  /* {{{1 */
     if (DEBUG) { printf("157 <- op4_load_S\n"); fflush(stdout); }
     return array;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 double *op4_load_D(FILE   *fp         ,  /* {{{1 */
                    int     filetype   ,  /* in  1=text, other is binary    */
                    int     nRow       ,  /* in  # rows    in matrix        */
@@ -265,9 +260,6 @@ double *op4_load_D(FILE   *fp         ,  /* {{{1 */
     if (DEBUG) { printf("260 <- op4_load_D\n"); fflush(stdout); }
     return array;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_filetype(const char *filename)    /* {{{1 */
 {
     /* Returns
@@ -326,9 +318,6 @@ word, w[0], w[1], w[2], w[3]);
     fclose(fp);
     return type;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
                 int        *n_mat     ,  /* out number of matrices      */
                 char        name[][9] ,  /* out matrix names            */
@@ -403,9 +392,6 @@ int  op4_scan(  const char *filename  ,  /* in  {{{1                    */
     }
     return result;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_scan_text(const char *filename  ,  /* in  {{{1                    */
                 int        *n_mat     ,  /* out number of matrices      */
                 char        name[][9] ,  /* out matrix names            */
@@ -544,9 +530,6 @@ printf("510 - s1:  %s", line);
     }
     return 1;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_scan_binary(const char *filename  ,  /* in  {{{1                    */
                 int         endian    ,  /* in  0=native   1=flipped    */
                 int        *n_mat     ,  /* out number of matrices      */
@@ -643,9 +626,6 @@ printf("620 - op4_scan_binary end byte position=%ld\n", offset[*n_mat]);
 
     return 1;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 void op4_is_mat_header_binary(FILE *fp,        /* {{{1 */
                          int   endian    ,     /* in  0=native   1=flipped  */
                          int  *record_length,  /* out */
@@ -746,9 +726,6 @@ rec_len, column_id, start_row, n_words);
     }
     fseek(fp, location, SEEK_SET);
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
                      int   endian ,  /* in  */
                      int   nType  ,  /* in  */
@@ -882,8 +859,6 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
     return 1;
 }
 /* 1}}} */
-
-//-----------------------------------------------------------------------
 int  op4_line_type(const char *line) {  /* in {{{1 */
     int length, type;
 
@@ -908,9 +883,6 @@ if (DEBUG)
 printf("883 - T=%d:[%s]\n", type, line);
     return type;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_read_col_text(FILE   *fp         ,  /* {{{1 */
                     int     c_in       ,  /* in  requested column to read   */
                     int     nRow       ,  /* in  # rows    in matrix        */
@@ -1039,9 +1011,6 @@ printf("\n978 - new column %2d row %2d complx=%d\n", col, row, complx);
     }
     return n_nnz;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 int  op4_read_col_binary(FILE   *fp         ,  /* {{{1 */
                     int     endian     ,  /* in  0=native   1=flipped    */
                     int     c_in       ,  /* in  requested column to read   */
@@ -1231,9 +1200,6 @@ printf("1194 - op4_read_col_binary N[%3d] = %e\n", *N_index+i, N[*N_index + i]);
     }
     return n_nnz;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 FILE* op4_open_r(const char *filename, long offset) {  /* in {{{1 */
     FILE *fp;
     /* Open an op4 file for reading, optionally positioning the file
@@ -1248,7 +1214,348 @@ FILE* op4_open_r(const char *filename, long offset) {  /* in {{{1 */
     return fp;
 } /* 1}}} */
 
-//-----------------------------------------------------------------------
+int  op4_wrt_header(FILE   *fp         ,  /* {{{1 */
+                    int     endian     ,  /* in  0=native   1=flipped    */
+                    char   *name       ,  /* in  matrix name                */
+                    int     nRow       ,  /* in  # rows    in matrix        */
+                    int     nCol       ,  /* in  # columns in matrix        */
+                    int     nType      ,  /* in  1=RS 2=RD 3=CS 4=CD        */
+                    int     Form       ,  /* in  1=rect; 2=square           */
+                    int     sparse     ,  /* in  1=sp2; 0=dn                */
+                    int     digits        /* in -1=flipped endian binary    */
+                                          /*     0=native  endian binary    */
+                                          /*    >2=text; number of DIGITS   */
+                   )
+{
+/*
+int DEBUG = 0;
+*/
+    int width, text_cols, RL = 24, 
+        F_RL, F_nCol, F_nRow, F_Form, F_nType;
+
+
+    if (sparse)
+        nRow = -nRow;
+
+    if (2 <= digits && digits <= 9) { /* single precision text */
+        if (nType <= 2) nType = 1;
+        else            nType = 3;
+    } else {                          /* all other cases:  force double prec */
+        if (nType <= 2) nType = 2;
+        else            nType = 4;
+    }
+
+    if (digits > 1) {          /* text */
+        width     = digits + 7;
+        text_cols = (int) 80/width;
+        fprintf(fp, "%8d%8d%8d%8d%-8s1P,%dE%d.%d\n",
+                    nCol, nRow, Form, nType, name, text_cols, width, digits);
+
+    } else if (digits == -1) { /* binary, opposite endian */
+        F_RL    = flip_bytes_int(RL   );
+        F_nCol  = flip_bytes_int(nCol );
+        F_nRow  = flip_bytes_int(nRow );
+        F_Form  = flip_bytes_int(Form );
+        F_nType = flip_bytes_int(nType);
+
+        fwrite(&F_RL,      BYTES_PER_WORD, 1, fp);
+        fwrite(&F_nCol,    BYTES_PER_WORD, 1, fp);
+        fwrite(&F_nRow,    BYTES_PER_WORD, 1, fp);
+        fwrite(&F_Form,    BYTES_PER_WORD, 1, fp);
+        fwrite(&F_nType,   BYTES_PER_WORD, 1, fp);
+        fwrite( name,    2*BYTES_PER_WORD, 1, fp);
+        fwrite(&F_RL,      BYTES_PER_WORD, 1, fp);
+
+    } else {                   /* binary, native endian   */
+        fwrite(&RL,        BYTES_PER_WORD, 1, fp);
+        fwrite(&nCol,      BYTES_PER_WORD, 1, fp);
+        fwrite(&nRow,      BYTES_PER_WORD, 1, fp);
+        fwrite(&Form,      BYTES_PER_WORD, 1, fp);
+        fwrite(&nType,     BYTES_PER_WORD, 1, fp);
+        fwrite( name,    2*BYTES_PER_WORD, 1, fp);
+        fwrite(&RL,        BYTES_PER_WORD, 1, fp);
+    }
+    return 1;
+} /* 1}}} */
+int  op4_wrt_col_dn(FILE   *fp    , /* {{{1 */
+                    int     column, /* first column is 0       */
+                    int     nRows , /* number of rows          */
+                    int     nCols , /* number of columns       */
+                    double *A     , /* array of terms to write */
+                    int     complx, /* 1=complex  0=real       */
+                    int     digits  /* -1=flipped endian; 0=native; >0=digits */
+                    )
+{
+int DEBUG = 0;
+    int    i, r, first_nonzero_row, last_nonzero_row, nNums, width, text_cols,
+           RL, A_start, F_RL, F_col, F_fnz, F_nNums;
+    double F_x;
+    char   format[10];
+
+    ++column; /* go from 0- to 1-based indexing */
+    first_nonzero_row = nRows;
+    last_nonzero_row  =   -1;
+    /* find the first and last rows in this column with nonzero's */
+    for (r = 0;       r < nRows; r++) {
+        if (complx && ((A[2*r] != 0.0) || (A[2*r+1] != 0.0))) {
+            first_nonzero_row = r;
+            break;
+        } else if (A[r] != 0.0) {
+            first_nonzero_row = r;
+            break;
+        }
+    }
+    for (r = nRows-1; r >= 0;    r--) {
+        if (complx && ((A[2*r] != 0.0) || (A[2*r+1] != 0.0))) {
+            last_nonzero_row = r;
+            break;
+        } else if (A[r] != 0.0) {
+            last_nonzero_row = r;
+            break;
+        }
+    }
+    if (last_nonzero_row < first_nonzero_row) {
+        /* column is all zeros; do nothing unless this is the last column */
+        if (column == nCols)
+            op4_wrt_trailer(fp, column, digits);
+        return 1;
+    } else {
+        nNums = Nm_per_term[complx]*(last_nonzero_row - first_nonzero_row + 1);
+    }
+if (DEBUG)
+printf("op4_wrt_col_dn nNums=%d 1st nonzero_row=%d last_row=%d Nm_per_term[complx]=%d\n", nNums, first_nonzero_row, last_nonzero_row, Nm_per_term[complx]);
+
+    /* write terms of the column from the first to the last nonzero */
+    A_start = first_nonzero_row*Nm_per_term[complx];
+    if (digits > 1) {          /* text */
+        fprintf(fp, "%8d%8d%8d\n", column, first_nonzero_row+1, nNums);
+        sprintf(format, "%%%d.%dE", digits+7, digits);
+        width     = digits + 7;
+        text_cols = (int) 80/width;
+        for (i = 0; i < nNums; i++) {
+            fprintf(fp, format, A[i + A_start]);
+            if (!((i+1) % text_cols))
+                fprintf(fp, "\n");
+        }
+        if (nNums % text_cols)
+            fprintf(fp, "\n");
+
+    } else if (digits == -1) { /* binary, opposite endian */
+        RL = BYTES_PER_WORD*(3 + 2*nNums);
+        first_nonzero_row++;  /* convert to 1-based indexing */
+        nNums *= 2;           /* convert to # of words */
+        F_RL    = flip_bytes_int(RL);
+        F_col   = flip_bytes_int(column);
+        F_fnz   = flip_bytes_int(first_nonzero_row);
+        F_nNums = flip_bytes_int(nNums);
+
+        fwrite(&F_RL   ,           BYTES_PER_WORD,     1, fp);
+        fwrite(&F_col  ,           BYTES_PER_WORD,     1, fp);
+        fwrite(&F_fnz  ,           BYTES_PER_WORD,     1, fp);
+        fwrite(&F_nNums,           BYTES_PER_WORD,     1, fp); /* # words     */
+        for (i = 0; i < nNums/2; i++) {
+            F_x = flip_bytes_double(A[i + A_start]);
+            fwrite(&F_x,  2*BYTES_PER_WORD, 1, fp);
+        }
+        fwrite(&F_RL,              BYTES_PER_WORD,     1, fp);
+
+    } else {                   /* binary, native endian   */
+        RL = BYTES_PER_WORD*(3 + 2*nNums);
+        first_nonzero_row++;  /* convert to 1-based indexing */
+        nNums *= 2;           /* convert to # of words */
+if (DEBUG)
+printf("op4_wrt_col_dn loc 1 = %ld\n", ftell(fp));
+        fwrite(&RL,                BYTES_PER_WORD,     1, fp);
+        fwrite(&column,            BYTES_PER_WORD,     1, fp);
+        fwrite(&first_nonzero_row, BYTES_PER_WORD,     1, fp);
+        fwrite(&nNums,             BYTES_PER_WORD,     1, fp); /* # words     */
+if (DEBUG)
+printf("op4_wrt_col_dn nNums=%d words starting at A[%d]\n", nNums, A_start);
+if (DEBUG)
+printf("op4_wrt_col_dn loc 2 = %ld\n", ftell(fp));
+        fwrite(&A[A_start],        BYTES_PER_WORD, nNums, fp);
+if (DEBUG)
+printf("op4_wrt_col_dn loc 3 = %ld\n", ftell(fp));
+        fwrite(&RL,                BYTES_PER_WORD,     1, fp);
+if (DEBUG)
+printf("op4_wrt_col_dn loc 4 = %ld\n", ftell(fp));
+    }
+
+    if (column == nCols)
+        op4_wrt_trailer(fp, column, digits);
+    return 1;
+} /* 1}}} */
+int  op4_wrt_col_sp(FILE         *fp    , /* {{{1 */
+                    int           column, /* first column is 0    */
+                    int           A_col , /* column index to A[]; this differs
+                                             from 'column' if A[] contains only
+                                             part of the entire matrix */
+                    int           nCols , /* number of columns    */
+                    SparseMatrix  A     , /* entire sparse matrix */
+                    int           complx, /* 1=complex  0=real    */
+                    int           digits  /* -1=flipped; 0=native; >0=digits */
+                    )
+{
+int DEBUG = 0;
+    int    i, n, s, nStr, nNums, nTerms, s_ptr, n_ptr, width, text_cols, 
+           RL, n_words_str, n_words_col, type, start_row,
+           F_RL, F_col, F_zero, F_nnw, F_n_words_str, F_start_row,
+           zero = 0;
+    char   format[10];
+    double x, F_x;
+
+    nStr  = A.S_start[A_col + 1] - A.S_start[A_col];
+    nNums = A.N_start[A_col + 1] - A.N_start[A_col]; /* in this column */
+    s_ptr = A.S_start[A_col];
+    n_ptr = A.N_start[A_col];
+
+    ++column; /* go from 0- to 1-based indexing */
+    if (!nStr) { /* empty column */
+        if (column == nCols)
+            op4_wrt_trailer(fp, column, digits);
+        return 1;
+    }
+
+    n     = 0;
+    type  = 2;     /* double precision real */
+    if (complx) {
+        type = 4;  /* double precision complex */
+        nTerms = nNums/2;
+    } else {
+        nTerms = nNums;
+    }
+    if ((digits > 2) && (digits < 10)) /* demote to single precision */
+        --type;
+
+if (DEBUG)
+printf("op4_wrt_col_sp a col=%d nStr=%d nNums=%d\n", column, nStr, nNums);
+    n_words_col = op4_words_per_term[type]*nTerms + 2*nStr;
+    if (digits > 1) {          /* text */
+        fprintf(fp, "%8d%8d%8d\n", column, 0, n_words_col);
+        sprintf(format, "%%%d.%dE", digits+7, digits);
+        width     = digits + 7;
+        text_cols = (int) 80/width;
+        for (s = 0; s < nStr; s++) {
+            nNums = Nm_per_term[complx]*A.S[s_ptr + s].len; /* in this string */
+            n_words_str = op4_words_per_term[type]*A.S[s_ptr + s].len + 1;
+            fprintf(fp, "%8d%8d\n", n_words_str, A.S[s_ptr + s].start_row + 1);
+if (DEBUG)
+printf("op4_wrt_col_sp b s=%d\n", s);
+            for (i = 0; i < nNums; i++) {
+                fprintf(fp, format, A.N[n_ptr + n++]);
+                if (!((i+1) % text_cols))
+                    fprintf(fp, "\n");
+            }
+            if (nNums % text_cols)
+                fprintf(fp, "\n");
+        }
+
+    } else if (digits == -1) { /* binary, opposite endian */
+
+if (DEBUG)
+printf("flipping for column %d\n", column);
+        RL = BYTES_PER_WORD*(3 + n_words_col);
+
+        F_RL    = flip_bytes_int(RL);
+        F_col   = flip_bytes_int(column);
+        F_zero  = flip_bytes_int(zero);   /* not really necessary */
+        F_nnw   = flip_bytes_int(n_words_col);
+
+        fwrite(&F_RL  , BYTES_PER_WORD, 1, fp);
+        fwrite(&F_col , BYTES_PER_WORD, 1, fp);
+        fwrite(&F_zero, BYTES_PER_WORD, 1, fp);
+        fwrite(&F_nnw , BYTES_PER_WORD, 1, fp);
+if (DEBUG)
+printf("column header RL=%d col=%d nnw=%d\n", RL, column, n_words_col);
+        for (s = 0; s < nStr; s++) {
+            n_words_str = op4_words_per_term[type]*A.S[s_ptr + s].len + 1;
+            start_row   = A.S[s_ptr + s].start_row + 1;
+if (DEBUG)
+printf("string s=%d nwords=%d start_row=%d loc=%ld  Fnw=%d  Fsr=%d\n", 
+s, n_words_str, start_row, ftell(fp), F_n_words_str, F_start_row);
+
+            F_n_words_str = flip_bytes_int(n_words_str);
+            F_start_row   = flip_bytes_int(start_row);
+
+            fwrite(&F_n_words_str,   BYTES_PER_WORD, 1, fp);
+            fwrite(&F_start_row, BYTES_PER_WORD, 1, fp);
+
+            nNums = Nm_per_term[complx]*A.S[s_ptr + s].len; /* in this string */
+            for (i = 0; i < nNums; i++) {
+if (DEBUG)
+printf("N[%d]=%le\n", n_ptr + n, A.N[n_ptr + n]);
+                x   = A.N[n_ptr + n++];
+                F_x = flip_bytes_double(x);
+                fwrite(&F_x, 2*BYTES_PER_WORD, 1, fp);
+            }
+        }
+        fwrite(&F_RL  , BYTES_PER_WORD, 1, fp);
+
+    } else {                   /* binary, native endian   */
+
+        RL = BYTES_PER_WORD*(3 + n_words_col);
+
+        fwrite(&RL         ,  BYTES_PER_WORD,     1, fp);
+        fwrite(&column     ,  BYTES_PER_WORD,     1, fp);
+        fwrite(&zero       ,  BYTES_PER_WORD,     1, fp);
+        fwrite(&n_words_col,  BYTES_PER_WORD,     1, fp);
+        for (s = 0; s < nStr; s++) {
+            nNums = Nm_per_term[complx]*A.S[s_ptr + s].len; /* in this string */
+            n_words_str = op4_words_per_term[type]*A.S[s_ptr + s].len + 1;
+            start_row = A.S[s_ptr + s].start_row + 1;
+            fwrite(&n_words_str   ,   BYTES_PER_WORD,     1, fp);
+            fwrite(&start_row     ,   BYTES_PER_WORD,     1, fp);
+            fwrite(&A.N[n_ptr + n], 2*BYTES_PER_WORD, nNums, fp);
+            n += nNums;
+        }
+        fwrite(&RL         ,  BYTES_PER_WORD,     1, fp);
+    }
+
+    if (column == nCols)
+        op4_wrt_trailer(fp, column, digits);
+    return 1;
+} /* 1}}} */
+int  op4_wrt_trailer(FILE *fp    , /* {{{1 */
+                     int   column, /* first column is 0    */
+                     int   digits  /* -1=flipped; 0=native; >0=digits */
+                    )
+{
+int DEBUG = 0;
+    int    RL  = 20,  /* 16 if single precision, 20 for double */ 
+           one =  1, F_RL, F_col, F_one;
+    double x   = 1.0, F_x;
+    char  format[10];
+
+    ++column; 
+    if (digits > 1) {          /* text */
+        sprintf(format, "%%%d.%dE", digits+7, digits);
+        fprintf(fp, "%8d%8d%8d\n", column, 1, 1);
+        fprintf(fp, format, x);
+        fprintf(fp, "\n");
+    } else if (digits == -1) { /* binary, opposite endian */
+        F_RL  = flip_bytes_int(RL);
+        F_one = flip_bytes_int(one);
+        F_col = flip_bytes_int(column);
+        F_x   = flip_bytes_double(x);
+if (DEBUG)
+printf("op4_wrt_trailer loc=%ld\n", ftell(fp));
+        fwrite(&F_RL,              BYTES_PER_WORD,     1, fp);
+        fwrite(&F_col,             BYTES_PER_WORD,     1, fp);
+        fwrite(&F_one,             BYTES_PER_WORD,     1, fp);
+        fwrite(&F_one,             BYTES_PER_WORD,     1, fp);
+        fwrite(&F_x,             2*BYTES_PER_WORD,     1, fp);
+        fwrite(&F_RL,              BYTES_PER_WORD,     1, fp);
+    } else {                   /* binary, native endian   */
+        fwrite(&RL,                BYTES_PER_WORD,     1, fp);
+        fwrite(&column,            BYTES_PER_WORD,     1, fp);
+        fwrite(&one,               BYTES_PER_WORD,     1, fp);
+        fwrite(&one,               BYTES_PER_WORD,     1, fp);
+        fwrite(&x,               2*BYTES_PER_WORD,     1, fp);
+        fwrite(&RL,                BYTES_PER_WORD,     1, fp);
+    }
+    return 1;
+} /* 1}}} */
+
 int    flip_bytes_int(int x) {  /* {{{1 */
     int   y;
     char *c_x, *c_y;
@@ -1263,9 +1570,6 @@ int    flip_bytes_int(int x) {  /* {{{1 */
 
     return y;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 float  flip_bytes_float(float x) {  /* {{{1 */
     /* Looks identical to flip_bytes_int() and it practice it might
        be possible to use this function and flip_bytes_int()
@@ -1286,9 +1590,6 @@ float  flip_bytes_float(float x) {  /* {{{1 */
 
     return y;
 } /* 1}}} */
-
-
-//-----------------------------------------------------------------------
 double flip_bytes_double(double x) {  /* {{{1 */
     double   y;
     char    *c_x, *c_y;
@@ -1307,10 +1608,6 @@ double flip_bytes_double(double x) {  /* {{{1 */
 
     return y;
 } /* 1}}} */
-
-
-
-//-----------------------------------------------------------------------
 int  op4_valid_name(char   *name)         /* {{{1 */
 {
      /* Returns:
