@@ -52,9 +52,12 @@ cdef extern from "stdio.h":
     ctypedef void* FILE
     int   fseek (FILE *stream, long int off, int whence)
     char *fgets (char *s, int n, FILE *stream)
+    FILE *fopen(char *path, char *mode)
+
 cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
+
 cdef extern from "string.h":
     void* memset(void *dest, int c, size_t n)
 
@@ -319,6 +322,10 @@ class OP4:                                                # {{{1
         cdef int  form[100]   
         cdef int  digits[100]
         cdef long offset[100]
+        cdef np.ndarray ndfh
+#       cdef FILE *fh[1]
+        cdef double fh[1]
+
 #       print('op4.File got [%s], [%c]' % (filename, mode))
         if mode == 'r' or mode == 'R':
             if not os.path.exists(filename):
@@ -328,7 +335,17 @@ class OP4:                                                # {{{1
                 print('op4.File: not a file %s' % (filename))
                 raise IOError
         self.filename = os.path.abspath(filename)
-        if mode == 'w' or mode == 'W': return
+        if mode in ['w', 'W', 'a', 'A']:
+            return
+############# self.fh_txt = fopen(filename, "w")
+############fh[0] = (double *) fopen(filename, "wb")
+############fh_wrapper_RD = ArrayWrapper_RD()
+############fh_wrapper_RD.set_data(1, <void*> fh)   # crash
+############ndfh = np.array(fh_wrapper_RD, copy=False)
+############ndfh.base = <PyObject*> fh_wrapper_RD
+############Py_INCREF(fh_wrapper_RD)
+############self.fh = fh_wrapper_RD
+
         # Scan the file for number of matrices and headers for each matrix.
         try:
             rv = op4_scan(filename , # in                            
@@ -666,19 +683,80 @@ class OP4:                                                # {{{1
             return All_Matrices
 
     # 2}}}
-    def Save(self     ,                         # {{{2
-             *matrices,
-             digits=0 ): # default output format is binary
-
-        if digits:
-            if digits <  2: digits =  2
-            if digits > 26: digits = 26
-        print('write to %s with digits=%d' % (self.filename, digits))
-        for m in matrices:
-            print(' -> type=[%s]' % (m.dtype))
-            if m.dtype not in ['float32', 'float64', 'complex64', 'complex128',]:
-                print('   type %s not supported, converting to float64')
-                m = m.astype(np.float64)
-            print(m)
-    # 2}}}
 # 1}}}
+def Save(                                   # {{{2
+         filename ,
+         *args    ,  # unnamed matrices
+         **kwargs ): # named matrices and other options like digits
+    """
+
+    cop4.Save('kd.op4', Kxx=K, D)
+        Write matrices K and D to x.op4 with names 
+        "Kxx" and "M0000001" using native binary format.
+     
+    cop4.Save('kd.op4', Kxx=K, Dxx=D, digits=5)
+        Write matrices K and D to x.op4 with names 
+        "Kxx" and "Dxx" as a text file with 5 mantissa digits.
+     
+    """
+
+    if 'digits' in kwargs: 
+        digits = kwargs['digits']
+        if digits and digits <  2: digits =  2
+        if digits and digits > 26: digits = 26
+        del kwargs['digits']
+    else:
+        digits = 0
+
+    print('write to %s with digits=%d' % (     filename, digits))
+
+    # assign a name to each unnamed matrix: M0000001 through M9999999
+    for mat in args:
+        i = 1
+        while True:
+            name = 'M%07d' % i
+            if name not in kwargs: break
+            i += 1
+        kwargs[name] = mat
+
+    for name in kwargs:  # loop over the matrices
+        if type(kwargs[name]) is not np.ndarray:
+            print('skipping %s, wrong type (%s)' % (
+                name, type(kwargs[name])))
+            continue
+        if   kwargs[name].ndim == 1:
+            nR, nC = kwargs[name].shape , 1
+        elif kwargs[name].ndim == 2:
+            nR, nC = kwargs[name].shape
+        else:
+            print('skipping %s, not 1D or 2D' % (name))
+            continue
+        if kwargs[name].dtype not in ['float32', 'float64', 
+                                      'complex64', 'complex128',]:
+            print('   type %s not supported, converting to float64' % (
+                  kwargs[name].dtype))
+            kwargs[name] = kwargs[name].astype(np.float64)
+        print('%s:' % name)
+        print(kwargs[name])
+        print('%s' % ('-' * 40))
+        if   kwargs[name].dtype is 'float32':
+            op4_type   = 1
+            op4_complx = 0
+        elif kwargs[name].dtype is 'float64':
+            op4_type   = 2
+            op4_complx = 0
+        elif kwargs[name].dtype is 'complex64':
+            op4_type   = 3
+            op4_complx = 1
+        else: # kwargs[name].dtype is 'complex128':
+            op4_type   = 4
+            op4_complx = 1
+
+        if nR == nC: op4_form = 1   # square
+        else:        op4_form = 2   # rectangular
+
+        # text with few digits; demote to single precision
+        if (op4_type in [2,4]) and (2 <= digits <= 9): op4_type -= 1
+
+    return
+# 2}}}
