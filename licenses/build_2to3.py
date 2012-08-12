@@ -31,7 +31,7 @@ def fix_object(files):
                 lines2 = []
                 #print "len(lines) = ",len(lines)
                 for codeLine in lines:
-                    codeLine.rstrip()
+
                     if '#' in codeLine:
                         isPound = True
                         indx = codeLine.index('#')
@@ -89,10 +89,10 @@ def fix_object(files):
                             line = line.replace('from itertools import izip, count','from itertools import count')
                         elif 'from itertools import izip' in line:
                             line = ''
-                        elif 'izip' in line:
-                            line = line.replace('izip','zip')
-                        elif 'xrange' in line:
-                            line = line.replace('xrange','range')
+                        elif 'izip(' in line:
+                            line = line.replace('izip(','zip(')
+                        elif 'xrange(' in line:
+                            line = line.replace('xrange(','range(')
                         elif '.iteritems()' in line:
                             line = line.replace('.iteritems()','.items()')
                         elif '.itervalues()' in line:
@@ -100,7 +100,7 @@ def fix_object(files):
                         elif '.iterkeys()' in line:
                             line = line.replace('.iterkeys()','.keys()')
 
-                        elif '=' in line and ('keys()' in line or 'values()' in line) and 'sorted' not in line and "'" not in line and ':' not in line:
+                        elif '=' in line and ('keys()' in line or 'values()' in line) and 'sorted' not in line and "'" not in line and ':' not in line and 'set(' not in line:
                             i = line.index('=')
                             before,after = line[:i],line[i+1:]
                             after = after.strip()
@@ -120,7 +120,7 @@ def fix_object(files):
                             #after = after.strip('\r\n')
                             #print "before=|%s| after=|%s|" %(before,after)
 
-                        elif ('keys()' in line or 'values()' in line) and 'sorted' in line and "'" not in line and ':' not in line:
+                        elif ('keys()' in line or 'values()' in line) and 'sorted' in line and "'" not in line and ':' not in line  and 'set(' not in line:
                             i = line.index('sorted(')
                             before,after = line[:i+7],line[i+7:] # 7 is the length of 'sorted('
                             #after = after.strip('\r\n')
@@ -130,7 +130,11 @@ def fix_object(files):
                             print "***",line
 
                         elif "'wb')" in line:
-                            line = line.replace("'wb')","'w')")
+                            line = line.replace("'wb')","'w',encoding='utf-8')")
+                        elif "'w')" in line:
+                            line = line.replace("'w')","'w',encoding='utf-8')")
+                        elif "'r')" in line:
+                            line = line.replace("'r')","'r',encoding='utf-8')")
                         elif 'format1 = bytes(format1)' in line:
                             line = ''
                         elif 'format2 = bytes(format2)' in line:
@@ -171,6 +175,7 @@ def fix_object(files):
                         #print line.rstrip()
                         #print codeLine.rstrip()
                         #adsf
+                    
                     lines2.append(line)
             
             if 1:
