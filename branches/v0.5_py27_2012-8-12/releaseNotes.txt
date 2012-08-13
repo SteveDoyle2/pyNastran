@@ -13,46 +13,6 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 This code was written entirely in Python and should install easily.
 
 
-*** Not done....
-
------------------------v0.6 released 2012/06/??-----------------------
-
-Overall Notes
-   - more PEP-8
-Overall BDF
-BDF API Additions
-BDF Bug Fixes:
-Removed BDF
-
-Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1
-
-Removed BDF
-
-
-
-Overall OP2
-   - ***added support for SORT2
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
-Overall F06 Reader/Writer
-Added F06 Reader
-Added F06 Writer
-
-Overall GUI
-Added GUI
-   - CQUADR, CTRIAR
-GUI Bug Fixes
-
-
 -----------------------v0.5 released 2012/08/??-----------------------
 Overall Notes
    - lots of new BDF cards
@@ -109,12 +69,10 @@ Overall OP2
    - added majority of element forces
    - added majority of element heat fluxes
    - significantly more support for complex results
-   - added plotting support for "standard" results (real/***complex)
+   - added plotting support for "standard" results (real)
       - displacement, velocity, acceleration,
         eigenvectors, spcForces, mpcForces,
         gridPointForces, appliedLoads, loadVectors, forceVectors
-      - ***complex results may plot in real/imag or mag/phase or PSD (power spectral density)
-      - ***no temperature, stress, element forces, energy
 
 OP2 API Changes
    - renamed many of the objects to follow pep-8, shouldn't really affect
@@ -135,8 +93,6 @@ Overall GUI
 
 Added GUI
    - CQUADR, CTRIAR
-
-GUI Bug Fixes
 
 
 -----------------------v0.4.1 released Py2.x 2012/06/05-----------------------

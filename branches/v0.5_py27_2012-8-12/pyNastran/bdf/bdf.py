@@ -163,7 +163,7 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
         'PELAS', 'PGAP', 'PFAST',
         'PBUSH', 'PBUSH1D',
         'PDAMP', 'PDAMP5', 'PDAMPT',
-        'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBEAML',#'PBEAM3',
+        'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', #'PBEAML',#'PBEAM3',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
         'PSOLID', 'PLSOLID', 'PVISC',
         
@@ -1352,9 +1352,9 @@ class BDF(BDFReader, BDFMethods, GetMethods, AddMethods, WriteMesh,
             #elif cardName == 'PBEAM3':
             #    prop = PBEAM3(cardObj)
             #    self.addProperty(prop)
-            elif cardName == 'PBEAML':   # disabled
-                prop = PBEAML(cardObj)
-                self.addProperty(prop)
+            #elif cardName == 'PBEAML':   # disabled
+            #    prop = PBEAML(cardObj)
+            #    self.addProperty(prop)
             elif cardName == 'PELAS':
                 prop = PELAS(cardObj)
                 self.addProperty(prop)

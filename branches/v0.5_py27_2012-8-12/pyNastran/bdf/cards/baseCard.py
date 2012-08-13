@@ -113,7 +113,6 @@ class BaseCard(BDFCard):
         (default values are left blank).
         """
         #print "tol = ",tol
-        self.rawFields()
         fields = self.reprFields()
         try:
             return self.printCard(fields)
