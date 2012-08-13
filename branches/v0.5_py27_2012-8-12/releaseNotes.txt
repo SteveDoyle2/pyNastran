@@ -13,7 +13,7 @@ Issues List:     http://code.google.com/p/pynastran/issues/list
 This code was written entirely in Python and should install easily.
 
 
------------------------v0.5 released 2012/08/??-----------------------
+-----------------------v0.5 released Python 2.x 2012/08/13-----------------------
 Overall Notes
    - lots of new BDF cards
    - OP2 now supports element real/imaginary forces
