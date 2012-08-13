@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 #pylint: disable=C0301,C0111,C0324,R0912,R0915,W0223,E1101
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 #import sys
 from struct import unpack
 

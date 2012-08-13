@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 #import os
 #import sys
 #from struct import unpack

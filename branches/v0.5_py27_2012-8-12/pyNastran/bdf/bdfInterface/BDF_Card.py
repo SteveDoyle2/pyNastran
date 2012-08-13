@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 import sys
 import copy
 
@@ -60,7 +60,7 @@ class BDFCard(object):
         """
         cardB = []
         for field in card:
-            if isinstance(field, unicode) and field.strip() == '':
+            if isinstance(field, str) and field.strip() == '':
                 field = None
             cardB.append(field)
 
@@ -261,7 +261,7 @@ def wipeEmptyFields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, unicode) and field.strip() == '':
+        if isinstance(field, str) and field.strip() == '':
             field = None
         cardB.append(field)
 

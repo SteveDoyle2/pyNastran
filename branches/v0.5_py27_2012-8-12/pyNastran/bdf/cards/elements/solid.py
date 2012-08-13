@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 from numpy import dot,cross,array,matrix,zeros
 from numpy.linalg import solve
 

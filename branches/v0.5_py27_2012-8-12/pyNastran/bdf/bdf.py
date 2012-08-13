@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=C0103,C0302,R0902,R0904,R0914,W0201,W0611
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 import os
 import sys
 import warnings

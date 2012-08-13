@@ -22,8 +22,8 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 import os
 from numpy import matrix
 
@@ -126,7 +126,7 @@ def is_binary(filename):
     @attention: found @ http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text on 6/08/2010
     @author: Trent Mick <TrentM@ActiveState.com>
     @author: Jorge Orpinel <jorge@orpinel.com>
-    @warning this may not work for unicode...
+    @warning this may not work for str...
     """
     fin = open(filename, 'rb')
     try:
@@ -168,7 +168,7 @@ def ListPrint(listA):
     else:
         for a in listA:
             #print "a = ", a, type(a)
-            if isinstance(a, unicode):
+            if isinstance(a, str):
                 msg += ' %s,' % (str(a))
             elif a is None:
                 msg += ' None,'

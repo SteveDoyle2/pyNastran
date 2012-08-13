@@ -23,8 +23,8 @@
 ## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
 ## 
 # pylint: disable=R0904,R0902
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 from itertools import izip, count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expandThru

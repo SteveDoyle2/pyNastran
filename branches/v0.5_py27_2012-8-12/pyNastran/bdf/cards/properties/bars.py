@@ -35,8 +35,8 @@ All beam properties are defined in this file.  This includes:
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 #import sys
 from itertools import izip, count
 from numpy import zeros, pi
@@ -1224,7 +1224,7 @@ class PBEAML(IntegratedLineProperty):
                 else: # other blocks, n>0 ???
                     #print "*2",
                     #print "dim = ",Dim
-                    if isinstance(dim, unicode):
+                    if isinstance(dim, str):
                         raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' %(dim,card.fields()))
                     self.nsm.append(dim)
                     if n > 0:
@@ -1246,7 +1246,7 @@ class PBEAML(IntegratedLineProperty):
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
                 self.nsm.append(0.0)
-                if isinstance(self.nsm[0], unicode):
+                if isinstance(self.nsm[0], str):
                     msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
                     raise RuntimeError(msg)
                 
