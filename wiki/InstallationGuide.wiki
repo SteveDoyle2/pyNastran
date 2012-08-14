@@ -29,7 +29,7 @@ I use *Python(x,y)-2.7.2.1*, but it shouldn't matter too much as long as your ve
  * [http://numpy.org/ numpy 1.6.1  ]
  * [http://www.vtk.org/VTK/resources/software.html vtk 5.8.0] (for the GUI)
  * [http://wxpython.org/download.php#stable wxPython 2.8.12.0] (for the GUI)
- * [http://pypi.python.org/pypi/distribute distribute_setup.py]
+ * [http://pypi.python.org/pypi/distribute distribute_setup.py] (for Python 3.x)
  * [http://matplotlib.sourceforge.net/ matplotlib 1.1.0] (version 0.5+, for plotting)
  * [http://cython.org/ Cython 0.15.1] (for OP4 support)
 
