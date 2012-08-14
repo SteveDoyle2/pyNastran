@@ -16,7 +16,7 @@ if dev:
     print("changes = %s" %(changes))
     #client.update('./examples/pysvn')
 else:
-    revision = 'dev877'
+    revision = '981'
 
 __author__  = 'Steven Doyle, Al Danial'
 __email__   = 'mesheb82@gmail.com'
