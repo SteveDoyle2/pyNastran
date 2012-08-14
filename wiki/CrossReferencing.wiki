@@ -2,7 +2,7 @@
 #labels Featured
 = Introduction =
 
-Cross-Referencing the BDF is a way of linking nodes, elements, properties, materials, etc. together in a way that makes it easier for the code to access data members.
+Cross-Referencing the BDF is a way of linking nodes, elements, properties, materials, etc. together in a way that makes it easier for the code to access data members.  If you're not cross-referencing the BDF, accessing data takes a lot more work.
 
 = Example With/Without Cross-Referencing =
 
