@@ -4,21 +4,23 @@
 = Why I develop the Software =
 I (Steve Doyle) am an aerospace engineer for a small aerospace company ([http://www.m4-engineering.com/ M4 Engineering]) based out of Long Beach, CA.  I do a lot of aerodynamic analysis, but also work with Nastran every now and then.  We often do multi-disciplinary analysis and many of the tools we use on a daily basis are developed in-house.
 
-The problem with some of these internal tools is it's difficult to improve a tool with so much legacy.  A fully capable Nastran reader requires way more funding than any company should have to invest.  I eventually realized the the only way to actually get a fully capable tool, I'd have to use an open-source tool.
+The problem with some of these internal tools is it's difficult to improve a tool with so much legacy.  It's not practical to regularly rewrite your widely used libraries, so the software becomes hard to maintain.  Additionally, a fully capable Nastran reader requires way more funding than any company should have to invest.  I eventually realized the the only way to actually get a fully capable tool, I'd have to use an open-source tool.
 
-Since the ones out there (e.g. [http://www.koders.com/info.aspx?c=ProjectInfo&pid=9MZG4YNSDBPLZY5Q11KE8N11SF&s=cdef%3aparser pynastran] and [http://www.ferespost.be/ FeResPost]) were too confusing to me despite doing some very impressive things with their code, I just decided to open-source part of my master's work (which is why there's also a Cart3D viewer).  I would have stopped there, but I figured in order for someone else to contribute to it, I needed to get some users.  I added a few features and when I realized I enjoyed doing it, I spent a lot of time making it easy to add new features.
+Since the ones out there (e.g. [http://www.koders.com/info.aspx?c=ProjectInfo&pid=9MZG4YNSDBPLZY5Q11KE8N11SF&s=cdef%3aparser pynastran] and [http://www.ferespost.be/ FeResPost]) were not what I was looking for (despite doing some very impressive things with their code), I decided to open-source part of my master's work (which is why there's also a Cart3D viewer).  I would have stopped there, but I realized in order for the project to grow, I needed to get some users and eventually developers.  I added a few features and when I realized I enjoyed doing it, I spent a lot of time making it easy to add new features.
 
-At this point (at least in the trunk version) there are ~200 cards and many of the OP2 tables are supported.  I also was able to get Al Danials to write an ASCII/binary OP4 reader, who is way more knowledgeable about the inner workings of Nastran than I am.  The software isn't perfect, but despite the excessive amount of Nastran tests there are (e.g. the tpl directory), it's actually hard to find errors.  Additionally, there are a few people who make tickets for the harder to catch bugs.
+At this point (at least in the trunk version) there are ~210 cards and many of the OP2 tables are supported.  I also was able to get Al Danial to write an ASCII/binary OP4 reader, who is also more knowledgeable about the inner workings of Nastran than I am.  The software isn't perfect, but despite the excessive amount of Nastran tests there are (e.g. the tpl directory), it's actually hard to find errors.  Additionally, there are a few people who make tickets for the harder to catch bugs.
 
 The one catch about having a capable Nastran reader is the API will change slightly over time.  I try to avoid it, but it will happen and if something needs to be scrapped because it's buggy, it will be (e.g. the old F06 Reader).
 
 So in summary:
 
 = Why use pyNastran =
- * it's written in [http://www.python.org/ Python] and works in Python 2 and Python 3, so no MATLAB licenses
+ * it's object oriented (this makes using it much easier)
+ * the goal is to read everything accurately, which requires a lot of extra work up front, but it drastically reduces errors
+ * it's written in [http://www.python.org/ Python] and works in Python 2 and Python 3, so no expensive licenses are required (e.g. Matlab)
  * it's free
  * by being open-source it can be improved by people who a minor update to fit their specific use case
- * you can debug you own code and fix it
+ * you can debug you own code and fix it.  That said, if you want to release it as part of your own software, you need to release the fix (it's part of the license)
  * you can make a [http://code.google.com/p/pynastran/issues/list ticket] and it will get fixed (unlike the tickets I make :)
  * it's really easy to add additional features (once you know your way around)
  * it hooks in well with other programs (e.g. the stress/deflection margin calculator)
