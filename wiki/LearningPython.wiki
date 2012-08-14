@@ -2,7 +2,7 @@
 
 = Introduction =
 
-Python is a one of the easiest languages there is to program in.  It's easier than C++, Matlab, Perl, Fortran (all languages I've used).  It's also free.  It comes with a lot of built-in functions, which means you won't ever have to code those very common functions (path manipulation, file copying, etc.).  The book [http://learnpythonthehardway.org/book/ Learn Python the Hard Way] (free for the HTML version) is a good place to start.
+Python is a one of the easiest languages there is to program in.  It's easier than C++, Matlab, Perl, Fortran (all languages I've used).  It's also free.  It comes with a lot of built-in functions, which means you won't ever have to code those very common functions (path manipulation, file copying, etc.).  The book [http://learnpythonthehardway.org/book/ Learn Python the Hard Way] (free for the HTML version) is a good place to start.  [http://www.diveintopython.net/ Dive Into Python] is another great HTML book.
 
 == Basic Math (Python 2.x)==
 Python distinguishes between integers and floats.
