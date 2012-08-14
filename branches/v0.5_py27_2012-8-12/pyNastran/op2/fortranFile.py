@@ -602,7 +602,7 @@ class FortranFile(object):
             #print "self.n = ",self.n
             #print "op2.tell = ",self.op2.tell()
             tableName = word.strip()
-            return tableName.decode('utf-8')
+            return tableName
         except:
             if rewind and not stopOnFailure:
                 self.n = n

@@ -59,11 +59,7 @@ class OEE(object):
         #print(self.printSection(100))
         elementName, = unpack(b'8s',data[24:32])
         #print("elementName = %s" %(elementName))
-        try:
-            elementName = elementName.decode('utf-8').strip() ## element name
-        except UnicodeDecodeError:
-            print("elementName = ",str(elementName))
-            raise
+        elementName = elementName.strip() ## element name
         #print("elementName = %s" %(elementName))
         if elementName.isalpha():
             self.dataCode['elementName'] = elementName
@@ -125,6 +121,9 @@ class OEE(object):
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
         #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
         #print self.codeInformation()
+
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
 
         #self.printBlock(data)
         self.readTitle()

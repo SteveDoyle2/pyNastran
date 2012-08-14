@@ -473,7 +473,7 @@ class ComplexForces(object):
             (eid,eName,axr,ayr,azr,vxr,vyr,vzr,pressure,
                        axi,ayi,azi,vxi,vyi,vzi) = out
             eid2  = extract(eid,dt)
-            eName = eName.decode('utf-8').strip()
+            eName = eName.strip()
             #print "eType=%s" %(eType)
             
             if isMagnitudePhase:

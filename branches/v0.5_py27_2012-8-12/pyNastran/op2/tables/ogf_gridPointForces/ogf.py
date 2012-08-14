@@ -125,6 +125,9 @@ class OGF(object):
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         #self.printBlock(data)
         self.readTitle()
 

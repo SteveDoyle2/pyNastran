@@ -146,6 +146,9 @@ class OES(RealElementsStressStrain,ComplexElementsStressStrain):
         #if self.analysisCode==2: # sort2
         #    self.lsdvmn = self.getValues(data,'i',5)
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         self.readTitle()
         #print "n4 = ",self.n
 

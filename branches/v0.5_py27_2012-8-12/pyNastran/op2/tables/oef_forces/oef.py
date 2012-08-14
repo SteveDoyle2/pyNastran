@@ -142,6 +142,9 @@ class OEF(ThermalElements,RealForces,ComplexForces):
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         #self.printBlock(data)
         #print '-'*80
         self.readTitle()

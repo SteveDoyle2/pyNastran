@@ -126,6 +126,9 @@ class OPG(object):
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
 
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
+
         #self.printBlock(data)
         self.readTitle()
 
@@ -267,7 +270,7 @@ class OPG(object):
             out = unpack(format1,eData)
             (eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm) = out
             eKey = extract(eKey,dt)
-            fiber = fiber.decode('utf-8').strip()
+            fiber = fiber.strip()
             self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
         #print len(self.data)
 
