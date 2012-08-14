@@ -82,7 +82,8 @@ The Cython OP4 reader is faster than the pure Python version, but has a slightly
 
 Import the OP4 reader
 {{{
-from pyNastran.op4.cop4 import OP4
+from pyNastran.op4.op4 import OP4  # v0.4
+from pyNastran.op4.cop4 import OP4  # v0.5
 }}}
 
 Creates a read object associated with the file sol103.op4.
