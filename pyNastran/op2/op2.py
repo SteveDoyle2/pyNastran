@@ -1,6 +1,30 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 #pylint: disable=C0103,W0201,W0223,R0901,R0902,R0904
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 import os
 import sys
 from numpy import array
@@ -40,20 +64,6 @@ class OP2(BDF,
             ## the set of valid subcases -> set([1,2,3])
             self.validSubcases = set(iSubcases)
         self.log.debug("setSubcases - iSubcases = %s" % (self.validSubcases))
-
-    def setTransientTimes(self, times): ## @todo this name sucks...
-        """
-        takes a dictionary of list of times in a transient case and
-        gets the output closest to those timse
-        times = {subcaseID_1: [time1, time2],
-                 subcaseID_2: [time3, time4]}
-        """
-        expectedTimes = {}
-        for (iSubcase, eTimes) in times.iteritems():
-            eTimes = list(times)
-            eTimes.sort()
-            expectedTimes[iSubcase] = array(eTimes)
-        self.expectedTimes = expectedTimes
 
     def isValidSubcase(self):
         """

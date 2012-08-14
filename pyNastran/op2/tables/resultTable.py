@@ -1,5 +1,29 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
+
+from __future__ import division, print_function
 import sys
 import copy
 from numpy import array
@@ -437,7 +461,7 @@ class ResultTable(OQG,OUG,OEF,OPG,OES,OEE,OGF,R1TAB,DESTAB,LAMA):  # OESNLXR,OES
             else:
                 data = self.readBlock()
                 if type(data) != type(self.data):
-                    msg = 'The function f=%s has a unicode error\n'%(f.__name__)
+                    msg = 'The function f=%s has a str error\n'%(f.__name__)
                     msg += ("type(self.data)=%s type(data)=%s"
                           % (type(self.data), type(data)))
                 sys.stdout.flush()

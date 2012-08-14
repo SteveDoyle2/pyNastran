@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 # pylint: disable=C0103,R0201
 import sys
 import warnings
@@ -377,7 +401,7 @@ class Subcase(object):
         key = self.update_param_name(key)
         #print("adding iSubcase=%s key=|%s| value=|%s| options=|%s| "
         #      "paramType=%s" %(self.id, key, value, options, paramType))
-        if isinstance(value, unicode) and value.isdigit():
+        if isinstance(value, str) and value.isdigit():
             value = int(value)
 
         (key, value, options) = self._simplify_data(key, value, options,

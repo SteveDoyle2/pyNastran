@@ -1,6 +1,30 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 # pylint: disable=R0904,R0902
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 from numpy import array, cross
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
@@ -56,89 +80,6 @@ class BDFMethods(object):
             m = element.Mass()
             mass += m
         return (mass)
-
-    def flipNormals(self, starterEid, eids=None, flipStarter=False):
-        """
-        Takes the normals of SHELL elements and flips it to a common direction
-        This method follows the contour of the body, so assuming
-        no internal elements, all the normals on the outside will point
-        outwards (or inwards).
-
-        @param starterEid
-          the element to copy the normal of
-        @param eids
-          the element IDs to flip to the common direction (default=None -> all)
-        @param flipStarter
-          should the staring element be flipped (default=False)
-        
-        @todo
-          finish method...think i need to build a edge list...
-          that'd be a lot easier to loop through stuff...
-        """
-        raise NotImplementedError()
-        normals   = {}
-        validNids = set([])
-        isCorrectNormal = set([])
-
-        allEids = eids
-        if allEids == None:
-            allEids = self.elements.keys()
-        ###
-        setAllEids = set(allEids)
-
-
-        if flipStarter:
-            elem = self.Element(starterEid)
-            elem.flipNormal()
-        normals[starterEid] = elem.Normal()
-        
-        for eid in allEids:
-            element = self.elements[eid]
-            if isinstance(element, ShellElement):
-                elem = self.Element(starterEid)
-                normals[starterEid] = elem.Normal()
-                validNids = validNids.union(set(elem.nodeIDs()))
-            ###
-        ###
-        
-        ## clean up the elements that will be considered
-        elemsToCheck = set([])
-        nidToEidMap = self.getNodeIDToElementIDsMap()
-        for (nid, eidsMap) in sorted(nidToEidMap.iteritems()):
-            if nid not in validNids:  # clean up extra nodes
-                del nidToEidMap[nid]
-            else:
-                eids = list(set(eids))  # do i need this?
-                for eid in eids:  # clean up ROD/SOLID elements
-                    eids2 = []
-                    if eid in setAllEids:
-                        eids2.append(eid)
-                    ###
-                    elemsToCheck = elemsToCheck.union(set(eids2))
-                nidToEidMap[nid] = eids2
-            ###
-        ###
-        
-        ## starts with the starter element, loops thru adjacent elements
-        ## and checks to see if the normal is 'close' to the elements
-        ## normal from before
-        goEid = starterEid
-        
-        # no recursion to avoid recursion limit
-        while 1:
-            elem = self.Element(goEid)
-            nids = elem.getNodeIDs()
-            normals = self._getAdjacentNormals(nids, nidToEidMap)
-            normal = normals[goEid]
-        ###
-
-    def _getAdjacentElements(self, nids, nidToEidMap):
-        """
-        @todo doesnt work...
-        """
-        raise NotImplementedError()
-        normals = {}
-        #for nid in 
 
     def resolveGrids(self, cid=0):
         """

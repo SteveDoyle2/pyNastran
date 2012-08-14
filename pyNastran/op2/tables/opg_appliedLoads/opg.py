@@ -1,5 +1,29 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
+
+from __future__ import division, print_function
 #import sys
 from struct import unpack
 
@@ -101,6 +125,9 @@ class OPG(object):
         #print "*iSubcase=%s"%(self.iSubcase)
         #print "analysisCode=%s tableCode=%s thermal=%s" %(self.analysisCode,self.tableCode,self.thermal)
         #print self.codeInformation()
+
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
 
         #self.printBlock(data)
         self.readTitle()
@@ -243,7 +270,7 @@ class OPG(object):
             out = unpack(format1,eData)
             (eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm) = out
             eKey = extract(eKey,dt)
-            fiber = fiber.decode('utf-8').strip()
+            fiber = fiber.strip()
             self.obj.add(dt,eKey,eid,fiber,nx,ny,txy,angle,major,minor,tmax,ovm)
         #print len(self.data)
 

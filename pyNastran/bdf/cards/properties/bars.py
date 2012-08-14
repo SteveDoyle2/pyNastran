@@ -1,3 +1,27 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 # pylint: disable=C0103,R0902,R0904,R0914
 """
 All beam properties are defined in this file.  This includes:
@@ -11,8 +35,8 @@ All beam properties are defined in this file.  This includes:
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 #import sys
 from itertools import izip, count
 from numpy import zeros, pi
@@ -1200,7 +1224,7 @@ class PBEAML(IntegratedLineProperty):
                 else: # other blocks, n>0 ???
                     #print "*2",
                     #print "dim = ",Dim
-                    if isinstance(dim, unicode):
+                    if isinstance(dim, str):
                         raise RuntimeError('nsm is a string...nsm=|%s|; fields=%s' %(dim,card.fields()))
                     self.nsm.append(dim)
                     if n > 0:
@@ -1222,7 +1246,7 @@ class PBEAML(IntegratedLineProperty):
                 #print "DimB = ",Dim
                 self.dim.append(Dim)
                 self.nsm.append(0.0)
-                if isinstance(self.nsm[0], unicode):
+                if isinstance(self.nsm[0], str):
                     msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
                     raise RuntimeError(msg)
                 

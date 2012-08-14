@@ -1,6 +1,30 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 # pylint: disable=R0904,R0902,E1101,E1103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 #import sys
 
 from numpy import matrix, zeros, ones, array, transpose, dot
@@ -624,7 +648,7 @@ class CBAR(LineElement):
             self.w3b = main[11]
         ###
         #print("offt = %s" %(self.offt))
-        if not isinstance(self.offt, unicode):
+        if not isinstance(self.offt, str):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%s|' %(self.offt))
 
@@ -1074,7 +1098,7 @@ class CBEAM(CBAR):
             self.isOfft = True
             self.offt = 'GGG' # default
             self.bit = None
-        elif isinstance(field8, unicode):
+        elif isinstance(field8, str):
             self.isOfft = True
             self.bit = None
             self.offt = field8

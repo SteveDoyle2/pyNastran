@@ -1,6 +1,30 @@
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
 # pylint: disable=C0103,R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+
+from __future__ import division, print_function
 #import sys
 from itertools import izip, count
 from numpy import array, pi
@@ -1236,7 +1260,7 @@ class TRIM(BaseCard):
             while i<nFields: ## @todo doesnt support aeqr
                 label = fields[i]
                 ux = fields[i+1]
-                assert isinstance(label, unicode), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
+                assert isinstance(label, str), 'TRIM card doesnt support AEQR field...iField=%s label=%s fields=%s' %(i,label,card.fields(0))
                 self.labels.append(label)
                 self.uxs.append(ux)
                 if i==2:

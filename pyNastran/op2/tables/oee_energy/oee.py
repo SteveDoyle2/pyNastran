@@ -1,5 +1,29 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+## GNU Lesser General Public License
+## 
+## Program pyNastran - a python interface to NASTRAN files
+## Copyright (C) 2011-2012  Steven Doyle, Al Danial
+## 
+## Authors and copyright holders of pyNastran
+## Steven Doyle <mesheb82@gmail.com>
+## Al Danial    <al.danial@gmail.com>
+## 
+## This file is part of pyNastran.
+## 
+## pyNastran is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+## 
+## pyNastran is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public License
+## along with pyNastran.  If not, see <http://www.gnu.org/licenses/>.
+## 
+
+from __future__ import division, print_function
 import sys
 from struct import unpack
 
@@ -35,11 +59,7 @@ class OEE(object):
         #print(self.printSection(100))
         elementName, = unpack(b'8s',data[24:32])
         #print("elementName = %s" %(elementName))
-        try:
-            elementName = elementName.decode('utf-8').strip() ## element name
-        except UnicodeDecodeError:
-            print("elementName = ",str(elementName))
-            raise
+        elementName = elementName.strip() ## element name
         #print("elementName = %s" %(elementName))
         if elementName.isalpha():
             self.dataCode['elementName'] = elementName
@@ -101,6 +121,9 @@ class OEE(object):
         #print "*iSubcase=%s elementName=|%s|"%(self.iSubcase,self.elementName)
         #print "analysisCode=%s tableCode=%s" %(self.analysisCode,self.tableCode)
         #print self.codeInformation()
+
+        if not self.isSort1():
+            raise NotImplementedError('sort2...')
 
         #self.printBlock(data)
         self.readTitle()

@@ -9,8 +9,8 @@ packages = find_packages()+['gui/icons/*.*']
 #sys.exit()
 
 extra = {}
-if sys.version_info >= (3,):
-    extra['use_2to3'] = True
+#if sys.version_info >= (3,):
+    #extra['use_2to3'] = True
     #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
     #extra['use_2to3_fixers'] = ['your.fixers']
 
@@ -23,8 +23,8 @@ setup(name='pyNastran',
                    'Natural Language :: English',
                    'Intended Audience :: Science/Research',
                    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-                   'Programming Language :: Python :: 2',
-                   'Programming Language :: Python :: 3'], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+                   'Programming Language :: Python :: 2.6',
+                   'Programming Language :: Python :: 2.7'], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author=pyNastran.__author__,
       author_email=pyNastran.__email__,
@@ -48,7 +48,6 @@ setup(name='pyNastran',
                             'test_op2 = pyNastran.op2.test.test_op2:main',
                             'test_f06 = pyNastran.f06.test.test_f06:main',
                             'pyNastranGUI = pyNastran.gui.gui:main',
-                           #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
                            ]
       },
       test_suite = 'pyNastran.all_tests',
