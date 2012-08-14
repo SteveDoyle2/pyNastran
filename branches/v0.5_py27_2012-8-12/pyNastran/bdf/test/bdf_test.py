@@ -57,7 +57,7 @@ if __name__ == '__main__':
         files2 = get_failed_files('failedCases.in')
     files = files2
     
-    skipFiles = [] # giant
+    skipFiles = ['orthog4.bdf'] # giant
 
     nStart = 0
     nStop = 10000
