@@ -41,20 +41,6 @@ class OP2(BDF,
             self.validSubcases = set(iSubcases)
         self.log.debug("setSubcases - iSubcases = %s" % (self.validSubcases))
 
-    def setTransientTimes(self, times): ## @todo this name sucks...
-        """
-        takes a dictionary of list of times in a transient case and
-        gets the output closest to those timse
-        times = {subcaseID_1: [time1, time2],
-                 subcaseID_2: [time3, time4]}
-        """
-        expectedTimes = {}
-        for (iSubcase, eTimes) in times.iteritems():
-            eTimes = list(times)
-            eTimes.sort()
-            expectedTimes[iSubcase] = array(eTimes)
-        self.expectedTimes = expectedTimes
-
     def isValidSubcase(self):
         """
         lets the code check whether or not to read a subcase
