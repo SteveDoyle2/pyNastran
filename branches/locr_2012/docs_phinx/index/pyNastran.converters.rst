@@ -1,0 +1,20 @@
+converters Package
+==================
+
+:mod:`toCodeAster` Module
+-------------------------
+
+.. automodule:: pyNastran.converters.toCodeAster
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    pyNastran.converters.LaWGS
+    pyNastran.converters.cart3d
+    pyNastran.converters.panair
+
