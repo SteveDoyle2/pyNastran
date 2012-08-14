@@ -47,8 +47,6 @@ setup(name='pyNastran',
                             'test_bdf = pyNastran.bdf.test.test_bdf:main',
                             'test_op2 = pyNastran.op2.test.test_op2:main',
                             'test_f06 = pyNastran.f06.test.test_f06:main',
-                            'pyNastranGUI = pyNastran.gui.gui:main',
-                           #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
                            ]
       },
       test_suite = 'pyNastran.all_tests',
