@@ -15,7 +15,7 @@ After installing pyNastran, open a command prompt in a folder you have a BDF you
 
 {{{
 
->> python test_bdf.py cylinder.bdf > test.out
+>> test_bdf cylinder.bdf > test.out
 
 }}}
 
@@ -63,7 +63,7 @@ It's broken into 3 sections:
 
 You can also test the code without using cross-Referencing
 {{{
-test_bdf.py -x fem.bdf > test.out
+test_bdf -x fem.bdf > test.out
 }}}
 
 {{{
