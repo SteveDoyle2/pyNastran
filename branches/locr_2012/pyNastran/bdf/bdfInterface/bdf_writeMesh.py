@@ -35,7 +35,7 @@ class WriteMesh(object):
         #print "eids = ",eids
         nextEID = max(eids)+1  # set the new ID
         msg = '$ELEMENTS\n'
-        for element in sorted(self.elements.itervalues()):
+        for eid, element in sorted(self.elements.iteritems()):
             if element.Is('CQUAD4'):
                 msg += element.writeAsCTRIA3(nextEID)
                 nextEID += 1
@@ -478,17 +478,17 @@ class WriteMesh(object):
         if (self.sets or self.setsSuper or self.asets or self.bsets or
             self.csets or self.qsets):
             msg += '$SETS\n'
-            for (ID, setObj) in sorted(self.sets.iteritems()):
+            for (ID, setObj) in sorted(self.sets.iteritems()):  # dict
                 msg += str(setObj)
-            for (setObj) in sorted(self.asets):
+            for setObj in self.asets:  # list
                 msg += str(setObj)
-            for (setObj) in sorted(self.bsets):
+            for setObj in self.bsets:  # list
                 msg += str(setObj)
-            for (setObj) in sorted(self.csets):
+            for setObj in self.csets:  # list
                 msg += str(setObj)
-            for (setObj) in sorted(self.qsets):
+            for setObj in self.qsets:  # list
                 msg += str(setObj)
-            for (ID, setObj) in sorted(self.setsSuper.iteritems()):
+            for (ID, setObj) in sorted(self.setsSuper.iteritems()):  # dict
                 msg += str(setObj)
         return msg
 
@@ -604,8 +604,6 @@ class WriteMesh(object):
         msg = ''
         if len(self.coords) > 1:
             msg += '$COORDS\n'
-        #coordKeys = self.coords.keys()
-        #self.log.info("coordKeys = %s" %(coordKeys))
         for (ID, coord) in sorted(self.coords.iteritems()):
             if ID != 0:
                 msg += str(coord)
